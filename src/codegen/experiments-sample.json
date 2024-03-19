@@ -1,0 +1,484 @@
+{
+  "version": "2.0",
+  "metadata": {
+    "apiVersion": "2017-07-24",
+    "endpointPrefix": "api.sagemaker",
+    "jsonVersion": "1.1",
+    "protocol": "json",
+    "serviceAbbreviation": "SageMaker",
+    "serviceFullName": "Amazon SageMaker Service",
+    "serviceId": "SageMaker",
+    "signatureVersion": "v4",
+    "signingName": "sagemaker",
+    "targetPrefix": "SageMaker",
+    "uid": "sagemaker-2017-07-24"
+  },
+  "operations": {
+    "CreateExperiment": {
+      "name": "CreateExperiment",
+      "http": {
+        "method": "POST",
+        "requestUri": "/"
+      },
+      "input": {
+        "shape": "CreateExperimentRequest"
+      },
+      "output": {
+        "shape": "CreateExperimentResponse"
+      },
+      "errors": [
+        {
+          "shape": "ResourceLimitExceeded"
+        }
+      ],
+      "documentation": "<p>Creates a SageMaker <i>experiment</i>. An experiment is a collection of <i>trials</i> that are observed, compared and evaluated as a group. A trial is a set of steps, called <i>trial components</i>, that produce a machine learning model.</p> <note> <p>In the Studio UI, trials are referred to as <i>run groups</i> and trial components are referred to as <i>runs</i>.</p> </note> <p>The goal of an experiment is to determine the components that produce the best model. Multiple trials are performed, each one isolating and measuring the impact of a change to one or more inputs, while keeping the remaining inputs constant.</p> <p>When you use SageMaker Studio or the SageMaker Python SDK, all experiments, trials, and trial components are automatically tracked, logged, and indexed. When you use the Amazon Web Services SDK for Python (Boto), you must use the logging APIs provided by the SDK.</p> <p>You can add tags to experiments, trials, trial components and then use the <a href=\"https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_Search.html\">Search</a> API to search for the tags.</p> <p>To add a description to an experiment, specify the optional <code>Description</code> parameter. To add a description later, or to change the description, call the <a href=\"https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_UpdateExperiment.html\">UpdateExperiment</a> API.</p> <p>To get a list of all your experiments, call the <a href=\"https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_ListExperiments.html\">ListExperiments</a> API. To view an experiment's properties, call the <a href=\"https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_DescribeExperiment.html\">DescribeExperiment</a> API. To get a list of all the trials associated with an experiment, call the <a href=\"https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_ListTrials.html\">ListTrials</a> API. To create a trial call the <a href=\"https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_CreateTrial.html\">CreateTrial</a> API.</p>"
+    },
+    "DeleteExperiment": {
+      "name": "DeleteExperiment",
+      "http": {
+        "method": "POST",
+        "requestUri": "/"
+      },
+      "input": {
+        "shape": "DeleteExperimentRequest"
+      },
+      "output": {
+        "shape": "DeleteExperimentResponse"
+      },
+      "errors": [
+        {
+          "shape": "ResourceNotFound"
+        }
+      ],
+      "documentation": "<p>Deletes an SageMaker experiment. All trials associated with the experiment must be deleted first. Use the <a href=\"https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_ListTrials.html\">ListTrials</a> API to get a list of the trials associated with the experiment.</p>"
+    },
+    "DescribeExperiment": {
+      "name": "DescribeExperiment",
+      "http": {
+        "method": "POST",
+        "requestUri": "/"
+      },
+      "input": {
+        "shape": "DescribeExperimentRequest"
+      },
+      "output": {
+        "shape": "DescribeExperimentResponse"
+      },
+      "errors": [
+        {
+          "shape": "ResourceNotFound"
+        }
+      ],
+      "documentation": "<p>Provides a list of an experiment's properties.</p>"
+    },
+    "ListExperiments": {
+      "name": "ListExperiments",
+      "http": {
+        "method": "POST",
+        "requestUri": "/"
+      },
+      "input": {
+        "shape": "ListExperimentsRequest"
+      },
+      "output": {
+        "shape": "ListExperimentsResponse"
+      },
+      "documentation": "<p>Lists all the experiments in your account. The list can be filtered to show only experiments that were created in a specific time range. The list can be sorted by experiment name or creation time.</p>"
+    },
+    "UpdateExperiment": {
+      "name": "UpdateExperiment",
+      "http": {
+        "method": "POST",
+        "requestUri": "/"
+      },
+      "input": {
+        "shape": "UpdateExperimentRequest"
+      },
+      "output": {
+        "shape": "UpdateExperimentResponse"
+      },
+      "errors": [
+        {
+          "shape": "ConflictException"
+        },
+        {
+          "shape": "ResourceNotFound"
+        }
+      ],
+      "documentation": "<p>Adds, updates, or removes the description of an experiment. Updates the display name of an experiment.</p>"
+    }
+  },
+  "shapes": {
+    "CreateExperimentRequest": {
+      "type": "structure",
+      "required": [
+        "ExperimentName"
+      ],
+      "members": {
+        "ExperimentName": {
+          "shape": "ExperimentEntityName",
+          "documentation": "<p>The name of the experiment. The name must be unique in your Amazon Web Services account and is not case-sensitive.</p>"
+        },
+        "DisplayName": {
+          "shape": "ExperimentEntityName",
+          "documentation": "<p>The name of the experiment as displayed. The name doesn't need to be unique. If you don't specify <code>DisplayName</code>, the value in <code>ExperimentName</code> is displayed.</p>"
+        },
+        "Description": {
+          "shape": "ExperimentDescription",
+          "documentation": "<p>The description of the experiment.</p>"
+        },
+        "Tags": {
+          "shape": "TagList",
+          "documentation": "<p>A list of tags to associate with the experiment. You can use <a href=\"https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_Search.html\">Search</a> API to search on the tags.</p>"
+        }
+      }
+    },
+    "CreateExperimentResponse": {
+      "type": "structure",
+      "members": {
+        "ExperimentArn": {
+          "shape": "ExperimentArn",
+          "documentation": "<p>The Amazon Resource Name (ARN) of the experiment.</p>"
+        }
+      }
+    },
+    "DeleteExperimentRequest": {
+      "type": "structure",
+      "required": [
+        "ExperimentName"
+      ],
+      "members": {
+        "ExperimentName": {
+          "shape": "ExperimentEntityName",
+          "documentation": "<p>The name of the experiment to delete.</p>"
+        }
+      }
+    },
+    "DeleteExperimentResponse": {
+      "type": "structure",
+      "members": {
+        "ExperimentArn": {
+          "shape": "ExperimentArn",
+          "documentation": "<p>The Amazon Resource Name (ARN) of the experiment that is being deleted.</p>"
+        }
+      }
+    },
+    "DescribeExperimentRequest": {
+      "type": "structure",
+      "required": [
+        "ExperimentName"
+      ],
+      "members": {
+        "ExperimentName": {
+          "shape": "ExperimentEntityName",
+          "documentation": "<p>The name of the experiment to describe.</p>"
+        }
+      }
+    },
+    "DescribeExperimentResponse": {
+      "type": "structure",
+      "members": {
+        "ExperimentName": {
+          "shape": "ExperimentEntityName",
+          "documentation": "<p>The name of the experiment.</p>"
+        },
+        "ExperimentArn": {
+          "shape": "ExperimentArn",
+          "documentation": "<p>The Amazon Resource Name (ARN) of the experiment.</p>"
+        },
+        "DisplayName": {
+          "shape": "ExperimentEntityName",
+          "documentation": "<p>The name of the experiment as displayed. If <code>DisplayName</code> isn't specified, <code>ExperimentName</code> is displayed.</p>"
+        },
+        "Source": {
+          "shape": "ExperimentSource",
+          "documentation": "<p>The Amazon Resource Name (ARN) of the source and, optionally, the type.</p>"
+        },
+        "Description": {
+          "shape": "ExperimentDescription",
+          "documentation": "<p>The description of the experiment.</p>"
+        },
+        "CreationTime": {
+          "shape": "Timestamp",
+          "documentation": "<p>When the experiment was created.</p>"
+        },
+        "CreatedBy": {
+          "shape": "UserContext",
+          "documentation": "<p>Who created the experiment.</p>"
+        },
+        "LastModifiedTime": {
+          "shape": "Timestamp",
+          "documentation": "<p>When the experiment was last modified.</p>"
+        },
+        "LastModifiedBy": {
+          "shape": "UserContext",
+          "documentation": "<p>Who last modified the experiment.</p>"
+        }
+      }
+    },
+    "Experiment": {
+      "type": "structure",
+      "members": {
+        "ExperimentName": {
+          "shape": "ExperimentEntityName",
+          "documentation": "<p>The name of the experiment.</p>"
+        },
+        "ExperimentArn": {
+          "shape": "ExperimentArn",
+          "documentation": "<p>The Amazon Resource Name (ARN) of the experiment.</p>"
+        },
+        "DisplayName": {
+          "shape": "ExperimentEntityName",
+          "documentation": "<p>The name of the experiment as displayed. If <code>DisplayName</code> isn't specified, <code>ExperimentName</code> is displayed.</p>"
+        },
+        "Source": {
+          "shape": "ExperimentSource"
+        },
+        "Description": {
+          "shape": "ExperimentDescription",
+          "documentation": "<p>The description of the experiment.</p>"
+        },
+        "CreationTime": {
+          "shape": "Timestamp",
+          "documentation": "<p>When the experiment was created.</p>"
+        },
+        "CreatedBy": {
+          "shape": "UserContext",
+          "documentation": "<p>Who created the experiment.</p>"
+        },
+        "LastModifiedTime": {
+          "shape": "Timestamp",
+          "documentation": "<p>When the experiment was last modified.</p>"
+        },
+        "LastModifiedBy": {
+          "shape": "UserContext"
+        },
+        "Tags": {
+          "shape": "TagList",
+          "documentation": "<p>The list of tags that are associated with the experiment. You can use <a href=\"https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_Search.html\">Search</a> API to search on the tags.</p>"
+        }
+      },
+      "documentation": "<p>The properties of an experiment as returned by the <a href=\"https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_Search.html\">Search</a> API.</p>"
+    },
+    "ExperimentArn": {
+      "type": "string",
+      "max": 256,
+      "pattern": "arn:aws[a-z\\-]*:sagemaker:[a-z0-9\\-]*:[0-9]{12}:experiment/.*"
+    },
+    "ExperimentConfig": {
+      "type": "structure",
+      "members": {
+        "ExperimentName": {
+          "shape": "ExperimentEntityName",
+          "documentation": "<p>The name of an existing experiment to associate with the trial component.</p>"
+        },
+        "TrialName": {
+          "shape": "ExperimentEntityName",
+          "documentation": "<p>The name of an existing trial to associate the trial component with. If not specified, a new trial is created.</p>"
+        },
+        "TrialComponentDisplayName": {
+          "shape": "ExperimentEntityName",
+          "documentation": "<p>The display name for the trial component. If this key isn't specified, the display name is the trial component name.</p>"
+        },
+        "RunName": {
+          "shape": "ExperimentEntityName",
+          "documentation": "<p>The name of the experiment run to associate with the trial component.</p>"
+        }
+      },
+      "documentation": "<p>Associates a SageMaker job as a trial component with an experiment and trial. Specified when you call the following APIs:</p> <ul> <li> <p> <a href=\"https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_CreateProcessingJob.html\">CreateProcessingJob</a> </p> </li> <li> <p> <a href=\"https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_CreateTrainingJob.html\">CreateTrainingJob</a> </p> </li> <li> <p> <a href=\"https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_CreateTransformJob.html\">CreateTransformJob</a> </p> </li> </ul>"
+    },
+    "ExperimentDescription": {
+      "type": "string",
+      "max": 3072,
+      "pattern": ".*"
+    },
+    "ExperimentEntityName": {
+      "type": "string",
+      "max": 120,
+      "min": 1,
+      "pattern": "^[a-zA-Z0-9](-*[a-zA-Z0-9]){0,119}"
+    },
+    "ExperimentEntityNameOrArn": {
+      "type": "string",
+      "max": 256,
+      "min": 1,
+      "pattern": "(arn:aws[a-z\\-]*:sagemaker:[a-z0-9\\-]*:[0-9]{12}:(experiment|experiment-trial|experiment-trial-component|artifact|action|context)\\/)?([a-zA-Z0-9](-*[a-zA-Z0-9]){0,119})"
+    },
+    "ExperimentSource": {
+      "type": "structure",
+      "required": [
+        "SourceArn"
+      ],
+      "members": {
+        "SourceArn": {
+          "shape": "ExperimentSourceArn",
+          "documentation": "<p>The Amazon Resource Name (ARN) of the source.</p>"
+        },
+        "SourceType": {
+          "shape": "SourceType",
+          "documentation": "<p>The source type.</p>"
+        }
+      },
+      "documentation": "<p>The source of the experiment.</p>"
+    },
+    "ExperimentSourceArn": {
+      "type": "string",
+      "max": 256,
+      "pattern": "arn:aws[a-z\\-]*:sagemaker:[a-z0-9\\-]*:[0-9]{12}:.*"
+    },
+    "ExperimentSummaries": {
+      "type": "list",
+      "member": {
+        "shape": "ExperimentSummary"
+      }
+    },
+    "ExperimentSummary": {
+      "type": "structure",
+      "members": {
+        "ExperimentArn": {
+          "shape": "ExperimentArn",
+          "documentation": "<p>The Amazon Resource Name (ARN) of the experiment.</p>"
+        },
+        "ExperimentName": {
+          "shape": "ExperimentEntityName",
+          "documentation": "<p>The name of the experiment.</p>"
+        },
+        "DisplayName": {
+          "shape": "ExperimentEntityName",
+          "documentation": "<p>The name of the experiment as displayed. If <code>DisplayName</code> isn't specified, <code>ExperimentName</code> is displayed.</p>"
+        },
+        "ExperimentSource": {
+          "shape": "ExperimentSource"
+        },
+        "CreationTime": {
+          "shape": "Timestamp",
+          "documentation": "<p>When the experiment was created.</p>"
+        },
+        "LastModifiedTime": {
+          "shape": "Timestamp",
+          "documentation": "<p>When the experiment was last modified.</p>"
+        }
+      },
+      "documentation": "<p>A summary of the properties of an experiment. To get the complete set of properties, call the <a href=\"https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_DescribeExperiment.html\">DescribeExperiment</a> API and provide the <code>ExperimentName</code>.</p>"
+    },
+    "TagList":{
+      "type":"list",
+      "member":{"shape":"Tag"},
+      "max":50,
+      "min":0
+    },
+    "Tag":{
+      "type":"structure",
+      "required":[
+        "Key",
+        "Value"
+      ],
+      "members":{
+        "Key":{
+          "shape":"TagKey",
+          "documentation":"<p>The tag key. Tag keys must be unique per resource.</p>"
+        },
+        "Value":{
+          "shape":"TagValue",
+          "documentation":"<p>The tag value.</p>"
+        }
+      },
+      "documentation":"<p>A tag object that consists of a key and an optional value, used to manage metadata for SageMaker Amazon Web Services resources.</p> <p>You can add tags to notebook instances, training jobs, hyperparameter tuning jobs, batch transform jobs, models, labeling jobs, work teams, endpoint configurations, and endpoints. For more information on adding tags to SageMaker resources, see <a href=\"https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_AddTags.html\">AddTags</a>.</p> <p>For more information on adding metadata to your Amazon Web Services resources with tagging, see <a href=\"https://docs.aws.amazon.com/general/latest/gr/aws_tagging.html\">Tagging Amazon Web Services resources</a>. For advice on best practices for managing Amazon Web Services resources with tagging, see <a href=\"https://d1.awsstatic.com/whitepapers/aws-tagging-best-practices.pdf\">Tagging Best Practices: Implement an Effective Amazon Web Services Resource Tagging Strategy</a>.</p>"
+    },
+    "TagKey":{
+      "type":"string",
+      "max":128,
+      "min":1,
+      "pattern":"^([\\p{L}\\p{Z}\\p{N}_.:/=+\\-@]*)$"
+    },
+    "TagKeyList":{
+      "type":"list",
+      "member":{"shape":"TagKey"},
+      "max":50,
+      "min":1
+    },
+    "TagValue":{
+      "type":"string",
+      "max":256,
+      "min":0,
+      "pattern":"^([\\p{L}\\p{Z}\\p{N}_.:/=+\\-@]*)$"
+    },
+    "Timestamp":{"type":"timestamp"},
+    "UpdateExperimentRequest": {
+      "type": "structure",
+      "required": [
+        "ExperimentName"
+      ],
+      "members": {
+        "ExperimentName": {
+          "shape": "ExperimentEntityName",
+          "documentation": "<p>The name of the experiment to update.</p>"
+        },
+        "DisplayName": {
+          "shape": "ExperimentEntityName",
+          "documentation": "<p>The name of the experiment as displayed. The name doesn't need to be unique. If <code>DisplayName</code> isn't specified, <code>ExperimentName</code> is displayed.</p>"
+        },
+        "Description": {
+          "shape": "ExperimentDescription",
+          "documentation": "<p>The description of the experiment.</p>"
+        }
+      }
+    },
+    "UpdateExperimentResponse": {
+      "type": "structure",
+      "members": {
+        "ExperimentArn": {
+          "shape": "ExperimentArn",
+          "documentation": "<p>The Amazon Resource Name (ARN) of the experiment.</p>"
+        }
+      }
+    },
+    "UserContext":{
+      "type":"structure",
+      "members":{
+        "UserProfileArn":{
+          "shape":"String",
+          "documentation":"<p>The Amazon Resource Name (ARN) of the user's profile.</p>"
+        },
+        "UserProfileName":{
+          "shape":"String",
+          "documentation":"<p>The name of the user's profile.</p>"
+        },
+        "DomainId":{
+          "shape":"String",
+          "documentation":"<p>The domain associated with the user.</p>"
+        },
+        "IamIdentity":{
+          "shape":"IamIdentity",
+          "documentation":"<p>The IAM Identity details associated with the user. These details are associated with model package groups, model packages, and project entities only.</p>"
+        }
+      },
+      "documentation":"<p>Information about the user who created or modified an experiment, trial, trial component, lineage group, project, or model card.</p>"
+    },
+    "IamIdentity":{
+      "type":"structure",
+      "members":{
+        "Arn":{
+          "shape":"String",
+          "documentation":"<p>The Amazon Resource Name (ARN) of the IAM identity.</p>"
+        },
+        "PrincipalId":{
+          "shape":"String",
+          "documentation":"<p>The ID of the principal that assumes the IAM identity.</p>"
+        },
+        "SourceIdentity":{
+          "shape":"String",
+          "documentation":"<p>The person or application which assumes the IAM identity.</p>"
+        }
+      },
+      "documentation":"<p>The IAM Identity details associated with the user. These details are associated with model package groups, model packages and project entities only.</p>"
+    },
+    "SourceType":{
+      "type":"string",
+      "max":128
+    },
+    "String":{"type":"string"}
+  },
+  "documentation": "<p>Provides APIs for creating and managing SageMaker resources. </p> <p>Other Resources:</p> <ul> <li> <p> <a href=\"https://docs.aws.amazon.com/sagemaker/latest/dg/whatis.html#first-time-user\">SageMaker Developer Guide</a> </p> </li> <li> <p> <a href=\"https://docs.aws.amazon.com/augmented-ai/2019-11-07/APIReference/Welcome.html\">Amazon Augmented AI Runtime API Reference</a> </p> </li> </ul>",
+  "\\": ""
+}
