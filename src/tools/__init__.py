@@ -1,1 +1,1 @@
-from .generate_se_de import _pascal_to_snake
+from ..util.se_de import _pascal_to_snake

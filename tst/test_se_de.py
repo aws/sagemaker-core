@@ -1,5 +1,5 @@
 import unittest
-from ..src.tools.generate_se_de import _pascal_to_snake
+from ..src.util.se_de import _pascal_to_snake
 
 class TestConversion(unittest.TestCase):
     def test_pascal_to_snake(self):
