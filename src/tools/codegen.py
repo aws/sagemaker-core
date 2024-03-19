@@ -225,8 +225,8 @@ class CodeGen:
                     file.write(shape_class)
 
 
-with open('src/codegen/experiments-sample.json') as f:
-# with open('src/codegen/sagemaker-service.json') as f:
+with open('src/tools/experiments-sample.json') as f:
+# with open('sample/sagemaker/2017-07-24/service-2.json') as f:
     data = json.load(f)
 
 codegen = CodeGen(service_json=data)
