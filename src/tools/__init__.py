@@ -1,0 +1,1 @@
+from .generate_se_de import _pascal_to_snake
