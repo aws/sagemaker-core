@@ -17,12 +17,20 @@ import datetime
 import json
 import os
 import re
+import textwrap
 
 
 CLASS_TEMPLATE ='''
 class {class_name}:
     """{docstring}"""
-    {init_method_body}
+{init_method_body}
+'''
+
+DATA_CLASS_TEMPLATE ='''
+@dataclass
+class {class_name}:
+    """{docstring}"""
+{data_class_members}
 '''
 
 BASIC_JSON_TYPES_TO_PYTHON_TYPES = {
@@ -74,6 +82,27 @@ def convert_to_snake_case(entity_name):
     """
     snake_case_string = re.sub(r'(?<!^)(?=[A-Z])', '_', entity_name).lower()
     return snake_case_string
+
+
+def filter_req_resp_shapes(shape):
+    # OidcConfigForRequest, WorkforceVpcConfigRequest and WorkforceVpcConfigResponse
+    # are valid Shape Structures with no associated operation
+    # ToDo: need to make this list dynamically so that future instances are covered.
+    # req_resp_list = []
+    # for shape in data["shapes"].keys():
+    #     if shape.endswith("Request") or shape.endswith("Response"):
+    #         req_resp_list.append(shape)
+    # req = [r.replace("Request", "") for r in req_resp_list if r.endswith("Request")]
+    # resp = [r.replace("Response", "") for r in req_resp_list if r.endswith("Response")]
+    # [r for r in resp if r not in data["operations"].keys()]
+    # ['OidcConfigFor', 'WorkforceVpcConfig']
+    # [r for r in req if r not in data["operations"].keys()]
+    # ['WorkforceVpcConfig']
+    if shape in ["OidcConfigForResponse", "WorkforceVpcConfigRequest", "WorkforceVpcConfigResponse"]:
+        return True
+    if shape.endswith("Request") or shape.endswith("Response"):
+        return False
+    return True
 
 
 class CodeGen:
@@ -147,12 +176,11 @@ class CodeGen:
 
         return stack
 
-    def _generate_init_body_from_shape_members(self, shape):
+    def _generate_data_class_members(self, shape):
         shape_dict = self.service_json['shapes'][shape]
         members = shape_dict["members"]
         required_args = shape_dict.get("required", [])
-        init_arg_list = ""
-        init_data_body = f"super().__init__(**kwargs)\n"
+        init_data_body = ""
         for member_name, member_attrs in members.items():
             member_shape = member_attrs["shape"]
             if self.service_json["shapes"][member_shape]:
@@ -166,63 +194,74 @@ class CodeGen:
                 member_type = "placeholder"
             member_name_snake_case = convert_to_snake_case(member_name)
             if member_name in required_args:
-                init_arg_list += f"{member_name_snake_case}: {member_type} = None,\n"
-                init_data_body += f"self.{member_name_snake_case} = {member_name_snake_case},\n"
+                init_data_body += f"{member_name_snake_case}: {member_type}\n"
             else:
-                init_arg_list += f"{member_name_snake_case}: Optional[{member_type}] = None,\n"
-                init_data_body += f"self.{member_name_snake_case} = {member_name_snake_case},\n"
-        init_data = f"def __init__(\n"
-        init_data += add_indent(f"self,\n{init_arg_list}**kwargs\n", 8)
-        init_data += add_indent("):\n", 4)
-        init_data += add_indent(init_data_body, 8)
+                init_data_body += f"{member_name_snake_case}: Optional[{member_type}] = Unassigned()\n"
+        init_data = add_indent(init_data_body, 4)
         return init_data
 
-    def generate_class_for_shape(self, shape):
+    def generate_data_class_for_shape(self, shape):
         class_name = shape
-        init_data = self._generate_init_body_from_shape_members(shape)
-        return CLASS_TEMPLATE.format(
-            class_name=class_name + "(Shape)",
-            init_method_body=init_data,
+        init_data = self._generate_data_class_members(shape)
+        return DATA_CLASS_TEMPLATE.format(
+            class_name=class_name + "(Base)",
+            data_class_members=init_data,
             docstring="TBA",
         )
 
     def generate_imports(self):
-        imports = "from typing import Optional\n"
-        imports += "import datetime\n"
+        imports = "import datetime\n"
+        imports += "\n"
+        imports += "from dataclasses import dataclass\n"
+        imports += "from typing import Optional\n"
         imports += "\n"
         return imports
 
-    def generate_base_class_for_shape(self):
-        class_shape_init = "def __init__(self, **kwargs):\n"
-        class_shape_init += add_indent("for key, value in kwargs.items():\n", 8)
-        class_shape_init += add_indent("setattr(self, key, value)\n", 12)
+    def generate_base_class(self):
+        # more customisations would be added later
         return CLASS_TEMPLATE.format(
-            class_name="Shape",
-            init_method_body=class_shape_init,
+            class_name="Base",
+            init_method_body=add_indent("pass", 4),
             docstring="TBA",
         )
 
-    def generate_classes(self, output_folder="src/sagemaker-core"):
+    def generate_classes(self, output_folder="src/generated"):
         if not os.path.exists(output_folder):
             os.makedirs(output_folder)
 
-        current_datetime = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
-        output_file = os.path.join(output_folder, f"generated_classes_{current_datetime}.py")
+        #current_datetime = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+        output_file = os.path.join(output_folder, f"generated_classes.py")
 
         with open(output_file, "w") as file:
             imports = self.generate_imports()
             file.write(imports)
-            base_class = self.generate_base_class_for_shape()
+            base_class = self.generate_base_class()
             file.write(base_class)
+            file.write("\n\n")
+            # add Unassigned class
+            class_definition_string = '''\
+            class Unassigned:
+                """A custom type used to signify an undefined optional argument."""
+                _instance = None
 
+                def __new__(cls):
+                    if cls._instance is None:
+                        cls._instance = super().__new__(cls)
+                    return cls._instance
+            '''
+            wrapped_class_definition = textwrap.indent(textwrap.dedent(class_definition_string),
+                                                       prefix='')
+            file.write(wrapped_class_definition)
+            file.write("\n")
             # iterate through shapes in topological order an generate classes.
             topological_order = self.topological_sort()
             for shape in topological_order:
-                shape_dict = self.service_json['shapes'][shape]
-                shape_type = shape_dict["type"]
-                if shape_type == "structure":
-                    shape_class = self.generate_class_for_shape(shape)
-                    file.write(shape_class)
+                if filter_req_resp_shapes(shape):
+                    shape_dict = self.service_json['shapes'][shape]
+                    shape_type = shape_dict["type"]
+                    if shape_type == "structure":
+                        shape_class = self.generate_data_class_for_shape(shape)
+                        file.write(shape_class)
 
 
 with open('src/tools/experiments-sample.json') as f:
