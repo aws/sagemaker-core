@@ -11,9 +11,6 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 """A class for generating class structure from Service Model JSON."""
-from __future__ import absolute_import
-
-import datetime
 import json
 import os
 import re
@@ -105,7 +102,7 @@ def filter_req_resp_shapes(shape):
     return True
 
 
-class CodeGen:
+class CodeGenerator:
     """Builds the pythonic structure from an input Botocore service.json"""
 
     def __init__(self, service_json=None):
@@ -176,7 +173,7 @@ class CodeGen:
 
         return stack
 
-    def _generate_data_class_members(self, shape):
+    def _generate_data_shape_members(self, shape):
         shape_dict = self.service_json['shapes'][shape]
         members = shape_dict["members"]
         required_args = shape_dict.get("required", [])
@@ -202,7 +199,7 @@ class CodeGen:
 
     def generate_data_class_for_shape(self, shape):
         class_name = shape
-        init_data = self._generate_data_class_members(shape)
+        init_data = self._generate_data_shape_members(shape)
         return DATA_CLASS_TEMPLATE.format(
             class_name=class_name + "(Base)",
             data_class_members=init_data,
@@ -218,19 +215,19 @@ class CodeGen:
         return imports
 
     def generate_base_class(self):
-        # more customisations would be added later
+        # more customizations would be added later
         return CLASS_TEMPLATE.format(
             class_name="Base",
             init_method_body=add_indent("pass", 4),
             docstring="TBA",
         )
 
-    def generate_classes(self, output_folder="src/generated"):
+    def generate_shapes(self, output_folder="src/generated"):
         if not os.path.exists(output_folder):
             os.makedirs(output_folder)
 
         #current_datetime = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
-        output_file = os.path.join(output_folder, f"generated_classes.py")
+        output_file = os.path.join(output_folder, f"generate_shapes.py")
 
         with open(output_file, "w") as file:
             imports = self.generate_imports()
@@ -265,9 +262,9 @@ class CodeGen:
 
 
 with open('src/tools/experiments-sample.json') as f:
-# with open('sample/sagemaker/2017-07-24/service-2.json') as f:
+#with open('../sample/sagemaker/2017-07-24/service-2.json') as f:
     data = json.load(f)
 
-codegen = CodeGen(service_json=data)
+codegen = CodeGenerator(service_json=data)
 
-codegen.generate_classes()
+codegen.generate_shapes()

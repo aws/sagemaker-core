@@ -3,12 +3,13 @@ from functools import cache
 import os
 import pandas as pd
 
+CLASS_METHODS = set(['create', 'add', 'start', 'register', 'import', 'list', 'get'])
+OBJECT_METHODS = set(['refresh', 'delete', 'update', 'stop', 'deregister'])
+
 '''
 This class is used to extract the resources and its actions from the service-2.json file.
 '''
 class ResourceExtractor:
-    CLASS_METHODS = set(['create', 'add', 'start', 'register', 'import', 'list', 'get'])
-    OBJECT_METHODS = set(['refresh', 'delete', 'update', 'stop', 'deregister'])
 
     # Wire additional methods to resources
     RESOURCE_TO_ADDITIONAL_METHODS = {
