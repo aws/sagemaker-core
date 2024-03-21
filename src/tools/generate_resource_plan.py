@@ -80,9 +80,9 @@ class ResourceExtractor:
     def _extract_dataframes(self):
         # built a dataframe for each resources and it has
         # resource_name, type, class_methods, object_methods, additional_methods and raw_actions
-        df = pd.DataFrame(columns=['resource_name', 'type', 
-                                   'class_methods', 'object_methods', 
-                                   'additional_methods', 'raw_actions'])
+        self.df = pd.DataFrame(columns=['resource_name', 'type', 
+                                        'class_methods', 'object_methods', 
+                                        'additional_methods', 'raw_actions'])
 
         for resource, actions in sorted(self.resource_actions.items()):
             class_methods = set()
@@ -119,9 +119,14 @@ class ResourceExtractor:
                 'raw_actions': [list(sorted(actions))]
             })
 
-            df = pd.concat([df, new_row], ignore_index=True)
+            self.df = pd.concat([self.df, new_row], ignore_index=True)
 
-        df.to_csv('resource_plan.csv', index=False)
+        # df.to_csv('resource_plan.csv', index=False)
+
+    def get_resource_plan(self):
+        return self.df
+    
+
 
 file_path = os.getcwd() + '/sample/sagemaker/2017-07-24/service-2.json'
 resource_extractor = ResourceExtractor(file_path)
