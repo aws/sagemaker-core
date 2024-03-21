@@ -102,7 +102,7 @@ def filter_req_resp_shapes(shape):
     return True
 
 
-class CodeGenerator:
+class ShapeGenerator:
     """Builds the pythonic structure from an input Botocore service.json"""
 
     def __init__(self, service_json=None):
@@ -265,6 +265,6 @@ with open('src/tools/experiments-sample.json') as f:
 #with open('../sample/sagemaker/2017-07-24/service-2.json') as f:
     data = json.load(f)
 
-codegen = CodeGenerator(service_json=data)
+codegen = ShapeGenerator(service_json=data)
 
 codegen.generate_shapes()
