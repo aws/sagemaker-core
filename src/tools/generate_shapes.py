@@ -178,7 +178,10 @@ class ShapeGenerator:
         members = shape_dict["members"]
         required_args = shape_dict.get("required", [])
         init_data_body = ""
-        for member_name, member_attrs in members.items():
+        # bring the required members in front
+        ordered_members = {key: members[key] for key in required_args if key in members}
+        ordered_members.update(members)
+        for member_name, member_attrs in ordered_members.items():
             member_shape = member_attrs["shape"]
             if self.service_json["shapes"][member_shape]:
                 member_shape_type = self.service_json["shapes"][member_shape]["type"]
@@ -188,12 +191,16 @@ class ShapeGenerator:
                     # Shape is a simple type like string
                     member_type = BASIC_JSON_TYPES_TO_PYTHON_TYPES[member_shape_type]
             else:
-                member_type = "placeholder"
+                raise Exception("The Shape definition mush exist. The Json Data might be corrupt")
             member_name_snake_case = convert_to_snake_case(member_name)
             if member_name in required_args:
                 init_data_body += f"{member_name_snake_case}: {member_type}\n"
             else:
-                init_data_body += f"{member_name_snake_case}: Optional[{member_type}] = Unassigned()\n"
+                if member_name_snake_case == "lambda":
+                    # ToDo handle this edge case later
+                    init_data_body += f"# {member_name_snake_case}: Optional[{member_type}] = Unassigned()\n"
+                else:
+                    init_data_body += f"{member_name_snake_case}: Optional[{member_type}] = Unassigned()\n"
         init_data = add_indent(init_data_body, 4)
         return init_data
 
@@ -227,7 +234,7 @@ class ShapeGenerator:
             os.makedirs(output_folder)
 
         #current_datetime = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
-        output_file = os.path.join(output_folder, f"generate_shapes.py")
+        output_file = os.path.join(output_folder, f"shapes.py")
 
         with open(output_file, "w") as file:
             imports = self.generate_imports()
@@ -261,8 +268,7 @@ class ShapeGenerator:
                         file.write(shape_class)
 
 
-with open('src/tools/experiments-sample.json') as f:
-#with open('../sample/sagemaker/2017-07-24/service-2.json') as f:
+with open('sample/sagemaker/2017-07-24/service-2.json') as f:
     data = json.load(f)
 
 codegen = ShapeGenerator(service_json=data)
