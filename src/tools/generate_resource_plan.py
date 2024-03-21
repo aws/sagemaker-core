@@ -16,28 +16,14 @@ class ResourceExtractor:
         'Cluster': ['DescribeClusterNode', 'ListClusterNodes'],
     }
     
-    def __init__(self, file_path):
-        with open(file_path, 'r') as file:
-            data = json.load(file)
-        
-        self.version = data['metadata']['apiVersion']
-        self.protocol = data['metadata']['protocol']
-        self.service = data['metadata']['serviceFullName']
-        self.service_id = data['metadata']['serviceId']
-        self.uid = data['metadata']['uid']
-        self.operations = data['operations']
-        self.shapes = data['shapes']
+    def __init__(self, service_json):
+        self.service_json = service_json
+        self.operations = self.service_json['operations']
         self.resource_actions = {}
         self.actions_under_resource = set()
 
-        if self.service_id != 'SageMaker':
-            raise Exception(f"ServiceId {self.service_id} not supported")
-
-        if self.protocol == 'json':
-            self._extract_resources_and_its_api_actions()
-            self._extract_dataframes()
-        else:
-            raise Exception(f"Protocol {self.protocol} not supported")
+        self._extract_resources_plan()
+        
     
     def _filter_actions_for_resources(self, resources):
         for resource in sorted(resources, key=len, reverse=True):
@@ -48,7 +34,7 @@ class ResourceExtractor:
 
             self.actions = self.actions - filtered_actions
 
-    def _extract_resources_and_its_api_actions(self):
+    def _extract_resources_plan(self):
         self.actions = set(self.operations.keys())
         
         print(f"Total actions - {len(self.actions)}")
@@ -76,8 +62,9 @@ class ResourceExtractor:
         for resource, self.actions in self.resource_actions.items():
             print(f"{resource} -- {self.actions}")
         '''
+        self._extract_resource_plan_as_dataframe()
 
-    def _extract_dataframes(self):
+    def _extract_resource_plan_as_dataframe(self):
         # built a dataframe for each resources and it has
         # resource_name, type, class_methods, object_methods, additional_methods and raw_actions
         self.df = pd.DataFrame(columns=['resource_name', 'type', 
@@ -98,9 +85,9 @@ class ResourceExtractor:
                     object_methods.add('refresh')
                     continue
 
-                if action_low.split(resource_low)[0] in self.CLASS_METHODS:
+                if action_low.split(resource_low)[0] in CLASS_METHODS:
                     class_methods.add(action_low.split(resource_low)[0])
-                elif action_low.split(resource_low)[0] in self.OBJECT_METHODS:
+                elif action_low.split(resource_low)[0] in OBJECT_METHODS:
                     object_methods.add(action_low.split(resource_low)[0])
                 else:
                     additional_methods.add(action)
@@ -129,4 +116,6 @@ class ResourceExtractor:
 
 
 file_path = os.getcwd() + '/sample/sagemaker/2017-07-24/service-2.json'
-resource_extractor = ResourceExtractor(file_path)
+with open(file_path, 'r') as file:
+    data = json.load(file)
+resource_extractor = ResourceExtractor(data)
