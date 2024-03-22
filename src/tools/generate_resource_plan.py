@@ -19,6 +19,7 @@ class ResourceExtractor:
     def __init__(self, service_json):
         self.service_json = service_json
         self.operations = self.service_json['operations']
+        self.shapes = self.service_json['shapes']
         self.resource_actions = {}
         self.actions_under_resource = set()
 
@@ -68,22 +69,37 @@ class ResourceExtractor:
         # built a dataframe for each resources and it has
         # resource_name, type, class_methods, object_methods, additional_methods and raw_actions
         self.df = pd.DataFrame(columns=['resource_name', 'type', 
-                                        'class_methods', 'object_methods', 
+                                        'class_methods', 'object_methods', 'chain_resource_name',
                                         'additional_methods', 'raw_actions'])
 
         for resource, actions in sorted(self.resource_actions.items()):
             class_methods = set()
             object_methods = set()
             additional_methods = set()
+            chain_resource_names = set()
 
             for action in actions:
                 action_low = action.lower()
                 resource_low = resource.lower()
 
+                # describe action maps to get class method and refresh object method
                 if action_low.split(resource_low)[0] == 'describe':
                     class_methods.add('get')
                     object_methods.add('refresh')
                     continue
+
+                # Find chaining of resources
+                if action_low.split(resource_low)[0] == 'create':
+                    shape_name = self.operations[action]['input']['shape']
+                    input = self.shapes[shape_name]
+                    for member in input['members']:
+                        if member.endswith('Name'):
+                            # print(f"Chain Resource: {member}")
+                            chain_resource_name = member[:-len('Name')]
+
+                            if chain_resource_name != resource and chain_resource_name in self.resources:
+                                chain_resource_names.add(chain_resource_name)
+                                #raise Exception(f"Chain Resource {chain_resource_names} for {resource} ")
 
                 if action_low.split(resource_low)[0] in CLASS_METHODS:
                     class_methods.add(action_low.split(resource_low)[0])
@@ -92,7 +108,7 @@ class ResourceExtractor:
                 else:
                     additional_methods.add(action)
 
-            # print(f"{resource} -- {sorted(class_methods)} -- {sorted(object_methods)} -- {sorted(additional_methods)} -- {sorted(actions)}")
+            # print(f"{resource} -- {sorted(class_methods)} -- {sorted(object_methods)} -- {sorted(chain_resource_names)} -- {sorted(additional_methods)} -- {sorted(actions)}")
 
             if resource in self.RESOURCE_TO_ADDITIONAL_METHODS:
                 additional_methods.update(self.RESOURCE_TO_ADDITIONAL_METHODS[resource])
@@ -102,13 +118,14 @@ class ResourceExtractor:
                 'type': ['resource'],
                 'class_methods': [list(sorted(class_methods))],
                 'object_methods': [list(sorted(object_methods))],
+                'chain_resource_name': [list(sorted(chain_resource_names))],
                 'additional_methods': [list(sorted(additional_methods))],
                 'raw_actions': [list(sorted(actions))]
             })
 
             self.df = pd.concat([self.df, new_row], ignore_index=True)
 
-        # df.to_csv('resource_plan.csv', index=False)
+        self.df.to_csv('resource_plan.csv', index=False)
 
     def get_resource_plan(self):
         return self.df

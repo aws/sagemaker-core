@@ -48,6 +48,9 @@ class ResourceGenerator:
             print(f"Raw actions: {raw_actions}")
             print("\n")
 
+    def generate_init_method(self, row):
+        return f'''
+
 
 if __name__ == "__main__":
     file_path = os.getcwd() + '/sample/sagemaker/2017-07-24/service-2.json'
