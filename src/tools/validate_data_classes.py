@@ -3,6 +3,13 @@
 python src/tools/validate_data_classes.py
 
 The script would validate data classes present in src.generated.generated_classes module.
+
+ToDo: Improve the validation to do a multi-level check as well.
+Background:
+The script does a 1st level validation. Meaning for example if Experiment ->(depends on)->
+ExperimentSource shape. Validation does not create an instance of  ExperimentSource
+ and then pass that instance to Experiment for a multi-level validation. Currently it uses the
+ default Unassigned() in this case for ExperimentSource.
 """
 
 import inspect

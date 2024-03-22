@@ -10,11 +10,17 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-"""A class for generating class structure from Service Model JSON."""
+"""A class for generating class structure from Service Model JSON.
+
+To run the script be sure to set the PYTHONPATH
+export PYTHONPATH=<sagemaker-code-gen repo directory>:$PYTHONPATH
+"""
 import json
 import os
-import re
 import textwrap
+
+from src.tools.generator import Generator
+from src.util.util import add_indent
 
 
 CLASS_TEMPLATE ='''
@@ -29,56 +35,6 @@ class {class_name}:
     """{docstring}"""
 {data_class_members}
 '''
-
-BASIC_JSON_TYPES_TO_PYTHON_TYPES = {
-    "string": "str",
-    "integer": "int",
-    "boolean": "bool",
-    "long": "int",
-    "float": "float",
-    "map": "dict",
-    "double": "float",
-    "list": "list",
-    "timestamp": "datetime.datetime",
-    "placeholder": "placeholder",  # To be removed after validation
-}
-
-
-def add_indent(text, num_spaces=4):
-    """
-    Add customizable indent spaces to a given text.
-
-    Parameters:
-        text (str): The text to which the indent spaces will be added.
-        num_spaces (int): Number of spaces to be added for each level of indentation. Default is 4.
-
-    Returns:
-        str: The text with added indent spaces.
-    """
-    indent = ' ' * num_spaces
-    lines = text.split('\n')
-    indented_text = '\n'.join(indent + line for line in lines)
-    return indented_text.rstrip(' ')
-
-
-def clean_documentaion(documentation):
-    documentation = re.sub(r'<\/?p>', '', documentation)
-    documentation = re.sub(r'<\/?code>', "'", documentation)
-    return documentation
-
-
-def convert_to_snake_case(entity_name):
-    """
-    Convert a string to snake_case.
-
-    Args:
-        entity_name (str): The string to convert.
-
-    Returns:
-        str: The converted string in snake_case.
-    """
-    snake_case_string = re.sub(r'(?<!^)(?=[A-Z])', '_', entity_name).lower()
-    return snake_case_string
 
 
 def filter_req_resp_shapes(shape):
@@ -102,15 +58,8 @@ def filter_req_resp_shapes(shape):
     return True
 
 
-class ShapeGenerator:
+class ShapeGenerator(Generator):
     """Builds the pythonic structure from an input Botocore service.json"""
-
-    def __init__(self, service_json=None):
-        """
-
-        :param service_json: The Botocore Service Json in python dict format.
-        """
-        self.service_json = service_json
 
     def build_graph(self):
         """Builds DAG for Service Json Shapes
@@ -173,40 +122,9 @@ class ShapeGenerator:
 
         return stack
 
-    def _generate_data_shape_members(self, shape):
-        shape_dict = self.service_json['shapes'][shape]
-        members = shape_dict["members"]
-        required_args = shape_dict.get("required", [])
-        init_data_body = ""
-        # bring the required members in front
-        ordered_members = {key: members[key] for key in required_args if key in members}
-        ordered_members.update(members)
-        for member_name, member_attrs in ordered_members.items():
-            member_shape = member_attrs["shape"]
-            if self.service_json["shapes"][member_shape]:
-                member_shape_type = self.service_json["shapes"][member_shape]["type"]
-                if member_shape_type == "structure":
-                    member_type = member_shape
-                else:
-                    # Shape is a simple type like string
-                    member_type = BASIC_JSON_TYPES_TO_PYTHON_TYPES[member_shape_type]
-            else:
-                raise Exception("The Shape definition mush exist. The Json Data might be corrupt")
-            member_name_snake_case = convert_to_snake_case(member_name)
-            if member_name in required_args:
-                init_data_body += f"{member_name_snake_case}: {member_type}\n"
-            else:
-                if member_name_snake_case == "lambda":
-                    # ToDo handle this edge case later
-                    init_data_body += f"# {member_name_snake_case}: Optional[{member_type}] = Unassigned()\n"
-                else:
-                    init_data_body += f"{member_name_snake_case}: Optional[{member_type}] = Unassigned()\n"
-        init_data = add_indent(init_data_body, 4)
-        return init_data
-
     def generate_data_class_for_shape(self, shape):
         class_name = shape
-        init_data = self._generate_data_shape_members(shape)
+        init_data = self.generate_data_shape_members(shape)
         return DATA_CLASS_TEMPLATE.format(
             class_name=class_name + "(Base)",
             data_class_members=init_data,
