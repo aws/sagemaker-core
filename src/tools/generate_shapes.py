@@ -37,27 +37,6 @@ class {class_name}:
 '''
 
 
-def filter_req_resp_shapes(shape):
-    # OidcConfigForRequest, WorkforceVpcConfigRequest and WorkforceVpcConfigResponse
-    # are valid Shape Structures with no associated operation
-    # ToDo: need to make this list dynamically so that future instances are covered.
-    # req_resp_list = []
-    # for shape in data["shapes"].keys():
-    #     if shape.endswith("Request") or shape.endswith("Response"):
-    #         req_resp_list.append(shape)
-    # req = [r.replace("Request", "") for r in req_resp_list if r.endswith("Request")]
-    # resp = [r.replace("Response", "") for r in req_resp_list if r.endswith("Response")]
-    # [r for r in resp if r not in data["operations"].keys()]
-    # ['OidcConfigFor', 'WorkforceVpcConfig']
-    # [r for r in req if r not in data["operations"].keys()]
-    # ['WorkforceVpcConfig']
-    if shape in ["OidcConfigForResponse", "WorkforceVpcConfigRequest", "WorkforceVpcConfigResponse"]:
-        return True
-    if shape.endswith("Request") or shape.endswith("Response"):
-        return False
-    return True
-
-
 class ShapeGenerator(Generator):
     """Builds the pythonic structure from an input Botocore service.json"""
 
@@ -92,7 +71,15 @@ class ShapeGenerator(Generator):
                     # i.e. ExperimentEntityName taken over ExperimentName
                     if member_attributes["shape"] in shapes_dict.keys():
                         node_deps = graph.get(node, [])
-                        node_deps.append(member_attributes["shape"])
+                        # evaluate the member shape and then append to node deps
+                        member_shape = shapes_dict[member_attributes["shape"]]
+                        if member_shape["type"] == "list":
+                            node_deps.append(member_shape["member"]["shape"])
+                        elif member_shape["type"] == "map":
+                            node_deps.append(member_shape["key"]["shape"])
+                            node_deps.append(member_shape["value"]["shape"])
+                        else:
+                            node_deps.append(member_attributes["shape"])
                         graph[node] = node_deps
             else:
                 graph[node] = None
@@ -135,7 +122,7 @@ class ShapeGenerator(Generator):
         imports = "import datetime\n"
         imports += "\n"
         imports += "from dataclasses import dataclass\n"
-        imports += "from typing import Optional\n"
+        imports += "from typing import List, Dict, Optional\n"
         imports += "\n"
         return imports
 
@@ -146,6 +133,20 @@ class ShapeGenerator(Generator):
             init_method_body=add_indent("pass", 4),
             docstring="TBA",
         )
+
+    def _filter_input_output_shapes(self, shape):
+        """Filter Operation Input Output shapes, to not generate Shape Classes"""
+
+        operation_input_output_shapes = []
+        for operation, attrs in self.service_json["operations"].items():
+            if attrs.get("input"):
+                operation_input_output_shapes.append(attrs["input"]["shape"])
+            if attrs.get("output"):
+                operation_input_output_shapes.append(attrs["output"]["shape"])
+
+        if shape in operation_input_output_shapes:
+            return False
+        return True
 
     def generate_shapes(self, output_folder="src/generated"):
         if not os.path.exists(output_folder):
@@ -178,7 +179,7 @@ class ShapeGenerator(Generator):
             # iterate through shapes in topological order an generate classes.
             topological_order = self.topological_sort()
             for shape in topological_order:
-                if filter_req_resp_shapes(shape):
+                if self._filter_input_output_shapes(shape):
                     shape_dict = self.service_json['shapes'][shape]
                     shape_type = shape_dict["type"]
                     if shape_type == "structure":

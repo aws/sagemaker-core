@@ -1,7 +1,7 @@
 import datetime
 
 from dataclasses import dataclass
-from typing import Optional
+from typing import List, Dict, Optional
 
 
 class Base:
@@ -40,28 +40,37 @@ class ActionSummary(Base):
 
 
 @dataclass
-class AddTagsInput(Base):
+class Tag(Base):
     """TBA"""
-    resource_arn: str
-    tags: list
+    key: str
+    value: str
 
 
 @dataclass
-class AddTagsOutput(Base):
+class ModelAccessConfig(Base):
     """TBA"""
-    tags: Optional[list] = Unassigned()
+    accept_eula: bool
 
 
 @dataclass
-class AdditionalInferenceSpecificationDefinition(Base):
+class S3ModelDataSource(Base):
     """TBA"""
-    name: str
-    containers: list
-    description: Optional[str] = Unassigned()
-    supported_transform_instance_types: Optional[list] = Unassigned()
-    supported_realtime_inference_instance_types: Optional[list] = Unassigned()
-    supported_content_types: Optional[list] = Unassigned()
-    supported_response_m_i_m_e_types: Optional[list] = Unassigned()
+    s3_uri: str
+    s3_data_type: str
+    compression_type: str
+    model_access_config: Optional[ModelAccessConfig] = Unassigned()
+
+
+@dataclass
+class ModelDataSource(Base):
+    """TBA"""
+    s3_data_source: Optional[S3ModelDataSource] = Unassigned()
+
+
+@dataclass
+class ModelInput(Base):
+    """TBA"""
+    data_input_config: str
 
 
 @dataclass
@@ -70,6 +79,35 @@ class AdditionalS3DataSource(Base):
     s3_data_type: str
     s3_uri: str
     compression_type: Optional[str] = Unassigned()
+
+
+@dataclass
+class ModelPackageContainerDefinition(Base):
+    """TBA"""
+    image: str
+    container_hostname: Optional[str] = Unassigned()
+    image_digest: Optional[str] = Unassigned()
+    model_data_url: Optional[str] = Unassigned()
+    model_data_source: Optional[ModelDataSource] = Unassigned()
+    product_id: Optional[str] = Unassigned()
+    environment: Optional[Dict[str, str]] = Unassigned()
+    model_input: Optional[ModelInput] = Unassigned()
+    framework: Optional[str] = Unassigned()
+    framework_version: Optional[str] = Unassigned()
+    nearest_model_name: Optional[str] = Unassigned()
+    additional_s3_data_source: Optional[AdditionalS3DataSource] = Unassigned()
+
+
+@dataclass
+class AdditionalInferenceSpecificationDefinition(Base):
+    """TBA"""
+    name: str
+    containers: List[ModelPackageContainerDefinition]
+    description: Optional[str] = Unassigned()
+    supported_transform_instance_types: Optional[List[str]] = Unassigned()
+    supported_realtime_inference_instance_types: Optional[List[str]] = Unassigned()
+    supported_content_types: Optional[List[str]] = Unassigned()
+    supported_response_m_i_m_e_types: Optional[List[str]] = Unassigned()
 
 
 @dataclass
@@ -83,6 +121,13 @@ class AgentVersion(Base):
 class Alarm(Base):
     """TBA"""
     alarm_name: Optional[str] = Unassigned()
+
+
+@dataclass
+class MetricDefinition(Base):
+    """TBA"""
+    name: str
+    regex: str
 
 
 @dataclass
@@ -104,18 +149,11 @@ class AlgorithmSpecification(Base):
     training_input_mode: str
     training_image: Optional[str] = Unassigned()
     algorithm_name: Optional[str] = Unassigned()
-    metric_definitions: Optional[list] = Unassigned()
+    metric_definitions: Optional[List[MetricDefinition]] = Unassigned()
     enable_sage_maker_metrics_time_series: Optional[bool] = Unassigned()
-    container_entrypoint: Optional[list] = Unassigned()
-    container_arguments: Optional[list] = Unassigned()
+    container_entrypoint: Optional[List[str]] = Unassigned()
+    container_arguments: Optional[List[str]] = Unassigned()
     training_image_config: Optional[TrainingImageConfig] = Unassigned()
-
-
-@dataclass
-class AlgorithmStatusDetails(Base):
-    """TBA"""
-    validation_statuses: Optional[list] = Unassigned()
-    image_scan_statuses: Optional[list] = Unassigned()
 
 
 @dataclass
@@ -124,6 +162,13 @@ class AlgorithmStatusItem(Base):
     name: str
     status: str
     failure_reason: Optional[str] = Unassigned()
+
+
+@dataclass
+class AlgorithmStatusDetails(Base):
+    """TBA"""
+    validation_statuses: Optional[List[AlgorithmStatusItem]] = Unassigned()
+    image_scan_statuses: Optional[List[AlgorithmStatusItem]] = Unassigned()
 
 
 @dataclass
@@ -137,11 +182,63 @@ class AlgorithmSummary(Base):
 
 
 @dataclass
+class S3DataSource(Base):
+    """TBA"""
+    s3_data_type: str
+    s3_uri: str
+    s3_data_distribution_type: Optional[str] = Unassigned()
+    attribute_names: Optional[List[str]] = Unassigned()
+    instance_group_names: Optional[List[str]] = Unassigned()
+
+
+@dataclass
+class FileSystemDataSource(Base):
+    """TBA"""
+    file_system_id: str
+    file_system_access_mode: str
+    file_system_type: str
+    directory_path: str
+
+
+@dataclass
+class DataSource(Base):
+    """TBA"""
+    s3_data_source: Optional[S3DataSource] = Unassigned()
+    file_system_data_source: Optional[FileSystemDataSource] = Unassigned()
+
+
+@dataclass
+class ShuffleConfig(Base):
+    """TBA"""
+    seed: int
+
+
+@dataclass
+class Channel(Base):
+    """TBA"""
+    channel_name: str
+    data_source: DataSource
+    content_type: Optional[str] = Unassigned()
+    compression_type: Optional[str] = Unassigned()
+    record_wrapper_type: Optional[str] = Unassigned()
+    input_mode: Optional[str] = Unassigned()
+    shuffle_config: Optional[ShuffleConfig] = Unassigned()
+
+
+@dataclass
 class OutputDataConfig(Base):
     """TBA"""
     s3_output_path: str
     kms_key_id: Optional[str] = Unassigned()
     compression_type: Optional[str] = Unassigned()
+
+
+@dataclass
+class InstanceGroup(Base):
+    """TBA"""
+    instance_type: str
+    instance_count: int
+    instance_group_name: str
 
 
 @dataclass
@@ -152,7 +249,7 @@ class ResourceConfig(Base):
     instance_count: Optional[int] = Unassigned()
     volume_kms_key_id: Optional[str] = Unassigned()
     keep_alive_period_in_seconds: Optional[int] = Unassigned()
-    instance_groups: Optional[list] = Unassigned()
+    instance_groups: Optional[List[InstanceGroup]] = Unassigned()
 
 
 @dataclass
@@ -167,11 +264,11 @@ class StoppingCondition(Base):
 class TrainingJobDefinition(Base):
     """TBA"""
     training_input_mode: str
-    input_data_config: list
+    input_data_config: List[Channel]
     output_data_config: OutputDataConfig
     resource_config: ResourceConfig
     stopping_condition: StoppingCondition
-    hyper_parameters: Optional[dict] = Unassigned()
+    hyper_parameters: Optional[Dict[str, str]] = Unassigned()
 
 
 @dataclass
@@ -222,7 +319,7 @@ class TransformJobDefinition(Base):
     max_concurrent_transforms: Optional[int] = Unassigned()
     max_payload_in_m_b: Optional[int] = Unassigned()
     batch_strategy: Optional[str] = Unassigned()
-    environment: Optional[dict] = Unassigned()
+    environment: Optional[Dict[str, str]] = Unassigned()
 
 
 @dataclass
@@ -237,7 +334,7 @@ class AlgorithmValidationProfile(Base):
 class AlgorithmValidationSpecification(Base):
     """TBA"""
     validation_role: str
-    validation_profiles: list
+    validation_profiles: List[AlgorithmValidationProfile]
 
 
 @dataclass
@@ -270,6 +367,13 @@ class AppDetails(Base):
 
 
 @dataclass
+class KernelSpec(Base):
+    """TBA"""
+    name: str
+    display_name: Optional[str] = Unassigned()
+
+
+@dataclass
 class FileSystemConfig(Base):
     """TBA"""
     mount_path: Optional[str] = Unassigned()
@@ -280,16 +384,16 @@ class FileSystemConfig(Base):
 @dataclass
 class KernelGatewayImageConfig(Base):
     """TBA"""
-    kernel_specs: list
+    kernel_specs: List[KernelSpec]
     file_system_config: Optional[FileSystemConfig] = Unassigned()
 
 
 @dataclass
 class ContainerConfig(Base):
     """TBA"""
-    container_arguments: Optional[list] = Unassigned()
-    container_entrypoint: Optional[list] = Unassigned()
-    container_environment_variables: Optional[dict] = Unassigned()
+    container_arguments: Optional[List[str]] = Unassigned()
+    container_entrypoint: Optional[List[str]] = Unassigned()
+    container_environment_variables: Optional[Dict[str, str]] = Unassigned()
 
 
 @dataclass
@@ -314,15 +418,8 @@ class AppImageConfigDetails(Base):
 class AppSpecification(Base):
     """TBA"""
     image_uri: str
-    container_entrypoint: Optional[list] = Unassigned()
-    container_arguments: Optional[list] = Unassigned()
-
-
-@dataclass
-class ArtifactSource(Base):
-    """TBA"""
-    source_uri: str
-    source_types: Optional[list] = Unassigned()
+    container_entrypoint: Optional[List[str]] = Unassigned()
+    container_arguments: Optional[List[str]] = Unassigned()
 
 
 @dataclass
@@ -330,6 +427,13 @@ class ArtifactSourceType(Base):
     """TBA"""
     source_id_type: str
     value: str
+
+
+@dataclass
+class ArtifactSource(Base):
+    """TBA"""
+    source_uri: str
+    source_types: Optional[List[ArtifactSourceType]] = Unassigned()
 
 
 @dataclass
@@ -385,7 +489,7 @@ class AsyncInferenceNotificationConfig(Base):
     """TBA"""
     success_topic: Optional[str] = Unassigned()
     error_topic: Optional[str] = Unassigned()
-    include_inference_response_in: Optional[list] = Unassigned()
+    include_inference_response_in: Optional[List[str]] = Unassigned()
 
 
 @dataclass
@@ -420,7 +524,7 @@ class AthenaDatasetDefinition(Base):
 @dataclass
 class AutoMLAlgorithmConfig(Base):
     """TBA"""
-    auto_m_l_algorithms: list
+    auto_m_l_algorithms: List[str]
 
 
 @dataclass
@@ -433,6 +537,22 @@ class FinalAutoMLJobObjectiveMetric(Base):
 
 
 @dataclass
+class AutoMLCandidateStep(Base):
+    """TBA"""
+    candidate_step_type: str
+    candidate_step_arn: str
+    candidate_step_name: str
+
+
+@dataclass
+class AutoMLContainerDefinition(Base):
+    """TBA"""
+    image: str
+    model_data_url: str
+    environment: Optional[Dict[str, str]] = Unassigned()
+
+
+@dataclass
 class CandidateArtifactLocations(Base):
     """TBA"""
     explainability: str
@@ -441,10 +561,19 @@ class CandidateArtifactLocations(Base):
 
 
 @dataclass
+class MetricDatum(Base):
+    """TBA"""
+    metric_name: Optional[str] = Unassigned()
+    value: Optional[float] = Unassigned()
+    set: Optional[str] = Unassigned()
+    standard_metric_name: Optional[str] = Unassigned()
+
+
+@dataclass
 class CandidateProperties(Base):
     """TBA"""
     candidate_artifact_locations: Optional[CandidateArtifactLocations] = Unassigned()
-    candidate_metrics: Optional[list] = Unassigned()
+    candidate_metrics: Optional[List[MetricDatum]] = Unassigned()
 
 
 @dataclass
@@ -452,31 +581,23 @@ class AutoMLCandidate(Base):
     """TBA"""
     candidate_name: str
     objective_status: str
-    candidate_steps: list
+    candidate_steps: List[AutoMLCandidateStep]
     candidate_status: str
     creation_time: datetime.datetime
     last_modified_time: datetime.datetime
     final_auto_m_l_job_objective_metric: Optional[FinalAutoMLJobObjectiveMetric] = Unassigned()
-    inference_containers: Optional[list] = Unassigned()
+    inference_containers: Optional[List[AutoMLContainerDefinition]] = Unassigned()
     end_time: Optional[datetime.datetime] = Unassigned()
     failure_reason: Optional[str] = Unassigned()
     candidate_properties: Optional[CandidateProperties] = Unassigned()
-    inference_container_definitions: Optional[dict] = Unassigned()
+    inference_container_definitions: Optional[Dict[str, List[AutoMLContainerDefinition]]] = Unassigned()
 
 
 @dataclass
 class AutoMLCandidateGenerationConfig(Base):
     """TBA"""
     feature_specification_s3_uri: Optional[str] = Unassigned()
-    algorithms_config: Optional[list] = Unassigned()
-
-
-@dataclass
-class AutoMLCandidateStep(Base):
-    """TBA"""
-    candidate_step_type: str
-    candidate_step_arn: str
-    candidate_step_name: str
+    algorithms_config: Optional[List[AutoMLAlgorithmConfig]] = Unassigned()
 
 
 @dataclass
@@ -501,14 +622,6 @@ class AutoMLChannel(Base):
     content_type: Optional[str] = Unassigned()
     channel_type: Optional[str] = Unassigned()
     sample_weight_attribute_name: Optional[str] = Unassigned()
-
-
-@dataclass
-class AutoMLContainerDefinition(Base):
-    """TBA"""
-    image: str
-    model_data_url: str
-    environment: Optional[dict] = Unassigned()
 
 
 @dataclass
@@ -544,8 +657,8 @@ class AutoMLJobCompletionCriteria(Base):
 @dataclass
 class VpcConfig(Base):
     """TBA"""
-    security_group_ids: list
-    subnets: list
+    security_group_ids: List[str]
+    subnets: List[str]
 
 
 @dataclass
@@ -579,6 +692,12 @@ class AutoMLJobStepMetadata(Base):
 
 
 @dataclass
+class AutoMLPartialFailureReason(Base):
+    """TBA"""
+    partial_failure_message: Optional[str] = Unassigned()
+
+
+@dataclass
 class AutoMLJobSummary(Base):
     """TBA"""
     auto_m_l_job_name: str
@@ -589,7 +708,7 @@ class AutoMLJobSummary(Base):
     last_modified_time: datetime.datetime
     end_time: Optional[datetime.datetime] = Unassigned()
     failure_reason: Optional[str] = Unassigned()
-    partial_failure_reasons: Optional[list] = Unassigned()
+    partial_failure_reasons: Optional[List[AutoMLPartialFailureReason]] = Unassigned()
 
 
 @dataclass
@@ -597,12 +716,6 @@ class AutoMLOutputDataConfig(Base):
     """TBA"""
     s3_output_path: str
     kms_key_id: Optional[str] = Unassigned()
-
-
-@dataclass
-class AutoMLPartialFailureReason(Base):
-    """TBA"""
-    partial_failure_message: Optional[str] = Unassigned()
 
 
 @dataclass
@@ -622,8 +735,8 @@ class TextClassificationJobConfig(Base):
 @dataclass
 class TimeSeriesTransformations(Base):
     """TBA"""
-    filling: Optional[dict] = Unassigned()
-    aggregation: Optional[dict] = Unassigned()
+    filling: Optional[Dict[str, Dict[str, str]]] = Unassigned()
+    aggregation: Optional[Dict[str, str]] = Unassigned()
 
 
 @dataclass
@@ -632,7 +745,13 @@ class TimeSeriesConfig(Base):
     target_attribute_name: str
     timestamp_attribute_name: str
     item_identifier_attribute_name: str
-    grouping_attribute_names: Optional[list] = Unassigned()
+    grouping_attribute_names: Optional[List[str]] = Unassigned()
+
+
+@dataclass
+class HolidayConfigAttributes(Base):
+    """TBA"""
+    country_code: Optional[str] = Unassigned()
 
 
 @dataclass
@@ -643,15 +762,15 @@ class TimeSeriesForecastingJobConfig(Base):
     time_series_config: TimeSeriesConfig
     feature_specification_s3_uri: Optional[str] = Unassigned()
     completion_criteria: Optional[AutoMLJobCompletionCriteria] = Unassigned()
-    forecast_quantiles: Optional[list] = Unassigned()
+    forecast_quantiles: Optional[List[str]] = Unassigned()
     transformations: Optional[TimeSeriesTransformations] = Unassigned()
-    holiday_config: Optional[list] = Unassigned()
+    holiday_config: Optional[List[HolidayConfigAttributes]] = Unassigned()
 
 
 @dataclass
 class CandidateGenerationConfig(Base):
     """TBA"""
-    algorithms_config: Optional[list] = Unassigned()
+    algorithms_config: Optional[List[AutoMLAlgorithmConfig]] = Unassigned()
 
 
 @dataclass
@@ -668,17 +787,11 @@ class TabularJobConfig(Base):
 
 
 @dataclass
-class ModelAccessConfig(Base):
-    """TBA"""
-    accept_eula: bool
-
-
-@dataclass
 class TextGenerationJobConfig(Base):
     """TBA"""
     completion_criteria: Optional[AutoMLJobCompletionCriteria] = Unassigned()
     base_model_name: Optional[str] = Unassigned()
-    text_generation_hyper_parameters: Optional[dict] = Unassigned()
+    text_generation_hyper_parameters: Optional[Dict[str, str]] = Unassigned()
     model_access_config: Optional[ModelAccessConfig] = Unassigned()
 
 
@@ -729,7 +842,7 @@ class AutoParameter(Base):
 @dataclass
 class AutoRollbackConfig(Base):
     """TBA"""
-    alarms: Optional[list] = Unassigned()
+    alarms: Optional[List[Alarm]] = Unassigned()
 
 
 @dataclass
@@ -754,26 +867,13 @@ class BatchDescribeModelPackageError(Base):
 
 
 @dataclass
-class BatchDescribeModelPackageInput(Base):
-    """TBA"""
-    model_package_arn_list: list
-
-
-@dataclass
-class BatchDescribeModelPackageOutput(Base):
-    """TBA"""
-    model_package_summaries: Optional[dict] = Unassigned()
-    batch_describe_model_package_error_map: Optional[dict] = Unassigned()
-
-
-@dataclass
 class InferenceSpecification(Base):
     """TBA"""
-    containers: list
-    supported_transform_instance_types: Optional[list] = Unassigned()
-    supported_realtime_inference_instance_types: Optional[list] = Unassigned()
-    supported_content_types: Optional[list] = Unassigned()
-    supported_response_m_i_m_e_types: Optional[list] = Unassigned()
+    containers: List[ModelPackageContainerDefinition]
+    supported_transform_instance_types: Optional[List[str]] = Unassigned()
+    supported_realtime_inference_instance_types: Optional[List[str]] = Unassigned()
+    supported_content_types: Optional[List[str]] = Unassigned()
+    supported_response_m_i_m_e_types: Optional[List[str]] = Unassigned()
 
 
 @dataclass
@@ -884,11 +984,18 @@ class CacheHitResult(Base):
 
 
 @dataclass
+class OutputParameter(Base):
+    """TBA"""
+    name: str
+    value: str
+
+
+@dataclass
 class CallbackStepMetadata(Base):
     """TBA"""
     callback_token: Optional[str] = Unassigned()
     sqs_queue_url: Optional[str] = Unassigned()
-    output_parameters: Optional[list] = Unassigned()
+    output_parameters: Optional[List[OutputParameter]] = Unassigned()
 
 
 @dataclass
@@ -910,6 +1017,14 @@ class WorkspaceSettings(Base):
     """TBA"""
     s3_artifact_path: Optional[str] = Unassigned()
     s3_kms_key_id: Optional[str] = Unassigned()
+
+
+@dataclass
+class IdentityProviderOAuthSetting(Base):
+    """TBA"""
+    data_source_name: Optional[str] = Unassigned()
+    status: Optional[str] = Unassigned()
+    secret_arn: Optional[str] = Unassigned()
 
 
 @dataclass
@@ -936,7 +1051,7 @@ class CanvasAppSettings(Base):
     time_series_forecasting_settings: Optional[TimeSeriesForecastingSettings] = Unassigned()
     model_register_settings: Optional[ModelRegisterSettings] = Unassigned()
     workspace_settings: Optional[WorkspaceSettings] = Unassigned()
-    identity_provider_o_auth_settings: Optional[list] = Unassigned()
+    identity_provider_o_auth_settings: Optional[List[IdentityProviderOAuthSetting]] = Unassigned()
     direct_deploy_settings: Optional[DirectDeploySettings] = Unassigned()
     kendra_settings: Optional[KendraSettings] = Unassigned()
     generative_ai_settings: Optional[GenerativeAiSettings] = Unassigned()
@@ -945,8 +1060,8 @@ class CanvasAppSettings(Base):
 @dataclass
 class CaptureContentTypeHeader(Base):
     """TBA"""
-    csv_content_types: Optional[list] = Unassigned()
-    json_content_types: Optional[list] = Unassigned()
+    csv_content_types: Optional[List[str]] = Unassigned()
+    json_content_types: Optional[List[str]] = Unassigned()
 
 
 @dataclass
@@ -959,75 +1074,31 @@ class CaptureOption(Base):
 class CategoricalParameter(Base):
     """TBA"""
     name: str
-    value: list
+    value: List[str]
 
 
 @dataclass
 class CategoricalParameterRange(Base):
     """TBA"""
     name: str
-    values: list
+    values: List[str]
 
 
 @dataclass
 class CategoricalParameterRangeSpecification(Base):
     """TBA"""
-    values: list
-
-
-@dataclass
-class S3DataSource(Base):
-    """TBA"""
-    s3_data_type: str
-    s3_uri: str
-    s3_data_distribution_type: Optional[str] = Unassigned()
-    attribute_names: Optional[list] = Unassigned()
-    instance_group_names: Optional[list] = Unassigned()
-
-
-@dataclass
-class FileSystemDataSource(Base):
-    """TBA"""
-    file_system_id: str
-    file_system_access_mode: str
-    file_system_type: str
-    directory_path: str
-
-
-@dataclass
-class DataSource(Base):
-    """TBA"""
-    s3_data_source: Optional[S3DataSource] = Unassigned()
-    file_system_data_source: Optional[FileSystemDataSource] = Unassigned()
-
-
-@dataclass
-class ShuffleConfig(Base):
-    """TBA"""
-    seed: int
-
-
-@dataclass
-class Channel(Base):
-    """TBA"""
-    channel_name: str
-    data_source: DataSource
-    content_type: Optional[str] = Unassigned()
-    compression_type: Optional[str] = Unassigned()
-    record_wrapper_type: Optional[str] = Unassigned()
-    input_mode: Optional[str] = Unassigned()
-    shuffle_config: Optional[ShuffleConfig] = Unassigned()
+    values: List[str]
 
 
 @dataclass
 class ChannelSpecification(Base):
     """TBA"""
     name: str
-    supported_content_types: list
-    supported_input_modes: list
+    supported_content_types: List[str]
+    supported_input_modes: List[str]
     description: Optional[str] = Unassigned()
     is_required: Optional[bool] = Unassigned()
-    supported_compression_types: Optional[list] = Unassigned()
+    supported_compression_types: Optional[List[str]] = Unassigned()
 
 
 @dataclass
@@ -1061,9 +1132,9 @@ class ClarifyInferenceConfig(Base):
     label_index: Optional[int] = Unassigned()
     probability_attribute: Optional[str] = Unassigned()
     label_attribute: Optional[str] = Unassigned()
-    label_headers: Optional[list] = Unassigned()
-    feature_headers: Optional[list] = Unassigned()
-    feature_types: Optional[list] = Unassigned()
+    label_headers: Optional[List[str]] = Unassigned()
+    feature_headers: Optional[List[str]] = Unassigned()
+    feature_types: Optional[List[str]] = Unassigned()
 
 
 @dataclass
@@ -1171,7 +1242,7 @@ class ClusterSummary(Base):
 class CodeEditorAppSettings(Base):
     """TBA"""
     default_resource_spec: Optional[ResourceSpec] = Unassigned()
-    lifecycle_config_arns: Optional[list] = Unassigned()
+    lifecycle_config_arns: Optional[List[str]] = Unassigned()
 
 
 @dataclass
@@ -1229,7 +1300,7 @@ class CollectionConfig(Base):
 class CollectionConfiguration(Base):
     """TBA"""
     collection_name: Optional[str] = Unassigned()
-    collection_parameters: Optional[dict] = Unassigned()
+    collection_parameters: Optional[Dict[str, str]] = Unassigned()
 
 
 @dataclass
@@ -1274,21 +1345,6 @@ class ImageConfig(Base):
 
 
 @dataclass
-class S3ModelDataSource(Base):
-    """TBA"""
-    s3_uri: str
-    s3_data_type: str
-    compression_type: str
-    model_access_config: Optional[ModelAccessConfig] = Unassigned()
-
-
-@dataclass
-class ModelDataSource(Base):
-    """TBA"""
-    s3_data_source: Optional[S3ModelDataSource] = Unassigned()
-
-
-@dataclass
 class MultiModelConfig(Base):
     """TBA"""
     model_cache_setting: Optional[str] = Unassigned()
@@ -1303,7 +1359,7 @@ class ContainerDefinition(Base):
     mode: Optional[str] = Unassigned()
     model_data_url: Optional[str] = Unassigned()
     model_data_source: Optional[ModelDataSource] = Unassigned()
-    environment: Optional[dict] = Unassigned()
+    environment: Optional[Dict[str, str]] = Unassigned()
     model_package_name: Optional[str] = Unassigned()
     inference_specification_name: Optional[str] = Unassigned()
     multi_model_config: Optional[MultiModelConfig] = Unassigned()
@@ -1360,35 +1416,51 @@ class MetadataProperties(Base):
 
 
 @dataclass
+class IntegerParameterRangeSpecification(Base):
+    """TBA"""
+    min_value: str
+    max_value: str
+
+
+@dataclass
+class ParameterRange(Base):
+    """TBA"""
+    integer_parameter_range_specification: Optional[IntegerParameterRangeSpecification] = Unassigned()
+    continuous_parameter_range_specification: Optional[ContinuousParameterRangeSpecification] = Unassigned()
+    categorical_parameter_range_specification: Optional[CategoricalParameterRangeSpecification] = Unassigned()
+
+
+@dataclass
+class HyperParameterSpecification(Base):
+    """TBA"""
+    name: str
+    type: str
+    description: Optional[str] = Unassigned()
+    range: Optional[ParameterRange] = Unassigned()
+    is_tunable: Optional[bool] = Unassigned()
+    is_required: Optional[bool] = Unassigned()
+    default_value: Optional[str] = Unassigned()
+
+
+@dataclass
+class HyperParameterTuningJobObjective(Base):
+    """TBA"""
+    type: str
+    metric_name: str
+
+
+@dataclass
 class TrainingSpecification(Base):
     """TBA"""
     training_image: str
-    supported_training_instance_types: list
-    training_channels: list
+    supported_training_instance_types: List[str]
+    training_channels: List[ChannelSpecification]
     training_image_digest: Optional[str] = Unassigned()
-    supported_hyper_parameters: Optional[list] = Unassigned()
+    supported_hyper_parameters: Optional[List[HyperParameterSpecification]] = Unassigned()
     supports_distributed_training: Optional[bool] = Unassigned()
-    metric_definitions: Optional[list] = Unassigned()
-    supported_tuning_job_objective_metrics: Optional[list] = Unassigned()
+    metric_definitions: Optional[List[MetricDefinition]] = Unassigned()
+    supported_tuning_job_objective_metrics: Optional[List[HyperParameterTuningJobObjective]] = Unassigned()
     additional_s3_data_source: Optional[AdditionalS3DataSource] = Unassigned()
-
-
-@dataclass
-class CreateAlgorithmInput(Base):
-    """TBA"""
-    algorithm_name: str
-    training_specification: TrainingSpecification
-    algorithm_description: Optional[str] = Unassigned()
-    inference_specification: Optional[InferenceSpecification] = Unassigned()
-    validation_specification: Optional[AlgorithmValidationSpecification] = Unassigned()
-    certify_for_marketplace: Optional[bool] = Unassigned()
-    tags: Optional[list] = Unassigned()
-
-
-@dataclass
-class CreateAlgorithmOutput(Base):
-    """TBA"""
-    algorithm_arn: str
 
 
 @dataclass
@@ -1396,20 +1468,6 @@ class ModelDeployConfig(Base):
     """TBA"""
     auto_generate_endpoint_name: Optional[bool] = Unassigned()
     endpoint_name: Optional[str] = Unassigned()
-
-
-@dataclass
-class CreateCodeRepositoryInput(Base):
-    """TBA"""
-    code_repository_name: str
-    git_config: GitConfig
-    tags: Optional[list] = Unassigned()
-
-
-@dataclass
-class CreateCodeRepositoryOutput(Base):
-    """TBA"""
-    code_repository_arn: str
 
 
 @dataclass
@@ -1442,8 +1500,8 @@ class OutputConfig(Base):
 @dataclass
 class NeoVpcConfig(Base):
     """TBA"""
-    security_group_ids: list
-    subnets: list
+    security_group_ids: List[str]
+    subnets: List[str]
 
 
 @dataclass
@@ -1470,11 +1528,11 @@ class DataQualityBaselineConfig(Base):
 class DataQualityAppSpecification(Base):
     """TBA"""
     image_uri: str
-    container_entrypoint: Optional[list] = Unassigned()
-    container_arguments: Optional[list] = Unassigned()
+    container_entrypoint: Optional[List[str]] = Unassigned()
+    container_arguments: Optional[List[str]] = Unassigned()
     record_preprocessor_source_uri: Optional[str] = Unassigned()
     post_analytics_processor_source_uri: Optional[str] = Unassigned()
-    environment: Optional[dict] = Unassigned()
+    environment: Optional[Dict[str, str]] = Unassigned()
 
 
 @dataclass
@@ -1501,9 +1559,23 @@ class DataQualityJobInput(Base):
 
 
 @dataclass
+class MonitoringS3Output(Base):
+    """TBA"""
+    s3_uri: str
+    local_path: str
+    s3_upload_mode: Optional[str] = Unassigned()
+
+
+@dataclass
+class MonitoringOutput(Base):
+    """TBA"""
+    s3_output: MonitoringS3Output
+
+
+@dataclass
 class MonitoringOutputConfig(Base):
     """TBA"""
-    monitoring_outputs: list
+    monitoring_outputs: List[MonitoringOutput]
     kms_key_id: Optional[str] = Unassigned()
 
 
@@ -1557,16 +1629,24 @@ class SharingSettings(Base):
 class JupyterServerAppSettings(Base):
     """TBA"""
     default_resource_spec: Optional[ResourceSpec] = Unassigned()
-    lifecycle_config_arns: Optional[list] = Unassigned()
-    code_repositories: Optional[list] = Unassigned()
+    lifecycle_config_arns: Optional[List[str]] = Unassigned()
+    code_repositories: Optional[List[CodeRepository]] = Unassigned()
+
+
+@dataclass
+class CustomImage(Base):
+    """TBA"""
+    image_name: str
+    app_image_config_name: str
+    image_version_number: Optional[int] = Unassigned()
 
 
 @dataclass
 class KernelGatewayAppSettings(Base):
     """TBA"""
     default_resource_spec: Optional[ResourceSpec] = Unassigned()
-    custom_images: Optional[list] = Unassigned()
-    lifecycle_config_arns: Optional[list] = Unassigned()
+    custom_images: Optional[List[CustomImage]] = Unassigned()
+    lifecycle_config_arns: Optional[List[str]] = Unassigned()
 
 
 @dataclass
@@ -1586,16 +1666,16 @@ class RStudioServerProAppSettings(Base):
 class RSessionAppSettings(Base):
     """TBA"""
     default_resource_spec: Optional[ResourceSpec] = Unassigned()
-    custom_images: Optional[list] = Unassigned()
+    custom_images: Optional[List[CustomImage]] = Unassigned()
 
 
 @dataclass
 class JupyterLabAppSettings(Base):
     """TBA"""
     default_resource_spec: Optional[ResourceSpec] = Unassigned()
-    custom_images: Optional[list] = Unassigned()
-    lifecycle_config_arns: Optional[list] = Unassigned()
-    code_repositories: Optional[list] = Unassigned()
+    custom_images: Optional[List[CustomImage]] = Unassigned()
+    lifecycle_config_arns: Optional[List[str]] = Unassigned()
+    code_repositories: Optional[List[CodeRepository]] = Unassigned()
 
 
 @dataclass
@@ -1619,10 +1699,23 @@ class CustomPosixUserConfig(Base):
 
 
 @dataclass
+class EFSFileSystemConfig(Base):
+    """TBA"""
+    file_system_id: str
+    file_system_path: Optional[str] = Unassigned()
+
+
+@dataclass
+class CustomFileSystemConfig(Base):
+    """TBA"""
+    e_f_s_file_system_config: Optional[EFSFileSystemConfig] = Unassigned()
+
+
+@dataclass
 class UserSettings(Base):
     """TBA"""
     execution_role: Optional[str] = Unassigned()
-    security_groups: Optional[list] = Unassigned()
+    security_groups: Optional[List[str]] = Unassigned()
     sharing_settings: Optional[SharingSettings] = Unassigned()
     jupyter_server_app_settings: Optional[JupyterServerAppSettings] = Unassigned()
     kernel_gateway_app_settings: Optional[KernelGatewayAppSettings] = Unassigned()
@@ -1636,7 +1729,7 @@ class UserSettings(Base):
     default_landing_uri: Optional[str] = Unassigned()
     studio_web_portal: Optional[str] = Unassigned()
     custom_posix_user_config: Optional[CustomPosixUserConfig] = Unassigned()
-    custom_file_system_configs: Optional[list] = Unassigned()
+    custom_file_system_configs: Optional[List[CustomFileSystemConfig]] = Unassigned()
 
 
 @dataclass
@@ -1652,13 +1745,13 @@ class RStudioServerProDomainSettings(Base):
 class DockerSettings(Base):
     """TBA"""
     enable_docker_access: Optional[str] = Unassigned()
-    vpc_only_trusted_accounts: Optional[list] = Unassigned()
+    vpc_only_trusted_accounts: Optional[List[str]] = Unassigned()
 
 
 @dataclass
 class DomainSettings(Base):
     """TBA"""
-    security_group_ids: Optional[list] = Unassigned()
+    security_group_ids: Optional[List[str]] = Unassigned()
     r_studio_server_pro_domain_settings: Optional[RStudioServerProDomainSettings] = Unassigned()
     execution_role_identity_config: Optional[str] = Unassigned()
     docker_settings: Optional[DockerSettings] = Unassigned()
@@ -1668,9 +1761,87 @@ class DomainSettings(Base):
 class DefaultSpaceSettings(Base):
     """TBA"""
     execution_role: Optional[str] = Unassigned()
-    security_groups: Optional[list] = Unassigned()
+    security_groups: Optional[List[str]] = Unassigned()
     jupyter_server_app_settings: Optional[JupyterServerAppSettings] = Unassigned()
     kernel_gateway_app_settings: Optional[KernelGatewayAppSettings] = Unassigned()
+
+
+@dataclass
+class EdgeDeploymentModelConfig(Base):
+    """TBA"""
+    model_handle: str
+    edge_packaging_job_name: str
+
+
+@dataclass
+class DeviceSelectionConfig(Base):
+    """TBA"""
+    device_subset_type: str
+    percentage: Optional[int] = Unassigned()
+    device_names: Optional[List[str]] = Unassigned()
+    device_name_contains: Optional[str] = Unassigned()
+
+
+@dataclass
+class EdgeDeploymentConfig(Base):
+    """TBA"""
+    failure_handling_policy: str
+
+
+@dataclass
+class DeploymentStage(Base):
+    """TBA"""
+    stage_name: str
+    device_selection_config: DeviceSelectionConfig
+    deployment_config: Optional[EdgeDeploymentConfig] = Unassigned()
+
+
+@dataclass
+class ProductionVariantCoreDumpConfig(Base):
+    """TBA"""
+    destination_s3_uri: str
+    kms_key_id: Optional[str] = Unassigned()
+
+
+@dataclass
+class ProductionVariantServerlessConfig(Base):
+    """TBA"""
+    memory_size_in_m_b: int
+    max_concurrency: int
+    provisioned_concurrency: Optional[int] = Unassigned()
+
+
+@dataclass
+class ProductionVariantManagedInstanceScaling(Base):
+    """TBA"""
+    status: Optional[str] = Unassigned()
+    min_instance_count: Optional[int] = Unassigned()
+    max_instance_count: Optional[int] = Unassigned()
+
+
+@dataclass
+class ProductionVariantRoutingConfig(Base):
+    """TBA"""
+    routing_strategy: str
+
+
+@dataclass
+class ProductionVariant(Base):
+    """TBA"""
+    variant_name: str
+    model_name: Optional[str] = Unassigned()
+    initial_instance_count: Optional[int] = Unassigned()
+    instance_type: Optional[str] = Unassigned()
+    initial_variant_weight: Optional[float] = Unassigned()
+    accelerator_type: Optional[str] = Unassigned()
+    core_dump_config: Optional[ProductionVariantCoreDumpConfig] = Unassigned()
+    serverless_config: Optional[ProductionVariantServerlessConfig] = Unassigned()
+    volume_size_in_g_b: Optional[int] = Unassigned()
+    model_data_download_timeout_in_seconds: Optional[int] = Unassigned()
+    container_startup_health_check_timeout_in_seconds: Optional[int] = Unassigned()
+    enable_s_s_m_access: Optional[bool] = Unassigned()
+    managed_instance_scaling: Optional[ProductionVariantManagedInstanceScaling] = Unassigned()
+    routing_config: Optional[ProductionVariantRoutingConfig] = Unassigned()
 
 
 @dataclass
@@ -1678,7 +1849,7 @@ class DataCaptureConfig(Base):
     """TBA"""
     initial_sampling_percentage: int
     destination_s3_uri: str
-    capture_options: list
+    capture_options: List[CaptureOption]
     enable_capture: Optional[bool] = Unassigned()
     kms_key_id: Optional[str] = Unassigned()
     capture_content_type_header: Optional[CaptureContentTypeHeader] = Unassigned()
@@ -1688,28 +1859,6 @@ class DataCaptureConfig(Base):
 class ExplainerConfig(Base):
     """TBA"""
     clarify_explainer_config: Optional[ClarifyExplainerConfig] = Unassigned()
-
-
-@dataclass
-class CreateEndpointConfigInput(Base):
-    """TBA"""
-    endpoint_config_name: str
-    production_variants: list
-    data_capture_config: Optional[DataCaptureConfig] = Unassigned()
-    tags: Optional[list] = Unassigned()
-    kms_key_id: Optional[str] = Unassigned()
-    async_inference_config: Optional[AsyncInferenceConfig] = Unassigned()
-    explainer_config: Optional[ExplainerConfig] = Unassigned()
-    shadow_production_variants: Optional[list] = Unassigned()
-    execution_role_arn: Optional[str] = Unassigned()
-    vpc_config: Optional[VpcConfig] = Unassigned()
-    enable_network_isolation: Optional[bool] = Unassigned()
-
-
-@dataclass
-class CreateEndpointConfigOutput(Base):
-    """TBA"""
-    endpoint_config_arn: str
 
 
 @dataclass
@@ -1730,18 +1879,12 @@ class DeploymentConfig(Base):
 
 
 @dataclass
-class CreateEndpointInput(Base):
+class FeatureDefinition(Base):
     """TBA"""
-    endpoint_name: str
-    endpoint_config_name: str
-    deployment_config: Optional[DeploymentConfig] = Unassigned()
-    tags: Optional[list] = Unassigned()
-
-
-@dataclass
-class CreateEndpointOutput(Base):
-    """TBA"""
-    endpoint_arn: str
+    feature_name: str
+    feature_type: str
+    collection_type: Optional[str] = Unassigned()
+    collection_config: Optional[CollectionConfig] = Unassigned()
 
 
 @dataclass
@@ -1841,7 +1984,7 @@ class HumanLoopConfig(Base):
     task_count: int
     task_availability_lifetime_in_seconds: Optional[int] = Unassigned()
     task_time_limit_in_seconds: Optional[int] = Unassigned()
-    task_keywords: Optional[list] = Unassigned()
+    task_keywords: Optional[List[str]] = Unassigned()
     public_workforce_task_price: Optional[PublicWorkforceTaskPrice] = Unassigned()
 
 
@@ -1878,13 +2021,6 @@ class HyperParameterTuningJobStrategyConfig(Base):
 
 
 @dataclass
-class HyperParameterTuningJobObjective(Base):
-    """TBA"""
-    type: str
-    metric_name: str
-
-
-@dataclass
 class ResourceLimits(Base):
     """TBA"""
     max_parallel_training_jobs: int
@@ -1893,12 +2029,21 @@ class ResourceLimits(Base):
 
 
 @dataclass
+class IntegerParameterRange(Base):
+    """TBA"""
+    name: str
+    min_value: str
+    max_value: str
+    scaling_type: Optional[str] = Unassigned()
+
+
+@dataclass
 class ParameterRanges(Base):
     """TBA"""
-    integer_parameter_ranges: Optional[list] = Unassigned()
-    continuous_parameter_ranges: Optional[list] = Unassigned()
-    categorical_parameter_ranges: Optional[list] = Unassigned()
-    auto_parameters: Optional[list] = Unassigned()
+    integer_parameter_ranges: Optional[List[IntegerParameterRange]] = Unassigned()
+    continuous_parameter_ranges: Optional[List[ContinuousParameterRange]] = Unassigned()
+    categorical_parameter_ranges: Optional[List[CategoricalParameterRange]] = Unassigned()
+    auto_parameters: Optional[List[AutoParameter]] = Unassigned()
 
 
 @dataclass
@@ -1928,7 +2073,15 @@ class HyperParameterAlgorithmSpecification(Base):
     training_input_mode: str
     training_image: Optional[str] = Unassigned()
     algorithm_name: Optional[str] = Unassigned()
-    metric_definitions: Optional[list] = Unassigned()
+    metric_definitions: Optional[List[MetricDefinition]] = Unassigned()
+
+
+@dataclass
+class HyperParameterTuningInstanceConfig(Base):
+    """TBA"""
+    instance_type: str
+    instance_count: int
+    volume_size_in_g_b: int
 
 
 @dataclass
@@ -1939,7 +2092,7 @@ class HyperParameterTuningResourceConfig(Base):
     volume_size_in_g_b: Optional[int] = Unassigned()
     volume_kms_key_id: Optional[str] = Unassigned()
     allocation_strategy: Optional[str] = Unassigned()
-    instance_configs: Optional[list] = Unassigned()
+    instance_configs: Optional[List[HyperParameterTuningInstanceConfig]] = Unassigned()
 
 
 @dataclass
@@ -1958,8 +2111,8 @@ class HyperParameterTrainingJobDefinition(Base):
     definition_name: Optional[str] = Unassigned()
     tuning_objective: Optional[HyperParameterTuningJobObjective] = Unassigned()
     hyper_parameter_ranges: Optional[ParameterRanges] = Unassigned()
-    static_hyper_parameters: Optional[dict] = Unassigned()
-    input_data_config: Optional[list] = Unassigned()
+    static_hyper_parameters: Optional[Dict[str, str]] = Unassigned()
+    input_data_config: Optional[List[Channel]] = Unassigned()
     vpc_config: Optional[VpcConfig] = Unassigned()
     resource_config: Optional[ResourceConfig] = Unassigned()
     hyper_parameter_tuning_resource_config: Optional[HyperParameterTuningResourceConfig] = Unassigned()
@@ -1968,13 +2121,19 @@ class HyperParameterTrainingJobDefinition(Base):
     enable_managed_spot_training: Optional[bool] = Unassigned()
     checkpoint_config: Optional[CheckpointConfig] = Unassigned()
     retry_strategy: Optional[RetryStrategy] = Unassigned()
-    environment: Optional[dict] = Unassigned()
+    environment: Optional[Dict[str, str]] = Unassigned()
+
+
+@dataclass
+class ParentHyperParameterTuningJob(Base):
+    """TBA"""
+    hyper_parameter_tuning_job_name: Optional[str] = Unassigned()
 
 
 @dataclass
 class HyperParameterTuningJobWarmStartConfig(Base):
     """TBA"""
-    parent_hyper_parameter_tuning_jobs: list
+    parent_hyper_parameter_tuning_jobs: List[ParentHyperParameterTuningJob]
     warm_start_type: str
 
 
@@ -1983,7 +2142,7 @@ class InferenceComponentContainerSpecification(Base):
     """TBA"""
     image: Optional[str] = Unassigned()
     artifact_url: Optional[str] = Unassigned()
-    environment: Optional[dict] = Unassigned()
+    environment: Optional[Dict[str, str]] = Unassigned()
 
 
 @dataclass
@@ -2018,27 +2177,32 @@ class InferenceComponentRuntimeConfig(Base):
 
 
 @dataclass
-class CreateInferenceComponentInput(Base):
-    """TBA"""
-    inference_component_name: str
-    endpoint_name: str
-    variant_name: str
-    specification: InferenceComponentSpecification
-    runtime_config: InferenceComponentRuntimeConfig
-    tags: Optional[list] = Unassigned()
-
-
-@dataclass
-class CreateInferenceComponentOutput(Base):
-    """TBA"""
-    inference_component_arn: str
-
-
-@dataclass
 class InferenceExperimentSchedule(Base):
     """TBA"""
     start_time: Optional[datetime.datetime] = Unassigned()
     end_time: Optional[datetime.datetime] = Unassigned()
+
+
+@dataclass
+class RealTimeInferenceConfig(Base):
+    """TBA"""
+    instance_type: str
+    instance_count: int
+
+
+@dataclass
+class ModelInfrastructureConfig(Base):
+    """TBA"""
+    infrastructure_type: str
+    real_time_inference_config: RealTimeInferenceConfig
+
+
+@dataclass
+class ModelVariantConfig(Base):
+    """TBA"""
+    model_name: str
+    variant_name: str
+    infrastructure_config: ModelInfrastructureConfig
 
 
 @dataclass
@@ -2050,10 +2214,25 @@ class InferenceExperimentDataStorageConfig(Base):
 
 
 @dataclass
+class ShadowModelVariantConfig(Base):
+    """TBA"""
+    shadow_model_variant_name: str
+    sampling_percentage: int
+
+
+@dataclass
 class ShadowModeConfig(Base):
     """TBA"""
     source_model_variant_name: str
-    shadow_model_variants: list
+    shadow_model_variants: List[ShadowModelVariantConfig]
+
+
+@dataclass
+class Phase(Base):
+    """TBA"""
+    initial_number_of_users: Optional[int] = Unassigned()
+    spawn_rate: Optional[int] = Unassigned()
+    duration_in_seconds: Optional[int] = Unassigned()
 
 
 @dataclass
@@ -2068,7 +2247,7 @@ class Stairs(Base):
 class TrafficPattern(Base):
     """TBA"""
     traffic_type: Optional[str] = Unassigned()
-    phases: Optional[list] = Unassigned()
+    phases: Optional[List[Phase]] = Unassigned()
     stairs: Optional[Stairs] = Unassigned()
 
 
@@ -2080,10 +2259,25 @@ class RecommendationJobResourceLimit(Base):
 
 
 @dataclass
+class EnvironmentParameterRanges(Base):
+    """TBA"""
+    categorical_parameter_ranges: Optional[List[CategoricalParameter]] = Unassigned()
+
+
+@dataclass
+class EndpointInputConfiguration(Base):
+    """TBA"""
+    instance_type: Optional[str] = Unassigned()
+    serverless_config: Optional[ProductionVariantServerlessConfig] = Unassigned()
+    inference_specification_name: Optional[str] = Unassigned()
+    environment_parameter_ranges: Optional[EnvironmentParameterRanges] = Unassigned()
+
+
+@dataclass
 class RecommendationJobPayloadConfig(Base):
     """TBA"""
     sample_payload_url: Optional[str] = Unassigned()
-    supported_content_types: Optional[list] = Unassigned()
+    supported_content_types: Optional[List[str]] = Unassigned()
 
 
 @dataclass
@@ -2095,17 +2289,23 @@ class RecommendationJobContainerConfig(Base):
     framework_version: Optional[str] = Unassigned()
     payload_config: Optional[RecommendationJobPayloadConfig] = Unassigned()
     nearest_model_name: Optional[str] = Unassigned()
-    supported_instance_types: Optional[list] = Unassigned()
+    supported_instance_types: Optional[List[str]] = Unassigned()
     supported_endpoint_type: Optional[str] = Unassigned()
     data_input_config: Optional[str] = Unassigned()
-    supported_response_m_i_m_e_types: Optional[list] = Unassigned()
+    supported_response_m_i_m_e_types: Optional[List[str]] = Unassigned()
+
+
+@dataclass
+class EndpointInfo(Base):
+    """TBA"""
+    endpoint_name: Optional[str] = Unassigned()
 
 
 @dataclass
 class RecommendationJobVpcConfig(Base):
     """TBA"""
-    security_group_ids: list
-    subnets: list
+    security_group_ids: List[str]
+    subnets: List[str]
 
 
 @dataclass
@@ -2116,18 +2316,25 @@ class RecommendationJobInputConfig(Base):
     job_duration_in_seconds: Optional[int] = Unassigned()
     traffic_pattern: Optional[TrafficPattern] = Unassigned()
     resource_limit: Optional[RecommendationJobResourceLimit] = Unassigned()
-    endpoint_configurations: Optional[list] = Unassigned()
+    endpoint_configurations: Optional[List[EndpointInputConfiguration]] = Unassigned()
     volume_kms_key_id: Optional[str] = Unassigned()
     container_config: Optional[RecommendationJobContainerConfig] = Unassigned()
-    endpoints: Optional[list] = Unassigned()
+    endpoints: Optional[List[EndpointInfo]] = Unassigned()
     vpc_config: Optional[RecommendationJobVpcConfig] = Unassigned()
+
+
+@dataclass
+class ModelLatencyThreshold(Base):
+    """TBA"""
+    percentile: Optional[str] = Unassigned()
+    value_in_milliseconds: Optional[int] = Unassigned()
 
 
 @dataclass
 class RecommendationJobStoppingConditions(Base):
     """TBA"""
     max_invocations: Optional[int] = Unassigned()
-    model_latency_thresholds: Optional[list] = Unassigned()
+    model_latency_thresholds: Optional[List[ModelLatencyThreshold]] = Unassigned()
     flat_invocations: Optional[str] = Unassigned()
 
 
@@ -2166,7 +2373,7 @@ class LabelingJobDataSource(Base):
 @dataclass
 class LabelingJobDataAttributes(Base):
     """TBA"""
-    content_classifiers: Optional[list] = Unassigned()
+    content_classifiers: Optional[List[str]] = Unassigned()
 
 
 @dataclass
@@ -2224,7 +2431,7 @@ class HumanTaskConfig(Base):
     number_of_human_workers_per_data_object: int
     task_time_limit_in_seconds: int
     annotation_consolidation_config: AnnotationConsolidationConfig
-    task_keywords: Optional[list] = Unassigned()
+    task_keywords: Optional[List[str]] = Unassigned()
     task_availability_lifetime_in_seconds: Optional[int] = Unassigned()
     max_concurrent_task_count: Optional[int] = Unassigned()
     public_workforce_task_price: Optional[PublicWorkforceTaskPrice] = Unassigned()
@@ -2242,7 +2449,7 @@ class ModelBiasAppSpecification(Base):
     """TBA"""
     image_uri: str
     config_uri: str
-    environment: Optional[dict] = Unassigned()
+    environment: Optional[Dict[str, str]] = Unassigned()
 
 
 @dataclass
@@ -2283,7 +2490,7 @@ class ModelExplainabilityAppSpecification(Base):
     """TBA"""
     image_uri: str
     config_uri: str
-    environment: Optional[dict] = Unassigned()
+    environment: Optional[Dict[str, str]] = Unassigned()
 
 
 @dataclass
@@ -2300,49 +2507,31 @@ class InferenceExecutionConfig(Base):
 
 
 @dataclass
-class CreateModelInput(Base):
+class ModelPackageValidationProfile(Base):
     """TBA"""
-    model_name: str
-    primary_container: Optional[ContainerDefinition] = Unassigned()
-    containers: Optional[list] = Unassigned()
-    inference_execution_config: Optional[InferenceExecutionConfig] = Unassigned()
-    execution_role_arn: Optional[str] = Unassigned()
-    tags: Optional[list] = Unassigned()
-    vpc_config: Optional[VpcConfig] = Unassigned()
-    enable_network_isolation: Optional[bool] = Unassigned()
-
-
-@dataclass
-class CreateModelOutput(Base):
-    """TBA"""
-    model_arn: str
-
-
-@dataclass
-class CreateModelPackageGroupInput(Base):
-    """TBA"""
-    model_package_group_name: str
-    model_package_group_description: Optional[str] = Unassigned()
-    tags: Optional[list] = Unassigned()
-
-
-@dataclass
-class CreateModelPackageGroupOutput(Base):
-    """TBA"""
-    model_package_group_arn: str
+    profile_name: str
+    transform_job_definition: TransformJobDefinition
 
 
 @dataclass
 class ModelPackageValidationSpecification(Base):
     """TBA"""
     validation_role: str
-    validation_profiles: list
+    validation_profiles: List[ModelPackageValidationProfile]
+
+
+@dataclass
+class SourceAlgorithm(Base):
+    """TBA"""
+    algorithm_name: str
+    model_data_url: Optional[str] = Unassigned()
+    model_data_source: Optional[ModelDataSource] = Unassigned()
 
 
 @dataclass
 class SourceAlgorithmSpecification(Base):
     """TBA"""
-    source_algorithms: list
+    source_algorithms: List[SourceAlgorithm]
 
 
 @dataclass
@@ -2421,37 +2610,6 @@ class DriftCheckBaselines(Base):
 
 
 @dataclass
-class CreateModelPackageInput(Base):
-    """TBA"""
-    model_package_name: Optional[str] = Unassigned()
-    model_package_group_name: Optional[str] = Unassigned()
-    model_package_description: Optional[str] = Unassigned()
-    inference_specification: Optional[InferenceSpecification] = Unassigned()
-    validation_specification: Optional[ModelPackageValidationSpecification] = Unassigned()
-    source_algorithm_specification: Optional[SourceAlgorithmSpecification] = Unassigned()
-    certify_for_marketplace: Optional[bool] = Unassigned()
-    tags: Optional[list] = Unassigned()
-    model_approval_status: Optional[str] = Unassigned()
-    metadata_properties: Optional[MetadataProperties] = Unassigned()
-    model_metrics: Optional[ModelMetrics] = Unassigned()
-    client_token: Optional[str] = Unassigned()
-    domain: Optional[str] = Unassigned()
-    task: Optional[str] = Unassigned()
-    sample_payload_url: Optional[str] = Unassigned()
-    customer_metadata_properties: Optional[dict] = Unassigned()
-    drift_check_baselines: Optional[DriftCheckBaselines] = Unassigned()
-    additional_inference_specifications: Optional[list] = Unassigned()
-    skip_model_validation: Optional[str] = Unassigned()
-    source_uri: Optional[str] = Unassigned()
-
-
-@dataclass
-class CreateModelPackageOutput(Base):
-    """TBA"""
-    model_package_arn: str
-
-
-@dataclass
 class ModelQualityBaselineConfig(Base):
     """TBA"""
     baselining_job_name: Optional[str] = Unassigned()
@@ -2462,12 +2620,12 @@ class ModelQualityBaselineConfig(Base):
 class ModelQualityAppSpecification(Base):
     """TBA"""
     image_uri: str
-    container_entrypoint: Optional[list] = Unassigned()
-    container_arguments: Optional[list] = Unassigned()
+    container_entrypoint: Optional[List[str]] = Unassigned()
+    container_arguments: Optional[List[str]] = Unassigned()
     record_preprocessor_source_uri: Optional[str] = Unassigned()
     post_analytics_processor_source_uri: Optional[str] = Unassigned()
     problem_type: Optional[str] = Unassigned()
-    environment: Optional[dict] = Unassigned()
+    environment: Optional[Dict[str, str]] = Unassigned()
 
 
 @dataclass
@@ -2495,11 +2653,18 @@ class MonitoringBaselineConfig(Base):
 
 
 @dataclass
+class MonitoringInput(Base):
+    """TBA"""
+    endpoint_input: Optional[EndpointInput] = Unassigned()
+    batch_transform_input: Optional[BatchTransformInput] = Unassigned()
+
+
+@dataclass
 class MonitoringAppSpecification(Base):
     """TBA"""
     image_uri: str
-    container_entrypoint: Optional[list] = Unassigned()
-    container_arguments: Optional[list] = Unassigned()
+    container_entrypoint: Optional[List[str]] = Unassigned()
+    container_arguments: Optional[List[str]] = Unassigned()
     record_preprocessor_source_uri: Optional[str] = Unassigned()
     post_analytics_processor_source_uri: Optional[str] = Unassigned()
 
@@ -2515,14 +2680,14 @@ class NetworkConfig(Base):
 @dataclass
 class MonitoringJobDefinition(Base):
     """TBA"""
-    monitoring_inputs: list
+    monitoring_inputs: List[MonitoringInput]
     monitoring_output_config: MonitoringOutputConfig
     monitoring_resources: MonitoringResources
     monitoring_app_specification: MonitoringAppSpecification
     role_arn: str
     baseline_config: Optional[MonitoringBaselineConfig] = Unassigned()
     stopping_condition: Optional[MonitoringStoppingCondition] = Unassigned()
-    environment: Optional[dict] = Unassigned()
+    environment: Optional[Dict[str, str]] = Unassigned()
     network_config: Optional[NetworkConfig] = Unassigned()
 
 
@@ -2542,44 +2707,9 @@ class InstanceMetadataServiceConfiguration(Base):
 
 
 @dataclass
-class CreateNotebookInstanceInput(Base):
+class NotebookInstanceLifecycleHook(Base):
     """TBA"""
-    notebook_instance_name: str
-    instance_type: str
-    role_arn: str
-    subnet_id: Optional[str] = Unassigned()
-    security_group_ids: Optional[list] = Unassigned()
-    kms_key_id: Optional[str] = Unassigned()
-    tags: Optional[list] = Unassigned()
-    lifecycle_config_name: Optional[str] = Unassigned()
-    direct_internet_access: Optional[str] = Unassigned()
-    volume_size_in_g_b: Optional[int] = Unassigned()
-    accelerator_types: Optional[list] = Unassigned()
-    default_code_repository: Optional[str] = Unassigned()
-    additional_code_repositories: Optional[list] = Unassigned()
-    root_access: Optional[str] = Unassigned()
-    platform_identifier: Optional[str] = Unassigned()
-    instance_metadata_service_configuration: Optional[InstanceMetadataServiceConfiguration] = Unassigned()
-
-
-@dataclass
-class CreateNotebookInstanceLifecycleConfigInput(Base):
-    """TBA"""
-    notebook_instance_lifecycle_config_name: str
-    on_create: Optional[list] = Unassigned()
-    on_start: Optional[list] = Unassigned()
-
-
-@dataclass
-class CreateNotebookInstanceLifecycleConfigOutput(Base):
-    """TBA"""
-    notebook_instance_lifecycle_config_arn: Optional[str] = Unassigned()
-
-
-@dataclass
-class CreateNotebookInstanceOutput(Base):
-    """TBA"""
-    notebook_instance_arn: Optional[str] = Unassigned()
+    content: Optional[str] = Unassigned()
 
 
 @dataclass
@@ -2597,22 +2727,76 @@ class ParallelismConfiguration(Base):
 
 
 @dataclass
-class CreatePresignedNotebookInstanceUrlInput(Base):
+class ProcessingS3Input(Base):
     """TBA"""
-    notebook_instance_name: str
-    session_expiration_duration_in_seconds: Optional[int] = Unassigned()
+    s3_uri: str
+    s3_data_type: str
+    local_path: Optional[str] = Unassigned()
+    s3_input_mode: Optional[str] = Unassigned()
+    s3_data_distribution_type: Optional[str] = Unassigned()
+    s3_compression_type: Optional[str] = Unassigned()
 
 
 @dataclass
-class CreatePresignedNotebookInstanceUrlOutput(Base):
+class RedshiftDatasetDefinition(Base):
     """TBA"""
-    authorized_url: Optional[str] = Unassigned()
+    cluster_id: str
+    database: str
+    db_user: str
+    query_string: str
+    cluster_role_arn: str
+    output_s3_uri: str
+    output_format: str
+    kms_key_id: Optional[str] = Unassigned()
+    output_compression: Optional[str] = Unassigned()
+
+
+@dataclass
+class DatasetDefinition(Base):
+    """TBA"""
+    athena_dataset_definition: Optional[AthenaDatasetDefinition] = Unassigned()
+    redshift_dataset_definition: Optional[RedshiftDatasetDefinition] = Unassigned()
+    local_path: Optional[str] = Unassigned()
+    data_distribution_type: Optional[str] = Unassigned()
+    input_mode: Optional[str] = Unassigned()
+
+
+@dataclass
+class ProcessingInput(Base):
+    """TBA"""
+    input_name: str
+    app_managed: Optional[bool] = Unassigned()
+    s3_input: Optional[ProcessingS3Input] = Unassigned()
+    dataset_definition: Optional[DatasetDefinition] = Unassigned()
+
+
+@dataclass
+class ProcessingS3Output(Base):
+    """TBA"""
+    s3_uri: str
+    local_path: str
+    s3_upload_mode: str
+
+
+@dataclass
+class ProcessingFeatureStoreOutput(Base):
+    """TBA"""
+    feature_group_name: str
+
+
+@dataclass
+class ProcessingOutput(Base):
+    """TBA"""
+    output_name: str
+    s3_output: Optional[ProcessingS3Output] = Unassigned()
+    feature_store_output: Optional[ProcessingFeatureStoreOutput] = Unassigned()
+    app_managed: Optional[bool] = Unassigned()
 
 
 @dataclass
 class ProcessingOutputConfig(Base):
     """TBA"""
-    outputs: list
+    outputs: List[ProcessingOutput]
     kms_key_id: Optional[str] = Unassigned()
 
 
@@ -2647,28 +2831,19 @@ class ExperimentConfig(Base):
 
 
 @dataclass
+class ProvisioningParameter(Base):
+    """TBA"""
+    key: Optional[str] = Unassigned()
+    value: Optional[str] = Unassigned()
+
+
+@dataclass
 class ServiceCatalogProvisioningDetails(Base):
     """TBA"""
     product_id: str
     provisioning_artifact_id: Optional[str] = Unassigned()
     path_id: Optional[str] = Unassigned()
-    provisioning_parameters: Optional[list] = Unassigned()
-
-
-@dataclass
-class CreateProjectInput(Base):
-    """TBA"""
-    project_name: str
-    service_catalog_provisioning_details: ServiceCatalogProvisioningDetails
-    project_description: Optional[str] = Unassigned()
-    tags: Optional[list] = Unassigned()
-
-
-@dataclass
-class CreateProjectOutput(Base):
-    """TBA"""
-    project_arn: str
-    project_id: str
+    provisioning_parameters: Optional[List[ProvisioningParameter]] = Unassigned()
 
 
 @dataclass
@@ -2681,7 +2856,7 @@ class SpaceCodeEditorAppSettings(Base):
 class SpaceJupyterLabAppSettings(Base):
     """TBA"""
     default_resource_spec: Optional[ResourceSpec] = Unassigned()
-    code_repositories: Optional[list] = Unassigned()
+    code_repositories: Optional[List[CodeRepository]] = Unassigned()
 
 
 @dataclass
@@ -2697,6 +2872,18 @@ class SpaceStorageSettings(Base):
 
 
 @dataclass
+class EFSFileSystem(Base):
+    """TBA"""
+    file_system_id: str
+
+
+@dataclass
+class CustomFileSystem(Base):
+    """TBA"""
+    e_f_s_file_system: Optional[EFSFileSystem] = Unassigned()
+
+
+@dataclass
 class SpaceSettings(Base):
     """TBA"""
     jupyter_server_app_settings: Optional[JupyterServerAppSettings] = Unassigned()
@@ -2705,7 +2892,7 @@ class SpaceSettings(Base):
     jupyter_lab_app_settings: Optional[SpaceJupyterLabAppSettings] = Unassigned()
     app_type: Optional[str] = Unassigned()
     space_storage_settings: Optional[SpaceStorageSettings] = Unassigned()
-    custom_file_systems: Optional[list] = Unassigned()
+    custom_file_systems: Optional[List[CustomFileSystem]] = Unassigned()
 
 
 @dataclass
@@ -2725,8 +2912,20 @@ class DebugHookConfig(Base):
     """TBA"""
     s3_output_path: str
     local_path: Optional[str] = Unassigned()
-    hook_parameters: Optional[dict] = Unassigned()
-    collection_configurations: Optional[list] = Unassigned()
+    hook_parameters: Optional[Dict[str, str]] = Unassigned()
+    collection_configurations: Optional[List[CollectionConfiguration]] = Unassigned()
+
+
+@dataclass
+class DebugRuleConfiguration(Base):
+    """TBA"""
+    rule_configuration_name: str
+    rule_evaluator_image: str
+    local_path: Optional[str] = Unassigned()
+    s3_output_path: Optional[str] = Unassigned()
+    instance_type: Optional[str] = Unassigned()
+    volume_size_in_g_b: Optional[int] = Unassigned()
+    rule_parameters: Optional[Dict[str, str]] = Unassigned()
 
 
 @dataclass
@@ -2741,8 +2940,20 @@ class ProfilerConfig(Base):
     """TBA"""
     s3_output_path: Optional[str] = Unassigned()
     profiling_interval_in_milliseconds: Optional[int] = Unassigned()
-    profiling_parameters: Optional[dict] = Unassigned()
+    profiling_parameters: Optional[Dict[str, str]] = Unassigned()
     disable_profiler: Optional[bool] = Unassigned()
+
+
+@dataclass
+class ProfilerRuleConfiguration(Base):
+    """TBA"""
+    rule_configuration_name: str
+    rule_evaluator_image: str
+    local_path: Optional[str] = Unassigned()
+    s3_output_path: Optional[str] = Unassigned()
+    instance_type: Optional[str] = Unassigned()
+    volume_size_in_g_b: Optional[int] = Unassigned()
+    rule_parameters: Optional[Dict[str, str]] = Unassigned()
 
 
 @dataclass
@@ -2780,6 +2991,20 @@ class TrialComponentStatus(Base):
 
 
 @dataclass
+class TrialComponentParameterValue(Base):
+    """TBA"""
+    string_value: Optional[str] = Unassigned()
+    number_value: Optional[float] = Unassigned()
+
+
+@dataclass
+class TrialComponentArtifact(Base):
+    """TBA"""
+    value: str
+    media_type: Optional[str] = Unassigned()
+
+
+@dataclass
 class OidcConfig(Base):
     """TBA"""
     client_id: str
@@ -2795,54 +3020,34 @@ class OidcConfig(Base):
 @dataclass
 class SourceIpConfig(Base):
     """TBA"""
-    cidrs: list
+    cidrs: List[str]
 
 
 @dataclass
 class WorkforceVpcConfigRequest(Base):
     """TBA"""
     vpc_id: Optional[str] = Unassigned()
-    security_group_ids: Optional[list] = Unassigned()
-    subnets: Optional[list] = Unassigned()
+    security_group_ids: Optional[List[str]] = Unassigned()
+    subnets: Optional[List[str]] = Unassigned()
+
+
+@dataclass
+class OidcMemberDefinition(Base):
+    """TBA"""
+    groups: Optional[List[str]] = Unassigned()
+
+
+@dataclass
+class MemberDefinition(Base):
+    """TBA"""
+    cognito_member_definition: Optional[CognitoMemberDefinition] = Unassigned()
+    oidc_member_definition: Optional[OidcMemberDefinition] = Unassigned()
 
 
 @dataclass
 class NotificationConfiguration(Base):
     """TBA"""
     notification_topic_arn: Optional[str] = Unassigned()
-
-
-@dataclass
-class EFSFileSystem(Base):
-    """TBA"""
-    file_system_id: str
-
-
-@dataclass
-class CustomFileSystem(Base):
-    """TBA"""
-    e_f_s_file_system: Optional[EFSFileSystem] = Unassigned()
-
-
-@dataclass
-class EFSFileSystemConfig(Base):
-    """TBA"""
-    file_system_id: str
-    file_system_path: Optional[str] = Unassigned()
-
-
-@dataclass
-class CustomFileSystemConfig(Base):
-    """TBA"""
-    e_f_s_file_system_config: Optional[EFSFileSystemConfig] = Unassigned()
-
-
-@dataclass
-class CustomImage(Base):
-    """TBA"""
-    image_name: str
-    app_image_config_name: str
-    image_version_number: Optional[int] = Unassigned()
 
 
 @dataclass
@@ -2864,42 +3069,6 @@ class DataCaptureConfigSummary(Base):
 
 
 @dataclass
-class RedshiftDatasetDefinition(Base):
-    """TBA"""
-    cluster_id: str
-    database: str
-    db_user: str
-    query_string: str
-    cluster_role_arn: str
-    output_s3_uri: str
-    output_format: str
-    kms_key_id: Optional[str] = Unassigned()
-    output_compression: Optional[str] = Unassigned()
-
-
-@dataclass
-class DatasetDefinition(Base):
-    """TBA"""
-    athena_dataset_definition: Optional[AthenaDatasetDefinition] = Unassigned()
-    redshift_dataset_definition: Optional[RedshiftDatasetDefinition] = Unassigned()
-    local_path: Optional[str] = Unassigned()
-    data_distribution_type: Optional[str] = Unassigned()
-    input_mode: Optional[str] = Unassigned()
-
-
-@dataclass
-class DebugRuleConfiguration(Base):
-    """TBA"""
-    rule_configuration_name: str
-    rule_evaluator_image: str
-    local_path: Optional[str] = Unassigned()
-    s3_output_path: Optional[str] = Unassigned()
-    instance_type: Optional[str] = Unassigned()
-    volume_size_in_g_b: Optional[int] = Unassigned()
-    rule_parameters: Optional[dict] = Unassigned()
-
-
-@dataclass
 class DebugRuleEvaluationStatus(Base):
     """TBA"""
     rule_configuration_name: Optional[str] = Unassigned()
@@ -2910,88 +3079,9 @@ class DebugRuleEvaluationStatus(Base):
 
 
 @dataclass
-class DeleteAlgorithmInput(Base):
-    """TBA"""
-    algorithm_name: str
-
-
-@dataclass
-class DeleteCodeRepositoryInput(Base):
-    """TBA"""
-    code_repository_name: str
-
-
-@dataclass
 class RetentionPolicy(Base):
     """TBA"""
     home_efs_file_system: Optional[str] = Unassigned()
-
-
-@dataclass
-class DeleteEndpointConfigInput(Base):
-    """TBA"""
-    endpoint_config_name: str
-
-
-@dataclass
-class DeleteEndpointInput(Base):
-    """TBA"""
-    endpoint_name: str
-
-
-@dataclass
-class DeleteInferenceComponentInput(Base):
-    """TBA"""
-    inference_component_name: str
-
-
-@dataclass
-class DeleteModelInput(Base):
-    """TBA"""
-    model_name: str
-
-
-@dataclass
-class DeleteModelPackageGroupInput(Base):
-    """TBA"""
-    model_package_group_name: str
-
-
-@dataclass
-class DeleteModelPackageGroupPolicyInput(Base):
-    """TBA"""
-    model_package_group_name: str
-
-
-@dataclass
-class DeleteModelPackageInput(Base):
-    """TBA"""
-    model_package_name: str
-
-
-@dataclass
-class DeleteNotebookInstanceInput(Base):
-    """TBA"""
-    notebook_instance_name: str
-
-
-@dataclass
-class DeleteNotebookInstanceLifecycleConfigInput(Base):
-    """TBA"""
-    notebook_instance_lifecycle_config_name: str
-
-
-@dataclass
-class DeleteProjectInput(Base):
-    """TBA"""
-    project_name: str
-
-
-@dataclass
-class DeleteTagsInput(Base):
-    """TBA"""
-    resource_arn: str
-    tag_keys: list
 
 
 @dataclass
@@ -3003,33 +3093,18 @@ class DeployedImage(Base):
 
 
 @dataclass
+class RealTimeInferenceRecommendation(Base):
+    """TBA"""
+    recommendation_id: str
+    instance_type: str
+    environment: Optional[Dict[str, str]] = Unassigned()
+
+
+@dataclass
 class DeploymentRecommendation(Base):
     """TBA"""
     recommendation_status: str
-    real_time_inference_recommendations: Optional[list] = Unassigned()
-
-
-@dataclass
-class DeviceSelectionConfig(Base):
-    """TBA"""
-    device_subset_type: str
-    percentage: Optional[int] = Unassigned()
-    device_names: Optional[list] = Unassigned()
-    device_name_contains: Optional[str] = Unassigned()
-
-
-@dataclass
-class EdgeDeploymentConfig(Base):
-    """TBA"""
-    failure_handling_policy: str
-
-
-@dataclass
-class DeploymentStage(Base):
-    """TBA"""
-    stage_name: str
-    device_selection_config: DeviceSelectionConfig
-    deployment_config: Optional[EdgeDeploymentConfig] = Unassigned()
+    real_time_inference_recommendations: Optional[List[RealTimeInferenceRecommendation]] = Unassigned()
 
 
 @dataclass
@@ -3059,28 +3134,6 @@ class DerivedInformation(Base):
 
 
 @dataclass
-class DescribeAlgorithmInput(Base):
-    """TBA"""
-    algorithm_name: str
-
-
-@dataclass
-class DescribeAlgorithmOutput(Base):
-    """TBA"""
-    algorithm_name: str
-    algorithm_arn: str
-    creation_time: datetime.datetime
-    training_specification: TrainingSpecification
-    algorithm_status: str
-    algorithm_status_details: AlgorithmStatusDetails
-    algorithm_description: Optional[str] = Unassigned()
-    inference_specification: Optional[InferenceSpecification] = Unassigned()
-    validation_specification: Optional[AlgorithmValidationSpecification] = Unassigned()
-    product_id: Optional[str] = Unassigned()
-    certify_for_marketplace: Optional[bool] = Unassigned()
-
-
-@dataclass
 class ResolvedAttributes(Base):
     """TBA"""
     auto_m_l_job_objective: Optional[AutoMLJobObjective] = Unassigned()
@@ -3092,22 +3145,6 @@ class ResolvedAttributes(Base):
 class ModelDeployResult(Base):
     """TBA"""
     endpoint_name: Optional[str] = Unassigned()
-
-
-@dataclass
-class DescribeCodeRepositoryInput(Base):
-    """TBA"""
-    code_repository_name: str
-
-
-@dataclass
-class DescribeCodeRepositoryOutput(Base):
-    """TBA"""
-    code_repository_name: str
-    code_repository_arn: str
-    creation_time: datetime.datetime
-    last_modified_time: datetime.datetime
-    git_config: Optional[GitConfig] = Unassigned()
 
 
 @dataclass
@@ -3123,6 +3160,15 @@ class ModelDigests(Base):
 
 
 @dataclass
+class EdgeModel(Base):
+    """TBA"""
+    model_name: str
+    model_version: str
+    latest_sample_time: Optional[datetime.datetime] = Unassigned()
+    latest_inference: Optional[datetime.datetime] = Unassigned()
+
+
+@dataclass
 class EdgePresetDeploymentOutput(Base):
     """TBA"""
     type: str
@@ -3132,60 +3178,54 @@ class EdgePresetDeploymentOutput(Base):
 
 
 @dataclass
-class DescribeEndpointConfigInput(Base):
+class ProductionVariantStatus(Base):
     """TBA"""
-    endpoint_config_name: str
+    status: str
+    status_message: Optional[str] = Unassigned()
+    start_time: Optional[datetime.datetime] = Unassigned()
 
 
 @dataclass
-class DescribeEndpointConfigOutput(Base):
+class ProductionVariantSummary(Base):
     """TBA"""
-    endpoint_config_name: str
-    endpoint_config_arn: str
-    production_variants: list
-    creation_time: datetime.datetime
-    data_capture_config: Optional[DataCaptureConfig] = Unassigned()
-    kms_key_id: Optional[str] = Unassigned()
-    async_inference_config: Optional[AsyncInferenceConfig] = Unassigned()
-    explainer_config: Optional[ExplainerConfig] = Unassigned()
-    shadow_production_variants: Optional[list] = Unassigned()
-    execution_role_arn: Optional[str] = Unassigned()
-    vpc_config: Optional[VpcConfig] = Unassigned()
-    enable_network_isolation: Optional[bool] = Unassigned()
+    variant_name: str
+    deployed_images: Optional[List[DeployedImage]] = Unassigned()
+    current_weight: Optional[float] = Unassigned()
+    desired_weight: Optional[float] = Unassigned()
+    current_instance_count: Optional[int] = Unassigned()
+    desired_instance_count: Optional[int] = Unassigned()
+    variant_status: Optional[List[ProductionVariantStatus]] = Unassigned()
+    current_serverless_config: Optional[ProductionVariantServerlessConfig] = Unassigned()
+    desired_serverless_config: Optional[ProductionVariantServerlessConfig] = Unassigned()
+    managed_instance_scaling: Optional[ProductionVariantManagedInstanceScaling] = Unassigned()
+    routing_config: Optional[ProductionVariantRoutingConfig] = Unassigned()
 
 
 @dataclass
-class DescribeEndpointInput(Base):
+class PendingProductionVariantSummary(Base):
     """TBA"""
-    endpoint_name: str
+    variant_name: str
+    deployed_images: Optional[List[DeployedImage]] = Unassigned()
+    current_weight: Optional[float] = Unassigned()
+    desired_weight: Optional[float] = Unassigned()
+    current_instance_count: Optional[int] = Unassigned()
+    desired_instance_count: Optional[int] = Unassigned()
+    instance_type: Optional[str] = Unassigned()
+    accelerator_type: Optional[str] = Unassigned()
+    variant_status: Optional[List[ProductionVariantStatus]] = Unassigned()
+    current_serverless_config: Optional[ProductionVariantServerlessConfig] = Unassigned()
+    desired_serverless_config: Optional[ProductionVariantServerlessConfig] = Unassigned()
+    managed_instance_scaling: Optional[ProductionVariantManagedInstanceScaling] = Unassigned()
+    routing_config: Optional[ProductionVariantRoutingConfig] = Unassigned()
 
 
 @dataclass
 class PendingDeploymentSummary(Base):
     """TBA"""
     endpoint_config_name: str
-    production_variants: Optional[list] = Unassigned()
+    production_variants: Optional[List[PendingProductionVariantSummary]] = Unassigned()
     start_time: Optional[datetime.datetime] = Unassigned()
-    shadow_production_variants: Optional[list] = Unassigned()
-
-
-@dataclass
-class DescribeEndpointOutput(Base):
-    """TBA"""
-    endpoint_name: str
-    endpoint_arn: str
-    endpoint_status: str
-    creation_time: datetime.datetime
-    last_modified_time: datetime.datetime
-    endpoint_config_name: Optional[str] = Unassigned()
-    production_variants: Optional[list] = Unassigned()
-    data_capture_config: Optional[DataCaptureConfigSummary] = Unassigned()
-    failure_reason: Optional[str] = Unassigned()
-    last_deployment_config: Optional[DeploymentConfig] = Unassigned()
-    async_inference_config: Optional[AsyncInferenceConfig] = Unassigned()
-    pending_deployment_summary: Optional[PendingDeploymentSummary] = Unassigned()
-    explainer_config: Optional[ExplainerConfig] = Unassigned()
-    shadow_production_variants: Optional[list] = Unassigned()
+    shadow_production_variants: Optional[List[PendingProductionVariantSummary]] = Unassigned()
 
 
 @dataclass
@@ -3215,6 +3255,20 @@ class LastUpdateStatus(Base):
     """TBA"""
     status: str
     failure_reason: Optional[str] = Unassigned()
+
+
+@dataclass
+class FeatureParameter(Base):
+    """TBA"""
+    key: Optional[str] = Unassigned()
+    value: Optional[str] = Unassigned()
+
+
+@dataclass
+class HubContentDependency(Base):
+    """TBA"""
+    dependency_origin_path: Optional[str] = Unassigned()
+    dependency_copy_path: Optional[str] = Unassigned()
 
 
 @dataclass
@@ -3257,7 +3311,7 @@ class HyperParameterTrainingJobSummary(Base):
     training_job_arn: str
     creation_time: datetime.datetime
     training_job_status: str
-    tuned_hyper_parameters: dict
+    tuned_hyper_parameters: Dict[str, str]
     training_job_definition_name: Optional[str] = Unassigned()
     tuning_job_name: Optional[str] = Unassigned()
     training_start_time: Optional[datetime.datetime] = Unassigned()
@@ -3281,17 +3335,11 @@ class HyperParameterTuningJobConsumedResources(Base):
 
 
 @dataclass
-class DescribeInferenceComponentInput(Base):
-    """TBA"""
-    inference_component_name: str
-
-
-@dataclass
 class InferenceComponentContainerSpecificationSummary(Base):
     """TBA"""
     deployed_image: Optional[DeployedImage] = Unassigned()
     artifact_url: Optional[str] = Unassigned()
-    environment: Optional[dict] = Unassigned()
+    environment: Optional[Dict[str, str]] = Unassigned()
 
 
 @dataclass
@@ -3311,28 +3359,84 @@ class InferenceComponentRuntimeConfigSummary(Base):
 
 
 @dataclass
-class DescribeInferenceComponentOutput(Base):
-    """TBA"""
-    inference_component_name: str
-    inference_component_arn: str
-    endpoint_name: str
-    endpoint_arn: str
-    creation_time: datetime.datetime
-    last_modified_time: datetime.datetime
-    variant_name: Optional[str] = Unassigned()
-    failure_reason: Optional[str] = Unassigned()
-    specification: Optional[InferenceComponentSpecificationSummary] = Unassigned()
-    runtime_config: Optional[InferenceComponentRuntimeConfigSummary] = Unassigned()
-    inference_component_status: Optional[str] = Unassigned()
-
-
-@dataclass
 class EndpointMetadata(Base):
     """TBA"""
     endpoint_name: str
     endpoint_config_name: Optional[str] = Unassigned()
     endpoint_status: Optional[str] = Unassigned()
     failure_reason: Optional[str] = Unassigned()
+
+
+@dataclass
+class ModelVariantConfigSummary(Base):
+    """TBA"""
+    model_name: str
+    variant_name: str
+    infrastructure_config: ModelInfrastructureConfig
+    status: str
+
+
+@dataclass
+class RecommendationMetrics(Base):
+    """TBA"""
+    cost_per_hour: float
+    cost_per_inference: float
+    max_invocations: int
+    model_latency: int
+    cpu_utilization: Optional[float] = Unassigned()
+    memory_utilization: Optional[float] = Unassigned()
+    model_setup_time: Optional[int] = Unassigned()
+
+
+@dataclass
+class EndpointOutputConfiguration(Base):
+    """TBA"""
+    endpoint_name: str
+    variant_name: str
+    instance_type: Optional[str] = Unassigned()
+    initial_instance_count: Optional[int] = Unassigned()
+    serverless_config: Optional[ProductionVariantServerlessConfig] = Unassigned()
+
+
+@dataclass
+class EnvironmentParameter(Base):
+    """TBA"""
+    key: str
+    value_type: str
+    value: str
+
+
+@dataclass
+class ModelConfiguration(Base):
+    """TBA"""
+    inference_specification_name: Optional[str] = Unassigned()
+    environment_parameters: Optional[List[EnvironmentParameter]] = Unassigned()
+    compilation_job_name: Optional[str] = Unassigned()
+
+
+@dataclass
+class InferenceRecommendation(Base):
+    """TBA"""
+    metrics: RecommendationMetrics
+    endpoint_configuration: EndpointOutputConfiguration
+    model_configuration: ModelConfiguration
+    recommendation_id: Optional[str] = Unassigned()
+    invocation_end_time: Optional[datetime.datetime] = Unassigned()
+    invocation_start_time: Optional[datetime.datetime] = Unassigned()
+
+
+@dataclass
+class InferenceMetrics(Base):
+    """TBA"""
+    max_invocations: int
+    model_latency: int
+
+
+@dataclass
+class EndpointPerformance(Base):
+    """TBA"""
+    metrics: InferenceMetrics
+    endpoint_info: EndpointInfo
 
 
 @dataclass
@@ -3359,86 +3463,18 @@ class ModelCardExportArtifacts(Base):
 
 
 @dataclass
-class DescribeModelInput(Base):
+class ModelPackageStatusItem(Base):
     """TBA"""
-    model_name: str
-
-
-@dataclass
-class DescribeModelOutput(Base):
-    """TBA"""
-    model_name: str
-    creation_time: datetime.datetime
-    model_arn: str
-    primary_container: Optional[ContainerDefinition] = Unassigned()
-    containers: Optional[list] = Unassigned()
-    inference_execution_config: Optional[InferenceExecutionConfig] = Unassigned()
-    execution_role_arn: Optional[str] = Unassigned()
-    vpc_config: Optional[VpcConfig] = Unassigned()
-    enable_network_isolation: Optional[bool] = Unassigned()
-    deployment_recommendation: Optional[DeploymentRecommendation] = Unassigned()
-
-
-@dataclass
-class DescribeModelPackageGroupInput(Base):
-    """TBA"""
-    model_package_group_name: str
-
-
-@dataclass
-class DescribeModelPackageGroupOutput(Base):
-    """TBA"""
-    model_package_group_name: str
-    model_package_group_arn: str
-    creation_time: datetime.datetime
-    created_by: UserContext
-    model_package_group_status: str
-    model_package_group_description: Optional[str] = Unassigned()
-
-
-@dataclass
-class DescribeModelPackageInput(Base):
-    """TBA"""
-    model_package_name: str
+    name: str
+    status: str
+    failure_reason: Optional[str] = Unassigned()
 
 
 @dataclass
 class ModelPackageStatusDetails(Base):
     """TBA"""
-    validation_statuses: list
-    image_scan_statuses: Optional[list] = Unassigned()
-
-
-@dataclass
-class DescribeModelPackageOutput(Base):
-    """TBA"""
-    model_package_name: str
-    model_package_arn: str
-    creation_time: datetime.datetime
-    model_package_status: str
-    model_package_status_details: ModelPackageStatusDetails
-    model_package_group_name: Optional[str] = Unassigned()
-    model_package_version: Optional[int] = Unassigned()
-    model_package_description: Optional[str] = Unassigned()
-    inference_specification: Optional[InferenceSpecification] = Unassigned()
-    source_algorithm_specification: Optional[SourceAlgorithmSpecification] = Unassigned()
-    validation_specification: Optional[ModelPackageValidationSpecification] = Unassigned()
-    certify_for_marketplace: Optional[bool] = Unassigned()
-    model_approval_status: Optional[str] = Unassigned()
-    created_by: Optional[UserContext] = Unassigned()
-    metadata_properties: Optional[MetadataProperties] = Unassigned()
-    model_metrics: Optional[ModelMetrics] = Unassigned()
-    last_modified_time: Optional[datetime.datetime] = Unassigned()
-    last_modified_by: Optional[UserContext] = Unassigned()
-    approval_description: Optional[str] = Unassigned()
-    domain: Optional[str] = Unassigned()
-    task: Optional[str] = Unassigned()
-    sample_payload_url: Optional[str] = Unassigned()
-    customer_metadata_properties: Optional[dict] = Unassigned()
-    drift_check_baselines: Optional[DriftCheckBaselines] = Unassigned()
-    additional_inference_specifications: Optional[list] = Unassigned()
-    skip_model_validation: Optional[str] = Unassigned()
-    source_uri: Optional[str] = Unassigned()
+    validation_statuses: List[ModelPackageStatusItem]
+    image_scan_statuses: Optional[List[ModelPackageStatusItem]] = Unassigned()
 
 
 @dataclass
@@ -3457,56 +3493,6 @@ class MonitoringExecutionSummary(Base):
 
 
 @dataclass
-class DescribeNotebookInstanceInput(Base):
-    """TBA"""
-    notebook_instance_name: str
-
-
-@dataclass
-class DescribeNotebookInstanceLifecycleConfigInput(Base):
-    """TBA"""
-    notebook_instance_lifecycle_config_name: str
-
-
-@dataclass
-class DescribeNotebookInstanceLifecycleConfigOutput(Base):
-    """TBA"""
-    notebook_instance_lifecycle_config_arn: Optional[str] = Unassigned()
-    notebook_instance_lifecycle_config_name: Optional[str] = Unassigned()
-    on_create: Optional[list] = Unassigned()
-    on_start: Optional[list] = Unassigned()
-    last_modified_time: Optional[datetime.datetime] = Unassigned()
-    creation_time: Optional[datetime.datetime] = Unassigned()
-
-
-@dataclass
-class DescribeNotebookInstanceOutput(Base):
-    """TBA"""
-    notebook_instance_arn: Optional[str] = Unassigned()
-    notebook_instance_name: Optional[str] = Unassigned()
-    notebook_instance_status: Optional[str] = Unassigned()
-    failure_reason: Optional[str] = Unassigned()
-    url: Optional[str] = Unassigned()
-    instance_type: Optional[str] = Unassigned()
-    subnet_id: Optional[str] = Unassigned()
-    security_groups: Optional[list] = Unassigned()
-    role_arn: Optional[str] = Unassigned()
-    kms_key_id: Optional[str] = Unassigned()
-    network_interface_id: Optional[str] = Unassigned()
-    last_modified_time: Optional[datetime.datetime] = Unassigned()
-    creation_time: Optional[datetime.datetime] = Unassigned()
-    notebook_instance_lifecycle_config_name: Optional[str] = Unassigned()
-    direct_internet_access: Optional[str] = Unassigned()
-    volume_size_in_g_b: Optional[int] = Unassigned()
-    accelerator_types: Optional[list] = Unassigned()
-    default_code_repository: Optional[str] = Unassigned()
-    additional_code_repositories: Optional[list] = Unassigned()
-    root_access: Optional[str] = Unassigned()
-    platform_identifier: Optional[str] = Unassigned()
-    instance_metadata_service_configuration: Optional[InstanceMetadataServiceConfiguration] = Unassigned()
-
-
-@dataclass
 class PipelineExperimentConfig(Base):
     """TBA"""
     experiment_name: Optional[str] = Unassigned()
@@ -3514,16 +3500,16 @@ class PipelineExperimentConfig(Base):
 
 
 @dataclass
-class SelectiveExecutionConfig(Base):
+class SelectedStep(Base):
     """TBA"""
-    selected_steps: list
-    source_pipeline_execution_arn: Optional[str] = Unassigned()
+    step_name: str
 
 
 @dataclass
-class DescribeProjectInput(Base):
+class SelectiveExecutionConfig(Base):
     """TBA"""
-    project_name: str
+    selected_steps: List[SelectedStep]
+    source_pipeline_execution_arn: Optional[str] = Unassigned()
 
 
 @dataclass
@@ -3531,22 +3517,6 @@ class ServiceCatalogProvisionedProductDetails(Base):
     """TBA"""
     provisioned_product_id: Optional[str] = Unassigned()
     provisioned_product_status_message: Optional[str] = Unassigned()
-
-
-@dataclass
-class DescribeProjectOutput(Base):
-    """TBA"""
-    project_arn: str
-    project_name: str
-    project_id: str
-    service_catalog_provisioning_details: ServiceCatalogProvisioningDetails
-    project_status: str
-    creation_time: datetime.datetime
-    project_description: Optional[str] = Unassigned()
-    service_catalog_provisioned_product_details: Optional[ServiceCatalogProvisionedProductDetails] = Unassigned()
-    created_by: Optional[UserContext] = Unassigned()
-    last_modified_time: Optional[datetime.datetime] = Unassigned()
-    last_modified_by: Optional[UserContext] = Unassigned()
 
 
 @dataclass
@@ -3568,10 +3538,51 @@ class WarmPoolStatus(Base):
 
 
 @dataclass
+class SecondaryStatusTransition(Base):
+    """TBA"""
+    status: str
+    start_time: datetime.datetime
+    end_time: Optional[datetime.datetime] = Unassigned()
+    status_message: Optional[str] = Unassigned()
+
+
+@dataclass
+class MetricData(Base):
+    """TBA"""
+    metric_name: Optional[str] = Unassigned()
+    value: Optional[float] = Unassigned()
+    timestamp: Optional[datetime.datetime] = Unassigned()
+
+
+@dataclass
+class ProfilerRuleEvaluationStatus(Base):
+    """TBA"""
+    rule_configuration_name: Optional[str] = Unassigned()
+    rule_evaluation_job_arn: Optional[str] = Unassigned()
+    rule_evaluation_status: Optional[str] = Unassigned()
+    status_details: Optional[str] = Unassigned()
+    last_modified_time: Optional[datetime.datetime] = Unassigned()
+
+
+@dataclass
 class TrialComponentSource(Base):
     """TBA"""
     source_arn: str
     source_type: Optional[str] = Unassigned()
+
+
+@dataclass
+class TrialComponentMetricSummary(Base):
+    """TBA"""
+    metric_name: Optional[str] = Unassigned()
+    source_arn: Optional[str] = Unassigned()
+    time_stamp: Optional[datetime.datetime] = Unassigned()
+    max: Optional[float] = Unassigned()
+    min: Optional[float] = Unassigned()
+    last: Optional[float] = Unassigned()
+    count: Optional[int] = Unassigned()
+    avg: Optional[float] = Unassigned()
+    std_dev: Optional[float] = Unassigned()
 
 
 @dataclass
@@ -3597,8 +3608,8 @@ class OidcConfigForResponse(Base):
 class WorkforceVpcConfigResponse(Base):
     """TBA"""
     vpc_id: str
-    security_group_ids: list
-    subnets: list
+    security_group_ids: List[str]
+    subnets: List[str]
     vpc_endpoint_id: Optional[str] = Unassigned()
 
 
@@ -3622,11 +3633,11 @@ class Workforce(Base):
 class Workteam(Base):
     """TBA"""
     workteam_name: str
-    member_definitions: list
+    member_definitions: List[MemberDefinition]
     workteam_arn: str
     description: str
     workforce_arn: Optional[str] = Unassigned()
-    product_listing_ids: Optional[list] = Unassigned()
+    product_listing_ids: Optional[List[str]] = Unassigned()
     sub_domain: Optional[str] = Unassigned()
     create_date: Optional[datetime.datetime] = Unassigned()
     last_updated_date: Optional[datetime.datetime] = Unassigned()
@@ -3690,6 +3701,13 @@ class DeviceStats(Base):
 
 
 @dataclass
+class EdgeModelSummary(Base):
+    """TBA"""
+    model_name: str
+    model_version: str
+
+
+@dataclass
 class DeviceSummary(Base):
     """TBA"""
     device_name: str
@@ -3699,7 +3717,7 @@ class DeviceSummary(Base):
     iot_thing_name: Optional[str] = Unassigned()
     registration_time: Optional[datetime.datetime] = Unassigned()
     latest_heartbeat: Optional[datetime.datetime] = Unassigned()
-    models: Optional[list] = Unassigned()
+    models: Optional[List[EdgeModelSummary]] = Unassigned()
     agent_version: Optional[str] = Unassigned()
 
 
@@ -3729,8 +3747,34 @@ class DomainSettingsForUpdate(Base):
     """TBA"""
     r_studio_server_pro_domain_settings_for_update: Optional[RStudioServerProDomainSettingsForUpdate] = Unassigned()
     execution_role_identity_config: Optional[str] = Unassigned()
-    security_group_ids: Optional[list] = Unassigned()
+    security_group_ids: Optional[List[str]] = Unassigned()
     docker_settings: Optional[DockerSettings] = Unassigned()
+
+
+@dataclass
+class PredefinedMetricSpecification(Base):
+    """TBA"""
+    predefined_metric_type: Optional[str] = Unassigned()
+
+
+@dataclass
+class MetricSpecification(Base):
+    """TBA"""
+    predefined: Optional[PredefinedMetricSpecification] = Unassigned()
+    customized: Optional[CustomizedMetricSpecification] = Unassigned()
+
+
+@dataclass
+class TargetTrackingScalingPolicyConfiguration(Base):
+    """TBA"""
+    metric_specification: Optional[MetricSpecification] = Unassigned()
+    target_value: Optional[float] = Unassigned()
+
+
+@dataclass
+class ScalingPolicy(Base):
+    """TBA"""
+    target_tracking: Optional[TargetTrackingScalingPolicyConfiguration] = Unassigned()
 
 
 @dataclass
@@ -3740,7 +3784,7 @@ class DynamicScalingConfiguration(Base):
     max_capacity: Optional[int] = Unassigned()
     scale_in_cooldown: Optional[int] = Unassigned()
     scale_out_cooldown: Optional[int] = Unassigned()
-    scaling_policies: Optional[list] = Unassigned()
+    scaling_policies: Optional[List[ScalingPolicy]] = Unassigned()
 
 
 @dataclass
@@ -3761,13 +3805,6 @@ class Edge(Base):
 
 
 @dataclass
-class EdgeDeploymentModelConfig(Base):
-    """TBA"""
-    model_handle: str
-    edge_packaging_job_name: str
-
-
-@dataclass
 class EdgeDeploymentPlanSummary(Base):
     """TBA"""
     edge_deployment_plan_arn: str
@@ -3781,15 +3818,6 @@ class EdgeDeploymentPlanSummary(Base):
 
 
 @dataclass
-class EdgeModel(Base):
-    """TBA"""
-    model_name: str
-    model_version: str
-    latest_sample_time: Optional[datetime.datetime] = Unassigned()
-    latest_inference: Optional[datetime.datetime] = Unassigned()
-
-
-@dataclass
 class EdgeModelStat(Base):
     """TBA"""
     model_name: str
@@ -3798,13 +3826,6 @@ class EdgeModelStat(Base):
     connected_device_count: int
     active_device_count: int
     sampling_device_count: int
-
-
-@dataclass
-class EdgeModelSummary(Base):
-    """TBA"""
-    model_name: str
-    model_version: str
 
 
 @dataclass
@@ -3821,6 +3842,22 @@ class EdgePackagingJobSummary(Base):
 
 
 @dataclass
+class MonitoringSchedule(Base):
+    """TBA"""
+    monitoring_schedule_arn: Optional[str] = Unassigned()
+    monitoring_schedule_name: Optional[str] = Unassigned()
+    monitoring_schedule_status: Optional[str] = Unassigned()
+    monitoring_type: Optional[str] = Unassigned()
+    failure_reason: Optional[str] = Unassigned()
+    creation_time: Optional[datetime.datetime] = Unassigned()
+    last_modified_time: Optional[datetime.datetime] = Unassigned()
+    monitoring_schedule_config: Optional[MonitoringScheduleConfig] = Unassigned()
+    endpoint_name: Optional[str] = Unassigned()
+    last_monitoring_execution_summary: Optional[MonitoringExecutionSummary] = Unassigned()
+    tags: Optional[List[Tag]] = Unassigned()
+
+
+@dataclass
 class Endpoint(Base):
     """TBA"""
     endpoint_name: str
@@ -3829,12 +3866,12 @@ class Endpoint(Base):
     endpoint_status: str
     creation_time: datetime.datetime
     last_modified_time: datetime.datetime
-    production_variants: Optional[list] = Unassigned()
+    production_variants: Optional[List[ProductionVariantSummary]] = Unassigned()
     data_capture_config: Optional[DataCaptureConfigSummary] = Unassigned()
     failure_reason: Optional[str] = Unassigned()
-    monitoring_schedules: Optional[list] = Unassigned()
-    tags: Optional[list] = Unassigned()
-    shadow_production_variants: Optional[list] = Unassigned()
+    monitoring_schedules: Optional[List[MonitoringSchedule]] = Unassigned()
+    tags: Optional[List[Tag]] = Unassigned()
+    shadow_production_variants: Optional[List[ProductionVariantSummary]] = Unassigned()
 
 
 @dataclass
@@ -3846,59 +3883,6 @@ class EndpointConfigSummary(Base):
 
 
 @dataclass
-class EndpointInfo(Base):
-    """TBA"""
-    endpoint_name: Optional[str] = Unassigned()
-
-
-@dataclass
-class ProductionVariantServerlessConfig(Base):
-    """TBA"""
-    memory_size_in_m_b: int
-    max_concurrency: int
-    provisioned_concurrency: Optional[int] = Unassigned()
-
-
-@dataclass
-class EnvironmentParameterRanges(Base):
-    """TBA"""
-    categorical_parameter_ranges: Optional[list] = Unassigned()
-
-
-@dataclass
-class EndpointInputConfiguration(Base):
-    """TBA"""
-    instance_type: Optional[str] = Unassigned()
-    serverless_config: Optional[ProductionVariantServerlessConfig] = Unassigned()
-    inference_specification_name: Optional[str] = Unassigned()
-    environment_parameter_ranges: Optional[EnvironmentParameterRanges] = Unassigned()
-
-
-@dataclass
-class EndpointOutputConfiguration(Base):
-    """TBA"""
-    endpoint_name: str
-    variant_name: str
-    instance_type: Optional[str] = Unassigned()
-    initial_instance_count: Optional[int] = Unassigned()
-    serverless_config: Optional[ProductionVariantServerlessConfig] = Unassigned()
-
-
-@dataclass
-class InferenceMetrics(Base):
-    """TBA"""
-    max_invocations: int
-    model_latency: int
-
-
-@dataclass
-class EndpointPerformance(Base):
-    """TBA"""
-    metrics: InferenceMetrics
-    endpoint_info: EndpointInfo
-
-
-@dataclass
 class EndpointSummary(Base):
     """TBA"""
     endpoint_name: str
@@ -3906,14 +3890,6 @@ class EndpointSummary(Base):
     creation_time: datetime.datetime
     last_modified_time: datetime.datetime
     endpoint_status: str
-
-
-@dataclass
-class EnvironmentParameter(Base):
-    """TBA"""
-    key: str
-    value_type: str
-    value: str
 
 
 @dataclass
@@ -3928,7 +3904,7 @@ class Experiment(Base):
     created_by: Optional[UserContext] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
     last_modified_by: Optional[UserContext] = Unassigned()
-    tags: Optional[list] = Unassigned()
+    tags: Optional[List[Tag]] = Unassigned()
 
 
 @dataclass
@@ -3949,22 +3925,13 @@ class FailStepMetadata(Base):
 
 
 @dataclass
-class FeatureDefinition(Base):
-    """TBA"""
-    feature_name: str
-    feature_type: str
-    collection_type: Optional[str] = Unassigned()
-    collection_config: Optional[CollectionConfig] = Unassigned()
-
-
-@dataclass
 class FeatureGroup(Base):
     """TBA"""
     feature_group_arn: Optional[str] = Unassigned()
     feature_group_name: Optional[str] = Unassigned()
     record_identifier_feature_name: Optional[str] = Unassigned()
     event_time_feature_name: Optional[str] = Unassigned()
-    feature_definitions: Optional[list] = Unassigned()
+    feature_definitions: Optional[List[FeatureDefinition]] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
     online_store_config: Optional[OnlineStoreConfig] = Unassigned()
@@ -3975,7 +3942,7 @@ class FeatureGroup(Base):
     last_update_status: Optional[LastUpdateStatus] = Unassigned()
     failure_reason: Optional[str] = Unassigned()
     description: Optional[str] = Unassigned()
-    tags: Optional[list] = Unassigned()
+    tags: Optional[List[Tag]] = Unassigned()
 
 
 @dataclass
@@ -3998,14 +3965,7 @@ class FeatureMetadata(Base):
     creation_time: Optional[datetime.datetime] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
     description: Optional[str] = Unassigned()
-    parameters: Optional[list] = Unassigned()
-
-
-@dataclass
-class FeatureParameter(Base):
-    """TBA"""
-    key: Optional[str] = Unassigned()
-    value: Optional[str] = Unassigned()
+    parameters: Optional[List[FeatureParameter]] = Unassigned()
 
 
 @dataclass
@@ -4024,24 +3984,6 @@ class FlowDefinitionSummary(Base):
     flow_definition_status: str
     creation_time: datetime.datetime
     failure_reason: Optional[str] = Unassigned()
-
-
-@dataclass
-class GetModelPackageGroupPolicyInput(Base):
-    """TBA"""
-    model_package_group_name: str
-
-
-@dataclass
-class GetModelPackageGroupPolicyOutput(Base):
-    """TBA"""
-    resource_policy: str
-
-
-@dataclass
-class GetSagemakerServicecatalogPortfolioStatusOutput(Base):
-    """TBA"""
-    status: Optional[str] = Unassigned()
 
 
 @dataclass
@@ -4071,22 +4013,15 @@ class SuggestionQuery(Base):
 
 
 @dataclass
+class PropertyNameSuggestion(Base):
+    """TBA"""
+    property_name: Optional[str] = Unassigned()
+
+
+@dataclass
 class GitConfigForUpdate(Base):
     """TBA"""
     secret_arn: Optional[str] = Unassigned()
-
-
-@dataclass
-class HolidayConfigAttributes(Base):
-    """TBA"""
-    country_code: Optional[str] = Unassigned()
-
-
-@dataclass
-class HubContentDependency(Base):
-    """TBA"""
-    dependency_origin_path: Optional[str] = Unassigned()
-    dependency_copy_path: Optional[str] = Unassigned()
 
 
 @dataclass
@@ -4101,7 +4036,7 @@ class HubContentInfo(Base):
     creation_time: datetime.datetime
     hub_content_display_name: Optional[str] = Unassigned()
     hub_content_description: Optional[str] = Unassigned()
-    hub_content_search_keywords: Optional[list] = Unassigned()
+    hub_content_search_keywords: Optional[List[str]] = Unassigned()
 
 
 @dataclass
@@ -4114,7 +4049,7 @@ class HubInfo(Base):
     last_modified_time: datetime.datetime
     hub_display_name: Optional[str] = Unassigned()
     hub_description: Optional[str] = Unassigned()
-    hub_search_keywords: Optional[list] = Unassigned()
+    hub_search_keywords: Optional[List[str]] = Unassigned()
 
 
 @dataclass
@@ -4126,48 +4061,13 @@ class HumanTaskUiSummary(Base):
 
 
 @dataclass
-class IntegerParameterRangeSpecification(Base):
-    """TBA"""
-    min_value: str
-    max_value: str
-
-
-@dataclass
-class ParameterRange(Base):
-    """TBA"""
-    integer_parameter_range_specification: Optional[IntegerParameterRangeSpecification] = Unassigned()
-    continuous_parameter_range_specification: Optional[ContinuousParameterRangeSpecification] = Unassigned()
-    categorical_parameter_range_specification: Optional[CategoricalParameterRangeSpecification] = Unassigned()
-
-
-@dataclass
-class HyperParameterSpecification(Base):
-    """TBA"""
-    name: str
-    type: str
-    description: Optional[str] = Unassigned()
-    range: Optional[ParameterRange] = Unassigned()
-    is_tunable: Optional[bool] = Unassigned()
-    is_required: Optional[bool] = Unassigned()
-    default_value: Optional[str] = Unassigned()
-
-
-@dataclass
-class HyperParameterTuningInstanceConfig(Base):
-    """TBA"""
-    instance_type: str
-    instance_count: int
-    volume_size_in_g_b: int
-
-
-@dataclass
 class HyperParameterTuningJobSearchEntity(Base):
     """TBA"""
     hyper_parameter_tuning_job_name: Optional[str] = Unassigned()
     hyper_parameter_tuning_job_arn: Optional[str] = Unassigned()
     hyper_parameter_tuning_job_config: Optional[HyperParameterTuningJobConfig] = Unassigned()
     training_job_definition: Optional[HyperParameterTrainingJobDefinition] = Unassigned()
-    training_job_definitions: Optional[list] = Unassigned()
+    training_job_definitions: Optional[List[HyperParameterTrainingJobDefinition]] = Unassigned()
     hyper_parameter_tuning_job_status: Optional[str] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
     hyper_parameter_tuning_end_time: Optional[datetime.datetime] = Unassigned()
@@ -4180,7 +4080,7 @@ class HyperParameterTuningJobSearchEntity(Base):
     failure_reason: Optional[str] = Unassigned()
     tuning_job_completion_details: Optional[HyperParameterTuningJobCompletionDetails] = Unassigned()
     consumed_resources: Optional[HyperParameterTuningJobConsumedResources] = Unassigned()
-    tags: Optional[list] = Unassigned()
+    tags: Optional[List[Tag]] = Unassigned()
 
 
 @dataclass
@@ -4196,14 +4096,6 @@ class HyperParameterTuningJobSummary(Base):
     hyper_parameter_tuning_end_time: Optional[datetime.datetime] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
     resource_limits: Optional[ResourceLimits] = Unassigned()
-
-
-@dataclass
-class IdentityProviderOAuthSetting(Base):
-    """TBA"""
-    data_source_name: Optional[str] = Unassigned()
-    status: Optional[str] = Unassigned()
-    secret_arn: Optional[str] = Unassigned()
 
 
 @dataclass
@@ -4260,37 +4152,6 @@ class InferenceExperimentSummary(Base):
 
 
 @dataclass
-class RecommendationMetrics(Base):
-    """TBA"""
-    cost_per_hour: float
-    cost_per_inference: float
-    max_invocations: int
-    model_latency: int
-    cpu_utilization: Optional[float] = Unassigned()
-    memory_utilization: Optional[float] = Unassigned()
-    model_setup_time: Optional[int] = Unassigned()
-
-
-@dataclass
-class ModelConfiguration(Base):
-    """TBA"""
-    inference_specification_name: Optional[str] = Unassigned()
-    environment_parameters: Optional[list] = Unassigned()
-    compilation_job_name: Optional[str] = Unassigned()
-
-
-@dataclass
-class InferenceRecommendation(Base):
-    """TBA"""
-    metrics: RecommendationMetrics
-    endpoint_configuration: EndpointOutputConfiguration
-    model_configuration: ModelConfiguration
-    recommendation_id: Optional[str] = Unassigned()
-    invocation_end_time: Optional[datetime.datetime] = Unassigned()
-    invocation_start_time: Optional[datetime.datetime] = Unassigned()
-
-
-@dataclass
 class InferenceRecommendationsJob(Base):
     """TBA"""
     job_name: str
@@ -4327,30 +4188,6 @@ class InferenceRecommendationsJobStep(Base):
     job_name: str
     status: str
     inference_benchmark: Optional[RecommendationJobInferenceBenchmark] = Unassigned()
-
-
-@dataclass
-class InstanceGroup(Base):
-    """TBA"""
-    instance_type: str
-    instance_count: int
-    instance_group_name: str
-
-
-@dataclass
-class IntegerParameterRange(Base):
-    """TBA"""
-    name: str
-    min_value: str
-    max_value: str
-    scaling_type: Optional[str] = Unassigned()
-
-
-@dataclass
-class KernelSpec(Base):
-    """TBA"""
-    name: str
-    display_name: Optional[str] = Unassigned()
 
 
 @dataclass
@@ -4393,7 +4230,7 @@ class LabelingJobSummary(Base):
 class LambdaStepMetadata(Base):
     """TBA"""
     arn: Optional[str] = Unassigned()
-    output_parameters: Optional[list] = Unassigned()
+    output_parameters: Optional[List[OutputParameter]] = Unassigned()
 
 
 @dataclass
@@ -4407,339 +4244,12 @@ class LineageGroupSummary(Base):
 
 
 @dataclass
-class ListAlgorithmsInput(Base):
+class MonitoringJobDefinitionSummary(Base):
     """TBA"""
-    creation_time_after: Optional[datetime.datetime] = Unassigned()
-    creation_time_before: Optional[datetime.datetime] = Unassigned()
-    max_results: Optional[int] = Unassigned()
-    name_contains: Optional[str] = Unassigned()
-    next_token: Optional[str] = Unassigned()
-    sort_by: Optional[str] = Unassigned()
-    sort_order: Optional[str] = Unassigned()
-
-
-@dataclass
-class ListAlgorithmsOutput(Base):
-    """TBA"""
-    algorithm_summary_list: list
-    next_token: Optional[str] = Unassigned()
-
-
-@dataclass
-class ListCodeRepositoriesInput(Base):
-    """TBA"""
-    creation_time_after: Optional[datetime.datetime] = Unassigned()
-    creation_time_before: Optional[datetime.datetime] = Unassigned()
-    last_modified_time_after: Optional[datetime.datetime] = Unassigned()
-    last_modified_time_before: Optional[datetime.datetime] = Unassigned()
-    max_results: Optional[int] = Unassigned()
-    name_contains: Optional[str] = Unassigned()
-    next_token: Optional[str] = Unassigned()
-    sort_by: Optional[str] = Unassigned()
-    sort_order: Optional[str] = Unassigned()
-
-
-@dataclass
-class ListCodeRepositoriesOutput(Base):
-    """TBA"""
-    code_repository_summary_list: list
-    next_token: Optional[str] = Unassigned()
-
-
-@dataclass
-class ListEndpointConfigsInput(Base):
-    """TBA"""
-    sort_by: Optional[str] = Unassigned()
-    sort_order: Optional[str] = Unassigned()
-    next_token: Optional[str] = Unassigned()
-    max_results: Optional[int] = Unassigned()
-    name_contains: Optional[str] = Unassigned()
-    creation_time_before: Optional[datetime.datetime] = Unassigned()
-    creation_time_after: Optional[datetime.datetime] = Unassigned()
-
-
-@dataclass
-class ListEndpointConfigsOutput(Base):
-    """TBA"""
-    endpoint_configs: list
-    next_token: Optional[str] = Unassigned()
-
-
-@dataclass
-class ListEndpointsInput(Base):
-    """TBA"""
-    sort_by: Optional[str] = Unassigned()
-    sort_order: Optional[str] = Unassigned()
-    next_token: Optional[str] = Unassigned()
-    max_results: Optional[int] = Unassigned()
-    name_contains: Optional[str] = Unassigned()
-    creation_time_before: Optional[datetime.datetime] = Unassigned()
-    creation_time_after: Optional[datetime.datetime] = Unassigned()
-    last_modified_time_before: Optional[datetime.datetime] = Unassigned()
-    last_modified_time_after: Optional[datetime.datetime] = Unassigned()
-    status_equals: Optional[str] = Unassigned()
-
-
-@dataclass
-class ListEndpointsOutput(Base):
-    """TBA"""
-    endpoints: list
-    next_token: Optional[str] = Unassigned()
-
-
-@dataclass
-class ListInferenceComponentsInput(Base):
-    """TBA"""
-    sort_by: Optional[str] = Unassigned()
-    sort_order: Optional[str] = Unassigned()
-    next_token: Optional[str] = Unassigned()
-    max_results: Optional[int] = Unassigned()
-    name_contains: Optional[str] = Unassigned()
-    creation_time_before: Optional[datetime.datetime] = Unassigned()
-    creation_time_after: Optional[datetime.datetime] = Unassigned()
-    last_modified_time_before: Optional[datetime.datetime] = Unassigned()
-    last_modified_time_after: Optional[datetime.datetime] = Unassigned()
-    status_equals: Optional[str] = Unassigned()
-    endpoint_name_equals: Optional[str] = Unassigned()
-    variant_name_equals: Optional[str] = Unassigned()
-
-
-@dataclass
-class ListInferenceComponentsOutput(Base):
-    """TBA"""
-    inference_components: list
-    next_token: Optional[str] = Unassigned()
-
-
-@dataclass
-class ModelMetadataSearchExpression(Base):
-    """TBA"""
-    filters: Optional[list] = Unassigned()
-
-
-@dataclass
-class ListModelPackageGroupsInput(Base):
-    """TBA"""
-    creation_time_after: Optional[datetime.datetime] = Unassigned()
-    creation_time_before: Optional[datetime.datetime] = Unassigned()
-    max_results: Optional[int] = Unassigned()
-    name_contains: Optional[str] = Unassigned()
-    next_token: Optional[str] = Unassigned()
-    sort_by: Optional[str] = Unassigned()
-    sort_order: Optional[str] = Unassigned()
-
-
-@dataclass
-class ListModelPackageGroupsOutput(Base):
-    """TBA"""
-    model_package_group_summary_list: list
-    next_token: Optional[str] = Unassigned()
-
-
-@dataclass
-class ListModelPackagesInput(Base):
-    """TBA"""
-    creation_time_after: Optional[datetime.datetime] = Unassigned()
-    creation_time_before: Optional[datetime.datetime] = Unassigned()
-    max_results: Optional[int] = Unassigned()
-    name_contains: Optional[str] = Unassigned()
-    model_approval_status: Optional[str] = Unassigned()
-    model_package_group_name: Optional[str] = Unassigned()
-    model_package_type: Optional[str] = Unassigned()
-    next_token: Optional[str] = Unassigned()
-    sort_by: Optional[str] = Unassigned()
-    sort_order: Optional[str] = Unassigned()
-
-
-@dataclass
-class ListModelPackagesOutput(Base):
-    """TBA"""
-    model_package_summary_list: list
-    next_token: Optional[str] = Unassigned()
-
-
-@dataclass
-class ListModelsInput(Base):
-    """TBA"""
-    sort_by: Optional[str] = Unassigned()
-    sort_order: Optional[str] = Unassigned()
-    next_token: Optional[str] = Unassigned()
-    max_results: Optional[int] = Unassigned()
-    name_contains: Optional[str] = Unassigned()
-    creation_time_before: Optional[datetime.datetime] = Unassigned()
-    creation_time_after: Optional[datetime.datetime] = Unassigned()
-
-
-@dataclass
-class ListModelsOutput(Base):
-    """TBA"""
-    models: list
-    next_token: Optional[str] = Unassigned()
-
-
-@dataclass
-class ListNotebookInstanceLifecycleConfigsInput(Base):
-    """TBA"""
-    next_token: Optional[str] = Unassigned()
-    max_results: Optional[int] = Unassigned()
-    sort_by: Optional[str] = Unassigned()
-    sort_order: Optional[str] = Unassigned()
-    name_contains: Optional[str] = Unassigned()
-    creation_time_before: Optional[datetime.datetime] = Unassigned()
-    creation_time_after: Optional[datetime.datetime] = Unassigned()
-    last_modified_time_before: Optional[datetime.datetime] = Unassigned()
-    last_modified_time_after: Optional[datetime.datetime] = Unassigned()
-
-
-@dataclass
-class ListNotebookInstanceLifecycleConfigsOutput(Base):
-    """TBA"""
-    next_token: Optional[str] = Unassigned()
-    notebook_instance_lifecycle_configs: Optional[list] = Unassigned()
-
-
-@dataclass
-class ListNotebookInstancesInput(Base):
-    """TBA"""
-    next_token: Optional[str] = Unassigned()
-    max_results: Optional[int] = Unassigned()
-    sort_by: Optional[str] = Unassigned()
-    sort_order: Optional[str] = Unassigned()
-    name_contains: Optional[str] = Unassigned()
-    creation_time_before: Optional[datetime.datetime] = Unassigned()
-    creation_time_after: Optional[datetime.datetime] = Unassigned()
-    last_modified_time_before: Optional[datetime.datetime] = Unassigned()
-    last_modified_time_after: Optional[datetime.datetime] = Unassigned()
-    status_equals: Optional[str] = Unassigned()
-    notebook_instance_lifecycle_config_name_contains: Optional[str] = Unassigned()
-    default_code_repository_contains: Optional[str] = Unassigned()
-    additional_code_repository_equals: Optional[str] = Unassigned()
-
-
-@dataclass
-class ListNotebookInstancesOutput(Base):
-    """TBA"""
-    next_token: Optional[str] = Unassigned()
-    notebook_instances: Optional[list] = Unassigned()
-
-
-@dataclass
-class ListProjectsInput(Base):
-    """TBA"""
-    creation_time_after: Optional[datetime.datetime] = Unassigned()
-    creation_time_before: Optional[datetime.datetime] = Unassigned()
-    max_results: Optional[int] = Unassigned()
-    name_contains: Optional[str] = Unassigned()
-    next_token: Optional[str] = Unassigned()
-    sort_by: Optional[str] = Unassigned()
-    sort_order: Optional[str] = Unassigned()
-
-
-@dataclass
-class ListProjectsOutput(Base):
-    """TBA"""
-    project_summary_list: list
-    next_token: Optional[str] = Unassigned()
-
-
-@dataclass
-class ListTagsInput(Base):
-    """TBA"""
-    resource_arn: str
-    next_token: Optional[str] = Unassigned()
-    max_results: Optional[int] = Unassigned()
-
-
-@dataclass
-class ListTagsOutput(Base):
-    """TBA"""
-    tags: Optional[list] = Unassigned()
-    next_token: Optional[str] = Unassigned()
-
-
-@dataclass
-class OidcMemberDefinition(Base):
-    """TBA"""
-    groups: Optional[list] = Unassigned()
-
-
-@dataclass
-class MemberDefinition(Base):
-    """TBA"""
-    cognito_member_definition: Optional[CognitoMemberDefinition] = Unassigned()
-    oidc_member_definition: Optional[OidcMemberDefinition] = Unassigned()
-
-
-@dataclass
-class MetricData(Base):
-    """TBA"""
-    metric_name: Optional[str] = Unassigned()
-    value: Optional[float] = Unassigned()
-    timestamp: Optional[datetime.datetime] = Unassigned()
-
-
-@dataclass
-class MetricDatum(Base):
-    """TBA"""
-    metric_name: Optional[str] = Unassigned()
-    value: Optional[float] = Unassigned()
-    set: Optional[str] = Unassigned()
-    standard_metric_name: Optional[str] = Unassigned()
-
-
-@dataclass
-class MetricDefinition(Base):
-    """TBA"""
-    name: str
-    regex: str
-
-
-@dataclass
-class PredefinedMetricSpecification(Base):
-    """TBA"""
-    predefined_metric_type: Optional[str] = Unassigned()
-
-
-@dataclass
-class MetricSpecification(Base):
-    """TBA"""
-    predefined: Optional[PredefinedMetricSpecification] = Unassigned()
-    customized: Optional[CustomizedMetricSpecification] = Unassigned()
-
-
-@dataclass
-class Model(Base):
-    """TBA"""
-    model_name: Optional[str] = Unassigned()
-    primary_container: Optional[ContainerDefinition] = Unassigned()
-    containers: Optional[list] = Unassigned()
-    inference_execution_config: Optional[InferenceExecutionConfig] = Unassigned()
-    execution_role_arn: Optional[str] = Unassigned()
-    vpc_config: Optional[VpcConfig] = Unassigned()
-    creation_time: Optional[datetime.datetime] = Unassigned()
-    model_arn: Optional[str] = Unassigned()
-    enable_network_isolation: Optional[bool] = Unassigned()
-    tags: Optional[list] = Unassigned()
-    deployment_recommendation: Optional[DeploymentRecommendation] = Unassigned()
-
-
-@dataclass
-class ModelCard(Base):
-    """TBA"""
-    model_card_arn: Optional[str] = Unassigned()
-    model_card_name: Optional[str] = Unassigned()
-    model_card_version: Optional[int] = Unassigned()
-    content: Optional[str] = Unassigned()
-    model_card_status: Optional[str] = Unassigned()
-    security_config: Optional[ModelCardSecurityConfig] = Unassigned()
-    creation_time: Optional[datetime.datetime] = Unassigned()
-    created_by: Optional[UserContext] = Unassigned()
-    last_modified_time: Optional[datetime.datetime] = Unassigned()
-    last_modified_by: Optional[UserContext] = Unassigned()
-    tags: Optional[list] = Unassigned()
-    model_id: Optional[str] = Unassigned()
-    risk_rating: Optional[str] = Unassigned()
-    model_package_group_name: Optional[str] = Unassigned()
+    monitoring_job_definition_name: str
+    monitoring_job_definition_arn: str
+    creation_time: datetime.datetime
+    endpoint_name: str
 
 
 @dataclass
@@ -4755,16 +4265,6 @@ class ModelCardExportJobSummary(Base):
 
 
 @dataclass
-class ModelCardSummary(Base):
-    """TBA"""
-    model_card_name: str
-    model_card_arn: str
-    model_card_status: str
-    creation_time: datetime.datetime
-    last_modified_time: Optional[datetime.datetime] = Unassigned()
-
-
-@dataclass
 class ModelCardVersionSummary(Base):
     """TBA"""
     model_card_name: str
@@ -4776,117 +4276,13 @@ class ModelCardVersionSummary(Base):
 
 
 @dataclass
-class ModelDashboardEndpoint(Base):
+class ModelCardSummary(Base):
     """TBA"""
-    endpoint_name: str
-    endpoint_arn: str
+    model_card_name: str
+    model_card_arn: str
+    model_card_status: str
     creation_time: datetime.datetime
-    last_modified_time: datetime.datetime
-    endpoint_status: str
-
-
-@dataclass
-class ModelDashboardIndicatorAction(Base):
-    """TBA"""
-    enabled: Optional[bool] = Unassigned()
-
-
-@dataclass
-class TransformJob(Base):
-    """TBA"""
-    transform_job_name: Optional[str] = Unassigned()
-    transform_job_arn: Optional[str] = Unassigned()
-    transform_job_status: Optional[str] = Unassigned()
-    failure_reason: Optional[str] = Unassigned()
-    model_name: Optional[str] = Unassigned()
-    max_concurrent_transforms: Optional[int] = Unassigned()
-    model_client_config: Optional[ModelClientConfig] = Unassigned()
-    max_payload_in_m_b: Optional[int] = Unassigned()
-    batch_strategy: Optional[str] = Unassigned()
-    environment: Optional[dict] = Unassigned()
-    transform_input: Optional[TransformInput] = Unassigned()
-    transform_output: Optional[TransformOutput] = Unassigned()
-    data_capture_config: Optional[BatchDataCaptureConfig] = Unassigned()
-    transform_resources: Optional[TransformResources] = Unassigned()
-    creation_time: Optional[datetime.datetime] = Unassigned()
-    transform_start_time: Optional[datetime.datetime] = Unassigned()
-    transform_end_time: Optional[datetime.datetime] = Unassigned()
-    labeling_job_arn: Optional[str] = Unassigned()
-    auto_m_l_job_arn: Optional[str] = Unassigned()
-    data_processing: Optional[DataProcessing] = Unassigned()
-    experiment_config: Optional[ExperimentConfig] = Unassigned()
-    tags: Optional[list] = Unassigned()
-
-
-@dataclass
-class ModelDashboardModelCard(Base):
-    """TBA"""
-    model_card_arn: Optional[str] = Unassigned()
-    model_card_name: Optional[str] = Unassigned()
-    model_card_version: Optional[int] = Unassigned()
-    model_card_status: Optional[str] = Unassigned()
-    security_config: Optional[ModelCardSecurityConfig] = Unassigned()
-    creation_time: Optional[datetime.datetime] = Unassigned()
-    created_by: Optional[UserContext] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
-    last_modified_by: Optional[UserContext] = Unassigned()
-    tags: Optional[list] = Unassigned()
-    model_id: Optional[str] = Unassigned()
-    risk_rating: Optional[str] = Unassigned()
-
-
-@dataclass
-class ModelDashboardModel(Base):
-    """TBA"""
-    model: Optional[Model] = Unassigned()
-    endpoints: Optional[list] = Unassigned()
-    last_batch_transform_job: Optional[TransformJob] = Unassigned()
-    monitoring_schedules: Optional[list] = Unassigned()
-    model_card: Optional[ModelDashboardModelCard] = Unassigned()
-
-
-@dataclass
-class ModelDashboardMonitoringSchedule(Base):
-    """TBA"""
-    monitoring_schedule_arn: Optional[str] = Unassigned()
-    monitoring_schedule_name: Optional[str] = Unassigned()
-    monitoring_schedule_status: Optional[str] = Unassigned()
-    monitoring_type: Optional[str] = Unassigned()
-    failure_reason: Optional[str] = Unassigned()
-    creation_time: Optional[datetime.datetime] = Unassigned()
-    last_modified_time: Optional[datetime.datetime] = Unassigned()
-    monitoring_schedule_config: Optional[MonitoringScheduleConfig] = Unassigned()
-    endpoint_name: Optional[str] = Unassigned()
-    monitoring_alert_summaries: Optional[list] = Unassigned()
-    last_monitoring_execution_summary: Optional[MonitoringExecutionSummary] = Unassigned()
-    batch_transform_input: Optional[BatchTransformInput] = Unassigned()
-
-
-@dataclass
-class RealTimeInferenceConfig(Base):
-    """TBA"""
-    instance_type: str
-    instance_count: int
-
-
-@dataclass
-class ModelInfrastructureConfig(Base):
-    """TBA"""
-    infrastructure_type: str
-    real_time_inference_config: RealTimeInferenceConfig
-
-
-@dataclass
-class ModelInput(Base):
-    """TBA"""
-    data_input_config: str
-
-
-@dataclass
-class ModelLatencyThreshold(Base):
-    """TBA"""
-    percentile: Optional[str] = Unassigned()
-    value_in_milliseconds: Optional[int] = Unassigned()
 
 
 @dataclass
@@ -4894,6 +4290,12 @@ class ModelMetadataFilter(Base):
     """TBA"""
     name: str
     value: str
+
+
+@dataclass
+class ModelMetadataSearchExpression(Base):
+    """TBA"""
+    filters: Optional[List[ModelMetadataFilter]] = Unassigned()
 
 
 @dataclass
@@ -4907,68 +4309,6 @@ class ModelMetadataSummary(Base):
 
 
 @dataclass
-class ModelPackage(Base):
-    """TBA"""
-    model_package_name: Optional[str] = Unassigned()
-    model_package_group_name: Optional[str] = Unassigned()
-    model_package_version: Optional[int] = Unassigned()
-    model_package_arn: Optional[str] = Unassigned()
-    model_package_description: Optional[str] = Unassigned()
-    creation_time: Optional[datetime.datetime] = Unassigned()
-    inference_specification: Optional[InferenceSpecification] = Unassigned()
-    source_algorithm_specification: Optional[SourceAlgorithmSpecification] = Unassigned()
-    validation_specification: Optional[ModelPackageValidationSpecification] = Unassigned()
-    model_package_status: Optional[str] = Unassigned()
-    model_package_status_details: Optional[ModelPackageStatusDetails] = Unassigned()
-    certify_for_marketplace: Optional[bool] = Unassigned()
-    model_approval_status: Optional[str] = Unassigned()
-    created_by: Optional[UserContext] = Unassigned()
-    metadata_properties: Optional[MetadataProperties] = Unassigned()
-    model_metrics: Optional[ModelMetrics] = Unassigned()
-    last_modified_time: Optional[datetime.datetime] = Unassigned()
-    last_modified_by: Optional[UserContext] = Unassigned()
-    approval_description: Optional[str] = Unassigned()
-    domain: Optional[str] = Unassigned()
-    task: Optional[str] = Unassigned()
-    sample_payload_url: Optional[str] = Unassigned()
-    additional_inference_specifications: Optional[list] = Unassigned()
-    source_uri: Optional[str] = Unassigned()
-    tags: Optional[list] = Unassigned()
-    customer_metadata_properties: Optional[dict] = Unassigned()
-    drift_check_baselines: Optional[DriftCheckBaselines] = Unassigned()
-    skip_model_validation: Optional[str] = Unassigned()
-
-
-@dataclass
-class ModelPackageContainerDefinition(Base):
-    """TBA"""
-    image: str
-    container_hostname: Optional[str] = Unassigned()
-    image_digest: Optional[str] = Unassigned()
-    model_data_url: Optional[str] = Unassigned()
-    model_data_source: Optional[ModelDataSource] = Unassigned()
-    product_id: Optional[str] = Unassigned()
-    environment: Optional[dict] = Unassigned()
-    model_input: Optional[ModelInput] = Unassigned()
-    framework: Optional[str] = Unassigned()
-    framework_version: Optional[str] = Unassigned()
-    nearest_model_name: Optional[str] = Unassigned()
-    additional_s3_data_source: Optional[AdditionalS3DataSource] = Unassigned()
-
-
-@dataclass
-class ModelPackageGroup(Base):
-    """TBA"""
-    model_package_group_name: Optional[str] = Unassigned()
-    model_package_group_arn: Optional[str] = Unassigned()
-    model_package_group_description: Optional[str] = Unassigned()
-    creation_time: Optional[datetime.datetime] = Unassigned()
-    created_by: Optional[UserContext] = Unassigned()
-    model_package_group_status: Optional[str] = Unassigned()
-    tags: Optional[list] = Unassigned()
-
-
-@dataclass
 class ModelPackageGroupSummary(Base):
     """TBA"""
     model_package_group_name: str
@@ -4976,14 +4316,6 @@ class ModelPackageGroupSummary(Base):
     creation_time: datetime.datetime
     model_package_group_status: str
     model_package_group_description: Optional[str] = Unassigned()
-
-
-@dataclass
-class ModelPackageStatusItem(Base):
-    """TBA"""
-    name: str
-    status: str
-    failure_reason: Optional[str] = Unassigned()
 
 
 @dataclass
@@ -5000,47 +4332,11 @@ class ModelPackageSummary(Base):
 
 
 @dataclass
-class ModelPackageValidationProfile(Base):
-    """TBA"""
-    profile_name: str
-    transform_job_definition: TransformJobDefinition
-
-
-@dataclass
-class ModelStepMetadata(Base):
-    """TBA"""
-    arn: Optional[str] = Unassigned()
-
-
-@dataclass
 class ModelSummary(Base):
     """TBA"""
     model_name: str
     model_arn: str
     creation_time: datetime.datetime
-
-
-@dataclass
-class ModelVariantConfig(Base):
-    """TBA"""
-    model_name: str
-    variant_name: str
-    infrastructure_config: ModelInfrastructureConfig
-
-
-@dataclass
-class ModelVariantConfigSummary(Base):
-    """TBA"""
-    model_name: str
-    variant_name: str
-    infrastructure_config: ModelInfrastructureConfig
-    status: str
-
-
-@dataclass
-class MonitoringAlertActions(Base):
-    """TBA"""
-    model_dashboard_indicator: Optional[ModelDashboardIndicatorAction] = Unassigned()
 
 
 @dataclass
@@ -5053,6 +4349,18 @@ class MonitoringAlertHistorySummary(Base):
 
 
 @dataclass
+class ModelDashboardIndicatorAction(Base):
+    """TBA"""
+    enabled: Optional[bool] = Unassigned()
+
+
+@dataclass
+class MonitoringAlertActions(Base):
+    """TBA"""
+    model_dashboard_indicator: Optional[ModelDashboardIndicatorAction] = Unassigned()
+
+
+@dataclass
 class MonitoringAlertSummary(Base):
     """TBA"""
     monitoring_alert_name: str
@@ -5062,52 +4370,6 @@ class MonitoringAlertSummary(Base):
     datapoints_to_alert: int
     evaluation_period: int
     actions: MonitoringAlertActions
-
-
-@dataclass
-class MonitoringInput(Base):
-    """TBA"""
-    endpoint_input: Optional[EndpointInput] = Unassigned()
-    batch_transform_input: Optional[BatchTransformInput] = Unassigned()
-
-
-@dataclass
-class MonitoringJobDefinitionSummary(Base):
-    """TBA"""
-    monitoring_job_definition_name: str
-    monitoring_job_definition_arn: str
-    creation_time: datetime.datetime
-    endpoint_name: str
-
-
-@dataclass
-class MonitoringS3Output(Base):
-    """TBA"""
-    s3_uri: str
-    local_path: str
-    s3_upload_mode: Optional[str] = Unassigned()
-
-
-@dataclass
-class MonitoringOutput(Base):
-    """TBA"""
-    s3_output: MonitoringS3Output
-
-
-@dataclass
-class MonitoringSchedule(Base):
-    """TBA"""
-    monitoring_schedule_arn: Optional[str] = Unassigned()
-    monitoring_schedule_name: Optional[str] = Unassigned()
-    monitoring_schedule_status: Optional[str] = Unassigned()
-    monitoring_type: Optional[str] = Unassigned()
-    failure_reason: Optional[str] = Unassigned()
-    creation_time: Optional[datetime.datetime] = Unassigned()
-    last_modified_time: Optional[datetime.datetime] = Unassigned()
-    monitoring_schedule_config: Optional[MonitoringScheduleConfig] = Unassigned()
-    endpoint_name: Optional[str] = Unassigned()
-    last_monitoring_execution_summary: Optional[MonitoringExecutionSummary] = Unassigned()
-    tags: Optional[list] = Unassigned()
 
 
 @dataclass
@@ -5124,25 +4386,12 @@ class MonitoringScheduleSummary(Base):
 
 
 @dataclass
-class NestedFilters(Base):
-    """TBA"""
-    nested_property_name: str
-    filters: list
-
-
-@dataclass
 class NotebookInstanceLifecycleConfigSummary(Base):
     """TBA"""
     notebook_instance_lifecycle_config_name: str
     notebook_instance_lifecycle_config_arn: str
     creation_time: Optional[datetime.datetime] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
-
-
-@dataclass
-class NotebookInstanceLifecycleHook(Base):
-    """TBA"""
-    content: Optional[str] = Unassigned()
 
 
 @dataclass
@@ -5157,123 +4406,7 @@ class NotebookInstanceSummary(Base):
     last_modified_time: Optional[datetime.datetime] = Unassigned()
     notebook_instance_lifecycle_config_name: Optional[str] = Unassigned()
     default_code_repository: Optional[str] = Unassigned()
-    additional_code_repositories: Optional[list] = Unassigned()
-
-
-@dataclass
-class OnlineStoreConfigUpdate(Base):
-    """TBA"""
-    ttl_duration: Optional[TtlDuration] = Unassigned()
-
-
-@dataclass
-class OutputParameter(Base):
-    """TBA"""
-    name: str
-    value: str
-
-
-@dataclass
-class OwnershipSettingsSummary(Base):
-    """TBA"""
-    owner_user_profile_name: Optional[str] = Unassigned()
-
-
-@dataclass
-class Parameter(Base):
-    """TBA"""
-    name: str
-    value: str
-
-
-@dataclass
-class Parent(Base):
-    """TBA"""
-    trial_name: Optional[str] = Unassigned()
-    experiment_name: Optional[str] = Unassigned()
-
-
-@dataclass
-class ParentHyperParameterTuningJob(Base):
-    """TBA"""
-    hyper_parameter_tuning_job_name: Optional[str] = Unassigned()
-
-
-@dataclass
-class ProductionVariantManagedInstanceScaling(Base):
-    """TBA"""
-    status: Optional[str] = Unassigned()
-    min_instance_count: Optional[int] = Unassigned()
-    max_instance_count: Optional[int] = Unassigned()
-
-
-@dataclass
-class ProductionVariantRoutingConfig(Base):
-    """TBA"""
-    routing_strategy: str
-
-
-@dataclass
-class PendingProductionVariantSummary(Base):
-    """TBA"""
-    variant_name: str
-    deployed_images: Optional[list] = Unassigned()
-    current_weight: Optional[float] = Unassigned()
-    desired_weight: Optional[float] = Unassigned()
-    current_instance_count: Optional[int] = Unassigned()
-    desired_instance_count: Optional[int] = Unassigned()
-    instance_type: Optional[str] = Unassigned()
-    accelerator_type: Optional[str] = Unassigned()
-    variant_status: Optional[list] = Unassigned()
-    current_serverless_config: Optional[ProductionVariantServerlessConfig] = Unassigned()
-    desired_serverless_config: Optional[ProductionVariantServerlessConfig] = Unassigned()
-    managed_instance_scaling: Optional[ProductionVariantManagedInstanceScaling] = Unassigned()
-    routing_config: Optional[ProductionVariantRoutingConfig] = Unassigned()
-
-
-@dataclass
-class Phase(Base):
-    """TBA"""
-    initial_number_of_users: Optional[int] = Unassigned()
-    spawn_rate: Optional[int] = Unassigned()
-    duration_in_seconds: Optional[int] = Unassigned()
-
-
-@dataclass
-class Pipeline(Base):
-    """TBA"""
-    pipeline_arn: Optional[str] = Unassigned()
-    pipeline_name: Optional[str] = Unassigned()
-    pipeline_display_name: Optional[str] = Unassigned()
-    pipeline_description: Optional[str] = Unassigned()
-    role_arn: Optional[str] = Unassigned()
-    pipeline_status: Optional[str] = Unassigned()
-    creation_time: Optional[datetime.datetime] = Unassigned()
-    last_modified_time: Optional[datetime.datetime] = Unassigned()
-    last_run_time: Optional[datetime.datetime] = Unassigned()
-    created_by: Optional[UserContext] = Unassigned()
-    last_modified_by: Optional[UserContext] = Unassigned()
-    parallelism_configuration: Optional[ParallelismConfiguration] = Unassigned()
-    tags: Optional[list] = Unassigned()
-
-
-@dataclass
-class PipelineExecution(Base):
-    """TBA"""
-    pipeline_arn: Optional[str] = Unassigned()
-    pipeline_execution_arn: Optional[str] = Unassigned()
-    pipeline_execution_display_name: Optional[str] = Unassigned()
-    pipeline_execution_status: Optional[str] = Unassigned()
-    pipeline_execution_description: Optional[str] = Unassigned()
-    pipeline_experiment_config: Optional[PipelineExperimentConfig] = Unassigned()
-    failure_reason: Optional[str] = Unassigned()
-    creation_time: Optional[datetime.datetime] = Unassigned()
-    last_modified_time: Optional[datetime.datetime] = Unassigned()
-    created_by: Optional[UserContext] = Unassigned()
-    last_modified_by: Optional[UserContext] = Unassigned()
-    parallelism_configuration: Optional[ParallelismConfiguration] = Unassigned()
-    selective_execution_config: Optional[SelectiveExecutionConfig] = Unassigned()
-    pipeline_parameters: Optional[list] = Unassigned()
+    additional_code_repositories: Optional[List[str]] = Unassigned()
 
 
 @dataclass
@@ -5296,6 +4429,12 @@ class TransformJobStepMetadata(Base):
 
 @dataclass
 class TuningJobStepMetaData(Base):
+    """TBA"""
+    arn: Optional[str] = Unassigned()
+
+
+@dataclass
+class ModelStepMetadata(Base):
     """TBA"""
     arn: Optional[str] = Unassigned()
 
@@ -5374,6 +4513,13 @@ class PipelineExecutionSummary(Base):
 
 
 @dataclass
+class Parameter(Base):
+    """TBA"""
+    name: str
+    value: str
+
+
+@dataclass
 class PipelineSummary(Base):
     """TBA"""
     pipeline_arn: Optional[str] = Unassigned()
@@ -5384,59 +4530,6 @@ class PipelineSummary(Base):
     creation_time: Optional[datetime.datetime] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
     last_execution_time: Optional[datetime.datetime] = Unassigned()
-
-
-@dataclass
-class ProcessingFeatureStoreOutput(Base):
-    """TBA"""
-    feature_group_name: str
-
-
-@dataclass
-class ProcessingS3Input(Base):
-    """TBA"""
-    s3_uri: str
-    s3_data_type: str
-    local_path: Optional[str] = Unassigned()
-    s3_input_mode: Optional[str] = Unassigned()
-    s3_data_distribution_type: Optional[str] = Unassigned()
-    s3_compression_type: Optional[str] = Unassigned()
-
-
-@dataclass
-class ProcessingInput(Base):
-    """TBA"""
-    input_name: str
-    app_managed: Optional[bool] = Unassigned()
-    s3_input: Optional[ProcessingS3Input] = Unassigned()
-    dataset_definition: Optional[DatasetDefinition] = Unassigned()
-
-
-@dataclass
-class ProcessingJob(Base):
-    """TBA"""
-    processing_inputs: Optional[list] = Unassigned()
-    processing_output_config: Optional[ProcessingOutputConfig] = Unassigned()
-    processing_job_name: Optional[str] = Unassigned()
-    processing_resources: Optional[ProcessingResources] = Unassigned()
-    stopping_condition: Optional[ProcessingStoppingCondition] = Unassigned()
-    app_specification: Optional[AppSpecification] = Unassigned()
-    environment: Optional[dict] = Unassigned()
-    network_config: Optional[NetworkConfig] = Unassigned()
-    role_arn: Optional[str] = Unassigned()
-    experiment_config: Optional[ExperimentConfig] = Unassigned()
-    processing_job_arn: Optional[str] = Unassigned()
-    processing_job_status: Optional[str] = Unassigned()
-    exit_message: Optional[str] = Unassigned()
-    failure_reason: Optional[str] = Unassigned()
-    processing_end_time: Optional[datetime.datetime] = Unassigned()
-    processing_start_time: Optional[datetime.datetime] = Unassigned()
-    last_modified_time: Optional[datetime.datetime] = Unassigned()
-    creation_time: Optional[datetime.datetime] = Unassigned()
-    monitoring_schedule_arn: Optional[str] = Unassigned()
-    auto_m_l_job_arn: Optional[str] = Unassigned()
-    training_job_arn: Optional[str] = Unassigned()
-    tags: Optional[list] = Unassigned()
 
 
 @dataclass
@@ -5453,121 +4546,6 @@ class ProcessingJobSummary(Base):
 
 
 @dataclass
-class ProcessingS3Output(Base):
-    """TBA"""
-    s3_uri: str
-    local_path: str
-    s3_upload_mode: str
-
-
-@dataclass
-class ProcessingOutput(Base):
-    """TBA"""
-    output_name: str
-    s3_output: Optional[ProcessingS3Output] = Unassigned()
-    feature_store_output: Optional[ProcessingFeatureStoreOutput] = Unassigned()
-    app_managed: Optional[bool] = Unassigned()
-
-
-@dataclass
-class ProductionVariantCoreDumpConfig(Base):
-    """TBA"""
-    destination_s3_uri: str
-    kms_key_id: Optional[str] = Unassigned()
-
-
-@dataclass
-class ProductionVariant(Base):
-    """TBA"""
-    variant_name: str
-    model_name: Optional[str] = Unassigned()
-    initial_instance_count: Optional[int] = Unassigned()
-    instance_type: Optional[str] = Unassigned()
-    initial_variant_weight: Optional[float] = Unassigned()
-    accelerator_type: Optional[str] = Unassigned()
-    core_dump_config: Optional[ProductionVariantCoreDumpConfig] = Unassigned()
-    serverless_config: Optional[ProductionVariantServerlessConfig] = Unassigned()
-    volume_size_in_g_b: Optional[int] = Unassigned()
-    model_data_download_timeout_in_seconds: Optional[int] = Unassigned()
-    container_startup_health_check_timeout_in_seconds: Optional[int] = Unassigned()
-    enable_s_s_m_access: Optional[bool] = Unassigned()
-    managed_instance_scaling: Optional[ProductionVariantManagedInstanceScaling] = Unassigned()
-    routing_config: Optional[ProductionVariantRoutingConfig] = Unassigned()
-
-
-@dataclass
-class ProductionVariantStatus(Base):
-    """TBA"""
-    status: str
-    status_message: Optional[str] = Unassigned()
-    start_time: Optional[datetime.datetime] = Unassigned()
-
-
-@dataclass
-class ProductionVariantSummary(Base):
-    """TBA"""
-    variant_name: str
-    deployed_images: Optional[list] = Unassigned()
-    current_weight: Optional[float] = Unassigned()
-    desired_weight: Optional[float] = Unassigned()
-    current_instance_count: Optional[int] = Unassigned()
-    desired_instance_count: Optional[int] = Unassigned()
-    variant_status: Optional[list] = Unassigned()
-    current_serverless_config: Optional[ProductionVariantServerlessConfig] = Unassigned()
-    desired_serverless_config: Optional[ProductionVariantServerlessConfig] = Unassigned()
-    managed_instance_scaling: Optional[ProductionVariantManagedInstanceScaling] = Unassigned()
-    routing_config: Optional[ProductionVariantRoutingConfig] = Unassigned()
-
-
-@dataclass
-class ProfilerConfigForUpdate(Base):
-    """TBA"""
-    s3_output_path: Optional[str] = Unassigned()
-    profiling_interval_in_milliseconds: Optional[int] = Unassigned()
-    profiling_parameters: Optional[dict] = Unassigned()
-    disable_profiler: Optional[bool] = Unassigned()
-
-
-@dataclass
-class ProfilerRuleConfiguration(Base):
-    """TBA"""
-    rule_configuration_name: str
-    rule_evaluator_image: str
-    local_path: Optional[str] = Unassigned()
-    s3_output_path: Optional[str] = Unassigned()
-    instance_type: Optional[str] = Unassigned()
-    volume_size_in_g_b: Optional[int] = Unassigned()
-    rule_parameters: Optional[dict] = Unassigned()
-
-
-@dataclass
-class ProfilerRuleEvaluationStatus(Base):
-    """TBA"""
-    rule_configuration_name: Optional[str] = Unassigned()
-    rule_evaluation_job_arn: Optional[str] = Unassigned()
-    rule_evaluation_status: Optional[str] = Unassigned()
-    status_details: Optional[str] = Unassigned()
-    last_modified_time: Optional[datetime.datetime] = Unassigned()
-
-
-@dataclass
-class Project(Base):
-    """TBA"""
-    project_arn: Optional[str] = Unassigned()
-    project_name: Optional[str] = Unassigned()
-    project_id: Optional[str] = Unassigned()
-    project_description: Optional[str] = Unassigned()
-    service_catalog_provisioning_details: Optional[ServiceCatalogProvisioningDetails] = Unassigned()
-    service_catalog_provisioned_product_details: Optional[ServiceCatalogProvisionedProductDetails] = Unassigned()
-    project_status: Optional[str] = Unassigned()
-    created_by: Optional[UserContext] = Unassigned()
-    creation_time: Optional[datetime.datetime] = Unassigned()
-    tags: Optional[list] = Unassigned()
-    last_modified_time: Optional[datetime.datetime] = Unassigned()
-    last_modified_by: Optional[UserContext] = Unassigned()
-
-
-@dataclass
 class ProjectSummary(Base):
     """TBA"""
     project_name: str
@@ -5579,275 +4557,12 @@ class ProjectSummary(Base):
 
 
 @dataclass
-class PropertyNameSuggestion(Base):
-    """TBA"""
-    property_name: Optional[str] = Unassigned()
-
-
-@dataclass
-class ProvisioningParameter(Base):
-    """TBA"""
-    key: Optional[str] = Unassigned()
-    value: Optional[str] = Unassigned()
-
-
-@dataclass
-class PutModelPackageGroupPolicyInput(Base):
-    """TBA"""
-    model_package_group_name: str
-    resource_policy: str
-
-
-@dataclass
-class PutModelPackageGroupPolicyOutput(Base):
-    """TBA"""
-    model_package_group_arn: str
-
-
-@dataclass
-class QueryFilters(Base):
-    """TBA"""
-    types: Optional[list] = Unassigned()
-    lineage_types: Optional[list] = Unassigned()
-    created_before: Optional[datetime.datetime] = Unassigned()
-    created_after: Optional[datetime.datetime] = Unassigned()
-    modified_before: Optional[datetime.datetime] = Unassigned()
-    modified_after: Optional[datetime.datetime] = Unassigned()
-    properties: Optional[dict] = Unassigned()
-
-
-@dataclass
-class RealTimeInferenceRecommendation(Base):
-    """TBA"""
-    recommendation_id: str
-    instance_type: str
-    environment: Optional[dict] = Unassigned()
-
-
-@dataclass
-class RemoteDebugConfigForUpdate(Base):
-    """TBA"""
-    enable_remote_debug: Optional[bool] = Unassigned()
-
-
-@dataclass
-class RenderableTask(Base):
-    """TBA"""
-    input: str
-
-
-@dataclass
-class RenderingError(Base):
-    """TBA"""
-    code: str
-    message: str
-
-
-@dataclass
 class ResourceCatalog(Base):
     """TBA"""
     resource_catalog_arn: str
     resource_catalog_name: str
     description: str
     creation_time: datetime.datetime
-
-
-@dataclass
-class ResourceConfigForUpdate(Base):
-    """TBA"""
-    keep_alive_period_in_seconds: int
-
-
-@dataclass
-class ResourceInUse(Base):
-    """TBA"""
-    message: Optional[str] = Unassigned()
-
-
-@dataclass
-class ResourceLimitExceeded(Base):
-    """TBA"""
-    message: Optional[str] = Unassigned()
-
-
-@dataclass
-class ResourceNotFound(Base):
-    """TBA"""
-    message: Optional[str] = Unassigned()
-
-
-@dataclass
-class TargetTrackingScalingPolicyConfiguration(Base):
-    """TBA"""
-    metric_specification: Optional[MetricSpecification] = Unassigned()
-    target_value: Optional[float] = Unassigned()
-
-
-@dataclass
-class ScalingPolicy(Base):
-    """TBA"""
-    target_tracking: Optional[TargetTrackingScalingPolicyConfiguration] = Unassigned()
-
-
-@dataclass
-class SearchExpression(Base):
-    """TBA"""
-    filters: Optional[list] = Unassigned()
-    nested_filters: Optional[list] = Unassigned()
-    sub_expressions: Optional[list] = Unassigned()
-    operator: Optional[str] = Unassigned()
-
-
-@dataclass
-class TrainingJob(Base):
-    """TBA"""
-    training_job_name: Optional[str] = Unassigned()
-    training_job_arn: Optional[str] = Unassigned()
-    tuning_job_arn: Optional[str] = Unassigned()
-    labeling_job_arn: Optional[str] = Unassigned()
-    auto_m_l_job_arn: Optional[str] = Unassigned()
-    model_artifacts: Optional[ModelArtifacts] = Unassigned()
-    training_job_status: Optional[str] = Unassigned()
-    secondary_status: Optional[str] = Unassigned()
-    failure_reason: Optional[str] = Unassigned()
-    hyper_parameters: Optional[dict] = Unassigned()
-    algorithm_specification: Optional[AlgorithmSpecification] = Unassigned()
-    role_arn: Optional[str] = Unassigned()
-    input_data_config: Optional[list] = Unassigned()
-    output_data_config: Optional[OutputDataConfig] = Unassigned()
-    resource_config: Optional[ResourceConfig] = Unassigned()
-    vpc_config: Optional[VpcConfig] = Unassigned()
-    stopping_condition: Optional[StoppingCondition] = Unassigned()
-    creation_time: Optional[datetime.datetime] = Unassigned()
-    training_start_time: Optional[datetime.datetime] = Unassigned()
-    training_end_time: Optional[datetime.datetime] = Unassigned()
-    last_modified_time: Optional[datetime.datetime] = Unassigned()
-    secondary_status_transitions: Optional[list] = Unassigned()
-    final_metric_data_list: Optional[list] = Unassigned()
-    enable_network_isolation: Optional[bool] = Unassigned()
-    enable_inter_container_traffic_encryption: Optional[bool] = Unassigned()
-    enable_managed_spot_training: Optional[bool] = Unassigned()
-    checkpoint_config: Optional[CheckpointConfig] = Unassigned()
-    training_time_in_seconds: Optional[int] = Unassigned()
-    billable_time_in_seconds: Optional[int] = Unassigned()
-    debug_hook_config: Optional[DebugHookConfig] = Unassigned()
-    experiment_config: Optional[ExperimentConfig] = Unassigned()
-    debug_rule_configurations: Optional[list] = Unassigned()
-    tensor_board_output_config: Optional[TensorBoardOutputConfig] = Unassigned()
-    debug_rule_evaluation_statuses: Optional[list] = Unassigned()
-    profiler_config: Optional[ProfilerConfig] = Unassigned()
-    environment: Optional[dict] = Unassigned()
-    retry_strategy: Optional[RetryStrategy] = Unassigned()
-    tags: Optional[list] = Unassigned()
-
-
-@dataclass
-class Trial(Base):
-    """TBA"""
-    trial_name: Optional[str] = Unassigned()
-    trial_arn: Optional[str] = Unassigned()
-    display_name: Optional[str] = Unassigned()
-    experiment_name: Optional[str] = Unassigned()
-    source: Optional[TrialSource] = Unassigned()
-    creation_time: Optional[datetime.datetime] = Unassigned()
-    created_by: Optional[UserContext] = Unassigned()
-    last_modified_time: Optional[datetime.datetime] = Unassigned()
-    last_modified_by: Optional[UserContext] = Unassigned()
-    metadata_properties: Optional[MetadataProperties] = Unassigned()
-    tags: Optional[list] = Unassigned()
-    trial_component_summaries: Optional[list] = Unassigned()
-
-
-@dataclass
-class TrialComponentSourceDetail(Base):
-    """TBA"""
-    source_arn: Optional[str] = Unassigned()
-    training_job: Optional[TrainingJob] = Unassigned()
-    processing_job: Optional[ProcessingJob] = Unassigned()
-    transform_job: Optional[TransformJob] = Unassigned()
-
-
-@dataclass
-class TrialComponent(Base):
-    """TBA"""
-    trial_component_name: Optional[str] = Unassigned()
-    display_name: Optional[str] = Unassigned()
-    trial_component_arn: Optional[str] = Unassigned()
-    source: Optional[TrialComponentSource] = Unassigned()
-    status: Optional[TrialComponentStatus] = Unassigned()
-    start_time: Optional[datetime.datetime] = Unassigned()
-    end_time: Optional[datetime.datetime] = Unassigned()
-    creation_time: Optional[datetime.datetime] = Unassigned()
-    created_by: Optional[UserContext] = Unassigned()
-    last_modified_time: Optional[datetime.datetime] = Unassigned()
-    last_modified_by: Optional[UserContext] = Unassigned()
-    parameters: Optional[dict] = Unassigned()
-    input_artifacts: Optional[dict] = Unassigned()
-    output_artifacts: Optional[dict] = Unassigned()
-    metrics: Optional[list] = Unassigned()
-    metadata_properties: Optional[MetadataProperties] = Unassigned()
-    source_detail: Optional[TrialComponentSourceDetail] = Unassigned()
-    lineage_group_arn: Optional[str] = Unassigned()
-    tags: Optional[list] = Unassigned()
-    parents: Optional[list] = Unassigned()
-    run_name: Optional[str] = Unassigned()
-
-
-@dataclass
-class SearchRecord(Base):
-    """TBA"""
-    training_job: Optional[TrainingJob] = Unassigned()
-    experiment: Optional[Experiment] = Unassigned()
-    trial: Optional[Trial] = Unassigned()
-    trial_component: Optional[TrialComponent] = Unassigned()
-    endpoint: Optional[Endpoint] = Unassigned()
-    model_package: Optional[ModelPackage] = Unassigned()
-    model_package_group: Optional[ModelPackageGroup] = Unassigned()
-    pipeline: Optional[Pipeline] = Unassigned()
-    pipeline_execution: Optional[PipelineExecution] = Unassigned()
-    feature_group: Optional[FeatureGroup] = Unassigned()
-    feature_metadata: Optional[FeatureMetadata] = Unassigned()
-    project: Optional[Project] = Unassigned()
-    hyper_parameter_tuning_job: Optional[HyperParameterTuningJobSearchEntity] = Unassigned()
-    model_card: Optional[ModelCard] = Unassigned()
-    model: Optional[ModelDashboardModel] = Unassigned()
-
-
-@dataclass
-class SecondaryStatusTransition(Base):
-    """TBA"""
-    status: str
-    start_time: datetime.datetime
-    end_time: Optional[datetime.datetime] = Unassigned()
-    status_message: Optional[str] = Unassigned()
-
-
-@dataclass
-class SelectedStep(Base):
-    """TBA"""
-    step_name: str
-
-
-@dataclass
-class ServiceCatalogProvisioningUpdateDetails(Base):
-    """TBA"""
-    provisioning_artifact_id: Optional[str] = Unassigned()
-    provisioning_parameters: Optional[list] = Unassigned()
-
-
-@dataclass
-class ShadowModelVariantConfig(Base):
-    """TBA"""
-    shadow_model_variant_name: str
-    sampling_percentage: int
-
-
-@dataclass
-class SourceAlgorithm(Base):
-    """TBA"""
-    algorithm_name: str
-    model_data_url: Optional[str] = Unassigned()
-    model_data_source: Optional[ModelDataSource] = Unassigned()
 
 
 @dataclass
@@ -5861,6 +4576,12 @@ class SpaceSettingsSummary(Base):
 class SpaceSharingSettingsSummary(Base):
     """TBA"""
     sharing_type: Optional[str] = Unassigned()
+
+
+@dataclass
+class OwnershipSettingsSummary(Base):
+    """TBA"""
+    owner_user_profile_name: Optional[str] = Unassigned()
 
 
 @dataclass
@@ -5878,18 +4599,6 @@ class SpaceDetails(Base):
 
 
 @dataclass
-class StartNotebookInstanceInput(Base):
-    """TBA"""
-    notebook_instance_name: str
-
-
-@dataclass
-class StopNotebookInstanceInput(Base):
-    """TBA"""
-    notebook_instance_name: str
-
-
-@dataclass
 class StudioLifecycleConfigDetails(Base):
     """TBA"""
     studio_lifecycle_config_arn: Optional[str] = Unassigned()
@@ -5897,21 +4606,6 @@ class StudioLifecycleConfigDetails(Base):
     creation_time: Optional[datetime.datetime] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
     studio_lifecycle_config_app_type: Optional[str] = Unassigned()
-
-
-@dataclass
-class Tag(Base):
-    """TBA"""
-    key: str
-    value: str
-
-
-@dataclass
-class ThroughputConfigUpdate(Base):
-    """TBA"""
-    throughput_mode: Optional[str] = Unassigned()
-    provisioned_read_capacity_units: Optional[int] = Unassigned()
-    provisioned_write_capacity_units: Optional[int] = Unassigned()
 
 
 @dataclass
@@ -5936,44 +4630,6 @@ class TransformJobSummary(Base):
     transform_end_time: Optional[datetime.datetime] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
     failure_reason: Optional[str] = Unassigned()
-
-
-@dataclass
-class TrialComponentArtifact(Base):
-    """TBA"""
-    value: str
-    media_type: Optional[str] = Unassigned()
-
-
-@dataclass
-class TrialComponentMetricSummary(Base):
-    """TBA"""
-    metric_name: Optional[str] = Unassigned()
-    source_arn: Optional[str] = Unassigned()
-    time_stamp: Optional[datetime.datetime] = Unassigned()
-    max: Optional[float] = Unassigned()
-    min: Optional[float] = Unassigned()
-    last: Optional[float] = Unassigned()
-    count: Optional[int] = Unassigned()
-    avg: Optional[float] = Unassigned()
-    std_dev: Optional[float] = Unassigned()
-
-
-@dataclass
-class TrialComponentParameterValue(Base):
-    """TBA"""
-    string_value: Optional[str] = Unassigned()
-    number_value: Optional[float] = Unassigned()
-
-
-@dataclass
-class TrialComponentSimpleSummary(Base):
-    """TBA"""
-    trial_component_name: Optional[str] = Unassigned()
-    trial_component_arn: Optional[str] = Unassigned()
-    trial_component_source: Optional[TrialComponentSource] = Unassigned()
-    creation_time: Optional[datetime.datetime] = Unassigned()
-    created_by: Optional[UserContext] = Unassigned()
 
 
 @dataclass
@@ -6004,137 +4660,6 @@ class TrialSummary(Base):
 
 
 @dataclass
-class UpdateCodeRepositoryInput(Base):
-    """TBA"""
-    code_repository_name: str
-    git_config: Optional[GitConfigForUpdate] = Unassigned()
-
-
-@dataclass
-class UpdateCodeRepositoryOutput(Base):
-    """TBA"""
-    code_repository_arn: str
-
-
-@dataclass
-class UpdateEndpointInput(Base):
-    """TBA"""
-    endpoint_name: str
-    endpoint_config_name: str
-    retain_all_variant_properties: Optional[bool] = Unassigned()
-    exclude_retained_variant_properties: Optional[list] = Unassigned()
-    deployment_config: Optional[DeploymentConfig] = Unassigned()
-    retain_deployment_config: Optional[bool] = Unassigned()
-
-
-@dataclass
-class UpdateEndpointOutput(Base):
-    """TBA"""
-    endpoint_arn: str
-
-
-@dataclass
-class UpdateEndpointWeightsAndCapacitiesInput(Base):
-    """TBA"""
-    endpoint_name: str
-    desired_weights_and_capacities: list
-
-
-@dataclass
-class UpdateEndpointWeightsAndCapacitiesOutput(Base):
-    """TBA"""
-    endpoint_arn: str
-
-
-@dataclass
-class UpdateInferenceComponentInput(Base):
-    """TBA"""
-    inference_component_name: str
-    specification: Optional[InferenceComponentSpecification] = Unassigned()
-    runtime_config: Optional[InferenceComponentRuntimeConfig] = Unassigned()
-
-
-@dataclass
-class UpdateInferenceComponentOutput(Base):
-    """TBA"""
-    inference_component_arn: str
-
-
-@dataclass
-class UpdateInferenceComponentRuntimeConfigInput(Base):
-    """TBA"""
-    inference_component_name: str
-    desired_runtime_config: InferenceComponentRuntimeConfig
-
-
-@dataclass
-class UpdateInferenceComponentRuntimeConfigOutput(Base):
-    """TBA"""
-    inference_component_arn: str
-
-
-@dataclass
-class UpdateModelPackageInput(Base):
-    """TBA"""
-    model_package_arn: str
-    model_approval_status: Optional[str] = Unassigned()
-    approval_description: Optional[str] = Unassigned()
-    customer_metadata_properties: Optional[dict] = Unassigned()
-    customer_metadata_properties_to_remove: Optional[list] = Unassigned()
-    additional_inference_specifications_to_add: Optional[list] = Unassigned()
-    inference_specification: Optional[InferenceSpecification] = Unassigned()
-    source_uri: Optional[str] = Unassigned()
-
-
-@dataclass
-class UpdateModelPackageOutput(Base):
-    """TBA"""
-    model_package_arn: str
-
-
-@dataclass
-class UpdateNotebookInstanceInput(Base):
-    """TBA"""
-    notebook_instance_name: str
-    instance_type: Optional[str] = Unassigned()
-    role_arn: Optional[str] = Unassigned()
-    lifecycle_config_name: Optional[str] = Unassigned()
-    disassociate_lifecycle_config: Optional[bool] = Unassigned()
-    volume_size_in_g_b: Optional[int] = Unassigned()
-    default_code_repository: Optional[str] = Unassigned()
-    additional_code_repositories: Optional[list] = Unassigned()
-    accelerator_types: Optional[list] = Unassigned()
-    disassociate_accelerator_types: Optional[bool] = Unassigned()
-    disassociate_default_code_repository: Optional[bool] = Unassigned()
-    disassociate_additional_code_repositories: Optional[bool] = Unassigned()
-    root_access: Optional[str] = Unassigned()
-    instance_metadata_service_configuration: Optional[InstanceMetadataServiceConfiguration] = Unassigned()
-
-
-@dataclass
-class UpdateNotebookInstanceLifecycleConfigInput(Base):
-    """TBA"""
-    notebook_instance_lifecycle_config_name: str
-    on_create: Optional[list] = Unassigned()
-    on_start: Optional[list] = Unassigned()
-
-
-@dataclass
-class UpdateProjectInput(Base):
-    """TBA"""
-    project_name: str
-    project_description: Optional[str] = Unassigned()
-    service_catalog_provisioning_update_details: Optional[ServiceCatalogProvisioningUpdateDetails] = Unassigned()
-    tags: Optional[list] = Unassigned()
-
-
-@dataclass
-class UpdateProjectOutput(Base):
-    """TBA"""
-    project_arn: str
-
-
-@dataclass
 class UserProfileDetails(Base):
     """TBA"""
     domain_id: Optional[str] = Unassigned()
@@ -6145,9 +4670,286 @@ class UserProfileDetails(Base):
 
 
 @dataclass
-class VariantProperty(Base):
+class Model(Base):
     """TBA"""
-    variant_property_type: str
+    model_name: Optional[str] = Unassigned()
+    primary_container: Optional[ContainerDefinition] = Unassigned()
+    containers: Optional[List[ContainerDefinition]] = Unassigned()
+    inference_execution_config: Optional[InferenceExecutionConfig] = Unassigned()
+    execution_role_arn: Optional[str] = Unassigned()
+    vpc_config: Optional[VpcConfig] = Unassigned()
+    creation_time: Optional[datetime.datetime] = Unassigned()
+    model_arn: Optional[str] = Unassigned()
+    enable_network_isolation: Optional[bool] = Unassigned()
+    tags: Optional[List[Tag]] = Unassigned()
+    deployment_recommendation: Optional[DeploymentRecommendation] = Unassigned()
+
+
+@dataclass
+class ModelCard(Base):
+    """TBA"""
+    model_card_arn: Optional[str] = Unassigned()
+    model_card_name: Optional[str] = Unassigned()
+    model_card_version: Optional[int] = Unassigned()
+    content: Optional[str] = Unassigned()
+    model_card_status: Optional[str] = Unassigned()
+    security_config: Optional[ModelCardSecurityConfig] = Unassigned()
+    creation_time: Optional[datetime.datetime] = Unassigned()
+    created_by: Optional[UserContext] = Unassigned()
+    last_modified_time: Optional[datetime.datetime] = Unassigned()
+    last_modified_by: Optional[UserContext] = Unassigned()
+    tags: Optional[List[Tag]] = Unassigned()
+    model_id: Optional[str] = Unassigned()
+    risk_rating: Optional[str] = Unassigned()
+    model_package_group_name: Optional[str] = Unassigned()
+
+
+@dataclass
+class ModelDashboardEndpoint(Base):
+    """TBA"""
+    endpoint_name: str
+    endpoint_arn: str
+    creation_time: datetime.datetime
+    last_modified_time: datetime.datetime
+    endpoint_status: str
+
+
+@dataclass
+class TransformJob(Base):
+    """TBA"""
+    transform_job_name: Optional[str] = Unassigned()
+    transform_job_arn: Optional[str] = Unassigned()
+    transform_job_status: Optional[str] = Unassigned()
+    failure_reason: Optional[str] = Unassigned()
+    model_name: Optional[str] = Unassigned()
+    max_concurrent_transforms: Optional[int] = Unassigned()
+    model_client_config: Optional[ModelClientConfig] = Unassigned()
+    max_payload_in_m_b: Optional[int] = Unassigned()
+    batch_strategy: Optional[str] = Unassigned()
+    environment: Optional[Dict[str, str]] = Unassigned()
+    transform_input: Optional[TransformInput] = Unassigned()
+    transform_output: Optional[TransformOutput] = Unassigned()
+    data_capture_config: Optional[BatchDataCaptureConfig] = Unassigned()
+    transform_resources: Optional[TransformResources] = Unassigned()
+    creation_time: Optional[datetime.datetime] = Unassigned()
+    transform_start_time: Optional[datetime.datetime] = Unassigned()
+    transform_end_time: Optional[datetime.datetime] = Unassigned()
+    labeling_job_arn: Optional[str] = Unassigned()
+    auto_m_l_job_arn: Optional[str] = Unassigned()
+    data_processing: Optional[DataProcessing] = Unassigned()
+    experiment_config: Optional[ExperimentConfig] = Unassigned()
+    tags: Optional[List[Tag]] = Unassigned()
+
+
+@dataclass
+class ModelDashboardMonitoringSchedule(Base):
+    """TBA"""
+    monitoring_schedule_arn: Optional[str] = Unassigned()
+    monitoring_schedule_name: Optional[str] = Unassigned()
+    monitoring_schedule_status: Optional[str] = Unassigned()
+    monitoring_type: Optional[str] = Unassigned()
+    failure_reason: Optional[str] = Unassigned()
+    creation_time: Optional[datetime.datetime] = Unassigned()
+    last_modified_time: Optional[datetime.datetime] = Unassigned()
+    monitoring_schedule_config: Optional[MonitoringScheduleConfig] = Unassigned()
+    endpoint_name: Optional[str] = Unassigned()
+    monitoring_alert_summaries: Optional[List[MonitoringAlertSummary]] = Unassigned()
+    last_monitoring_execution_summary: Optional[MonitoringExecutionSummary] = Unassigned()
+    batch_transform_input: Optional[BatchTransformInput] = Unassigned()
+
+
+@dataclass
+class ModelDashboardModelCard(Base):
+    """TBA"""
+    model_card_arn: Optional[str] = Unassigned()
+    model_card_name: Optional[str] = Unassigned()
+    model_card_version: Optional[int] = Unassigned()
+    model_card_status: Optional[str] = Unassigned()
+    security_config: Optional[ModelCardSecurityConfig] = Unassigned()
+    creation_time: Optional[datetime.datetime] = Unassigned()
+    created_by: Optional[UserContext] = Unassigned()
+    last_modified_time: Optional[datetime.datetime] = Unassigned()
+    last_modified_by: Optional[UserContext] = Unassigned()
+    tags: Optional[List[Tag]] = Unassigned()
+    model_id: Optional[str] = Unassigned()
+    risk_rating: Optional[str] = Unassigned()
+
+
+@dataclass
+class ModelDashboardModel(Base):
+    """TBA"""
+    model: Optional[Model] = Unassigned()
+    endpoints: Optional[List[ModelDashboardEndpoint]] = Unassigned()
+    last_batch_transform_job: Optional[TransformJob] = Unassigned()
+    monitoring_schedules: Optional[List[ModelDashboardMonitoringSchedule]] = Unassigned()
+    model_card: Optional[ModelDashboardModelCard] = Unassigned()
+
+
+@dataclass
+class ModelPackage(Base):
+    """TBA"""
+    model_package_name: Optional[str] = Unassigned()
+    model_package_group_name: Optional[str] = Unassigned()
+    model_package_version: Optional[int] = Unassigned()
+    model_package_arn: Optional[str] = Unassigned()
+    model_package_description: Optional[str] = Unassigned()
+    creation_time: Optional[datetime.datetime] = Unassigned()
+    inference_specification: Optional[InferenceSpecification] = Unassigned()
+    source_algorithm_specification: Optional[SourceAlgorithmSpecification] = Unassigned()
+    validation_specification: Optional[ModelPackageValidationSpecification] = Unassigned()
+    model_package_status: Optional[str] = Unassigned()
+    model_package_status_details: Optional[ModelPackageStatusDetails] = Unassigned()
+    certify_for_marketplace: Optional[bool] = Unassigned()
+    model_approval_status: Optional[str] = Unassigned()
+    created_by: Optional[UserContext] = Unassigned()
+    metadata_properties: Optional[MetadataProperties] = Unassigned()
+    model_metrics: Optional[ModelMetrics] = Unassigned()
+    last_modified_time: Optional[datetime.datetime] = Unassigned()
+    last_modified_by: Optional[UserContext] = Unassigned()
+    approval_description: Optional[str] = Unassigned()
+    domain: Optional[str] = Unassigned()
+    task: Optional[str] = Unassigned()
+    sample_payload_url: Optional[str] = Unassigned()
+    additional_inference_specifications: Optional[List[AdditionalInferenceSpecificationDefinition]] = Unassigned()
+    source_uri: Optional[str] = Unassigned()
+    tags: Optional[List[Tag]] = Unassigned()
+    customer_metadata_properties: Optional[Dict[str, str]] = Unassigned()
+    drift_check_baselines: Optional[DriftCheckBaselines] = Unassigned()
+    skip_model_validation: Optional[str] = Unassigned()
+
+
+@dataclass
+class ModelPackageGroup(Base):
+    """TBA"""
+    model_package_group_name: Optional[str] = Unassigned()
+    model_package_group_arn: Optional[str] = Unassigned()
+    model_package_group_description: Optional[str] = Unassigned()
+    creation_time: Optional[datetime.datetime] = Unassigned()
+    created_by: Optional[UserContext] = Unassigned()
+    model_package_group_status: Optional[str] = Unassigned()
+    tags: Optional[List[Tag]] = Unassigned()
+
+
+@dataclass
+class NestedFilters(Base):
+    """TBA"""
+    nested_property_name: str
+    filters: List[Filter]
+
+
+@dataclass
+class OnlineStoreConfigUpdate(Base):
+    """TBA"""
+    ttl_duration: Optional[TtlDuration] = Unassigned()
+
+
+@dataclass
+class Parent(Base):
+    """TBA"""
+    trial_name: Optional[str] = Unassigned()
+    experiment_name: Optional[str] = Unassigned()
+
+
+@dataclass
+class Pipeline(Base):
+    """TBA"""
+    pipeline_arn: Optional[str] = Unassigned()
+    pipeline_name: Optional[str] = Unassigned()
+    pipeline_display_name: Optional[str] = Unassigned()
+    pipeline_description: Optional[str] = Unassigned()
+    role_arn: Optional[str] = Unassigned()
+    pipeline_status: Optional[str] = Unassigned()
+    creation_time: Optional[datetime.datetime] = Unassigned()
+    last_modified_time: Optional[datetime.datetime] = Unassigned()
+    last_run_time: Optional[datetime.datetime] = Unassigned()
+    created_by: Optional[UserContext] = Unassigned()
+    last_modified_by: Optional[UserContext] = Unassigned()
+    parallelism_configuration: Optional[ParallelismConfiguration] = Unassigned()
+    tags: Optional[List[Tag]] = Unassigned()
+
+
+@dataclass
+class PipelineExecution(Base):
+    """TBA"""
+    pipeline_arn: Optional[str] = Unassigned()
+    pipeline_execution_arn: Optional[str] = Unassigned()
+    pipeline_execution_display_name: Optional[str] = Unassigned()
+    pipeline_execution_status: Optional[str] = Unassigned()
+    pipeline_execution_description: Optional[str] = Unassigned()
+    pipeline_experiment_config: Optional[PipelineExperimentConfig] = Unassigned()
+    failure_reason: Optional[str] = Unassigned()
+    creation_time: Optional[datetime.datetime] = Unassigned()
+    last_modified_time: Optional[datetime.datetime] = Unassigned()
+    created_by: Optional[UserContext] = Unassigned()
+    last_modified_by: Optional[UserContext] = Unassigned()
+    parallelism_configuration: Optional[ParallelismConfiguration] = Unassigned()
+    selective_execution_config: Optional[SelectiveExecutionConfig] = Unassigned()
+    pipeline_parameters: Optional[List[Parameter]] = Unassigned()
+
+
+@dataclass
+class ProcessingJob(Base):
+    """TBA"""
+    processing_inputs: Optional[List[ProcessingInput]] = Unassigned()
+    processing_output_config: Optional[ProcessingOutputConfig] = Unassigned()
+    processing_job_name: Optional[str] = Unassigned()
+    processing_resources: Optional[ProcessingResources] = Unassigned()
+    stopping_condition: Optional[ProcessingStoppingCondition] = Unassigned()
+    app_specification: Optional[AppSpecification] = Unassigned()
+    environment: Optional[Dict[str, str]] = Unassigned()
+    network_config: Optional[NetworkConfig] = Unassigned()
+    role_arn: Optional[str] = Unassigned()
+    experiment_config: Optional[ExperimentConfig] = Unassigned()
+    processing_job_arn: Optional[str] = Unassigned()
+    processing_job_status: Optional[str] = Unassigned()
+    exit_message: Optional[str] = Unassigned()
+    failure_reason: Optional[str] = Unassigned()
+    processing_end_time: Optional[datetime.datetime] = Unassigned()
+    processing_start_time: Optional[datetime.datetime] = Unassigned()
+    last_modified_time: Optional[datetime.datetime] = Unassigned()
+    creation_time: Optional[datetime.datetime] = Unassigned()
+    monitoring_schedule_arn: Optional[str] = Unassigned()
+    auto_m_l_job_arn: Optional[str] = Unassigned()
+    training_job_arn: Optional[str] = Unassigned()
+    tags: Optional[List[Tag]] = Unassigned()
+
+
+@dataclass
+class ProfilerConfigForUpdate(Base):
+    """TBA"""
+    s3_output_path: Optional[str] = Unassigned()
+    profiling_interval_in_milliseconds: Optional[int] = Unassigned()
+    profiling_parameters: Optional[Dict[str, str]] = Unassigned()
+    disable_profiler: Optional[bool] = Unassigned()
+
+
+@dataclass
+class Project(Base):
+    """TBA"""
+    project_arn: Optional[str] = Unassigned()
+    project_name: Optional[str] = Unassigned()
+    project_id: Optional[str] = Unassigned()
+    project_description: Optional[str] = Unassigned()
+    service_catalog_provisioning_details: Optional[ServiceCatalogProvisioningDetails] = Unassigned()
+    service_catalog_provisioned_product_details: Optional[ServiceCatalogProvisionedProductDetails] = Unassigned()
+    project_status: Optional[str] = Unassigned()
+    created_by: Optional[UserContext] = Unassigned()
+    creation_time: Optional[datetime.datetime] = Unassigned()
+    tags: Optional[List[Tag]] = Unassigned()
+    last_modified_time: Optional[datetime.datetime] = Unassigned()
+    last_modified_by: Optional[UserContext] = Unassigned()
+
+
+@dataclass
+class QueryFilters(Base):
+    """TBA"""
+    types: Optional[List[str]] = Unassigned()
+    lineage_types: Optional[List[str]] = Unassigned()
+    created_before: Optional[datetime.datetime] = Unassigned()
+    created_after: Optional[datetime.datetime] = Unassigned()
+    modified_before: Optional[datetime.datetime] = Unassigned()
+    modified_after: Optional[datetime.datetime] = Unassigned()
+    properties: Optional[Dict[str, str]] = Unassigned()
 
 
 @dataclass
@@ -6159,8 +4961,206 @@ class Vertex(Base):
 
 
 @dataclass
+class RemoteDebugConfigForUpdate(Base):
+    """TBA"""
+    enable_remote_debug: Optional[bool] = Unassigned()
+
+
+@dataclass
+class RenderableTask(Base):
+    """TBA"""
+    input: str
+
+
+@dataclass
+class RenderingError(Base):
+    """TBA"""
+    code: str
+    message: str
+
+
+@dataclass
+class ResourceConfigForUpdate(Base):
+    """TBA"""
+    keep_alive_period_in_seconds: int
+
+
+@dataclass
+class ResourceInUse(Base):
+    """TBA"""
+    message: Optional[str] = Unassigned()
+
+
+@dataclass
+class ResourceLimitExceeded(Base):
+    """TBA"""
+    message: Optional[str] = Unassigned()
+
+
+@dataclass
+class ResourceNotFound(Base):
+    """TBA"""
+    message: Optional[str] = Unassigned()
+
+
+@dataclass
+class SearchExpression(Base):
+    """TBA"""
+    filters: Optional[List[Filter]] = Unassigned()
+    nested_filters: Optional[List[NestedFilters]] = Unassigned()
+    sub_expressions: Optional[List['SearchExpression']] = Unassigned()
+    operator: Optional[str] = Unassigned()
+
+
+@dataclass
+class TrainingJob(Base):
+    """TBA"""
+    training_job_name: Optional[str] = Unassigned()
+    training_job_arn: Optional[str] = Unassigned()
+    tuning_job_arn: Optional[str] = Unassigned()
+    labeling_job_arn: Optional[str] = Unassigned()
+    auto_m_l_job_arn: Optional[str] = Unassigned()
+    model_artifacts: Optional[ModelArtifacts] = Unassigned()
+    training_job_status: Optional[str] = Unassigned()
+    secondary_status: Optional[str] = Unassigned()
+    failure_reason: Optional[str] = Unassigned()
+    hyper_parameters: Optional[Dict[str, str]] = Unassigned()
+    algorithm_specification: Optional[AlgorithmSpecification] = Unassigned()
+    role_arn: Optional[str] = Unassigned()
+    input_data_config: Optional[List[Channel]] = Unassigned()
+    output_data_config: Optional[OutputDataConfig] = Unassigned()
+    resource_config: Optional[ResourceConfig] = Unassigned()
+    vpc_config: Optional[VpcConfig] = Unassigned()
+    stopping_condition: Optional[StoppingCondition] = Unassigned()
+    creation_time: Optional[datetime.datetime] = Unassigned()
+    training_start_time: Optional[datetime.datetime] = Unassigned()
+    training_end_time: Optional[datetime.datetime] = Unassigned()
+    last_modified_time: Optional[datetime.datetime] = Unassigned()
+    secondary_status_transitions: Optional[List[SecondaryStatusTransition]] = Unassigned()
+    final_metric_data_list: Optional[List[MetricData]] = Unassigned()
+    enable_network_isolation: Optional[bool] = Unassigned()
+    enable_inter_container_traffic_encryption: Optional[bool] = Unassigned()
+    enable_managed_spot_training: Optional[bool] = Unassigned()
+    checkpoint_config: Optional[CheckpointConfig] = Unassigned()
+    training_time_in_seconds: Optional[int] = Unassigned()
+    billable_time_in_seconds: Optional[int] = Unassigned()
+    debug_hook_config: Optional[DebugHookConfig] = Unassigned()
+    experiment_config: Optional[ExperimentConfig] = Unassigned()
+    debug_rule_configurations: Optional[List[DebugRuleConfiguration]] = Unassigned()
+    tensor_board_output_config: Optional[TensorBoardOutputConfig] = Unassigned()
+    debug_rule_evaluation_statuses: Optional[List[DebugRuleEvaluationStatus]] = Unassigned()
+    profiler_config: Optional[ProfilerConfig] = Unassigned()
+    environment: Optional[Dict[str, str]] = Unassigned()
+    retry_strategy: Optional[RetryStrategy] = Unassigned()
+    tags: Optional[List[Tag]] = Unassigned()
+
+
+@dataclass
+class TrialComponentSimpleSummary(Base):
+    """TBA"""
+    trial_component_name: Optional[str] = Unassigned()
+    trial_component_arn: Optional[str] = Unassigned()
+    trial_component_source: Optional[TrialComponentSource] = Unassigned()
+    creation_time: Optional[datetime.datetime] = Unassigned()
+    created_by: Optional[UserContext] = Unassigned()
+
+
+@dataclass
+class Trial(Base):
+    """TBA"""
+    trial_name: Optional[str] = Unassigned()
+    trial_arn: Optional[str] = Unassigned()
+    display_name: Optional[str] = Unassigned()
+    experiment_name: Optional[str] = Unassigned()
+    source: Optional[TrialSource] = Unassigned()
+    creation_time: Optional[datetime.datetime] = Unassigned()
+    created_by: Optional[UserContext] = Unassigned()
+    last_modified_time: Optional[datetime.datetime] = Unassigned()
+    last_modified_by: Optional[UserContext] = Unassigned()
+    metadata_properties: Optional[MetadataProperties] = Unassigned()
+    tags: Optional[List[Tag]] = Unassigned()
+    trial_component_summaries: Optional[List[TrialComponentSimpleSummary]] = Unassigned()
+
+
+@dataclass
+class TrialComponentSourceDetail(Base):
+    """TBA"""
+    source_arn: Optional[str] = Unassigned()
+    training_job: Optional[TrainingJob] = Unassigned()
+    processing_job: Optional[ProcessingJob] = Unassigned()
+    transform_job: Optional[TransformJob] = Unassigned()
+
+
+@dataclass
+class TrialComponent(Base):
+    """TBA"""
+    trial_component_name: Optional[str] = Unassigned()
+    display_name: Optional[str] = Unassigned()
+    trial_component_arn: Optional[str] = Unassigned()
+    source: Optional[TrialComponentSource] = Unassigned()
+    status: Optional[TrialComponentStatus] = Unassigned()
+    start_time: Optional[datetime.datetime] = Unassigned()
+    end_time: Optional[datetime.datetime] = Unassigned()
+    creation_time: Optional[datetime.datetime] = Unassigned()
+    created_by: Optional[UserContext] = Unassigned()
+    last_modified_time: Optional[datetime.datetime] = Unassigned()
+    last_modified_by: Optional[UserContext] = Unassigned()
+    parameters: Optional[Dict[str, TrialComponentParameterValue]] = Unassigned()
+    input_artifacts: Optional[Dict[str, TrialComponentArtifact]] = Unassigned()
+    output_artifacts: Optional[Dict[str, TrialComponentArtifact]] = Unassigned()
+    metrics: Optional[List[TrialComponentMetricSummary]] = Unassigned()
+    metadata_properties: Optional[MetadataProperties] = Unassigned()
+    source_detail: Optional[TrialComponentSourceDetail] = Unassigned()
+    lineage_group_arn: Optional[str] = Unassigned()
+    tags: Optional[List[Tag]] = Unassigned()
+    parents: Optional[List[Parent]] = Unassigned()
+    run_name: Optional[str] = Unassigned()
+
+
+@dataclass
+class SearchRecord(Base):
+    """TBA"""
+    training_job: Optional[TrainingJob] = Unassigned()
+    experiment: Optional[Experiment] = Unassigned()
+    trial: Optional[Trial] = Unassigned()
+    trial_component: Optional[TrialComponent] = Unassigned()
+    endpoint: Optional[Endpoint] = Unassigned()
+    model_package: Optional[ModelPackage] = Unassigned()
+    model_package_group: Optional[ModelPackageGroup] = Unassigned()
+    pipeline: Optional[Pipeline] = Unassigned()
+    pipeline_execution: Optional[PipelineExecution] = Unassigned()
+    feature_group: Optional[FeatureGroup] = Unassigned()
+    feature_metadata: Optional[FeatureMetadata] = Unassigned()
+    project: Optional[Project] = Unassigned()
+    hyper_parameter_tuning_job: Optional[HyperParameterTuningJobSearchEntity] = Unassigned()
+    model_card: Optional[ModelCard] = Unassigned()
+    model: Optional[ModelDashboardModel] = Unassigned()
+
+
+@dataclass
 class VisibilityConditions(Base):
     """TBA"""
     key: Optional[str] = Unassigned()
     value: Optional[str] = Unassigned()
+
+
+@dataclass
+class ServiceCatalogProvisioningUpdateDetails(Base):
+    """TBA"""
+    provisioning_artifact_id: Optional[str] = Unassigned()
+    provisioning_parameters: Optional[List[ProvisioningParameter]] = Unassigned()
+
+
+@dataclass
+class ThroughputConfigUpdate(Base):
+    """TBA"""
+    throughput_mode: Optional[str] = Unassigned()
+    provisioned_read_capacity_units: Optional[int] = Unassigned()
+    provisioned_write_capacity_units: Optional[int] = Unassigned()
+
+
+@dataclass
+class VariantProperty(Base):
+    """TBA"""
+    variant_property_type: str
 
