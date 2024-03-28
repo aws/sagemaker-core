@@ -93,8 +93,7 @@ class ResourceExtractor:
                     shape_name = self.operations[action]['input']['shape']
                     input = self.shapes[shape_name]
                     for member in input['members']:
-                        if member.endswith('Name'):
-                            # print(f"Chain Resource: {member}")
+                        if member.endswith('Name') or member.endswith('Names'):
                             chain_resource_name = member[:-len('Name')]
 
                             if chain_resource_name != resource and chain_resource_name in self.resources:
