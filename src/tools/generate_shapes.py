@@ -112,9 +112,14 @@ class ShapeGenerator(Generator):
     def generate_data_class_for_shape(self, shape):
         class_name = shape
         init_data = self.generate_data_shape_members(shape)
+        try:
+            data_class_members = add_indent(init_data, 4)
+        except Exception:
+            print("DEBUG HELP\n", init_data)
+            raise
         return DATA_CLASS_TEMPLATE.format(
             class_name=class_name + "(Base)",
-            data_class_members=init_data,
+            data_class_members=data_class_members,
             docstring="TBA",
         )
 

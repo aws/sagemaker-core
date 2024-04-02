@@ -77,10 +77,20 @@ class Generator:
         return member_type
 
     def generate_data_shape_members(self, shape):
+        shape_members = self.generate_shape_members(shape)
+        init_data_body = ""
+        for attr, value in shape_members.items():
+            if attr == "lambda":
+                init_data_body += f"# {attr}: {value}\n"
+            else:
+                init_data_body += f"{attr}: {value}\n"
+        return init_data_body
+
+    def generate_shape_members(self, shape):
         shape_dict = self.service_json['shapes'][shape]
         members = shape_dict["members"]
         required_args = shape_dict.get("required", [])
-        init_data_body = ""
+        init_data_body = {}
         # bring the required members in front
         ordered_members = {key: members[key] for key in required_args if key in members}
         ordered_members.update(members)
@@ -102,12 +112,7 @@ class Generator:
                 raise Exception("The Shape definition mush exist. The Json Data might be corrupt")
             member_name_snake_case = convert_to_snake_case(member_name)
             if member_name in required_args:
-                init_data_body += f"{member_name_snake_case}: {member_type}\n"
+                init_data_body[f"{member_name_snake_case}"] = f"{member_type}"
             else:
-                if member_name_snake_case == "lambda":
-                    # ToDo handle this edge case later
-                    init_data_body += f"# {member_name_snake_case}: Optional[{member_type}] = Unassigned()\n"
-                else:
-                    init_data_body += f"{member_name_snake_case}: Optional[{member_type}] = Unassigned()\n"
-        init_data = add_indent(init_data_body, 4)
-        return init_data
+                init_data_body[f"{member_name_snake_case}"] = f"Optional[{member_type}] = Unassigned()"
+        return init_data_body

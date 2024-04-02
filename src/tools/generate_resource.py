@@ -1,6 +1,9 @@
-from generate_resource_plan import ResourceExtractor
+from .generate_resource_plan import ResourceExtractor
 import json
 import os
+
+from src.tools.generator import Generator
+from src.util.util import add_indent, convert_to_snake_case
 
 RESOURCE_CLASS_TEMPLATE ='''
 class {class_name}:
@@ -9,10 +12,32 @@ class {class_name}:
 {object_methods}
 '''
 
-class ResourceGenerator:
+GET_METHOD_TEMPLATE = """
+@classmethod
+def get(
+    cls,
+    {describe_args}
+    session: Optional[Session] = None,
+    region: Optional[str] = None,
+) -> Optional[object]:
+    {resource_lower} = cls(session, region)
+
+    operation_input_args = {operation_input_args}
+    response = {resource_lower}.client.{operation}(**operation_input_args)
+
+    pprint(response)
+
+    # deserialize the response
+{object_attribute_assignments}
+    return {resource_lower}
+"""
+
+
+class ResourceGenerator(Generator):
     def __init__(self, file_path):
         with open(file_path, 'r') as file:
-            self.service_json = json.load(file)
+            service_json = json.load(file)
+        super().__init__(service_json)
 
         self.version = self.service_json['metadata']['apiVersion']
         self.protocol = self.service_json['metadata']['protocol']
@@ -49,7 +74,54 @@ class ResourceGenerator:
             print("\n")
 
     def generate_init_method(self, row):
-        return f'''
+        pass
+
+    def generate_get_method(self, resource):
+        """Auto-Generate GET Method [describe API] for a resource.
+
+        Usage:
+            get_method_response = res_gen.generate_get_method("Model")
+            from pprint import pprint
+            pprint(get_method_response)
+
+        :param resource: (str) Resource Name string. (Ex. Model)
+        :return: (str) Formatted Get Method template.
+        """
+        resource_operation = self.operations["Describe" + resource]
+        resource_operation_input_shape_name = resource_operation["input"]["shape"]
+        resource_operation_output_shape_name = resource_operation["output"]["shape"]
+        describe_args = ""
+        typed_shape_members = self.generate_shape_members(resource_operation_input_shape_name)
+        for attr, type in typed_shape_members.items():
+            describe_args += f"{attr}: {type},\n"
+        # remove the last \n
+        describe_args = describe_args.rstrip("\n")
+        resource_lower = convert_to_snake_case(resource)
+
+        input_shape_members = self.shapes[resource_operation_input_shape_name]["members"].keys()
+
+        operation_input_args = {}
+        for member in input_shape_members:
+            operation_input_args[member] = convert_to_snake_case(member)
+
+        operation = convert_to_snake_case("Describe" + resource)
+
+        # ToDo: The direct assignments would be replaced by multi-level deserialization logic.
+        object_attribute_assignments = ""
+        output_shape_members = self.shapes[resource_operation_output_shape_name]["members"]
+        for member in output_shape_members.keys():
+            attribute_from_member = convert_to_snake_case(member)
+            object_attribute_assignments += f"{resource_lower}.{attribute_from_member} = response[\"{member}\"]\n"
+        object_attribute_assignments = add_indent(object_attribute_assignments, 4)
+
+        formatted_method = GET_METHOD_TEMPLATE.format(
+            describe_args=describe_args,
+            resource_lower=resource_lower,
+            operation_input_args=operation_input_args,
+            operation=operation,
+            object_attribute_assignments=object_attribute_assignments,
+        )
+        return formatted_method
 
 
 if __name__ == "__main__":
