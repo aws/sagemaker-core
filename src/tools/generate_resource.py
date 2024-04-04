@@ -7,6 +7,7 @@ from src.util.util import add_indent, convert_to_snake_case
 
 RESOURCE_CLASS_TEMPLATE ='''
 class {class_name}:
+{data_class_members}
 {init_method}
 {class_methods}
 {object_methods}
@@ -56,22 +57,33 @@ class ResourceGenerator(Generator):
         self.resource_extractor = ResourceExtractor(self.service_json)
         self.generate_resources()
 
-    def generate_resources(self):
+    def generate_imports(self):
+        imports = "import datetime\n"
+        imports += "\n"
+        imports += "from dataclasses import dataclass\n"
+        imports += "from typing import List, Dict, Optional\n"
+        imports += "\n"
+        return imports
+
+
+    def generate_resources(self, output_folder="src/generated"):
+        if not os.path.exists(output_folder):
+            os.makedirs(output_folder)
+        
+        output_file = os.path.join(output_folder, f"resources.py")
         self.df = self.resource_extractor.get_resource_plan()
 
-        for index, row in self.df.iterrows():
-            resource_name = row['resource_name']
-            class_methods = row['class_methods']
-            object_methods = row['object_methods']
-            additional_methods = row['additional_methods']
-            raw_actions = row['raw_actions']
+        with open(output_file, "w") as file:
+            imports = self.generate_imports()
+            file.write(imports)
+            file.write("\n\n")
 
-            print(f"Resource: {resource_name}")
-            print(f"Class Methods: {class_methods}")
-            print(f"Object Methods: {object_methods}")
-            print(f"Additional Methods: {additional_methods}")
-            print(f"Raw actions: {raw_actions}")
-            print("\n")
+            for index, row in self.df.iterrows():
+                resource_name = row['resource_name']
+                class_methods = row['class_methods']
+                object_methods = row['object_methods']
+                additional_methods = row['additional_methods']
+                raw_actions = row['raw_actions']
 
     def generate_init_method(self, row):
         pass
@@ -123,6 +135,11 @@ class ResourceGenerator(Generator):
         )
         return formatted_method
 
+    def get_attributes_and_its_type(self, row) -> dict:
+        pass
+
+    def generate_resource_class(self, row) -> str:
+        pass
 
 if __name__ == "__main__":
     file_path = os.getcwd() + '/sample/sagemaker/2017-07-24/service-2.json'
