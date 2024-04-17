@@ -20,8 +20,7 @@ import os
 import textwrap
 
 from src.tools.generator import Generator
-from src.util.util import add_indent
-
+from src.util.util import add_indent, convert_to_snake_case
 
 CLASS_TEMPLATE ='''
 class {class_name}:
@@ -32,7 +31,9 @@ class {class_name}:
 DATA_CLASS_TEMPLATE ='''
 @dataclass
 class {class_name}:
-    """{docstring}"""
+    """
+    {docstring}
+    """
 {data_class_members}
 '''
 
@@ -120,8 +121,26 @@ class ShapeGenerator(Generator):
         return DATA_CLASS_TEMPLATE.format(
             class_name=class_name + "(Base)",
             data_class_members=data_class_members,
-            docstring="TBA",
+            docstring=self._generate_doc_string_for_shape(shape),
         )
+
+    def _generate_doc_string_for_shape(self, shape):
+        shape_dict = self.service_json["shapes"][shape]
+
+        docstring = f" {shape}"
+        if "documentation" in shape_dict:
+            docstring += f"\n \t  {shape_dict['documentation']}"
+
+        docstring += "\n\n \t Attributes"
+        docstring += "\n\t----------------------"
+
+        if "members" in shape_dict:
+            for member, member_attributes in shape_dict["members"].items():
+                docstring += f"\n \t{convert_to_snake_case(member)}"
+                if "documentation" in member_attributes:
+                    docstring += f": \t {member_attributes['documentation']}"
+
+        return docstring
 
     def generate_imports(self):
         imports = "import datetime\n"
@@ -153,7 +172,7 @@ class ShapeGenerator(Generator):
             return False
         return True
 
-    def generate_shapes(self, output_folder="src/generated"):
+    def generate_shapes(self, output_folder="../../src/generated"):
         if not os.path.exists(output_folder):
             os.makedirs(output_folder)
 
@@ -181,7 +200,7 @@ class ShapeGenerator(Generator):
                                                        prefix='')
             file.write(wrapped_class_definition)
             file.write("\n")
-            # iterate through shapes in topological order an generate classes.
+            # iterate through shapes in topological order and generate classes.
             topological_order = self.topological_sort()
             for shape in topological_order:
                 if self._filter_input_output_shapes(shape):
@@ -192,7 +211,7 @@ class ShapeGenerator(Generator):
                         file.write(shape_class)
 
 
-with open('sample/sagemaker/2017-07-24/service-2.json') as f:
+with open('../../sample/sagemaker/2017-07-24/service-2.json') as f:
     data = json.load(f)
 
 codegen = ShapeGenerator(service_json=data)
