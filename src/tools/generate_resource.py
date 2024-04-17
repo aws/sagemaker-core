@@ -13,7 +13,29 @@ class {class_name}:
 {object_methods}
 '''
 
-GET_METHOD_TEMPLATE = """
+INIT_METHOD_TEMPLATE = '''
+def __init__(self, 
+    session: Optional[Session] = None, 
+    region: Optional[str] = None
+    {init_args}):
+    self.session = session
+    self.region = region
+    {init_assignments}
+
+'''
+
+CREATE_METHOD_TEMPLATE = '''
+@classmethod
+def create(
+    cls,
+    {create_args}
+    session: Optional[Session] = None,
+    region: Optional[str] = None,
+) -> Optional[object]:
+
+'''
+
+GET_METHOD_TEMPLATE = '''
 @classmethod
 def get(
     cls,
@@ -31,7 +53,7 @@ def get(
     # deserialize the response
 {object_attribute_assignments}
     return {resource_lower}
-"""
+'''
 
 
 class ResourceGenerator(Generator):
