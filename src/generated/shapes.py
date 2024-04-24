@@ -1,10 +1,10 @@
 import datetime
 
-from dataclasses import dataclass
+from pydantic import BaseModel
 from typing import List, Dict, Optional
 
 
-class Base:
+class Base(BaseModel):
     """TBA"""
     pass
 
@@ -19,7 +19,6 @@ class Unassigned:
         return cls._instance
 
 
-@dataclass
 class ActionSource(Base):
     """
      ActionSource
@@ -30,14 +29,12 @@ class ActionSource(Base):
  	source_uri: 	 <p>The URI of the source.</p>
  	source_type: 	 <p>The type of the source.</p>
  	source_id: 	 <p>The ID of the source.</p>
-
     """
     source_uri: str
     source_type: Optional[str] = Unassigned()
     source_id: Optional[str] = Unassigned()
 
 
-@dataclass
 class ActionSummary(Base):
     """
      ActionSummary
@@ -52,7 +49,6 @@ class ActionSummary(Base):
  	status: 	 <p>The status of the action.</p>
  	creation_time: 	 <p>When the action was created.</p>
  	last_modified_time: 	 <p>When the action was last modified.</p>
-
     """
     action_arn: Optional[str] = Unassigned()
     action_name: Optional[str] = Unassigned()
@@ -63,7 +59,6 @@ class ActionSummary(Base):
     last_modified_time: Optional[datetime.datetime] = Unassigned()
 
 
-@dataclass
 class Tag(Base):
     """
      Tag
@@ -73,13 +68,11 @@ class Tag(Base):
 	----------------------
  	key: 	 <p>The tag key. Tag keys must be unique per resource.</p>
  	value: 	 <p>The tag value.</p>
-
     """
     key: str
     value: str
 
 
-@dataclass
 class ModelAccessConfig(Base):
     """
      ModelAccessConfig
@@ -88,12 +81,10 @@ class ModelAccessConfig(Base):
  	 Attributes
 	----------------------
  	accept_eula: 	 <p>Specifies agreement to the model end-user license agreement (EULA). The <code>AcceptEula</code> value must be explicitly defined as <code>True</code> in order to accept the EULA that this model requires. You are responsible for reviewing and complying with any applicable license terms and making sure they are acceptable for your use case before downloading or using a model.</p>
-
     """
     accept_eula: bool
 
 
-@dataclass
 class S3ModelDataSource(Base):
     """
      S3ModelDataSource
@@ -105,7 +96,6 @@ class S3ModelDataSource(Base):
  	s3_data_type: 	 <p>Specifies the type of ML model data to deploy.</p> <p>If you choose <code>S3Prefix</code>, <code>S3Uri</code> identifies a key name prefix. SageMaker uses all objects that match the specified key name prefix as part of the ML model data to deploy. A valid key name prefix identified by <code>S3Uri</code> always ends with a forward slash (/).</p> <p>If you choose <code>S3Object</code>, <code>S3Uri</code> identifies an object that is the ML model data to deploy.</p>
  	compression_type: 	 <p>Specifies how the ML model data is prepared.</p> <p>If you choose <code>Gzip</code> and choose <code>S3Object</code> as the value of <code>S3DataType</code>, <code>S3Uri</code> identifies an object that is a gzip-compressed TAR archive. SageMaker will attempt to decompress and untar the object during model deployment.</p> <p>If you choose <code>None</code> and chooose <code>S3Object</code> as the value of <code>S3DataType</code>, <code>S3Uri</code> identifies an object that represents an uncompressed ML model to deploy.</p> <p>If you choose None and choose <code>S3Prefix</code> as the value of <code>S3DataType</code>, <code>S3Uri</code> identifies a key name prefix, under which all objects represents the uncompressed ML model to deploy.</p> <p>If you choose None, then SageMaker will follow rules below when creating model data files under /opt/ml/model directory for use by your inference code:</p> <ul> <li> <p>If you choose <code>S3Object</code> as the value of <code>S3DataType</code>, then SageMaker will split the key of the S3 object referenced by <code>S3Uri</code> by slash (/), and use the last part as the filename of the file holding the content of the S3 object.</p> </li> <li> <p>If you choose <code>S3Prefix</code> as the value of <code>S3DataType</code>, then for each S3 object under the key name pefix referenced by <code>S3Uri</code>, SageMaker will trim its key by the prefix, and use the remainder as the path (relative to <code>/opt/ml/model</code>) of the file holding the content of the S3 object. SageMaker will split the remainder by slash (/), using intermediate parts as directory names and the last part as filename of the file holding the content of the S3 object.</p> </li> <li> <p>Do not use any of the following as file names or directory names:</p> <ul> <li> <p>An empty or blank string</p> </li> <li> <p>A string which contains null bytes</p> </li> <li> <p>A string longer than 255 bytes</p> </li> <li> <p>A single dot (<code>.</code>)</p> </li> <li> <p>A double dot (<code>..</code>)</p> </li> </ul> </li> <li> <p>Ambiguous file names will result in model deployment failure. For example, if your uncompressed ML model consists of two S3 objects <code>s3://mybucket/model/weights</code> and <code>s3://mybucket/model/weights/part1</code> and you specify <code>s3://mybucket/model/</code> as the value of <code>S3Uri</code> and <code>S3Prefix</code> as the value of <code>S3DataType</code>, then it will result in name clash between <code>/opt/ml/model/weights</code> (a regular file) and <code>/opt/ml/model/weights/</code> (a directory).</p> </li> <li> <p>Do not organize the model artifacts in <a href="https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-folders.html">S3 console using folders</a>. When you create a folder in S3 console, S3 creates a 0-byte object with a key set to the folder name you provide. They key of the 0-byte object ends with a slash (/) which violates SageMaker restrictions on model artifact file names, leading to model deployment failure. </p> </li> </ul>
  	model_access_config: 	 <p>Specifies the access configuration file for the ML model. You can explicitly accept the model end-user license agreement (EULA) within the <code>ModelAccessConfig</code>. You are responsible for reviewing and complying with any applicable license terms and making sure they are acceptable for your use case before downloading or using a model.</p>
-
     """
     s3_uri: str
     s3_data_type: str
@@ -113,7 +103,6 @@ class S3ModelDataSource(Base):
     model_access_config: Optional[ModelAccessConfig] = Unassigned()
 
 
-@dataclass
 class ModelDataSource(Base):
     """
      ModelDataSource
@@ -122,12 +111,10 @@ class ModelDataSource(Base):
  	 Attributes
 	----------------------
  	s3_data_source: 	 <p>Specifies the S3 location of ML model data to deploy.</p>
-
     """
     s3_data_source: Optional[S3ModelDataSource] = Unassigned()
 
 
-@dataclass
 class ModelInput(Base):
     """
      ModelInput
@@ -136,12 +123,10 @@ class ModelInput(Base):
  	 Attributes
 	----------------------
  	data_input_config: 	 <p>The input configuration object for the model.</p>
-
     """
     data_input_config: str
 
 
-@dataclass
 class AdditionalS3DataSource(Base):
     """
      AdditionalS3DataSource
@@ -152,14 +137,12 @@ class AdditionalS3DataSource(Base):
  	s3_data_type: 	 <p>The data type of the additional data source that you specify for use in inference or training. </p>
  	s3_uri: 	 <p>The uniform resource identifier (URI) used to identify an additional data source used in inference or training.</p>
  	compression_type: 	 <p>The type of compression used for an additional data source used in inference or training. Specify <code>None</code> if your additional data source is not compressed.</p>
-
     """
     s3_data_type: str
     s3_uri: str
     compression_type: Optional[str] = Unassigned()
 
 
-@dataclass
 class ModelPackageContainerDefinition(Base):
     """
      ModelPackageContainerDefinition
@@ -179,7 +162,6 @@ class ModelPackageContainerDefinition(Base):
  	framework_version: 	 <p>The framework version of the Model Package Container Image.</p>
  	nearest_model_name: 	 <p>The name of a pre-trained machine learning benchmarked by Amazon SageMaker Inference Recommender model that matches your model. You can find a list of benchmarked models by calling <code>ListModelMetadata</code>.</p>
  	additional_s3_data_source: 	 <p>The additional data source that is used during inference in the Docker container for your model package.</p>
-
     """
     image: str
     container_hostname: Optional[str] = Unassigned()
@@ -195,7 +177,6 @@ class ModelPackageContainerDefinition(Base):
     additional_s3_data_source: Optional[AdditionalS3DataSource] = Unassigned()
 
 
-@dataclass
 class AdditionalInferenceSpecificationDefinition(Base):
     """
      AdditionalInferenceSpecificationDefinition
@@ -210,7 +191,6 @@ class AdditionalInferenceSpecificationDefinition(Base):
  	supported_realtime_inference_instance_types: 	 <p>A list of the instance types that are used to generate inferences in real-time.</p>
  	supported_content_types: 	 <p>The supported MIME types for the input data.</p>
  	supported_response_m_i_m_e_types: 	 <p>The supported MIME types for the output data.</p>
-
     """
     name: str
     containers: List[ModelPackageContainerDefinition]
@@ -221,7 +201,6 @@ class AdditionalInferenceSpecificationDefinition(Base):
     supported_response_m_i_m_e_types: Optional[List[str]] = Unassigned()
 
 
-@dataclass
 class AgentVersion(Base):
     """
      AgentVersion
@@ -231,13 +210,11 @@ class AgentVersion(Base):
 	----------------------
  	version: 	 <p>Version of the agent.</p>
  	agent_count: 	 <p>The number of Edge Manager agents.</p>
-
     """
     version: str
     agent_count: int
 
 
-@dataclass
 class Alarm(Base):
     """
      Alarm
@@ -246,12 +223,10 @@ class Alarm(Base):
  	 Attributes
 	----------------------
  	alarm_name: 	 <p>The name of a CloudWatch alarm in your account.</p>
-
     """
     alarm_name: Optional[str] = Unassigned()
 
 
-@dataclass
 class MetricDefinition(Base):
     """
      MetricDefinition
@@ -261,13 +236,11 @@ class MetricDefinition(Base):
 	----------------------
  	name: 	 <p>The name of the metric.</p>
  	regex: 	 <p>A regular expression that searches the output of a training job and gets the value of the metric. For more information about using regular expressions to define metrics, see <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/automatic-model-tuning-define-metrics-variables.html">Defining metrics and environment variables</a>.</p>
-
     """
     name: str
     regex: str
 
 
-@dataclass
 class TrainingRepositoryAuthConfig(Base):
     """
      TrainingRepositoryAuthConfig
@@ -276,12 +249,10 @@ class TrainingRepositoryAuthConfig(Base):
  	 Attributes
 	----------------------
  	training_repository_credentials_provider_arn: 	 <p>The Amazon Resource Name (ARN) of an Amazon Web Services Lambda function used to give SageMaker access credentials to your private Docker registry.</p>
-
     """
     training_repository_credentials_provider_arn: str
 
 
-@dataclass
 class TrainingImageConfig(Base):
     """
      TrainingImageConfig
@@ -291,13 +262,11 @@ class TrainingImageConfig(Base):
 	----------------------
  	training_repository_access_mode: 	 <p>The method that your training job will use to gain access to the images in your private Docker registry. For access to an image in a private Docker registry, set to <code>Vpc</code>.</p>
  	training_repository_auth_config: 	 <p>An object containing authentication information for a private Docker registry containing your training images.</p>
-
     """
     training_repository_access_mode: str
     training_repository_auth_config: Optional[TrainingRepositoryAuthConfig] = Unassigned()
 
 
-@dataclass
 class AlgorithmSpecification(Base):
     """
      AlgorithmSpecification
@@ -313,7 +282,6 @@ class AlgorithmSpecification(Base):
  	container_entrypoint: 	 <p>The <a href="https://docs.docker.com/engine/reference/builder/">entrypoint script for a Docker container</a> used to run a training job. This script takes precedence over the default train processing instructions. See <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/your-algorithms-training-algo-dockerfile.html">How Amazon SageMaker Runs Your Training Image</a> for more information.</p>
  	container_arguments: 	 <p>The arguments for a container used to run a training job. See <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/your-algorithms-training-algo-dockerfile.html">How Amazon SageMaker Runs Your Training Image</a> for additional information.</p>
  	training_image_config: 	 <p>The configuration to use an image from a private Docker registry for a training job.</p>
-
     """
     training_input_mode: str
     training_image: Optional[str] = Unassigned()
@@ -325,7 +293,6 @@ class AlgorithmSpecification(Base):
     training_image_config: Optional[TrainingImageConfig] = Unassigned()
 
 
-@dataclass
 class AlgorithmStatusItem(Base):
     """
      AlgorithmStatusItem
@@ -336,14 +303,12 @@ class AlgorithmStatusItem(Base):
  	name: 	 <p>The name of the algorithm for which the overall status is being reported.</p>
  	status: 	 <p>The current status.</p>
  	failure_reason: 	 <p>if the overall status is <code>Failed</code>, the reason for the failure.</p>
-
     """
     name: str
     status: str
     failure_reason: Optional[str] = Unassigned()
 
 
-@dataclass
 class AlgorithmStatusDetails(Base):
     """
      AlgorithmStatusDetails
@@ -353,13 +318,11 @@ class AlgorithmStatusDetails(Base):
 	----------------------
  	validation_statuses: 	 <p>The status of algorithm validation.</p>
  	image_scan_statuses: 	 <p>The status of the scan of the algorithm's Docker image container.</p>
-
     """
     validation_statuses: Optional[List[AlgorithmStatusItem]] = Unassigned()
     image_scan_statuses: Optional[List[AlgorithmStatusItem]] = Unassigned()
 
 
-@dataclass
 class AlgorithmSummary(Base):
     """
      AlgorithmSummary
@@ -372,7 +335,6 @@ class AlgorithmSummary(Base):
  	algorithm_description: 	 <p>A brief description of the algorithm.</p>
  	creation_time: 	 <p>A timestamp that shows when the algorithm was created.</p>
  	algorithm_status: 	 <p>The overall status of the algorithm.</p>
-
     """
     algorithm_name: str
     algorithm_arn: str
@@ -381,7 +343,6 @@ class AlgorithmSummary(Base):
     algorithm_description: Optional[str] = Unassigned()
 
 
-@dataclass
 class S3DataSource(Base):
     """
      S3DataSource
@@ -394,7 +355,6 @@ class S3DataSource(Base):
  	s3_data_distribution_type: 	 <p>If you want SageMaker to replicate the entire dataset on each ML compute instance that is launched for model training, specify <code>FullyReplicated</code>. </p> <p>If you want SageMaker to replicate a subset of data on each ML compute instance that is launched for model training, specify <code>ShardedByS3Key</code>. If there are <i>n</i> ML compute instances launched for a training job, each instance gets approximately 1/<i>n</i> of the number of S3 objects. In this case, model training on each machine uses only the subset of training data. </p> <p>Don't choose more ML compute instances for training than available S3 objects. If you do, some nodes won't get any data and you will pay for nodes that aren't getting any training data. This applies in both File and Pipe modes. Keep this in mind when developing algorithms. </p> <p>In distributed training, where you use multiple ML compute EC2 instances, you might choose <code>ShardedByS3Key</code>. If the algorithm requires copying training data to the ML storage volume (when <code>TrainingInputMode</code> is set to <code>File</code>), this copies 1/<i>n</i> of the number of objects. </p>
  	attribute_names: 	 <p>A list of one or more attribute names to use that are found in a specified augmented manifest file.</p>
  	instance_group_names: 	 <p>A list of names of instance groups that get data from the S3 data source.</p>
-
     """
     s3_data_type: str
     s3_uri: str
@@ -403,7 +363,6 @@ class S3DataSource(Base):
     instance_group_names: Optional[List[str]] = Unassigned()
 
 
-@dataclass
 class FileSystemDataSource(Base):
     """
      FileSystemDataSource
@@ -415,7 +374,6 @@ class FileSystemDataSource(Base):
  	file_system_access_mode: 	 <p>The access mode of the mount of the directory associated with the channel. A directory can be mounted either in <code>ro</code> (read-only) or <code>rw</code> (read-write) mode.</p>
  	file_system_type: 	 <p>The file system type. </p>
  	directory_path: 	 <p>The full path to the directory to associate with the channel.</p>
-
     """
     file_system_id: str
     file_system_access_mode: str
@@ -423,7 +381,6 @@ class FileSystemDataSource(Base):
     directory_path: str
 
 
-@dataclass
 class DataSource(Base):
     """
      DataSource
@@ -433,13 +390,11 @@ class DataSource(Base):
 	----------------------
  	s3_data_source: 	 <p>The S3 location of the data source that is associated with a channel.</p>
  	file_system_data_source: 	 <p>The file system that is associated with a channel.</p>
-
     """
     s3_data_source: Optional[S3DataSource] = Unassigned()
     file_system_data_source: Optional[FileSystemDataSource] = Unassigned()
 
 
-@dataclass
 class ShuffleConfig(Base):
     """
      ShuffleConfig
@@ -448,12 +403,10 @@ class ShuffleConfig(Base):
  	 Attributes
 	----------------------
  	seed: 	 <p>Determines the shuffling order in <code>ShuffleConfig</code> value.</p>
-
     """
     seed: int
 
 
-@dataclass
 class Channel(Base):
     """
      Channel
@@ -468,7 +421,6 @@ class Channel(Base):
  	record_wrapper_type: 	 <p/> <p>Specify RecordIO as the value when input data is in raw format but the training algorithm requires the RecordIO format. In this case, SageMaker wraps each individual S3 object in a RecordIO record. If the input data is already in RecordIO format, you don't need to set this attribute. For more information, see <a href="https://mxnet.apache.org/api/architecture/note_data_loading#data-format">Create a Dataset Using RecordIO</a>. </p> <p>In File mode, leave this field unset or set it to None.</p>
  	input_mode: 	 <p>(Optional) The input mode to use for the data channel in a training job. If you don't set a value for <code>InputMode</code>, SageMaker uses the value set for <code>TrainingInputMode</code>. Use this parameter to override the <code>TrainingInputMode</code> setting in a <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_AlgorithmSpecification.html">AlgorithmSpecification</a> request when you have a channel that needs a different input mode from the training job's general setting. To download the data from Amazon Simple Storage Service (Amazon S3) to the provisioned ML storage volume, and mount the directory to a Docker volume, use <code>File</code> input mode. To stream data directly from Amazon S3 to the container, choose <code>Pipe</code> input mode.</p> <p>To use a model for incremental training, choose <code>File</code> input model.</p>
  	shuffle_config: 	 <p>A configuration for a shuffle option for input data in a channel. If you use <code>S3Prefix</code> for <code>S3DataType</code>, this shuffles the results of the S3 key prefix matches. If you use <code>ManifestFile</code>, the order of the S3 object references in the <code>ManifestFile</code> is shuffled. If you use <code>AugmentedManifestFile</code>, the order of the JSON lines in the <code>AugmentedManifestFile</code> is shuffled. The shuffling order is determined using the <code>Seed</code> value.</p> <p>For Pipe input mode, shuffling is done at the start of every epoch. With large datasets this ensures that the order of the training data is different for each epoch, it helps reduce bias and possible overfitting. In a multi-node training job when ShuffleConfig is combined with <code>S3DataDistributionType</code> of <code>ShardedByS3Key</code>, the data is shuffled across nodes so that the content sent to a particular node on the first epoch might be sent to a different node on the second epoch.</p>
-
     """
     channel_name: str
     data_source: DataSource
@@ -479,7 +431,6 @@ class Channel(Base):
     shuffle_config: Optional[ShuffleConfig] = Unassigned()
 
 
-@dataclass
 class OutputDataConfig(Base):
     """
      OutputDataConfig
@@ -490,14 +441,12 @@ class OutputDataConfig(Base):
  	kms_key_id: 	 <p>The Amazon Web Services Key Management Service (Amazon Web Services KMS) key that SageMaker uses to encrypt the model artifacts at rest using Amazon S3 server-side encryption. The <code>KmsKeyId</code> can be any of the following formats: </p> <ul> <li> <p>// KMS Key ID</p> <p> <code>"1234abcd-12ab-34cd-56ef-1234567890ab"</code> </p> </li> <li> <p>// Amazon Resource Name (ARN) of a KMS Key</p> <p> <code>"arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab"</code> </p> </li> <li> <p>// KMS Key Alias</p> <p> <code>"alias/ExampleAlias"</code> </p> </li> <li> <p>// Amazon Resource Name (ARN) of a KMS Key Alias</p> <p> <code>"arn:aws:kms:us-west-2:111122223333:alias/ExampleAlias"</code> </p> </li> </ul> <p>If you use a KMS key ID or an alias of your KMS key, the SageMaker execution role must include permissions to call <code>kms:Encrypt</code>. If you don't provide a KMS key ID, SageMaker uses the default KMS key for Amazon S3 for your role's account. For more information, see <a href="https://docs.aws.amazon.com/AmazonS3/latest/userguide/UsingKMSEncryption.html">KMS-Managed Encryption Keys</a> in the <i>Amazon Simple Storage Service Developer Guide</i>. If the output data is stored in Amazon S3 Express One Zone, it is encrypted with server-side encryption with Amazon S3 managed keys (SSE-S3). KMS key is not supported for Amazon S3 Express One Zone</p> <p>The KMS key policy must grant permission to the IAM role that you specify in your <code>CreateTrainingJob</code>, <code>CreateTransformJob</code>, or <code>CreateHyperParameterTuningJob</code> requests. For more information, see <a href="https://docs.aws.amazon.com/kms/latest/developerguide/key-policies.html">Using Key Policies in Amazon Web Services KMS</a> in the <i>Amazon Web Services Key Management Service Developer Guide</i>.</p>
  	s3_output_path: 	 <p>Identifies the S3 path where you want SageMaker to store the model artifacts. For example, <code>s3://bucket-name/key-name-prefix</code>. </p>
  	compression_type: 	 <p>The model output compression type. Select <code>None</code> to output an uncompressed model, recommended for large model outputs. Defaults to gzip.</p>
-
     """
     s3_output_path: str
     kms_key_id: Optional[str] = Unassigned()
     compression_type: Optional[str] = Unassigned()
 
 
-@dataclass
 class InstanceGroup(Base):
     """
      InstanceGroup
@@ -508,14 +457,12 @@ class InstanceGroup(Base):
  	instance_type: 	 <p>Specifies the instance type of the instance group.</p>
  	instance_count: 	 <p>Specifies the number of instances of the instance group.</p>
  	instance_group_name: 	 <p>Specifies the name of the instance group.</p>
-
     """
     instance_type: str
     instance_count: int
     instance_group_name: str
 
 
-@dataclass
 class ResourceConfig(Base):
     """
      ResourceConfig
@@ -529,7 +476,6 @@ class ResourceConfig(Base):
  	volume_kms_key_id: 	 <p>The Amazon Web Services KMS key that SageMaker uses to encrypt data on the storage volume attached to the ML compute instance(s) that run the training job.</p> <note> <p>Certain Nitro-based instances include local storage, dependent on the instance type. Local storage volumes are encrypted using a hardware module on the instance. You can't request a <code>VolumeKmsKeyId</code> when using an instance type with local storage.</p> <p>For a list of instance types that support local instance storage, see <a href="https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/InstanceStorage.html#instance-store-volumes">Instance Store Volumes</a>.</p> <p>For more information about local instance storage encryption, see <a href="https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ssd-instance-store.html">SSD Instance Store Volumes</a>.</p> </note> <p>The <code>VolumeKmsKeyId</code> can be in any of the following formats:</p> <ul> <li> <p>// KMS Key ID</p> <p> <code>"1234abcd-12ab-34cd-56ef-1234567890ab"</code> </p> </li> <li> <p>// Amazon Resource Name (ARN) of a KMS Key</p> <p> <code>"arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab"</code> </p> </li> </ul>
  	keep_alive_period_in_seconds: 	 <p>The duration of time in seconds to retain configured resources in a warm pool for subsequent training jobs.</p>
  	instance_groups: 	 <p>The configuration of a heterogeneous cluster in JSON format.</p>
-
     """
     volume_size_in_g_b: int
     instance_type: Optional[str] = Unassigned()
@@ -539,7 +485,6 @@ class ResourceConfig(Base):
     instance_groups: Optional[List[InstanceGroup]] = Unassigned()
 
 
-@dataclass
 class StoppingCondition(Base):
     """
      StoppingCondition
@@ -550,14 +495,12 @@ class StoppingCondition(Base):
  	max_runtime_in_seconds: 	 <p>The maximum length of time, in seconds, that a training or compilation job can run before it is stopped.</p> <p>For compilation jobs, if the job does not complete during this time, a <code>TimeOut</code> error is generated. We recommend starting with 900 seconds and increasing as necessary based on your model.</p> <p>For all other jobs, if the job does not complete during this time, SageMaker ends the job. When <code>RetryStrategy</code> is specified in the job request, <code>MaxRuntimeInSeconds</code> specifies the maximum time for all of the attempts in total, not each individual attempt. The default value is 1 day. The maximum value is 28 days.</p> <p>The maximum time that a <code>TrainingJob</code> can run in total, including any time spent publishing metrics or archiving and uploading models after it has been stopped, is 30 days.</p>
  	max_wait_time_in_seconds: 	 <p>The maximum length of time, in seconds, that a managed Spot training job has to complete. It is the amount of time spent waiting for Spot capacity plus the amount of time the job can run. It must be equal to or greater than <code>MaxRuntimeInSeconds</code>. If the job does not complete during this time, SageMaker ends the job.</p> <p>When <code>RetryStrategy</code> is specified in the job request, <code>MaxWaitTimeInSeconds</code> specifies the maximum time for all of the attempts in total, not each individual attempt.</p>
  	max_pending_time_in_seconds: 	 <p>The maximum length of time, in seconds, that a training or compilation job can be pending before it is stopped.</p>
-
     """
     max_runtime_in_seconds: Optional[int] = Unassigned()
     max_wait_time_in_seconds: Optional[int] = Unassigned()
     max_pending_time_in_seconds: Optional[int] = Unassigned()
 
 
-@dataclass
 class TrainingJobDefinition(Base):
     """
      TrainingJobDefinition
@@ -571,7 +514,6 @@ class TrainingJobDefinition(Base):
  	output_data_config: 	 <p>the path to the S3 bucket where you want to store model artifacts. SageMaker creates subfolders for the artifacts.</p>
  	resource_config: 	 <p>The resources, including the ML compute instances and ML storage volumes, to use for model training.</p>
  	stopping_condition: 	 <p>Specifies a limit to how long a model training job can run. It also specifies how long a managed Spot training job has to complete. When the job reaches the time limit, SageMaker ends the training job. Use this API to cap model training costs.</p> <p>To stop a job, SageMaker sends the algorithm the SIGTERM signal, which delays job termination for 120 seconds. Algorithms can use this 120-second window to save the model artifacts.</p>
-
     """
     training_input_mode: str
     input_data_config: List[Channel]
@@ -581,7 +523,6 @@ class TrainingJobDefinition(Base):
     hyper_parameters: Optional[Dict[str, str]] = Unassigned()
 
 
-@dataclass
 class TransformS3DataSource(Base):
     """
      TransformS3DataSource
@@ -591,13 +532,11 @@ class TransformS3DataSource(Base):
 	----------------------
  	s3_data_type: 	 <p>If you choose <code>S3Prefix</code>, <code>S3Uri</code> identifies a key name prefix. Amazon SageMaker uses all objects with the specified key name prefix for batch transform. </p> <p>If you choose <code>ManifestFile</code>, <code>S3Uri</code> identifies an object that is a manifest file containing a list of object keys that you want Amazon SageMaker to use for batch transform. </p> <p>The following values are compatible: <code>ManifestFile</code>, <code>S3Prefix</code> </p> <p>The following value is not compatible: <code>AugmentedManifestFile</code> </p>
  	s3_uri: 	 <p>Depending on the value specified for the <code>S3DataType</code>, identifies either a key name prefix or a manifest. For example:</p> <ul> <li> <p> A key name prefix might look like this: <code>s3://bucketname/exampleprefix/</code>. </p> </li> <li> <p> A manifest might look like this: <code>s3://bucketname/example.manifest</code> </p> <p> The manifest is an S3 object which is a JSON file with the following format: </p> <p> <code>[ {"prefix": "s3://customer_bucket/some/prefix/"},</code> </p> <p> <code>"relative/path/to/custdata-1",</code> </p> <p> <code>"relative/path/custdata-2",</code> </p> <p> <code>...</code> </p> <p> <code>"relative/path/custdata-N"</code> </p> <p> <code>]</code> </p> <p> The preceding JSON matches the following <code>S3Uris</code>: </p> <p> <code>s3://customer_bucket/some/prefix/relative/path/to/custdata-1</code> </p> <p> <code>s3://customer_bucket/some/prefix/relative/path/custdata-2</code> </p> <p> <code>...</code> </p> <p> <code>s3://customer_bucket/some/prefix/relative/path/custdata-N</code> </p> <p> The complete set of <code>S3Uris</code> in this manifest constitutes the input data for the channel for this datasource. The object that each <code>S3Uris</code> points to must be readable by the IAM role that Amazon SageMaker uses to perform tasks on your behalf.</p> </li> </ul>
-
     """
     s3_data_type: str
     s3_uri: str
 
 
-@dataclass
 class TransformDataSource(Base):
     """
      TransformDataSource
@@ -606,12 +545,10 @@ class TransformDataSource(Base):
  	 Attributes
 	----------------------
  	s3_data_source: 	 <p>The S3 location of the data source that is associated with a channel.</p>
-
     """
     s3_data_source: TransformS3DataSource
 
 
-@dataclass
 class TransformInput(Base):
     """
      TransformInput
@@ -623,7 +560,6 @@ class TransformInput(Base):
  	content_type: 	 <p>The multipurpose internet mail extension (MIME) type of the data. Amazon SageMaker uses the MIME type with each http call to transfer data to the transform job.</p>
  	compression_type: 	 <p>If your transform data is compressed, specify the compression type. Amazon SageMaker automatically decompresses the data for the transform job accordingly. The default value is <code>None</code>.</p>
  	split_type: 	 <p>The method to use to split the transform job's data files into smaller batches. Splitting is necessary when the total size of each object is too large to fit in a single request. You can also use data splitting to improve performance by processing multiple concurrent mini-batches. The default value for <code>SplitType</code> is <code>None</code>, which indicates that input data files are not split, and request payloads contain the entire contents of an input object. Set the value of this parameter to <code>Line</code> to split records on a newline character boundary. <code>SplitType</code> also supports a number of record-oriented binary data formats. Currently, the supported record formats are:</p> <ul> <li> <p>RecordIO</p> </li> <li> <p>TFRecord</p> </li> </ul> <p>When splitting is enabled, the size of a mini-batch depends on the values of the <code>BatchStrategy</code> and <code>MaxPayloadInMB</code> parameters. When the value of <code>BatchStrategy</code> is <code>MultiRecord</code>, Amazon SageMaker sends the maximum number of records in each request, up to the <code>MaxPayloadInMB</code> limit. If the value of <code>BatchStrategy</code> is <code>SingleRecord</code>, Amazon SageMaker sends individual records in each request.</p> <note> <p>Some data formats represent a record as a binary payload wrapped with extra padding bytes. When splitting is applied to a binary data format, padding is removed if the value of <code>BatchStrategy</code> is set to <code>SingleRecord</code>. Padding is not removed if the value of <code>BatchStrategy</code> is set to <code>MultiRecord</code>.</p> <p>For more information about <code>RecordIO</code>, see <a href="https://mxnet.apache.org/api/faq/recordio">Create a Dataset Using RecordIO</a> in the MXNet documentation. For more information about <code>TFRecord</code>, see <a href="https://www.tensorflow.org/guide/data#consuming_tfrecord_data">Consuming TFRecord data</a> in the TensorFlow documentation.</p> </note>
-
     """
     data_source: TransformDataSource
     content_type: Optional[str] = Unassigned()
@@ -631,7 +567,6 @@ class TransformInput(Base):
     split_type: Optional[str] = Unassigned()
 
 
-@dataclass
 class TransformOutput(Base):
     """
      TransformOutput
@@ -643,7 +578,6 @@ class TransformOutput(Base):
  	accept: 	 <p>The MIME type used to specify the output data. Amazon SageMaker uses the MIME type with each http call to transfer data from the transform job.</p>
  	assemble_with: 	 <p>Defines how to assemble the results of the transform job as a single S3 object. Choose a format that is most convenient to you. To concatenate the results in binary format, specify <code>None</code>. To add a newline character at the end of every transformed record, specify <code>Line</code>.</p>
  	kms_key_id: 	 <p>The Amazon Web Services Key Management Service (Amazon Web Services KMS) key that Amazon SageMaker uses to encrypt the model artifacts at rest using Amazon S3 server-side encryption. The <code>KmsKeyId</code> can be any of the following formats: </p> <ul> <li> <p>Key ID: <code>1234abcd-12ab-34cd-56ef-1234567890ab</code> </p> </li> <li> <p>Key ARN: <code>arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab</code> </p> </li> <li> <p>Alias name: <code>alias/ExampleAlias</code> </p> </li> <li> <p>Alias name ARN: <code>arn:aws:kms:us-west-2:111122223333:alias/ExampleAlias</code> </p> </li> </ul> <p>If you don't provide a KMS key ID, Amazon SageMaker uses the default KMS key for Amazon S3 for your role's account. For more information, see <a href="https://docs.aws.amazon.com/AmazonS3/latest/dev/UsingKMSEncryption.html">KMS-Managed Encryption Keys</a> in the <i>Amazon Simple Storage Service Developer Guide.</i> </p> <p>The KMS key policy must grant permission to the IAM role that you specify in your <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_CreateModel.html">CreateModel</a> request. For more information, see <a href="https://docs.aws.amazon.com/kms/latest/developerguide/key-policies.html">Using Key Policies in Amazon Web Services KMS</a> in the <i>Amazon Web Services Key Management Service Developer Guide</i>.</p>
-
     """
     s3_output_path: str
     accept: Optional[str] = Unassigned()
@@ -651,7 +585,6 @@ class TransformOutput(Base):
     kms_key_id: Optional[str] = Unassigned()
 
 
-@dataclass
 class TransformResources(Base):
     """
      TransformResources
@@ -662,14 +595,12 @@ class TransformResources(Base):
  	instance_type: 	 <p>The ML compute instance type for the transform job. If you are using built-in algorithms to transform moderately sized datasets, we recommend using ml.m4.xlarge or <code>ml.m5.large</code>instance types.</p>
  	instance_count: 	 <p>The number of ML compute instances to use in the transform job. The default value is <code>1</code>, and the maximum is <code>100</code>. For distributed transform jobs, specify a value greater than <code>1</code>.</p>
  	volume_kms_key_id: 	 <p>The Amazon Web Services Key Management Service (Amazon Web Services KMS) key that Amazon SageMaker uses to encrypt model data on the storage volume attached to the ML compute instance(s) that run the batch transform job.</p> <note> <p>Certain Nitro-based instances include local storage, dependent on the instance type. Local storage volumes are encrypted using a hardware module on the instance. You can't request a <code>VolumeKmsKeyId</code> when using an instance type with local storage.</p> <p>For a list of instance types that support local instance storage, see <a href="https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/InstanceStorage.html#instance-store-volumes">Instance Store Volumes</a>.</p> <p>For more information about local instance storage encryption, see <a href="https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ssd-instance-store.html">SSD Instance Store Volumes</a>.</p> </note> <p> The <code>VolumeKmsKeyId</code> can be any of the following formats:</p> <ul> <li> <p>Key ID: <code>1234abcd-12ab-34cd-56ef-1234567890ab</code> </p> </li> <li> <p>Key ARN: <code>arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab</code> </p> </li> <li> <p>Alias name: <code>alias/ExampleAlias</code> </p> </li> <li> <p>Alias name ARN: <code>arn:aws:kms:us-west-2:111122223333:alias/ExampleAlias</code> </p> </li> </ul>
-
     """
     instance_type: str
     instance_count: int
     volume_kms_key_id: Optional[str] = Unassigned()
 
 
-@dataclass
 class TransformJobDefinition(Base):
     """
      TransformJobDefinition
@@ -684,7 +615,6 @@ class TransformJobDefinition(Base):
  	transform_input: 	 <p>A description of the input source and the way the transform job consumes it.</p>
  	transform_output: 	 <p>Identifies the Amazon S3 location where you want Amazon SageMaker to save the results from the transform job.</p>
  	transform_resources: 	 <p>Identifies the ML compute instances for the transform job.</p>
-
     """
     transform_input: TransformInput
     transform_output: TransformOutput
@@ -695,7 +625,6 @@ class TransformJobDefinition(Base):
     environment: Optional[Dict[str, str]] = Unassigned()
 
 
-@dataclass
 class AlgorithmValidationProfile(Base):
     """
      AlgorithmValidationProfile
@@ -706,14 +635,12 @@ class AlgorithmValidationProfile(Base):
  	profile_name: 	 <p>The name of the profile for the algorithm. The name must have 1 to 63 characters. Valid characters are a-z, A-Z, 0-9, and - (hyphen).</p>
  	training_job_definition: 	 <p>The <code>TrainingJobDefinition</code> object that describes the training job that SageMaker runs to validate your algorithm.</p>
  	transform_job_definition: 	 <p>The <code>TransformJobDefinition</code> object that describes the transform job that SageMaker runs to validate your algorithm.</p>
-
     """
     profile_name: str
     training_job_definition: TrainingJobDefinition
     transform_job_definition: Optional[TransformJobDefinition] = Unassigned()
 
 
-@dataclass
 class AlgorithmValidationSpecification(Base):
     """
      AlgorithmValidationSpecification
@@ -723,13 +650,11 @@ class AlgorithmValidationSpecification(Base):
 	----------------------
  	validation_role: 	 <p>The IAM roles that SageMaker uses to run the training jobs.</p>
  	validation_profiles: 	 <p>An array of <code>AlgorithmValidationProfile</code> objects, each of which specifies a training job and batch transform job that SageMaker runs to validate your algorithm.</p>
-
     """
     validation_role: str
     validation_profiles: List[AlgorithmValidationProfile]
 
 
-@dataclass
 class AnnotationConsolidationConfig(Base):
     """
      AnnotationConsolidationConfig
@@ -738,12 +663,10 @@ class AnnotationConsolidationConfig(Base):
  	 Attributes
 	----------------------
  	annotation_consolidation_lambda_arn: 	 <p>The Amazon Resource Name (ARN) of a Lambda function implements the logic for <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/sms-annotation-consolidation.html">annotation consolidation</a> and to process output data.</p> <p>This parameter is required for all labeling jobs. For <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/sms-task-types.html">built-in task types</a>, use one of the following Amazon SageMaker Ground Truth Lambda function ARNs for <code>AnnotationConsolidationLambdaArn</code>. For custom labeling workflows, see <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/sms-custom-templates-step3.html#sms-custom-templates-step3-postlambda">Post-annotation Lambda</a>. </p> <p> <b>Bounding box</b> - Finds the most similar boxes from different workers based on the Jaccard index of the boxes.</p> <ul> <li> <p> <code>arn:aws:lambda:us-east-1:432418664414:function:ACS-BoundingBox</code> </p> </li> <li> <p> <code>arn:aws:lambda:us-east-2:266458841044:function:ACS-BoundingBox</code> </p> </li> <li> <p> <code>arn:aws:lambda:us-west-2:081040173940:function:ACS-BoundingBox</code> </p> </li> <li> <p> <code>arn:aws:lambda:eu-west-1:568282634449:function:ACS-BoundingBox</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-northeast-1:477331159723:function:ACS-BoundingBox</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-southeast-2:454466003867:function:ACS-BoundingBox</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-south-1:565803892007:function:ACS-BoundingBox</code> </p> </li> <li> <p> <code>arn:aws:lambda:eu-central-1:203001061592:function:ACS-BoundingBox</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-northeast-2:845288260483:function:ACS-BoundingBox</code> </p> </li> <li> <p> <code>arn:aws:lambda:eu-west-2:487402164563:function:ACS-BoundingBox</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-southeast-1:377565633583:function:ACS-BoundingBox</code> </p> </li> <li> <p> <code>arn:aws:lambda:ca-central-1:918755190332:function:ACS-BoundingBox</code> </p> </li> </ul> <p> <b>Image classification</b> - Uses a variant of the Expectation Maximization approach to estimate the true class of an image based on annotations from individual workers.</p> <ul> <li> <p> <code>arn:aws:lambda:us-east-1:432418664414:function:ACS-ImageMultiClass</code> </p> </li> <li> <p> <code>arn:aws:lambda:us-east-2:266458841044:function:ACS-ImageMultiClass</code> </p> </li> <li> <p> <code>arn:aws:lambda:us-west-2:081040173940:function:ACS-ImageMultiClass</code> </p> </li> <li> <p> <code>arn:aws:lambda:eu-west-1:568282634449:function:ACS-ImageMultiClass</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-northeast-1:477331159723:function:ACS-ImageMultiClass</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-southeast-2:454466003867:function:ACS-ImageMultiClass</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-south-1:565803892007:function:ACS-ImageMultiClass</code> </p> </li> <li> <p> <code>arn:aws:lambda:eu-central-1:203001061592:function:ACS-ImageMultiClass</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-northeast-2:845288260483:function:ACS-ImageMultiClass</code> </p> </li> <li> <p> <code>arn:aws:lambda:eu-west-2:487402164563:function:ACS-ImageMultiClass</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-southeast-1:377565633583:function:ACS-ImageMultiClass</code> </p> </li> <li> <p> <code>arn:aws:lambda:ca-central-1:918755190332:function:ACS-ImageMultiClass</code> </p> </li> </ul> <p> <b>Multi-label image classification</b> - Uses a variant of the Expectation Maximization approach to estimate the true classes of an image based on annotations from individual workers.</p> <ul> <li> <p> <code>arn:aws:lambda:us-east-1:432418664414:function:ACS-ImageMultiClassMultiLabel</code> </p> </li> <li> <p> <code>arn:aws:lambda:us-east-2:266458841044:function:ACS-ImageMultiClassMultiLabel</code> </p> </li> <li> <p> <code>arn:aws:lambda:us-west-2:081040173940:function:ACS-ImageMultiClassMultiLabel</code> </p> </li> <li> <p> <code>arn:aws:lambda:eu-west-1:568282634449:function:ACS-ImageMultiClassMultiLabel</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-northeast-1:477331159723:function:ACS-ImageMultiClassMultiLabel</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-southeast-2:454466003867:function:ACS-ImageMultiClassMultiLabel</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-south-1:565803892007:function:ACS-ImageMultiClassMultiLabel</code> </p> </li> <li> <p> <code>arn:aws:lambda:eu-central-1:203001061592:function:ACS-ImageMultiClassMultiLabel</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-northeast-2:845288260483:function:ACS-ImageMultiClassMultiLabel</code> </p> </li> <li> <p> <code>arn:aws:lambda:eu-west-2:487402164563:function:ACS-ImageMultiClassMultiLabel</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-southeast-1:377565633583:function:ACS-ImageMultiClassMultiLabel</code> </p> </li> <li> <p> <code>arn:aws:lambda:ca-central-1:918755190332:function:ACS-ImageMultiClassMultiLabel</code> </p> </li> </ul> <p> <b>Semantic segmentation</b> - Treats each pixel in an image as a multi-class classification and treats pixel annotations from workers as "votes" for the correct label.</p> <ul> <li> <p> <code>arn:aws:lambda:us-east-1:432418664414:function:ACS-SemanticSegmentation</code> </p> </li> <li> <p> <code>arn:aws:lambda:us-east-2:266458841044:function:ACS-SemanticSegmentation</code> </p> </li> <li> <p> <code>arn:aws:lambda:us-west-2:081040173940:function:ACS-SemanticSegmentation</code> </p> </li> <li> <p> <code>arn:aws:lambda:eu-west-1:568282634449:function:ACS-SemanticSegmentation</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-northeast-1:477331159723:function:ACS-SemanticSegmentation</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-southeast-2:454466003867:function:ACS-SemanticSegmentation</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-south-1:565803892007:function:ACS-SemanticSegmentation</code> </p> </li> <li> <p> <code>arn:aws:lambda:eu-central-1:203001061592:function:ACS-SemanticSegmentation</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-northeast-2:845288260483:function:ACS-SemanticSegmentation</code> </p> </li> <li> <p> <code>arn:aws:lambda:eu-west-2:487402164563:function:ACS-SemanticSegmentation</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-southeast-1:377565633583:function:ACS-SemanticSegmentation</code> </p> </li> <li> <p> <code>arn:aws:lambda:ca-central-1:918755190332:function:ACS-SemanticSegmentation</code> </p> </li> </ul> <p> <b>Text classification</b> - Uses a variant of the Expectation Maximization approach to estimate the true class of text based on annotations from individual workers.</p> <ul> <li> <p> <code>arn:aws:lambda:us-east-1:432418664414:function:ACS-TextMultiClass</code> </p> </li> <li> <p> <code>arn:aws:lambda:us-east-2:266458841044:function:ACS-TextMultiClass</code> </p> </li> <li> <p> <code>arn:aws:lambda:us-west-2:081040173940:function:ACS-TextMultiClass</code> </p> </li> <li> <p> <code>arn:aws:lambda:eu-west-1:568282634449:function:ACS-TextMultiClass</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-northeast-1:477331159723:function:ACS-TextMultiClass</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-southeast-2:454466003867:function:ACS-TextMultiClass</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-south-1:565803892007:function:ACS-TextMultiClass</code> </p> </li> <li> <p> <code>arn:aws:lambda:eu-central-1:203001061592:function:ACS-TextMultiClass</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-northeast-2:845288260483:function:ACS-TextMultiClass</code> </p> </li> <li> <p> <code>arn:aws:lambda:eu-west-2:487402164563:function:ACS-TextMultiClass</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-southeast-1:377565633583:function:ACS-TextMultiClass</code> </p> </li> <li> <p> <code>arn:aws:lambda:ca-central-1:918755190332:function:ACS-TextMultiClass</code> </p> </li> </ul> <p> <b>Multi-label text classification</b> - Uses a variant of the Expectation Maximization approach to estimate the true classes of text based on annotations from individual workers.</p> <ul> <li> <p> <code>arn:aws:lambda:us-east-1:432418664414:function:ACS-TextMultiClassMultiLabel</code> </p> </li> <li> <p> <code>arn:aws:lambda:us-east-2:266458841044:function:ACS-TextMultiClassMultiLabel</code> </p> </li> <li> <p> <code>arn:aws:lambda:us-west-2:081040173940:function:ACS-TextMultiClassMultiLabel</code> </p> </li> <li> <p> <code>arn:aws:lambda:eu-west-1:568282634449:function:ACS-TextMultiClassMultiLabel</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-northeast-1:477331159723:function:ACS-TextMultiClassMultiLabel</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-southeast-2:454466003867:function:ACS-TextMultiClassMultiLabel</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-south-1:565803892007:function:ACS-TextMultiClassMultiLabel</code> </p> </li> <li> <p> <code>arn:aws:lambda:eu-central-1:203001061592:function:ACS-TextMultiClassMultiLabel</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-northeast-2:845288260483:function:ACS-TextMultiClassMultiLabel</code> </p> </li> <li> <p> <code>arn:aws:lambda:eu-west-2:487402164563:function:ACS-TextMultiClassMultiLabel</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-southeast-1:377565633583:function:ACS-TextMultiClassMultiLabel</code> </p> </li> <li> <p> <code>arn:aws:lambda:ca-central-1:918755190332:function:ACS-TextMultiClassMultiLabel</code> </p> </li> </ul> <p> <b>Named entity recognition</b> - Groups similar selections and calculates aggregate boundaries, resolving to most-assigned label.</p> <ul> <li> <p> <code>arn:aws:lambda:us-east-1:432418664414:function:ACS-NamedEntityRecognition</code> </p> </li> <li> <p> <code>arn:aws:lambda:us-east-2:266458841044:function:ACS-NamedEntityRecognition</code> </p> </li> <li> <p> <code>arn:aws:lambda:us-west-2:081040173940:function:ACS-NamedEntityRecognition</code> </p> </li> <li> <p> <code>arn:aws:lambda:eu-west-1:568282634449:function:ACS-NamedEntityRecognition</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-northeast-1:477331159723:function:ACS-NamedEntityRecognition</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-southeast-2:454466003867:function:ACS-NamedEntityRecognition</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-south-1:565803892007:function:ACS-NamedEntityRecognition</code> </p> </li> <li> <p> <code>arn:aws:lambda:eu-central-1:203001061592:function:ACS-NamedEntityRecognition</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-northeast-2:845288260483:function:ACS-NamedEntityRecognition</code> </p> </li> <li> <p> <code>arn:aws:lambda:eu-west-2:487402164563:function:ACS-NamedEntityRecognition</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-southeast-1:377565633583:function:ACS-NamedEntityRecognition</code> </p> </li> <li> <p> <code>arn:aws:lambda:ca-central-1:918755190332:function:ACS-NamedEntityRecognition</code> </p> </li> </ul> <p> <b>Video Classification</b> - Use this task type when you need workers to classify videos using predefined labels that you specify. Workers are shown videos and are asked to choose one label for each video.</p> <ul> <li> <p> <code>arn:aws:lambda:us-east-1:432418664414:function:ACS-VideoMultiClass</code> </p> </li> <li> <p> <code>arn:aws:lambda:us-east-2:266458841044:function:ACS-VideoMultiClass</code> </p> </li> <li> <p> <code>arn:aws:lambda:us-west-2:081040173940:function:ACS-VideoMultiClass</code> </p> </li> <li> <p> <code>arn:aws:lambda:eu-west-1:568282634449:function:ACS-VideoMultiClass</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-northeast-1:477331159723:function:ACS-VideoMultiClass</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-southeast-2:454466003867:function:ACS-VideoMultiClass</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-south-1:565803892007:function:ACS-VideoMultiClass</code> </p> </li> <li> <p> <code>arn:aws:lambda:eu-central-1:203001061592:function:ACS-VideoMultiClass</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-northeast-2:845288260483:function:ACS-VideoMultiClass</code> </p> </li> <li> <p> <code>arn:aws:lambda:eu-west-2:487402164563:function:ACS-VideoMultiClass</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-southeast-1:377565633583:function:ACS-VideoMultiClass</code> </p> </li> <li> <p> <code>arn:aws:lambda:ca-central-1:918755190332:function:ACS-VideoMultiClass</code> </p> </li> </ul> <p> <b>Video Frame Object Detection</b> - Use this task type to have workers identify and locate objects in a sequence of video frames (images extracted from a video) using bounding boxes. For example, you can use this task to ask workers to identify and localize various objects in a series of video frames, such as cars, bikes, and pedestrians.</p> <ul> <li> <p> <code>arn:aws:lambda:us-east-1:432418664414:function:ACS-VideoObjectDetection</code> </p> </li> <li> <p> <code>arn:aws:lambda:us-east-2:266458841044:function:ACS-VideoObjectDetection</code> </p> </li> <li> <p> <code>arn:aws:lambda:us-west-2:081040173940:function:ACS-VideoObjectDetection</code> </p> </li> <li> <p> <code>arn:aws:lambda:eu-west-1:568282634449:function:ACS-VideoObjectDetection</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-northeast-1:477331159723:function:ACS-VideoObjectDetection</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-southeast-2:454466003867:function:ACS-VideoObjectDetection</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-south-1:565803892007:function:ACS-VideoObjectDetection</code> </p> </li> <li> <p> <code>arn:aws:lambda:eu-central-1:203001061592:function:ACS-VideoObjectDetection</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-northeast-2:845288260483:function:ACS-VideoObjectDetection</code> </p> </li> <li> <p> <code>arn:aws:lambda:eu-west-2:487402164563:function:ACS-VideoObjectDetection</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-southeast-1:377565633583:function:ACS-VideoObjectDetection</code> </p> </li> <li> <p> <code>arn:aws:lambda:ca-central-1:918755190332:function:ACS-VideoObjectDetection</code> </p> </li> </ul> <p> <b>Video Frame Object Tracking</b> - Use this task type to have workers track the movement of objects in a sequence of video frames (images extracted from a video) using bounding boxes. For example, you can use this task to ask workers to track the movement of objects, such as cars, bikes, and pedestrians. </p> <ul> <li> <p> <code>arn:aws:lambda:us-east-1:432418664414:function:ACS-VideoObjectTracking</code> </p> </li> <li> <p> <code>arn:aws:lambda:us-east-2:266458841044:function:ACS-VideoObjectTracking</code> </p> </li> <li> <p> <code>arn:aws:lambda:us-west-2:081040173940:function:ACS-VideoObjectTracking</code> </p> </li> <li> <p> <code>arn:aws:lambda:eu-west-1:568282634449:function:ACS-VideoObjectTracking</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-northeast-1:477331159723:function:ACS-VideoObjectTracking</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-southeast-2:454466003867:function:ACS-VideoObjectTracking</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-south-1:565803892007:function:ACS-VideoObjectTracking</code> </p> </li> <li> <p> <code>arn:aws:lambda:eu-central-1:203001061592:function:ACS-VideoObjectTracking</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-northeast-2:845288260483:function:ACS-VideoObjectTracking</code> </p> </li> <li> <p> <code>arn:aws:lambda:eu-west-2:487402164563:function:ACS-VideoObjectTracking</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-southeast-1:377565633583:function:ACS-VideoObjectTracking</code> </p> </li> <li> <p> <code>arn:aws:lambda:ca-central-1:918755190332:function:ACS-VideoObjectTracking</code> </p> </li> </ul> <p> <b>3D Point Cloud Object Detection</b> - Use this task type when you want workers to classify objects in a 3D point cloud by drawing 3D cuboids around objects. For example, you can use this task type to ask workers to identify different types of objects in a point cloud, such as cars, bikes, and pedestrians.</p> <ul> <li> <p> <code>arn:aws:lambda:us-east-1:432418664414:function:ACS-3DPointCloudObjectDetection</code> </p> </li> <li> <p> <code>arn:aws:lambda:us-east-2:266458841044:function:ACS-3DPointCloudObjectDetection</code> </p> </li> <li> <p> <code>arn:aws:lambda:us-west-2:081040173940:function:ACS-3DPointCloudObjectDetection</code> </p> </li> <li> <p> <code>arn:aws:lambda:eu-west-1:568282634449:function:ACS-3DPointCloudObjectDetection</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-northeast-1:477331159723:function:ACS-3DPointCloudObjectDetection</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-southeast-2:454466003867:function:ACS-3DPointCloudObjectDetection</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-south-1:565803892007:function:ACS-3DPointCloudObjectDetection</code> </p> </li> <li> <p> <code>arn:aws:lambda:eu-central-1:203001061592:function:ACS-3DPointCloudObjectDetection</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-northeast-2:845288260483:function:ACS-3DPointCloudObjectDetection</code> </p> </li> <li> <p> <code>arn:aws:lambda:eu-west-2:487402164563:function:ACS-3DPointCloudObjectDetection</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-southeast-1:377565633583:function:ACS-3DPointCloudObjectDetection</code> </p> </li> <li> <p> <code>arn:aws:lambda:ca-central-1:918755190332:function:ACS-3DPointCloudObjectDetection</code> </p> </li> </ul> <p> <b>3D Point Cloud Object Tracking</b> - Use this task type when you want workers to draw 3D cuboids around objects that appear in a sequence of 3D point cloud frames. For example, you can use this task type to ask workers to track the movement of vehicles across multiple point cloud frames. </p> <ul> <li> <p> <code>arn:aws:lambda:us-east-1:432418664414:function:ACS-3DPointCloudObjectTracking</code> </p> </li> <li> <p> <code>arn:aws:lambda:us-east-2:266458841044:function:ACS-3DPointCloudObjectTracking</code> </p> </li> <li> <p> <code>arn:aws:lambda:us-west-2:081040173940:function:ACS-3DPointCloudObjectTracking</code> </p> </li> <li> <p> <code>arn:aws:lambda:eu-west-1:568282634449:function:ACS-3DPointCloudObjectTracking</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-northeast-1:477331159723:function:ACS-3DPointCloudObjectTracking</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-southeast-2:454466003867:function:ACS-3DPointCloudObjectTracking</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-south-1:565803892007:function:ACS-3DPointCloudObjectTracking</code> </p> </li> <li> <p> <code>arn:aws:lambda:eu-central-1:203001061592:function:ACS-3DPointCloudObjectTracking</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-northeast-2:845288260483:function:ACS-3DPointCloudObjectTracking</code> </p> </li> <li> <p> <code>arn:aws:lambda:eu-west-2:487402164563:function:ACS-3DPointCloudObjectTracking</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-southeast-1:377565633583:function:ACS-3DPointCloudObjectTracking</code> </p> </li> <li> <p> <code>arn:aws:lambda:ca-central-1:918755190332:function:ACS-3DPointCloudObjectTracking</code> </p> </li> </ul> <p> <b>3D Point Cloud Semantic Segmentation</b> - Use this task type when you want workers to create a point-level semantic segmentation masks by painting objects in a 3D point cloud using different colors where each color is assigned to one of the classes you specify.</p> <ul> <li> <p> <code>arn:aws:lambda:us-east-1:432418664414:function:ACS-3DPointCloudSemanticSegmentation</code> </p> </li> <li> <p> <code>arn:aws:lambda:us-east-2:266458841044:function:ACS-3DPointCloudSemanticSegmentation</code> </p> </li> <li> <p> <code>arn:aws:lambda:us-west-2:081040173940:function:ACS-3DPointCloudSemanticSegmentation</code> </p> </li> <li> <p> <code>arn:aws:lambda:eu-west-1:568282634449:function:ACS-3DPointCloudSemanticSegmentation</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-northeast-1:477331159723:function:ACS-3DPointCloudSemanticSegmentation</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-southeast-2:454466003867:function:ACS-3DPointCloudSemanticSegmentation</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-south-1:565803892007:function:ACS-3DPointCloudSemanticSegmentation</code> </p> </li> <li> <p> <code>arn:aws:lambda:eu-central-1:203001061592:function:ACS-3DPointCloudSemanticSegmentation</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-northeast-2:845288260483:function:ACS-3DPointCloudSemanticSegmentation</code> </p> </li> <li> <p> <code>arn:aws:lambda:eu-west-2:487402164563:function:ACS-3DPointCloudSemanticSegmentation</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-southeast-1:377565633583:function:ACS-3DPointCloudSemanticSegmentation</code> </p> </li> <li> <p> <code>arn:aws:lambda:ca-central-1:918755190332:function:ACS-3DPointCloudSemanticSegmentation</code> </p> </li> </ul> <p> <b>Use the following ARNs for Label Verification and Adjustment Jobs</b> </p> <p>Use label verification and adjustment jobs to review and adjust labels. To learn more, see <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/sms-verification-data.html">Verify and Adjust Labels </a>.</p> <p> <b>Semantic Segmentation Adjustment</b> - Treats each pixel in an image as a multi-class classification and treats pixel adjusted annotations from workers as "votes" for the correct label.</p> <ul> <li> <p> <code>arn:aws:lambda:us-east-1:432418664414:function:ACS-AdjustmentSemanticSegmentation</code> </p> </li> <li> <p> <code>arn:aws:lambda:us-east-2:266458841044:function:ACS-AdjustmentSemanticSegmentation</code> </p> </li> <li> <p> <code>arn:aws:lambda:us-west-2:081040173940:function:ACS-AdjustmentSemanticSegmentation</code> </p> </li> <li> <p> <code>arn:aws:lambda:eu-west-1:568282634449:function:ACS-AdjustmentSemanticSegmentation</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-northeast-1:477331159723:function:ACS-AdjustmentSemanticSegmentation</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-southeast-2:454466003867:function:ACS-AdjustmentSemanticSegmentation</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-south-1:565803892007:function:ACS-AdjustmentSemanticSegmentation</code> </p> </li> <li> <p> <code>arn:aws:lambda:eu-central-1:203001061592:function:ACS-AdjustmentSemanticSegmentation</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-northeast-2:845288260483:function:ACS-AdjustmentSemanticSegmentation</code> </p> </li> <li> <p> <code>arn:aws:lambda:eu-west-2:487402164563:function:ACS-AdjustmentSemanticSegmentation</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-southeast-1:377565633583:function:ACS-AdjustmentSemanticSegmentation</code> </p> </li> <li> <p> <code>arn:aws:lambda:ca-central-1:918755190332:function:ACS-AdjustmentSemanticSegmentation</code> </p> </li> </ul> <p> <b>Semantic Segmentation Verification</b> - Uses a variant of the Expectation Maximization approach to estimate the true class of verification judgment for semantic segmentation labels based on annotations from individual workers.</p> <ul> <li> <p> <code>arn:aws:lambda:us-east-1:432418664414:function:ACS-VerificationSemanticSegmentation</code> </p> </li> <li> <p> <code>arn:aws:lambda:us-east-2:266458841044:function:ACS-VerificationSemanticSegmentation</code> </p> </li> <li> <p> <code>arn:aws:lambda:us-west-2:081040173940:function:ACS-VerificationSemanticSegmentation</code> </p> </li> <li> <p> <code>arn:aws:lambda:eu-west-1:568282634449:function:ACS-VerificationSemanticSegmentation</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-northeast-1:477331159723:function:ACS-VerificationSemanticSegmentation</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-southeast-2:454466003867:function:ACS-VerificationSemanticSegmentation</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-south-1:565803892007:function:ACS-VerificationSemanticSegmentation</code> </p> </li> <li> <p> <code>arn:aws:lambda:eu-central-1:203001061592:function:ACS-VerificationSemanticSegmentation</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-northeast-2:845288260483:function:ACS-VerificationSemanticSegmentation</code> </p> </li> <li> <p> <code>arn:aws:lambda:eu-west-2:487402164563:function:ACS-VerificationSemanticSegmentation</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-southeast-1:377565633583:function:ACS-VerificationSemanticSegmentation</code> </p> </li> <li> <p> <code>arn:aws:lambda:ca-central-1:918755190332:function:ACS-VerificationSemanticSegmentation</code> </p> </li> </ul> <p> <b>Bounding Box Adjustment</b> - Finds the most similar boxes from different workers based on the Jaccard index of the adjusted annotations.</p> <ul> <li> <p> <code>arn:aws:lambda:us-east-1:432418664414:function:ACS-AdjustmentBoundingBox</code> </p> </li> <li> <p> <code>arn:aws:lambda:us-east-2:266458841044:function:ACS-AdjustmentBoundingBox</code> </p> </li> <li> <p> <code>arn:aws:lambda:us-west-2:081040173940:function:ACS-AdjustmentBoundingBox</code> </p> </li> <li> <p> <code>arn:aws:lambda:eu-west-1:568282634449:function:ACS-AdjustmentBoundingBox</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-northeast-1:477331159723:function:ACS-AdjustmentBoundingBox</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-southeast-2:454466003867:function:ACS-AdjustmentBoundingBox</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-south-1:565803892007:function:ACS-AdjustmentBoundingBox</code> </p> </li> <li> <p> <code>arn:aws:lambda:eu-central-1:203001061592:function:ACS-AdjustmentBoundingBox</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-northeast-2:845288260483:function:ACS-AdjustmentBoundingBox</code> </p> </li> <li> <p> <code>arn:aws:lambda:eu-west-2:487402164563:function:ACS-AdjustmentBoundingBox</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-southeast-1:377565633583:function:ACS-AdjustmentBoundingBox</code> </p> </li> <li> <p> <code>arn:aws:lambda:ca-central-1:918755190332:function:ACS-AdjustmentBoundingBox</code> </p> </li> </ul> <p> <b>Bounding Box Verification</b> - Uses a variant of the Expectation Maximization approach to estimate the true class of verification judgement for bounding box labels based on annotations from individual workers.</p> <ul> <li> <p> <code>arn:aws:lambda:us-east-1:432418664414:function:ACS-VerificationBoundingBox</code> </p> </li> <li> <p> <code>arn:aws:lambda:us-east-2:266458841044:function:ACS-VerificationBoundingBox</code> </p> </li> <li> <p> <code>arn:aws:lambda:us-west-2:081040173940:function:ACS-VerificationBoundingBox</code> </p> </li> <li> <p> <code>arn:aws:lambda:eu-west-1:568282634449:function:ACS-VerificationBoundingBox</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-northeast-1:477331159723:function:ACS-VerificationBoundingBox</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-southeast-2:454466003867:function:ACS-VerificationBoundingBox</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-south-1:565803892007:function:ACS-VerificationBoundingBox</code> </p> </li> <li> <p> <code>arn:aws:lambda:eu-central-1:203001061592:function:ACS-VerificationBoundingBox</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-northeast-2:845288260483:function:ACS-VerificationBoundingBox</code> </p> </li> <li> <p> <code>arn:aws:lambda:eu-west-2:487402164563:function:ACS-VerificationBoundingBox</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-southeast-1:377565633583:function:ACS-VerificationBoundingBox</code> </p> </li> <li> <p> <code>arn:aws:lambda:ca-central-1:918755190332:function:ACS-VerificationBoundingBox</code> </p> </li> </ul> <p> <b>Video Frame Object Detection Adjustment</b> - Use this task type when you want workers to adjust bounding boxes that workers have added to video frames to classify and localize objects in a sequence of video frames.</p> <ul> <li> <p> <code>arn:aws:lambda:us-east-1:432418664414:function:ACS-AdjustmentVideoObjectDetection</code> </p> </li> <li> <p> <code>arn:aws:lambda:us-east-2:266458841044:function:ACS-AdjustmentVideoObjectDetection</code> </p> </li> <li> <p> <code>arn:aws:lambda:us-west-2:081040173940:function:ACS-AdjustmentVideoObjectDetection</code> </p> </li> <li> <p> <code>arn:aws:lambda:eu-west-1:568282634449:function:ACS-AdjustmentVideoObjectDetection</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-northeast-1:477331159723:function:ACS-AdjustmentVideoObjectDetection</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-southeast-2:454466003867:function:ACS-AdjustmentVideoObjectDetection</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-south-1:565803892007:function:ACS-AdjustmentVideoObjectDetection</code> </p> </li> <li> <p> <code>arn:aws:lambda:eu-central-1:203001061592:function:ACS-AdjustmentVideoObjectDetection</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-northeast-2:845288260483:function:ACS-AdjustmentVideoObjectDetection</code> </p> </li> <li> <p> <code>arn:aws:lambda:eu-west-2:487402164563:function:ACS-AdjustmentVideoObjectDetection</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-southeast-1:377565633583:function:ACS-AdjustmentVideoObjectDetection</code> </p> </li> <li> <p> <code>arn:aws:lambda:ca-central-1:918755190332:function:ACS-AdjustmentVideoObjectDetection</code> </p> </li> </ul> <p> <b>Video Frame Object Tracking Adjustment</b> - Use this task type when you want workers to adjust bounding boxes that workers have added to video frames to track object movement across a sequence of video frames.</p> <ul> <li> <p> <code>arn:aws:lambda:us-east-1:432418664414:function:ACS-AdjustmentVideoObjectTracking</code> </p> </li> <li> <p> <code>arn:aws:lambda:us-east-2:266458841044:function:ACS-AdjustmentVideoObjectTracking</code> </p> </li> <li> <p> <code>arn:aws:lambda:us-west-2:081040173940:function:ACS-AdjustmentVideoObjectTracking</code> </p> </li> <li> <p> <code>arn:aws:lambda:eu-west-1:568282634449:function:ACS-AdjustmentVideoObjectTracking</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-northeast-1:477331159723:function:ACS-AdjustmentVideoObjectTracking</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-southeast-2:454466003867:function:ACS-AdjustmentVideoObjectTracking</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-south-1:565803892007:function:ACS-AdjustmentVideoObjectTracking</code> </p> </li> <li> <p> <code>arn:aws:lambda:eu-central-1:203001061592:function:ACS-AdjustmentVideoObjectTracking</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-northeast-2:845288260483:function:ACS-AdjustmentVideoObjectTracking</code> </p> </li> <li> <p> <code>arn:aws:lambda:eu-west-2:487402164563:function:ACS-AdjustmentVideoObjectTracking</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-southeast-1:377565633583:function:ACS-AdjustmentVideoObjectTracking</code> </p> </li> <li> <p> <code>arn:aws:lambda:ca-central-1:918755190332:function:ACS-AdjustmentVideoObjectTracking</code> </p> </li> </ul> <p> <b>3D Point Cloud Object Detection Adjustment</b> - Use this task type when you want workers to adjust 3D cuboids around objects in a 3D point cloud. </p> <ul> <li> <p> <code>arn:aws:lambda:us-east-1:432418664414:function:ACS-Adjustment3DPointCloudObjectDetection</code> </p> </li> <li> <p> <code>arn:aws:lambda:us-east-2:266458841044:function:ACS-Adjustment3DPointCloudObjectDetection</code> </p> </li> <li> <p> <code>arn:aws:lambda:us-west-2:081040173940:function:ACS-Adjustment3DPointCloudObjectDetection</code> </p> </li> <li> <p> <code>arn:aws:lambda:eu-west-1:568282634449:function:ACS-Adjustment3DPointCloudObjectDetection</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-northeast-1:477331159723:function:ACS-Adjustment3DPointCloudObjectDetection</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-southeast-2:454466003867:function:ACS-Adjustment3DPointCloudObjectDetection</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-south-1:565803892007:function:ACS-Adjustment3DPointCloudObjectDetection</code> </p> </li> <li> <p> <code>arn:aws:lambda:eu-central-1:203001061592:function:ACS-Adjustment3DPointCloudObjectDetection</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-northeast-2:845288260483:function:ACS-Adjustment3DPointCloudObjectDetection</code> </p> </li> <li> <p> <code>arn:aws:lambda:eu-west-2:487402164563:function:ACS-Adjustment3DPointCloudObjectDetection</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-southeast-1:377565633583:function:ACS-Adjustment3DPointCloudObjectDetection</code> </p> </li> <li> <p> <code>arn:aws:lambda:ca-central-1:918755190332:function:ACS-Adjustment3DPointCloudObjectDetection</code> </p> </li> </ul> <p> <b>3D Point Cloud Object Tracking Adjustment</b> - Use this task type when you want workers to adjust 3D cuboids around objects that appear in a sequence of 3D point cloud frames.</p> <ul> <li> <p> <code>arn:aws:lambda:us-east-1:432418664414:function:ACS-Adjustment3DPointCloudObjectTracking</code> </p> </li> <li> <p> <code>arn:aws:lambda:us-east-2:266458841044:function:ACS-Adjustment3DPointCloudObjectTracking</code> </p> </li> <li> <p> <code>arn:aws:lambda:us-west-2:081040173940:function:ACS-Adjustment3DPointCloudObjectTracking</code> </p> </li> <li> <p> <code>arn:aws:lambda:eu-west-1:568282634449:function:ACS-Adjustment3DPointCloudObjectTracking</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-northeast-1:477331159723:function:ACS-Adjustment3DPointCloudObjectTracking</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-southeast-2:454466003867:function:ACS-Adjustment3DPointCloudObjectTracking</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-south-1:565803892007:function:ACS-Adjustment3DPointCloudObjectTracking</code> </p> </li> <li> <p> <code>arn:aws:lambda:eu-central-1:203001061592:function:ACS-Adjustment3DPointCloudObjectTracking</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-northeast-2:845288260483:function:ACS-Adjustment3DPointCloudObjectTracking</code> </p> </li> <li> <p> <code>arn:aws:lambda:eu-west-2:487402164563:function:ACS-Adjustment3DPointCloudObjectTracking</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-southeast-1:377565633583:function:ACS-Adjustment3DPointCloudObjectTracking</code> </p> </li> <li> <p> <code>arn:aws:lambda:ca-central-1:918755190332:function:ACS-Adjustment3DPointCloudObjectTracking</code> </p> </li> </ul> <p> <b>3D Point Cloud Semantic Segmentation Adjustment</b> - Use this task type when you want workers to adjust a point-level semantic segmentation masks using a paint tool.</p> <ul> <li> <p> <code>arn:aws:lambda:us-east-1:432418664414:function:ACS-3DPointCloudSemanticSegmentation</code> </p> </li> <li> <p> <code>arn:aws:lambda:us-east-1:432418664414:function:ACS-Adjustment3DPointCloudSemanticSegmentation</code> </p> </li> <li> <p> <code>arn:aws:lambda:us-east-2:266458841044:function:ACS-Adjustment3DPointCloudSemanticSegmentation</code> </p> </li> <li> <p> <code>arn:aws:lambda:us-west-2:081040173940:function:ACS-Adjustment3DPointCloudSemanticSegmentation</code> </p> </li> <li> <p> <code>arn:aws:lambda:eu-west-1:568282634449:function:ACS-Adjustment3DPointCloudSemanticSegmentation</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-northeast-1:477331159723:function:ACS-Adjustment3DPointCloudSemanticSegmentation</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-southeast-2:454466003867:function:ACS-Adjustment3DPointCloudSemanticSegmentation</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-south-1:565803892007:function:ACS-Adjustment3DPointCloudSemanticSegmentation</code> </p> </li> <li> <p> <code>arn:aws:lambda:eu-central-1:203001061592:function:ACS-Adjustment3DPointCloudSemanticSegmentation</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-northeast-2:845288260483:function:ACS-Adjustment3DPointCloudSemanticSegmentation</code> </p> </li> <li> <p> <code>arn:aws:lambda:eu-west-2:487402164563:function:ACS-Adjustment3DPointCloudSemanticSegmentation</code> </p> </li> <li> <p> <code>arn:aws:lambda:ap-southeast-1:377565633583:function:ACS-Adjustment3DPointCloudSemanticSegmentation</code> </p> </li> <li> <p> <code>arn:aws:lambda:ca-central-1:918755190332:function:ACS-Adjustment3DPointCloudSemanticSegmentation</code> </p> </li> </ul>
-
     """
     annotation_consolidation_lambda_arn: str
 
 
-@dataclass
 class ResourceSpec(Base):
     """
      ResourceSpec
@@ -756,7 +679,6 @@ class ResourceSpec(Base):
  	sage_maker_image_version_alias: 	 <p>The SageMakerImageVersionAlias of the image to launch with. This value is in SemVer 2.0.0 versioning format.</p>
  	instance_type: 	 <p>The instance type that the image version runs on.</p> <note> <p> <b>JupyterServer apps</b> only support the <code>system</code> value.</p> <p>For <b>KernelGateway apps</b>, the <code>system</code> value is translated to <code>ml.t3.medium</code>. KernelGateway apps also support all other values for available instance types.</p> </note>
  	lifecycle_config_arn: 	 <p> The Amazon Resource Name (ARN) of the Lifecycle Configuration attached to the Resource.</p>
-
     """
     sage_maker_image_arn: Optional[str] = Unassigned()
     sage_maker_image_version_arn: Optional[str] = Unassigned()
@@ -765,7 +687,6 @@ class ResourceSpec(Base):
     lifecycle_config_arn: Optional[str] = Unassigned()
 
 
-@dataclass
 class AppDetails(Base):
     """
      AppDetails
@@ -781,7 +702,6 @@ class AppDetails(Base):
  	status: 	 <p>The status.</p>
  	creation_time: 	 <p>The creation time.</p>
  	resource_spec
-
     """
     domain_id: Optional[str] = Unassigned()
     user_profile_name: Optional[str] = Unassigned()
@@ -793,7 +713,6 @@ class AppDetails(Base):
     resource_spec: Optional[ResourceSpec] = Unassigned()
 
 
-@dataclass
 class KernelSpec(Base):
     """
      KernelSpec
@@ -803,13 +722,11 @@ class KernelSpec(Base):
 	----------------------
  	name: 	 <p>The name of the Jupyter kernel in the image. This value is case sensitive.</p>
  	display_name: 	 <p>The display name of the kernel.</p>
-
     """
     name: str
     display_name: Optional[str] = Unassigned()
 
 
-@dataclass
 class FileSystemConfig(Base):
     """
      FileSystemConfig
@@ -820,14 +737,12 @@ class FileSystemConfig(Base):
  	mount_path: 	 <p>The path within the image to mount the user's EFS home directory. The directory should be empty. If not specified, defaults to <i>/home/sagemaker-user</i>.</p>
  	default_uid: 	 <p>The default POSIX user ID (UID). If not specified, defaults to <code>1000</code>.</p>
  	default_gid: 	 <p>The default POSIX group ID (GID). If not specified, defaults to <code>100</code>.</p>
-
     """
     mount_path: Optional[str] = Unassigned()
     default_uid: Optional[int] = Unassigned()
     default_gid: Optional[int] = Unassigned()
 
 
-@dataclass
 class KernelGatewayImageConfig(Base):
     """
      KernelGatewayImageConfig
@@ -837,13 +752,11 @@ class KernelGatewayImageConfig(Base):
 	----------------------
  	kernel_specs: 	 <p>The specification of the Jupyter kernels in the image.</p>
  	file_system_config: 	 <p>The Amazon Elastic File System storage configuration for a SageMaker image.</p>
-
     """
     kernel_specs: List[KernelSpec]
     file_system_config: Optional[FileSystemConfig] = Unassigned()
 
 
-@dataclass
 class ContainerConfig(Base):
     """
      ContainerConfig
@@ -854,14 +767,12 @@ class ContainerConfig(Base):
  	container_arguments: 	 <p>The arguments for the container when you're running the application.</p>
  	container_entrypoint: 	 <p>The entrypoint used to run the application in the container.</p>
  	container_environment_variables: 	 <p>The environment variables to set in the container</p>
-
     """
     container_arguments: Optional[List[str]] = Unassigned()
     container_entrypoint: Optional[List[str]] = Unassigned()
     container_environment_variables: Optional[Dict[str, str]] = Unassigned()
 
 
-@dataclass
 class JupyterLabAppImageConfig(Base):
     """
      JupyterLabAppImageConfig
@@ -871,13 +782,11 @@ class JupyterLabAppImageConfig(Base):
 	----------------------
  	file_system_config
  	container_config
-
     """
     file_system_config: Optional[FileSystemConfig] = Unassigned()
     container_config: Optional[ContainerConfig] = Unassigned()
 
 
-@dataclass
 class AppImageConfigDetails(Base):
     """
      AppImageConfigDetails
@@ -891,7 +800,6 @@ class AppImageConfigDetails(Base):
  	last_modified_time: 	 <p>When the AppImageConfig was last modified.</p>
  	kernel_gateway_image_config: 	 <p>The configuration for the file system and kernels in the SageMaker image.</p>
  	jupyter_lab_app_image_config: 	 <p>The configuration for the file system and the runtime, such as the environment variables and entry point.</p>
-
     """
     app_image_config_arn: Optional[str] = Unassigned()
     app_image_config_name: Optional[str] = Unassigned()
@@ -901,7 +809,6 @@ class AppImageConfigDetails(Base):
     jupyter_lab_app_image_config: Optional[JupyterLabAppImageConfig] = Unassigned()
 
 
-@dataclass
 class AppSpecification(Base):
     """
      AppSpecification
@@ -912,14 +819,12 @@ class AppSpecification(Base):
  	image_uri: 	 <p>The container image to be run by the processing job.</p>
  	container_entrypoint: 	 <p>The entrypoint for a container used to run a processing job.</p>
  	container_arguments: 	 <p>The arguments for a container used to run a processing job.</p>
-
     """
     image_uri: str
     container_entrypoint: Optional[List[str]] = Unassigned()
     container_arguments: Optional[List[str]] = Unassigned()
 
 
-@dataclass
 class ArtifactSourceType(Base):
     """
      ArtifactSourceType
@@ -929,13 +834,11 @@ class ArtifactSourceType(Base):
 	----------------------
  	source_id_type: 	 <p>The type of ID.</p>
  	value: 	 <p>The ID.</p>
-
     """
     source_id_type: str
     value: str
 
 
-@dataclass
 class ArtifactSource(Base):
     """
      ArtifactSource
@@ -945,13 +848,11 @@ class ArtifactSource(Base):
 	----------------------
  	source_uri: 	 <p>The URI of the source.</p>
  	source_types: 	 <p>A list of source types.</p>
-
     """
     source_uri: str
     source_types: Optional[List[ArtifactSourceType]] = Unassigned()
 
 
-@dataclass
 class ArtifactSummary(Base):
     """
      ArtifactSummary
@@ -965,7 +866,6 @@ class ArtifactSummary(Base):
  	artifact_type: 	 <p>The type of the artifact.</p>
  	creation_time: 	 <p>When the artifact was created.</p>
  	last_modified_time: 	 <p>When the artifact was last modified.</p>
-
     """
     artifact_arn: Optional[str] = Unassigned()
     artifact_name: Optional[str] = Unassigned()
@@ -975,7 +875,6 @@ class ArtifactSummary(Base):
     last_modified_time: Optional[datetime.datetime] = Unassigned()
 
 
-@dataclass
 class IamIdentity(Base):
     """
      IamIdentity
@@ -986,14 +885,12 @@ class IamIdentity(Base):
  	arn: 	 <p>The Amazon Resource Name (ARN) of the IAM identity.</p>
  	principal_id: 	 <p>The ID of the principal that assumes the IAM identity.</p>
  	source_identity: 	 <p>The person or application which assumes the IAM identity.</p>
-
     """
     arn: Optional[str] = Unassigned()
     principal_id: Optional[str] = Unassigned()
     source_identity: Optional[str] = Unassigned()
 
 
-@dataclass
 class UserContext(Base):
     """
      UserContext
@@ -1005,7 +902,6 @@ class UserContext(Base):
  	user_profile_name: 	 <p>The name of the user's profile.</p>
  	domain_id: 	 <p>The domain associated with the user.</p>
  	iam_identity: 	 <p>The IAM Identity details associated with the user. These details are associated with model package groups, model packages, and project entities only.</p>
-
     """
     user_profile_arn: Optional[str] = Unassigned()
     user_profile_name: Optional[str] = Unassigned()
@@ -1013,7 +909,6 @@ class UserContext(Base):
     iam_identity: Optional[IamIdentity] = Unassigned()
 
 
-@dataclass
 class AssociationSummary(Base):
     """
      AssociationSummary
@@ -1030,7 +925,6 @@ class AssociationSummary(Base):
  	destination_name: 	 <p>The name of the destination.</p>
  	creation_time: 	 <p>When the association was created.</p>
  	created_by
-
     """
     source_arn: Optional[str] = Unassigned()
     destination_arn: Optional[str] = Unassigned()
@@ -1043,7 +937,6 @@ class AssociationSummary(Base):
     created_by: Optional[UserContext] = Unassigned()
 
 
-@dataclass
 class AsyncInferenceClientConfig(Base):
     """
      AsyncInferenceClientConfig
@@ -1052,12 +945,10 @@ class AsyncInferenceClientConfig(Base):
  	 Attributes
 	----------------------
  	max_concurrent_invocations_per_instance: 	 <p>The maximum number of concurrent requests sent by the SageMaker client to the model container. If no value is provided, SageMaker chooses an optimal value.</p>
-
     """
     max_concurrent_invocations_per_instance: Optional[int] = Unassigned()
 
 
-@dataclass
 class AsyncInferenceNotificationConfig(Base):
     """
      AsyncInferenceNotificationConfig
@@ -1068,14 +959,12 @@ class AsyncInferenceNotificationConfig(Base):
  	success_topic: 	 <p>Amazon SNS topic to post a notification to when inference completes successfully. If no topic is provided, no notification is sent on success.</p>
  	error_topic: 	 <p>Amazon SNS topic to post a notification to when inference fails. If no topic is provided, no notification is sent on failure.</p>
  	include_inference_response_in: 	 <p>The Amazon SNS topics where you want the inference response to be included.</p> <note> <p>The inference response is included only if the response size is less than or equal to 128 KB.</p> </note>
-
     """
     success_topic: Optional[str] = Unassigned()
     error_topic: Optional[str] = Unassigned()
     include_inference_response_in: Optional[List[str]] = Unassigned()
 
 
-@dataclass
 class AsyncInferenceOutputConfig(Base):
     """
      AsyncInferenceOutputConfig
@@ -1087,7 +976,6 @@ class AsyncInferenceOutputConfig(Base):
  	s3_output_path: 	 <p>The Amazon S3 location to upload inference responses to.</p>
  	notification_config: 	 <p>Specifies the configuration for notifications of inference results for asynchronous inference.</p>
  	s3_failure_path: 	 <p>The Amazon S3 location to upload failure inference responses to.</p>
-
     """
     kms_key_id: Optional[str] = Unassigned()
     s3_output_path: Optional[str] = Unassigned()
@@ -1095,7 +983,6 @@ class AsyncInferenceOutputConfig(Base):
     s3_failure_path: Optional[str] = Unassigned()
 
 
-@dataclass
 class AsyncInferenceConfig(Base):
     """
      AsyncInferenceConfig
@@ -1105,13 +992,11 @@ class AsyncInferenceConfig(Base):
 	----------------------
  	client_config: 	 <p>Configures the behavior of the client used by SageMaker to interact with the model container during asynchronous inference.</p>
  	output_config: 	 <p>Specifies the configuration for asynchronous inference invocation outputs.</p>
-
     """
     output_config: AsyncInferenceOutputConfig
     client_config: Optional[AsyncInferenceClientConfig] = Unassigned()
 
 
-@dataclass
 class AthenaDatasetDefinition(Base):
     """
      AthenaDatasetDefinition
@@ -1127,7 +1012,6 @@ class AthenaDatasetDefinition(Base):
  	kms_key_id: 	 <p>The Amazon Web Services Key Management Service (Amazon Web Services KMS) key that Amazon SageMaker uses to encrypt data generated from an Athena query execution.</p>
  	output_format
  	output_compression
-
     """
     catalog: str
     database: str
@@ -1139,7 +1023,6 @@ class AthenaDatasetDefinition(Base):
     output_compression: Optional[str] = Unassigned()
 
 
-@dataclass
 class AutoMLAlgorithmConfig(Base):
     """
      AutoMLAlgorithmConfig
@@ -1148,12 +1031,10 @@ class AutoMLAlgorithmConfig(Base):
  	 Attributes
 	----------------------
  	auto_m_l_algorithms: 	 <p>The selection of algorithms run on a dataset to train the model candidates of an Autopilot job. </p> <note> <p>Selected algorithms must belong to the list corresponding to the training mode set in <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_AutoMLJobConfig.html#sagemaker-Type-AutoMLJobConfig-Mode">AutoMLJobConfig.Mode</a> (<code>ENSEMBLING</code> or <code>HYPERPARAMETER_TUNING</code>). Choose a minimum of 1 algorithm. </p> </note> <ul> <li> <p>In <code>ENSEMBLING</code> mode:</p> <ul> <li> <p>"catboost"</p> </li> <li> <p>"extra-trees"</p> </li> <li> <p>"fastai"</p> </li> <li> <p>"lightgbm"</p> </li> <li> <p>"linear-learner"</p> </li> <li> <p>"nn-torch"</p> </li> <li> <p>"randomforest"</p> </li> <li> <p>"xgboost"</p> </li> </ul> </li> <li> <p>In <code>HYPERPARAMETER_TUNING</code> mode:</p> <ul> <li> <p>"linear-learner"</p> </li> <li> <p>"mlp"</p> </li> <li> <p>"xgboost"</p> </li> </ul> </li> </ul>
-
     """
     auto_m_l_algorithms: List[str]
 
 
-@dataclass
 class FinalAutoMLJobObjectiveMetric(Base):
     """
      FinalAutoMLJobObjectiveMetric
@@ -1165,7 +1046,6 @@ class FinalAutoMLJobObjectiveMetric(Base):
  	metric_name: 	 <p>The name of the metric with the best result. For a description of the possible objective metrics, see <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_AutoMLJobObjective.html">AutoMLJobObjective$MetricName</a>.</p>
  	value: 	 <p>The value of the metric with the best result.</p>
  	standard_metric_name: 	 <p>The name of the standard metric. For a description of the standard metrics, see <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/autopilot-metrics-validation.html#autopilot-metrics">Autopilot candidate metrics</a>.</p>
-
     """
     metric_name: str
     value: float
@@ -1173,7 +1053,6 @@ class FinalAutoMLJobObjectiveMetric(Base):
     standard_metric_name: Optional[str] = Unassigned()
 
 
-@dataclass
 class AutoMLCandidateStep(Base):
     """
      AutoMLCandidateStep
@@ -1184,14 +1063,12 @@ class AutoMLCandidateStep(Base):
  	candidate_step_type: 	 <p>Whether the candidate is at the transform, training, or processing step.</p>
  	candidate_step_arn: 	 <p>The ARN for the candidate's step.</p>
  	candidate_step_name: 	 <p>The name for the candidate's step.</p>
-
     """
     candidate_step_type: str
     candidate_step_arn: str
     candidate_step_name: str
 
 
-@dataclass
 class AutoMLContainerDefinition(Base):
     """
      AutoMLContainerDefinition
@@ -1202,14 +1079,12 @@ class AutoMLContainerDefinition(Base):
  	image: 	 <p>The Amazon Elastic Container Registry (Amazon ECR) path of the container. For more information, see <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_ContainerDefinition.html"> ContainerDefinition</a>.</p>
  	model_data_url: 	 <p>The location of the model artifacts. For more information, see <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_ContainerDefinition.html"> ContainerDefinition</a>.</p>
  	environment: 	 <p>The environment variables to set in the container. For more information, see <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_ContainerDefinition.html"> ContainerDefinition</a>.</p>
-
     """
     image: str
     model_data_url: str
     environment: Optional[Dict[str, str]] = Unassigned()
 
 
-@dataclass
 class CandidateArtifactLocations(Base):
     """
      CandidateArtifactLocations
@@ -1220,14 +1095,12 @@ class CandidateArtifactLocations(Base):
  	explainability: 	 <p>The Amazon S3 prefix to the explainability artifacts generated for the AutoML candidate.</p>
  	model_insights: 	 <p>The Amazon S3 prefix to the model insight artifacts generated for the AutoML candidate.</p>
  	backtest_results: 	 <p>The Amazon S3 prefix to the accuracy metrics and the inference results observed over the testing window. Available only for the time-series forecasting problem type.</p>
-
     """
     explainability: str
     model_insights: Optional[str] = Unassigned()
     backtest_results: Optional[str] = Unassigned()
 
 
-@dataclass
 class MetricDatum(Base):
     """
      MetricDatum
@@ -1239,7 +1112,6 @@ class MetricDatum(Base):
  	value: 	 <p>The value of the metric.</p>
  	set: 	 <p>The dataset split from which the AutoML job produced the metric.</p>
  	standard_metric_name: 	 <p>The name of the standard metric. </p> <note> <p>For definitions of the standard metrics, see <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/autopilot-model-support-validation.html#autopilot-metrics"> <code>Autopilot candidate metrics</code> </a>.</p> </note>
-
     """
     metric_name: Optional[str] = Unassigned()
     value: Optional[float] = Unassigned()
@@ -1247,7 +1119,6 @@ class MetricDatum(Base):
     standard_metric_name: Optional[str] = Unassigned()
 
 
-@dataclass
 class CandidateProperties(Base):
     """
      CandidateProperties
@@ -1257,13 +1128,11 @@ class CandidateProperties(Base):
 	----------------------
  	candidate_artifact_locations: 	 <p>The Amazon S3 prefix to the artifacts generated for an AutoML candidate.</p>
  	candidate_metrics: 	 <p>Information about the candidate metrics for an AutoML job.</p>
-
     """
     candidate_artifact_locations: Optional[CandidateArtifactLocations] = Unassigned()
     candidate_metrics: Optional[List[MetricDatum]] = Unassigned()
 
 
-@dataclass
 class AutoMLCandidate(Base):
     """
      AutoMLCandidate
@@ -1283,7 +1152,6 @@ class AutoMLCandidate(Base):
  	failure_reason: 	 <p>The failure reason.</p>
  	candidate_properties: 	 <p>The properties of an AutoML candidate job.</p>
  	inference_container_definitions: 	 <p>The mapping of all supported processing unit (CPU, GPU, etc...) to inference container definitions for the candidate. This field is populated for the AutoML jobs V2 (for example, for jobs created by calling <code>CreateAutoMLJobV2</code>) related to image or text classification problem types only.</p>
-
     """
     candidate_name: str
     objective_status: str
@@ -1299,7 +1167,6 @@ class AutoMLCandidate(Base):
     inference_container_definitions: Optional[Dict[str, List[AutoMLContainerDefinition]]] = Unassigned()
 
 
-@dataclass
 class AutoMLCandidateGenerationConfig(Base):
     """
      AutoMLCandidateGenerationConfig
@@ -1309,13 +1176,11 @@ class AutoMLCandidateGenerationConfig(Base):
 	----------------------
  	feature_specification_s3_uri: 	 <p>A URL to the Amazon S3 data source containing selected features from the input data source to run an Autopilot job. You can input <code>FeatureAttributeNames</code> (optional) in JSON format as shown below: </p> <p> <code>{ "FeatureAttributeNames":["col1", "col2", ...] }</code>.</p> <p>You can also specify the data type of the feature (optional) in the format shown below:</p> <p> <code>{ "FeatureDataTypes":{"col1":"numeric", "col2":"categorical" ... } }</code> </p> <note> <p>These column keys may not include the target column.</p> </note> <p>In ensembling mode, Autopilot only supports the following data types: <code>numeric</code>, <code>categorical</code>, <code>text</code>, and <code>datetime</code>. In HPO mode, Autopilot can support <code>numeric</code>, <code>categorical</code>, <code>text</code>, <code>datetime</code>, and <code>sequence</code>.</p> <p>If only <code>FeatureDataTypes</code> is provided, the column keys (<code>col1</code>, <code>col2</code>,..) should be a subset of the column names in the input data. </p> <p>If both <code>FeatureDataTypes</code> and <code>FeatureAttributeNames</code> are provided, then the column keys should be a subset of the column names provided in <code>FeatureAttributeNames</code>. </p> <p>The key name <code>FeatureAttributeNames</code> is fixed. The values listed in <code>["col1", "col2", ...]</code> are case sensitive and should be a list of strings containing unique values that are a subset of the column names in the input data. The list of columns provided must not include the target column.</p>
  	algorithms_config: 	 <p>Stores the configuration information for the selection of algorithms used to train the model candidates.</p> <p>The list of available algorithms to choose from depends on the training mode set in <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_AutoMLJobConfig.html"> <code>AutoMLJobConfig.Mode</code> </a>.</p> <ul> <li> <p> <code>AlgorithmsConfig</code> should not be set in <code>AUTO</code> training mode.</p> </li> <li> <p>When <code>AlgorithmsConfig</code> is provided, one <code>AutoMLAlgorithms</code> attribute must be set and one only.</p> <p>If the list of algorithms provided as values for <code>AutoMLAlgorithms</code> is empty, <code>AutoMLCandidateGenerationConfig</code> uses the full set of algorithms for the given training mode.</p> </li> <li> <p>When <code>AlgorithmsConfig</code> is not provided, <code>AutoMLCandidateGenerationConfig</code> uses the full set of algorithms for the given training mode.</p> </li> </ul> <p>For the list of all algorithms per training mode, see <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_AutoMLAlgorithmConfig.html"> AutoMLAlgorithmConfig</a>.</p> <p>For more information on each algorithm, see the <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/autopilot-model-support-validation.html#autopilot-algorithm-support">Algorithm support</a> section in Autopilot developer guide.</p>
-
     """
     feature_specification_s3_uri: Optional[str] = Unassigned()
     algorithms_config: Optional[List[AutoMLAlgorithmConfig]] = Unassigned()
 
 
-@dataclass
 class AutoMLS3DataSource(Base):
     """
      AutoMLS3DataSource
@@ -1325,13 +1190,11 @@ class AutoMLS3DataSource(Base):
 	----------------------
  	s3_data_type: 	 <p>The data type. </p> <ul> <li> <p>If you choose <code>S3Prefix</code>, <code>S3Uri</code> identifies a key name prefix. SageMaker uses all objects that match the specified key name prefix for model training.</p> <p>The <code>S3Prefix</code> should have the following format:</p> <p> <code>s3://DOC-EXAMPLE-BUCKET/DOC-EXAMPLE-FOLDER-OR-FILE</code> </p> </li> <li> <p>If you choose <code>ManifestFile</code>, <code>S3Uri</code> identifies an object that is a manifest file containing a list of object keys that you want SageMaker to use for model training.</p> <p>A <code>ManifestFile</code> should have the format shown below:</p> <p> <code>[ {"prefix": "s3://DOC-EXAMPLE-BUCKET/DOC-EXAMPLE-FOLDER/DOC-EXAMPLE-PREFIX/"}, </code> </p> <p> <code>"DOC-EXAMPLE-RELATIVE-PATH/DOC-EXAMPLE-FOLDER/DATA-1",</code> </p> <p> <code>"DOC-EXAMPLE-RELATIVE-PATH/DOC-EXAMPLE-FOLDER/DATA-2",</code> </p> <p> <code>... "DOC-EXAMPLE-RELATIVE-PATH/DOC-EXAMPLE-FOLDER/DATA-N" ]</code> </p> </li> <li> <p>If you choose <code>AugmentedManifestFile</code>, <code>S3Uri</code> identifies an object that is an augmented manifest file in JSON lines format. This file contains the data you want to use for model training. <code>AugmentedManifestFile</code> is available for V2 API jobs only (for example, for jobs created by calling <code>CreateAutoMLJobV2</code>).</p> <p>Here is a minimal, single-record example of an <code>AugmentedManifestFile</code>:</p> <p> <code>{"source-ref": "s3://DOC-EXAMPLE-BUCKET/DOC-EXAMPLE-FOLDER/cats/cat.jpg",</code> </p> <p> <code>"label-metadata": {"class-name": "cat"</code> }</p> <p>For more information on <code>AugmentedManifestFile</code>, see <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/augmented-manifest.html">Provide Dataset Metadata to Training Jobs with an Augmented Manifest File</a>.</p> </li> </ul>
  	s3_uri: 	 <p>The URL to the Amazon S3 data source. The Uri refers to the Amazon S3 prefix or ManifestFile depending on the data type.</p>
-
     """
     s3_data_type: str
     s3_uri: str
 
 
-@dataclass
 class AutoMLDataSource(Base):
     """
      AutoMLDataSource
@@ -1340,12 +1203,10 @@ class AutoMLDataSource(Base):
  	 Attributes
 	----------------------
  	s3_data_source: 	 <p>The Amazon S3 location of the input data.</p>
-
     """
     s3_data_source: AutoMLS3DataSource
 
 
-@dataclass
 class AutoMLChannel(Base):
     """
      AutoMLChannel
@@ -1359,7 +1220,6 @@ class AutoMLChannel(Base):
  	content_type: 	 <p>The content type of the data from the input source. You can use <code>text/csv;header=present</code> or <code>x-application/vnd.amazon+parquet</code>. The default value is <code>text/csv;header=present</code>.</p>
  	channel_type: 	 <p>The channel type (optional) is an <code>enum</code> string. The default value is <code>training</code>. Channels for training and validation must share the same <code>ContentType</code> and <code>TargetAttributeName</code>. For information on specifying training and validation channel types, see <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/autopilot-datasets-problem-types.html#autopilot-data-sources-training-or-validation">How to specify training and validation datasets</a>.</p>
  	sample_weight_attribute_name: 	 <p>If specified, this column name indicates which column of the dataset should be treated as sample weights for use by the objective metric during the training, evaluation, and the selection of the best model. This column is not considered as a predictive feature. For more information on Autopilot metrics, see <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/autopilot-metrics-validation.html">Metrics and validation</a>.</p> <p>Sample weights should be numeric, non-negative, with larger values indicating which rows are more important than others. Data points that have invalid or no weight value are excluded.</p> <p>Support for sample weights is available in <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_AutoMLAlgorithmConfig.html">Ensembling</a> mode only.</p>
-
     """
     target_attribute_name: str
     data_source: Optional[AutoMLDataSource] = Unassigned()
@@ -1369,7 +1229,6 @@ class AutoMLChannel(Base):
     sample_weight_attribute_name: Optional[str] = Unassigned()
 
 
-@dataclass
 class AutoMLDataSplitConfig(Base):
     """
      AutoMLDataSplitConfig
@@ -1378,12 +1237,10 @@ class AutoMLDataSplitConfig(Base):
  	 Attributes
 	----------------------
  	validation_fraction: 	 <p>The validation fraction (optional) is a float that specifies the portion of the training dataset to be used for validation. The default value is 0.2, and values must be greater than 0 and less than 1. We recommend setting this value to be less than 0.5.</p>
-
     """
     validation_fraction: Optional[float] = Unassigned()
 
 
-@dataclass
 class AutoMLJobArtifacts(Base):
     """
      AutoMLJobArtifacts
@@ -1393,13 +1250,11 @@ class AutoMLJobArtifacts(Base):
 	----------------------
  	candidate_definition_notebook_location: 	 <p>The URL of the notebook location.</p>
  	data_exploration_notebook_location: 	 <p>The URL of the notebook location.</p>
-
     """
     candidate_definition_notebook_location: Optional[str] = Unassigned()
     data_exploration_notebook_location: Optional[str] = Unassigned()
 
 
-@dataclass
 class AutoMLJobChannel(Base):
     """
      AutoMLJobChannel
@@ -1411,7 +1266,6 @@ class AutoMLJobChannel(Base):
  	content_type: 	 <p>The content type of the data from the input source. The following are the allowed content types for different problems:</p> <ul> <li> <p>For tabular problem types: <code>text/csv;header=present</code> or <code>x-application/vnd.amazon+parquet</code>. The default value is <code>text/csv;header=present</code>.</p> </li> <li> <p>For image classification: <code>image/png</code>, <code>image/jpeg</code>, or <code>image/*</code>. The default value is <code>image/*</code>.</p> </li> <li> <p>For text classification: <code>text/csv;header=present</code> or <code>x-application/vnd.amazon+parquet</code>. The default value is <code>text/csv;header=present</code>.</p> </li> <li> <p>For time-series forecasting: <code>text/csv;header=present</code> or <code>x-application/vnd.amazon+parquet</code>. The default value is <code>text/csv;header=present</code>.</p> </li> <li> <p>For text generation (LLMs fine-tuning): <code>text/csv;header=present</code> or <code>x-application/vnd.amazon+parquet</code>. The default value is <code>text/csv;header=present</code>.</p> </li> </ul>
  	compression_type: 	 <p>The allowed compression types depend on the input format and problem type. We allow the compression type <code>Gzip</code> for <code>S3Prefix</code> inputs on tabular data only. For all other inputs, the compression type should be <code>None</code>. If no compression type is provided, we default to <code>None</code>.</p>
  	data_source: 	 <p>The data source for an AutoML channel (Required).</p>
-
     """
     channel_type: Optional[str] = Unassigned()
     content_type: Optional[str] = Unassigned()
@@ -1419,7 +1273,6 @@ class AutoMLJobChannel(Base):
     data_source: Optional[AutoMLDataSource] = Unassigned()
 
 
-@dataclass
 class AutoMLJobCompletionCriteria(Base):
     """
      AutoMLJobCompletionCriteria
@@ -1430,14 +1283,12 @@ class AutoMLJobCompletionCriteria(Base):
  	max_candidates: 	 <p>The maximum number of times a training job is allowed to run.</p> <p>For text and image classification, time-series forecasting, as well as text generation (LLMs fine-tuning) problem types, the supported value is 1. For tabular problem types, the maximum value is 750.</p>
  	max_runtime_per_training_job_in_seconds: 	 <p>The maximum time, in seconds, that each training job executed inside hyperparameter tuning is allowed to run as part of a hyperparameter tuning job. For more information, see the <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_StoppingCondition.html">StoppingCondition</a> used by the <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_CreateHyperParameterTuningJob.html">CreateHyperParameterTuningJob</a> action.</p> <p>For job V2s (jobs created by calling <code>CreateAutoMLJobV2</code>), this field controls the runtime of the job candidate.</p> <p>For <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_TextClassificationJobConfig.html">TextGenerationJobConfig</a> problem types, the maximum time defaults to 72 hours (259200 seconds).</p>
  	max_auto_m_l_job_runtime_in_seconds: 	 <p>The maximum runtime, in seconds, an AutoML job has to complete.</p> <p>If an AutoML job exceeds the maximum runtime, the job is stopped automatically and its processing is ended gracefully. The AutoML job identifies the best model whose training was completed and marks it as the best-performing model. Any unfinished steps of the job, such as automatic one-click Autopilot model deployment, are not completed.</p>
-
     """
     max_candidates: Optional[int] = Unassigned()
     max_runtime_per_training_job_in_seconds: Optional[int] = Unassigned()
     max_auto_m_l_job_runtime_in_seconds: Optional[int] = Unassigned()
 
 
-@dataclass
 class VpcConfig(Base):
     """
      VpcConfig
@@ -1447,13 +1298,11 @@ class VpcConfig(Base):
 	----------------------
  	security_group_ids: 	 <p>The VPC security group IDs, in the form <code>sg-xxxxxxxx</code>. Specify the security groups for the VPC that is specified in the <code>Subnets</code> field.</p>
  	subnets: 	 <p>The ID of the subnets in the VPC to which you want to connect your training job or model. For information about the availability of specific instance types, see <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/instance-types-az.html">Supported Instance Types and Availability Zones</a>.</p>
-
     """
     security_group_ids: List[str]
     subnets: List[str]
 
 
-@dataclass
 class AutoMLSecurityConfig(Base):
     """
      AutoMLSecurityConfig
@@ -1464,14 +1313,12 @@ class AutoMLSecurityConfig(Base):
  	volume_kms_key_id: 	 <p>The key used to encrypt stored data.</p>
  	enable_inter_container_traffic_encryption: 	 <p>Whether to use traffic encryption between the container layers.</p>
  	vpc_config: 	 <p>The VPC configuration.</p>
-
     """
     volume_kms_key_id: Optional[str] = Unassigned()
     enable_inter_container_traffic_encryption: Optional[bool] = Unassigned()
     vpc_config: Optional[VpcConfig] = Unassigned()
 
 
-@dataclass
 class AutoMLJobConfig(Base):
     """
      AutoMLJobConfig
@@ -1484,7 +1331,6 @@ class AutoMLJobConfig(Base):
  	candidate_generation_config: 	 <p>The configuration for generating a candidate for an AutoML job (optional). </p>
  	data_split_config: 	 <p>The configuration for splitting the input training dataset.</p> <p>Type: AutoMLDataSplitConfig</p>
  	mode: 	 <p>The method that Autopilot uses to train the data. You can either specify the mode manually or let Autopilot choose for you based on the dataset size by selecting <code>AUTO</code>. In <code>AUTO</code> mode, Autopilot chooses <code>ENSEMBLING</code> for datasets smaller than 100 MB, and <code>HYPERPARAMETER_TUNING</code> for larger ones.</p> <p>The <code>ENSEMBLING</code> mode uses a multi-stack ensemble model to predict classification and regression tasks directly from your dataset. This machine learning mode combines several base models to produce an optimal predictive model. It then uses a stacking ensemble method to combine predictions from contributing members. A multi-stack ensemble model can provide better performance over a single model by combining the predictive capabilities of multiple models. See <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/autopilot-model-support-validation.html#autopilot-algorithm-support">Autopilot algorithm support</a> for a list of algorithms supported by <code>ENSEMBLING</code> mode.</p> <p>The <code>HYPERPARAMETER_TUNING</code> (HPO) mode uses the best hyperparameters to train the best version of a model. HPO automatically selects an algorithm for the type of problem you want to solve. Then HPO finds the best hyperparameters according to your objective metric. See <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/autopilot-model-support-validation.html#autopilot-algorithm-support">Autopilot algorithm support</a> for a list of algorithms supported by <code>HYPERPARAMETER_TUNING</code> mode.</p>
-
     """
     completion_criteria: Optional[AutoMLJobCompletionCriteria] = Unassigned()
     security_config: Optional[AutoMLSecurityConfig] = Unassigned()
@@ -1493,7 +1339,6 @@ class AutoMLJobConfig(Base):
     mode: Optional[str] = Unassigned()
 
 
-@dataclass
 class AutoMLJobObjective(Base):
     """
      AutoMLJobObjective
@@ -1502,12 +1347,10 @@ class AutoMLJobObjective(Base):
  	 Attributes
 	----------------------
  	metric_name: 	 <p>The name of the objective metric used to measure the predictive quality of a machine learning system. During training, the model's parameters are updated iteratively to optimize its performance based on the feedback provided by the objective metric when evaluating the model on the validation dataset.</p> <p>The list of available metrics supported by Autopilot and the default metric applied when you do not specify a metric name explicitly depend on the problem type.</p> <ul> <li> <p>For tabular problem types:</p> <ul> <li> <p>List of available metrics: </p> <ul> <li> <p> Regression: <code>MAE</code>, <code>MSE</code>, <code>R2</code>, <code>RMSE</code> </p> </li> <li> <p> Binary classification: <code>Accuracy</code>, <code>AUC</code>, <code>BalancedAccuracy</code>, <code>F1</code>, <code>Precision</code>, <code>Recall</code> </p> </li> <li> <p> Multiclass classification: <code>Accuracy</code>, <code>BalancedAccuracy</code>, <code>F1macro</code>, <code>PrecisionMacro</code>, <code>RecallMacro</code> </p> </li> </ul> <p>For a description of each metric, see <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/autopilot-metrics-validation.html#autopilot-metrics">Autopilot metrics for classification and regression</a>.</p> </li> <li> <p>Default objective metrics:</p> <ul> <li> <p>Regression: <code>MSE</code>.</p> </li> <li> <p>Binary classification: <code>F1</code>.</p> </li> <li> <p>Multiclass classification: <code>Accuracy</code>.</p> </li> </ul> </li> </ul> </li> <li> <p>For image or text classification problem types:</p> <ul> <li> <p>List of available metrics: <code>Accuracy</code> </p> <p>For a description of each metric, see <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/text-classification-data-format-and-metric.html">Autopilot metrics for text and image classification</a>.</p> </li> <li> <p>Default objective metrics: <code>Accuracy</code> </p> </li> </ul> </li> <li> <p>For time-series forecasting problem types:</p> <ul> <li> <p>List of available metrics: <code>RMSE</code>, <code>wQL</code>, <code>Average wQL</code>, <code>MASE</code>, <code>MAPE</code>, <code>WAPE</code> </p> <p>For a description of each metric, see <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/timeseries-objective-metric.html">Autopilot metrics for time-series forecasting</a>.</p> </li> <li> <p>Default objective metrics: <code>AverageWeightedQuantileLoss</code> </p> </li> </ul> </li> <li> <p>For text generation problem types (LLMs fine-tuning): Fine-tuning language models in Autopilot does not require setting the <code>AutoMLJobObjective</code> field. Autopilot fine-tunes LLMs without requiring multiple candidates to be trained and evaluated. Instead, using your dataset, Autopilot directly fine-tunes your target model to enhance a default objective metric, the cross-entropy loss. After fine-tuning a language model, you can evaluate the quality of its generated text using different metrics. For a list of the available metrics, see <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/autopilot-llms-finetuning-metrics.html">Metrics for fine-tuning LLMs in Autopilot</a>.</p> </li> </ul>
-
     """
     metric_name: str
 
 
-@dataclass
 class AutoMLJobStepMetadata(Base):
     """
      AutoMLJobStepMetadata
@@ -1516,12 +1359,10 @@ class AutoMLJobStepMetadata(Base):
  	 Attributes
 	----------------------
  	arn: 	 <p>The Amazon Resource Name (ARN) of the AutoML job.</p>
-
     """
     arn: Optional[str] = Unassigned()
 
 
-@dataclass
 class AutoMLPartialFailureReason(Base):
     """
      AutoMLPartialFailureReason
@@ -1530,12 +1371,10 @@ class AutoMLPartialFailureReason(Base):
  	 Attributes
 	----------------------
  	partial_failure_message: 	 <p>The message containing the reason for a partial failure of an AutoML job.</p>
-
     """
     partial_failure_message: Optional[str] = Unassigned()
 
 
-@dataclass
 class AutoMLJobSummary(Base):
     """
      AutoMLJobSummary
@@ -1552,7 +1391,6 @@ class AutoMLJobSummary(Base):
  	last_modified_time: 	 <p>When the AutoML job was last modified.</p>
  	failure_reason: 	 <p>The failure reason of an AutoML job.</p>
  	partial_failure_reasons: 	 <p>The list of reasons for partial failures within an AutoML job.</p>
-
     """
     auto_m_l_job_name: str
     auto_m_l_job_arn: str
@@ -1565,7 +1403,6 @@ class AutoMLJobSummary(Base):
     partial_failure_reasons: Optional[List[AutoMLPartialFailureReason]] = Unassigned()
 
 
-@dataclass
 class AutoMLOutputDataConfig(Base):
     """
      AutoMLOutputDataConfig
@@ -1575,13 +1412,11 @@ class AutoMLOutputDataConfig(Base):
 	----------------------
  	kms_key_id: 	 <p>The Key Management Service encryption key ID.</p>
  	s3_output_path: 	 <p>The Amazon S3 output path. Must be 128 characters or less.</p>
-
     """
     s3_output_path: str
     kms_key_id: Optional[str] = Unassigned()
 
 
-@dataclass
 class ImageClassificationJobConfig(Base):
     """
      ImageClassificationJobConfig
@@ -1590,12 +1425,10 @@ class ImageClassificationJobConfig(Base):
  	 Attributes
 	----------------------
  	completion_criteria: 	 <p>How long a job is allowed to run, or how many candidates a job is allowed to generate.</p>
-
     """
     completion_criteria: Optional[AutoMLJobCompletionCriteria] = Unassigned()
 
 
-@dataclass
 class TextClassificationJobConfig(Base):
     """
      TextClassificationJobConfig
@@ -1606,14 +1439,12 @@ class TextClassificationJobConfig(Base):
  	completion_criteria: 	 <p>How long a job is allowed to run, or how many candidates a job is allowed to generate.</p>
  	content_column: 	 <p>The name of the column used to provide the sentences to be classified. It should not be the same as the target column.</p>
  	target_label_column: 	 <p>The name of the column used to provide the class labels. It should not be same as the content column.</p>
-
     """
     content_column: str
     target_label_column: str
     completion_criteria: Optional[AutoMLJobCompletionCriteria] = Unassigned()
 
 
-@dataclass
 class TimeSeriesTransformations(Base):
     """
      TimeSeriesTransformations
@@ -1623,13 +1454,11 @@ class TimeSeriesTransformations(Base):
 	----------------------
  	filling: 	 <p>A key value pair defining the filling method for a column, where the key is the column name and the value is an object which defines the filling logic. You can specify multiple filling methods for a single column.</p> <p>The supported filling methods and their corresponding options are:</p> <ul> <li> <p> <code>frontfill</code>: <code>none</code> (Supported only for target column)</p> </li> <li> <p> <code>middlefill</code>: <code>zero</code>, <code>value</code>, <code>median</code>, <code>mean</code>, <code>min</code>, <code>max</code> </p> </li> <li> <p> <code>backfill</code>: <code>zero</code>, <code>value</code>, <code>median</code>, <code>mean</code>, <code>min</code>, <code>max</code> </p> </li> <li> <p> <code>futurefill</code>: <code>zero</code>, <code>value</code>, <code>median</code>, <code>mean</code>, <code>min</code>, <code>max</code> </p> </li> </ul> <p>To set a filling method to a specific value, set the fill parameter to the chosen filling method value (for example <code>"backfill" : "value"</code>), and define the filling value in an additional parameter prefixed with "_value". For example, to set <code>backfill</code> to a value of <code>2</code>, you must include two parameters: <code>"backfill": "value"</code> and <code>"backfill_value":"2"</code>.</p>
  	aggregation: 	 <p>A key value pair defining the aggregation method for a column, where the key is the column name and the value is the aggregation method.</p> <p>The supported aggregation methods are <code>sum</code> (default), <code>avg</code>, <code>first</code>, <code>min</code>, <code>max</code>.</p> <note> <p>Aggregation is only supported for the target column.</p> </note>
-
     """
     filling: Optional[Dict[str, Dict[str, str]]] = Unassigned()
     aggregation: Optional[Dict[str, str]] = Unassigned()
 
 
-@dataclass
 class TimeSeriesConfig(Base):
     """
      TimeSeriesConfig
@@ -1641,7 +1470,6 @@ class TimeSeriesConfig(Base):
  	timestamp_attribute_name: 	 <p>The name of the column indicating a point in time at which the target value of a given item is recorded.</p>
  	item_identifier_attribute_name: 	 <p>The name of the column that represents the set of item identifiers for which you want to predict the target value.</p>
  	grouping_attribute_names: 	 <p>A set of columns names that can be grouped with the item identifier column to create a composite key for which a target value is predicted.</p>
-
     """
     target_attribute_name: str
     timestamp_attribute_name: str
@@ -1649,7 +1477,6 @@ class TimeSeriesConfig(Base):
     grouping_attribute_names: Optional[List[str]] = Unassigned()
 
 
-@dataclass
 class HolidayConfigAttributes(Base):
     """
      HolidayConfigAttributes
@@ -1658,12 +1485,10 @@ class HolidayConfigAttributes(Base):
  	 Attributes
 	----------------------
  	country_code: 	 <p>The country code for the holiday calendar.</p> <p>For the list of public holiday calendars supported by AutoML job V2, see <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/autopilot-timeseries-forecasting-holiday-calendars.html#holiday-country-codes">Country Codes</a>. Use the country code corresponding to the country of your choice.</p>
-
     """
     country_code: Optional[str] = Unassigned()
 
 
-@dataclass
 class TimeSeriesForecastingJobConfig(Base):
     """
      TimeSeriesForecastingJobConfig
@@ -1679,7 +1504,6 @@ class TimeSeriesForecastingJobConfig(Base):
  	transformations: 	 <p>The transformations modifying specific attributes of the time-series, such as filling strategies for missing values.</p>
  	time_series_config: 	 <p>The collection of components that defines the time-series.</p>
  	holiday_config: 	 <p>The collection of holiday featurization attributes used to incorporate national holiday information into your forecasting model.</p>
-
     """
     forecast_frequency: str
     forecast_horizon: int
@@ -1691,7 +1515,6 @@ class TimeSeriesForecastingJobConfig(Base):
     holiday_config: Optional[List[HolidayConfigAttributes]] = Unassigned()
 
 
-@dataclass
 class CandidateGenerationConfig(Base):
     """
      CandidateGenerationConfig
@@ -1700,12 +1523,10 @@ class CandidateGenerationConfig(Base):
  	 Attributes
 	----------------------
  	algorithms_config: 	 <p>Stores the configuration information for the selection of algorithms used to train model candidates on tabular data.</p> <p>The list of available algorithms to choose from depends on the training mode set in <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_TabularJobConfig.html"> <code>TabularJobConfig.Mode</code> </a>.</p> <ul> <li> <p> <code>AlgorithmsConfig</code> should not be set in <code>AUTO</code> training mode.</p> </li> <li> <p>When <code>AlgorithmsConfig</code> is provided, one <code>AutoMLAlgorithms</code> attribute must be set and one only.</p> <p>If the list of algorithms provided as values for <code>AutoMLAlgorithms</code> is empty, <code>CandidateGenerationConfig</code> uses the full set of algorithms for the given training mode.</p> </li> <li> <p>When <code>AlgorithmsConfig</code> is not provided, <code>CandidateGenerationConfig</code> uses the full set of algorithms for the given training mode.</p> </li> </ul> <p>For the list of all algorithms per problem type and training mode, see <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_AutoMLAlgorithmConfig.html"> AutoMLAlgorithmConfig</a>.</p> <p>For more information on each algorithm, see the <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/autopilot-model-support-validation.html#autopilot-algorithm-support">Algorithm support</a> section in Autopilot developer guide.</p>
-
     """
     algorithms_config: Optional[List[AutoMLAlgorithmConfig]] = Unassigned()
 
 
-@dataclass
 class TabularJobConfig(Base):
     """
      TabularJobConfig
@@ -1721,7 +1542,6 @@ class TabularJobConfig(Base):
  	problem_type: 	 <p>The type of supervised learning problem available for the model candidates of the AutoML job V2. For more information, see <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/autopilot-datasets-problem-types.html#autopilot-problem-types"> SageMaker Autopilot problem types</a>.</p> <note> <p>You must either specify the type of supervised learning problem in <code>ProblemType</code> and provide the <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_CreateAutoMLJobV2.html#sagemaker-CreateAutoMLJobV2-request-AutoMLJobObjective">AutoMLJobObjective</a> metric, or none at all.</p> </note>
  	target_attribute_name: 	 <p>The name of the target variable in supervised learning, usually represented by 'y'.</p>
  	sample_weight_attribute_name: 	 <p>If specified, this column name indicates which column of the dataset should be treated as sample weights for use by the objective metric during the training, evaluation, and the selection of the best model. This column is not considered as a predictive feature. For more information on Autopilot metrics, see <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/autopilot-metrics-validation.html">Metrics and validation</a>.</p> <p>Sample weights should be numeric, non-negative, with larger values indicating which rows are more important than others. Data points that have invalid or no weight value are excluded.</p> <p>Support for sample weights is available in <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_AutoMLAlgorithmConfig.html">Ensembling</a> mode only.</p>
-
     """
     target_attribute_name: str
     candidate_generation_config: Optional[CandidateGenerationConfig] = Unassigned()
@@ -1733,7 +1553,6 @@ class TabularJobConfig(Base):
     sample_weight_attribute_name: Optional[str] = Unassigned()
 
 
-@dataclass
 class TextGenerationJobConfig(Base):
     """
      TextGenerationJobConfig
@@ -1745,7 +1564,6 @@ class TextGenerationJobConfig(Base):
  	base_model_name: 	 <p>The name of the base model to fine-tune. Autopilot supports fine-tuning a variety of large language models. For information on the list of supported models, see <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/autopilot-llms-finetuning-models.html#autopilot-llms-finetuning-supported-llms">Text generation models supporting fine-tuning in Autopilot</a>. If no <code>BaseModelName</code> is provided, the default model used is <b>Falcon7BInstruct</b>. </p>
  	text_generation_hyper_parameters: 	 <p>The hyperparameters used to configure and optimize the learning process of the base model. You can set any combination of the following hyperparameters for all base models. For more information on each supported hyperparameter, see <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/autopilot-llms-finetuning-set-hyperparameters.html">Optimize the learning process of your text generation models with hyperparameters</a>.</p> <ul> <li> <p> <code>"epochCount"</code>: The number of times the model goes through the entire training dataset. Its value should be a string containing an integer value within the range of "1" to "10".</p> </li> <li> <p> <code>"batchSize"</code>: The number of data samples used in each iteration of training. Its value should be a string containing an integer value within the range of "1" to "64".</p> </li> <li> <p> <code>"learningRate"</code>: The step size at which a model's parameters are updated during training. Its value should be a string containing a floating-point value within the range of "0" to "1".</p> </li> <li> <p> <code>"learningRateWarmupSteps"</code>: The number of training steps during which the learning rate gradually increases before reaching its target or maximum value. Its value should be a string containing an integer value within the range of "0" to "250".</p> </li> </ul> <p>Here is an example where all four hyperparameters are configured.</p> <p> <code>{ "epochCount":"5", "learningRate":"0.5", "batchSize": "32", "learningRateWarmupSteps": "10" }</code> </p>
  	model_access_config
-
     """
     completion_criteria: Optional[AutoMLJobCompletionCriteria] = Unassigned()
     base_model_name: Optional[str] = Unassigned()
@@ -1753,7 +1571,6 @@ class TextGenerationJobConfig(Base):
     model_access_config: Optional[ModelAccessConfig] = Unassigned()
 
 
-@dataclass
 class AutoMLProblemTypeConfig(Base):
     """
      AutoMLProblemTypeConfig
@@ -1766,7 +1583,6 @@ class AutoMLProblemTypeConfig(Base):
  	time_series_forecasting_job_config: 	 <p>Settings used to configure an AutoML job V2 for the time-series forecasting problem type.</p>
  	tabular_job_config: 	 <p>Settings used to configure an AutoML job V2 for the tabular problem type (regression, classification).</p>
  	text_generation_job_config: 	 <p>Settings used to configure an AutoML job V2 for the text generation (LLMs fine-tuning) problem type.</p> <note> <p>The text generation models that support fine-tuning in Autopilot are currently accessible exclusively in regions supported by Canvas. Refer to the documentation of Canvas for the <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/canvas.html">full list of its supported Regions</a>.</p> </note>
-
     """
     image_classification_job_config: Optional[ImageClassificationJobConfig] = Unassigned()
     text_classification_job_config: Optional[TextClassificationJobConfig] = Unassigned()
@@ -1775,7 +1591,6 @@ class AutoMLProblemTypeConfig(Base):
     text_generation_job_config: Optional[TextGenerationJobConfig] = Unassigned()
 
 
-@dataclass
 class TabularResolvedAttributes(Base):
     """
      TabularResolvedAttributes
@@ -1784,12 +1599,10 @@ class TabularResolvedAttributes(Base):
  	 Attributes
 	----------------------
  	problem_type: 	 <p>The type of supervised learning problem available for the model candidates of the AutoML job V2 (Binary Classification, Multiclass Classification, Regression). For more information, see <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/autopilot-datasets-problem-types.html#autopilot-problem-types"> SageMaker Autopilot problem types</a>.</p>
-
     """
     problem_type: Optional[str] = Unassigned()
 
 
-@dataclass
 class TextGenerationResolvedAttributes(Base):
     """
      TextGenerationResolvedAttributes
@@ -1798,12 +1611,10 @@ class TextGenerationResolvedAttributes(Base):
  	 Attributes
 	----------------------
  	base_model_name: 	 <p>The name of the base model to fine-tune.</p>
-
     """
     base_model_name: Optional[str] = Unassigned()
 
 
-@dataclass
 class AutoMLProblemTypeResolvedAttributes(Base):
     """
      AutoMLProblemTypeResolvedAttributes
@@ -1813,13 +1624,11 @@ class AutoMLProblemTypeResolvedAttributes(Base):
 	----------------------
  	tabular_resolved_attributes: 	 <p>The resolved attributes for the tabular problem type.</p>
  	text_generation_resolved_attributes: 	 <p>The resolved attributes for the text generation problem type.</p>
-
     """
     tabular_resolved_attributes: Optional[TabularResolvedAttributes] = Unassigned()
     text_generation_resolved_attributes: Optional[TextGenerationResolvedAttributes] = Unassigned()
 
 
-@dataclass
 class AutoMLResolvedAttributes(Base):
     """
      AutoMLResolvedAttributes
@@ -1830,14 +1639,12 @@ class AutoMLResolvedAttributes(Base):
  	auto_m_l_job_objective
  	completion_criteria
  	auto_m_l_problem_type_resolved_attributes: 	 <p>Defines the resolved attributes specific to a problem type.</p>
-
     """
     auto_m_l_job_objective: Optional[AutoMLJobObjective] = Unassigned()
     completion_criteria: Optional[AutoMLJobCompletionCriteria] = Unassigned()
     auto_m_l_problem_type_resolved_attributes: Optional[AutoMLProblemTypeResolvedAttributes] = Unassigned()
 
 
-@dataclass
 class AutoParameter(Base):
     """
      AutoParameter
@@ -1847,13 +1654,11 @@ class AutoParameter(Base):
 	----------------------
  	name: 	 <p>The name of the hyperparameter to optimize using Autotune.</p>
  	value_hint: 	 <p>An example value of the hyperparameter to optimize using Autotune.</p>
-
     """
     name: str
     value_hint: str
 
 
-@dataclass
 class AutoRollbackConfig(Base):
     """
      AutoRollbackConfig
@@ -1862,12 +1667,10 @@ class AutoRollbackConfig(Base):
  	 Attributes
 	----------------------
  	alarms: 	 <p>List of CloudWatch alarms in your account that are configured to monitor metrics on an endpoint. If any alarms are tripped during a deployment, SageMaker rolls back the deployment.</p>
-
     """
     alarms: Optional[List[Alarm]] = Unassigned()
 
 
-@dataclass
 class Autotune(Base):
     """
      Autotune
@@ -1876,12 +1679,10 @@ class Autotune(Base):
  	 Attributes
 	----------------------
  	mode: 	 <p>Set <code>Mode</code> to <code>Enabled</code> if you want to use Autotune.</p>
-
     """
     mode: str
 
 
-@dataclass
 class BatchDataCaptureConfig(Base):
     """
      BatchDataCaptureConfig
@@ -1892,14 +1693,12 @@ class BatchDataCaptureConfig(Base):
  	destination_s3_uri: 	 <p>The Amazon S3 location being used to capture the data.</p>
  	kms_key_id: 	 <p>The Amazon Resource Name (ARN) of a Amazon Web Services Key Management Service key that SageMaker uses to encrypt data on the storage volume attached to the ML compute instance that hosts the batch transform job.</p> <p>The KmsKeyId can be any of the following formats: </p> <ul> <li> <p>Key ID: <code>1234abcd-12ab-34cd-56ef-1234567890ab</code> </p> </li> <li> <p>Key ARN: <code>arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab</code> </p> </li> <li> <p>Alias name: <code>alias/ExampleAlias</code> </p> </li> <li> <p>Alias name ARN: <code>arn:aws:kms:us-west-2:111122223333:alias/ExampleAlias</code> </p> </li> </ul>
  	generate_inference_id: 	 <p>Flag that indicates whether to append inference id to the output.</p>
-
     """
     destination_s3_uri: str
     kms_key_id: Optional[str] = Unassigned()
     generate_inference_id: Optional[bool] = Unassigned()
 
 
-@dataclass
 class BatchDescribeModelPackageError(Base):
     """
      BatchDescribeModelPackageError
@@ -1909,13 +1708,11 @@ class BatchDescribeModelPackageError(Base):
 	----------------------
  	error_code: 	 <p/>
  	error_response: 	 <p/>
-
     """
     error_code: str
     error_response: str
 
 
-@dataclass
 class InferenceSpecification(Base):
     """
      InferenceSpecification
@@ -1928,7 +1725,6 @@ class InferenceSpecification(Base):
  	supported_realtime_inference_instance_types: 	 <p>A list of the instance types that are used to generate inferences in real-time.</p> <p>This parameter is required for unversioned models, and optional for versioned models.</p>
  	supported_content_types: 	 <p>The supported MIME types for the input data.</p>
  	supported_response_m_i_m_e_types: 	 <p>The supported MIME types for the output data.</p>
-
     """
     containers: List[ModelPackageContainerDefinition]
     supported_transform_instance_types: Optional[List[str]] = Unassigned()
@@ -1937,7 +1733,6 @@ class InferenceSpecification(Base):
     supported_response_m_i_m_e_types: Optional[List[str]] = Unassigned()
 
 
-@dataclass
 class BatchDescribeModelPackageSummary(Base):
     """
      BatchDescribeModelPackageSummary
@@ -1953,7 +1748,6 @@ class BatchDescribeModelPackageSummary(Base):
  	inference_specification
  	model_package_status: 	 <p>The status of the mortgage package.</p>
  	model_approval_status: 	 <p>The approval status of the model.</p>
-
     """
     model_package_group_name: str
     model_package_arn: str
@@ -1965,7 +1759,6 @@ class BatchDescribeModelPackageSummary(Base):
     model_approval_status: Optional[str] = Unassigned()
 
 
-@dataclass
 class MonitoringCsvDatasetFormat(Base):
     """
      MonitoringCsvDatasetFormat
@@ -1974,12 +1767,10 @@ class MonitoringCsvDatasetFormat(Base):
  	 Attributes
 	----------------------
  	header: 	 <p>Indicates if the CSV data has a header.</p>
-
     """
     header: Optional[bool] = Unassigned()
 
 
-@dataclass
 class MonitoringJsonDatasetFormat(Base):
     """
      MonitoringJsonDatasetFormat
@@ -1988,12 +1779,10 @@ class MonitoringJsonDatasetFormat(Base):
  	 Attributes
 	----------------------
  	line: 	 <p>Indicates if the file should be read as a JSON object per line. </p>
-
     """
     line: Optional[bool] = Unassigned()
 
 
-@dataclass
 class MonitoringParquetDatasetFormat(Base):
     """
      MonitoringParquetDatasetFormat
@@ -2001,11 +1790,9 @@ class MonitoringParquetDatasetFormat(Base):
 
  	 Attributes
 	----------------------
-
     """
 
 
-@dataclass
 class MonitoringDatasetFormat(Base):
     """
      MonitoringDatasetFormat
@@ -2016,14 +1803,12 @@ class MonitoringDatasetFormat(Base):
  	csv: 	 <p>The CSV dataset used in the monitoring job.</p>
  	json: 	 <p>The JSON dataset used in the monitoring job</p>
  	parquet: 	 <p>The Parquet dataset used in the monitoring job</p>
-
     """
     csv: Optional[MonitoringCsvDatasetFormat] = Unassigned()
     json: Optional[MonitoringJsonDatasetFormat] = Unassigned()
     parquet: Optional[MonitoringParquetDatasetFormat] = Unassigned()
 
 
-@dataclass
 class BatchTransformInput(Base):
     """
      BatchTransformInput
@@ -2043,7 +1828,6 @@ class BatchTransformInput(Base):
  	start_time_offset: 	 <p>If specified, monitoring jobs substract this time from the start time. For information about using offsets for scheduling monitoring jobs, see <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/model-monitor-model-quality-schedule.html">Schedule Model Quality Monitoring Jobs</a>.</p>
  	end_time_offset: 	 <p>If specified, monitoring jobs subtract this time from the end time. For information about using offsets for scheduling monitoring jobs, see <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/model-monitor-model-quality-schedule.html">Schedule Model Quality Monitoring Jobs</a>.</p>
  	exclude_features_attribute: 	 <p>The attributes of the input data to exclude from the analysis.</p>
-
     """
     data_captured_destination_s3_uri: str
     dataset_format: MonitoringDatasetFormat
@@ -2059,7 +1843,6 @@ class BatchTransformInput(Base):
     exclude_features_attribute: Optional[str] = Unassigned()
 
 
-@dataclass
 class BestObjectiveNotImproving(Base):
     """
      BestObjectiveNotImproving
@@ -2068,12 +1851,10 @@ class BestObjectiveNotImproving(Base):
  	 Attributes
 	----------------------
  	max_number_of_training_jobs_not_improving: 	 <p>The number of training jobs that have failed to improve model performance by 1% or greater over prior training jobs as evaluated against an objective function.</p>
-
     """
     max_number_of_training_jobs_not_improving: Optional[int] = Unassigned()
 
 
-@dataclass
 class MetricsSource(Base):
     """
      MetricsSource
@@ -2084,14 +1865,12 @@ class MetricsSource(Base):
  	content_type: 	 <p>The metric source content type.</p>
  	content_digest: 	 <p>The hash key used for the metrics source.</p>
  	s3_uri: 	 <p>The S3 URI for the metrics source.</p>
-
     """
     content_type: str
     s3_uri: str
     content_digest: Optional[str] = Unassigned()
 
 
-@dataclass
 class Bias(Base):
     """
      Bias
@@ -2102,14 +1881,12 @@ class Bias(Base):
  	report: 	 <p>The bias report for a model</p>
  	pre_training_report: 	 <p>The pre-training bias report for a model.</p>
  	post_training_report: 	 <p>The post-training bias report for a model.</p>
-
     """
     report: Optional[MetricsSource] = Unassigned()
     pre_training_report: Optional[MetricsSource] = Unassigned()
     post_training_report: Optional[MetricsSource] = Unassigned()
 
 
-@dataclass
 class CapacitySize(Base):
     """
      CapacitySize
@@ -2119,13 +1896,11 @@ class CapacitySize(Base):
 	----------------------
  	type: 	 <p>Specifies the endpoint capacity type.</p> <ul> <li> <p> <code>INSTANCE_COUNT</code>: The endpoint activates based on the number of instances.</p> </li> <li> <p> <code>CAPACITY_PERCENT</code>: The endpoint activates based on the specified percentage of capacity.</p> </li> </ul>
  	value: 	 <p>Defines the capacity size, either as a number of instances or a capacity percentage.</p>
-
     """
     type: str
     value: int
 
 
-@dataclass
 class TrafficRoutingConfig(Base):
     """
      TrafficRoutingConfig
@@ -2137,7 +1912,6 @@ class TrafficRoutingConfig(Base):
  	wait_interval_in_seconds: 	 <p>The waiting time (in seconds) between incremental steps to turn on traffic on the new endpoint fleet.</p>
  	canary_size: 	 <p>Batch size for the first step to turn on traffic on the new endpoint fleet. <code>Value</code> must be less than or equal to 50% of the variant's total instance count.</p>
  	linear_step_size: 	 <p>Batch size for each step to turn on traffic on the new endpoint fleet. <code>Value</code> must be 10-50% of the variant's total instance count.</p>
-
     """
     type: str
     wait_interval_in_seconds: int
@@ -2145,7 +1919,6 @@ class TrafficRoutingConfig(Base):
     linear_step_size: Optional[CapacitySize] = Unassigned()
 
 
-@dataclass
 class BlueGreenUpdatePolicy(Base):
     """
      BlueGreenUpdatePolicy
@@ -2156,14 +1929,12 @@ class BlueGreenUpdatePolicy(Base):
  	traffic_routing_configuration: 	 <p>Defines the traffic routing strategy to shift traffic from the old fleet to the new fleet during an endpoint deployment.</p>
  	termination_wait_in_seconds: 	 <p>Additional waiting time in seconds after the completion of an endpoint deployment before terminating the old endpoint fleet. Default is 0.</p>
  	maximum_execution_timeout_in_seconds: 	 <p>Maximum execution timeout for the deployment. Note that the timeout value should be larger than the total waiting time specified in <code>TerminationWaitInSeconds</code> and <code>WaitIntervalInSeconds</code>.</p>
-
     """
     traffic_routing_configuration: TrafficRoutingConfig
     termination_wait_in_seconds: Optional[int] = Unassigned()
     maximum_execution_timeout_in_seconds: Optional[int] = Unassigned()
 
 
-@dataclass
 class CacheHitResult(Base):
     """
      CacheHitResult
@@ -2172,12 +1943,10 @@ class CacheHitResult(Base):
  	 Attributes
 	----------------------
  	source_pipeline_execution_arn: 	 <p>The Amazon Resource Name (ARN) of the pipeline execution.</p>
-
     """
     source_pipeline_execution_arn: Optional[str] = Unassigned()
 
 
-@dataclass
 class OutputParameter(Base):
     """
      OutputParameter
@@ -2187,13 +1956,11 @@ class OutputParameter(Base):
 	----------------------
  	name: 	 <p>The name of the output parameter.</p>
  	value: 	 <p>The value of the output parameter.</p>
-
     """
     name: str
     value: str
 
 
-@dataclass
 class CallbackStepMetadata(Base):
     """
      CallbackStepMetadata
@@ -2204,14 +1971,12 @@ class CallbackStepMetadata(Base):
  	callback_token: 	 <p>The pipeline generated token from the Amazon SQS queue.</p>
  	sqs_queue_url: 	 <p>The URL of the Amazon Simple Queue Service (Amazon SQS) queue used by the callback step.</p>
  	output_parameters: 	 <p>A list of the output parameters of the callback step.</p>
-
     """
     callback_token: Optional[str] = Unassigned()
     sqs_queue_url: Optional[str] = Unassigned()
     output_parameters: Optional[List[OutputParameter]] = Unassigned()
 
 
-@dataclass
 class TimeSeriesForecastingSettings(Base):
     """
      TimeSeriesForecastingSettings
@@ -2221,13 +1986,11 @@ class TimeSeriesForecastingSettings(Base):
 	----------------------
  	status: 	 <p>Describes whether time series forecasting is enabled or disabled in the Canvas application.</p>
  	amazon_forecast_role_arn: 	 <p>The IAM role that Canvas passes to Amazon Forecast for time series forecasting. By default, Canvas uses the execution role specified in the <code>UserProfile</code> that launches the Canvas application. If an execution role is not specified in the <code>UserProfile</code>, Canvas uses the execution role specified in the Domain that owns the <code>UserProfile</code>. To allow time series forecasting, this IAM role should have the <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/security-iam-awsmanpol-canvas.html#security-iam-awsmanpol-AmazonSageMakerCanvasForecastAccess"> AmazonSageMakerCanvasForecastAccess</a> policy attached and <code>forecast.amazonaws.com</code> added in the trust relationship as a service principal.</p>
-
     """
     status: Optional[str] = Unassigned()
     amazon_forecast_role_arn: Optional[str] = Unassigned()
 
 
-@dataclass
 class ModelRegisterSettings(Base):
     """
      ModelRegisterSettings
@@ -2237,13 +2000,11 @@ class ModelRegisterSettings(Base):
 	----------------------
  	status: 	 <p>Describes whether the integration to the model registry is enabled or disabled in the Canvas application.</p>
  	cross_account_model_register_role_arn: 	 <p>The Amazon Resource Name (ARN) of the SageMaker model registry account. Required only to register model versions created by a different SageMaker Canvas Amazon Web Services account than the Amazon Web Services account in which SageMaker model registry is set up.</p>
-
     """
     status: Optional[str] = Unassigned()
     cross_account_model_register_role_arn: Optional[str] = Unassigned()
 
 
-@dataclass
 class WorkspaceSettings(Base):
     """
      WorkspaceSettings
@@ -2253,13 +2014,11 @@ class WorkspaceSettings(Base):
 	----------------------
  	s3_artifact_path: 	 <p>The Amazon S3 bucket used to store artifacts generated by Canvas. Updating the Amazon S3 location impacts existing configuration settings, and Canvas users no longer have access to their artifacts. Canvas users must log out and log back in to apply the new location.</p>
  	s3_kms_key_id: 	 <p>The Amazon Web Services Key Management Service (KMS) encryption key ID that is used to encrypt artifacts generated by Canvas in the Amazon S3 bucket.</p>
-
     """
     s3_artifact_path: Optional[str] = Unassigned()
     s3_kms_key_id: Optional[str] = Unassigned()
 
 
-@dataclass
 class IdentityProviderOAuthSetting(Base):
     """
      IdentityProviderOAuthSetting
@@ -2270,14 +2029,12 @@ class IdentityProviderOAuthSetting(Base):
  	data_source_name: 	 <p>The name of the data source that you're connecting to. Canvas currently supports OAuth for Snowflake and Salesforce Data Cloud.</p>
  	status: 	 <p>Describes whether OAuth for a data source is enabled or disabled in the Canvas application.</p>
  	secret_arn: 	 <p>The ARN of an Amazon Web Services Secrets Manager secret that stores the credentials from your identity provider, such as the client ID and secret, authorization URL, and token URL. </p>
-
     """
     data_source_name: Optional[str] = Unassigned()
     status: Optional[str] = Unassigned()
     secret_arn: Optional[str] = Unassigned()
 
 
-@dataclass
 class DirectDeploySettings(Base):
     """
      DirectDeploySettings
@@ -2286,12 +2043,10 @@ class DirectDeploySettings(Base):
  	 Attributes
 	----------------------
  	status: 	 <p>Describes whether model deployment permissions are enabled or disabled in the Canvas application.</p>
-
     """
     status: Optional[str] = Unassigned()
 
 
-@dataclass
 class KendraSettings(Base):
     """
      KendraSettings
@@ -2300,12 +2055,10 @@ class KendraSettings(Base):
  	 Attributes
 	----------------------
  	status: 	 <p>Describes whether the document querying feature is enabled or disabled in the Canvas application.</p>
-
     """
     status: Optional[str] = Unassigned()
 
 
-@dataclass
 class GenerativeAiSettings(Base):
     """
      GenerativeAiSettings
@@ -2314,12 +2067,10 @@ class GenerativeAiSettings(Base):
  	 Attributes
 	----------------------
  	amazon_bedrock_role_arn: 	 <p>The ARN of an Amazon Web Services IAM role that allows fine-tuning of large language models (LLMs) in Amazon Bedrock. The IAM role should have Amazon S3 read and write permissions, as well as a trust relationship that establishes <code>bedrock.amazonaws.com</code> as a service principal.</p>
-
     """
     amazon_bedrock_role_arn: Optional[str] = Unassigned()
 
 
-@dataclass
 class CanvasAppSettings(Base):
     """
      CanvasAppSettings
@@ -2334,7 +2085,6 @@ class CanvasAppSettings(Base):
  	direct_deploy_settings: 	 <p>The model deployment settings for the SageMaker Canvas application.</p>
  	kendra_settings: 	 <p>The settings for document querying.</p>
  	generative_ai_settings: 	 <p>The generative AI settings for the SageMaker Canvas application.</p>
-
     """
     time_series_forecasting_settings: Optional[TimeSeriesForecastingSettings] = Unassigned()
     model_register_settings: Optional[ModelRegisterSettings] = Unassigned()
@@ -2345,7 +2095,6 @@ class CanvasAppSettings(Base):
     generative_ai_settings: Optional[GenerativeAiSettings] = Unassigned()
 
 
-@dataclass
 class CaptureContentTypeHeader(Base):
     """
      CaptureContentTypeHeader
@@ -2355,13 +2104,11 @@ class CaptureContentTypeHeader(Base):
 	----------------------
  	csv_content_types: 	 <p>The list of all content type headers that Amazon SageMaker will treat as CSV and capture accordingly.</p>
  	json_content_types: 	 <p>The list of all content type headers that SageMaker will treat as JSON and capture accordingly.</p>
-
     """
     csv_content_types: Optional[List[str]] = Unassigned()
     json_content_types: Optional[List[str]] = Unassigned()
 
 
-@dataclass
 class CaptureOption(Base):
     """
      CaptureOption
@@ -2370,12 +2117,10 @@ class CaptureOption(Base):
  	 Attributes
 	----------------------
  	capture_mode: 	 <p>Specify the boundary of data to capture.</p>
-
     """
     capture_mode: str
 
 
-@dataclass
 class CategoricalParameter(Base):
     """
      CategoricalParameter
@@ -2385,13 +2130,11 @@ class CategoricalParameter(Base):
 	----------------------
  	name: 	 <p>The Name of the environment variable.</p>
  	value: 	 <p>The list of values you can pass.</p>
-
     """
     name: str
     value: List[str]
 
 
-@dataclass
 class CategoricalParameterRange(Base):
     """
      CategoricalParameterRange
@@ -2401,13 +2144,11 @@ class CategoricalParameterRange(Base):
 	----------------------
  	name: 	 <p>The name of the categorical hyperparameter to tune.</p>
  	values: 	 <p>A list of the categories for the hyperparameter.</p>
-
     """
     name: str
     values: List[str]
 
 
-@dataclass
 class CategoricalParameterRangeSpecification(Base):
     """
      CategoricalParameterRangeSpecification
@@ -2416,12 +2157,10 @@ class CategoricalParameterRangeSpecification(Base):
  	 Attributes
 	----------------------
  	values: 	 <p>The allowed categories for the hyperparameter.</p>
-
     """
     values: List[str]
 
 
-@dataclass
 class ChannelSpecification(Base):
     """
      ChannelSpecification
@@ -2435,7 +2174,6 @@ class ChannelSpecification(Base):
  	supported_content_types: 	 <p>The supported MIME types for the data.</p>
  	supported_compression_types: 	 <p>The allowed compression types, if data compression is used.</p>
  	supported_input_modes: 	 <p>The allowed input mode, either FILE or PIPE.</p> <p>In FILE mode, Amazon SageMaker copies the data from the input source onto the local Amazon Elastic Block Store (Amazon EBS) volumes before starting your training algorithm. This is the most commonly used input mode.</p> <p>In PIPE mode, Amazon SageMaker streams input data from the source directly to your algorithm without using the EBS volume.</p>
-
     """
     name: str
     supported_content_types: List[str]
@@ -2445,7 +2183,6 @@ class ChannelSpecification(Base):
     supported_compression_types: Optional[List[str]] = Unassigned()
 
 
-@dataclass
 class CheckpointConfig(Base):
     """
      CheckpointConfig
@@ -2455,13 +2192,11 @@ class CheckpointConfig(Base):
 	----------------------
  	s3_uri: 	 <p>Identifies the S3 path where you want SageMaker to store checkpoints. For example, <code>s3://bucket-name/key-name-prefix</code>.</p>
  	local_path: 	 <p>(Optional) The local directory where checkpoints are written. The default directory is <code>/opt/ml/checkpoints/</code>. </p>
-
     """
     s3_uri: str
     local_path: Optional[str] = Unassigned()
 
 
-@dataclass
 class ClarifyCheckStepMetadata(Base):
     """
      ClarifyCheckStepMetadata
@@ -2477,7 +2212,6 @@ class ClarifyCheckStepMetadata(Base):
  	check_job_arn: 	 <p>The Amazon Resource Name (ARN) of the check processing job that was run by this step's execution.</p>
  	skip_check: 	 <p>This flag indicates if the drift check against the previous baseline will be skipped or not. If it is set to <code>False</code>, the previous baseline of the configured check type must be available.</p>
  	register_new_baseline: 	 <p>This flag indicates if a newly calculated baseline can be accessed through step properties <code>BaselineUsedForDriftCheckConstraints</code> and <code>BaselineUsedForDriftCheckStatistics</code>. If it is set to <code>False</code>, the previous baseline of the configured check type must also be available. These can be accessed through the <code>BaselineUsedForDriftCheckConstraints</code> property. </p>
-
     """
     check_type: Optional[str] = Unassigned()
     baseline_used_for_drift_check_constraints: Optional[str] = Unassigned()
@@ -2489,7 +2223,6 @@ class ClarifyCheckStepMetadata(Base):
     register_new_baseline: Optional[bool] = Unassigned()
 
 
-@dataclass
 class ClarifyInferenceConfig(Base):
     """
      ClarifyInferenceConfig
@@ -2508,7 +2241,6 @@ class ClarifyInferenceConfig(Base):
  	label_headers: 	 <p>For multiclass classification problems, the label headers are the names of the classes. Otherwise, the label header is the name of the predicted label. These are used to help readability for the output of the <code>InvokeEndpoint</code> API. See the <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/clarify-online-explainability-invoke-endpoint.html#clarify-online-explainability-response">response</a> section under <b>Invoke the endpoint</b> in the Developer Guide for more information. If there are no label headers in the model container output, provide them manually using this parameter.</p>
  	feature_headers: 	 <p>The names of the features. If provided, these are included in the endpoint response payload to help readability of the <code>InvokeEndpoint</code> output. See the <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/clarify-online-explainability-invoke-endpoint.html#clarify-online-explainability-response">Response</a> section under <b>Invoke the endpoint</b> in the Developer Guide for more information.</p>
  	feature_types: 	 <p>A list of data types of the features (optional). Applicable only to NLP explainability. If provided, <code>FeatureTypes</code> must have at least one <code>'text'</code> string (for example, <code>['text']</code>). If <code>FeatureTypes</code> is not provided, the explainer infers the feature types based on the baseline data. The feature types are included in the endpoint response payload. For additional information see the <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/clarify-online-explainability-invoke-endpoint.html#clarify-online-explainability-response">response</a> section under <b>Invoke the endpoint</b> in the Developer Guide for more information.</p>
-
     """
     features_attribute: Optional[str] = Unassigned()
     content_template: Optional[str] = Unassigned()
@@ -2523,7 +2255,6 @@ class ClarifyInferenceConfig(Base):
     feature_types: Optional[List[str]] = Unassigned()
 
 
-@dataclass
 class ClarifyShapBaselineConfig(Base):
     """
      ClarifyShapBaselineConfig
@@ -2534,14 +2265,12 @@ class ClarifyShapBaselineConfig(Base):
  	mime_type: 	 <p>The MIME type of the baseline data. Choose from <code>'text/csv'</code> or <code>'application/jsonlines'</code>. Defaults to <code>'text/csv'</code>.</p>
  	shap_baseline: 	 <p>The inline SHAP baseline data in string format. <code>ShapBaseline</code> can have one or multiple records to be used as the baseline dataset. The format of the SHAP baseline file should be the same format as the training dataset. For example, if the training dataset is in CSV format and each record contains four features, and all features are numerical, then the format of the baseline data should also share these characteristics. For natural language processing (NLP) of text columns, the baseline value should be the value used to replace the unit of text specified by the <code>Granularity</code> of the <code>TextConfig</code> parameter. The size limit for <code>ShapBasline</code> is 4 KB. Use the <code>ShapBaselineUri</code> parameter if you want to provide more than 4 KB of baseline data.</p>
  	shap_baseline_uri: 	 <p>The uniform resource identifier (URI) of the S3 bucket where the SHAP baseline file is stored. The format of the SHAP baseline file should be the same format as the format of the training dataset. For example, if the training dataset is in CSV format, and each record in the training dataset has four features, and all features are numerical, then the baseline file should also have this same format. Each record should contain only the features. If you are using a virtual private cloud (VPC), the <code>ShapBaselineUri</code> should be accessible to the VPC. For more information about setting up endpoints with Amazon Virtual Private Cloud, see <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/infrastructure-give-access.html">Give SageMaker access to Resources in your Amazon Virtual Private Cloud</a>.</p>
-
     """
     mime_type: Optional[str] = Unassigned()
     shap_baseline: Optional[str] = Unassigned()
     shap_baseline_uri: Optional[str] = Unassigned()
 
 
-@dataclass
 class ClarifyTextConfig(Base):
     """
      ClarifyTextConfig
@@ -2551,13 +2280,11 @@ class ClarifyTextConfig(Base):
 	----------------------
  	language: 	 <p>Specifies the language of the text features in <a href=" https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes">ISO 639-1</a> or <a href="https://en.wikipedia.org/wiki/ISO_639-3">ISO 639-3</a> code of a supported language. </p> <note> <p>For a mix of multiple languages, use code <code>'xx'</code>.</p> </note>
  	granularity: 	 <p>The unit of granularity for the analysis of text features. For example, if the unit is <code>'token'</code>, then each token (like a word in English) of the text is treated as a feature. SHAP values are computed for each unit/feature.</p>
-
     """
     language: str
     granularity: str
 
 
-@dataclass
 class ClarifyShapConfig(Base):
     """
      ClarifyShapConfig
@@ -2570,7 +2297,6 @@ class ClarifyShapConfig(Base):
  	use_logit: 	 <p>A Boolean toggle to indicate if you want to use the logit function (true) or log-odds units (false) for model predictions. Defaults to false.</p>
  	seed: 	 <p>The starting value used to initialize the random number generator in the explainer. Provide a value for this parameter to obtain a deterministic SHAP result.</p>
  	text_config: 	 <p>A parameter that indicates if text features are treated as text and explanations are provided for individual units of text. Required for natural language processing (NLP) explainability only.</p>
-
     """
     shap_baseline_config: ClarifyShapBaselineConfig
     number_of_samples: Optional[int] = Unassigned()
@@ -2579,7 +2305,6 @@ class ClarifyShapConfig(Base):
     text_config: Optional[ClarifyTextConfig] = Unassigned()
 
 
-@dataclass
 class ClarifyExplainerConfig(Base):
     """
      ClarifyExplainerConfig
@@ -2590,14 +2315,12 @@ class ClarifyExplainerConfig(Base):
  	enable_explanations: 	 <p>A JMESPath boolean expression used to filter which records to explain. Explanations are activated by default. See <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/clarify-online-explainability-create-endpoint.html#clarify-online-explainability-create-endpoint-enable"> <code>EnableExplanations</code> </a>for additional information.</p>
  	inference_config: 	 <p>The inference configuration parameter for the model container.</p>
  	shap_config: 	 <p>The configuration for SHAP analysis.</p>
-
     """
     shap_config: ClarifyShapConfig
     enable_explanations: Optional[str] = Unassigned()
     inference_config: Optional[ClarifyInferenceConfig] = Unassigned()
 
 
-@dataclass
 class ClusterLifeCycleConfig(Base):
     """
      ClusterLifeCycleConfig
@@ -2607,13 +2330,11 @@ class ClusterLifeCycleConfig(Base):
 	----------------------
  	source_s3_uri: 	 <p>An Amazon S3 bucket path where your LifeCycle scripts are stored.</p>
  	on_create: 	 <p>The directory of the LifeCycle script under <code>SourceS3Uri</code>. This LifeCycle script runs during cluster creation.</p>
-
     """
     source_s3_uri: str
     on_create: str
 
 
-@dataclass
 class ClusterInstanceGroupDetails(Base):
     """
      ClusterInstanceGroupDetails
@@ -2628,7 +2349,6 @@ class ClusterInstanceGroupDetails(Base):
  	life_cycle_config: 	 <p>Details of LifeCycle configuration for the instance group.</p>
  	execution_role: 	 <p>The execution role for the instance group to assume.</p>
  	threads_per_core: 	 <p>The number you specified to <code>TreadsPerCore</code> in <code>CreateCluster</code> for enabling or disabling multithreading. For instance types that support multithreading, you can specify 1 for disabling multithreading and 2 for enabling multithreading. For more information, see the reference table of <a href="https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/cpu-options-supported-instances-values.html">CPU cores and threads per CPU core per instance type</a> in the <i>Amazon Elastic Compute Cloud User Guide</i>.</p>
-
     """
     current_count: Optional[int] = Unassigned()
     target_count: Optional[int] = Unassigned()
@@ -2639,7 +2359,6 @@ class ClusterInstanceGroupDetails(Base):
     threads_per_core: Optional[int] = Unassigned()
 
 
-@dataclass
 class ClusterInstanceGroupSpecification(Base):
     """
      ClusterInstanceGroupSpecification
@@ -2653,7 +2372,6 @@ class ClusterInstanceGroupSpecification(Base):
  	life_cycle_config: 	 <p>Specifies the LifeCycle configuration for the instance group.</p>
  	execution_role: 	 <p>Specifies an IAM execution role to be assumed by the instance group.</p>
  	threads_per_core: 	 <p>Specifies the value for <b>Threads per core</b>. For instance types that support multithreading, you can specify <code>1</code> for disabling multithreading and <code>2</code> for enabling multithreading. For instance types that doesn't support multithreading, specify <code>1</code>. For more information, see the reference table of <a href="https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/cpu-options-supported-instances-values.html">CPU cores and threads per CPU core per instance type</a> in the <i>Amazon Elastic Compute Cloud User Guide</i>.</p>
-
     """
     instance_count: int
     instance_group_name: str
@@ -2663,7 +2381,6 @@ class ClusterInstanceGroupSpecification(Base):
     threads_per_core: Optional[int] = Unassigned()
 
 
-@dataclass
 class ClusterInstanceStatusDetails(Base):
     """
      ClusterInstanceStatusDetails
@@ -2673,13 +2390,11 @@ class ClusterInstanceStatusDetails(Base):
 	----------------------
  	status: 	 <p>The status of an instance in a SageMaker HyperPod cluster.</p>
  	message: 	 <p>The message from an instance in a SageMaker HyperPod cluster.</p>
-
     """
     status: str
     message: Optional[str] = Unassigned()
 
 
-@dataclass
 class ClusterNodeDetails(Base):
     """
      ClusterNodeDetails
@@ -2694,7 +2409,6 @@ class ClusterNodeDetails(Base):
  	launch_time: 	 <p>The time when the instance is launched.</p>
  	life_cycle_config: 	 <p>The LifeCycle configuration applied to the instance.</p>
  	threads_per_core: 	 <p>The number of threads per CPU core you specified under <code>CreateCluster</code>.</p>
-
     """
     instance_group_name: Optional[str] = Unassigned()
     instance_id: Optional[str] = Unassigned()
@@ -2705,7 +2419,6 @@ class ClusterNodeDetails(Base):
     threads_per_core: Optional[int] = Unassigned()
 
 
-@dataclass
 class ClusterNodeSummary(Base):
     """
      ClusterNodeSummary
@@ -2718,7 +2431,6 @@ class ClusterNodeSummary(Base):
  	instance_type: 	 <p>The type of the instance.</p>
  	launch_time: 	 <p>The time when the instance is launched.</p>
  	instance_status: 	 <p>The status of the instance.</p>
-
     """
     instance_group_name: str
     instance_id: str
@@ -2727,7 +2439,6 @@ class ClusterNodeSummary(Base):
     instance_status: ClusterInstanceStatusDetails
 
 
-@dataclass
 class ClusterSummary(Base):
     """
      ClusterSummary
@@ -2739,7 +2450,6 @@ class ClusterSummary(Base):
  	cluster_name: 	 <p>The name of the SageMaker HyperPod cluster.</p>
  	creation_time: 	 <p>The time when the SageMaker HyperPod cluster is created.</p>
  	cluster_status: 	 <p>The status of the SageMaker HyperPod cluster.</p>
-
     """
     cluster_arn: str
     cluster_name: str
@@ -2747,7 +2457,6 @@ class ClusterSummary(Base):
     cluster_status: str
 
 
-@dataclass
 class CodeEditorAppSettings(Base):
     """
      CodeEditorAppSettings
@@ -2757,13 +2466,11 @@ class CodeEditorAppSettings(Base):
 	----------------------
  	default_resource_spec
  	lifecycle_config_arns: 	 <p>The Amazon Resource Name (ARN) of the Code Editor application lifecycle configuration.</p>
-
     """
     default_resource_spec: Optional[ResourceSpec] = Unassigned()
     lifecycle_config_arns: Optional[List[str]] = Unassigned()
 
 
-@dataclass
 class CodeRepository(Base):
     """
      CodeRepository
@@ -2772,12 +2479,10 @@ class CodeRepository(Base):
  	 Attributes
 	----------------------
  	repository_url: 	 <p>The URL of the Git repository.</p>
-
     """
     repository_url: str
 
 
-@dataclass
 class GitConfig(Base):
     """
      GitConfig
@@ -2788,14 +2493,12 @@ class GitConfig(Base):
  	repository_url: 	 <p>The URL where the Git repository is located.</p>
  	branch: 	 <p>The default branch for the Git repository.</p>
  	secret_arn: 	 <p>The Amazon Resource Name (ARN) of the Amazon Web Services Secrets Manager secret that contains the credentials used to access the git repository. The secret must have a staging label of <code>AWSCURRENT</code> and must be in the following format:</p> <p> <code>{"username": <i>UserName</i>, "password": <i>Password</i>}</code> </p>
-
     """
     repository_url: str
     branch: Optional[str] = Unassigned()
     secret_arn: Optional[str] = Unassigned()
 
 
-@dataclass
 class CodeRepositorySummary(Base):
     """
      CodeRepositorySummary
@@ -2808,7 +2511,6 @@ class CodeRepositorySummary(Base):
  	creation_time: 	 <p>The date and time that the Git repository was created.</p>
  	last_modified_time: 	 <p>The date and time that the Git repository was last modified.</p>
  	git_config: 	 <p>Configuration details for the Git repository, including the URL where it is located and the ARN of the Amazon Web Services Secrets Manager secret that contains the credentials used to access the repository.</p>
-
     """
     code_repository_name: str
     code_repository_arn: str
@@ -2817,7 +2519,6 @@ class CodeRepositorySummary(Base):
     git_config: Optional[GitConfig] = Unassigned()
 
 
-@dataclass
 class CognitoConfig(Base):
     """
      CognitoConfig
@@ -2827,13 +2528,11 @@ class CognitoConfig(Base):
 	----------------------
  	user_pool: 	 <p>A <a href="https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-identity-pools.html"> user pool</a> is a user directory in Amazon Cognito. With a user pool, your users can sign in to your web or mobile app through Amazon Cognito. Your users can also sign in through social identity providers like Google, Facebook, Amazon, or Apple, and through SAML identity providers.</p>
  	client_id: 	 <p>The client ID for your Amazon Cognito user pool.</p>
-
     """
     user_pool: str
     client_id: str
 
 
-@dataclass
 class CognitoMemberDefinition(Base):
     """
      CognitoMemberDefinition
@@ -2844,14 +2543,12 @@ class CognitoMemberDefinition(Base):
  	user_pool: 	 <p>An identifier for a user pool. The user pool must be in the same region as the service that you are calling.</p>
  	user_group: 	 <p>An identifier for a user group.</p>
  	client_id: 	 <p>An identifier for an application client. You must create the app client ID using Amazon Cognito.</p>
-
     """
     user_pool: str
     user_group: str
     client_id: str
 
 
-@dataclass
 class VectorConfig(Base):
     """
      VectorConfig
@@ -2860,12 +2557,10 @@ class VectorConfig(Base):
  	 Attributes
 	----------------------
  	dimension: 	 <p>The number of elements in your vector.</p>
-
     """
     dimension: int
 
 
-@dataclass
 class CollectionConfig(Base):
     """
      CollectionConfig
@@ -2874,12 +2569,10 @@ class CollectionConfig(Base):
  	 Attributes
 	----------------------
  	vector_config: 	 <p>Configuration for your vector collection type.</p> <ul> <li> <p> <code>Dimension</code>: The number of elements in your vector.</p> </li> </ul>
-
     """
     vector_config: Optional[VectorConfig] = Unassigned()
 
 
-@dataclass
 class CollectionConfiguration(Base):
     """
      CollectionConfiguration
@@ -2889,13 +2582,11 @@ class CollectionConfiguration(Base):
 	----------------------
  	collection_name: 	 <p>The name of the tensor collection. The name must be unique relative to other rule configuration names.</p>
  	collection_parameters: 	 <p>Parameter values for the tensor collection. The allowed parameters are <code>"name"</code>, <code>"include_regex"</code>, <code>"reduction_config"</code>, <code>"save_config"</code>, <code>"tensor_names"</code>, and <code>"save_histogram"</code>.</p>
-
     """
     collection_name: Optional[str] = Unassigned()
     collection_parameters: Optional[Dict[str, str]] = Unassigned()
 
 
-@dataclass
 class CompilationJobSummary(Base):
     """
      CompilationJobSummary
@@ -2914,7 +2605,6 @@ class CompilationJobSummary(Base):
  	compilation_target_platform_accelerator: 	 <p>The type of accelerator that the model will run on after the compilation job has completed.</p>
  	last_modified_time: 	 <p>The time when the model compilation job was last modified.</p>
  	compilation_job_status: 	 <p>The status of the model compilation job.</p>
-
     """
     compilation_job_name: str
     compilation_job_arn: str
@@ -2929,7 +2619,6 @@ class CompilationJobSummary(Base):
     last_modified_time: Optional[datetime.datetime] = Unassigned()
 
 
-@dataclass
 class ConditionStepMetadata(Base):
     """
      ConditionStepMetadata
@@ -2938,12 +2627,10 @@ class ConditionStepMetadata(Base):
  	 Attributes
 	----------------------
  	outcome: 	 <p>The outcome of the Condition step evaluation.</p>
-
     """
     outcome: Optional[str] = Unassigned()
 
 
-@dataclass
 class ConflictException(Base):
     """
      ConflictException
@@ -2952,12 +2639,10 @@ class ConflictException(Base):
  	 Attributes
 	----------------------
  	message
-
     """
     message: Optional[str] = Unassigned()
 
 
-@dataclass
 class RepositoryAuthConfig(Base):
     """
      RepositoryAuthConfig
@@ -2966,12 +2651,10 @@ class RepositoryAuthConfig(Base):
  	 Attributes
 	----------------------
  	repository_credentials_provider_arn: 	 <p>The Amazon Resource Name (ARN) of an Amazon Web Services Lambda function that provides credentials to authenticate to the private Docker registry where your model image is hosted. For information about how to create an Amazon Web Services Lambda function, see <a href="https://docs.aws.amazon.com/lambda/latest/dg/getting-started-create-function.html">Create a Lambda function with the console</a> in the <i>Amazon Web Services Lambda Developer Guide</i>.</p>
-
     """
     repository_credentials_provider_arn: str
 
 
-@dataclass
 class ImageConfig(Base):
     """
      ImageConfig
@@ -2981,13 +2664,11 @@ class ImageConfig(Base):
 	----------------------
  	repository_access_mode: 	 <p>Set this to one of the following values:</p> <ul> <li> <p> <code>Platform</code> - The model image is hosted in Amazon ECR.</p> </li> <li> <p> <code>Vpc</code> - The model image is hosted in a private Docker registry in your VPC.</p> </li> </ul>
  	repository_auth_config: 	 <p>(Optional) Specifies an authentication configuration for the private docker registry where your model image is hosted. Specify a value for this property only if you specified <code>Vpc</code> as the value for the <code>RepositoryAccessMode</code> field, and the private Docker registry where the model image is hosted requires authentication.</p>
-
     """
     repository_access_mode: str
     repository_auth_config: Optional[RepositoryAuthConfig] = Unassigned()
 
 
-@dataclass
 class MultiModelConfig(Base):
     """
      MultiModelConfig
@@ -2996,12 +2677,10 @@ class MultiModelConfig(Base):
  	 Attributes
 	----------------------
  	model_cache_setting: 	 <p>Whether to cache models for a multi-model endpoint. By default, multi-model endpoints cache models so that a model does not have to be loaded into memory each time it is invoked. Some use cases do not benefit from model caching. For example, if an endpoint hosts a large number of models that are each invoked infrequently, the endpoint might perform better if you disable model caching. To disable model caching, set the value of this parameter to <code>Disabled</code>.</p>
-
     """
     model_cache_setting: Optional[str] = Unassigned()
 
 
-@dataclass
 class ContainerDefinition(Base):
     """
      ContainerDefinition
@@ -3019,7 +2698,6 @@ class ContainerDefinition(Base):
  	model_package_name: 	 <p>The name or Amazon Resource Name (ARN) of the model package to use to create the model.</p>
  	inference_specification_name: 	 <p>The inference specification name in the model package version.</p>
  	multi_model_config: 	 <p>Specifies additional configuration for multi-model endpoints.</p>
-
     """
     container_hostname: Optional[str] = Unassigned()
     image: Optional[str] = Unassigned()
@@ -3033,7 +2711,6 @@ class ContainerDefinition(Base):
     multi_model_config: Optional[MultiModelConfig] = Unassigned()
 
 
-@dataclass
 class ContextSource(Base):
     """
      ContextSource
@@ -3044,14 +2721,12 @@ class ContextSource(Base):
  	source_uri: 	 <p>The URI of the source.</p>
  	source_type: 	 <p>The type of the source.</p>
  	source_id: 	 <p>The ID of the source.</p>
-
     """
     source_uri: str
     source_type: Optional[str] = Unassigned()
     source_id: Optional[str] = Unassigned()
 
 
-@dataclass
 class ContextSummary(Base):
     """
      ContextSummary
@@ -3065,7 +2740,6 @@ class ContextSummary(Base):
  	context_type: 	 <p>The type of the context.</p>
  	creation_time: 	 <p>When the context was created.</p>
  	last_modified_time: 	 <p>When the context was last modified.</p>
-
     """
     context_arn: Optional[str] = Unassigned()
     context_name: Optional[str] = Unassigned()
@@ -3075,7 +2749,6 @@ class ContextSummary(Base):
     last_modified_time: Optional[datetime.datetime] = Unassigned()
 
 
-@dataclass
 class ContinuousParameterRange(Base):
     """
      ContinuousParameterRange
@@ -3087,7 +2760,6 @@ class ContinuousParameterRange(Base):
  	min_value: 	 <p>The minimum value for the hyperparameter. The tuning job uses floating-point values between this value and <code>MaxValue</code>for tuning.</p>
  	max_value: 	 <p>The maximum value for the hyperparameter. The tuning job uses floating-point values between <code>MinValue</code> value and this value for tuning.</p>
  	scaling_type: 	 <p>The scale that hyperparameter tuning uses to search the hyperparameter range. For information about choosing a hyperparameter scale, see <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/automatic-model-tuning-define-ranges.html#scaling-type">Hyperparameter Scaling</a>. One of the following values:</p> <dl> <dt>Auto</dt> <dd> <p>SageMaker hyperparameter tuning chooses the best scale for the hyperparameter.</p> </dd> <dt>Linear</dt> <dd> <p>Hyperparameter tuning searches the values in the hyperparameter range by using a linear scale.</p> </dd> <dt>Logarithmic</dt> <dd> <p>Hyperparameter tuning searches the values in the hyperparameter range by using a logarithmic scale.</p> <p>Logarithmic scaling works only for ranges that have only values greater than 0.</p> </dd> <dt>ReverseLogarithmic</dt> <dd> <p>Hyperparameter tuning searches the values in the hyperparameter range by using a reverse logarithmic scale.</p> <p>Reverse logarithmic scaling works only for ranges that are entirely within the range 0&lt;=x&lt;1.0.</p> </dd> </dl>
-
     """
     name: str
     min_value: str
@@ -3095,7 +2767,6 @@ class ContinuousParameterRange(Base):
     scaling_type: Optional[str] = Unassigned()
 
 
-@dataclass
 class ContinuousParameterRangeSpecification(Base):
     """
      ContinuousParameterRangeSpecification
@@ -3105,13 +2776,11 @@ class ContinuousParameterRangeSpecification(Base):
 	----------------------
  	min_value: 	 <p>The minimum floating-point value allowed.</p>
  	max_value: 	 <p>The maximum floating-point value allowed.</p>
-
     """
     min_value: str
     max_value: str
 
 
-@dataclass
 class ConvergenceDetected(Base):
     """
      ConvergenceDetected
@@ -3120,12 +2789,10 @@ class ConvergenceDetected(Base):
  	 Attributes
 	----------------------
  	complete_on_convergence: 	 <p>A flag to stop a tuning job once AMT has detected that the job has converged.</p>
-
     """
     complete_on_convergence: Optional[str] = Unassigned()
 
 
-@dataclass
 class MetadataProperties(Base):
     """
      MetadataProperties
@@ -3137,7 +2804,6 @@ class MetadataProperties(Base):
  	repository: 	 <p>The repository.</p>
  	generated_by: 	 <p>The entity this entity was generated by.</p>
  	project_id: 	 <p>The project ID.</p>
-
     """
     commit_id: Optional[str] = Unassigned()
     repository: Optional[str] = Unassigned()
@@ -3145,7 +2811,6 @@ class MetadataProperties(Base):
     project_id: Optional[str] = Unassigned()
 
 
-@dataclass
 class IntegerParameterRangeSpecification(Base):
     """
      IntegerParameterRangeSpecification
@@ -3155,13 +2820,11 @@ class IntegerParameterRangeSpecification(Base):
 	----------------------
  	min_value: 	 <p>The minimum integer value allowed.</p>
  	max_value: 	 <p>The maximum integer value allowed.</p>
-
     """
     min_value: str
     max_value: str
 
 
-@dataclass
 class ParameterRange(Base):
     """
      ParameterRange
@@ -3172,14 +2835,12 @@ class ParameterRange(Base):
  	integer_parameter_range_specification: 	 <p>A <code>IntegerParameterRangeSpecification</code> object that defines the possible values for an integer hyperparameter.</p>
  	continuous_parameter_range_specification: 	 <p>A <code>ContinuousParameterRangeSpecification</code> object that defines the possible values for a continuous hyperparameter.</p>
  	categorical_parameter_range_specification: 	 <p>A <code>CategoricalParameterRangeSpecification</code> object that defines the possible values for a categorical hyperparameter.</p>
-
     """
     integer_parameter_range_specification: Optional[IntegerParameterRangeSpecification] = Unassigned()
     continuous_parameter_range_specification: Optional[ContinuousParameterRangeSpecification] = Unassigned()
     categorical_parameter_range_specification: Optional[CategoricalParameterRangeSpecification] = Unassigned()
 
 
-@dataclass
 class HyperParameterSpecification(Base):
     """
      HyperParameterSpecification
@@ -3194,7 +2855,6 @@ class HyperParameterSpecification(Base):
  	is_tunable: 	 <p>Indicates whether this hyperparameter is tunable in a hyperparameter tuning job.</p>
  	is_required: 	 <p>Indicates whether this hyperparameter is required.</p>
  	default_value: 	 <p>The default value for this hyperparameter. If a default value is specified, a hyperparameter cannot be required.</p>
-
     """
     name: str
     type: str
@@ -3205,7 +2865,6 @@ class HyperParameterSpecification(Base):
     default_value: Optional[str] = Unassigned()
 
 
-@dataclass
 class HyperParameterTuningJobObjective(Base):
     """
      HyperParameterTuningJobObjective
@@ -3215,13 +2874,11 @@ class HyperParameterTuningJobObjective(Base):
 	----------------------
  	type: 	 <p>Whether to minimize or maximize the objective metric.</p>
  	metric_name: 	 <p>The name of the metric to use for the objective metric.</p>
-
     """
     type: str
     metric_name: str
 
 
-@dataclass
 class TrainingSpecification(Base):
     """
      TrainingSpecification
@@ -3238,7 +2895,6 @@ class TrainingSpecification(Base):
  	training_channels: 	 <p>A list of <code>ChannelSpecification</code> objects, which specify the input sources to be used by the algorithm.</p>
  	supported_tuning_job_objective_metrics: 	 <p>A list of the metrics that the algorithm emits that can be used as the objective metric in a hyperparameter tuning job.</p>
  	additional_s3_data_source: 	 <p>The additional data source used during the training job.</p>
-
     """
     training_image: str
     supported_training_instance_types: List[str]
@@ -3251,7 +2907,6 @@ class TrainingSpecification(Base):
     additional_s3_data_source: Optional[AdditionalS3DataSource] = Unassigned()
 
 
-@dataclass
 class ModelDeployConfig(Base):
     """
      ModelDeployConfig
@@ -3261,13 +2916,11 @@ class ModelDeployConfig(Base):
 	----------------------
  	auto_generate_endpoint_name: 	 <p>Set to <code>True</code> to automatically generate an endpoint name for a one-click Autopilot model deployment; set to <code>False</code> otherwise. The default value is <code>False</code>.</p> <note> <p>If you set <code>AutoGenerateEndpointName</code> to <code>True</code>, do not specify the <code>EndpointName</code>; otherwise a 400 error is thrown.</p> </note>
  	endpoint_name: 	 <p>Specifies the endpoint name to use for a one-click Autopilot model deployment if the endpoint name is not generated automatically.</p> <note> <p>Specify the <code>EndpointName</code> if and only if you set <code>AutoGenerateEndpointName</code> to <code>False</code>; otherwise a 400 error is thrown.</p> </note>
-
     """
     auto_generate_endpoint_name: Optional[bool] = Unassigned()
     endpoint_name: Optional[str] = Unassigned()
 
 
-@dataclass
 class InputConfig(Base):
     """
      InputConfig
@@ -3279,7 +2932,6 @@ class InputConfig(Base):
  	data_input_config: 	 <p>Specifies the name and shape of the expected data inputs for your trained model with a JSON dictionary form. The data inputs are <code>Framework</code> specific. </p> <ul> <li> <p> <code>TensorFlow</code>: You must specify the name and shape (NHWC format) of the expected data inputs using a dictionary format for your trained model. The dictionary formats required for the console and CLI are different.</p> <ul> <li> <p>Examples for one input:</p> <ul> <li> <p>If using the console, <code>{"input":[1,1024,1024,3]}</code> </p> </li> <li> <p>If using the CLI, <code>{\"input\":[1,1024,1024,3]}</code> </p> </li> </ul> </li> <li> <p>Examples for two inputs:</p> <ul> <li> <p>If using the console, <code>{"data1": [1,28,28,1], "data2":[1,28,28,1]}</code> </p> </li> <li> <p>If using the CLI, <code>{\"data1\": [1,28,28,1], \"data2\":[1,28,28,1]}</code> </p> </li> </ul> </li> </ul> </li> <li> <p> <code>KERAS</code>: You must specify the name and shape (NCHW format) of expected data inputs using a dictionary format for your trained model. Note that while Keras model artifacts should be uploaded in NHWC (channel-last) format, <code>DataInputConfig</code> should be specified in NCHW (channel-first) format. The dictionary formats required for the console and CLI are different.</p> <ul> <li> <p>Examples for one input:</p> <ul> <li> <p>If using the console, <code>{"input_1":[1,3,224,224]}</code> </p> </li> <li> <p>If using the CLI, <code>{\"input_1\":[1,3,224,224]}</code> </p> </li> </ul> </li> <li> <p>Examples for two inputs:</p> <ul> <li> <p>If using the console, <code>{"input_1": [1,3,224,224], "input_2":[1,3,224,224]} </code> </p> </li> <li> <p>If using the CLI, <code>{\"input_1\": [1,3,224,224], \"input_2\":[1,3,224,224]}</code> </p> </li> </ul> </li> </ul> </li> <li> <p> <code>MXNET/ONNX/DARKNET</code>: You must specify the name and shape (NCHW format) of the expected data inputs in order using a dictionary format for your trained model. The dictionary formats required for the console and CLI are different.</p> <ul> <li> <p>Examples for one input:</p> <ul> <li> <p>If using the console, <code>{"data":[1,3,1024,1024]}</code> </p> </li> <li> <p>If using the CLI, <code>{\"data\":[1,3,1024,1024]}</code> </p> </li> </ul> </li> <li> <p>Examples for two inputs:</p> <ul> <li> <p>If using the console, <code>{"var1": [1,1,28,28], "var2":[1,1,28,28]} </code> </p> </li> <li> <p>If using the CLI, <code>{\"var1\": [1,1,28,28], \"var2\":[1,1,28,28]}</code> </p> </li> </ul> </li> </ul> </li> <li> <p> <code>PyTorch</code>: You can either specify the name and shape (NCHW format) of expected data inputs in order using a dictionary format for your trained model or you can specify the shape only using a list format. The dictionary formats required for the console and CLI are different. The list formats for the console and CLI are the same.</p> <ul> <li> <p>Examples for one input in dictionary format:</p> <ul> <li> <p>If using the console, <code>{"input0":[1,3,224,224]}</code> </p> </li> <li> <p>If using the CLI, <code>{\"input0\":[1,3,224,224]}</code> </p> </li> </ul> </li> <li> <p>Example for one input in list format: <code>[[1,3,224,224]]</code> </p> </li> <li> <p>Examples for two inputs in dictionary format:</p> <ul> <li> <p>If using the console, <code>{"input0":[1,3,224,224], "input1":[1,3,224,224]}</code> </p> </li> <li> <p>If using the CLI, <code>{\"input0\":[1,3,224,224], \"input1\":[1,3,224,224]} </code> </p> </li> </ul> </li> <li> <p>Example for two inputs in list format: <code>[[1,3,224,224], [1,3,224,224]]</code> </p> </li> </ul> </li> <li> <p> <code>XGBOOST</code>: input data name and shape are not needed.</p> </li> </ul> <p> <code>DataInputConfig</code> supports the following parameters for <code>CoreML</code> <code>TargetDevice</code> (ML Model format):</p> <ul> <li> <p> <code>shape</code>: Input shape, for example <code>{"input_1": {"shape": [1,224,224,3]}}</code>. In addition to static input shapes, CoreML converter supports Flexible input shapes:</p> <ul> <li> <p>Range Dimension. You can use the Range Dimension feature if you know the input shape will be within some specific interval in that dimension, for example: <code>{"input_1": {"shape": ["1..10", 224, 224, 3]}}</code> </p> </li> <li> <p>Enumerated shapes. Sometimes, the models are trained to work only on a select set of inputs. You can enumerate all supported input shapes, for example: <code>{"input_1": {"shape": [[1, 224, 224, 3], [1, 160, 160, 3]]}}</code> </p> </li> </ul> </li> <li> <p> <code>default_shape</code>: Default input shape. You can set a default shape during conversion for both Range Dimension and Enumerated Shapes. For example <code>{"input_1": {"shape": ["1..10", 224, 224, 3], "default_shape": [1, 224, 224, 3]}}</code> </p> </li> <li> <p> <code>type</code>: Input type. Allowed values: <code>Image</code> and <code>Tensor</code>. By default, the converter generates an ML Model with inputs of type Tensor (MultiArray). User can set input type to be Image. Image input type requires additional input parameters such as <code>bias</code> and <code>scale</code>.</p> </li> <li> <p> <code>bias</code>: If the input type is an Image, you need to provide the bias vector.</p> </li> <li> <p> <code>scale</code>: If the input type is an Image, you need to provide a scale factor.</p> </li> </ul> <p>CoreML <code>ClassifierConfig</code> parameters can be specified using <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_OutputConfig.html">OutputConfig</a> <code>CompilerOptions</code>. CoreML converter supports Tensorflow and PyTorch models. CoreML conversion examples:</p> <ul> <li> <p>Tensor type input:</p> <ul> <li> <p> <code>"DataInputConfig": {"input_1": {"shape": [[1,224,224,3], [1,160,160,3]], "default_shape": [1,224,224,3]}}</code> </p> </li> </ul> </li> <li> <p>Tensor type input without input name (PyTorch):</p> <ul> <li> <p> <code>"DataInputConfig": [{"shape": [[1,3,224,224], [1,3,160,160]], "default_shape": [1,3,224,224]}]</code> </p> </li> </ul> </li> <li> <p>Image type input:</p> <ul> <li> <p> <code>"DataInputConfig": {"input_1": {"shape": [[1,224,224,3], [1,160,160,3]], "default_shape": [1,224,224,3], "type": "Image", "bias": [-1,-1,-1], "scale": 0.007843137255}}</code> </p> </li> <li> <p> <code>"CompilerOptions": {"class_labels": "imagenet_labels_1000.txt"}</code> </p> </li> </ul> </li> <li> <p>Image type input without input name (PyTorch):</p> <ul> <li> <p> <code>"DataInputConfig": [{"shape": [[1,3,224,224], [1,3,160,160]], "default_shape": [1,3,224,224], "type": "Image", "bias": [-1,-1,-1], "scale": 0.007843137255}]</code> </p> </li> <li> <p> <code>"CompilerOptions": {"class_labels": "imagenet_labels_1000.txt"}</code> </p> </li> </ul> </li> </ul> <p>Depending on the model format, <code>DataInputConfig</code> requires the following parameters for <code>ml_eia2</code> <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_OutputConfig.html#sagemaker-Type-OutputConfig-TargetDevice">OutputConfig:TargetDevice</a>.</p> <ul> <li> <p>For TensorFlow models saved in the SavedModel format, specify the input names from <code>signature_def_key</code> and the input model shapes for <code>DataInputConfig</code>. Specify the <code>signature_def_key</code> in <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_OutputConfig.html#sagemaker-Type-OutputConfig-CompilerOptions"> <code>OutputConfig:CompilerOptions</code> </a> if the model does not use TensorFlow's default signature def key. For example:</p> <ul> <li> <p> <code>"DataInputConfig": {"inputs": [1, 224, 224, 3]}</code> </p> </li> <li> <p> <code>"CompilerOptions": {"signature_def_key": "serving_custom"}</code> </p> </li> </ul> </li> <li> <p>For TensorFlow models saved as a frozen graph, specify the input tensor names and shapes in <code>DataInputConfig</code> and the output tensor names for <code>output_names</code> in <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_OutputConfig.html#sagemaker-Type-OutputConfig-CompilerOptions"> <code>OutputConfig:CompilerOptions</code> </a>. For example:</p> <ul> <li> <p> <code>"DataInputConfig": {"input_tensor:0": [1, 224, 224, 3]}</code> </p> </li> <li> <p> <code>"CompilerOptions": {"output_names": ["output_tensor:0"]}</code> </p> </li> </ul> </li> </ul>
  	framework: 	 <p>Identifies the framework in which the model was trained. For example: TENSORFLOW.</p>
  	framework_version: 	 <p>Specifies the framework version to use. This API field is only supported for the MXNet, PyTorch, TensorFlow and TensorFlow Lite frameworks.</p> <p>For information about framework versions supported for cloud targets and edge devices, see <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/neo-supported-cloud.html">Cloud Supported Instance Types and Frameworks</a> and <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/neo-supported-devices-edge-frameworks.html">Edge Supported Frameworks</a>.</p>
-
     """
     s3_uri: str
     framework: str
@@ -3287,7 +2939,6 @@ class InputConfig(Base):
     framework_version: Optional[str] = Unassigned()
 
 
-@dataclass
 class TargetPlatform(Base):
     """
      TargetPlatform
@@ -3298,14 +2949,12 @@ class TargetPlatform(Base):
  	os: 	 <p>Specifies a target platform OS.</p> <ul> <li> <p> <code>LINUX</code>: Linux-based operating systems.</p> </li> <li> <p> <code>ANDROID</code>: Android operating systems. Android API level can be specified using the <code>ANDROID_PLATFORM</code> compiler option. For example, <code>"CompilerOptions": {'ANDROID_PLATFORM': 28}</code> </p> </li> </ul>
  	arch: 	 <p>Specifies a target platform architecture.</p> <ul> <li> <p> <code>X86_64</code>: 64-bit version of the x86 instruction set.</p> </li> <li> <p> <code>X86</code>: 32-bit version of the x86 instruction set.</p> </li> <li> <p> <code>ARM64</code>: ARMv8 64-bit CPU.</p> </li> <li> <p> <code>ARM_EABIHF</code>: ARMv7 32-bit, Hard Float.</p> </li> <li> <p> <code>ARM_EABI</code>: ARMv7 32-bit, Soft Float. Used by Android 32-bit ARM platform.</p> </li> </ul>
  	accelerator: 	 <p>Specifies a target platform accelerator (optional).</p> <ul> <li> <p> <code>NVIDIA</code>: Nvidia graphics processing unit. It also requires <code>gpu-code</code>, <code>trt-ver</code>, <code>cuda-ver</code> compiler options</p> </li> <li> <p> <code>MALI</code>: ARM Mali graphics processor</p> </li> <li> <p> <code>INTEL_GRAPHICS</code>: Integrated Intel graphics</p> </li> </ul>
-
     """
     os: str
     arch: str
     accelerator: Optional[str] = Unassigned()
 
 
-@dataclass
 class OutputConfig(Base):
     """
      OutputConfig
@@ -3318,7 +2967,6 @@ class OutputConfig(Base):
  	target_platform: 	 <p>Contains information about a target platform that you want your model to run on, such as OS, architecture, and accelerators. It is an alternative of <code>TargetDevice</code>.</p> <p>The following examples show how to configure the <code>TargetPlatform</code> and <code>CompilerOptions</code> JSON strings for popular target platforms: </p> <ul> <li> <p>Raspberry Pi 3 Model B+</p> <p> <code>"TargetPlatform": {"Os": "LINUX", "Arch": "ARM_EABIHF"},</code> </p> <p> <code> "CompilerOptions": {'mattr': ['+neon']}</code> </p> </li> <li> <p>Jetson TX2</p> <p> <code>"TargetPlatform": {"Os": "LINUX", "Arch": "ARM64", "Accelerator": "NVIDIA"},</code> </p> <p> <code> "CompilerOptions": {'gpu-code': 'sm_62', 'trt-ver': '6.0.1', 'cuda-ver': '10.0'}</code> </p> </li> <li> <p>EC2 m5.2xlarge instance OS</p> <p> <code>"TargetPlatform": {"Os": "LINUX", "Arch": "X86_64", "Accelerator": "NVIDIA"},</code> </p> <p> <code> "CompilerOptions": {'mcpu': 'skylake-avx512'}</code> </p> </li> <li> <p>RK3399</p> <p> <code>"TargetPlatform": {"Os": "LINUX", "Arch": "ARM64", "Accelerator": "MALI"}</code> </p> </li> <li> <p>ARMv7 phone (CPU)</p> <p> <code>"TargetPlatform": {"Os": "ANDROID", "Arch": "ARM_EABI"},</code> </p> <p> <code> "CompilerOptions": {'ANDROID_PLATFORM': 25, 'mattr': ['+neon']}</code> </p> </li> <li> <p>ARMv8 phone (CPU)</p> <p> <code>"TargetPlatform": {"Os": "ANDROID", "Arch": "ARM64"},</code> </p> <p> <code> "CompilerOptions": {'ANDROID_PLATFORM': 29}</code> </p> </li> </ul>
  	compiler_options: 	 <p>Specifies additional parameters for compiler options in JSON format. The compiler options are <code>TargetPlatform</code> specific. It is required for NVIDIA accelerators and highly recommended for CPU compilations. For any other cases, it is optional to specify <code>CompilerOptions.</code> </p> <ul> <li> <p> <code>DTYPE</code>: Specifies the data type for the input. When compiling for <code>ml_*</code> (except for <code>ml_inf</code>) instances using PyTorch framework, provide the data type (dtype) of the model's input. <code>"float32"</code> is used if <code>"DTYPE"</code> is not specified. Options for data type are:</p> <ul> <li> <p>float32: Use either <code>"float"</code> or <code>"float32"</code>.</p> </li> <li> <p>int64: Use either <code>"int64"</code> or <code>"long"</code>.</p> </li> </ul> <p> For example, <code>{"dtype" : "float32"}</code>.</p> </li> <li> <p> <code>CPU</code>: Compilation for CPU supports the following compiler options.</p> <ul> <li> <p> <code>mcpu</code>: CPU micro-architecture. For example, <code>{'mcpu': 'skylake-avx512'}</code> </p> </li> <li> <p> <code>mattr</code>: CPU flags. For example, <code>{'mattr': ['+neon', '+vfpv4']}</code> </p> </li> </ul> </li> <li> <p> <code>ARM</code>: Details of ARM CPU compilations.</p> <ul> <li> <p> <code>NEON</code>: NEON is an implementation of the Advanced SIMD extension used in ARMv7 processors.</p> <p>For example, add <code>{'mattr': ['+neon']}</code> to the compiler options if compiling for ARM 32-bit platform with the NEON support.</p> </li> </ul> </li> <li> <p> <code>NVIDIA</code>: Compilation for NVIDIA GPU supports the following compiler options.</p> <ul> <li> <p> <code>gpu_code</code>: Specifies the targeted architecture.</p> </li> <li> <p> <code>trt-ver</code>: Specifies the TensorRT versions in x.y.z. format.</p> </li> <li> <p> <code>cuda-ver</code>: Specifies the CUDA version in x.y format.</p> </li> </ul> <p>For example, <code>{'gpu-code': 'sm_72', 'trt-ver': '6.0.1', 'cuda-ver': '10.1'}</code> </p> </li> <li> <p> <code>ANDROID</code>: Compilation for the Android OS supports the following compiler options:</p> <ul> <li> <p> <code>ANDROID_PLATFORM</code>: Specifies the Android API levels. Available levels range from 21 to 29. For example, <code>{'ANDROID_PLATFORM': 28}</code>.</p> </li> <li> <p> <code>mattr</code>: Add <code>{'mattr': ['+neon']}</code> to compiler options if compiling for ARM 32-bit platform with NEON support.</p> </li> </ul> </li> <li> <p> <code>INFERENTIA</code>: Compilation for target ml_inf1 uses compiler options passed in as a JSON string. For example, <code>"CompilerOptions": "\"--verbose 1 --num-neuroncores 2 -O2\""</code>. </p> <p>For information about supported compiler options, see <a href="https://awsdocs-neuron.readthedocs-hosted.com/en/latest/compiler/neuronx-cc/api-reference-guide/neuron-compiler-cli-reference-guide.html"> Neuron Compiler CLI Reference Guide</a>. </p> </li> <li> <p> <code>CoreML</code>: Compilation for the CoreML <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_OutputConfig.html">OutputConfig</a> <code>TargetDevice</code> supports the following compiler options:</p> <ul> <li> <p> <code>class_labels</code>: Specifies the classification labels file name inside input tar.gz file. For example, <code>{"class_labels": "imagenet_labels_1000.txt"}</code>. Labels inside the txt file should be separated by newlines.</p> </li> </ul> </li> <li> <p> <code>EIA</code>: Compilation for the Elastic Inference Accelerator supports the following compiler options:</p> <ul> <li> <p> <code>precision_mode</code>: Specifies the precision of compiled artifacts. Supported values are <code>"FP16"</code> and <code>"FP32"</code>. Default is <code>"FP32"</code>.</p> </li> <li> <p> <code>signature_def_key</code>: Specifies the signature to use for models in SavedModel format. Defaults is TensorFlow's default signature def key.</p> </li> <li> <p> <code>output_names</code>: Specifies a list of output tensor names for models in FrozenGraph format. Set at most one API field, either: <code>signature_def_key</code> or <code>output_names</code>.</p> </li> </ul> <p>For example: <code>{"precision_mode": "FP32", "output_names": ["output:0"]}</code> </p> </li> </ul>
  	kms_key_id: 	 <p>The Amazon Web Services Key Management Service key (Amazon Web Services KMS) that Amazon SageMaker uses to encrypt your output models with Amazon S3 server-side encryption after compilation job. If you don't provide a KMS key ID, Amazon SageMaker uses the default KMS key for Amazon S3 for your role's account. For more information, see <a href="https://docs.aws.amazon.com/AmazonS3/latest/userguide/UsingKMSEncryption.html">KMS-Managed Encryption Keys</a> in the <i>Amazon Simple Storage Service Developer Guide.</i> </p> <p>The KmsKeyId can be any of the following formats: </p> <ul> <li> <p>Key ID: <code>1234abcd-12ab-34cd-56ef-1234567890ab</code> </p> </li> <li> <p>Key ARN: <code>arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab</code> </p> </li> <li> <p>Alias name: <code>alias/ExampleAlias</code> </p> </li> <li> <p>Alias name ARN: <code>arn:aws:kms:us-west-2:111122223333:alias/ExampleAlias</code> </p> </li> </ul>
-
     """
     s3_output_location: str
     target_device: Optional[str] = Unassigned()
@@ -3327,7 +2975,6 @@ class OutputConfig(Base):
     kms_key_id: Optional[str] = Unassigned()
 
 
-@dataclass
 class NeoVpcConfig(Base):
     """
      NeoVpcConfig
@@ -3337,13 +2984,11 @@ class NeoVpcConfig(Base):
 	----------------------
  	security_group_ids: 	 <p>The VPC security group IDs. IDs have the form of <code>sg-xxxxxxxx</code>. Specify the security groups for the VPC that is specified in the <code>Subnets</code> field.</p>
  	subnets: 	 <p>The ID of the subnets in the VPC that you want to connect the compilation job to for accessing the model in Amazon S3.</p>
-
     """
     security_group_ids: List[str]
     subnets: List[str]
 
 
-@dataclass
 class MonitoringConstraintsResource(Base):
     """
      MonitoringConstraintsResource
@@ -3352,12 +2997,10 @@ class MonitoringConstraintsResource(Base):
  	 Attributes
 	----------------------
  	s3_uri: 	 <p>The Amazon S3 URI for the constraints resource.</p>
-
     """
     s3_uri: Optional[str] = Unassigned()
 
 
-@dataclass
 class MonitoringStatisticsResource(Base):
     """
      MonitoringStatisticsResource
@@ -3366,12 +3009,10 @@ class MonitoringStatisticsResource(Base):
  	 Attributes
 	----------------------
  	s3_uri: 	 <p>The Amazon S3 URI for the statistics resource.</p>
-
     """
     s3_uri: Optional[str] = Unassigned()
 
 
-@dataclass
 class DataQualityBaselineConfig(Base):
     """
      DataQualityBaselineConfig
@@ -3382,14 +3023,12 @@ class DataQualityBaselineConfig(Base):
  	baselining_job_name: 	 <p>The name of the job that performs baselining for the data quality monitoring job.</p>
  	constraints_resource
  	statistics_resource
-
     """
     baselining_job_name: Optional[str] = Unassigned()
     constraints_resource: Optional[MonitoringConstraintsResource] = Unassigned()
     statistics_resource: Optional[MonitoringStatisticsResource] = Unassigned()
 
 
-@dataclass
 class DataQualityAppSpecification(Base):
     """
      DataQualityAppSpecification
@@ -3403,7 +3042,6 @@ class DataQualityAppSpecification(Base):
  	record_preprocessor_source_uri: 	 <p>An Amazon S3 URI to a script that is called per row prior to running analysis. It can base64 decode the payload and convert it into a flattened JSON so that the built-in container can use the converted data. Applicable only for the built-in (first party) containers.</p>
  	post_analytics_processor_source_uri: 	 <p>An Amazon S3 URI to a script that is called after analysis has been performed. Applicable only for the built-in (first party) containers.</p>
  	environment: 	 <p>Sets the environment variables in the container that the monitoring job runs.</p>
-
     """
     image_uri: str
     container_entrypoint: Optional[List[str]] = Unassigned()
@@ -3413,7 +3051,6 @@ class DataQualityAppSpecification(Base):
     environment: Optional[Dict[str, str]] = Unassigned()
 
 
-@dataclass
 class EndpointInput(Base):
     """
      EndpointInput
@@ -3432,7 +3069,6 @@ class EndpointInput(Base):
  	start_time_offset: 	 <p>If specified, monitoring jobs substract this time from the start time. For information about using offsets for scheduling monitoring jobs, see <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/model-monitor-model-quality-schedule.html">Schedule Model Quality Monitoring Jobs</a>.</p>
  	end_time_offset: 	 <p>If specified, monitoring jobs substract this time from the end time. For information about using offsets for scheduling monitoring jobs, see <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/model-monitor-model-quality-schedule.html">Schedule Model Quality Monitoring Jobs</a>.</p>
  	exclude_features_attribute: 	 <p>The attributes of the input data to exclude from the analysis.</p>
-
     """
     endpoint_name: str
     local_path: str
@@ -3447,7 +3083,6 @@ class EndpointInput(Base):
     exclude_features_attribute: Optional[str] = Unassigned()
 
 
-@dataclass
 class DataQualityJobInput(Base):
     """
      DataQualityJobInput
@@ -3457,13 +3092,11 @@ class DataQualityJobInput(Base):
 	----------------------
  	endpoint_input
  	batch_transform_input: 	 <p>Input object for the batch transform job.</p>
-
     """
     endpoint_input: Optional[EndpointInput] = Unassigned()
     batch_transform_input: Optional[BatchTransformInput] = Unassigned()
 
 
-@dataclass
 class MonitoringS3Output(Base):
     """
      MonitoringS3Output
@@ -3474,14 +3107,12 @@ class MonitoringS3Output(Base):
  	s3_uri: 	 <p>A URI that identifies the Amazon S3 storage location where Amazon SageMaker saves the results of a monitoring job.</p>
  	local_path: 	 <p>The local path to the Amazon S3 storage location where Amazon SageMaker saves the results of a monitoring job. LocalPath is an absolute path for the output data.</p>
  	s3_upload_mode: 	 <p>Whether to upload the results of the monitoring job continuously or after the job completes.</p>
-
     """
     s3_uri: str
     local_path: str
     s3_upload_mode: Optional[str] = Unassigned()
 
 
-@dataclass
 class MonitoringOutput(Base):
     """
      MonitoringOutput
@@ -3490,12 +3121,10 @@ class MonitoringOutput(Base):
  	 Attributes
 	----------------------
  	s3_output: 	 <p>The Amazon S3 storage location where the results of a monitoring job are saved.</p>
-
     """
     s3_output: MonitoringS3Output
 
 
-@dataclass
 class MonitoringOutputConfig(Base):
     """
      MonitoringOutputConfig
@@ -3505,13 +3134,11 @@ class MonitoringOutputConfig(Base):
 	----------------------
  	monitoring_outputs: 	 <p>Monitoring outputs for monitoring jobs. This is where the output of the periodic monitoring jobs is uploaded.</p>
  	kms_key_id: 	 <p>The Key Management Service (KMS) key that Amazon SageMaker uses to encrypt the model artifacts at rest using Amazon S3 server-side encryption.</p>
-
     """
     monitoring_outputs: List[MonitoringOutput]
     kms_key_id: Optional[str] = Unassigned()
 
 
-@dataclass
 class MonitoringClusterConfig(Base):
     """
      MonitoringClusterConfig
@@ -3523,7 +3150,6 @@ class MonitoringClusterConfig(Base):
  	instance_type: 	 <p>The ML compute instance type for the processing job.</p>
  	volume_size_in_g_b: 	 <p>The size of the ML storage volume, in gigabytes, that you want to provision. You must specify sufficient ML storage for your scenario.</p>
  	volume_kms_key_id: 	 <p>The Key Management Service (KMS) key that Amazon SageMaker uses to encrypt data on the storage volume attached to the ML compute instance(s) that run the model monitoring job.</p>
-
     """
     instance_count: int
     instance_type: str
@@ -3531,7 +3157,6 @@ class MonitoringClusterConfig(Base):
     volume_kms_key_id: Optional[str] = Unassigned()
 
 
-@dataclass
 class MonitoringResources(Base):
     """
      MonitoringResources
@@ -3540,12 +3165,10 @@ class MonitoringResources(Base):
  	 Attributes
 	----------------------
  	cluster_config: 	 <p>The configuration for the cluster resources used to run the processing job.</p>
-
     """
     cluster_config: MonitoringClusterConfig
 
 
-@dataclass
 class MonitoringNetworkConfig(Base):
     """
      MonitoringNetworkConfig
@@ -3556,14 +3179,12 @@ class MonitoringNetworkConfig(Base):
  	enable_inter_container_traffic_encryption: 	 <p>Whether to encrypt all communications between the instances used for the monitoring jobs. Choose <code>True</code> to encrypt communications. Encryption provides greater security for distributed jobs, but the processing might take longer.</p>
  	enable_network_isolation: 	 <p>Whether to allow inbound and outbound network calls to and from the containers used for the monitoring job.</p>
  	vpc_config
-
     """
     enable_inter_container_traffic_encryption: Optional[bool] = Unassigned()
     enable_network_isolation: Optional[bool] = Unassigned()
     vpc_config: Optional[VpcConfig] = Unassigned()
 
 
-@dataclass
 class MonitoringStoppingCondition(Base):
     """
      MonitoringStoppingCondition
@@ -3572,12 +3193,10 @@ class MonitoringStoppingCondition(Base):
  	 Attributes
 	----------------------
  	max_runtime_in_seconds: 	 <p>The maximum runtime allowed in seconds.</p> <note> <p>The <code>MaxRuntimeInSeconds</code> cannot exceed the frequency of the job. For data quality and model explainability, this can be up to 3600 seconds for an hourly schedule. For model bias and model quality hourly schedules, this can be up to 1800 seconds.</p> </note>
-
     """
     max_runtime_in_seconds: int
 
 
-@dataclass
 class EdgeOutputConfig(Base):
     """
      EdgeOutputConfig
@@ -3589,7 +3208,6 @@ class EdgeOutputConfig(Base):
  	kms_key_id: 	 <p>The Amazon Web Services Key Management Service (Amazon Web Services KMS) key that Amazon SageMaker uses to encrypt data on the storage volume after compilation job. If you don't provide a KMS key ID, Amazon SageMaker uses the default KMS key for Amazon S3 for your role's account.</p>
  	preset_deployment_type: 	 <p>The deployment type SageMaker Edge Manager will create. Currently only supports Amazon Web Services IoT Greengrass Version 2 components.</p>
  	preset_deployment_config: 	 <p>The configuration used to create deployment artifacts. Specify configuration options with a JSON string. The available configuration options for each type are:</p> <ul> <li> <p> <code>ComponentName</code> (optional) - Name of the GreenGrass V2 component. If not specified, the default name generated consists of "SagemakerEdgeManager" and the name of your SageMaker Edge Manager packaging job.</p> </li> <li> <p> <code>ComponentDescription</code> (optional) - Description of the component.</p> </li> <li> <p> <code>ComponentVersion</code> (optional) - The version of the component.</p> <note> <p>Amazon Web Services IoT Greengrass uses semantic versions for components. Semantic versions follow a<i> major.minor.patch</i> number system. For example, version 1.0.0 represents the first major release for a component. For more information, see the <a href="https://semver.org/">semantic version specification</a>.</p> </note> </li> <li> <p> <code>PlatformOS</code> (optional) - The name of the operating system for the platform. Supported platforms include Windows and Linux.</p> </li> <li> <p> <code>PlatformArchitecture</code> (optional) - The processor architecture for the platform. </p> <p>Supported architectures Windows include: Windows32_x86, Windows64_x64.</p> <p>Supported architectures for Linux include: Linux x86_64, Linux ARMV8.</p> </li> </ul>
-
     """
     s3_output_location: str
     kms_key_id: Optional[str] = Unassigned()
@@ -3597,7 +3215,6 @@ class EdgeOutputConfig(Base):
     preset_deployment_config: Optional[str] = Unassigned()
 
 
-@dataclass
 class SharingSettings(Base):
     """
      SharingSettings
@@ -3608,14 +3225,12 @@ class SharingSettings(Base):
  	notebook_output_option: 	 <p>Whether to include the notebook cell output when sharing the notebook. The default is <code>Disabled</code>.</p>
  	s3_output_path: 	 <p>When <code>NotebookOutputOption</code> is <code>Allowed</code>, the Amazon S3 bucket used to store the shared notebook snapshots.</p>
  	s3_kms_key_id: 	 <p>When <code>NotebookOutputOption</code> is <code>Allowed</code>, the Amazon Web Services Key Management Service (KMS) encryption key ID used to encrypt the notebook cell output in the Amazon S3 bucket.</p>
-
     """
     notebook_output_option: Optional[str] = Unassigned()
     s3_output_path: Optional[str] = Unassigned()
     s3_kms_key_id: Optional[str] = Unassigned()
 
 
-@dataclass
 class JupyterServerAppSettings(Base):
     """
      JupyterServerAppSettings
@@ -3626,14 +3241,12 @@ class JupyterServerAppSettings(Base):
  	default_resource_spec: 	 <p>The default instance type and the Amazon Resource Name (ARN) of the default SageMaker image used by the JupyterServer app. If you use the <code>LifecycleConfigArns</code> parameter, then this parameter is also required.</p>
  	lifecycle_config_arns: 	 <p> The Amazon Resource Name (ARN) of the Lifecycle Configurations attached to the JupyterServerApp. If you use this parameter, the <code>DefaultResourceSpec</code> parameter is also required.</p> <note> <p>To remove a Lifecycle Config, you must set <code>LifecycleConfigArns</code> to an empty list.</p> </note>
  	code_repositories: 	 <p>A list of Git repositories that SageMaker automatically displays to users for cloning in the JupyterServer application.</p>
-
     """
     default_resource_spec: Optional[ResourceSpec] = Unassigned()
     lifecycle_config_arns: Optional[List[str]] = Unassigned()
     code_repositories: Optional[List[CodeRepository]] = Unassigned()
 
 
-@dataclass
 class CustomImage(Base):
     """
      CustomImage
@@ -3644,14 +3257,12 @@ class CustomImage(Base):
  	image_name: 	 <p>The name of the CustomImage. Must be unique to your account.</p>
  	image_version_number: 	 <p>The version number of the CustomImage.</p>
  	app_image_config_name: 	 <p>The name of the AppImageConfig.</p>
-
     """
     image_name: str
     app_image_config_name: str
     image_version_number: Optional[int] = Unassigned()
 
 
-@dataclass
 class KernelGatewayAppSettings(Base):
     """
      KernelGatewayAppSettings
@@ -3662,14 +3273,12 @@ class KernelGatewayAppSettings(Base):
  	default_resource_spec: 	 <p>The default instance type and the Amazon Resource Name (ARN) of the default SageMaker image used by the KernelGateway app.</p> <note> <p>The Amazon SageMaker Studio UI does not use the default instance type value set here. The default instance type set here is used when Apps are created using the CLI or CloudFormation and the instance type parameter value is not passed.</p> </note>
  	custom_images: 	 <p>A list of custom SageMaker images that are configured to run as a KernelGateway app.</p>
  	lifecycle_config_arns: 	 <p> The Amazon Resource Name (ARN) of the Lifecycle Configurations attached to the the user profile or domain.</p> <note> <p>To remove a Lifecycle Config, you must set <code>LifecycleConfigArns</code> to an empty list.</p> </note>
-
     """
     default_resource_spec: Optional[ResourceSpec] = Unassigned()
     custom_images: Optional[List[CustomImage]] = Unassigned()
     lifecycle_config_arns: Optional[List[str]] = Unassigned()
 
 
-@dataclass
 class TensorBoardAppSettings(Base):
     """
      TensorBoardAppSettings
@@ -3678,12 +3287,10 @@ class TensorBoardAppSettings(Base):
  	 Attributes
 	----------------------
  	default_resource_spec: 	 <p>The default instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance.</p>
-
     """
     default_resource_spec: Optional[ResourceSpec] = Unassigned()
 
 
-@dataclass
 class RStudioServerProAppSettings(Base):
     """
      RStudioServerProAppSettings
@@ -3693,13 +3300,11 @@ class RStudioServerProAppSettings(Base):
 	----------------------
  	access_status: 	 <p>Indicates whether the current user has access to the <code>RStudioServerPro</code> app.</p>
  	user_group: 	 <p>The level of permissions that the user has within the <code>RStudioServerPro</code> app. This value defaults to `User`. The `Admin` value allows the user access to the RStudio Administrative Dashboard.</p>
-
     """
     access_status: Optional[str] = Unassigned()
     user_group: Optional[str] = Unassigned()
 
 
-@dataclass
 class RSessionAppSettings(Base):
     """
      RSessionAppSettings
@@ -3709,13 +3314,11 @@ class RSessionAppSettings(Base):
 	----------------------
  	default_resource_spec
  	custom_images: 	 <p>A list of custom SageMaker images that are configured to run as a RSession app.</p>
-
     """
     default_resource_spec: Optional[ResourceSpec] = Unassigned()
     custom_images: Optional[List[CustomImage]] = Unassigned()
 
 
-@dataclass
 class JupyterLabAppSettings(Base):
     """
      JupyterLabAppSettings
@@ -3727,7 +3330,6 @@ class JupyterLabAppSettings(Base):
  	custom_images: 	 <p>A list of custom SageMaker images that are configured to run as a JupyterLab app.</p>
  	lifecycle_config_arns: 	 <p>The Amazon Resource Name (ARN) of the lifecycle configurations attached to the user profile or domain. To remove a lifecycle config, you must set <code>LifecycleConfigArns</code> to an empty list.</p>
  	code_repositories: 	 <p>A list of Git repositories that SageMaker automatically displays to users for cloning in the JupyterLab application.</p>
-
     """
     default_resource_spec: Optional[ResourceSpec] = Unassigned()
     custom_images: Optional[List[CustomImage]] = Unassigned()
@@ -3735,7 +3337,6 @@ class JupyterLabAppSettings(Base):
     code_repositories: Optional[List[CodeRepository]] = Unassigned()
 
 
-@dataclass
 class DefaultEbsStorageSettings(Base):
     """
      DefaultEbsStorageSettings
@@ -3745,13 +3346,11 @@ class DefaultEbsStorageSettings(Base):
 	----------------------
  	default_ebs_volume_size_in_gb: 	 <p>The default size of the EBS storage volume for a private space.</p>
  	maximum_ebs_volume_size_in_gb: 	 <p>The maximum size of the EBS storage volume for a private space.</p>
-
     """
     default_ebs_volume_size_in_gb: int
     maximum_ebs_volume_size_in_gb: int
 
 
-@dataclass
 class DefaultSpaceStorageSettings(Base):
     """
      DefaultSpaceStorageSettings
@@ -3760,12 +3359,10 @@ class DefaultSpaceStorageSettings(Base):
  	 Attributes
 	----------------------
  	default_ebs_storage_settings: 	 <p>The default EBS storage settings for a private space.</p>
-
     """
     default_ebs_storage_settings: Optional[DefaultEbsStorageSettings] = Unassigned()
 
 
-@dataclass
 class CustomPosixUserConfig(Base):
     """
      CustomPosixUserConfig
@@ -3775,13 +3372,11 @@ class CustomPosixUserConfig(Base):
 	----------------------
  	uid: 	 <p>The POSIX user ID.</p>
  	gid: 	 <p>The POSIX group ID.</p>
-
     """
     uid: int
     gid: int
 
 
-@dataclass
 class EFSFileSystemConfig(Base):
     """
      EFSFileSystemConfig
@@ -3791,13 +3386,11 @@ class EFSFileSystemConfig(Base):
 	----------------------
  	file_system_id: 	 <p>The ID of your Amazon EFS file system.</p>
  	file_system_path: 	 <p>The path to the file system directory that is accessible in Amazon SageMaker Studio. Permitted users can access only this directory and below.</p>
-
     """
     file_system_id: str
     file_system_path: Optional[str] = Unassigned()
 
 
-@dataclass
 class CustomFileSystemConfig(Base):
     """
      CustomFileSystemConfig
@@ -3806,12 +3399,10 @@ class CustomFileSystemConfig(Base):
  	 Attributes
 	----------------------
  	e_f_s_file_system_config: 	 <p>The settings for a custom Amazon EFS file system.</p>
-
     """
     e_f_s_file_system_config: Optional[EFSFileSystemConfig] = Unassigned()
 
 
-@dataclass
 class UserSettings(Base):
     """
      UserSettings
@@ -3835,7 +3426,6 @@ class UserSettings(Base):
  	studio_web_portal: 	 <p>Whether the user can access Studio. If this value is set to <code>DISABLED</code>, the user cannot access Studio, even if that is the default experience for the domain.</p>
  	custom_posix_user_config: 	 <p>Details about the POSIX identity that is used for file system operations.</p>
  	custom_file_system_configs: 	 <p>The settings for assigning a custom file system to a user profile. Permitted users can access this file system in Amazon SageMaker Studio.</p>
-
     """
     execution_role: Optional[str] = Unassigned()
     security_groups: Optional[List[str]] = Unassigned()
@@ -3855,7 +3445,6 @@ class UserSettings(Base):
     custom_file_system_configs: Optional[List[CustomFileSystemConfig]] = Unassigned()
 
 
-@dataclass
 class RStudioServerProDomainSettings(Base):
     """
      RStudioServerProDomainSettings
@@ -3867,7 +3456,6 @@ class RStudioServerProDomainSettings(Base):
  	r_studio_connect_url: 	 <p>A URL pointing to an RStudio Connect server.</p>
  	r_studio_package_manager_url: 	 <p>A URL pointing to an RStudio Package Manager server.</p>
  	default_resource_spec
-
     """
     domain_execution_role_arn: str
     r_studio_connect_url: Optional[str] = Unassigned()
@@ -3875,7 +3463,6 @@ class RStudioServerProDomainSettings(Base):
     default_resource_spec: Optional[ResourceSpec] = Unassigned()
 
 
-@dataclass
 class DockerSettings(Base):
     """
      DockerSettings
@@ -3885,13 +3472,11 @@ class DockerSettings(Base):
 	----------------------
  	enable_docker_access: 	 <p>Indicates whether the domain can access Docker.</p>
  	vpc_only_trusted_accounts: 	 <p>The list of Amazon Web Services accounts that are trusted when the domain is created in VPC-only mode.</p>
-
     """
     enable_docker_access: Optional[str] = Unassigned()
     vpc_only_trusted_accounts: Optional[List[str]] = Unassigned()
 
 
-@dataclass
 class DomainSettings(Base):
     """
      DomainSettings
@@ -3903,7 +3488,6 @@ class DomainSettings(Base):
  	r_studio_server_pro_domain_settings: 	 <p>A collection of settings that configure the <code>RStudioServerPro</code> Domain-level app.</p>
  	execution_role_identity_config: 	 <p>The configuration for attaching a SageMaker user profile name to the execution role as a <a href="https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_control-access_monitor.html">sts:SourceIdentity key</a>.</p>
  	docker_settings: 	 <p>A collection of settings that configure the domain's Docker interaction.</p>
-
     """
     security_group_ids: Optional[List[str]] = Unassigned()
     r_studio_server_pro_domain_settings: Optional[RStudioServerProDomainSettings] = Unassigned()
@@ -3911,7 +3495,6 @@ class DomainSettings(Base):
     docker_settings: Optional[DockerSettings] = Unassigned()
 
 
-@dataclass
 class DefaultSpaceSettings(Base):
     """
      DefaultSpaceSettings
@@ -3923,7 +3506,6 @@ class DefaultSpaceSettings(Base):
  	security_groups: 	 <p>The security group IDs for the Amazon VPC that the space uses for communication.</p>
  	jupyter_server_app_settings
  	kernel_gateway_app_settings
-
     """
     execution_role: Optional[str] = Unassigned()
     security_groups: Optional[List[str]] = Unassigned()
@@ -3931,7 +3513,6 @@ class DefaultSpaceSettings(Base):
     kernel_gateway_app_settings: Optional[KernelGatewayAppSettings] = Unassigned()
 
 
-@dataclass
 class EdgeDeploymentModelConfig(Base):
     """
      EdgeDeploymentModelConfig
@@ -3941,13 +3522,11 @@ class EdgeDeploymentModelConfig(Base):
 	----------------------
  	model_handle: 	 <p>The name the device application uses to reference this model.</p>
  	edge_packaging_job_name: 	 <p>The edge packaging job associated with this deployment.</p>
-
     """
     model_handle: str
     edge_packaging_job_name: str
 
 
-@dataclass
 class DeviceSelectionConfig(Base):
     """
      DeviceSelectionConfig
@@ -3959,7 +3538,6 @@ class DeviceSelectionConfig(Base):
  	percentage: 	 <p>Percentage of devices in the fleet to deploy to the current stage.</p>
  	device_names: 	 <p>List of devices chosen to deploy.</p>
  	device_name_contains: 	 <p>A filter to select devices with names containing this name.</p>
-
     """
     device_subset_type: str
     percentage: Optional[int] = Unassigned()
@@ -3967,7 +3545,6 @@ class DeviceSelectionConfig(Base):
     device_name_contains: Optional[str] = Unassigned()
 
 
-@dataclass
 class EdgeDeploymentConfig(Base):
     """
      EdgeDeploymentConfig
@@ -3976,12 +3553,10 @@ class EdgeDeploymentConfig(Base):
  	 Attributes
 	----------------------
  	failure_handling_policy: 	 <p>Toggle that determines whether to rollback to previous configuration if the current deployment fails. By default this is turned on. You may turn this off if you want to investigate the errors yourself.</p>
-
     """
     failure_handling_policy: str
 
 
-@dataclass
 class DeploymentStage(Base):
     """
      DeploymentStage
@@ -3992,14 +3567,12 @@ class DeploymentStage(Base):
  	stage_name: 	 <p>The name of the stage.</p>
  	device_selection_config: 	 <p>Configuration of the devices in the stage.</p>
  	deployment_config: 	 <p>Configuration of the deployment details.</p>
-
     """
     stage_name: str
     device_selection_config: DeviceSelectionConfig
     deployment_config: Optional[EdgeDeploymentConfig] = Unassigned()
 
 
-@dataclass
 class ProductionVariantCoreDumpConfig(Base):
     """
      ProductionVariantCoreDumpConfig
@@ -4009,13 +3582,11 @@ class ProductionVariantCoreDumpConfig(Base):
 	----------------------
  	destination_s3_uri: 	 <p>The Amazon S3 bucket to send the core dump to.</p>
  	kms_key_id: 	 <p>The Amazon Web Services Key Management Service (Amazon Web Services KMS) key that SageMaker uses to encrypt the core dump data at rest using Amazon S3 server-side encryption. The <code>KmsKeyId</code> can be any of the following formats: </p> <ul> <li> <p>// KMS Key ID</p> <p> <code>"1234abcd-12ab-34cd-56ef-1234567890ab"</code> </p> </li> <li> <p>// Amazon Resource Name (ARN) of a KMS Key</p> <p> <code>"arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab"</code> </p> </li> <li> <p>// KMS Key Alias</p> <p> <code>"alias/ExampleAlias"</code> </p> </li> <li> <p>// Amazon Resource Name (ARN) of a KMS Key Alias</p> <p> <code>"arn:aws:kms:us-west-2:111122223333:alias/ExampleAlias"</code> </p> </li> </ul> <p>If you use a KMS key ID or an alias of your KMS key, the SageMaker execution role must include permissions to call <code>kms:Encrypt</code>. If you don't provide a KMS key ID, SageMaker uses the default KMS key for Amazon S3 for your role's account. SageMaker uses server-side encryption with KMS-managed keys for <code>OutputDataConfig</code>. If you use a bucket policy with an <code>s3:PutObject</code> permission that only allows objects with server-side encryption, set the condition key of <code>s3:x-amz-server-side-encryption</code> to <code>"aws:kms"</code>. For more information, see <a href="https://docs.aws.amazon.com/AmazonS3/latest/dev/UsingKMSEncryption.html">KMS-Managed Encryption Keys</a> in the <i>Amazon Simple Storage Service Developer Guide.</i> </p> <p>The KMS key policy must grant permission to the IAM role that you specify in your <code>CreateEndpoint</code> and <code>UpdateEndpoint</code> requests. For more information, see <a href="https://docs.aws.amazon.com/kms/latest/developerguide/key-policies.html">Using Key Policies in Amazon Web Services KMS</a> in the <i>Amazon Web Services Key Management Service Developer Guide</i>.</p>
-
     """
     destination_s3_uri: str
     kms_key_id: Optional[str] = Unassigned()
 
 
-@dataclass
 class ProductionVariantServerlessConfig(Base):
     """
      ProductionVariantServerlessConfig
@@ -4026,14 +3597,12 @@ class ProductionVariantServerlessConfig(Base):
  	memory_size_in_m_b: 	 <p>The memory size of your serverless endpoint. Valid values are in 1 GB increments: 1024 MB, 2048 MB, 3072 MB, 4096 MB, 5120 MB, or 6144 MB.</p>
  	max_concurrency: 	 <p>The maximum number of concurrent invocations your serverless endpoint can process.</p>
  	provisioned_concurrency: 	 <p>The amount of provisioned concurrency to allocate for the serverless endpoint. Should be less than or equal to <code>MaxConcurrency</code>.</p> <note> <p>This field is not supported for serverless endpoint recommendations for Inference Recommender jobs. For more information about creating an Inference Recommender job, see <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_CreateInferenceRecommendationsJob.html">CreateInferenceRecommendationsJobs</a>.</p> </note>
-
     """
     memory_size_in_m_b: int
     max_concurrency: int
     provisioned_concurrency: Optional[int] = Unassigned()
 
 
-@dataclass
 class ProductionVariantManagedInstanceScaling(Base):
     """
      ProductionVariantManagedInstanceScaling
@@ -4044,14 +3613,12 @@ class ProductionVariantManagedInstanceScaling(Base):
  	status: 	 <p>Indicates whether managed instance scaling is enabled.</p>
  	min_instance_count: 	 <p>The minimum number of instances that the endpoint must retain when it scales down to accommodate a decrease in traffic.</p>
  	max_instance_count: 	 <p>The maximum number of instances that the endpoint can provision when it scales up to accommodate an increase in traffic.</p>
-
     """
     status: Optional[str] = Unassigned()
     min_instance_count: Optional[int] = Unassigned()
     max_instance_count: Optional[int] = Unassigned()
 
 
-@dataclass
 class ProductionVariantRoutingConfig(Base):
     """
      ProductionVariantRoutingConfig
@@ -4060,12 +3627,10 @@ class ProductionVariantRoutingConfig(Base):
  	 Attributes
 	----------------------
  	routing_strategy: 	 <p>Sets how the endpoint routes incoming traffic:</p> <ul> <li> <p> <code>LEAST_OUTSTANDING_REQUESTS</code>: The endpoint routes requests to the specific instances that have more capacity to process them.</p> </li> <li> <p> <code>RANDOM</code>: The endpoint routes each request to a randomly chosen instance.</p> </li> </ul>
-
     """
     routing_strategy: str
 
 
-@dataclass
 class ProductionVariant(Base):
     """
      ProductionVariant
@@ -4087,7 +3652,6 @@ class ProductionVariant(Base):
  	enable_s_s_m_access: 	 <p> You can use this parameter to turn on native Amazon Web Services Systems Manager (SSM) access for a production variant behind an endpoint. By default, SSM access is disabled for all production variants behind an endpoint. You can turn on or turn off SSM access for a production variant behind an existing endpoint by creating a new endpoint configuration and calling <code>UpdateEndpoint</code>. </p>
  	managed_instance_scaling: 	 <p>Settings that control the range in the number of instances that the endpoint provisions as it scales up or down to accommodate traffic. </p>
  	routing_config: 	 <p>Settings that control how the endpoint routes incoming traffic to the instances that the endpoint hosts.</p>
-
     """
     variant_name: str
     model_name: Optional[str] = Unassigned()
@@ -4105,7 +3669,6 @@ class ProductionVariant(Base):
     routing_config: Optional[ProductionVariantRoutingConfig] = Unassigned()
 
 
-@dataclass
 class DataCaptureConfig(Base):
     """
      DataCaptureConfig
@@ -4119,7 +3682,6 @@ class DataCaptureConfig(Base):
  	kms_key_id: 	 <p>The Amazon Resource Name (ARN) of an Key Management Service key that SageMaker uses to encrypt the captured data at rest using Amazon S3 server-side encryption.</p> <p>The KmsKeyId can be any of the following formats: </p> <ul> <li> <p>Key ID: <code>1234abcd-12ab-34cd-56ef-1234567890ab</code> </p> </li> <li> <p>Key ARN: <code>arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab</code> </p> </li> <li> <p>Alias name: <code>alias/ExampleAlias</code> </p> </li> <li> <p>Alias name ARN: <code>arn:aws:kms:us-west-2:111122223333:alias/ExampleAlias</code> </p> </li> </ul>
  	capture_options: 	 <p>Specifies data Model Monitor will capture. You can configure whether to collect only input, only output, or both</p>
  	capture_content_type_header: 	 <p>Configuration specifying how to treat different headers. If no headers are specified SageMaker will by default base64 encode when capturing the data.</p>
-
     """
     initial_sampling_percentage: int
     destination_s3_uri: str
@@ -4129,7 +3691,6 @@ class DataCaptureConfig(Base):
     capture_content_type_header: Optional[CaptureContentTypeHeader] = Unassigned()
 
 
-@dataclass
 class ExplainerConfig(Base):
     """
      ExplainerConfig
@@ -4138,12 +3699,10 @@ class ExplainerConfig(Base):
  	 Attributes
 	----------------------
  	clarify_explainer_config: 	 <p>A member of <code>ExplainerConfig</code> that contains configuration parameters for the SageMaker Clarify explainer.</p>
-
     """
     clarify_explainer_config: Optional[ClarifyExplainerConfig] = Unassigned()
 
 
-@dataclass
 class RollingUpdatePolicy(Base):
     """
      RollingUpdatePolicy
@@ -4155,7 +3714,6 @@ class RollingUpdatePolicy(Base):
  	wait_interval_in_seconds: 	 <p>The length of the baking period, during which SageMaker monitors alarms for each batch on the new fleet.</p>
  	maximum_execution_timeout_in_seconds: 	 <p>The time limit for the total deployment. Exceeding this limit causes a timeout.</p>
  	rollback_maximum_batch_size: 	 <p>Batch size for rollback to the old endpoint fleet. Each rolling step to provision capacity and turn on traffic on the old endpoint fleet, and terminate capacity on the new endpoint fleet. If this field is absent, the default value will be set to 100% of total capacity which means to bring up the whole capacity of the old fleet at once during rollback.</p>
-
     """
     maximum_batch_size: CapacitySize
     wait_interval_in_seconds: int
@@ -4163,7 +3721,6 @@ class RollingUpdatePolicy(Base):
     rollback_maximum_batch_size: Optional[CapacitySize] = Unassigned()
 
 
-@dataclass
 class DeploymentConfig(Base):
     """
      DeploymentConfig
@@ -4174,14 +3731,12 @@ class DeploymentConfig(Base):
  	blue_green_update_policy: 	 <p>Update policy for a blue/green deployment. If this update policy is specified, SageMaker creates a new fleet during the deployment while maintaining the old fleet. SageMaker flips traffic to the new fleet according to the specified traffic routing configuration. Only one update policy should be used in the deployment configuration. If no update policy is specified, SageMaker uses a blue/green deployment strategy with all at once traffic shifting by default.</p>
  	rolling_update_policy: 	 <p>Specifies a rolling deployment strategy for updating a SageMaker endpoint.</p>
  	auto_rollback_configuration: 	 <p>Automatic rollback configuration for handling endpoint deployment failures and recovery.</p>
-
     """
     blue_green_update_policy: Optional[BlueGreenUpdatePolicy] = Unassigned()
     rolling_update_policy: Optional[RollingUpdatePolicy] = Unassigned()
     auto_rollback_configuration: Optional[AutoRollbackConfig] = Unassigned()
 
 
-@dataclass
 class FeatureDefinition(Base):
     """
      FeatureDefinition
@@ -4193,7 +3748,6 @@ class FeatureDefinition(Base):
  	feature_type: 	 <p>The value type of a feature. Valid values are Integral, Fractional, or String.</p>
  	collection_type: 	 <p>A grouping of elements where each element within the collection must have the same feature type (<code>String</code>, <code>Integral</code>, or <code>Fractional</code>).</p> <ul> <li> <p> <code>List</code>: An ordered collection of elements.</p> </li> <li> <p> <code>Set</code>: An unordered collection of unique elements.</p> </li> <li> <p> <code>Vector</code>: A specialized list that represents a fixed-size array of elements. The vector dimension is determined by you. Must have elements with fractional feature types. </p> </li> </ul>
  	collection_config: 	 <p>Configuration for your collection.</p>
-
     """
     feature_name: str
     feature_type: str
@@ -4201,7 +3755,6 @@ class FeatureDefinition(Base):
     collection_config: Optional[CollectionConfig] = Unassigned()
 
 
-@dataclass
 class OnlineStoreSecurityConfig(Base):
     """
      OnlineStoreSecurityConfig
@@ -4210,12 +3763,10 @@ class OnlineStoreSecurityConfig(Base):
  	 Attributes
 	----------------------
  	kms_key_id: 	 <p>The Amazon Web Services Key Management Service (KMS) key ARN that SageMaker Feature Store uses to encrypt the Amazon S3 objects at rest using Amazon S3 server-side encryption.</p> <p>The caller (either user or IAM role) of <code>CreateFeatureGroup</code> must have below permissions to the <code>OnlineStore</code> <code>KmsKeyId</code>:</p> <ul> <li> <p> <code>"kms:Encrypt"</code> </p> </li> <li> <p> <code>"kms:Decrypt"</code> </p> </li> <li> <p> <code>"kms:DescribeKey"</code> </p> </li> <li> <p> <code>"kms:CreateGrant"</code> </p> </li> <li> <p> <code>"kms:RetireGrant"</code> </p> </li> <li> <p> <code>"kms:ReEncryptFrom"</code> </p> </li> <li> <p> <code>"kms:ReEncryptTo"</code> </p> </li> <li> <p> <code>"kms:GenerateDataKey"</code> </p> </li> <li> <p> <code>"kms:ListAliases"</code> </p> </li> <li> <p> <code>"kms:ListGrants"</code> </p> </li> <li> <p> <code>"kms:RevokeGrant"</code> </p> </li> </ul> <p>The caller (either user or IAM role) to all DataPlane operations (<code>PutRecord</code>, <code>GetRecord</code>, <code>DeleteRecord</code>) must have the following permissions to the <code>KmsKeyId</code>:</p> <ul> <li> <p> <code>"kms:Decrypt"</code> </p> </li> </ul>
-
     """
     kms_key_id: Optional[str] = Unassigned()
 
 
-@dataclass
 class TtlDuration(Base):
     """
      TtlDuration
@@ -4225,13 +3776,11 @@ class TtlDuration(Base):
 	----------------------
  	unit: 	 <p> <code>TtlDuration</code> time unit.</p>
  	value: 	 <p> <code>TtlDuration</code> time value.</p>
-
     """
     unit: Optional[str] = Unassigned()
     value: Optional[int] = Unassigned()
 
 
-@dataclass
 class OnlineStoreConfig(Base):
     """
      OnlineStoreConfig
@@ -4243,7 +3792,6 @@ class OnlineStoreConfig(Base):
  	enable_online_store: 	 <p>Turn <code>OnlineStore</code> off by specifying <code>False</code> for the <code>EnableOnlineStore</code> flag. Turn <code>OnlineStore</code> on by specifying <code>True</code> for the <code>EnableOnlineStore</code> flag. </p> <p>The default value is <code>False</code>.</p>
  	ttl_duration: 	 <p>Time to live duration, where the record is hard deleted after the expiration time is reached; <code>ExpiresAt</code> = <code>EventTime</code> + <code>TtlDuration</code>. For information on HardDelete, see the <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_feature_store_DeleteRecord.html">DeleteRecord</a> API in the Amazon SageMaker API Reference guide.</p>
  	storage_type: 	 <p>Option for different tiers of low latency storage for real-time data retrieval.</p> <ul> <li> <p> <code>Standard</code>: A managed low latency data store for feature groups.</p> </li> <li> <p> <code>InMemory</code>: A managed data store for feature groups that supports very low latency retrieval. </p> </li> </ul>
-
     """
     security_config: Optional[OnlineStoreSecurityConfig] = Unassigned()
     enable_online_store: Optional[bool] = Unassigned()
@@ -4251,7 +3799,6 @@ class OnlineStoreConfig(Base):
     storage_type: Optional[str] = Unassigned()
 
 
-@dataclass
 class S3StorageConfig(Base):
     """
      S3StorageConfig
@@ -4262,14 +3809,12 @@ class S3StorageConfig(Base):
  	s3_uri: 	 <p>The S3 URI, or location in Amazon S3, of <code>OfflineStore</code>.</p> <p>S3 URIs have a format similar to the following: <code>s3://example-bucket/prefix/</code>.</p>
  	kms_key_id: 	 <p>The Amazon Web Services Key Management Service (KMS) key ARN of the key used to encrypt any objects written into the <code>OfflineStore</code> S3 location.</p> <p>The IAM <code>roleARN</code> that is passed as a parameter to <code>CreateFeatureGroup</code> must have below permissions to the <code>KmsKeyId</code>:</p> <ul> <li> <p> <code>"kms:GenerateDataKey"</code> </p> </li> </ul>
  	resolved_output_s3_uri: 	 <p>The S3 path where offline records are written.</p>
-
     """
     s3_uri: str
     kms_key_id: Optional[str] = Unassigned()
     resolved_output_s3_uri: Optional[str] = Unassigned()
 
 
-@dataclass
 class DataCatalogConfig(Base):
     """
      DataCatalogConfig
@@ -4280,14 +3825,12 @@ class DataCatalogConfig(Base):
  	table_name: 	 <p>The name of the Glue table.</p>
  	catalog: 	 <p>The name of the Glue table catalog.</p>
  	database: 	 <p>The name of the Glue table database.</p>
-
     """
     table_name: str
     catalog: str
     database: str
 
 
-@dataclass
 class OfflineStoreConfig(Base):
     """
      OfflineStoreConfig
@@ -4299,7 +3842,6 @@ class OfflineStoreConfig(Base):
  	disable_glue_table_creation: 	 <p>Set to <code>True</code> to disable the automatic creation of an Amazon Web Services Glue table when configuring an <code>OfflineStore</code>. If set to <code>False</code>, Feature Store will name the <code>OfflineStore</code> Glue table following <a href="https://docs.aws.amazon.com/athena/latest/ug/tables-databases-columns-names.html">Athena's naming recommendations</a>.</p> <p>The default value is <code>False</code>.</p>
  	data_catalog_config: 	 <p>The meta data of the Glue table that is autogenerated when an <code>OfflineStore</code> is created. </p>
  	table_format: 	 <p>Format for the offline store table. Supported formats are Glue (Default) and <a href="https://iceberg.apache.org/">Apache Iceberg</a>.</p>
-
     """
     s3_storage_config: S3StorageConfig
     disable_glue_table_creation: Optional[bool] = Unassigned()
@@ -4307,7 +3849,6 @@ class OfflineStoreConfig(Base):
     table_format: Optional[str] = Unassigned()
 
 
-@dataclass
 class ThroughputConfig(Base):
     """
      ThroughputConfig
@@ -4318,14 +3859,12 @@ class ThroughputConfig(Base):
  	throughput_mode: 	 <p>The mode used for your feature group throughput: <code>ON_DEMAND</code> or <code>PROVISIONED</code>. </p>
  	provisioned_read_capacity_units: 	 <p> For provisioned feature groups with online store enabled, this indicates the read throughput you are billed for and can consume without throttling. </p> <p>This field is not applicable for on-demand feature groups. </p>
  	provisioned_write_capacity_units: 	 <p> For provisioned feature groups, this indicates the write throughput you are billed for and can consume without throttling. </p> <p>This field is not applicable for on-demand feature groups. </p>
-
     """
     throughput_mode: str
     provisioned_read_capacity_units: Optional[int] = Unassigned()
     provisioned_write_capacity_units: Optional[int] = Unassigned()
 
 
-@dataclass
 class HumanLoopRequestSource(Base):
     """
      HumanLoopRequestSource
@@ -4334,12 +3873,10 @@ class HumanLoopRequestSource(Base):
  	 Attributes
 	----------------------
  	aws_managed_human_loop_request_source: 	 <p>Specifies whether Amazon Rekognition or Amazon Textract are used as the integration source. The default field settings and JSON parsing rules are different based on the integration source. Valid values:</p>
-
     """
     aws_managed_human_loop_request_source: str
 
 
-@dataclass
 class HumanLoopActivationConditionsConfig(Base):
     """
      HumanLoopActivationConditionsConfig
@@ -4348,12 +3885,10 @@ class HumanLoopActivationConditionsConfig(Base):
  	 Attributes
 	----------------------
  	human_loop_activation_conditions: 	 <p>JSON expressing use-case specific conditions declaratively. If any condition is matched, atomic tasks are created against the configured work team. The set of conditions is different for Rekognition and Textract. For more information about how to structure the JSON, see <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/a2i-human-fallback-conditions-json-schema.html">JSON Schema for Human Loop Activation Conditions in Amazon Augmented AI</a> in the <i>Amazon SageMaker Developer Guide</i>.</p>
-
     """
     human_loop_activation_conditions: str
 
 
-@dataclass
 class HumanLoopActivationConfig(Base):
     """
      HumanLoopActivationConfig
@@ -4362,12 +3897,10 @@ class HumanLoopActivationConfig(Base):
  	 Attributes
 	----------------------
  	human_loop_activation_conditions_config: 	 <p>Container structure for defining under what conditions SageMaker creates a human loop.</p>
-
     """
     human_loop_activation_conditions_config: HumanLoopActivationConditionsConfig
 
 
-@dataclass
 class USD(Base):
     """
      USD
@@ -4378,14 +3911,12 @@ class USD(Base):
  	dollars: 	 <p>The whole number of dollars in the amount.</p>
  	cents: 	 <p>The fractional portion, in cents, of the amount. </p>
  	tenth_fractions_of_a_cent: 	 <p>Fractions of a cent, in tenths.</p>
-
     """
     dollars: Optional[int] = Unassigned()
     cents: Optional[int] = Unassigned()
     tenth_fractions_of_a_cent: Optional[int] = Unassigned()
 
 
-@dataclass
 class PublicWorkforceTaskPrice(Base):
     """
      PublicWorkforceTaskPrice
@@ -4394,12 +3925,10 @@ class PublicWorkforceTaskPrice(Base):
  	 Attributes
 	----------------------
  	amount_in_usd: 	 <p>Defines the amount of money paid to an Amazon Mechanical Turk worker in United States dollars.</p>
-
     """
     amount_in_usd: Optional[USD] = Unassigned()
 
 
-@dataclass
 class HumanLoopConfig(Base):
     """
      HumanLoopConfig
@@ -4416,7 +3945,6 @@ class HumanLoopConfig(Base):
  	task_time_limit_in_seconds: 	 <p>The amount of time that a worker has to complete a task. The default value is 3,600 seconds (1 hour).</p>
  	task_keywords: 	 <p>Keywords used to describe the task so that workers can discover the task.</p>
  	public_workforce_task_price
-
     """
     workteam_arn: str
     human_task_ui_arn: str
@@ -4429,7 +3957,6 @@ class HumanLoopConfig(Base):
     public_workforce_task_price: Optional[PublicWorkforceTaskPrice] = Unassigned()
 
 
-@dataclass
 class FlowDefinitionOutputConfig(Base):
     """
      FlowDefinitionOutputConfig
@@ -4439,13 +3966,11 @@ class FlowDefinitionOutputConfig(Base):
 	----------------------
  	s3_output_path: 	 <p>The Amazon S3 path where the object containing human output will be made available.</p> <p>To learn more about the format of Amazon A2I output data, see <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/a2i-output-data.html">Amazon A2I Output Data</a>.</p>
  	kms_key_id: 	 <p>The Amazon Key Management Service (KMS) key ID for server-side encryption.</p>
-
     """
     s3_output_path: str
     kms_key_id: Optional[str] = Unassigned()
 
 
-@dataclass
 class HubS3StorageConfig(Base):
     """
      HubS3StorageConfig
@@ -4454,12 +3979,10 @@ class HubS3StorageConfig(Base):
  	 Attributes
 	----------------------
  	s3_output_path: 	 <p>The Amazon S3 bucket prefix for hosting hub content.</p>
-
     """
     s3_output_path: Optional[str] = Unassigned()
 
 
-@dataclass
 class UiTemplate(Base):
     """
      UiTemplate
@@ -4468,12 +3991,10 @@ class UiTemplate(Base):
  	 Attributes
 	----------------------
  	content: 	 <p>The content of the Liquid template for the worker user interface.</p>
-
     """
     content: str
 
 
-@dataclass
 class HyperbandStrategyConfig(Base):
     """
      HyperbandStrategyConfig
@@ -4483,13 +4004,11 @@ class HyperbandStrategyConfig(Base):
 	----------------------
  	min_resource: 	 <p>The minimum number of resources (such as epochs) that can be used by a training job launched by a hyperparameter tuning job. If the value for <code>MinResource</code> has not been reached, the training job is not stopped by <code>Hyperband</code>.</p>
  	max_resource: 	 <p>The maximum number of resources (such as epochs) that can be used by a training job launched by a hyperparameter tuning job. Once a job reaches the <code>MaxResource</code> value, it is stopped. If a value for <code>MaxResource</code> is not provided, and <code>Hyperband</code> is selected as the hyperparameter tuning strategy, <code>HyperbandTraining</code> attempts to infer <code>MaxResource</code> from the following keys (if present) in <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_HyperParameterTrainingJobDefinition.html#sagemaker-Type-HyperParameterTrainingJobDefinition-StaticHyperParameters">StaticsHyperParameters</a>:</p> <ul> <li> <p> <code>epochs</code> </p> </li> <li> <p> <code>numepochs</code> </p> </li> <li> <p> <code>n-epochs</code> </p> </li> <li> <p> <code>n_epochs</code> </p> </li> <li> <p> <code>num_epochs</code> </p> </li> </ul> <p>If <code>HyperbandStrategyConfig</code> is unable to infer a value for <code>MaxResource</code>, it generates a validation error. The maximum value is 20,000 epochs. All metrics that correspond to an objective metric are used to derive <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/automatic-model-tuning-early-stopping.html">early stopping decisions</a>. For <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/distributed-training.html">distributed</a> training jobs, ensure that duplicate metrics are not printed in the logs across the individual nodes in a training job. If multiple nodes are publishing duplicate or incorrect metrics, training jobs may make an incorrect stopping decision and stop the job prematurely. </p>
-
     """
     min_resource: Optional[int] = Unassigned()
     max_resource: Optional[int] = Unassigned()
 
 
-@dataclass
 class HyperParameterTuningJobStrategyConfig(Base):
     """
      HyperParameterTuningJobStrategyConfig
@@ -4498,12 +4017,10 @@ class HyperParameterTuningJobStrategyConfig(Base):
  	 Attributes
 	----------------------
  	hyperband_strategy_config: 	 <p>The configuration for the object that specifies the <code>Hyperband</code> strategy. This parameter is only supported for the <code>Hyperband</code> selection for <code>Strategy</code> within the <code>HyperParameterTuningJobConfig</code> API.</p>
-
     """
     hyperband_strategy_config: Optional[HyperbandStrategyConfig] = Unassigned()
 
 
-@dataclass
 class ResourceLimits(Base):
     """
      ResourceLimits
@@ -4514,14 +4031,12 @@ class ResourceLimits(Base):
  	max_number_of_training_jobs: 	 <p>The maximum number of training jobs that a hyperparameter tuning job can launch.</p>
  	max_parallel_training_jobs: 	 <p>The maximum number of concurrent training jobs that a hyperparameter tuning job can launch.</p>
  	max_runtime_in_seconds: 	 <p>The maximum time in seconds that a hyperparameter tuning job can run.</p>
-
     """
     max_parallel_training_jobs: int
     max_number_of_training_jobs: Optional[int] = Unassigned()
     max_runtime_in_seconds: Optional[int] = Unassigned()
 
 
-@dataclass
 class IntegerParameterRange(Base):
     """
      IntegerParameterRange
@@ -4533,7 +4048,6 @@ class IntegerParameterRange(Base):
  	min_value: 	 <p>The minimum value of the hyperparameter to search.</p>
  	max_value: 	 <p>The maximum value of the hyperparameter to search.</p>
  	scaling_type: 	 <p>The scale that hyperparameter tuning uses to search the hyperparameter range. For information about choosing a hyperparameter scale, see <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/automatic-model-tuning-define-ranges.html#scaling-type">Hyperparameter Scaling</a>. One of the following values:</p> <dl> <dt>Auto</dt> <dd> <p>SageMaker hyperparameter tuning chooses the best scale for the hyperparameter.</p> </dd> <dt>Linear</dt> <dd> <p>Hyperparameter tuning searches the values in the hyperparameter range by using a linear scale.</p> </dd> <dt>Logarithmic</dt> <dd> <p>Hyperparameter tuning searches the values in the hyperparameter range by using a logarithmic scale.</p> <p>Logarithmic scaling works only for ranges that have only values greater than 0.</p> </dd> </dl>
-
     """
     name: str
     min_value: str
@@ -4541,7 +4055,6 @@ class IntegerParameterRange(Base):
     scaling_type: Optional[str] = Unassigned()
 
 
-@dataclass
 class ParameterRanges(Base):
     """
      ParameterRanges
@@ -4553,7 +4066,6 @@ class ParameterRanges(Base):
  	continuous_parameter_ranges: 	 <p>The array of <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_ContinuousParameterRange.html">ContinuousParameterRange</a> objects that specify ranges of continuous hyperparameters that a hyperparameter tuning job searches.</p>
  	categorical_parameter_ranges: 	 <p>The array of <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_CategoricalParameterRange.html">CategoricalParameterRange</a> objects that specify ranges of categorical hyperparameters that a hyperparameter tuning job searches.</p>
  	auto_parameters: 	 <p>A list containing hyperparameter names and example values to be used by Autotune to determine optimal ranges for your tuning job.</p>
-
     """
     integer_parameter_ranges: Optional[List[IntegerParameterRange]] = Unassigned()
     continuous_parameter_ranges: Optional[List[ContinuousParameterRange]] = Unassigned()
@@ -4561,7 +4073,6 @@ class ParameterRanges(Base):
     auto_parameters: Optional[List[AutoParameter]] = Unassigned()
 
 
-@dataclass
 class TuningJobCompletionCriteria(Base):
     """
      TuningJobCompletionCriteria
@@ -4572,14 +4083,12 @@ class TuningJobCompletionCriteria(Base):
  	target_objective_metric_value: 	 <p>The value of the objective metric.</p>
  	best_objective_not_improving: 	 <p>A flag to stop your hyperparameter tuning job if model performance fails to improve as evaluated against an objective function.</p>
  	convergence_detected: 	 <p>A flag to top your hyperparameter tuning job if automatic model tuning (AMT) has detected that your model has converged as evaluated against your objective function.</p>
-
     """
     target_objective_metric_value: Optional[float] = Unassigned()
     best_objective_not_improving: Optional[BestObjectiveNotImproving] = Unassigned()
     convergence_detected: Optional[ConvergenceDetected] = Unassigned()
 
 
-@dataclass
 class HyperParameterTuningJobConfig(Base):
     """
      HyperParameterTuningJobConfig
@@ -4595,7 +4104,6 @@ class HyperParameterTuningJobConfig(Base):
  	training_job_early_stopping_type: 	 <p>Specifies whether to use early stopping for training jobs launched by the hyperparameter tuning job. Because the <code>Hyperband</code> strategy has its own advanced internal early stopping mechanism, <code>TrainingJobEarlyStoppingType</code> must be <code>OFF</code> to use <code>Hyperband</code>. This parameter can take on one of the following values (the default value is <code>OFF</code>):</p> <dl> <dt>OFF</dt> <dd> <p>Training jobs launched by the hyperparameter tuning job do not use early stopping.</p> </dd> <dt>AUTO</dt> <dd> <p>SageMaker stops training jobs launched by the hyperparameter tuning job when they are unlikely to perform better than previously completed training jobs. For more information, see <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/automatic-model-tuning-early-stopping.html">Stop Training Jobs Early</a>.</p> </dd> </dl>
  	tuning_job_completion_criteria: 	 <p>The tuning job's completion criteria.</p>
  	random_seed: 	 <p>A value used to initialize a pseudo-random number generator. Setting a random seed and using the same seed later for the same tuning job will allow hyperparameter optimization to find more a consistent hyperparameter configuration between the two runs.</p>
-
     """
     strategy: str
     resource_limits: ResourceLimits
@@ -4607,7 +4115,6 @@ class HyperParameterTuningJobConfig(Base):
     random_seed: Optional[int] = Unassigned()
 
 
-@dataclass
 class HyperParameterAlgorithmSpecification(Base):
     """
      HyperParameterAlgorithmSpecification
@@ -4619,7 +4126,6 @@ class HyperParameterAlgorithmSpecification(Base):
  	training_input_mode
  	algorithm_name: 	 <p>The name of the resource algorithm to use for the hyperparameter tuning job. If you specify a value for this parameter, do not specify a value for <code>TrainingImage</code>.</p>
  	metric_definitions: 	 <p>An array of <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_MetricDefinition.html">MetricDefinition</a> objects that specify the metrics that the algorithm emits.</p>
-
     """
     training_input_mode: str
     training_image: Optional[str] = Unassigned()
@@ -4627,7 +4133,6 @@ class HyperParameterAlgorithmSpecification(Base):
     metric_definitions: Optional[List[MetricDefinition]] = Unassigned()
 
 
-@dataclass
 class HyperParameterTuningInstanceConfig(Base):
     """
      HyperParameterTuningInstanceConfig
@@ -4638,14 +4143,12 @@ class HyperParameterTuningInstanceConfig(Base):
  	instance_type: 	 <p>The instance type used for processing of hyperparameter optimization jobs. Choose from general purpose (no GPUs) instance types: ml.m5.xlarge, ml.m5.2xlarge, and ml.m5.4xlarge or compute optimized (no GPUs) instance types: ml.c5.xlarge and ml.c5.2xlarge. For more information about instance types, see <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/notebooks-available-instance-types.html">instance type descriptions</a>.</p>
  	instance_count: 	 <p>The number of instances of the type specified by <code>InstanceType</code>. Choose an instance count larger than 1 for distributed training algorithms. See <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/data-parallel-use-api.html">Step 2: Launch a SageMaker Distributed Training Job Using the SageMaker Python SDK</a> for more information.</p>
  	volume_size_in_g_b: 	 <p>The volume size in GB of the data to be processed for hyperparameter optimization (optional).</p>
-
     """
     instance_type: str
     instance_count: int
     volume_size_in_g_b: int
 
 
-@dataclass
 class HyperParameterTuningResourceConfig(Base):
     """
      HyperParameterTuningResourceConfig
@@ -4659,7 +4162,6 @@ class HyperParameterTuningResourceConfig(Base):
  	volume_kms_key_id: 	 <p>A key used by Amazon Web Services Key Management Service to encrypt data on the storage volume attached to the compute instances used to run the training job. You can use either of the following formats to specify a key.</p> <p>KMS Key ID:</p> <p> <code>"1234abcd-12ab-34cd-56ef-1234567890ab"</code> </p> <p>Amazon Resource Name (ARN) of a KMS key:</p> <p> <code>"arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab"</code> </p> <p>Some instances use local storage, which use a <a href="https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ssd-instance-store.html">hardware module to encrypt</a> storage volumes. If you choose one of these instance types, you cannot request a <code>VolumeKmsKeyId</code>. For a list of instance types that use local storage, see <a href="http://aws.amazon.com/releasenotes/host-instance-storage-volumes-table/">instance store volumes</a>. For more information about Amazon Web Services Key Management Service, see <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/sms-security-kms-permissions.html">KMS encryption</a> for more information.</p>
  	allocation_strategy: 	 <p>The strategy that determines the order of preference for resources specified in <code>InstanceConfigs</code> used in hyperparameter optimization.</p>
  	instance_configs: 	 <p>A list containing the configuration(s) for one or more resources for processing hyperparameter jobs. These resources include compute instances and storage volumes to use in model training jobs launched by hyperparameter tuning jobs. The <code>AllocationStrategy</code> controls the order in which multiple configurations provided in <code>InstanceConfigs</code> are used.</p> <note> <p>If you only want to use a single instance configuration inside the <code>HyperParameterTuningResourceConfig</code> API, do not provide a value for <code>InstanceConfigs</code>. Instead, use <code>InstanceType</code>, <code>VolumeSizeInGB</code> and <code>InstanceCount</code>. If you use <code>InstanceConfigs</code>, do not provide values for <code>InstanceType</code>, <code>VolumeSizeInGB</code> or <code>InstanceCount</code>.</p> </note>
-
     """
     instance_type: Optional[str] = Unassigned()
     instance_count: Optional[int] = Unassigned()
@@ -4669,7 +4171,6 @@ class HyperParameterTuningResourceConfig(Base):
     instance_configs: Optional[List[HyperParameterTuningInstanceConfig]] = Unassigned()
 
 
-@dataclass
 class RetryStrategy(Base):
     """
      RetryStrategy
@@ -4678,12 +4179,10 @@ class RetryStrategy(Base):
  	 Attributes
 	----------------------
  	maximum_retry_attempts: 	 <p>The number of times to retry the job. When the job is retried, it's <code>SecondaryStatus</code> is changed to <code>STARTING</code>.</p>
-
     """
     maximum_retry_attempts: int
 
 
-@dataclass
 class HyperParameterTrainingJobDefinition(Base):
     """
      HyperParameterTrainingJobDefinition
@@ -4709,7 +4208,6 @@ class HyperParameterTrainingJobDefinition(Base):
  	checkpoint_config
  	retry_strategy: 	 <p>The number of times to retry the job when the job fails due to an <code>InternalServerError</code>.</p>
  	environment: 	 <p>An environment variable that you can pass into the SageMaker <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_CreateTrainingJob.html">CreateTrainingJob</a> API. You can use an existing <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_CreateTrainingJob.html#sagemaker-CreateTrainingJob-request-Environment">environment variable from the training container</a> or use your own. See <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/automatic-model-tuning-define-metrics-variables.html">Define metrics and variables</a> for more information.</p> <note> <p>The maximum number of items specified for <code>Map Entries</code> refers to the maximum number of environment variables for each <code>TrainingJobDefinition</code> and also the maximum for the hyperparameter tuning job itself. That is, the sum of the number of environment variables for all the training job definitions can't exceed the maximum number specified.</p> </note>
-
     """
     algorithm_specification: HyperParameterAlgorithmSpecification
     role_arn: str
@@ -4731,7 +4229,6 @@ class HyperParameterTrainingJobDefinition(Base):
     environment: Optional[Dict[str, str]] = Unassigned()
 
 
-@dataclass
 class ParentHyperParameterTuningJob(Base):
     """
      ParentHyperParameterTuningJob
@@ -4740,12 +4237,10 @@ class ParentHyperParameterTuningJob(Base):
  	 Attributes
 	----------------------
  	hyper_parameter_tuning_job_name: 	 <p>The name of the hyperparameter tuning job to be used as a starting point for a new hyperparameter tuning job.</p>
-
     """
     hyper_parameter_tuning_job_name: Optional[str] = Unassigned()
 
 
-@dataclass
 class HyperParameterTuningJobWarmStartConfig(Base):
     """
      HyperParameterTuningJobWarmStartConfig
@@ -4755,13 +4250,11 @@ class HyperParameterTuningJobWarmStartConfig(Base):
 	----------------------
  	parent_hyper_parameter_tuning_jobs: 	 <p>An array of hyperparameter tuning jobs that are used as the starting point for the new hyperparameter tuning job. For more information about warm starting a hyperparameter tuning job, see <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/automatic-model-tuning-warm-start.html">Using a Previous Hyperparameter Tuning Job as a Starting Point</a>.</p> <p>Hyperparameter tuning jobs created before October 1, 2018 cannot be used as parent jobs for warm start tuning jobs.</p>
  	warm_start_type: 	 <p>Specifies one of the following:</p> <dl> <dt>IDENTICAL_DATA_AND_ALGORITHM</dt> <dd> <p>The new hyperparameter tuning job uses the same input data and training image as the parent tuning jobs. You can change the hyperparameter ranges to search and the maximum number of training jobs that the hyperparameter tuning job launches. You cannot use a new version of the training algorithm, unless the changes in the new version do not affect the algorithm itself. For example, changes that improve logging or adding support for a different data format are allowed. You can also change hyperparameters from tunable to static, and from static to tunable, but the total number of static plus tunable hyperparameters must remain the same as it is in all parent jobs. The objective metric for the new tuning job must be the same as for all parent jobs.</p> </dd> <dt>TRANSFER_LEARNING</dt> <dd> <p>The new hyperparameter tuning job can include input data, hyperparameter ranges, maximum number of concurrent training jobs, and maximum number of training jobs that are different than those of its parent hyperparameter tuning jobs. The training image can also be a different version from the version used in the parent hyperparameter tuning job. You can also change hyperparameters from tunable to static, and from static to tunable, but the total number of static plus tunable hyperparameters must remain the same as it is in all parent jobs. The objective metric for the new tuning job must be the same as for all parent jobs.</p> </dd> </dl>
-
     """
     parent_hyper_parameter_tuning_jobs: List[ParentHyperParameterTuningJob]
     warm_start_type: str
 
 
-@dataclass
 class InferenceComponentContainerSpecification(Base):
     """
      InferenceComponentContainerSpecification
@@ -4772,14 +4265,12 @@ class InferenceComponentContainerSpecification(Base):
  	image: 	 <p>The Amazon Elastic Container Registry (Amazon ECR) path where the Docker image for the model is stored.</p>
  	artifact_url: 	 <p>The Amazon S3 path where the model artifacts, which result from model training, are stored. This path must point to a single gzip compressed tar archive (.tar.gz suffix).</p>
  	environment: 	 <p>The environment variables to set in the Docker container. Each key and value in the Environment string-to-string map can have length of up to 1024. We support up to 16 entries in the map.</p>
-
     """
     image: Optional[str] = Unassigned()
     artifact_url: Optional[str] = Unassigned()
     environment: Optional[Dict[str, str]] = Unassigned()
 
 
-@dataclass
 class InferenceComponentStartupParameters(Base):
     """
      InferenceComponentStartupParameters
@@ -4789,13 +4280,11 @@ class InferenceComponentStartupParameters(Base):
 	----------------------
  	model_data_download_timeout_in_seconds: 	 <p>The timeout value, in seconds, to download and extract the model that you want to host from Amazon S3 to the individual inference instance associated with this inference component.</p>
  	container_startup_health_check_timeout_in_seconds: 	 <p>The timeout value, in seconds, for your inference container to pass health check by Amazon S3 Hosting. For more information about health check, see <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/your-algorithms-inference-code.html#your-algorithms-inference-algo-ping-requests">How Your Container Should Respond to Health Check (Ping) Requests</a>.</p>
-
     """
     model_data_download_timeout_in_seconds: Optional[int] = Unassigned()
     container_startup_health_check_timeout_in_seconds: Optional[int] = Unassigned()
 
 
-@dataclass
 class InferenceComponentComputeResourceRequirements(Base):
     """
      InferenceComponentComputeResourceRequirements
@@ -4807,7 +4296,6 @@ class InferenceComponentComputeResourceRequirements(Base):
  	number_of_accelerator_devices_required: 	 <p>The number of accelerators to allocate to run a model that you assign to an inference component. Accelerators include GPUs and Amazon Web Services Inferentia.</p>
  	min_memory_required_in_mb: 	 <p>The minimum MB of memory to allocate to run a model that you assign to an inference component.</p>
  	max_memory_required_in_mb: 	 <p>The maximum MB of memory to allocate to run a model that you assign to an inference component.</p>
-
     """
     min_memory_required_in_mb: int
     number_of_cpu_cores_required: Optional[float] = Unassigned()
@@ -4815,7 +4303,6 @@ class InferenceComponentComputeResourceRequirements(Base):
     max_memory_required_in_mb: Optional[int] = Unassigned()
 
 
-@dataclass
 class InferenceComponentSpecification(Base):
     """
      InferenceComponentSpecification
@@ -4827,7 +4314,6 @@ class InferenceComponentSpecification(Base):
  	container: 	 <p>Defines a container that provides the runtime environment for a model that you deploy with an inference component.</p>
  	startup_parameters: 	 <p>Settings that take effect while the model container starts up.</p>
  	compute_resource_requirements: 	 <p>The compute resources allocated to run the model assigned to the inference component.</p>
-
     """
     compute_resource_requirements: InferenceComponentComputeResourceRequirements
     model_name: Optional[str] = Unassigned()
@@ -4835,7 +4321,6 @@ class InferenceComponentSpecification(Base):
     startup_parameters: Optional[InferenceComponentStartupParameters] = Unassigned()
 
 
-@dataclass
 class InferenceComponentRuntimeConfig(Base):
     """
      InferenceComponentRuntimeConfig
@@ -4844,12 +4329,10 @@ class InferenceComponentRuntimeConfig(Base):
  	 Attributes
 	----------------------
  	copy_count: 	 <p>The number of runtime copies of the model container to deploy with the inference component. Each copy can serve inference requests.</p>
-
     """
     copy_count: int
 
 
-@dataclass
 class InferenceExperimentSchedule(Base):
     """
      InferenceExperimentSchedule
@@ -4859,13 +4342,11 @@ class InferenceExperimentSchedule(Base):
 	----------------------
  	start_time: 	 <p>The timestamp at which the inference experiment started or will start.</p>
  	end_time: 	 <p>The timestamp at which the inference experiment ended or will end.</p>
-
     """
     start_time: Optional[datetime.datetime] = Unassigned()
     end_time: Optional[datetime.datetime] = Unassigned()
 
 
-@dataclass
 class RealTimeInferenceConfig(Base):
     """
      RealTimeInferenceConfig
@@ -4875,13 +4356,11 @@ class RealTimeInferenceConfig(Base):
 	----------------------
  	instance_type: 	 <p>The instance type the model is deployed to.</p>
  	instance_count: 	 <p>The number of instances of the type specified by <code>InstanceType</code>.</p>
-
     """
     instance_type: str
     instance_count: int
 
 
-@dataclass
 class ModelInfrastructureConfig(Base):
     """
      ModelInfrastructureConfig
@@ -4891,13 +4370,11 @@ class ModelInfrastructureConfig(Base):
 	----------------------
  	infrastructure_type: 	 <p>The inference option to which to deploy your model. Possible values are the following:</p> <ul> <li> <p> <code>RealTime</code>: Deploy to real-time inference.</p> </li> </ul>
  	real_time_inference_config: 	 <p>The infrastructure configuration for deploying the model to real-time inference.</p>
-
     """
     infrastructure_type: str
     real_time_inference_config: RealTimeInferenceConfig
 
 
-@dataclass
 class ModelVariantConfig(Base):
     """
      ModelVariantConfig
@@ -4908,14 +4385,12 @@ class ModelVariantConfig(Base):
  	model_name: 	 <p>The name of the Amazon SageMaker Model entity.</p>
  	variant_name: 	 <p>The name of the variant.</p>
  	infrastructure_config: 	 <p>The configuration for the infrastructure that the model will be deployed to.</p>
-
     """
     model_name: str
     variant_name: str
     infrastructure_config: ModelInfrastructureConfig
 
 
-@dataclass
 class InferenceExperimentDataStorageConfig(Base):
     """
      InferenceExperimentDataStorageConfig
@@ -4926,14 +4401,12 @@ class InferenceExperimentDataStorageConfig(Base):
  	destination: 	 <p>The Amazon S3 bucket where the inference request and response data is stored. </p>
  	kms_key: 	 <p> The Amazon Web Services Key Management Service key that Amazon SageMaker uses to encrypt captured data at rest using Amazon S3 server-side encryption. </p>
  	content_type
-
     """
     destination: str
     kms_key: Optional[str] = Unassigned()
     content_type: Optional[CaptureContentTypeHeader] = Unassigned()
 
 
-@dataclass
 class ShadowModelVariantConfig(Base):
     """
      ShadowModelVariantConfig
@@ -4943,13 +4416,11 @@ class ShadowModelVariantConfig(Base):
 	----------------------
  	shadow_model_variant_name: 	 <p>The name of the shadow variant.</p>
  	sampling_percentage: 	 <p> The percentage of inference requests that Amazon SageMaker replicates from the production variant to the shadow variant. </p>
-
     """
     shadow_model_variant_name: str
     sampling_percentage: int
 
 
-@dataclass
 class ShadowModeConfig(Base):
     """
      ShadowModeConfig
@@ -4959,13 +4430,11 @@ class ShadowModeConfig(Base):
 	----------------------
  	source_model_variant_name: 	 <p> The name of the production variant, which takes all the inference requests. </p>
  	shadow_model_variants: 	 <p>List of shadow variant configurations.</p>
-
     """
     source_model_variant_name: str
     shadow_model_variants: List[ShadowModelVariantConfig]
 
 
-@dataclass
 class Phase(Base):
     """
      Phase
@@ -4976,14 +4445,12 @@ class Phase(Base):
  	initial_number_of_users: 	 <p>Specifies how many concurrent users to start with. The value should be between 1 and 3.</p>
  	spawn_rate: 	 <p>Specified how many new users to spawn in a minute.</p>
  	duration_in_seconds: 	 <p>Specifies how long a traffic phase should be. For custom load tests, the value should be between 120 and 3600. This value should not exceed <code>JobDurationInSeconds</code>.</p>
-
     """
     initial_number_of_users: Optional[int] = Unassigned()
     spawn_rate: Optional[int] = Unassigned()
     duration_in_seconds: Optional[int] = Unassigned()
 
 
-@dataclass
 class Stairs(Base):
     """
      Stairs
@@ -4994,14 +4461,12 @@ class Stairs(Base):
  	duration_in_seconds: 	 <p>Defines how long each traffic step should be.</p>
  	number_of_steps: 	 <p>Specifies how many steps to perform during traffic.</p>
  	users_per_step: 	 <p>Specifies how many new users to spawn in each step.</p>
-
     """
     duration_in_seconds: Optional[int] = Unassigned()
     number_of_steps: Optional[int] = Unassigned()
     users_per_step: Optional[int] = Unassigned()
 
 
-@dataclass
 class TrafficPattern(Base):
     """
      TrafficPattern
@@ -5012,14 +4477,12 @@ class TrafficPattern(Base):
  	traffic_type: 	 <p>Defines the traffic patterns. Choose either <code>PHASES</code> or <code>STAIRS</code>.</p>
  	phases: 	 <p>Defines the phases traffic specification.</p>
  	stairs: 	 <p>Defines the stairs traffic pattern.</p>
-
     """
     traffic_type: Optional[str] = Unassigned()
     phases: Optional[List[Phase]] = Unassigned()
     stairs: Optional[Stairs] = Unassigned()
 
 
-@dataclass
 class RecommendationJobResourceLimit(Base):
     """
      RecommendationJobResourceLimit
@@ -5029,13 +4492,11 @@ class RecommendationJobResourceLimit(Base):
 	----------------------
  	max_number_of_tests: 	 <p>Defines the maximum number of load tests.</p>
  	max_parallel_of_tests: 	 <p>Defines the maximum number of parallel load tests.</p>
-
     """
     max_number_of_tests: Optional[int] = Unassigned()
     max_parallel_of_tests: Optional[int] = Unassigned()
 
 
-@dataclass
 class EnvironmentParameterRanges(Base):
     """
      EnvironmentParameterRanges
@@ -5044,12 +4505,10 @@ class EnvironmentParameterRanges(Base):
  	 Attributes
 	----------------------
  	categorical_parameter_ranges: 	 <p>Specified a list of parameters for each category.</p>
-
     """
     categorical_parameter_ranges: Optional[List[CategoricalParameter]] = Unassigned()
 
 
-@dataclass
 class EndpointInputConfiguration(Base):
     """
      EndpointInputConfiguration
@@ -5061,7 +4520,6 @@ class EndpointInputConfiguration(Base):
  	serverless_config
  	inference_specification_name: 	 <p>The inference specification name in the model package version.</p>
  	environment_parameter_ranges: 	 <p> The parameter you want to benchmark against.</p>
-
     """
     instance_type: Optional[str] = Unassigned()
     serverless_config: Optional[ProductionVariantServerlessConfig] = Unassigned()
@@ -5069,7 +4527,6 @@ class EndpointInputConfiguration(Base):
     environment_parameter_ranges: Optional[EnvironmentParameterRanges] = Unassigned()
 
 
-@dataclass
 class RecommendationJobPayloadConfig(Base):
     """
      RecommendationJobPayloadConfig
@@ -5079,13 +4536,11 @@ class RecommendationJobPayloadConfig(Base):
 	----------------------
  	sample_payload_url: 	 <p>The Amazon Simple Storage Service (Amazon S3) path where the sample payload is stored. This path must point to a single gzip compressed tar archive (.tar.gz suffix).</p>
  	supported_content_types: 	 <p>The supported MIME types for the input data.</p>
-
     """
     sample_payload_url: Optional[str] = Unassigned()
     supported_content_types: Optional[List[str]] = Unassigned()
 
 
-@dataclass
 class RecommendationJobContainerConfig(Base):
     """
      RecommendationJobContainerConfig
@@ -5103,7 +4558,6 @@ class RecommendationJobContainerConfig(Base):
  	supported_endpoint_type: 	 <p>The endpoint type to receive recommendations for. By default this is null, and the results of the inference recommendation job return a combined list of both real-time and serverless benchmarks. By specifying a value for this field, you can receive a longer list of benchmarks for the desired endpoint type.</p>
  	data_input_config: 	 <p>Specifies the name and shape of the expected data inputs for your trained model with a JSON dictionary form. This field is used for optimizing your model using SageMaker Neo. For more information, see <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_InputConfig.html#sagemaker-Type-InputConfig-DataInputConfig">DataInputConfig</a>.</p>
  	supported_response_m_i_m_e_types: 	 <p>The supported MIME types for the output data.</p>
-
     """
     domain: Optional[str] = Unassigned()
     task: Optional[str] = Unassigned()
@@ -5117,7 +4571,6 @@ class RecommendationJobContainerConfig(Base):
     supported_response_m_i_m_e_types: Optional[List[str]] = Unassigned()
 
 
-@dataclass
 class EndpointInfo(Base):
     """
      EndpointInfo
@@ -5126,12 +4579,10 @@ class EndpointInfo(Base):
  	 Attributes
 	----------------------
  	endpoint_name: 	 <p>The name of a customer's endpoint.</p>
-
     """
     endpoint_name: Optional[str] = Unassigned()
 
 
-@dataclass
 class RecommendationJobVpcConfig(Base):
     """
      RecommendationJobVpcConfig
@@ -5141,13 +4592,11 @@ class RecommendationJobVpcConfig(Base):
 	----------------------
  	security_group_ids: 	 <p>The VPC security group IDs. IDs have the form of <code>sg-xxxxxxxx</code>. Specify the security groups for the VPC that is specified in the <code>Subnets</code> field.</p>
  	subnets: 	 <p>The ID of the subnets in the VPC to which you want to connect your model.</p>
-
     """
     security_group_ids: List[str]
     subnets: List[str]
 
 
-@dataclass
 class RecommendationJobInputConfig(Base):
     """
      RecommendationJobInputConfig
@@ -5165,7 +4614,6 @@ class RecommendationJobInputConfig(Base):
  	container_config: 	 <p>Specifies mandatory fields for running an Inference Recommender job. The fields specified in <code>ContainerConfig</code> override the corresponding fields in the model package.</p>
  	endpoints: 	 <p>Existing customer endpoints on which to run an Inference Recommender job.</p>
  	vpc_config: 	 <p>Inference Recommender provisions SageMaker endpoints with access to VPC in the inference recommendation job.</p>
-
     """
     model_package_version_arn: Optional[str] = Unassigned()
     model_name: Optional[str] = Unassigned()
@@ -5179,7 +4627,6 @@ class RecommendationJobInputConfig(Base):
     vpc_config: Optional[RecommendationJobVpcConfig] = Unassigned()
 
 
-@dataclass
 class ModelLatencyThreshold(Base):
     """
      ModelLatencyThreshold
@@ -5189,13 +4636,11 @@ class ModelLatencyThreshold(Base):
 	----------------------
  	percentile: 	 <p>The model latency percentile threshold. Acceptable values are <code>P95</code> and <code>P99</code>. For custom load tests, specify the value as <code>P95</code>.</p>
  	value_in_milliseconds: 	 <p>The model latency percentile value in milliseconds.</p>
-
     """
     percentile: Optional[str] = Unassigned()
     value_in_milliseconds: Optional[int] = Unassigned()
 
 
-@dataclass
 class RecommendationJobStoppingConditions(Base):
     """
      RecommendationJobStoppingConditions
@@ -5206,14 +4651,12 @@ class RecommendationJobStoppingConditions(Base):
  	max_invocations: 	 <p>The maximum number of requests per minute expected for the endpoint.</p>
  	model_latency_thresholds: 	 <p>The interval of time taken by a model to respond as viewed from SageMaker. The interval includes the local communication time taken to send the request and to fetch the response from the container of a model and the time taken to complete the inference in the container.</p>
  	flat_invocations: 	 <p>Stops a load test when the number of invocations (TPS) peaks and flattens, which means that the instance has reached capacity. The default value is <code>Stop</code>. If you want the load test to continue after invocations have flattened, set the value to <code>Continue</code>.</p>
-
     """
     max_invocations: Optional[int] = Unassigned()
     model_latency_thresholds: Optional[List[ModelLatencyThreshold]] = Unassigned()
     flat_invocations: Optional[str] = Unassigned()
 
 
-@dataclass
 class RecommendationJobCompiledOutputConfig(Base):
     """
      RecommendationJobCompiledOutputConfig
@@ -5222,12 +4665,10 @@ class RecommendationJobCompiledOutputConfig(Base):
  	 Attributes
 	----------------------
  	s3_output_uri: 	 <p>Identifies the Amazon S3 bucket where you want SageMaker to store the compiled model artifacts.</p>
-
     """
     s3_output_uri: Optional[str] = Unassigned()
 
 
-@dataclass
 class RecommendationJobOutputConfig(Base):
     """
      RecommendationJobOutputConfig
@@ -5237,13 +4678,11 @@ class RecommendationJobOutputConfig(Base):
 	----------------------
  	kms_key_id: 	 <p>The Amazon Resource Name (ARN) of a Amazon Web Services Key Management Service (Amazon Web Services KMS) key that Amazon SageMaker uses to encrypt your output artifacts with Amazon S3 server-side encryption. The SageMaker execution role must have <code>kms:GenerateDataKey</code> permission.</p> <p>The <code>KmsKeyId</code> can be any of the following formats:</p> <ul> <li> <p>// KMS Key ID</p> <p> <code>"1234abcd-12ab-34cd-56ef-1234567890ab"</code> </p> </li> <li> <p>// Amazon Resource Name (ARN) of a KMS Key</p> <p> <code>"arn:aws:kms:&lt;region&gt;:&lt;account&gt;:key/&lt;key-id-12ab-34cd-56ef-1234567890ab&gt;"</code> </p> </li> <li> <p>// KMS Key Alias</p> <p> <code>"alias/ExampleAlias"</code> </p> </li> <li> <p>// Amazon Resource Name (ARN) of a KMS Key Alias</p> <p> <code>"arn:aws:kms:&lt;region&gt;:&lt;account&gt;:alias/&lt;ExampleAlias&gt;"</code> </p> </li> </ul> <p>For more information about key identifiers, see <a href="https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html#key-id-key-id">Key identifiers (KeyID)</a> in the Amazon Web Services Key Management Service (Amazon Web Services KMS) documentation.</p>
  	compiled_output_config: 	 <p>Provides information about the output configuration for the compiled model.</p>
-
     """
     kms_key_id: Optional[str] = Unassigned()
     compiled_output_config: Optional[RecommendationJobCompiledOutputConfig] = Unassigned()
 
 
-@dataclass
 class LabelingJobS3DataSource(Base):
     """
      LabelingJobS3DataSource
@@ -5252,12 +4691,10 @@ class LabelingJobS3DataSource(Base):
  	 Attributes
 	----------------------
  	manifest_s3_uri: 	 <p>The Amazon S3 location of the manifest file that describes the input data objects. </p> <p>The input manifest file referenced in <code>ManifestS3Uri</code> must contain one of the following keys: <code>source-ref</code> or <code>source</code>. The value of the keys are interpreted as follows:</p> <ul> <li> <p> <code>source-ref</code>: The source of the object is the Amazon S3 object specified in the value. Use this value when the object is a binary object, such as an image.</p> </li> <li> <p> <code>source</code>: The source of the object is the value. Use this value when the object is a text value.</p> </li> </ul> <p>If you are a new user of Ground Truth, it is recommended you review <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/sms-input-data-input-manifest.html">Use an Input Manifest File </a> in the Amazon SageMaker Developer Guide to learn how to create an input manifest file.</p>
-
     """
     manifest_s3_uri: str
 
 
-@dataclass
 class LabelingJobSnsDataSource(Base):
     """
      LabelingJobSnsDataSource
@@ -5266,12 +4703,10 @@ class LabelingJobSnsDataSource(Base):
  	 Attributes
 	----------------------
  	sns_topic_arn: 	 <p>The Amazon SNS input topic Amazon Resource Name (ARN). Specify the ARN of the input topic you will use to send new data objects to a streaming labeling job.</p>
-
     """
     sns_topic_arn: str
 
 
-@dataclass
 class LabelingJobDataSource(Base):
     """
      LabelingJobDataSource
@@ -5281,13 +4716,11 @@ class LabelingJobDataSource(Base):
 	----------------------
  	s3_data_source: 	 <p>The Amazon S3 location of the input data objects.</p>
  	sns_data_source: 	 <p>An Amazon SNS data source used for streaming labeling jobs. To learn more, see <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/sms-streaming-labeling-job.html#sms-streaming-how-it-works-send-data">Send Data to a Streaming Labeling Job</a>. </p>
-
     """
     s3_data_source: Optional[LabelingJobS3DataSource] = Unassigned()
     sns_data_source: Optional[LabelingJobSnsDataSource] = Unassigned()
 
 
-@dataclass
 class LabelingJobDataAttributes(Base):
     """
      LabelingJobDataAttributes
@@ -5296,12 +4729,10 @@ class LabelingJobDataAttributes(Base):
  	 Attributes
 	----------------------
  	content_classifiers: 	 <p>Declares that your content is free of personally identifiable information or adult content. SageMaker may restrict the Amazon Mechanical Turk workers that can view your task based on this information.</p>
-
     """
     content_classifiers: Optional[List[str]] = Unassigned()
 
 
-@dataclass
 class LabelingJobInputConfig(Base):
     """
      LabelingJobInputConfig
@@ -5311,13 +4742,11 @@ class LabelingJobInputConfig(Base):
 	----------------------
  	data_source: 	 <p>The location of the input data.</p>
  	data_attributes: 	 <p>Attributes of the data specified by the customer.</p>
-
     """
     data_source: LabelingJobDataSource
     data_attributes: Optional[LabelingJobDataAttributes] = Unassigned()
 
 
-@dataclass
 class LabelingJobOutputConfig(Base):
     """
      LabelingJobOutputConfig
@@ -5328,14 +4757,12 @@ class LabelingJobOutputConfig(Base):
  	s3_output_path: 	 <p>The Amazon S3 location to write output data.</p>
  	kms_key_id: 	 <p>The Amazon Web Services Key Management Service ID of the key used to encrypt the output data, if any.</p> <p>If you provide your own KMS key ID, you must add the required permissions to your KMS key described in <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/sms-security-permission.html#sms-security-kms-permissions">Encrypt Output Data and Storage Volume with Amazon Web Services KMS</a>.</p> <p>If you don't provide a KMS key ID, Amazon SageMaker uses the default Amazon Web Services KMS key for Amazon S3 for your role's account to encrypt your output data.</p> <p>If you use a bucket policy with an <code>s3:PutObject</code> permission that only allows objects with server-side encryption, set the condition key of <code>s3:x-amz-server-side-encryption</code> to <code>"aws:kms"</code>. For more information, see <a href="https://docs.aws.amazon.com/AmazonS3/latest/dev/UsingKMSEncryption.html">KMS-Managed Encryption Keys</a> in the <i>Amazon Simple Storage Service Developer Guide.</i> </p>
  	sns_topic_arn: 	 <p>An Amazon Simple Notification Service (Amazon SNS) output topic ARN. Provide a <code>SnsTopicArn</code> if you want to do real time chaining to another streaming job and receive an Amazon SNS notifications each time a data object is submitted by a worker.</p> <p>If you provide an <code>SnsTopicArn</code> in <code>OutputConfig</code>, when workers complete labeling tasks, Ground Truth will send labeling task output data to the SNS output topic you specify here. </p> <p>To learn more, see <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/sms-streaming-labeling-job.html#sms-streaming-how-it-works-output-data">Receive Output Data from a Streaming Labeling Job</a>. </p>
-
     """
     s3_output_path: str
     kms_key_id: Optional[str] = Unassigned()
     sns_topic_arn: Optional[str] = Unassigned()
 
 
-@dataclass
 class LabelingJobStoppingConditions(Base):
     """
      LabelingJobStoppingConditions
@@ -5345,13 +4772,11 @@ class LabelingJobStoppingConditions(Base):
 	----------------------
  	max_human_labeled_object_count: 	 <p>The maximum number of objects that can be labeled by human workers.</p>
  	max_percentage_of_input_dataset_labeled: 	 <p>The maximum number of input data objects that should be labeled.</p>
-
     """
     max_human_labeled_object_count: Optional[int] = Unassigned()
     max_percentage_of_input_dataset_labeled: Optional[int] = Unassigned()
 
 
-@dataclass
 class LabelingJobResourceConfig(Base):
     """
      LabelingJobResourceConfig
@@ -5361,13 +4786,11 @@ class LabelingJobResourceConfig(Base):
 	----------------------
  	volume_kms_key_id: 	 <p>The Amazon Web Services Key Management Service (Amazon Web Services KMS) key that Amazon SageMaker uses to encrypt data on the storage volume attached to the ML compute instance(s) that run the training and inference jobs used for automated data labeling. </p> <p>You can only specify a <code>VolumeKmsKeyId</code> when you create a labeling job with automated data labeling enabled using the API operation <code>CreateLabelingJob</code>. You cannot specify an Amazon Web Services KMS key to encrypt the storage volume used for automated data labeling model training and inference when you create a labeling job using the console. To learn more, see <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/sms-security.html">Output Data and Storage Volume Encryption</a>.</p> <p>The <code>VolumeKmsKeyId</code> can be any of the following formats:</p> <ul> <li> <p>KMS Key ID</p> <p> <code>"1234abcd-12ab-34cd-56ef-1234567890ab"</code> </p> </li> <li> <p>Amazon Resource Name (ARN) of a KMS Key</p> <p> <code>"arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab"</code> </p> </li> </ul>
  	vpc_config
-
     """
     volume_kms_key_id: Optional[str] = Unassigned()
     vpc_config: Optional[VpcConfig] = Unassigned()
 
 
-@dataclass
 class LabelingJobAlgorithmsConfig(Base):
     """
      LabelingJobAlgorithmsConfig
@@ -5378,14 +4801,12 @@ class LabelingJobAlgorithmsConfig(Base):
  	labeling_job_algorithm_specification_arn: 	 <p>Specifies the Amazon Resource Name (ARN) of the algorithm used for auto-labeling. You must select one of the following ARNs:</p> <ul> <li> <p> <i>Image classification</i> </p> <p> <code>arn:aws:sagemaker:<i>region</i>:027400017018:labeling-job-algorithm-specification/image-classification</code> </p> </li> <li> <p> <i>Text classification</i> </p> <p> <code>arn:aws:sagemaker:<i>region</i>:027400017018:labeling-job-algorithm-specification/text-classification</code> </p> </li> <li> <p> <i>Object detection</i> </p> <p> <code>arn:aws:sagemaker:<i>region</i>:027400017018:labeling-job-algorithm-specification/object-detection</code> </p> </li> <li> <p> <i>Semantic Segmentation</i> </p> <p> <code>arn:aws:sagemaker:<i>region</i>:027400017018:labeling-job-algorithm-specification/semantic-segmentation</code> </p> </li> </ul>
  	initial_active_learning_model_arn: 	 <p>At the end of an auto-label job Ground Truth sends the Amazon Resource Name (ARN) of the final model used for auto-labeling. You can use this model as the starting point for subsequent similar jobs by providing the ARN of the model here. </p>
  	labeling_job_resource_config: 	 <p>Provides configuration information for a labeling job.</p>
-
     """
     labeling_job_algorithm_specification_arn: str
     initial_active_learning_model_arn: Optional[str] = Unassigned()
     labeling_job_resource_config: Optional[LabelingJobResourceConfig] = Unassigned()
 
 
-@dataclass
 class UiConfig(Base):
     """
      UiConfig
@@ -5395,13 +4816,11 @@ class UiConfig(Base):
 	----------------------
  	ui_template_s3_uri: 	 <p>The Amazon S3 bucket location of the UI template, or worker task template. This is the template used to render the worker UI and tools for labeling job tasks. For more information about the contents of a UI template, see <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/sms-custom-templates-step2.html"> Creating Your Custom Labeling Task Template</a>.</p>
  	human_task_ui_arn: 	 <p>The ARN of the worker task template used to render the worker UI and tools for labeling job tasks.</p> <p>Use this parameter when you are creating a labeling job for named entity recognition, 3D point cloud and video frame labeling jobs. Use your labeling job task type to select one of the following ARNs and use it with this parameter when you create a labeling job. Replace <code>aws-region</code> with the Amazon Web Services Region you are creating your labeling job in. For example, replace <code>aws-region</code> with <code>us-west-1</code> if you create a labeling job in US West (N. California).</p> <p> <b>Named Entity Recognition</b> </p> <p>Use the following <code>HumanTaskUiArn</code> for named entity recognition labeling jobs:</p> <p> <code>arn:aws:sagemaker:aws-region:394669845002:human-task-ui/NamedEntityRecognition</code> </p> <p> <b>3D Point Cloud HumanTaskUiArns</b> </p> <p>Use this <code>HumanTaskUiArn</code> for 3D point cloud object detection and 3D point cloud object detection adjustment labeling jobs. </p> <ul> <li> <p> <code>arn:aws:sagemaker:aws-region:394669845002:human-task-ui/PointCloudObjectDetection</code> </p> </li> </ul> <p> Use this <code>HumanTaskUiArn</code> for 3D point cloud object tracking and 3D point cloud object tracking adjustment labeling jobs. </p> <ul> <li> <p> <code>arn:aws:sagemaker:aws-region:394669845002:human-task-ui/PointCloudObjectTracking</code> </p> </li> </ul> <p> Use this <code>HumanTaskUiArn</code> for 3D point cloud semantic segmentation and 3D point cloud semantic segmentation adjustment labeling jobs.</p> <ul> <li> <p> <code>arn:aws:sagemaker:aws-region:394669845002:human-task-ui/PointCloudSemanticSegmentation</code> </p> </li> </ul> <p> <b>Video Frame HumanTaskUiArns</b> </p> <p>Use this <code>HumanTaskUiArn</code> for video frame object detection and video frame object detection adjustment labeling jobs. </p> <ul> <li> <p> <code>arn:aws:sagemaker:region:394669845002:human-task-ui/VideoObjectDetection</code> </p> </li> </ul> <p> Use this <code>HumanTaskUiArn</code> for video frame object tracking and video frame object tracking adjustment labeling jobs. </p> <ul> <li> <p> <code>arn:aws:sagemaker:aws-region:394669845002:human-task-ui/VideoObjectTracking</code> </p> </li> </ul>
-
     """
     ui_template_s3_uri: Optional[str] = Unassigned()
     human_task_ui_arn: Optional[str] = Unassigned()
 
 
-@dataclass
 class HumanTaskConfig(Base):
     """
      HumanTaskConfig
@@ -5421,7 +4840,6 @@ class HumanTaskConfig(Base):
  	max_concurrent_task_count: 	 <p>Defines the maximum number of data objects that can be labeled by human workers at the same time. Also referred to as batch size. Each object may have more than one worker at one time. The default value is 1000 objects. To increase the maximum value to 5000 objects, contact Amazon Web Services Support.</p>
  	annotation_consolidation_config: 	 <p>Configures how labels are consolidated across human workers.</p>
  	public_workforce_task_price: 	 <p>The price that you pay for each task performed by an Amazon Mechanical Turk worker.</p>
-
     """
     workteam_arn: str
     ui_config: UiConfig
@@ -5437,7 +4855,6 @@ class HumanTaskConfig(Base):
     public_workforce_task_price: Optional[PublicWorkforceTaskPrice] = Unassigned()
 
 
-@dataclass
 class ModelBiasBaselineConfig(Base):
     """
      ModelBiasBaselineConfig
@@ -5447,13 +4864,11 @@ class ModelBiasBaselineConfig(Base):
 	----------------------
  	baselining_job_name: 	 <p>The name of the baseline model bias job.</p>
  	constraints_resource
-
     """
     baselining_job_name: Optional[str] = Unassigned()
     constraints_resource: Optional[MonitoringConstraintsResource] = Unassigned()
 
 
-@dataclass
 class ModelBiasAppSpecification(Base):
     """
      ModelBiasAppSpecification
@@ -5464,14 +4879,12 @@ class ModelBiasAppSpecification(Base):
  	image_uri: 	 <p>The container image to be run by the model bias job.</p>
  	config_uri: 	 <p>JSON formatted S3 file that defines bias parameters. For more information on this JSON configuration file, see <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/clarify-config-json-monitor-bias-parameters.html">Configure bias parameters</a>.</p>
  	environment: 	 <p>Sets the environment variables in the Docker container.</p>
-
     """
     image_uri: str
     config_uri: str
     environment: Optional[Dict[str, str]] = Unassigned()
 
 
-@dataclass
 class MonitoringGroundTruthS3Input(Base):
     """
      MonitoringGroundTruthS3Input
@@ -5480,12 +4893,10 @@ class MonitoringGroundTruthS3Input(Base):
  	 Attributes
 	----------------------
  	s3_uri: 	 <p>The address of the Amazon S3 location of the ground truth labels.</p>
-
     """
     s3_uri: Optional[str] = Unassigned()
 
 
-@dataclass
 class ModelBiasJobInput(Base):
     """
      ModelBiasJobInput
@@ -5496,14 +4907,12 @@ class ModelBiasJobInput(Base):
  	endpoint_input
  	batch_transform_input: 	 <p>Input object for the batch transform job.</p>
  	ground_truth_s3_input: 	 <p>Location of ground truth labels to use in model bias job.</p>
-
     """
     ground_truth_s3_input: MonitoringGroundTruthS3Input
     endpoint_input: Optional[EndpointInput] = Unassigned()
     batch_transform_input: Optional[BatchTransformInput] = Unassigned()
 
 
-@dataclass
 class ModelCardExportOutputConfig(Base):
     """
      ModelCardExportOutputConfig
@@ -5512,12 +4921,10 @@ class ModelCardExportOutputConfig(Base):
  	 Attributes
 	----------------------
  	s3_output_path: 	 <p>The Amazon S3 output path to export your model card PDF.</p>
-
     """
     s3_output_path: str
 
 
-@dataclass
 class ModelCardSecurityConfig(Base):
     """
      ModelCardSecurityConfig
@@ -5526,12 +4933,10 @@ class ModelCardSecurityConfig(Base):
  	 Attributes
 	----------------------
  	kms_key_id: 	 <p>A Key Management Service <a href="https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html#key-id-key-id">key ID</a> to use for encrypting a model card.</p>
-
     """
     kms_key_id: Optional[str] = Unassigned()
 
 
-@dataclass
 class ModelExplainabilityBaselineConfig(Base):
     """
      ModelExplainabilityBaselineConfig
@@ -5541,13 +4946,11 @@ class ModelExplainabilityBaselineConfig(Base):
 	----------------------
  	baselining_job_name: 	 <p>The name of the baseline model explainability job.</p>
  	constraints_resource
-
     """
     baselining_job_name: Optional[str] = Unassigned()
     constraints_resource: Optional[MonitoringConstraintsResource] = Unassigned()
 
 
-@dataclass
 class ModelExplainabilityAppSpecification(Base):
     """
      ModelExplainabilityAppSpecification
@@ -5558,14 +4961,12 @@ class ModelExplainabilityAppSpecification(Base):
  	image_uri: 	 <p>The container image to be run by the model explainability job.</p>
  	config_uri: 	 <p>JSON formatted Amazon S3 file that defines explainability parameters. For more information on this JSON configuration file, see <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/clarify-config-json-monitor-model-explainability-parameters.html">Configure model explainability parameters</a>.</p>
  	environment: 	 <p>Sets the environment variables in the Docker container.</p>
-
     """
     image_uri: str
     config_uri: str
     environment: Optional[Dict[str, str]] = Unassigned()
 
 
-@dataclass
 class ModelExplainabilityJobInput(Base):
     """
      ModelExplainabilityJobInput
@@ -5575,13 +4976,11 @@ class ModelExplainabilityJobInput(Base):
 	----------------------
  	endpoint_input
  	batch_transform_input: 	 <p>Input object for the batch transform job.</p>
-
     """
     endpoint_input: Optional[EndpointInput] = Unassigned()
     batch_transform_input: Optional[BatchTransformInput] = Unassigned()
 
 
-@dataclass
 class InferenceExecutionConfig(Base):
     """
      InferenceExecutionConfig
@@ -5590,12 +4989,10 @@ class InferenceExecutionConfig(Base):
  	 Attributes
 	----------------------
  	mode: 	 <p>How containers in a multi-container are run. The following values are valid.</p> <ul> <li> <p> <code>SERIAL</code> - Containers run as a serial pipeline.</p> </li> <li> <p> <code>DIRECT</code> - Only the individual container that you specify is run.</p> </li> </ul>
-
     """
     mode: str
 
 
-@dataclass
 class ModelPackageValidationProfile(Base):
     """
      ModelPackageValidationProfile
@@ -5605,13 +5002,11 @@ class ModelPackageValidationProfile(Base):
 	----------------------
  	profile_name: 	 <p>The name of the profile for the model package.</p>
  	transform_job_definition: 	 <p>The <code>TransformJobDefinition</code> object that describes the transform job used for the validation of the model package.</p>
-
     """
     profile_name: str
     transform_job_definition: TransformJobDefinition
 
 
-@dataclass
 class ModelPackageValidationSpecification(Base):
     """
      ModelPackageValidationSpecification
@@ -5621,13 +5016,11 @@ class ModelPackageValidationSpecification(Base):
 	----------------------
  	validation_role: 	 <p>The IAM roles to be used for the validation of the model package.</p>
  	validation_profiles: 	 <p>An array of <code>ModelPackageValidationProfile</code> objects, each of which specifies a batch transform job that SageMaker runs to validate your model package.</p>
-
     """
     validation_role: str
     validation_profiles: List[ModelPackageValidationProfile]
 
 
-@dataclass
 class SourceAlgorithm(Base):
     """
      SourceAlgorithm
@@ -5638,14 +5031,12 @@ class SourceAlgorithm(Base):
  	model_data_url: 	 <p>The Amazon S3 path where the model artifacts, which result from model training, are stored. This path must point to a single <code>gzip</code> compressed tar archive (<code>.tar.gz</code> suffix).</p> <note> <p>The model artifacts must be in an S3 bucket that is in the same Amazon Web Services region as the algorithm.</p> </note>
  	model_data_source: 	 <p>Specifies the location of ML model data to deploy during endpoint creation.</p>
  	algorithm_name: 	 <p>The name of an algorithm that was used to create the model package. The algorithm must be either an algorithm resource in your SageMaker account or an algorithm in Amazon Web Services Marketplace that you are subscribed to.</p>
-
     """
     algorithm_name: str
     model_data_url: Optional[str] = Unassigned()
     model_data_source: Optional[ModelDataSource] = Unassigned()
 
 
-@dataclass
 class SourceAlgorithmSpecification(Base):
     """
      SourceAlgorithmSpecification
@@ -5654,12 +5045,10 @@ class SourceAlgorithmSpecification(Base):
  	 Attributes
 	----------------------
  	source_algorithms: 	 <p>A list of the algorithms that were used to create a model package.</p>
-
     """
     source_algorithms: List[SourceAlgorithm]
 
 
-@dataclass
 class ModelQuality(Base):
     """
      ModelQuality
@@ -5669,13 +5058,11 @@ class ModelQuality(Base):
 	----------------------
  	statistics: 	 <p>Model quality statistics.</p>
  	constraints: 	 <p>Model quality constraints.</p>
-
     """
     statistics: Optional[MetricsSource] = Unassigned()
     constraints: Optional[MetricsSource] = Unassigned()
 
 
-@dataclass
 class ModelDataQuality(Base):
     """
      ModelDataQuality
@@ -5685,13 +5072,11 @@ class ModelDataQuality(Base):
 	----------------------
  	statistics: 	 <p>Data quality statistics for a model.</p>
  	constraints: 	 <p>Data quality constraints for a model.</p>
-
     """
     statistics: Optional[MetricsSource] = Unassigned()
     constraints: Optional[MetricsSource] = Unassigned()
 
 
-@dataclass
 class Explainability(Base):
     """
      Explainability
@@ -5700,12 +5085,10 @@ class Explainability(Base):
  	 Attributes
 	----------------------
  	report: 	 <p>The explainability report for a model.</p>
-
     """
     report: Optional[MetricsSource] = Unassigned()
 
 
-@dataclass
 class ModelMetrics(Base):
     """
      ModelMetrics
@@ -5717,7 +5100,6 @@ class ModelMetrics(Base):
  	model_data_quality: 	 <p>Metrics that measure the quality of the input data for a model.</p>
  	bias: 	 <p>Metrics that measure bias in a model.</p>
  	explainability: 	 <p>Metrics that help explain a model.</p>
-
     """
     model_quality: Optional[ModelQuality] = Unassigned()
     model_data_quality: Optional[ModelDataQuality] = Unassigned()
@@ -5725,7 +5107,6 @@ class ModelMetrics(Base):
     explainability: Optional[Explainability] = Unassigned()
 
 
-@dataclass
 class FileSource(Base):
     """
      FileSource
@@ -5736,14 +5117,12 @@ class FileSource(Base):
  	content_type: 	 <p>The type of content stored in the file source.</p>
  	content_digest: 	 <p>The digest of the file source.</p>
  	s3_uri: 	 <p>The Amazon S3 URI for the file source.</p>
-
     """
     s3_uri: str
     content_type: Optional[str] = Unassigned()
     content_digest: Optional[str] = Unassigned()
 
 
-@dataclass
 class DriftCheckBias(Base):
     """
      DriftCheckBias
@@ -5754,14 +5133,12 @@ class DriftCheckBias(Base):
  	config_file: 	 <p>The bias config file for a model.</p>
  	pre_training_constraints: 	 <p>The pre-training constraints.</p>
  	post_training_constraints: 	 <p>The post-training constraints.</p>
-
     """
     config_file: Optional[FileSource] = Unassigned()
     pre_training_constraints: Optional[MetricsSource] = Unassigned()
     post_training_constraints: Optional[MetricsSource] = Unassigned()
 
 
-@dataclass
 class DriftCheckExplainability(Base):
     """
      DriftCheckExplainability
@@ -5771,13 +5148,11 @@ class DriftCheckExplainability(Base):
 	----------------------
  	constraints: 	 <p>The drift check explainability constraints.</p>
  	config_file: 	 <p>The explainability config file for the model.</p>
-
     """
     constraints: Optional[MetricsSource] = Unassigned()
     config_file: Optional[FileSource] = Unassigned()
 
 
-@dataclass
 class DriftCheckModelQuality(Base):
     """
      DriftCheckModelQuality
@@ -5787,13 +5162,11 @@ class DriftCheckModelQuality(Base):
 	----------------------
  	statistics: 	 <p>The drift check model quality statistics.</p>
  	constraints: 	 <p>The drift check model quality constraints.</p>
-
     """
     statistics: Optional[MetricsSource] = Unassigned()
     constraints: Optional[MetricsSource] = Unassigned()
 
 
-@dataclass
 class DriftCheckModelDataQuality(Base):
     """
      DriftCheckModelDataQuality
@@ -5803,13 +5176,11 @@ class DriftCheckModelDataQuality(Base):
 	----------------------
  	statistics: 	 <p>The drift check model data quality statistics.</p>
  	constraints: 	 <p>The drift check model data quality constraints.</p>
-
     """
     statistics: Optional[MetricsSource] = Unassigned()
     constraints: Optional[MetricsSource] = Unassigned()
 
 
-@dataclass
 class DriftCheckBaselines(Base):
     """
      DriftCheckBaselines
@@ -5821,7 +5192,6 @@ class DriftCheckBaselines(Base):
  	explainability: 	 <p>Represents the drift check explainability baselines that can be used when the model monitor is set using the model package. </p>
  	model_quality: 	 <p>Represents the drift check model quality baselines that can be used when the model monitor is set using the model package.</p>
  	model_data_quality: 	 <p>Represents the drift check model data quality baselines that can be used when the model monitor is set using the model package.</p>
-
     """
     bias: Optional[DriftCheckBias] = Unassigned()
     explainability: Optional[DriftCheckExplainability] = Unassigned()
@@ -5829,7 +5199,6 @@ class DriftCheckBaselines(Base):
     model_data_quality: Optional[DriftCheckModelDataQuality] = Unassigned()
 
 
-@dataclass
 class ModelQualityBaselineConfig(Base):
     """
      ModelQualityBaselineConfig
@@ -5839,13 +5208,11 @@ class ModelQualityBaselineConfig(Base):
 	----------------------
  	baselining_job_name: 	 <p>The name of the job that performs baselining for the monitoring job.</p>
  	constraints_resource
-
     """
     baselining_job_name: Optional[str] = Unassigned()
     constraints_resource: Optional[MonitoringConstraintsResource] = Unassigned()
 
 
-@dataclass
 class ModelQualityAppSpecification(Base):
     """
      ModelQualityAppSpecification
@@ -5860,7 +5227,6 @@ class ModelQualityAppSpecification(Base):
  	post_analytics_processor_source_uri: 	 <p>An Amazon S3 URI to a script that is called after analysis has been performed. Applicable only for the built-in (first party) containers.</p>
  	problem_type: 	 <p>The machine learning problem type of the model that the monitoring job monitors.</p>
  	environment: 	 <p>Sets the environment variables in the container that the monitoring job runs.</p>
-
     """
     image_uri: str
     container_entrypoint: Optional[List[str]] = Unassigned()
@@ -5871,7 +5237,6 @@ class ModelQualityAppSpecification(Base):
     environment: Optional[Dict[str, str]] = Unassigned()
 
 
-@dataclass
 class ModelQualityJobInput(Base):
     """
      ModelQualityJobInput
@@ -5882,14 +5247,12 @@ class ModelQualityJobInput(Base):
  	endpoint_input
  	batch_transform_input: 	 <p>Input object for the batch transform job.</p>
  	ground_truth_s3_input: 	 <p>The ground truth label provided for the model.</p>
-
     """
     ground_truth_s3_input: MonitoringGroundTruthS3Input
     endpoint_input: Optional[EndpointInput] = Unassigned()
     batch_transform_input: Optional[BatchTransformInput] = Unassigned()
 
 
-@dataclass
 class ScheduleConfig(Base):
     """
      ScheduleConfig
@@ -5900,14 +5263,12 @@ class ScheduleConfig(Base):
  	schedule_expression: 	 <p>A cron expression that describes details about the monitoring schedule.</p> <p>The supported cron expressions are:</p> <ul> <li> <p>If you want to set the job to start every hour, use the following:</p> <p> <code>Hourly: cron(0 * ? * * *)</code> </p> </li> <li> <p>If you want to start the job daily:</p> <p> <code>cron(0 [00-23] ? * * *)</code> </p> </li> <li> <p>If you want to run the job one time, immediately, use the following keyword:</p> <p> <code>NOW</code> </p> </li> </ul> <p>For example, the following are valid cron expressions:</p> <ul> <li> <p>Daily at noon UTC: <code>cron(0 12 ? * * *)</code> </p> </li> <li> <p>Daily at midnight UTC: <code>cron(0 0 ? * * *)</code> </p> </li> </ul> <p>To support running every 6, 12 hours, the following are also supported:</p> <p> <code>cron(0 [00-23]/[01-24] ? * * *)</code> </p> <p>For example, the following are valid cron expressions:</p> <ul> <li> <p>Every 12 hours, starting at 5pm UTC: <code>cron(0 17/12 ? * * *)</code> </p> </li> <li> <p>Every two hours starting at midnight: <code>cron(0 0/2 ? * * *)</code> </p> </li> </ul> <note> <ul> <li> <p>Even though the cron expression is set to start at 5PM UTC, note that there could be a delay of 0-20 minutes from the actual requested time to run the execution. </p> </li> <li> <p>We recommend that if you would like a daily schedule, you do not provide this parameter. Amazon SageMaker will pick a time for running every day.</p> </li> </ul> </note> <p>You can also specify the keyword <code>NOW</code> to run the monitoring job immediately, one time, without recurring.</p>
  	data_analysis_start_time: 	 <p>Sets the start time for a monitoring job window. Express this time as an offset to the times that you schedule your monitoring jobs to run. You schedule monitoring jobs with the <code>ScheduleExpression</code> parameter. Specify this offset in ISO 8601 duration format. For example, if you want to monitor the five hours of data in your dataset that precede the start of each monitoring job, you would specify: <code>"-PT5H"</code>.</p> <p>The start time that you specify must not precede the end time that you specify by more than 24 hours. You specify the end time with the <code>DataAnalysisEndTime</code> parameter.</p> <p>If you set <code>ScheduleExpression</code> to <code>NOW</code>, this parameter is required.</p>
  	data_analysis_end_time: 	 <p>Sets the end time for a monitoring job window. Express this time as an offset to the times that you schedule your monitoring jobs to run. You schedule monitoring jobs with the <code>ScheduleExpression</code> parameter. Specify this offset in ISO 8601 duration format. For example, if you want to end the window one hour before the start of each monitoring job, you would specify: <code>"-PT1H"</code>.</p> <p>The end time that you specify must not follow the start time that you specify by more than 24 hours. You specify the start time with the <code>DataAnalysisStartTime</code> parameter.</p> <p>If you set <code>ScheduleExpression</code> to <code>NOW</code>, this parameter is required.</p>
-
     """
     schedule_expression: str
     data_analysis_start_time: Optional[str] = Unassigned()
     data_analysis_end_time: Optional[str] = Unassigned()
 
 
-@dataclass
 class MonitoringBaselineConfig(Base):
     """
      MonitoringBaselineConfig
@@ -5918,14 +5279,12 @@ class MonitoringBaselineConfig(Base):
  	baselining_job_name: 	 <p>The name of the job that performs baselining for the monitoring job.</p>
  	constraints_resource: 	 <p>The baseline constraint file in Amazon S3 that the current monitoring job should validated against.</p>
  	statistics_resource: 	 <p>The baseline statistics file in Amazon S3 that the current monitoring job should be validated against.</p>
-
     """
     baselining_job_name: Optional[str] = Unassigned()
     constraints_resource: Optional[MonitoringConstraintsResource] = Unassigned()
     statistics_resource: Optional[MonitoringStatisticsResource] = Unassigned()
 
 
-@dataclass
 class MonitoringInput(Base):
     """
      MonitoringInput
@@ -5935,13 +5294,11 @@ class MonitoringInput(Base):
 	----------------------
  	endpoint_input: 	 <p>The endpoint for a monitoring job.</p>
  	batch_transform_input: 	 <p>Input object for the batch transform job.</p>
-
     """
     endpoint_input: Optional[EndpointInput] = Unassigned()
     batch_transform_input: Optional[BatchTransformInput] = Unassigned()
 
 
-@dataclass
 class MonitoringAppSpecification(Base):
     """
      MonitoringAppSpecification
@@ -5954,7 +5311,6 @@ class MonitoringAppSpecification(Base):
  	container_arguments: 	 <p>An array of arguments for the container used to run the monitoring job.</p>
  	record_preprocessor_source_uri: 	 <p>An Amazon S3 URI to a script that is called per row prior to running analysis. It can base64 decode the payload and convert it into a flattened JSON so that the built-in container can use the converted data. Applicable only for the built-in (first party) containers.</p>
  	post_analytics_processor_source_uri: 	 <p>An Amazon S3 URI to a script that is called after analysis has been performed. Applicable only for the built-in (first party) containers.</p>
-
     """
     image_uri: str
     container_entrypoint: Optional[List[str]] = Unassigned()
@@ -5963,7 +5319,6 @@ class MonitoringAppSpecification(Base):
     post_analytics_processor_source_uri: Optional[str] = Unassigned()
 
 
-@dataclass
 class NetworkConfig(Base):
     """
      NetworkConfig
@@ -5974,14 +5329,12 @@ class NetworkConfig(Base):
  	enable_inter_container_traffic_encryption: 	 <p>Whether to encrypt all communications between distributed processing jobs. Choose <code>True</code> to encrypt communications. Encryption provides greater security for distributed processing jobs, but the processing might take longer.</p>
  	enable_network_isolation: 	 <p>Whether to allow inbound and outbound network calls to and from the containers used for the processing job.</p>
  	vpc_config
-
     """
     enable_inter_container_traffic_encryption: Optional[bool] = Unassigned()
     enable_network_isolation: Optional[bool] = Unassigned()
     vpc_config: Optional[VpcConfig] = Unassigned()
 
 
-@dataclass
 class MonitoringJobDefinition(Base):
     """
      MonitoringJobDefinition
@@ -5998,7 +5351,6 @@ class MonitoringJobDefinition(Base):
  	environment: 	 <p>Sets the environment variables in the Docker container.</p>
  	network_config: 	 <p>Specifies networking options for an monitoring job.</p>
  	role_arn: 	 <p>The Amazon Resource Name (ARN) of an IAM role that Amazon SageMaker can assume to perform tasks on your behalf.</p>
-
     """
     monitoring_inputs: List[MonitoringInput]
     monitoring_output_config: MonitoringOutputConfig
@@ -6011,7 +5363,6 @@ class MonitoringJobDefinition(Base):
     network_config: Optional[NetworkConfig] = Unassigned()
 
 
-@dataclass
 class MonitoringScheduleConfig(Base):
     """
      MonitoringScheduleConfig
@@ -6023,7 +5374,6 @@ class MonitoringScheduleConfig(Base):
  	monitoring_job_definition: 	 <p>Defines the monitoring job.</p>
  	monitoring_job_definition_name: 	 <p>The name of the monitoring job definition to schedule.</p>
  	monitoring_type: 	 <p>The type of the monitoring job definition to schedule.</p>
-
     """
     schedule_config: Optional[ScheduleConfig] = Unassigned()
     monitoring_job_definition: Optional[MonitoringJobDefinition] = Unassigned()
@@ -6031,7 +5381,6 @@ class MonitoringScheduleConfig(Base):
     monitoring_type: Optional[str] = Unassigned()
 
 
-@dataclass
 class InstanceMetadataServiceConfiguration(Base):
     """
      InstanceMetadataServiceConfiguration
@@ -6040,12 +5389,10 @@ class InstanceMetadataServiceConfiguration(Base):
  	 Attributes
 	----------------------
  	minimum_instance_metadata_service_version: 	 <p>Indicates the minimum IMDS version that the notebook instance supports. When passed as part of <code>CreateNotebookInstance</code>, if no value is selected, then it defaults to IMDSv1. This means that both IMDSv1 and IMDSv2 are supported. If passed as part of <code>UpdateNotebookInstance</code>, there is no default.</p>
-
     """
     minimum_instance_metadata_service_version: str
 
 
-@dataclass
 class NotebookInstanceLifecycleHook(Base):
     """
      NotebookInstanceLifecycleHook
@@ -6054,12 +5401,10 @@ class NotebookInstanceLifecycleHook(Base):
  	 Attributes
 	----------------------
  	content: 	 <p>A base64-encoded string that contains a shell script for a notebook instance lifecycle configuration.</p>
-
     """
     content: Optional[str] = Unassigned()
 
 
-@dataclass
 class PipelineDefinitionS3Location(Base):
     """
      PipelineDefinitionS3Location
@@ -6070,14 +5415,12 @@ class PipelineDefinitionS3Location(Base):
  	bucket: 	 <p>Name of the S3 bucket.</p>
  	object_key: 	 <p>The object key (or key name) uniquely identifies the object in an S3 bucket. </p>
  	version_id: 	 <p>Version Id of the pipeline definition file. If not specified, Amazon SageMaker will retrieve the latest version.</p>
-
     """
     bucket: str
     object_key: str
     version_id: Optional[str] = Unassigned()
 
 
-@dataclass
 class ParallelismConfiguration(Base):
     """
      ParallelismConfiguration
@@ -6086,12 +5429,10 @@ class ParallelismConfiguration(Base):
  	 Attributes
 	----------------------
  	max_parallel_execution_steps: 	 <p>The max number of steps that can be executed in parallel. </p>
-
     """
     max_parallel_execution_steps: int
 
 
-@dataclass
 class ProcessingS3Input(Base):
     """
      ProcessingS3Input
@@ -6105,7 +5446,6 @@ class ProcessingS3Input(Base):
  	s3_input_mode: 	 <p>Whether to use <code>File</code> or <code>Pipe</code> input mode. In File mode, Amazon SageMaker copies the data from the input source onto the local ML storage volume before starting your processing container. This is the most commonly used input mode. In <code>Pipe</code> mode, Amazon SageMaker streams input data from the source directly to your processing container into named pipes without using the ML storage volume.</p>
  	s3_data_distribution_type: 	 <p>Whether to distribute the data from Amazon S3 to all processing instances with <code>FullyReplicated</code>, or whether the data from Amazon S3 is shared by Amazon S3 key, downloading one shard of data to each processing instance.</p>
  	s3_compression_type: 	 <p>Whether to GZIP-decompress the data in Amazon S3 as it is streamed into the processing container. <code>Gzip</code> can only be used when <code>Pipe</code> mode is specified as the <code>S3InputMode</code>. In <code>Pipe</code> mode, Amazon SageMaker streams input data from the source directly to your container without using the EBS volume.</p>
-
     """
     s3_uri: str
     s3_data_type: str
@@ -6115,7 +5455,6 @@ class ProcessingS3Input(Base):
     s3_compression_type: Optional[str] = Unassigned()
 
 
-@dataclass
 class RedshiftDatasetDefinition(Base):
     """
      RedshiftDatasetDefinition
@@ -6132,7 +5471,6 @@ class RedshiftDatasetDefinition(Base):
  	kms_key_id: 	 <p>The Amazon Web Services Key Management Service (Amazon Web Services KMS) key that Amazon SageMaker uses to encrypt data from a Redshift execution.</p>
  	output_format
  	output_compression
-
     """
     cluster_id: str
     database: str
@@ -6145,7 +5483,6 @@ class RedshiftDatasetDefinition(Base):
     output_compression: Optional[str] = Unassigned()
 
 
-@dataclass
 class DatasetDefinition(Base):
     """
      DatasetDefinition
@@ -6158,7 +5495,6 @@ class DatasetDefinition(Base):
  	local_path: 	 <p>The local path where you want Amazon SageMaker to download the Dataset Definition inputs to run a processing job. <code>LocalPath</code> is an absolute path to the input data. This is a required parameter when <code>AppManaged</code> is <code>False</code> (default).</p>
  	data_distribution_type: 	 <p>Whether the generated dataset is <code>FullyReplicated</code> or <code>ShardedByS3Key</code> (default).</p>
  	input_mode: 	 <p>Whether to use <code>File</code> or <code>Pipe</code> input mode. In <code>File</code> (default) mode, Amazon SageMaker copies the data from the input source onto the local Amazon Elastic Block Store (Amazon EBS) volumes before starting your training algorithm. This is the most commonly used input mode. In <code>Pipe</code> mode, Amazon SageMaker streams input data from the source directly to your algorithm without using the EBS volume.</p>
-
     """
     athena_dataset_definition: Optional[AthenaDatasetDefinition] = Unassigned()
     redshift_dataset_definition: Optional[RedshiftDatasetDefinition] = Unassigned()
@@ -6167,7 +5503,6 @@ class DatasetDefinition(Base):
     input_mode: Optional[str] = Unassigned()
 
 
-@dataclass
 class ProcessingInput(Base):
     """
      ProcessingInput
@@ -6179,7 +5514,6 @@ class ProcessingInput(Base):
  	app_managed: 	 <p>When <code>True</code>, input operations such as data download are managed natively by the processing job application. When <code>False</code> (default), input operations are managed by Amazon SageMaker.</p>
  	s3_input: 	 <p>Configuration for downloading input data from Amazon S3 into the processing container.</p>
  	dataset_definition: 	 <p>Configuration for a Dataset Definition input. </p>
-
     """
     input_name: str
     app_managed: Optional[bool] = Unassigned()
@@ -6187,7 +5521,6 @@ class ProcessingInput(Base):
     dataset_definition: Optional[DatasetDefinition] = Unassigned()
 
 
-@dataclass
 class ProcessingS3Output(Base):
     """
      ProcessingS3Output
@@ -6198,14 +5531,12 @@ class ProcessingS3Output(Base):
  	s3_uri: 	 <p>A URI that identifies the Amazon S3 bucket where you want Amazon SageMaker to save the results of a processing job.</p>
  	local_path: 	 <p>The local path of a directory where you want Amazon SageMaker to upload its contents to Amazon S3. <code>LocalPath</code> is an absolute path to a directory containing output files. This directory will be created by the platform and exist when your container's entrypoint is invoked.</p>
  	s3_upload_mode: 	 <p>Whether to upload the results of the processing job continuously or after the job completes.</p>
-
     """
     s3_uri: str
     local_path: str
     s3_upload_mode: str
 
 
-@dataclass
 class ProcessingFeatureStoreOutput(Base):
     """
      ProcessingFeatureStoreOutput
@@ -6214,12 +5545,10 @@ class ProcessingFeatureStoreOutput(Base):
  	 Attributes
 	----------------------
  	feature_group_name: 	 <p>The name of the Amazon SageMaker FeatureGroup to use as the destination for processing job output. Note that your processing script is responsible for putting records into your Feature Store.</p>
-
     """
     feature_group_name: str
 
 
-@dataclass
 class ProcessingOutput(Base):
     """
      ProcessingOutput
@@ -6231,7 +5560,6 @@ class ProcessingOutput(Base):
  	s3_output: 	 <p>Configuration for processing job outputs in Amazon S3.</p>
  	feature_store_output: 	 <p>Configuration for processing job outputs in Amazon SageMaker Feature Store. This processing output type is only supported when <code>AppManaged</code> is specified. </p>
  	app_managed: 	 <p>When <code>True</code>, output operations such as data upload are managed natively by the processing job application. When <code>False</code> (default), output operations are managed by Amazon SageMaker.</p>
-
     """
     output_name: str
     s3_output: Optional[ProcessingS3Output] = Unassigned()
@@ -6239,7 +5567,6 @@ class ProcessingOutput(Base):
     app_managed: Optional[bool] = Unassigned()
 
 
-@dataclass
 class ProcessingOutputConfig(Base):
     """
      ProcessingOutputConfig
@@ -6249,13 +5576,11 @@ class ProcessingOutputConfig(Base):
 	----------------------
  	outputs: 	 <p>An array of outputs configuring the data to upload from the processing container.</p>
  	kms_key_id: 	 <p>The Amazon Web Services Key Management Service (Amazon Web Services KMS) key that Amazon SageMaker uses to encrypt the processing job output. <code>KmsKeyId</code> can be an ID of a KMS key, ARN of a KMS key, alias of a KMS key, or alias of a KMS key. The <code>KmsKeyId</code> is applied to all outputs.</p>
-
     """
     outputs: List[ProcessingOutput]
     kms_key_id: Optional[str] = Unassigned()
 
 
-@dataclass
 class ProcessingClusterConfig(Base):
     """
      ProcessingClusterConfig
@@ -6267,7 +5592,6 @@ class ProcessingClusterConfig(Base):
  	instance_type: 	 <p>The ML compute instance type for the processing job.</p>
  	volume_size_in_g_b: 	 <p>The size of the ML storage volume in gigabytes that you want to provision. You must specify sufficient ML storage for your scenario.</p> <note> <p>Certain Nitro-based instances include local storage with a fixed total size, dependent on the instance type. When using these instances for processing, Amazon SageMaker mounts the local instance storage instead of Amazon EBS gp2 storage. You can't request a <code>VolumeSizeInGB</code> greater than the total size of the local instance storage.</p> <p>For a list of instance types that support local instance storage, including the total size per instance type, see <a href="https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/InstanceStorage.html#instance-store-volumes">Instance Store Volumes</a>.</p> </note>
  	volume_kms_key_id: 	 <p>The Amazon Web Services Key Management Service (Amazon Web Services KMS) key that Amazon SageMaker uses to encrypt data on the storage volume attached to the ML compute instance(s) that run the processing job. </p> <note> <p>Certain Nitro-based instances include local storage, dependent on the instance type. Local storage volumes are encrypted using a hardware module on the instance. You can't request a <code>VolumeKmsKeyId</code> when using an instance type with local storage.</p> <p>For a list of instance types that support local instance storage, see <a href="https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/InstanceStorage.html#instance-store-volumes">Instance Store Volumes</a>.</p> <p>For more information about local instance storage encryption, see <a href="https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ssd-instance-store.html">SSD Instance Store Volumes</a>.</p> </note>
-
     """
     instance_count: int
     instance_type: str
@@ -6275,7 +5599,6 @@ class ProcessingClusterConfig(Base):
     volume_kms_key_id: Optional[str] = Unassigned()
 
 
-@dataclass
 class ProcessingResources(Base):
     """
      ProcessingResources
@@ -6284,12 +5607,10 @@ class ProcessingResources(Base):
  	 Attributes
 	----------------------
  	cluster_config: 	 <p>The configuration for the resources in a cluster used to run the processing job.</p>
-
     """
     cluster_config: ProcessingClusterConfig
 
 
-@dataclass
 class ProcessingStoppingCondition(Base):
     """
      ProcessingStoppingCondition
@@ -6298,12 +5619,10 @@ class ProcessingStoppingCondition(Base):
  	 Attributes
 	----------------------
  	max_runtime_in_seconds: 	 <p>Specifies the maximum runtime in seconds.</p>
-
     """
     max_runtime_in_seconds: int
 
 
-@dataclass
 class ExperimentConfig(Base):
     """
      ExperimentConfig
@@ -6315,7 +5634,6 @@ class ExperimentConfig(Base):
  	trial_name: 	 <p>The name of an existing trial to associate the trial component with. If not specified, a new trial is created.</p>
  	trial_component_display_name: 	 <p>The display name for the trial component. If this key isn't specified, the display name is the trial component name.</p>
  	run_name: 	 <p>The name of the experiment run to associate with the trial component.</p>
-
     """
     experiment_name: Optional[str] = Unassigned()
     trial_name: Optional[str] = Unassigned()
@@ -6323,7 +5641,6 @@ class ExperimentConfig(Base):
     run_name: Optional[str] = Unassigned()
 
 
-@dataclass
 class ProvisioningParameter(Base):
     """
      ProvisioningParameter
@@ -6333,13 +5650,11 @@ class ProvisioningParameter(Base):
 	----------------------
  	key: 	 <p>The key that identifies a provisioning parameter.</p>
  	value: 	 <p>The value of the provisioning parameter.</p>
-
     """
     key: Optional[str] = Unassigned()
     value: Optional[str] = Unassigned()
 
 
-@dataclass
 class ServiceCatalogProvisioningDetails(Base):
     """
      ServiceCatalogProvisioningDetails
@@ -6351,7 +5666,6 @@ class ServiceCatalogProvisioningDetails(Base):
  	provisioning_artifact_id: 	 <p>The ID of the provisioning artifact.</p>
  	path_id: 	 <p>The path identifier of the product. This value is optional if the product has a default path, and required if the product has more than one path. </p>
  	provisioning_parameters: 	 <p>A list of key value pairs that you specify when you provision a product.</p>
-
     """
     product_id: str
     provisioning_artifact_id: Optional[str] = Unassigned()
@@ -6359,7 +5673,6 @@ class ServiceCatalogProvisioningDetails(Base):
     provisioning_parameters: Optional[List[ProvisioningParameter]] = Unassigned()
 
 
-@dataclass
 class SpaceCodeEditorAppSettings(Base):
     """
      SpaceCodeEditorAppSettings
@@ -6368,12 +5681,10 @@ class SpaceCodeEditorAppSettings(Base):
  	 Attributes
 	----------------------
  	default_resource_spec
-
     """
     default_resource_spec: Optional[ResourceSpec] = Unassigned()
 
 
-@dataclass
 class SpaceJupyterLabAppSettings(Base):
     """
      SpaceJupyterLabAppSettings
@@ -6383,13 +5694,11 @@ class SpaceJupyterLabAppSettings(Base):
 	----------------------
  	default_resource_spec
  	code_repositories: 	 <p>A list of Git repositories that SageMaker automatically displays to users for cloning in the JupyterLab application.</p>
-
     """
     default_resource_spec: Optional[ResourceSpec] = Unassigned()
     code_repositories: Optional[List[CodeRepository]] = Unassigned()
 
 
-@dataclass
 class EbsStorageSettings(Base):
     """
      EbsStorageSettings
@@ -6398,12 +5707,10 @@ class EbsStorageSettings(Base):
  	 Attributes
 	----------------------
  	ebs_volume_size_in_gb: 	 <p>The size of an EBS storage volume for a private space.</p>
-
     """
     ebs_volume_size_in_gb: int
 
 
-@dataclass
 class SpaceStorageSettings(Base):
     """
      SpaceStorageSettings
@@ -6412,12 +5719,10 @@ class SpaceStorageSettings(Base):
  	 Attributes
 	----------------------
  	ebs_storage_settings: 	 <p>A collection of EBS storage settings for a private space.</p>
-
     """
     ebs_storage_settings: Optional[EbsStorageSettings] = Unassigned()
 
 
-@dataclass
 class EFSFileSystem(Base):
     """
      EFSFileSystem
@@ -6426,12 +5731,10 @@ class EFSFileSystem(Base):
  	 Attributes
 	----------------------
  	file_system_id: 	 <p>The ID of your Amazon EFS file system.</p>
-
     """
     file_system_id: str
 
 
-@dataclass
 class CustomFileSystem(Base):
     """
      CustomFileSystem
@@ -6440,12 +5743,10 @@ class CustomFileSystem(Base):
  	 Attributes
 	----------------------
  	e_f_s_file_system: 	 <p>A custom file system in Amazon EFS.</p>
-
     """
     e_f_s_file_system: Optional[EFSFileSystem] = Unassigned()
 
 
-@dataclass
 class SpaceSettings(Base):
     """
      SpaceSettings
@@ -6460,7 +5761,6 @@ class SpaceSettings(Base):
  	app_type: 	 <p>The type of app created within the space.</p>
  	space_storage_settings: 	 <p>The storage settings for a private space.</p>
  	custom_file_systems: 	 <p>A file system, created by you, that you assign to a space for an Amazon SageMaker Domain. Permitted users can access this file system in Amazon SageMaker Studio.</p>
-
     """
     jupyter_server_app_settings: Optional[JupyterServerAppSettings] = Unassigned()
     kernel_gateway_app_settings: Optional[KernelGatewayAppSettings] = Unassigned()
@@ -6471,7 +5771,6 @@ class SpaceSettings(Base):
     custom_file_systems: Optional[List[CustomFileSystem]] = Unassigned()
 
 
-@dataclass
 class OwnershipSettings(Base):
     """
      OwnershipSettings
@@ -6480,12 +5779,10 @@ class OwnershipSettings(Base):
  	 Attributes
 	----------------------
  	owner_user_profile_name: 	 <p>The user profile who is the owner of the private space.</p>
-
     """
     owner_user_profile_name: str
 
 
-@dataclass
 class SpaceSharingSettings(Base):
     """
      SpaceSharingSettings
@@ -6494,12 +5791,10 @@ class SpaceSharingSettings(Base):
  	 Attributes
 	----------------------
  	sharing_type: 	 <p>Specifies the sharing type of the space.</p>
-
     """
     sharing_type: str
 
 
-@dataclass
 class DebugHookConfig(Base):
     """
      DebugHookConfig
@@ -6511,7 +5806,6 @@ class DebugHookConfig(Base):
  	s3_output_path: 	 <p>Path to Amazon S3 storage location for metrics and tensors.</p>
  	hook_parameters: 	 <p>Configuration information for the Amazon SageMaker Debugger hook parameters.</p>
  	collection_configurations: 	 <p>Configuration information for Amazon SageMaker Debugger tensor collections. To learn more about how to configure the <code>CollectionConfiguration</code> parameter, see <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/debugger-createtrainingjob-api.html">Use the SageMaker and Debugger Configuration API Operations to Create, Update, and Debug Your Training Job</a>. </p>
-
     """
     s3_output_path: str
     local_path: Optional[str] = Unassigned()
@@ -6519,7 +5813,6 @@ class DebugHookConfig(Base):
     collection_configurations: Optional[List[CollectionConfiguration]] = Unassigned()
 
 
-@dataclass
 class DebugRuleConfiguration(Base):
     """
      DebugRuleConfiguration
@@ -6534,7 +5827,6 @@ class DebugRuleConfiguration(Base):
  	instance_type: 	 <p>The instance type to deploy a custom rule for debugging a training job.</p>
  	volume_size_in_g_b: 	 <p>The size, in GB, of the ML storage volume attached to the processing instance.</p>
  	rule_parameters: 	 <p>Runtime configuration for rule container.</p>
-
     """
     rule_configuration_name: str
     rule_evaluator_image: str
@@ -6545,7 +5837,6 @@ class DebugRuleConfiguration(Base):
     rule_parameters: Optional[Dict[str, str]] = Unassigned()
 
 
-@dataclass
 class TensorBoardOutputConfig(Base):
     """
      TensorBoardOutputConfig
@@ -6555,13 +5846,11 @@ class TensorBoardOutputConfig(Base):
 	----------------------
  	local_path: 	 <p>Path to local storage location for tensorBoard output. Defaults to <code>/opt/ml/output/tensorboard</code>.</p>
  	s3_output_path: 	 <p>Path to Amazon S3 storage location for TensorBoard output.</p>
-
     """
     s3_output_path: str
     local_path: Optional[str] = Unassigned()
 
 
-@dataclass
 class ProfilerConfig(Base):
     """
      ProfilerConfig
@@ -6573,7 +5862,6 @@ class ProfilerConfig(Base):
  	profiling_interval_in_milliseconds: 	 <p>A time interval for capturing system metrics in milliseconds. Available values are 100, 200, 500, 1000 (1 second), 5000 (5 seconds), and 60000 (1 minute) milliseconds. The default value is 500 milliseconds.</p>
  	profiling_parameters: 	 <p>Configuration information for capturing framework metrics. Available key strings for different profiling options are <code>DetailedProfilingConfig</code>, <code>PythonProfilingConfig</code>, and <code>DataLoaderProfilingConfig</code>. The following codes are configuration structures for the <code>ProfilingParameters</code> parameter. To learn more about how to configure the <code>ProfilingParameters</code> parameter, see <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/debugger-createtrainingjob-api.html">Use the SageMaker and Debugger Configuration API Operations to Create, Update, and Debug Your Training Job</a>. </p>
  	disable_profiler: 	 <p>Configuration to turn off Amazon SageMaker Debugger's system monitoring and profiling functionality. To turn it off, set to <code>True</code>.</p>
-
     """
     s3_output_path: Optional[str] = Unassigned()
     profiling_interval_in_milliseconds: Optional[int] = Unassigned()
@@ -6581,7 +5869,6 @@ class ProfilerConfig(Base):
     disable_profiler: Optional[bool] = Unassigned()
 
 
-@dataclass
 class ProfilerRuleConfiguration(Base):
     """
      ProfilerRuleConfiguration
@@ -6596,7 +5883,6 @@ class ProfilerRuleConfiguration(Base):
  	instance_type: 	 <p>The instance type to deploy a custom rule for profiling a training job.</p>
  	volume_size_in_g_b: 	 <p>The size, in GB, of the ML storage volume attached to the processing instance.</p>
  	rule_parameters: 	 <p>Runtime configuration for rule container.</p>
-
     """
     rule_configuration_name: str
     rule_evaluator_image: str
@@ -6607,7 +5893,6 @@ class ProfilerRuleConfiguration(Base):
     rule_parameters: Optional[Dict[str, str]] = Unassigned()
 
 
-@dataclass
 class RemoteDebugConfig(Base):
     """
      RemoteDebugConfig
@@ -6616,12 +5901,10 @@ class RemoteDebugConfig(Base):
  	 Attributes
 	----------------------
  	enable_remote_debug: 	 <p>If set to True, enables remote debugging.</p>
-
     """
     enable_remote_debug: Optional[bool] = Unassigned()
 
 
-@dataclass
 class InfraCheckConfig(Base):
     """
      InfraCheckConfig
@@ -6630,12 +5913,10 @@ class InfraCheckConfig(Base):
  	 Attributes
 	----------------------
  	enable_infra_check: 	 <p>Enables an infrastructure health check.</p>
-
     """
     enable_infra_check: Optional[bool] = Unassigned()
 
 
-@dataclass
 class ModelClientConfig(Base):
     """
      ModelClientConfig
@@ -6645,13 +5926,11 @@ class ModelClientConfig(Base):
 	----------------------
  	invocations_timeout_in_seconds: 	 <p>The timeout value in seconds for an invocation request. The default value is 600.</p>
  	invocations_max_retries: 	 <p>The maximum number of retries when invocation requests are failing. The default value is 3.</p>
-
     """
     invocations_timeout_in_seconds: Optional[int] = Unassigned()
     invocations_max_retries: Optional[int] = Unassigned()
 
 
-@dataclass
 class DataProcessing(Base):
     """
      DataProcessing
@@ -6662,14 +5941,12 @@ class DataProcessing(Base):
  	input_filter: 	 <p>A <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/batch-transform-data-processing.html#data-processing-operators">JSONPath</a> expression used to select a portion of the input data to pass to the algorithm. Use the <code>InputFilter</code> parameter to exclude fields, such as an ID column, from the input. If you want SageMaker to pass the entire input dataset to the algorithm, accept the default value <code>$</code>.</p> <p>Examples: <code>"$"</code>, <code>"$[1:]"</code>, <code>"$.features"</code> </p>
  	output_filter: 	 <p>A <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/batch-transform-data-processing.html#data-processing-operators">JSONPath</a> expression used to select a portion of the joined dataset to save in the output file for a batch transform job. If you want SageMaker to store the entire input dataset in the output file, leave the default value, <code>$</code>. If you specify indexes that aren't within the dimension size of the joined dataset, you get an error.</p> <p>Examples: <code>"$"</code>, <code>"$[0,5:]"</code>, <code>"$['id','SageMakerOutput']"</code> </p>
  	join_source: 	 <p>Specifies the source of the data to join with the transformed data. The valid values are <code>None</code> and <code>Input</code>. The default value is <code>None</code>, which specifies not to join the input with the transformed data. If you want the batch transform job to join the original input data with the transformed data, set <code>JoinSource</code> to <code>Input</code>. You can specify <code>OutputFilter</code> as an additional filter to select a portion of the joined dataset and store it in the output file.</p> <p>For JSON or JSONLines objects, such as a JSON array, SageMaker adds the transformed data to the input JSON object in an attribute called <code>SageMakerOutput</code>. The joined result for JSON must be a key-value pair object. If the input is not a key-value pair object, SageMaker creates a new JSON file. In the new JSON file, and the input data is stored under the <code>SageMakerInput</code> key and the results are stored in <code>SageMakerOutput</code>.</p> <p>For CSV data, SageMaker takes each row as a JSON array and joins the transformed data with the input by appending each transformed row to the end of the input. The joined data has the original input data followed by the transformed data and the output is a CSV file.</p> <p>For information on how joining in applied, see <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/batch-transform-data-processing.html#batch-transform-data-processing-workflow">Workflow for Associating Inferences with Input Records</a>.</p>
-
     """
     input_filter: Optional[str] = Unassigned()
     output_filter: Optional[str] = Unassigned()
     join_source: Optional[str] = Unassigned()
 
 
-@dataclass
 class TrialComponentStatus(Base):
     """
      TrialComponentStatus
@@ -6679,13 +5956,11 @@ class TrialComponentStatus(Base):
 	----------------------
  	primary_status: 	 <p>The status of the trial component.</p>
  	message: 	 <p>If the component failed, a message describing why.</p>
-
     """
     primary_status: Optional[str] = Unassigned()
     message: Optional[str] = Unassigned()
 
 
-@dataclass
 class TrialComponentParameterValue(Base):
     """
      TrialComponentParameterValue
@@ -6695,13 +5970,11 @@ class TrialComponentParameterValue(Base):
 	----------------------
  	string_value: 	 <p>The string value of a categorical hyperparameter. If you specify a value for this parameter, you can't specify the <code>NumberValue</code> parameter.</p>
  	number_value: 	 <p>The numeric value of a numeric hyperparameter. If you specify a value for this parameter, you can't specify the <code>StringValue</code> parameter.</p>
-
     """
     string_value: Optional[str] = Unassigned()
     number_value: Optional[float] = Unassigned()
 
 
-@dataclass
 class TrialComponentArtifact(Base):
     """
      TrialComponentArtifact
@@ -6711,13 +5984,11 @@ class TrialComponentArtifact(Base):
 	----------------------
  	media_type: 	 <p>The media type of the artifact, which indicates the type of data in the artifact file. The media type consists of a <i>type</i> and a <i>subtype</i> concatenated with a slash (/) character, for example, text/csv, image/jpeg, and s3/uri. The type specifies the category of the media. The subtype specifies the kind of data.</p>
  	value: 	 <p>The location of the artifact.</p>
-
     """
     value: str
     media_type: Optional[str] = Unassigned()
 
 
-@dataclass
 class OidcConfig(Base):
     """
      OidcConfig
@@ -6733,7 +6004,6 @@ class OidcConfig(Base):
  	user_info_endpoint: 	 <p>The OIDC IdP user information endpoint used to configure your private workforce.</p>
  	logout_endpoint: 	 <p>The OIDC IdP logout endpoint used to configure your private workforce.</p>
  	jwks_uri: 	 <p>The OIDC IdP JSON Web Key Set (Jwks) URI used to configure your private workforce.</p>
-
     """
     client_id: str
     client_secret: str
@@ -6745,7 +6015,6 @@ class OidcConfig(Base):
     jwks_uri: str
 
 
-@dataclass
 class SourceIpConfig(Base):
     """
      SourceIpConfig
@@ -6754,12 +6023,10 @@ class SourceIpConfig(Base):
  	 Attributes
 	----------------------
  	cidrs: 	 <p>A list of one to ten <a href="https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Subnets.html">Classless Inter-Domain Routing</a> (CIDR) values.</p> <p>Maximum: Ten CIDR values</p> <note> <p>The following Length Constraints apply to individual CIDR values in the CIDR value list.</p> </note>
-
     """
     cidrs: List[str]
 
 
-@dataclass
 class WorkforceVpcConfigRequest(Base):
     """
      WorkforceVpcConfigRequest
@@ -6770,14 +6037,12 @@ class WorkforceVpcConfigRequest(Base):
  	vpc_id: 	 <p>The ID of the VPC that the workforce uses for communication.</p>
  	security_group_ids: 	 <p>The VPC security group IDs, in the form sg-xxxxxxxx. The security groups must be for the same VPC as specified in the subnet.</p>
  	subnets: 	 <p>The ID of the subnets in the VPC that you want to connect.</p>
-
     """
     vpc_id: Optional[str] = Unassigned()
     security_group_ids: Optional[List[str]] = Unassigned()
     subnets: Optional[List[str]] = Unassigned()
 
 
-@dataclass
 class OidcMemberDefinition(Base):
     """
      OidcMemberDefinition
@@ -6786,12 +6051,10 @@ class OidcMemberDefinition(Base):
  	 Attributes
 	----------------------
  	groups: 	 <p>A list of comma seperated strings that identifies user groups in your OIDC IdP. Each user group is made up of a group of private workers.</p>
-
     """
     groups: Optional[List[str]] = Unassigned()
 
 
-@dataclass
 class MemberDefinition(Base):
     """
      MemberDefinition
@@ -6801,13 +6064,11 @@ class MemberDefinition(Base):
 	----------------------
  	cognito_member_definition: 	 <p>The Amazon Cognito user group that is part of the work team.</p>
  	oidc_member_definition: 	 <p>A list user groups that exist in your OIDC Identity Provider (IdP). One to ten groups can be used to create a single private work team. When you add a user group to the list of <code>Groups</code>, you can add that user group to one or more private work teams. If you add a user group to a private work team, all workers in that user group are added to the work team.</p>
-
     """
     cognito_member_definition: Optional[CognitoMemberDefinition] = Unassigned()
     oidc_member_definition: Optional[OidcMemberDefinition] = Unassigned()
 
 
-@dataclass
 class NotificationConfiguration(Base):
     """
      NotificationConfiguration
@@ -6816,12 +6077,10 @@ class NotificationConfiguration(Base):
  	 Attributes
 	----------------------
  	notification_topic_arn: 	 <p>The ARN for the Amazon SNS topic to which notifications should be published.</p>
-
     """
     notification_topic_arn: Optional[str] = Unassigned()
 
 
-@dataclass
 class CustomizedMetricSpecification(Base):
     """
      CustomizedMetricSpecification
@@ -6832,14 +6091,12 @@ class CustomizedMetricSpecification(Base):
  	metric_name: 	 <p>The name of the customized metric.</p>
  	namespace: 	 <p>The namespace of the customized metric.</p>
  	statistic: 	 <p>The statistic of the customized metric.</p>
-
     """
     metric_name: Optional[str] = Unassigned()
     namespace: Optional[str] = Unassigned()
     statistic: Optional[str] = Unassigned()
 
 
-@dataclass
 class DataCaptureConfigSummary(Base):
     """
      DataCaptureConfigSummary
@@ -6852,7 +6109,6 @@ class DataCaptureConfigSummary(Base):
  	current_sampling_percentage: 	 <p>The percentage of requests being captured by your Endpoint.</p>
  	destination_s3_uri: 	 <p>The Amazon S3 location being used to capture the data.</p>
  	kms_key_id: 	 <p>The KMS key being used to encrypt the data in Amazon S3.</p>
-
     """
     enable_capture: bool
     capture_status: str
@@ -6861,7 +6117,6 @@ class DataCaptureConfigSummary(Base):
     kms_key_id: str
 
 
-@dataclass
 class DebugRuleEvaluationStatus(Base):
     """
      DebugRuleEvaluationStatus
@@ -6874,7 +6129,6 @@ class DebugRuleEvaluationStatus(Base):
  	rule_evaluation_status: 	 <p>Status of the rule evaluation.</p>
  	status_details: 	 <p>Details from the rule evaluation.</p>
  	last_modified_time: 	 <p>Timestamp when the rule evaluation status was last modified.</p>
-
     """
     rule_configuration_name: Optional[str] = Unassigned()
     rule_evaluation_job_arn: Optional[str] = Unassigned()
@@ -6883,7 +6137,6 @@ class DebugRuleEvaluationStatus(Base):
     last_modified_time: Optional[datetime.datetime] = Unassigned()
 
 
-@dataclass
 class RetentionPolicy(Base):
     """
      RetentionPolicy
@@ -6892,12 +6145,10 @@ class RetentionPolicy(Base):
  	 Attributes
 	----------------------
  	home_efs_file_system: 	 <p>The default is <code>Retain</code>, which specifies to keep the data stored on the Amazon EFS volume.</p> <p>Specify <code>Delete</code> to delete the data stored on the Amazon EFS volume.</p>
-
     """
     home_efs_file_system: Optional[str] = Unassigned()
 
 
-@dataclass
 class DeployedImage(Base):
     """
      DeployedImage
@@ -6908,14 +6159,12 @@ class DeployedImage(Base):
  	specified_image: 	 <p>The image path you specified when you created the model.</p>
  	resolved_image: 	 <p>The specific digest path of the image hosted in this <code>ProductionVariant</code>.</p>
  	resolution_time: 	 <p>The date and time when the image path for the model resolved to the <code>ResolvedImage</code> </p>
-
     """
     specified_image: Optional[str] = Unassigned()
     resolved_image: Optional[str] = Unassigned()
     resolution_time: Optional[datetime.datetime] = Unassigned()
 
 
-@dataclass
 class RealTimeInferenceRecommendation(Base):
     """
      RealTimeInferenceRecommendation
@@ -6926,14 +6175,12 @@ class RealTimeInferenceRecommendation(Base):
  	recommendation_id: 	 <p>The recommendation ID which uniquely identifies each recommendation.</p>
  	instance_type: 	 <p>The recommended instance type for Real-Time Inference.</p>
  	environment: 	 <p>The recommended environment variables to set in the model container for Real-Time Inference.</p>
-
     """
     recommendation_id: str
     instance_type: str
     environment: Optional[Dict[str, str]] = Unassigned()
 
 
-@dataclass
 class DeploymentRecommendation(Base):
     """
      DeploymentRecommendation
@@ -6943,13 +6190,11 @@ class DeploymentRecommendation(Base):
 	----------------------
  	recommendation_status: 	 <p>Status of the deployment recommendation. The status <code>NOT_APPLICABLE</code> means that SageMaker is unable to provide a default recommendation for the model using the information provided. If the deployment status is <code>IN_PROGRESS</code>, retry your API call after a few seconds to get a <code>COMPLETED</code> deployment recommendation.</p>
  	real_time_inference_recommendations: 	 <p>A list of <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_RealTimeInferenceRecommendation.html">RealTimeInferenceRecommendation</a> items.</p>
-
     """
     recommendation_status: str
     real_time_inference_recommendations: Optional[List[RealTimeInferenceRecommendation]] = Unassigned()
 
 
-@dataclass
 class EdgeDeploymentStatus(Base):
     """
      EdgeDeploymentStatus
@@ -6963,7 +6208,6 @@ class EdgeDeploymentStatus(Base):
  	edge_deployment_failed_in_stage: 	 <p>The number of edge devices that failed the deployment in current stage.</p>
  	edge_deployment_status_message: 	 <p>A detailed message about deployment status in current stage.</p>
  	edge_deployment_stage_start_time: 	 <p>The time when the deployment API started.</p>
-
     """
     stage_status: str
     edge_deployment_success_in_stage: int
@@ -6973,7 +6217,6 @@ class EdgeDeploymentStatus(Base):
     edge_deployment_stage_start_time: Optional[datetime.datetime] = Unassigned()
 
 
-@dataclass
 class DeploymentStageStatusSummary(Base):
     """
      DeploymentStageStatusSummary
@@ -6985,7 +6228,6 @@ class DeploymentStageStatusSummary(Base):
  	device_selection_config: 	 <p>Configuration of the devices in the stage.</p>
  	deployment_config: 	 <p>Configuration of the deployment details.</p>
  	deployment_status: 	 <p>General status of the current state.</p>
-
     """
     stage_name: str
     device_selection_config: DeviceSelectionConfig
@@ -6993,7 +6235,6 @@ class DeploymentStageStatusSummary(Base):
     deployment_status: EdgeDeploymentStatus
 
 
-@dataclass
 class DerivedInformation(Base):
     """
      DerivedInformation
@@ -7002,12 +6243,10 @@ class DerivedInformation(Base):
  	 Attributes
 	----------------------
  	derived_data_input_config: 	 <p>The data input configuration that SageMaker Neo automatically derived for the model. When SageMaker Neo derives this information, you don't need to specify the data input configuration when you create a compilation job.</p>
-
     """
     derived_data_input_config: Optional[str] = Unassigned()
 
 
-@dataclass
 class ResolvedAttributes(Base):
     """
      ResolvedAttributes
@@ -7018,14 +6257,12 @@ class ResolvedAttributes(Base):
  	auto_m_l_job_objective
  	problem_type: 	 <p>The problem type.</p>
  	completion_criteria
-
     """
     auto_m_l_job_objective: Optional[AutoMLJobObjective] = Unassigned()
     problem_type: Optional[str] = Unassigned()
     completion_criteria: Optional[AutoMLJobCompletionCriteria] = Unassigned()
 
 
-@dataclass
 class ModelDeployResult(Base):
     """
      ModelDeployResult
@@ -7034,12 +6271,10 @@ class ModelDeployResult(Base):
  	 Attributes
 	----------------------
  	endpoint_name: 	 <p>The name of the endpoint to which the model has been deployed.</p> <note> <p>If model deployment fails, this field is omitted from the response.</p> </note>
-
     """
     endpoint_name: Optional[str] = Unassigned()
 
 
-@dataclass
 class ModelArtifacts(Base):
     """
      ModelArtifacts
@@ -7048,12 +6283,10 @@ class ModelArtifacts(Base):
  	 Attributes
 	----------------------
  	s3_model_artifacts: 	 <p>The path of the S3 object that contains the model artifacts. For example, <code>s3://bucket-name/keynameprefix/model.tar.gz</code>.</p>
-
     """
     s3_model_artifacts: str
 
 
-@dataclass
 class ModelDigests(Base):
     """
      ModelDigests
@@ -7062,12 +6295,10 @@ class ModelDigests(Base):
  	 Attributes
 	----------------------
  	artifact_digest: 	 <p>Provides a hash value that uniquely identifies the stored model artifacts.</p>
-
     """
     artifact_digest: Optional[str] = Unassigned()
 
 
-@dataclass
 class EdgeModel(Base):
     """
      EdgeModel
@@ -7079,7 +6310,6 @@ class EdgeModel(Base):
  	model_version: 	 <p>The model version.</p>
  	latest_sample_time: 	 <p>The timestamp of the last data sample taken.</p>
  	latest_inference: 	 <p>The timestamp of the last inference that was made.</p>
-
     """
     model_name: str
     model_version: str
@@ -7087,7 +6317,6 @@ class EdgeModel(Base):
     latest_inference: Optional[datetime.datetime] = Unassigned()
 
 
-@dataclass
 class EdgePresetDeploymentOutput(Base):
     """
      EdgePresetDeploymentOutput
@@ -7099,7 +6328,6 @@ class EdgePresetDeploymentOutput(Base):
  	artifact: 	 <p>The Amazon Resource Name (ARN) of the generated deployable resource.</p>
  	status: 	 <p>The status of the deployable resource.</p>
  	status_message: 	 <p>Returns a message describing the status of the deployed resource.</p>
-
     """
     type: str
     artifact: Optional[str] = Unassigned()
@@ -7107,7 +6335,6 @@ class EdgePresetDeploymentOutput(Base):
     status_message: Optional[str] = Unassigned()
 
 
-@dataclass
 class ProductionVariantStatus(Base):
     """
      ProductionVariantStatus
@@ -7118,14 +6345,12 @@ class ProductionVariantStatus(Base):
  	status: 	 <p>The endpoint variant status which describes the current deployment stage status or operational status.</p> <ul> <li> <p> <code>Creating</code>: Creating inference resources for the production variant.</p> </li> <li> <p> <code>Deleting</code>: Terminating inference resources for the production variant.</p> </li> <li> <p> <code>Updating</code>: Updating capacity for the production variant.</p> </li> <li> <p> <code>ActivatingTraffic</code>: Turning on traffic for the production variant.</p> </li> <li> <p> <code>Baking</code>: Waiting period to monitor the CloudWatch alarms in the automatic rollback configuration.</p> </li> </ul>
  	status_message: 	 <p>A message that describes the status of the production variant.</p>
  	start_time: 	 <p>The start time of the current status change.</p>
-
     """
     status: str
     status_message: Optional[str] = Unassigned()
     start_time: Optional[datetime.datetime] = Unassigned()
 
 
-@dataclass
 class ProductionVariantSummary(Base):
     """
      ProductionVariantSummary
@@ -7144,7 +6369,6 @@ class ProductionVariantSummary(Base):
  	desired_serverless_config: 	 <p>The serverless configuration requested for the endpoint update.</p>
  	managed_instance_scaling: 	 <p>Settings that control the range in the number of instances that the endpoint provisions as it scales up or down to accommodate traffic. </p>
  	routing_config: 	 <p>Settings that control how the endpoint routes incoming traffic to the instances that the endpoint hosts.</p>
-
     """
     variant_name: str
     deployed_images: Optional[List[DeployedImage]] = Unassigned()
@@ -7159,7 +6383,6 @@ class ProductionVariantSummary(Base):
     routing_config: Optional[ProductionVariantRoutingConfig] = Unassigned()
 
 
-@dataclass
 class PendingProductionVariantSummary(Base):
     """
      PendingProductionVariantSummary
@@ -7180,7 +6403,6 @@ class PendingProductionVariantSummary(Base):
  	desired_serverless_config: 	 <p>The serverless configuration requested for this deployment, as specified in the endpoint configuration for the endpoint.</p>
  	managed_instance_scaling: 	 <p>Settings that control the range in the number of instances that the endpoint provisions as it scales up or down to accommodate traffic. </p>
  	routing_config: 	 <p>Settings that control how the endpoint routes incoming traffic to the instances that the endpoint hosts.</p>
-
     """
     variant_name: str
     deployed_images: Optional[List[DeployedImage]] = Unassigned()
@@ -7197,7 +6419,6 @@ class PendingProductionVariantSummary(Base):
     routing_config: Optional[ProductionVariantRoutingConfig] = Unassigned()
 
 
-@dataclass
 class PendingDeploymentSummary(Base):
     """
      PendingDeploymentSummary
@@ -7209,7 +6430,6 @@ class PendingDeploymentSummary(Base):
  	production_variants: 	 <p>An array of <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_PendingProductionVariantSummary.html">PendingProductionVariantSummary</a> objects, one for each model hosted behind this endpoint for the in-progress deployment.</p>
  	start_time: 	 <p>The start time of the deployment.</p>
  	shadow_production_variants: 	 <p>An array of <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_PendingProductionVariantSummary.html">PendingProductionVariantSummary</a> objects, one for each model hosted behind this endpoint in shadow mode with production traffic replicated from the model specified on <code>ProductionVariants</code> for the in-progress deployment.</p>
-
     """
     endpoint_config_name: str
     production_variants: Optional[List[PendingProductionVariantSummary]] = Unassigned()
@@ -7217,7 +6437,6 @@ class PendingDeploymentSummary(Base):
     shadow_production_variants: Optional[List[PendingProductionVariantSummary]] = Unassigned()
 
 
-@dataclass
 class ExperimentSource(Base):
     """
      ExperimentSource
@@ -7227,13 +6446,11 @@ class ExperimentSource(Base):
 	----------------------
  	source_arn: 	 <p>The Amazon Resource Name (ARN) of the source.</p>
  	source_type: 	 <p>The source type.</p>
-
     """
     source_arn: str
     source_type: Optional[str] = Unassigned()
 
 
-@dataclass
 class ThroughputConfigDescription(Base):
     """
      ThroughputConfigDescription
@@ -7244,14 +6461,12 @@ class ThroughputConfigDescription(Base):
  	throughput_mode: 	 <p>The mode used for your feature group throughput: <code>ON_DEMAND</code> or <code>PROVISIONED</code>. </p>
  	provisioned_read_capacity_units: 	 <p> For provisioned feature groups with online store enabled, this indicates the read throughput you are billed for and can consume without throttling. </p> <p>This field is not applicable for on-demand feature groups. </p>
  	provisioned_write_capacity_units: 	 <p> For provisioned feature groups, this indicates the write throughput you are billed for and can consume without throttling. </p> <p>This field is not applicable for on-demand feature groups. </p>
-
     """
     throughput_mode: str
     provisioned_read_capacity_units: Optional[int] = Unassigned()
     provisioned_write_capacity_units: Optional[int] = Unassigned()
 
 
-@dataclass
 class OfflineStoreStatus(Base):
     """
      OfflineStoreStatus
@@ -7261,13 +6476,11 @@ class OfflineStoreStatus(Base):
 	----------------------
  	status: 	 <p>An <code>OfflineStore</code> status.</p>
  	blocked_reason: 	 <p>The justification for why the OfflineStoreStatus is Blocked (if applicable).</p>
-
     """
     status: str
     blocked_reason: Optional[str] = Unassigned()
 
 
-@dataclass
 class LastUpdateStatus(Base):
     """
      LastUpdateStatus
@@ -7277,13 +6490,11 @@ class LastUpdateStatus(Base):
 	----------------------
  	status: 	 <p>A value that indicates whether the update was made successful.</p>
  	failure_reason: 	 <p>If the update wasn't successful, indicates the reason why it failed.</p>
-
     """
     status: str
     failure_reason: Optional[str] = Unassigned()
 
 
-@dataclass
 class FeatureParameter(Base):
     """
      FeatureParameter
@@ -7293,13 +6504,11 @@ class FeatureParameter(Base):
 	----------------------
  	key: 	 <p>A key that must contain a value to describe the feature.</p>
  	value: 	 <p>The value that belongs to a key.</p>
-
     """
     key: Optional[str] = Unassigned()
     value: Optional[str] = Unassigned()
 
 
-@dataclass
 class HubContentDependency(Base):
     """
      HubContentDependency
@@ -7309,13 +6518,11 @@ class HubContentDependency(Base):
 	----------------------
  	dependency_origin_path: 	 <p>The hub content dependency origin path.</p>
  	dependency_copy_path: 	 <p>The hub content dependency copy path.</p>
-
     """
     dependency_origin_path: Optional[str] = Unassigned()
     dependency_copy_path: Optional[str] = Unassigned()
 
 
-@dataclass
 class UiTemplateInfo(Base):
     """
      UiTemplateInfo
@@ -7325,13 +6532,11 @@ class UiTemplateInfo(Base):
 	----------------------
  	url: 	 <p>The URL for the user interface template.</p>
  	content_sha256: 	 <p>The SHA-256 digest of the contents of the template.</p>
-
     """
     url: Optional[str] = Unassigned()
     content_sha256: Optional[str] = Unassigned()
 
 
-@dataclass
 class TrainingJobStatusCounters(Base):
     """
      TrainingJobStatusCounters
@@ -7344,7 +6549,6 @@ class TrainingJobStatusCounters(Base):
  	retryable_error: 	 <p>The number of training jobs that failed, but can be retried. A failed training job can be retried only if it failed because an internal service error occurred.</p>
  	non_retryable_error: 	 <p>The number of training jobs that failed and can't be retried. A failed training job can't be retried if it failed because a client error occurred.</p>
  	stopped: 	 <p>The number of training jobs launched by a hyperparameter tuning job that were manually stopped.</p>
-
     """
     completed: Optional[int] = Unassigned()
     in_progress: Optional[int] = Unassigned()
@@ -7353,7 +6557,6 @@ class TrainingJobStatusCounters(Base):
     stopped: Optional[int] = Unassigned()
 
 
-@dataclass
 class ObjectiveStatusCounters(Base):
     """
      ObjectiveStatusCounters
@@ -7364,14 +6567,12 @@ class ObjectiveStatusCounters(Base):
  	succeeded: 	 <p>The number of training jobs whose final objective metric was evaluated by the hyperparameter tuning job and used in the hyperparameter tuning process.</p>
  	pending: 	 <p>The number of training jobs that are in progress and pending evaluation of their final objective metric.</p>
  	failed: 	 <p>The number of training jobs whose final objective metric was not evaluated and used in the hyperparameter tuning process. This typically occurs when the training job failed or did not emit an objective metric.</p>
-
     """
     succeeded: Optional[int] = Unassigned()
     pending: Optional[int] = Unassigned()
     failed: Optional[int] = Unassigned()
 
 
-@dataclass
 class FinalHyperParameterTuningJobObjectiveMetric(Base):
     """
      FinalHyperParameterTuningJobObjectiveMetric
@@ -7382,14 +6583,12 @@ class FinalHyperParameterTuningJobObjectiveMetric(Base):
  	type: 	 <p>Select if you want to minimize or maximize the objective metric during hyperparameter tuning. </p>
  	metric_name: 	 <p>The name of the objective metric. For SageMaker built-in algorithms, metrics are defined per algorithm. See the <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/xgboost-tuning.html">metrics for XGBoost</a> as an example. You can also use a custom algorithm for training and define your own metrics. For more information, see <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/automatic-model-tuning-define-metrics-variables.html">Define metrics and environment variables</a>.</p>
  	value: 	 <p>The value of the objective metric.</p>
-
     """
     metric_name: str
     value: float
     type: Optional[str] = Unassigned()
 
 
-@dataclass
 class HyperParameterTrainingJobSummary(Base):
     """
      HyperParameterTrainingJobSummary
@@ -7409,7 +6608,6 @@ class HyperParameterTrainingJobSummary(Base):
  	failure_reason: 	 <p>The reason that the training job failed. </p>
  	final_hyper_parameter_tuning_job_objective_metric: 	 <p>The <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_FinalHyperParameterTuningJobObjectiveMetric.html">FinalHyperParameterTuningJobObjectiveMetric</a> object that specifies the value of the objective metric of the tuning job that launched this training job.</p>
  	objective_status: 	 <p>The status of the objective metric for the training job:</p> <ul> <li> <p>Succeeded: The final objective metric for the training job was evaluated by the hyperparameter tuning job and used in the hyperparameter tuning process.</p> </li> </ul> <ul> <li> <p>Pending: The training job is in progress and evaluation of its final objective metric is pending.</p> </li> </ul> <ul> <li> <p>Failed: The final objective metric for the training job was not evaluated, and was not used in the hyperparameter tuning process. This typically occurs when the training job failed or did not emit an objective metric.</p> </li> </ul>
-
     """
     training_job_name: str
     training_job_arn: str
@@ -7425,7 +6623,6 @@ class HyperParameterTrainingJobSummary(Base):
     objective_status: Optional[str] = Unassigned()
 
 
-@dataclass
 class HyperParameterTuningJobCompletionDetails(Base):
     """
      HyperParameterTuningJobCompletionDetails
@@ -7435,13 +6632,11 @@ class HyperParameterTuningJobCompletionDetails(Base):
 	----------------------
  	number_of_training_jobs_objective_not_improving: 	 <p>The number of training jobs launched by a tuning job that are not improving (1% or less) as measured by model performance evaluated against an objective function.</p>
  	convergence_detected_time: 	 <p>The time in timestamp format that AMT detected model convergence, as defined by a lack of significant improvement over time based on criteria developed over a wide range of diverse benchmarking tests.</p>
-
     """
     number_of_training_jobs_objective_not_improving: Optional[int] = Unassigned()
     convergence_detected_time: Optional[datetime.datetime] = Unassigned()
 
 
-@dataclass
 class HyperParameterTuningJobConsumedResources(Base):
     """
      HyperParameterTuningJobConsumedResources
@@ -7450,12 +6645,10 @@ class HyperParameterTuningJobConsumedResources(Base):
  	 Attributes
 	----------------------
  	runtime_in_seconds: 	 <p>The wall clock runtime in seconds used by your hyperparameter tuning job.</p>
-
     """
     runtime_in_seconds: Optional[int] = Unassigned()
 
 
-@dataclass
 class InferenceComponentContainerSpecificationSummary(Base):
     """
      InferenceComponentContainerSpecificationSummary
@@ -7466,14 +6659,12 @@ class InferenceComponentContainerSpecificationSummary(Base):
  	deployed_image
  	artifact_url: 	 <p>The Amazon S3 path where the model artifacts are stored.</p>
  	environment: 	 <p>The environment variables to set in the Docker container.</p>
-
     """
     deployed_image: Optional[DeployedImage] = Unassigned()
     artifact_url: Optional[str] = Unassigned()
     environment: Optional[Dict[str, str]] = Unassigned()
 
 
-@dataclass
 class InferenceComponentSpecificationSummary(Base):
     """
      InferenceComponentSpecificationSummary
@@ -7485,7 +6676,6 @@ class InferenceComponentSpecificationSummary(Base):
  	container: 	 <p>Details about the container that provides the runtime environment for the model that is deployed with the inference component.</p>
  	startup_parameters: 	 <p>Settings that take effect while the model container starts up.</p>
  	compute_resource_requirements: 	 <p>The compute resources allocated to run the model assigned to the inference component.</p>
-
     """
     model_name: Optional[str] = Unassigned()
     container: Optional[InferenceComponentContainerSpecificationSummary] = Unassigned()
@@ -7493,7 +6683,6 @@ class InferenceComponentSpecificationSummary(Base):
     compute_resource_requirements: Optional[InferenceComponentComputeResourceRequirements] = Unassigned()
 
 
-@dataclass
 class InferenceComponentRuntimeConfigSummary(Base):
     """
      InferenceComponentRuntimeConfigSummary
@@ -7503,13 +6692,11 @@ class InferenceComponentRuntimeConfigSummary(Base):
 	----------------------
  	desired_copy_count: 	 <p>The number of runtime copies of the model container that you requested to deploy with the inference component.</p>
  	current_copy_count: 	 <p>The number of runtime copies of the model container that are currently deployed.</p>
-
     """
     desired_copy_count: Optional[int] = Unassigned()
     current_copy_count: Optional[int] = Unassigned()
 
 
-@dataclass
 class EndpointMetadata(Base):
     """
      EndpointMetadata
@@ -7521,7 +6708,6 @@ class EndpointMetadata(Base):
  	endpoint_config_name: 	 <p>The name of the endpoint configuration.</p>
  	endpoint_status: 	 <p> The status of the endpoint. For possible values of the status of an endpoint, see <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_EndpointSummary.html">EndpointSummary</a>. </p>
  	failure_reason: 	 <p> If the status of the endpoint is <code>Failed</code>, or the status is <code>InService</code> but update operation fails, this provides the reason why it failed. </p>
-
     """
     endpoint_name: str
     endpoint_config_name: Optional[str] = Unassigned()
@@ -7529,7 +6715,6 @@ class EndpointMetadata(Base):
     failure_reason: Optional[str] = Unassigned()
 
 
-@dataclass
 class ModelVariantConfigSummary(Base):
     """
      ModelVariantConfigSummary
@@ -7541,7 +6726,6 @@ class ModelVariantConfigSummary(Base):
  	variant_name: 	 <p>The name of the variant.</p>
  	infrastructure_config: 	 <p>The configuration of the infrastructure that the model has been deployed to.</p>
  	status: 	 <p>The status of deployment for the model variant on the hosted inference endpoint.</p> <ul> <li> <p> <code>Creating</code> - Amazon SageMaker is preparing the model variant on the hosted inference endpoint. </p> </li> <li> <p> <code>InService</code> - The model variant is running on the hosted inference endpoint. </p> </li> <li> <p> <code>Updating</code> - Amazon SageMaker is updating the model variant on the hosted inference endpoint. </p> </li> <li> <p> <code>Deleting</code> - Amazon SageMaker is deleting the model variant on the hosted inference endpoint. </p> </li> <li> <p> <code>Deleted</code> - The model variant has been deleted on the hosted inference endpoint. This can only happen after stopping the experiment. </p> </li> </ul>
-
     """
     model_name: str
     variant_name: str
@@ -7549,7 +6733,6 @@ class ModelVariantConfigSummary(Base):
     status: str
 
 
-@dataclass
 class RecommendationMetrics(Base):
     """
      RecommendationMetrics
@@ -7564,7 +6747,6 @@ class RecommendationMetrics(Base):
  	cpu_utilization: 	 <p>The expected CPU utilization at maximum invocations per minute for the instance.</p> <p> <code>NaN</code> indicates that the value is not available.</p>
  	memory_utilization: 	 <p>The expected memory utilization at maximum invocations per minute for the instance.</p> <p> <code>NaN</code> indicates that the value is not available.</p>
  	model_setup_time: 	 <p>The time it takes to launch new compute resources for a serverless endpoint. The time can vary depending on the model size, how long it takes to download the model, and the start-up time of the container.</p> <p> <code>NaN</code> indicates that the value is not available.</p>
-
     """
     cost_per_hour: float
     cost_per_inference: float
@@ -7575,7 +6757,6 @@ class RecommendationMetrics(Base):
     model_setup_time: Optional[int] = Unassigned()
 
 
-@dataclass
 class EndpointOutputConfiguration(Base):
     """
      EndpointOutputConfiguration
@@ -7588,7 +6769,6 @@ class EndpointOutputConfiguration(Base):
  	instance_type: 	 <p>The instance type recommended by Amazon SageMaker Inference Recommender.</p>
  	initial_instance_count: 	 <p>The number of instances recommended to launch initially.</p>
  	serverless_config
-
     """
     endpoint_name: str
     variant_name: str
@@ -7597,7 +6777,6 @@ class EndpointOutputConfiguration(Base):
     serverless_config: Optional[ProductionVariantServerlessConfig] = Unassigned()
 
 
-@dataclass
 class EnvironmentParameter(Base):
     """
      EnvironmentParameter
@@ -7608,14 +6787,12 @@ class EnvironmentParameter(Base):
  	key: 	 <p>The environment key suggested by the Amazon SageMaker Inference Recommender.</p>
  	value_type: 	 <p>The value type suggested by the Amazon SageMaker Inference Recommender.</p>
  	value: 	 <p>The value suggested by the Amazon SageMaker Inference Recommender.</p>
-
     """
     key: str
     value_type: str
     value: str
 
 
-@dataclass
 class ModelConfiguration(Base):
     """
      ModelConfiguration
@@ -7626,14 +6803,12 @@ class ModelConfiguration(Base):
  	inference_specification_name: 	 <p>The inference specification name in the model package version.</p>
  	environment_parameters: 	 <p>Defines the environment parameters that includes key, value types, and values.</p>
  	compilation_job_name: 	 <p>The name of the compilation job used to create the recommended model artifacts.</p>
-
     """
     inference_specification_name: Optional[str] = Unassigned()
     environment_parameters: Optional[List[EnvironmentParameter]] = Unassigned()
     compilation_job_name: Optional[str] = Unassigned()
 
 
-@dataclass
 class InferenceRecommendation(Base):
     """
      InferenceRecommendation
@@ -7647,7 +6822,6 @@ class InferenceRecommendation(Base):
  	model_configuration: 	 <p>Defines the model configuration.</p>
  	invocation_end_time: 	 <p>A timestamp that shows when the benchmark completed.</p>
  	invocation_start_time: 	 <p>A timestamp that shows when the benchmark started.</p>
-
     """
     metrics: RecommendationMetrics
     endpoint_configuration: EndpointOutputConfiguration
@@ -7657,7 +6831,6 @@ class InferenceRecommendation(Base):
     invocation_start_time: Optional[datetime.datetime] = Unassigned()
 
 
-@dataclass
 class InferenceMetrics(Base):
     """
      InferenceMetrics
@@ -7667,13 +6840,11 @@ class InferenceMetrics(Base):
 	----------------------
  	max_invocations: 	 <p>The expected maximum number of requests per minute for the instance.</p>
  	model_latency: 	 <p>The expected model latency at maximum invocations per minute for the instance.</p>
-
     """
     max_invocations: int
     model_latency: int
 
 
-@dataclass
 class EndpointPerformance(Base):
     """
      EndpointPerformance
@@ -7683,13 +6854,11 @@ class EndpointPerformance(Base):
 	----------------------
  	metrics: 	 <p>The metrics for an existing endpoint.</p>
  	endpoint_info
-
     """
     metrics: InferenceMetrics
     endpoint_info: EndpointInfo
 
 
-@dataclass
 class LabelCounters(Base):
     """
      LabelCounters
@@ -7702,7 +6871,6 @@ class LabelCounters(Base):
  	machine_labeled: 	 <p>The total number of objects labeled by automated data labeling.</p>
  	failed_non_retryable_error: 	 <p>The total number of objects that could not be labeled due to an error.</p>
  	unlabeled: 	 <p>The total number of objects not yet labeled.</p>
-
     """
     total_labeled: Optional[int] = Unassigned()
     human_labeled: Optional[int] = Unassigned()
@@ -7711,7 +6879,6 @@ class LabelCounters(Base):
     unlabeled: Optional[int] = Unassigned()
 
 
-@dataclass
 class LabelingJobOutput(Base):
     """
      LabelingJobOutput
@@ -7721,13 +6888,11 @@ class LabelingJobOutput(Base):
 	----------------------
  	output_dataset_s3_uri: 	 <p>The Amazon S3 bucket location of the manifest file for labeled data. </p>
  	final_active_learning_model_arn: 	 <p>The Amazon Resource Name (ARN) for the most recent SageMaker model trained as part of automated data labeling. </p>
-
     """
     output_dataset_s3_uri: str
     final_active_learning_model_arn: Optional[str] = Unassigned()
 
 
-@dataclass
 class ModelCardExportArtifacts(Base):
     """
      ModelCardExportArtifacts
@@ -7736,12 +6901,10 @@ class ModelCardExportArtifacts(Base):
  	 Attributes
 	----------------------
  	s3_export_artifacts: 	 <p>The Amazon S3 URI of the exported model artifacts.</p>
-
     """
     s3_export_artifacts: str
 
 
-@dataclass
 class ModelPackageStatusItem(Base):
     """
      ModelPackageStatusItem
@@ -7752,14 +6915,12 @@ class ModelPackageStatusItem(Base):
  	name: 	 <p>The name of the model package for which the overall status is being reported.</p>
  	status: 	 <p>The current status.</p>
  	failure_reason: 	 <p>if the overall status is <code>Failed</code>, the reason for the failure.</p>
-
     """
     name: str
     status: str
     failure_reason: Optional[str] = Unassigned()
 
 
-@dataclass
 class ModelPackageStatusDetails(Base):
     """
      ModelPackageStatusDetails
@@ -7769,13 +6930,11 @@ class ModelPackageStatusDetails(Base):
 	----------------------
  	validation_statuses: 	 <p>The validation status of the model package.</p>
  	image_scan_statuses: 	 <p>The status of the scan of the Docker image container for the model package.</p>
-
     """
     validation_statuses: List[ModelPackageStatusItem]
     image_scan_statuses: Optional[List[ModelPackageStatusItem]] = Unassigned()
 
 
-@dataclass
 class MonitoringExecutionSummary(Base):
     """
      MonitoringExecutionSummary
@@ -7793,7 +6952,6 @@ class MonitoringExecutionSummary(Base):
  	failure_reason: 	 <p>Contains the reason a monitoring job failed, if it failed.</p>
  	monitoring_job_definition_name: 	 <p>The name of the monitoring job.</p>
  	monitoring_type: 	 <p>The type of the monitoring job.</p>
-
     """
     monitoring_schedule_name: str
     scheduled_time: datetime.datetime
@@ -7807,7 +6965,6 @@ class MonitoringExecutionSummary(Base):
     monitoring_type: Optional[str] = Unassigned()
 
 
-@dataclass
 class PipelineExperimentConfig(Base):
     """
      PipelineExperimentConfig
@@ -7817,13 +6974,11 @@ class PipelineExperimentConfig(Base):
 	----------------------
  	experiment_name: 	 <p>The name of the experiment.</p>
  	trial_name: 	 <p>The name of the trial.</p>
-
     """
     experiment_name: Optional[str] = Unassigned()
     trial_name: Optional[str] = Unassigned()
 
 
-@dataclass
 class SelectedStep(Base):
     """
      SelectedStep
@@ -7832,12 +6987,10 @@ class SelectedStep(Base):
  	 Attributes
 	----------------------
  	step_name: 	 <p>The name of the pipeline step.</p>
-
     """
     step_name: str
 
 
-@dataclass
 class SelectiveExecutionConfig(Base):
     """
      SelectiveExecutionConfig
@@ -7847,13 +7000,11 @@ class SelectiveExecutionConfig(Base):
 	----------------------
  	source_pipeline_execution_arn: 	 <p>The ARN from a reference execution of the current pipeline. Used to copy input collaterals needed for the selected steps to run. The execution status of the pipeline can be either <code>Failed</code> or <code>Success</code>.</p> <p>This field is required if the steps you specify for <code>SelectedSteps</code> depend on output collaterals from any non-specified pipeline steps. For more information, see <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/pipelines-selective-ex.html">Selective Execution for Pipeline Steps</a>.</p>
  	selected_steps: 	 <p>A list of pipeline steps to run. All step(s) in all path(s) between two selected steps should be included.</p>
-
     """
     selected_steps: List[SelectedStep]
     source_pipeline_execution_arn: Optional[str] = Unassigned()
 
 
-@dataclass
 class ServiceCatalogProvisionedProductDetails(Base):
     """
      ServiceCatalogProvisionedProductDetails
@@ -7863,13 +7014,11 @@ class ServiceCatalogProvisionedProductDetails(Base):
 	----------------------
  	provisioned_product_id: 	 <p>The ID of the provisioned product.</p>
  	provisioned_product_status_message: 	 <p>The current status of the product.</p> <ul> <li> <p> <code>AVAILABLE</code> - Stable state, ready to perform any operation. The most recent operation succeeded and completed.</p> </li> <li> <p> <code>UNDER_CHANGE</code> - Transitive state. Operations performed might not have valid results. Wait for an AVAILABLE status before performing operations.</p> </li> <li> <p> <code>TAINTED</code> - Stable state, ready to perform any operation. The stack has completed the requested operation but is not exactly what was requested. For example, a request to update to a new version failed and the stack rolled back to the current version.</p> </li> <li> <p> <code>ERROR</code> - An unexpected error occurred. The provisioned product exists but the stack is not running. For example, CloudFormation received a parameter value that was not valid and could not launch the stack.</p> </li> <li> <p> <code>PLAN_IN_PROGRESS</code> - Transitive state. The plan operations were performed to provision a new product, but resources have not yet been created. After reviewing the list of resources to be created, execute the plan. Wait for an AVAILABLE status before performing operations.</p> </li> </ul>
-
     """
     provisioned_product_id: Optional[str] = Unassigned()
     provisioned_product_status_message: Optional[str] = Unassigned()
 
 
-@dataclass
 class SubscribedWorkteam(Base):
     """
      SubscribedWorkteam
@@ -7882,7 +7031,6 @@ class SubscribedWorkteam(Base):
  	seller_name: 	 <p>The name of the vendor in the Amazon Marketplace.</p>
  	marketplace_description: 	 <p>The description of the vendor from the Amazon Marketplace.</p>
  	listing_id: 	 <p>Marketplace product listing ID.</p>
-
     """
     workteam_arn: str
     marketplace_title: Optional[str] = Unassigned()
@@ -7891,7 +7039,6 @@ class SubscribedWorkteam(Base):
     listing_id: Optional[str] = Unassigned()
 
 
-@dataclass
 class WarmPoolStatus(Base):
     """
      WarmPoolStatus
@@ -7902,14 +7049,12 @@ class WarmPoolStatus(Base):
  	status: 	 <p>The status of the warm pool.</p> <ul> <li> <p> <code>InUse</code>: The warm pool is in use for the training job.</p> </li> <li> <p> <code>Available</code>: The warm pool is available to reuse for a matching training job.</p> </li> <li> <p> <code>Reused</code>: The warm pool moved to a matching training job for reuse.</p> </li> <li> <p> <code>Terminated</code>: The warm pool is no longer available. Warm pools are unavailable if they are terminated by a user, terminated for a patch update, or terminated for exceeding the specified <code>KeepAlivePeriodInSeconds</code>.</p> </li> </ul>
  	resource_retained_billable_time_in_seconds: 	 <p>The billable time in seconds used by the warm pool. Billable time refers to the absolute wall-clock time.</p> <p>Multiply <code>ResourceRetainedBillableTimeInSeconds</code> by the number of instances (<code>InstanceCount</code>) in your training cluster to get the total compute time SageMaker bills you if you run warm pool training. The formula is as follows: <code>ResourceRetainedBillableTimeInSeconds * InstanceCount</code>.</p>
  	reused_by_job: 	 <p>The name of the matching training job that reused the warm pool.</p>
-
     """
     status: str
     resource_retained_billable_time_in_seconds: Optional[int] = Unassigned()
     reused_by_job: Optional[str] = Unassigned()
 
 
-@dataclass
 class SecondaryStatusTransition(Base):
     """
      SecondaryStatusTransition
@@ -7921,7 +7066,6 @@ class SecondaryStatusTransition(Base):
  	start_time: 	 <p>A timestamp that shows when the training job transitioned to the current secondary status state.</p>
  	end_time: 	 <p>A timestamp that shows when the training job transitioned out of this secondary status state into another secondary status state or when the training job has ended.</p>
  	status_message: 	 <p>A detailed description of the progress within a secondary status. </p> <p>SageMaker provides secondary statuses and status messages that apply to each of them:</p> <dl> <dt>Starting</dt> <dd> <ul> <li> <p>Starting the training job.</p> </li> <li> <p>Launching requested ML instances.</p> </li> <li> <p>Insufficient capacity error from EC2 while launching instances, retrying!</p> </li> <li> <p>Launched instance was unhealthy, replacing it!</p> </li> <li> <p>Preparing the instances for training.</p> </li> </ul> </dd> <dt>Training</dt> <dd> <ul> <li> <p>Training image download completed. Training in progress.</p> </li> </ul> </dd> </dl> <important> <p>Status messages are subject to change. Therefore, we recommend not including them in code that programmatically initiates actions. For examples, don't use status messages in if statements.</p> </important> <p>To have an overview of your training job's progress, view <code>TrainingJobStatus</code> and <code>SecondaryStatus</code> in <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_DescribeTrainingJob.html">DescribeTrainingJob</a>, and <code>StatusMessage</code> together. For example, at the start of a training job, you might see the following:</p> <ul> <li> <p> <code>TrainingJobStatus</code> - InProgress</p> </li> <li> <p> <code>SecondaryStatus</code> - Training</p> </li> <li> <p> <code>StatusMessage</code> - Downloading the training image</p> </li> </ul>
-
     """
     status: str
     start_time: datetime.datetime
@@ -7929,7 +7073,6 @@ class SecondaryStatusTransition(Base):
     status_message: Optional[str] = Unassigned()
 
 
-@dataclass
 class MetricData(Base):
     """
      MetricData
@@ -7940,14 +7083,12 @@ class MetricData(Base):
  	metric_name: 	 <p>The name of the metric.</p>
  	value: 	 <p>The value of the metric.</p>
  	timestamp: 	 <p>The date and time that the algorithm emitted the metric.</p>
-
     """
     metric_name: Optional[str] = Unassigned()
     value: Optional[float] = Unassigned()
     timestamp: Optional[datetime.datetime] = Unassigned()
 
 
-@dataclass
 class ProfilerRuleEvaluationStatus(Base):
     """
      ProfilerRuleEvaluationStatus
@@ -7960,7 +7101,6 @@ class ProfilerRuleEvaluationStatus(Base):
  	rule_evaluation_status: 	 <p>Status of the rule evaluation.</p>
  	status_details: 	 <p>Details from the rule evaluation.</p>
  	last_modified_time: 	 <p>Timestamp when the rule evaluation status was last modified.</p>
-
     """
     rule_configuration_name: Optional[str] = Unassigned()
     rule_evaluation_job_arn: Optional[str] = Unassigned()
@@ -7969,7 +7109,6 @@ class ProfilerRuleEvaluationStatus(Base):
     last_modified_time: Optional[datetime.datetime] = Unassigned()
 
 
-@dataclass
 class TrialComponentSource(Base):
     """
      TrialComponentSource
@@ -7979,13 +7118,11 @@ class TrialComponentSource(Base):
 	----------------------
  	source_arn: 	 <p>The source Amazon Resource Name (ARN).</p>
  	source_type: 	 <p>The source job type.</p>
-
     """
     source_arn: str
     source_type: Optional[str] = Unassigned()
 
 
-@dataclass
 class TrialComponentMetricSummary(Base):
     """
      TrialComponentMetricSummary
@@ -8002,7 +7139,6 @@ class TrialComponentMetricSummary(Base):
  	count: 	 <p>The number of samples used to generate the metric.</p>
  	avg: 	 <p>The average value of the metric.</p>
  	std_dev: 	 <p>The standard deviation of the metric.</p>
-
     """
     metric_name: Optional[str] = Unassigned()
     source_arn: Optional[str] = Unassigned()
@@ -8015,7 +7151,6 @@ class TrialComponentMetricSummary(Base):
     std_dev: Optional[float] = Unassigned()
 
 
-@dataclass
 class TrialSource(Base):
     """
      TrialSource
@@ -8025,13 +7160,11 @@ class TrialSource(Base):
 	----------------------
  	source_arn: 	 <p>The Amazon Resource Name (ARN) of the source.</p>
  	source_type: 	 <p>The source job type.</p>
-
     """
     source_arn: str
     source_type: Optional[str] = Unassigned()
 
 
-@dataclass
 class OidcConfigForResponse(Base):
     """
      OidcConfigForResponse
@@ -8046,7 +7179,6 @@ class OidcConfigForResponse(Base):
  	user_info_endpoint: 	 <p>The OIDC IdP user information endpoint used to configure your private workforce.</p>
  	logout_endpoint: 	 <p>The OIDC IdP logout endpoint used to configure your private workforce.</p>
  	jwks_uri: 	 <p>The OIDC IdP JSON Web Key Set (Jwks) URI used to configure your private workforce.</p>
-
     """
     client_id: Optional[str] = Unassigned()
     issuer: Optional[str] = Unassigned()
@@ -8057,7 +7189,6 @@ class OidcConfigForResponse(Base):
     jwks_uri: Optional[str] = Unassigned()
 
 
-@dataclass
 class WorkforceVpcConfigResponse(Base):
     """
      WorkforceVpcConfigResponse
@@ -8069,7 +7200,6 @@ class WorkforceVpcConfigResponse(Base):
  	security_group_ids: 	 <p>The VPC security group IDs, in the form sg-xxxxxxxx. The security groups must be for the same VPC as specified in the subnet.</p>
  	subnets: 	 <p>The ID of the subnets in the VPC that you want to connect.</p>
  	vpc_endpoint_id: 	 <p>The IDs for the VPC service endpoints of your VPC workforce when it is created and updated.</p>
-
     """
     vpc_id: str
     security_group_ids: List[str]
@@ -8077,7 +7207,6 @@ class WorkforceVpcConfigResponse(Base):
     vpc_endpoint_id: Optional[str] = Unassigned()
 
 
-@dataclass
 class Workforce(Base):
     """
      Workforce
@@ -8096,7 +7225,6 @@ class Workforce(Base):
  	workforce_vpc_config: 	 <p>The configuration of a VPC workforce.</p>
  	status: 	 <p>The status of your workforce.</p>
  	failure_reason: 	 <p>The reason your workforce failed.</p>
-
     """
     workforce_name: str
     workforce_arn: str
@@ -8111,7 +7239,6 @@ class Workforce(Base):
     failure_reason: Optional[str] = Unassigned()
 
 
-@dataclass
 class Workteam(Base):
     """
      Workteam
@@ -8129,7 +7256,6 @@ class Workteam(Base):
  	create_date: 	 <p>The date and time that the work team was created (timestamp).</p>
  	last_updated_date: 	 <p>The date and time that the work team was last updated (timestamp).</p>
  	notification_configuration: 	 <p>Configures SNS notifications of available or expiring work items for work teams.</p>
-
     """
     workteam_name: str
     member_definitions: List[MemberDefinition]
@@ -8143,7 +7269,6 @@ class Workteam(Base):
     notification_configuration: Optional[NotificationConfiguration] = Unassigned()
 
 
-@dataclass
 class ProductionVariantServerlessUpdateConfig(Base):
     """
      ProductionVariantServerlessUpdateConfig
@@ -8153,13 +7278,11 @@ class ProductionVariantServerlessUpdateConfig(Base):
 	----------------------
  	max_concurrency: 	 <p>The updated maximum number of concurrent invocations your serverless endpoint can process.</p>
  	provisioned_concurrency: 	 <p>The updated amount of provisioned concurrency to allocate for the serverless endpoint. Should be less than or equal to <code>MaxConcurrency</code>.</p>
-
     """
     max_concurrency: Optional[int] = Unassigned()
     provisioned_concurrency: Optional[int] = Unassigned()
 
 
-@dataclass
 class DesiredWeightAndCapacity(Base):
     """
      DesiredWeightAndCapacity
@@ -8171,7 +7294,6 @@ class DesiredWeightAndCapacity(Base):
  	desired_weight: 	 <p>The variant's weight.</p>
  	desired_instance_count: 	 <p>The variant's capacity.</p>
  	serverless_update_config: 	 <p>Specifies the serverless update concurrency configuration for an endpoint variant.</p>
-
     """
     variant_name: str
     desired_weight: Optional[float] = Unassigned()
@@ -8179,7 +7301,6 @@ class DesiredWeightAndCapacity(Base):
     serverless_update_config: Optional[ProductionVariantServerlessUpdateConfig] = Unassigned()
 
 
-@dataclass
 class Device(Base):
     """
      Device
@@ -8190,14 +7311,12 @@ class Device(Base):
  	device_name: 	 <p>The name of the device.</p>
  	description: 	 <p>Description of the device.</p>
  	iot_thing_name: 	 <p>Amazon Web Services Internet of Things (IoT) object name.</p>
-
     """
     device_name: str
     description: Optional[str] = Unassigned()
     iot_thing_name: Optional[str] = Unassigned()
 
 
-@dataclass
 class DeviceDeploymentSummary(Base):
     """
      DeviceDeploymentSummary
@@ -8216,7 +7335,6 @@ class DeviceDeploymentSummary(Base):
  	device_deployment_status_message: 	 <p>The detailed error message for the deployoment status result.</p>
  	description: 	 <p>The description of the device.</p>
  	deployment_start_time: 	 <p>The time when the deployment on the device started.</p>
-
     """
     edge_deployment_plan_arn: str
     edge_deployment_plan_name: str
@@ -8231,7 +7349,6 @@ class DeviceDeploymentSummary(Base):
     deployment_start_time: Optional[datetime.datetime] = Unassigned()
 
 
-@dataclass
 class DeviceFleetSummary(Base):
     """
      DeviceFleetSummary
@@ -8243,7 +7360,6 @@ class DeviceFleetSummary(Base):
  	device_fleet_name: 	 <p>Name of the device fleet.</p>
  	creation_time: 	 <p>Timestamp of when the device fleet was created.</p>
  	last_modified_time: 	 <p>Timestamp of when the device fleet was last updated.</p>
-
     """
     device_fleet_arn: str
     device_fleet_name: str
@@ -8251,7 +7367,6 @@ class DeviceFleetSummary(Base):
     last_modified_time: Optional[datetime.datetime] = Unassigned()
 
 
-@dataclass
 class DeviceStats(Base):
     """
      DeviceStats
@@ -8261,13 +7376,11 @@ class DeviceStats(Base):
 	----------------------
  	connected_device_count: 	 <p>The number of devices connected with a heartbeat.</p>
  	registered_device_count: 	 <p>The number of registered devices.</p>
-
     """
     connected_device_count: int
     registered_device_count: int
 
 
-@dataclass
 class EdgeModelSummary(Base):
     """
      EdgeModelSummary
@@ -8277,13 +7390,11 @@ class EdgeModelSummary(Base):
 	----------------------
  	model_name: 	 <p>The name of the model.</p>
  	model_version: 	 <p>The version model.</p>
-
     """
     model_name: str
     model_version: str
 
 
-@dataclass
 class DeviceSummary(Base):
     """
      DeviceSummary
@@ -8300,7 +7411,6 @@ class DeviceSummary(Base):
  	latest_heartbeat: 	 <p>The last heartbeat received from the device.</p>
  	models: 	 <p>Models on the device.</p>
  	agent_version: 	 <p>Edge Manager agent version.</p>
-
     """
     device_name: str
     device_arn: str
@@ -8313,7 +7423,6 @@ class DeviceSummary(Base):
     agent_version: Optional[str] = Unassigned()
 
 
-@dataclass
 class DomainDetails(Base):
     """
      DomainDetails
@@ -8328,7 +7437,6 @@ class DomainDetails(Base):
  	creation_time: 	 <p>The creation time.</p>
  	last_modified_time: 	 <p>The last modified time.</p>
  	url: 	 <p>The domain's URL.</p>
-
     """
     domain_arn: Optional[str] = Unassigned()
     domain_id: Optional[str] = Unassigned()
@@ -8339,7 +7447,6 @@ class DomainDetails(Base):
     url: Optional[str] = Unassigned()
 
 
-@dataclass
 class RStudioServerProDomainSettingsForUpdate(Base):
     """
      RStudioServerProDomainSettingsForUpdate
@@ -8351,7 +7458,6 @@ class RStudioServerProDomainSettingsForUpdate(Base):
  	default_resource_spec
  	r_studio_connect_url: 	 <p>A URL pointing to an RStudio Connect server.</p>
  	r_studio_package_manager_url: 	 <p>A URL pointing to an RStudio Package Manager server.</p>
-
     """
     domain_execution_role_arn: str
     default_resource_spec: Optional[ResourceSpec] = Unassigned()
@@ -8359,7 +7465,6 @@ class RStudioServerProDomainSettingsForUpdate(Base):
     r_studio_package_manager_url: Optional[str] = Unassigned()
 
 
-@dataclass
 class DomainSettingsForUpdate(Base):
     """
      DomainSettingsForUpdate
@@ -8371,7 +7476,6 @@ class DomainSettingsForUpdate(Base):
  	execution_role_identity_config: 	 <p>The configuration for attaching a SageMaker user profile name to the execution role as a <a href="https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_control-access_monitor.html">sts:SourceIdentity key</a>. This configuration can only be modified if there are no apps in the <code>InService</code> or <code>Pending</code> state.</p>
  	security_group_ids: 	 <p>The security groups for the Amazon Virtual Private Cloud that the <code>Domain</code> uses for communication between Domain-level apps and user apps.</p>
  	docker_settings: 	 <p>A collection of settings that configure the domain's Docker interaction.</p>
-
     """
     r_studio_server_pro_domain_settings_for_update: Optional[RStudioServerProDomainSettingsForUpdate] = Unassigned()
     execution_role_identity_config: Optional[str] = Unassigned()
@@ -8379,7 +7483,6 @@ class DomainSettingsForUpdate(Base):
     docker_settings: Optional[DockerSettings] = Unassigned()
 
 
-@dataclass
 class PredefinedMetricSpecification(Base):
     """
      PredefinedMetricSpecification
@@ -8388,12 +7491,10 @@ class PredefinedMetricSpecification(Base):
  	 Attributes
 	----------------------
  	predefined_metric_type: 	 <p>The metric type. You can only apply SageMaker metric types to SageMaker endpoints.</p>
-
     """
     predefined_metric_type: Optional[str] = Unassigned()
 
 
-@dataclass
 class MetricSpecification(Base):
     """
      MetricSpecification
@@ -8403,13 +7504,11 @@ class MetricSpecification(Base):
 	----------------------
  	predefined: 	 <p>Information about a predefined metric.</p>
  	customized: 	 <p>Information about a customized metric.</p>
-
     """
     predefined: Optional[PredefinedMetricSpecification] = Unassigned()
     customized: Optional[CustomizedMetricSpecification] = Unassigned()
 
 
-@dataclass
 class TargetTrackingScalingPolicyConfiguration(Base):
     """
      TargetTrackingScalingPolicyConfiguration
@@ -8419,13 +7518,11 @@ class TargetTrackingScalingPolicyConfiguration(Base):
 	----------------------
  	metric_specification: 	 <p>An object containing information about a metric.</p>
  	target_value: 	 <p>The recommended target value to specify for the metric when creating a scaling policy.</p>
-
     """
     metric_specification: Optional[MetricSpecification] = Unassigned()
     target_value: Optional[float] = Unassigned()
 
 
-@dataclass
 class ScalingPolicy(Base):
     """
      ScalingPolicy
@@ -8434,12 +7531,10 @@ class ScalingPolicy(Base):
  	 Attributes
 	----------------------
  	target_tracking: 	 <p>A target tracking scaling policy. Includes support for predefined or customized metrics.</p>
-
     """
     target_tracking: Optional[TargetTrackingScalingPolicyConfiguration] = Unassigned()
 
 
-@dataclass
 class DynamicScalingConfiguration(Base):
     """
      DynamicScalingConfiguration
@@ -8452,7 +7547,6 @@ class DynamicScalingConfiguration(Base):
  	scale_in_cooldown: 	 <p>The recommended scale in cooldown time for your autoscaling policy.</p>
  	scale_out_cooldown: 	 <p>The recommended scale out cooldown time for your autoscaling policy.</p>
  	scaling_policies: 	 <p>An object of the scaling policies for each metric.</p>
-
     """
     min_capacity: Optional[int] = Unassigned()
     max_capacity: Optional[int] = Unassigned()
@@ -8461,7 +7555,6 @@ class DynamicScalingConfiguration(Base):
     scaling_policies: Optional[List[ScalingPolicy]] = Unassigned()
 
 
-@dataclass
 class EMRStepMetadata(Base):
     """
      EMRStepMetadata
@@ -8473,7 +7566,6 @@ class EMRStepMetadata(Base):
  	step_id: 	 <p>The identifier of the EMR cluster step.</p>
  	step_name: 	 <p>The name of the EMR cluster step.</p>
  	log_file_path: 	 <p>The path to the log file where the cluster step's failure root cause is recorded.</p>
-
     """
     cluster_id: Optional[str] = Unassigned()
     step_id: Optional[str] = Unassigned()
@@ -8481,7 +7573,6 @@ class EMRStepMetadata(Base):
     log_file_path: Optional[str] = Unassigned()
 
 
-@dataclass
 class Edge(Base):
     """
      Edge
@@ -8492,14 +7583,12 @@ class Edge(Base):
  	source_arn: 	 <p>The Amazon Resource Name (ARN) of the source lineage entity of the directed edge.</p>
  	destination_arn: 	 <p>The Amazon Resource Name (ARN) of the destination lineage entity of the directed edge.</p>
  	association_type: 	 <p>The type of the Association(Edge) between the source and destination. For example <code>ContributedTo</code>, <code>Produced</code>, or <code>DerivedFrom</code>.</p>
-
     """
     source_arn: Optional[str] = Unassigned()
     destination_arn: Optional[str] = Unassigned()
     association_type: Optional[str] = Unassigned()
 
 
-@dataclass
 class EdgeDeploymentPlanSummary(Base):
     """
      EdgeDeploymentPlanSummary
@@ -8515,7 +7604,6 @@ class EdgeDeploymentPlanSummary(Base):
  	edge_deployment_failed: 	 <p>The number of edge devices that failed the deployment.</p>
  	creation_time: 	 <p>The time when the edge deployment plan was created.</p>
  	last_modified_time: 	 <p>The time when the edge deployment plan was last updated.</p>
-
     """
     edge_deployment_plan_arn: str
     edge_deployment_plan_name: str
@@ -8527,7 +7615,6 @@ class EdgeDeploymentPlanSummary(Base):
     last_modified_time: Optional[datetime.datetime] = Unassigned()
 
 
-@dataclass
 class EdgeModelStat(Base):
     """
      EdgeModelStat
@@ -8541,7 +7628,6 @@ class EdgeModelStat(Base):
  	connected_device_count: 	 <p>The number of devices that have this model version and have a heart beat. </p>
  	active_device_count: 	 <p>The number of devices that have this model version, a heart beat, and are currently running.</p>
  	sampling_device_count: 	 <p>The number of devices with this model version and are producing sample data.</p>
-
     """
     model_name: str
     model_version: str
@@ -8551,7 +7637,6 @@ class EdgeModelStat(Base):
     sampling_device_count: int
 
 
-@dataclass
 class EdgePackagingJobSummary(Base):
     """
      EdgePackagingJobSummary
@@ -8567,7 +7652,6 @@ class EdgePackagingJobSummary(Base):
  	model_version: 	 <p>The version of the model.</p>
  	creation_time: 	 <p>The timestamp of when the job was created.</p>
  	last_modified_time: 	 <p>The timestamp of when the edge packaging job was last updated.</p>
-
     """
     edge_packaging_job_arn: str
     edge_packaging_job_name: str
@@ -8579,7 +7663,6 @@ class EdgePackagingJobSummary(Base):
     last_modified_time: Optional[datetime.datetime] = Unassigned()
 
 
-@dataclass
 class MonitoringSchedule(Base):
     """
      MonitoringSchedule
@@ -8598,7 +7681,6 @@ class MonitoringSchedule(Base):
  	endpoint_name: 	 <p>The endpoint that hosts the model being monitored.</p>
  	last_monitoring_execution_summary
  	tags: 	 <p>A list of the tags associated with the monitoring schedlue. For more information, see <a href="https://docs.aws.amazon.com/general/latest/gr/aws_tagging.html">Tagging Amazon Web Services resources</a> in the <i>Amazon Web Services General Reference Guide</i>.</p>
-
     """
     monitoring_schedule_arn: Optional[str] = Unassigned()
     monitoring_schedule_name: Optional[str] = Unassigned()
@@ -8613,7 +7695,6 @@ class MonitoringSchedule(Base):
     tags: Optional[List[Tag]] = Unassigned()
 
 
-@dataclass
 class Endpoint(Base):
     """
      Endpoint
@@ -8633,7 +7714,6 @@ class Endpoint(Base):
  	monitoring_schedules: 	 <p>A list of monitoring schedules for the endpoint. For information about model monitoring, see <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/model-monitor.html">Amazon SageMaker Model Monitor</a>.</p>
  	tags: 	 <p>A list of the tags associated with the endpoint. For more information, see <a href="https://docs.aws.amazon.com/general/latest/gr/aws_tagging.html">Tagging Amazon Web Services resources</a> in the <i>Amazon Web Services General Reference Guide</i>.</p>
  	shadow_production_variants: 	 <p>A list of the shadow variants hosted on the endpoint. Each shadow variant is a model in shadow mode with production traffic replicated from the production variant.</p>
-
     """
     endpoint_name: str
     endpoint_arn: str
@@ -8649,7 +7729,6 @@ class Endpoint(Base):
     shadow_production_variants: Optional[List[ProductionVariantSummary]] = Unassigned()
 
 
-@dataclass
 class EndpointConfigSummary(Base):
     """
      EndpointConfigSummary
@@ -8660,14 +7739,12 @@ class EndpointConfigSummary(Base):
  	endpoint_config_name: 	 <p>The name of the endpoint configuration.</p>
  	endpoint_config_arn: 	 <p>The Amazon Resource Name (ARN) of the endpoint configuration.</p>
  	creation_time: 	 <p>A timestamp that shows when the endpoint configuration was created.</p>
-
     """
     endpoint_config_name: str
     endpoint_config_arn: str
     creation_time: datetime.datetime
 
 
-@dataclass
 class EndpointSummary(Base):
     """
      EndpointSummary
@@ -8680,7 +7757,6 @@ class EndpointSummary(Base):
  	creation_time: 	 <p>A timestamp that shows when the endpoint was created.</p>
  	last_modified_time: 	 <p>A timestamp that shows when the endpoint was last modified.</p>
  	endpoint_status: 	 <p>The status of the endpoint.</p> <ul> <li> <p> <code>OutOfService</code>: Endpoint is not available to take incoming requests.</p> </li> <li> <p> <code>Creating</code>: <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_CreateEndpoint.html">CreateEndpoint</a> is executing.</p> </li> <li> <p> <code>Updating</code>: <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_UpdateEndpoint.html">UpdateEndpoint</a> or <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_UpdateEndpointWeightsAndCapacities.html">UpdateEndpointWeightsAndCapacities</a> is executing.</p> </li> <li> <p> <code>SystemUpdating</code>: Endpoint is undergoing maintenance and cannot be updated or deleted or re-scaled until it has completed. This maintenance operation does not change any customer-specified values such as VPC config, KMS encryption, model, instance type, or instance count.</p> </li> <li> <p> <code>RollingBack</code>: Endpoint fails to scale up or down or change its variant weight and is in the process of rolling back to its previous configuration. Once the rollback completes, endpoint returns to an <code>InService</code> status. This transitional status only applies to an endpoint that has autoscaling enabled and is undergoing variant weight or capacity changes as part of an <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_UpdateEndpointWeightsAndCapacities.html">UpdateEndpointWeightsAndCapacities</a> call or when the <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_UpdateEndpointWeightsAndCapacities.html">UpdateEndpointWeightsAndCapacities</a> operation is called explicitly.</p> </li> <li> <p> <code>InService</code>: Endpoint is available to process incoming requests.</p> </li> <li> <p> <code>Deleting</code>: <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_DeleteEndpoint.html">DeleteEndpoint</a> is executing.</p> </li> <li> <p> <code>Failed</code>: Endpoint could not be created, updated, or re-scaled. Use <code>DescribeEndpointOutput$FailureReason</code> for information about the failure. <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_DeleteEndpoint.html">DeleteEndpoint</a> is the only operation that can be performed on a failed endpoint.</p> </li> </ul> <p>To get a list of endpoints with a specified status, use the <code>StatusEquals</code> filter with a call to <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_ListEndpoints.html">ListEndpoints</a>.</p>
-
     """
     endpoint_name: str
     endpoint_arn: str
@@ -8689,7 +7765,6 @@ class EndpointSummary(Base):
     endpoint_status: str
 
 
-@dataclass
 class Experiment(Base):
     """
      Experiment
@@ -8707,7 +7782,6 @@ class Experiment(Base):
  	last_modified_time: 	 <p>When the experiment was last modified.</p>
  	last_modified_by
  	tags: 	 <p>The list of tags that are associated with the experiment. You can use <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_Search.html">Search</a> API to search on the tags.</p>
-
     """
     experiment_name: Optional[str] = Unassigned()
     experiment_arn: Optional[str] = Unassigned()
@@ -8721,7 +7795,6 @@ class Experiment(Base):
     tags: Optional[List[Tag]] = Unassigned()
 
 
-@dataclass
 class ExperimentSummary(Base):
     """
      ExperimentSummary
@@ -8735,7 +7808,6 @@ class ExperimentSummary(Base):
  	experiment_source
  	creation_time: 	 <p>When the experiment was created.</p>
  	last_modified_time: 	 <p>When the experiment was last modified.</p>
-
     """
     experiment_arn: Optional[str] = Unassigned()
     experiment_name: Optional[str] = Unassigned()
@@ -8745,7 +7817,6 @@ class ExperimentSummary(Base):
     last_modified_time: Optional[datetime.datetime] = Unassigned()
 
 
-@dataclass
 class FailStepMetadata(Base):
     """
      FailStepMetadata
@@ -8754,12 +7825,10 @@ class FailStepMetadata(Base):
  	 Attributes
 	----------------------
  	error_message: 	 <p>A message that you define and then is processed and rendered by the Fail step when the error occurs.</p>
-
     """
     error_message: Optional[str] = Unassigned()
 
 
-@dataclass
 class FeatureGroup(Base):
     """
      FeatureGroup
@@ -8783,7 +7852,6 @@ class FeatureGroup(Base):
  	failure_reason: 	 <p>The reason that the <code>FeatureGroup</code> failed to be replicated in the <code>OfflineStore</code>. This is failure may be due to a failure to create a <code>FeatureGroup</code> in or delete a <code>FeatureGroup</code> from the <code>OfflineStore</code>.</p>
  	description: 	 <p>A free form description of a <code>FeatureGroup</code>.</p>
  	tags: 	 <p>Tags used to define a <code>FeatureGroup</code>.</p>
-
     """
     feature_group_arn: Optional[str] = Unassigned()
     feature_group_name: Optional[str] = Unassigned()
@@ -8803,7 +7871,6 @@ class FeatureGroup(Base):
     tags: Optional[List[Tag]] = Unassigned()
 
 
-@dataclass
 class FeatureGroupSummary(Base):
     """
      FeatureGroupSummary
@@ -8816,7 +7883,6 @@ class FeatureGroupSummary(Base):
  	creation_time: 	 <p>A timestamp indicating the time of creation time of the <code>FeatureGroup</code>.</p>
  	feature_group_status: 	 <p>The status of a FeatureGroup. The status can be any of the following: <code>Creating</code>, <code>Created</code>, <code>CreateFail</code>, <code>Deleting</code> or <code>DetailFail</code>. </p>
  	offline_store_status: 	 <p>Notifies you if replicating data into the <code>OfflineStore</code> has failed. Returns either: <code>Active</code> or <code>Blocked</code>.</p>
-
     """
     feature_group_name: str
     feature_group_arn: str
@@ -8825,7 +7891,6 @@ class FeatureGroupSummary(Base):
     offline_store_status: Optional[OfflineStoreStatus] = Unassigned()
 
 
-@dataclass
 class FeatureMetadata(Base):
     """
      FeatureMetadata
@@ -8841,7 +7906,6 @@ class FeatureMetadata(Base):
  	last_modified_time: 	 <p>A timestamp indicating when the feature was last modified.</p>
  	description: 	 <p>An optional description that you specify to better describe the feature.</p>
  	parameters: 	 <p>Optional key-value pairs that you specify to better describe the feature.</p>
-
     """
     feature_group_arn: Optional[str] = Unassigned()
     feature_group_name: Optional[str] = Unassigned()
@@ -8853,7 +7917,6 @@ class FeatureMetadata(Base):
     parameters: Optional[List[FeatureParameter]] = Unassigned()
 
 
-@dataclass
 class Filter(Base):
     """
      Filter
@@ -8864,14 +7927,12 @@ class Filter(Base):
  	name: 	 <p>A resource property name. For example, <code>TrainingJobName</code>. For valid property names, see <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_SearchRecord.html">SearchRecord</a>. You must specify a valid property for the resource.</p>
  	operator: 	 <p>A Boolean binary operator that is used to evaluate the filter. The operator field contains one of the following values:</p> <dl> <dt>Equals</dt> <dd> <p>The value of <code>Name</code> equals <code>Value</code>.</p> </dd> <dt>NotEquals</dt> <dd> <p>The value of <code>Name</code> doesn't equal <code>Value</code>.</p> </dd> <dt>Exists</dt> <dd> <p>The <code>Name</code> property exists.</p> </dd> <dt>NotExists</dt> <dd> <p>The <code>Name</code> property does not exist.</p> </dd> <dt>GreaterThan</dt> <dd> <p>The value of <code>Name</code> is greater than <code>Value</code>. Not supported for text properties.</p> </dd> <dt>GreaterThanOrEqualTo</dt> <dd> <p>The value of <code>Name</code> is greater than or equal to <code>Value</code>. Not supported for text properties.</p> </dd> <dt>LessThan</dt> <dd> <p>The value of <code>Name</code> is less than <code>Value</code>. Not supported for text properties.</p> </dd> <dt>LessThanOrEqualTo</dt> <dd> <p>The value of <code>Name</code> is less than or equal to <code>Value</code>. Not supported for text properties.</p> </dd> <dt>In</dt> <dd> <p>The value of <code>Name</code> is one of the comma delimited strings in <code>Value</code>. Only supported for text properties.</p> </dd> <dt>Contains</dt> <dd> <p>The value of <code>Name</code> contains the string <code>Value</code>. Only supported for text properties.</p> <p>A <code>SearchExpression</code> can include the <code>Contains</code> operator multiple times when the value of <code>Name</code> is one of the following:</p> <ul> <li> <p> <code>Experiment.DisplayName</code> </p> </li> <li> <p> <code>Experiment.ExperimentName</code> </p> </li> <li> <p> <code>Experiment.Tags</code> </p> </li> <li> <p> <code>Trial.DisplayName</code> </p> </li> <li> <p> <code>Trial.TrialName</code> </p> </li> <li> <p> <code>Trial.Tags</code> </p> </li> <li> <p> <code>TrialComponent.DisplayName</code> </p> </li> <li> <p> <code>TrialComponent.TrialComponentName</code> </p> </li> <li> <p> <code>TrialComponent.Tags</code> </p> </li> <li> <p> <code>TrialComponent.InputArtifacts</code> </p> </li> <li> <p> <code>TrialComponent.OutputArtifacts</code> </p> </li> </ul> <p>A <code>SearchExpression</code> can include only one <code>Contains</code> operator for all other values of <code>Name</code>. In these cases, if you include multiple <code>Contains</code> operators in the <code>SearchExpression</code>, the result is the following error message: "<code>'CONTAINS' operator usage limit of 1 exceeded.</code>"</p> </dd> </dl>
  	value: 	 <p>A value used with <code>Name</code> and <code>Operator</code> to determine which resources satisfy the filter's condition. For numerical properties, <code>Value</code> must be an integer or floating-point decimal. For timestamp properties, <code>Value</code> must be an ISO 8601 date-time string of the following format: <code>YYYY-mm-dd'T'HH:MM:SS</code>.</p>
-
     """
     name: str
     operator: Optional[str] = Unassigned()
     value: Optional[str] = Unassigned()
 
 
-@dataclass
 class FlowDefinitionSummary(Base):
     """
      FlowDefinitionSummary
@@ -8884,7 +7945,6 @@ class FlowDefinitionSummary(Base):
  	flow_definition_status: 	 <p>The status of the flow definition. Valid values:</p>
  	creation_time: 	 <p>The timestamp when SageMaker created the flow definition.</p>
  	failure_reason: 	 <p>The reason why the flow definition creation failed. A failure reason is returned only when the flow definition status is <code>Failed</code>.</p>
-
     """
     flow_definition_name: str
     flow_definition_arn: str
@@ -8893,7 +7953,6 @@ class FlowDefinitionSummary(Base):
     failure_reason: Optional[str] = Unassigned()
 
 
-@dataclass
 class ScalingPolicyObjective(Base):
     """
      ScalingPolicyObjective
@@ -8903,13 +7962,11 @@ class ScalingPolicyObjective(Base):
 	----------------------
  	min_invocations_per_minute: 	 <p>The minimum number of expected requests to your endpoint per minute.</p>
  	max_invocations_per_minute: 	 <p>The maximum number of expected requests to your endpoint per minute.</p>
-
     """
     min_invocations_per_minute: Optional[int] = Unassigned()
     max_invocations_per_minute: Optional[int] = Unassigned()
 
 
-@dataclass
 class ScalingPolicyMetric(Base):
     """
      ScalingPolicyMetric
@@ -8919,13 +7976,11 @@ class ScalingPolicyMetric(Base):
 	----------------------
  	invocations_per_instance: 	 <p>The number of invocations sent to a model, normalized by <code>InstanceCount</code> in each ProductionVariant. <code>1/numberOfInstances</code> is sent as the value on each request, where <code>numberOfInstances</code> is the number of active instances for the ProductionVariant behind the endpoint at the time of the request.</p>
  	model_latency: 	 <p>The interval of time taken by a model to respond as viewed from SageMaker. This interval includes the local communication times taken to send the request and to fetch the response from the container of a model and the time taken to complete the inference in the container.</p>
-
     """
     invocations_per_instance: Optional[int] = Unassigned()
     model_latency: Optional[int] = Unassigned()
 
 
-@dataclass
 class PropertyNameQuery(Base):
     """
      PropertyNameQuery
@@ -8934,12 +7989,10 @@ class PropertyNameQuery(Base):
  	 Attributes
 	----------------------
  	property_name_hint: 	 <p>Text that begins a property's name.</p>
-
     """
     property_name_hint: str
 
 
-@dataclass
 class SuggestionQuery(Base):
     """
      SuggestionQuery
@@ -8948,12 +8001,10 @@ class SuggestionQuery(Base):
  	 Attributes
 	----------------------
  	property_name_query: 	 <p>Defines a property name hint. Only property names that begin with the specified hint are included in the response.</p>
-
     """
     property_name_query: Optional[PropertyNameQuery] = Unassigned()
 
 
-@dataclass
 class PropertyNameSuggestion(Base):
     """
      PropertyNameSuggestion
@@ -8962,12 +8013,10 @@ class PropertyNameSuggestion(Base):
  	 Attributes
 	----------------------
  	property_name: 	 <p>A suggested property name based on what you entered in the search textbox in the SageMaker console.</p>
-
     """
     property_name: Optional[str] = Unassigned()
 
 
-@dataclass
 class GitConfigForUpdate(Base):
     """
      GitConfigForUpdate
@@ -8976,12 +8025,10 @@ class GitConfigForUpdate(Base):
  	 Attributes
 	----------------------
  	secret_arn: 	 <p>The Amazon Resource Name (ARN) of the Amazon Web Services Secrets Manager secret that contains the credentials used to access the git repository. The secret must have a staging label of <code>AWSCURRENT</code> and must be in the following format:</p> <p> <code>{"username": <i>UserName</i>, "password": <i>Password</i>}</code> </p>
-
     """
     secret_arn: Optional[str] = Unassigned()
 
 
-@dataclass
 class HubContentInfo(Base):
     """
      HubContentInfo
@@ -8999,7 +8046,6 @@ class HubContentInfo(Base):
  	hub_content_search_keywords: 	 <p>The searchable keywords for the hub content.</p>
  	hub_content_status: 	 <p>The status of the hub content.</p>
  	creation_time: 	 <p>The date and time that the hub content was created.</p>
-
     """
     hub_content_name: str
     hub_content_arn: str
@@ -9013,7 +8059,6 @@ class HubContentInfo(Base):
     hub_content_search_keywords: Optional[List[str]] = Unassigned()
 
 
-@dataclass
 class HubInfo(Base):
     """
      HubInfo
@@ -9029,7 +8074,6 @@ class HubInfo(Base):
  	hub_status: 	 <p>The status of the hub.</p>
  	creation_time: 	 <p>The date and time that the hub was created.</p>
  	last_modified_time: 	 <p>The date and time that the hub was last modified.</p>
-
     """
     hub_name: str
     hub_arn: str
@@ -9041,7 +8085,6 @@ class HubInfo(Base):
     hub_search_keywords: Optional[List[str]] = Unassigned()
 
 
-@dataclass
 class HumanTaskUiSummary(Base):
     """
      HumanTaskUiSummary
@@ -9052,14 +8095,12 @@ class HumanTaskUiSummary(Base):
  	human_task_ui_name: 	 <p>The name of the human task user interface.</p>
  	human_task_ui_arn: 	 <p>The Amazon Resource Name (ARN) of the human task user interface.</p>
  	creation_time: 	 <p>A timestamp when SageMaker created the human task user interface.</p>
-
     """
     human_task_ui_name: str
     human_task_ui_arn: str
     creation_time: datetime.datetime
 
 
-@dataclass
 class HyperParameterTuningJobSearchEntity(Base):
     """
      HyperParameterTuningJobSearchEntity
@@ -9085,7 +8126,6 @@ class HyperParameterTuningJobSearchEntity(Base):
  	tuning_job_completion_details: 	 <p>Information about either a current or completed hyperparameter tuning job.</p>
  	consumed_resources: 	 <p>The total amount of resources consumed by a hyperparameter tuning job.</p>
  	tags: 	 <p>The tags associated with a hyperparameter tuning job. For more information see <a href="https://docs.aws.amazon.com/general/latest/gr/aws_tagging.html">Tagging Amazon Web Services resources</a>.</p>
-
     """
     hyper_parameter_tuning_job_name: Optional[str] = Unassigned()
     hyper_parameter_tuning_job_arn: Optional[str] = Unassigned()
@@ -9107,7 +8147,6 @@ class HyperParameterTuningJobSearchEntity(Base):
     tags: Optional[List[Tag]] = Unassigned()
 
 
-@dataclass
 class HyperParameterTuningJobSummary(Base):
     """
      HyperParameterTuningJobSummary
@@ -9125,7 +8164,6 @@ class HyperParameterTuningJobSummary(Base):
  	training_job_status_counters: 	 <p>The <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_TrainingJobStatusCounters.html">TrainingJobStatusCounters</a> object that specifies the numbers of training jobs, categorized by status, that this tuning job launched.</p>
  	objective_status_counters: 	 <p>The <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_ObjectiveStatusCounters.html">ObjectiveStatusCounters</a> object that specifies the numbers of training jobs, categorized by objective metric status, that this tuning job launched.</p>
  	resource_limits: 	 <p>The <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_ResourceLimits.html">ResourceLimits</a> object that specifies the maximum number of training jobs and parallel training jobs allowed for this tuning job.</p>
-
     """
     hyper_parameter_tuning_job_name: str
     hyper_parameter_tuning_job_arn: str
@@ -9139,7 +8177,6 @@ class HyperParameterTuningJobSummary(Base):
     resource_limits: Optional[ResourceLimits] = Unassigned()
 
 
-@dataclass
 class Image(Base):
     """
      Image
@@ -9155,7 +8192,6 @@ class Image(Base):
  	image_name: 	 <p>The name of the image.</p>
  	image_status: 	 <p>The status of the image.</p>
  	last_modified_time: 	 <p>When the image was last modified.</p>
-
     """
     creation_time: datetime.datetime
     image_arn: str
@@ -9167,7 +8203,6 @@ class Image(Base):
     failure_reason: Optional[str] = Unassigned()
 
 
-@dataclass
 class ImageVersion(Base):
     """
      ImageVersion
@@ -9182,7 +8217,6 @@ class ImageVersion(Base):
  	image_version_status: 	 <p>The status of the version.</p>
  	last_modified_time: 	 <p>When the version was last modified.</p>
  	version: 	 <p>The version number.</p>
-
     """
     creation_time: datetime.datetime
     image_arn: str
@@ -9193,7 +8227,6 @@ class ImageVersion(Base):
     failure_reason: Optional[str] = Unassigned()
 
 
-@dataclass
 class InferenceComponentSummary(Base):
     """
      InferenceComponentSummary
@@ -9209,7 +8242,6 @@ class InferenceComponentSummary(Base):
  	variant_name: 	 <p>The name of the production variant that hosts the inference component.</p>
  	inference_component_status: 	 <p>The status of the inference component.</p>
  	last_modified_time: 	 <p>The time when the inference component was last updated.</p>
-
     """
     creation_time: datetime.datetime
     inference_component_arn: str
@@ -9221,7 +8253,6 @@ class InferenceComponentSummary(Base):
     inference_component_status: Optional[str] = Unassigned()
 
 
-@dataclass
 class InferenceExperimentSummary(Base):
     """
      InferenceExperimentSummary
@@ -9239,7 +8270,6 @@ class InferenceExperimentSummary(Base):
  	completion_time: 	 <p>The timestamp at which the inference experiment was completed.</p>
  	last_modified_time: 	 <p>The timestamp when you last modified the inference experiment.</p>
  	role_arn: 	 <p> The ARN of the IAM role that Amazon SageMaker can assume to access model artifacts and container images, and manage Amazon SageMaker Inference endpoints for model deployment. </p>
-
     """
     name: str
     type: str
@@ -9253,7 +8283,6 @@ class InferenceExperimentSummary(Base):
     role_arn: Optional[str] = Unassigned()
 
 
-@dataclass
 class InferenceRecommendationsJob(Base):
     """
      InferenceRecommendationsJob
@@ -9274,7 +8303,6 @@ class InferenceRecommendationsJob(Base):
  	model_name: 	 <p>The name of the created model.</p>
  	sample_payload_url: 	 <p>The Amazon Simple Storage Service (Amazon S3) path where the sample payload is stored. This path must point to a single gzip compressed tar archive (.tar.gz suffix).</p>
  	model_package_version_arn: 	 <p>The Amazon Resource Name (ARN) of a versioned model package.</p>
-
     """
     job_name: str
     job_description: str
@@ -9291,7 +8319,6 @@ class InferenceRecommendationsJob(Base):
     model_package_version_arn: Optional[str] = Unassigned()
 
 
-@dataclass
 class RecommendationJobInferenceBenchmark(Base):
     """
      RecommendationJobInferenceBenchmark
@@ -9306,7 +8333,6 @@ class RecommendationJobInferenceBenchmark(Base):
  	failure_reason: 	 <p>The reason why a benchmark failed.</p>
  	invocation_end_time: 	 <p>A timestamp that shows when the benchmark completed.</p>
  	invocation_start_time: 	 <p>A timestamp that shows when the benchmark started.</p>
-
     """
     model_configuration: ModelConfiguration
     metrics: Optional[RecommendationMetrics] = Unassigned()
@@ -9317,7 +8343,6 @@ class RecommendationJobInferenceBenchmark(Base):
     invocation_start_time: Optional[datetime.datetime] = Unassigned()
 
 
-@dataclass
 class InferenceRecommendationsJobStep(Base):
     """
      InferenceRecommendationsJobStep
@@ -9329,7 +8354,6 @@ class InferenceRecommendationsJobStep(Base):
  	job_name: 	 <p>The name of the Inference Recommender job.</p>
  	status: 	 <p>The current status of the benchmark.</p>
  	inference_benchmark: 	 <p>The details for a specific benchmark.</p>
-
     """
     step_type: str
     job_name: str
@@ -9337,7 +8361,6 @@ class InferenceRecommendationsJobStep(Base):
     inference_benchmark: Optional[RecommendationJobInferenceBenchmark] = Unassigned()
 
 
-@dataclass
 class LabelCountersForWorkteam(Base):
     """
      LabelCountersForWorkteam
@@ -9348,14 +8371,12 @@ class LabelCountersForWorkteam(Base):
  	human_labeled: 	 <p>The total number of data objects labeled by a human worker.</p>
  	pending_human: 	 <p>The total number of data objects that need to be labeled by a human worker.</p>
  	total: 	 <p>The total number of tasks in the labeling job.</p>
-
     """
     human_labeled: Optional[int] = Unassigned()
     pending_human: Optional[int] = Unassigned()
     total: Optional[int] = Unassigned()
 
 
-@dataclass
 class LabelingJobForWorkteamSummary(Base):
     """
      LabelingJobForWorkteamSummary
@@ -9369,7 +8390,6 @@ class LabelingJobForWorkteamSummary(Base):
  	creation_time: 	 <p>The date and time that the labeling job was created.</p>
  	label_counters: 	 <p>Provides information about the progress of a labeling job.</p>
  	number_of_human_workers_per_data_object: 	 <p>The configured number of workers per data object.</p>
-
     """
     job_reference_code: str
     work_requester_account_id: str
@@ -9379,7 +8399,6 @@ class LabelingJobForWorkteamSummary(Base):
     number_of_human_workers_per_data_object: Optional[int] = Unassigned()
 
 
-@dataclass
 class LabelingJobSummary(Base):
     """
      LabelingJobSummary
@@ -9399,7 +8418,6 @@ class LabelingJobSummary(Base):
  	failure_reason: 	 <p>If the <code>LabelingJobStatus</code> field is <code>Failed</code>, this field contains a description of the error.</p>
  	labeling_job_output: 	 <p>The location of the output produced by the labeling job.</p>
  	input_config: 	 <p>Input configuration for the labeling job.</p>
-
     """
     labeling_job_name: str
     labeling_job_arn: str
@@ -9415,7 +8433,6 @@ class LabelingJobSummary(Base):
     input_config: Optional[LabelingJobInputConfig] = Unassigned()
 
 
-@dataclass
 class LambdaStepMetadata(Base):
     """
      LambdaStepMetadata
@@ -9425,13 +8442,11 @@ class LambdaStepMetadata(Base):
 	----------------------
  	arn: 	 <p>The Amazon Resource Name (ARN) of the Lambda function that was run by this step execution.</p>
  	output_parameters: 	 <p>A list of the output parameters of the Lambda step.</p>
-
     """
     arn: Optional[str] = Unassigned()
     output_parameters: Optional[List[OutputParameter]] = Unassigned()
 
 
-@dataclass
 class LineageGroupSummary(Base):
     """
      LineageGroupSummary
@@ -9444,7 +8459,6 @@ class LineageGroupSummary(Base):
  	display_name: 	 <p>The display name of the lineage group summary.</p>
  	creation_time: 	 <p>The creation time of the lineage group summary.</p>
  	last_modified_time: 	 <p>The last modified time of the lineage group summary.</p>
-
     """
     lineage_group_arn: Optional[str] = Unassigned()
     lineage_group_name: Optional[str] = Unassigned()
@@ -9453,7 +8467,6 @@ class LineageGroupSummary(Base):
     last_modified_time: Optional[datetime.datetime] = Unassigned()
 
 
-@dataclass
 class MonitoringJobDefinitionSummary(Base):
     """
      MonitoringJobDefinitionSummary
@@ -9465,7 +8478,6 @@ class MonitoringJobDefinitionSummary(Base):
  	monitoring_job_definition_arn: 	 <p>The Amazon Resource Name (ARN) of the monitoring job.</p>
  	creation_time: 	 <p>The time that the monitoring job was created.</p>
  	endpoint_name: 	 <p>The name of the endpoint that the job monitors.</p>
-
     """
     monitoring_job_definition_name: str
     monitoring_job_definition_arn: str
@@ -9473,7 +8485,6 @@ class MonitoringJobDefinitionSummary(Base):
     endpoint_name: str
 
 
-@dataclass
 class ModelCardExportJobSummary(Base):
     """
      ModelCardExportJobSummary
@@ -9488,7 +8499,6 @@ class ModelCardExportJobSummary(Base):
  	model_card_version: 	 <p>The version of the model card that the export job exports.</p>
  	created_at: 	 <p>The date and time that the model card export job was created.</p>
  	last_modified_at: 	 <p>The date and time that the model card export job was last modified..</p>
-
     """
     model_card_export_job_name: str
     model_card_export_job_arn: str
@@ -9499,7 +8509,6 @@ class ModelCardExportJobSummary(Base):
     last_modified_at: datetime.datetime
 
 
-@dataclass
 class ModelCardVersionSummary(Base):
     """
      ModelCardVersionSummary
@@ -9513,7 +8522,6 @@ class ModelCardVersionSummary(Base):
  	model_card_version: 	 <p>A version of the model card.</p>
  	creation_time: 	 <p>The date and time that the model card version was created.</p>
  	last_modified_time: 	 <p>The time date and time that the model card version was last modified.</p>
-
     """
     model_card_name: str
     model_card_arn: str
@@ -9523,7 +8531,6 @@ class ModelCardVersionSummary(Base):
     last_modified_time: Optional[datetime.datetime] = Unassigned()
 
 
-@dataclass
 class ModelCardSummary(Base):
     """
      ModelCardSummary
@@ -9536,7 +8543,6 @@ class ModelCardSummary(Base):
  	model_card_status: 	 <p>The approval status of the model card within your organization. Different organizations might have different criteria for model card review and approval.</p> <ul> <li> <p> <code>Draft</code>: The model card is a work in progress.</p> </li> <li> <p> <code>PendingReview</code>: The model card is pending review.</p> </li> <li> <p> <code>Approved</code>: The model card is approved.</p> </li> <li> <p> <code>Archived</code>: The model card is archived. No more updates should be made to the model card, but it can still be exported.</p> </li> </ul>
  	creation_time: 	 <p>The date and time that the model card was created.</p>
  	last_modified_time: 	 <p>The date and time that the model card was last modified.</p>
-
     """
     model_card_name: str
     model_card_arn: str
@@ -9545,7 +8551,6 @@ class ModelCardSummary(Base):
     last_modified_time: Optional[datetime.datetime] = Unassigned()
 
 
-@dataclass
 class ModelMetadataFilter(Base):
     """
      ModelMetadataFilter
@@ -9555,13 +8560,11 @@ class ModelMetadataFilter(Base):
 	----------------------
  	name: 	 <p>The name of the of the model to filter by.</p>
  	value: 	 <p>The value to filter the model metadata.</p>
-
     """
     name: str
     value: str
 
 
-@dataclass
 class ModelMetadataSearchExpression(Base):
     """
      ModelMetadataSearchExpression
@@ -9570,12 +8573,10 @@ class ModelMetadataSearchExpression(Base):
  	 Attributes
 	----------------------
  	filters: 	 <p>A list of filter objects.</p>
-
     """
     filters: Optional[List[ModelMetadataFilter]] = Unassigned()
 
 
-@dataclass
 class ModelMetadataSummary(Base):
     """
      ModelMetadataSummary
@@ -9588,7 +8589,6 @@ class ModelMetadataSummary(Base):
  	task: 	 <p>The machine learning task of the model.</p>
  	model: 	 <p>The name of the model.</p>
  	framework_version: 	 <p>The framework version of the model.</p>
-
     """
     domain: str
     framework: str
@@ -9597,7 +8597,6 @@ class ModelMetadataSummary(Base):
     framework_version: str
 
 
-@dataclass
 class ModelPackageGroupSummary(Base):
     """
      ModelPackageGroupSummary
@@ -9610,7 +8609,6 @@ class ModelPackageGroupSummary(Base):
  	model_package_group_description: 	 <p>A description of the model group.</p>
  	creation_time: 	 <p>The time that the model group was created.</p>
  	model_package_group_status: 	 <p>The status of the model group.</p>
-
     """
     model_package_group_name: str
     model_package_group_arn: str
@@ -9619,7 +8617,6 @@ class ModelPackageGroupSummary(Base):
     model_package_group_description: Optional[str] = Unassigned()
 
 
-@dataclass
 class ModelPackageSummary(Base):
     """
      ModelPackageSummary
@@ -9635,7 +8632,6 @@ class ModelPackageSummary(Base):
  	creation_time: 	 <p>A timestamp that shows when the model package was created.</p>
  	model_package_status: 	 <p>The overall status of the model package.</p>
  	model_approval_status: 	 <p>The approval status of the model. This can be one of the following values.</p> <ul> <li> <p> <code>APPROVED</code> - The model is approved</p> </li> <li> <p> <code>REJECTED</code> - The model is rejected.</p> </li> <li> <p> <code>PENDING_MANUAL_APPROVAL</code> - The model is waiting for manual approval.</p> </li> </ul>
-
     """
     model_package_arn: str
     creation_time: datetime.datetime
@@ -9647,7 +8643,6 @@ class ModelPackageSummary(Base):
     model_approval_status: Optional[str] = Unassigned()
 
 
-@dataclass
 class ModelSummary(Base):
     """
      ModelSummary
@@ -9658,14 +8653,12 @@ class ModelSummary(Base):
  	model_name: 	 <p>The name of the model that you want a summary for.</p>
  	model_arn: 	 <p>The Amazon Resource Name (ARN) of the model.</p>
  	creation_time: 	 <p>A timestamp that indicates when the model was created.</p>
-
     """
     model_name: str
     model_arn: str
     creation_time: datetime.datetime
 
 
-@dataclass
 class MonitoringAlertHistorySummary(Base):
     """
      MonitoringAlertHistorySummary
@@ -9677,7 +8670,6 @@ class MonitoringAlertHistorySummary(Base):
  	monitoring_alert_name: 	 <p>The name of a monitoring alert.</p>
  	creation_time: 	 <p>A timestamp that indicates when the first alert transition occurred in an alert history. An alert transition can be from status <code>InAlert</code> to <code>OK</code>, or from <code>OK</code> to <code>InAlert</code>.</p>
  	alert_status: 	 <p>The current alert status of an alert.</p>
-
     """
     monitoring_schedule_name: str
     monitoring_alert_name: str
@@ -9685,7 +8677,6 @@ class MonitoringAlertHistorySummary(Base):
     alert_status: str
 
 
-@dataclass
 class ModelDashboardIndicatorAction(Base):
     """
      ModelDashboardIndicatorAction
@@ -9694,12 +8685,10 @@ class ModelDashboardIndicatorAction(Base):
  	 Attributes
 	----------------------
  	enabled: 	 <p>Indicates whether the alert action is turned on.</p>
-
     """
     enabled: Optional[bool] = Unassigned()
 
 
-@dataclass
 class MonitoringAlertActions(Base):
     """
      MonitoringAlertActions
@@ -9708,12 +8697,10 @@ class MonitoringAlertActions(Base):
  	 Attributes
 	----------------------
  	model_dashboard_indicator: 	 <p>An alert action taken to light up an icon on the Model Dashboard when an alert goes into <code>InAlert</code> status.</p>
-
     """
     model_dashboard_indicator: Optional[ModelDashboardIndicatorAction] = Unassigned()
 
 
-@dataclass
 class MonitoringAlertSummary(Base):
     """
      MonitoringAlertSummary
@@ -9728,7 +8715,6 @@ class MonitoringAlertSummary(Base):
  	datapoints_to_alert: 	 <p>Within <code>EvaluationPeriod</code>, how many execution failures will raise an alert.</p>
  	evaluation_period: 	 <p>The number of most recent monitoring executions to consider when evaluating alert status.</p>
  	actions: 	 <p>A list of alert actions taken in response to an alert going into <code>InAlert</code> status.</p>
-
     """
     monitoring_alert_name: str
     creation_time: datetime.datetime
@@ -9739,7 +8725,6 @@ class MonitoringAlertSummary(Base):
     actions: MonitoringAlertActions
 
 
-@dataclass
 class MonitoringScheduleSummary(Base):
     """
      MonitoringScheduleSummary
@@ -9755,7 +8740,6 @@ class MonitoringScheduleSummary(Base):
  	endpoint_name: 	 <p>The name of the endpoint using the monitoring schedule.</p>
  	monitoring_job_definition_name: 	 <p>The name of the monitoring job definition that the schedule is for.</p>
  	monitoring_type: 	 <p>The type of the monitoring job definition that the schedule is for.</p>
-
     """
     monitoring_schedule_name: str
     monitoring_schedule_arn: str
@@ -9767,7 +8751,6 @@ class MonitoringScheduleSummary(Base):
     monitoring_type: Optional[str] = Unassigned()
 
 
-@dataclass
 class NotebookInstanceLifecycleConfigSummary(Base):
     """
      NotebookInstanceLifecycleConfigSummary
@@ -9779,7 +8762,6 @@ class NotebookInstanceLifecycleConfigSummary(Base):
  	notebook_instance_lifecycle_config_arn: 	 <p>The Amazon Resource Name (ARN) of the lifecycle configuration.</p>
  	creation_time: 	 <p>A timestamp that tells when the lifecycle configuration was created.</p>
  	last_modified_time: 	 <p>A timestamp that tells when the lifecycle configuration was last modified.</p>
-
     """
     notebook_instance_lifecycle_config_name: str
     notebook_instance_lifecycle_config_arn: str
@@ -9787,7 +8769,6 @@ class NotebookInstanceLifecycleConfigSummary(Base):
     last_modified_time: Optional[datetime.datetime] = Unassigned()
 
 
-@dataclass
 class NotebookInstanceSummary(Base):
     """
      NotebookInstanceSummary
@@ -9805,7 +8786,6 @@ class NotebookInstanceSummary(Base):
  	notebook_instance_lifecycle_config_name: 	 <p>The name of a notebook instance lifecycle configuration associated with this notebook instance.</p> <p>For information about notebook instance lifestyle configurations, see <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/notebook-lifecycle-config.html">Step 2.1: (Optional) Customize a Notebook Instance</a>.</p>
  	default_code_repository: 	 <p>The Git repository associated with the notebook instance as its default code repository. This can be either the name of a Git repository stored as a resource in your account, or the URL of a Git repository in <a href="https://docs.aws.amazon.com/codecommit/latest/userguide/welcome.html">Amazon Web Services CodeCommit</a> or in any other Git repository. When you open a notebook instance, it opens in the directory that contains this repository. For more information, see <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/nbi-git-repo.html">Associating Git Repositories with SageMaker Notebook Instances</a>.</p>
  	additional_code_repositories: 	 <p>An array of up to three Git repositories associated with the notebook instance. These can be either the names of Git repositories stored as resources in your account, or the URL of Git repositories in <a href="https://docs.aws.amazon.com/codecommit/latest/userguide/welcome.html">Amazon Web Services CodeCommit</a> or in any other Git repository. These repositories are cloned at the same level as the default repository of your notebook instance. For more information, see <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/nbi-git-repo.html">Associating Git Repositories with SageMaker Notebook Instances</a>.</p>
-
     """
     notebook_instance_name: str
     notebook_instance_arn: str
@@ -9819,7 +8799,6 @@ class NotebookInstanceSummary(Base):
     additional_code_repositories: Optional[List[str]] = Unassigned()
 
 
-@dataclass
 class TrainingJobStepMetadata(Base):
     """
      TrainingJobStepMetadata
@@ -9828,12 +8807,10 @@ class TrainingJobStepMetadata(Base):
  	 Attributes
 	----------------------
  	arn: 	 <p>The Amazon Resource Name (ARN) of the training job that was run by this step execution.</p>
-
     """
     arn: Optional[str] = Unassigned()
 
 
-@dataclass
 class ProcessingJobStepMetadata(Base):
     """
      ProcessingJobStepMetadata
@@ -9842,12 +8819,10 @@ class ProcessingJobStepMetadata(Base):
  	 Attributes
 	----------------------
  	arn: 	 <p>The Amazon Resource Name (ARN) of the processing job.</p>
-
     """
     arn: Optional[str] = Unassigned()
 
 
-@dataclass
 class TransformJobStepMetadata(Base):
     """
      TransformJobStepMetadata
@@ -9856,12 +8831,10 @@ class TransformJobStepMetadata(Base):
  	 Attributes
 	----------------------
  	arn: 	 <p>The Amazon Resource Name (ARN) of the transform job that was run by this step execution.</p>
-
     """
     arn: Optional[str] = Unassigned()
 
 
-@dataclass
 class TuningJobStepMetaData(Base):
     """
      TuningJobStepMetaData
@@ -9870,12 +8843,10 @@ class TuningJobStepMetaData(Base):
  	 Attributes
 	----------------------
  	arn: 	 <p>The Amazon Resource Name (ARN) of the tuning job that was run by this step execution.</p>
-
     """
     arn: Optional[str] = Unassigned()
 
 
-@dataclass
 class ModelStepMetadata(Base):
     """
      ModelStepMetadata
@@ -9884,12 +8855,10 @@ class ModelStepMetadata(Base):
  	 Attributes
 	----------------------
  	arn: 	 <p>The Amazon Resource Name (ARN) of the created model.</p>
-
     """
     arn: Optional[str] = Unassigned()
 
 
-@dataclass
 class RegisterModelStepMetadata(Base):
     """
      RegisterModelStepMetadata
@@ -9898,12 +8867,10 @@ class RegisterModelStepMetadata(Base):
  	 Attributes
 	----------------------
  	arn: 	 <p>The Amazon Resource Name (ARN) of the model package.</p>
-
     """
     arn: Optional[str] = Unassigned()
 
 
-@dataclass
 class QualityCheckStepMetadata(Base):
     """
      QualityCheckStepMetadata
@@ -9921,7 +8888,6 @@ class QualityCheckStepMetadata(Base):
  	check_job_arn: 	 <p>The Amazon Resource Name (ARN) of the Quality check processing job that was run by this step execution.</p>
  	skip_check: 	 <p>This flag indicates if the drift check against the previous baseline will be skipped or not. If it is set to <code>False</code>, the previous baseline of the configured check type must be available.</p>
  	register_new_baseline: 	 <p>This flag indicates if a newly calculated baseline can be accessed through step properties <code>BaselineUsedForDriftCheckConstraints</code> and <code>BaselineUsedForDriftCheckStatistics</code>. If it is set to <code>False</code>, the previous baseline of the configured check type must also be available. These can be accessed through the <code>BaselineUsedForDriftCheckConstraints</code> and <code> BaselineUsedForDriftCheckStatistics</code> properties. </p>
-
     """
     check_type: Optional[str] = Unassigned()
     baseline_used_for_drift_check_statistics: Optional[str] = Unassigned()
@@ -9935,7 +8901,6 @@ class QualityCheckStepMetadata(Base):
     register_new_baseline: Optional[bool] = Unassigned()
 
 
-@dataclass
 class PipelineExecutionStepMetadata(Base):
     """
      PipelineExecutionStepMetadata
@@ -9957,7 +8922,6 @@ class PipelineExecutionStepMetadata(Base):
  	clarify_check: 	 <p>Container for the metadata for a Clarify check step. The configurations and outcomes of the check step execution. This includes: </p> <ul> <li> <p>The type of the check conducted,</p> </li> <li> <p>The Amazon S3 URIs of baseline constraints and statistics files to be used for the drift check.</p> </li> <li> <p>The Amazon S3 URIs of newly calculated baseline constraints and statistics.</p> </li> <li> <p>The model package group name provided.</p> </li> <li> <p>The Amazon S3 URI of the violation report if violations detected.</p> </li> <li> <p>The Amazon Resource Name (ARN) of check processing job initiated by the step execution.</p> </li> <li> <p>The boolean flags indicating if the drift check is skipped.</p> </li> <li> <p>If step property <code>BaselineUsedForDriftCheck</code> is set the same as <code>CalculatedBaseline</code>.</p> </li> </ul>
  	fail: 	 <p>The configurations and outcomes of a Fail step execution.</p>
  	auto_m_l_job: 	 <p>The Amazon Resource Name (ARN) of the AutoML job that was run by this step.</p>
-
     """
     training_job: Optional[TrainingJobStepMetadata] = Unassigned()
     processing_job: Optional[ProcessingJobStepMetadata] = Unassigned()
@@ -9975,7 +8939,6 @@ class PipelineExecutionStepMetadata(Base):
     auto_m_l_job: Optional[AutoMLJobStepMetadata] = Unassigned()
 
 
-@dataclass
 class SelectiveExecutionResult(Base):
     """
      SelectiveExecutionResult
@@ -9984,12 +8947,10 @@ class SelectiveExecutionResult(Base):
  	 Attributes
 	----------------------
  	source_pipeline_execution_arn: 	 <p>The ARN from an execution of the current pipeline.</p>
-
     """
     source_pipeline_execution_arn: Optional[str] = Unassigned()
 
 
-@dataclass
 class PipelineExecutionStep(Base):
     """
      PipelineExecutionStep
@@ -10008,7 +8969,6 @@ class PipelineExecutionStep(Base):
  	metadata: 	 <p>Metadata to run the pipeline step.</p>
  	attempt_count: 	 <p>The current attempt of the execution step. For more information, see <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/pipelines-retry-policy.html">Retry Policy for SageMaker Pipelines steps</a>.</p>
  	selective_execution_result: 	 <p>The ARN from an execution of the current pipeline from which results are reused for this step.</p>
-
     """
     step_name: Optional[str] = Unassigned()
     step_display_name: Optional[str] = Unassigned()
@@ -10023,7 +8983,6 @@ class PipelineExecutionStep(Base):
     selective_execution_result: Optional[SelectiveExecutionResult] = Unassigned()
 
 
-@dataclass
 class PipelineExecutionSummary(Base):
     """
      PipelineExecutionSummary
@@ -10037,7 +8996,6 @@ class PipelineExecutionSummary(Base):
  	pipeline_execution_description: 	 <p>The description of the pipeline execution.</p>
  	pipeline_execution_display_name: 	 <p>The display name of the pipeline execution.</p>
  	pipeline_execution_failure_reason: 	 <p>A message generated by SageMaker Pipelines describing why the pipeline execution failed.</p>
-
     """
     pipeline_execution_arn: Optional[str] = Unassigned()
     start_time: Optional[datetime.datetime] = Unassigned()
@@ -10047,7 +9005,6 @@ class PipelineExecutionSummary(Base):
     pipeline_execution_failure_reason: Optional[str] = Unassigned()
 
 
-@dataclass
 class Parameter(Base):
     """
      Parameter
@@ -10057,13 +9014,11 @@ class Parameter(Base):
 	----------------------
  	name: 	 <p>The name of the parameter to assign a value to. This parameter name must match a named parameter in the pipeline definition.</p>
  	value: 	 <p>The literal value for the parameter.</p>
-
     """
     name: str
     value: str
 
 
-@dataclass
 class PipelineSummary(Base):
     """
      PipelineSummary
@@ -10079,7 +9034,6 @@ class PipelineSummary(Base):
  	creation_time: 	 <p>The creation time of the pipeline.</p>
  	last_modified_time: 	 <p>The time that the pipeline was last modified.</p>
  	last_execution_time: 	 <p>The last time that a pipeline execution began.</p>
-
     """
     pipeline_arn: Optional[str] = Unassigned()
     pipeline_name: Optional[str] = Unassigned()
@@ -10091,7 +9045,6 @@ class PipelineSummary(Base):
     last_execution_time: Optional[datetime.datetime] = Unassigned()
 
 
-@dataclass
 class ProcessingJobSummary(Base):
     """
      ProcessingJobSummary
@@ -10107,7 +9060,6 @@ class ProcessingJobSummary(Base):
  	processing_job_status: 	 <p>The status of the processing job.</p>
  	failure_reason: 	 <p>A string, up to one KB in size, that contains the reason a processing job failed, if it failed.</p>
  	exit_message: 	 <p>An optional string, up to one KB in size, that contains metadata from the processing container when the processing job exits.</p>
-
     """
     processing_job_name: str
     processing_job_arn: str
@@ -10119,7 +9071,6 @@ class ProcessingJobSummary(Base):
     exit_message: Optional[str] = Unassigned()
 
 
-@dataclass
 class ProjectSummary(Base):
     """
      ProjectSummary
@@ -10133,7 +9084,6 @@ class ProjectSummary(Base):
  	project_id: 	 <p>The ID of the project.</p>
  	creation_time: 	 <p>The time that the project was created.</p>
  	project_status: 	 <p>The status of the project.</p>
-
     """
     project_name: str
     project_arn: str
@@ -10143,7 +9093,6 @@ class ProjectSummary(Base):
     project_description: Optional[str] = Unassigned()
 
 
-@dataclass
 class ResourceCatalog(Base):
     """
      ResourceCatalog
@@ -10155,7 +9104,6 @@ class ResourceCatalog(Base):
  	resource_catalog_name: 	 <p> The name of the <code>ResourceCatalog</code>. </p>
  	description: 	 <p> A free form description of the <code>ResourceCatalog</code>. </p>
  	creation_time: 	 <p> The time the <code>ResourceCatalog</code> was created. </p>
-
     """
     resource_catalog_arn: str
     resource_catalog_name: str
@@ -10163,7 +9111,6 @@ class ResourceCatalog(Base):
     creation_time: datetime.datetime
 
 
-@dataclass
 class SpaceSettingsSummary(Base):
     """
      SpaceSettingsSummary
@@ -10173,13 +9120,11 @@ class SpaceSettingsSummary(Base):
 	----------------------
  	app_type: 	 <p>The type of app created within the space.</p>
  	space_storage_settings: 	 <p>The storage settings for a private space.</p>
-
     """
     app_type: Optional[str] = Unassigned()
     space_storage_settings: Optional[SpaceStorageSettings] = Unassigned()
 
 
-@dataclass
 class SpaceSharingSettingsSummary(Base):
     """
      SpaceSharingSettingsSummary
@@ -10188,12 +9133,10 @@ class SpaceSharingSettingsSummary(Base):
  	 Attributes
 	----------------------
  	sharing_type: 	 <p>Specifies the sharing type of the space.</p>
-
     """
     sharing_type: Optional[str] = Unassigned()
 
 
-@dataclass
 class OwnershipSettingsSummary(Base):
     """
      OwnershipSettingsSummary
@@ -10202,12 +9145,10 @@ class OwnershipSettingsSummary(Base):
  	 Attributes
 	----------------------
  	owner_user_profile_name: 	 <p>The user profile who is the owner of the private space.</p>
-
     """
     owner_user_profile_name: Optional[str] = Unassigned()
 
 
-@dataclass
 class SpaceDetails(Base):
     """
      SpaceDetails
@@ -10224,7 +9165,6 @@ class SpaceDetails(Base):
  	space_sharing_settings_summary: 	 <p>Specifies summary information about the space sharing settings.</p>
  	ownership_settings_summary: 	 <p>Specifies summary information about the ownership settings.</p>
  	space_display_name: 	 <p>The name of the space that appears in the Studio UI.</p>
-
     """
     domain_id: Optional[str] = Unassigned()
     space_name: Optional[str] = Unassigned()
@@ -10237,7 +9177,6 @@ class SpaceDetails(Base):
     space_display_name: Optional[str] = Unassigned()
 
 
-@dataclass
 class StudioLifecycleConfigDetails(Base):
     """
      StudioLifecycleConfigDetails
@@ -10250,7 +9189,6 @@ class StudioLifecycleConfigDetails(Base):
  	creation_time: 	 <p>The creation time of the Amazon SageMaker Studio Lifecycle Configuration.</p>
  	last_modified_time: 	 <p>This value is equivalent to CreationTime because Amazon SageMaker Studio Lifecycle Configurations are immutable.</p>
  	studio_lifecycle_config_app_type: 	 <p>The App type to which the Lifecycle Configuration is attached.</p>
-
     """
     studio_lifecycle_config_arn: Optional[str] = Unassigned()
     studio_lifecycle_config_name: Optional[str] = Unassigned()
@@ -10259,7 +9197,6 @@ class StudioLifecycleConfigDetails(Base):
     studio_lifecycle_config_app_type: Optional[str] = Unassigned()
 
 
-@dataclass
 class TrainingJobSummary(Base):
     """
      TrainingJobSummary
@@ -10274,7 +9211,6 @@ class TrainingJobSummary(Base):
  	last_modified_time: 	 <p> Timestamp when the training job was last modified. </p>
  	training_job_status: 	 <p>The status of the training job.</p>
  	warm_pool_status: 	 <p>The status of the warm pool associated with the training job.</p>
-
     """
     training_job_name: str
     training_job_arn: str
@@ -10285,7 +9221,6 @@ class TrainingJobSummary(Base):
     warm_pool_status: Optional[WarmPoolStatus] = Unassigned()
 
 
-@dataclass
 class TransformJobSummary(Base):
     """
      TransformJobSummary
@@ -10300,7 +9235,6 @@ class TransformJobSummary(Base):
  	last_modified_time: 	 <p>Indicates when the transform job was last modified.</p>
  	transform_job_status: 	 <p>The status of the transform job.</p>
  	failure_reason: 	 <p>If the transform job failed, the reason it failed.</p>
-
     """
     transform_job_name: str
     transform_job_arn: str
@@ -10311,7 +9245,6 @@ class TransformJobSummary(Base):
     failure_reason: Optional[str] = Unassigned()
 
 
-@dataclass
 class TrialComponentSummary(Base):
     """
      TrialComponentSummary
@@ -10330,7 +9263,6 @@ class TrialComponentSummary(Base):
  	created_by: 	 <p>Who created the trial component.</p>
  	last_modified_time: 	 <p>When the component was last modified.</p>
  	last_modified_by: 	 <p>Who last modified the component.</p>
-
     """
     trial_component_name: Optional[str] = Unassigned()
     trial_component_arn: Optional[str] = Unassigned()
@@ -10345,7 +9277,6 @@ class TrialComponentSummary(Base):
     last_modified_by: Optional[UserContext] = Unassigned()
 
 
-@dataclass
 class TrialSummary(Base):
     """
      TrialSummary
@@ -10359,7 +9290,6 @@ class TrialSummary(Base):
  	trial_source
  	creation_time: 	 <p>When the trial was created.</p>
  	last_modified_time: 	 <p>When the trial was last modified.</p>
-
     """
     trial_arn: Optional[str] = Unassigned()
     trial_name: Optional[str] = Unassigned()
@@ -10369,7 +9299,6 @@ class TrialSummary(Base):
     last_modified_time: Optional[datetime.datetime] = Unassigned()
 
 
-@dataclass
 class UserProfileDetails(Base):
     """
      UserProfileDetails
@@ -10382,7 +9311,6 @@ class UserProfileDetails(Base):
  	status: 	 <p>The status.</p>
  	creation_time: 	 <p>The creation time.</p>
  	last_modified_time: 	 <p>The last modified time.</p>
-
     """
     domain_id: Optional[str] = Unassigned()
     user_profile_name: Optional[str] = Unassigned()
@@ -10391,7 +9319,6 @@ class UserProfileDetails(Base):
     last_modified_time: Optional[datetime.datetime] = Unassigned()
 
 
-@dataclass
 class Model(Base):
     """
      Model
@@ -10410,7 +9337,6 @@ class Model(Base):
  	enable_network_isolation: 	 <p>Isolates the model container. No inbound or outbound network calls can be made to or from the model container.</p>
  	tags: 	 <p>A list of key-value pairs associated with the model. For more information, see <a href="https://docs.aws.amazon.com/general/latest/gr/aws_tagging.html">Tagging Amazon Web Services resources</a> in the <i>Amazon Web Services General Reference Guide</i>.</p>
  	deployment_recommendation: 	 <p>A set of recommended deployment configurations for the model.</p>
-
     """
     model_name: Optional[str] = Unassigned()
     primary_container: Optional[ContainerDefinition] = Unassigned()
@@ -10425,7 +9351,6 @@ class Model(Base):
     deployment_recommendation: Optional[DeploymentRecommendation] = Unassigned()
 
 
-@dataclass
 class ModelCard(Base):
     """
      ModelCard
@@ -10447,7 +9372,6 @@ class ModelCard(Base):
  	model_id: 	 <p>The unique name (ID) of the model.</p>
  	risk_rating: 	 <p>The risk rating of the model. Different organizations might have different criteria for model card risk ratings. For more information, see <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/model-cards-risk-rating.html">Risk ratings</a>.</p>
  	model_package_group_name: 	 <p>The model package group that contains the model package. Only relevant for model cards created for model packages in the Amazon SageMaker Model Registry. </p>
-
     """
     model_card_arn: Optional[str] = Unassigned()
     model_card_name: Optional[str] = Unassigned()
@@ -10465,7 +9389,6 @@ class ModelCard(Base):
     model_package_group_name: Optional[str] = Unassigned()
 
 
-@dataclass
 class ModelDashboardEndpoint(Base):
     """
      ModelDashboardEndpoint
@@ -10478,7 +9401,6 @@ class ModelDashboardEndpoint(Base):
  	creation_time: 	 <p>A timestamp that indicates when the endpoint was created.</p>
  	last_modified_time: 	 <p>The last time the endpoint was modified.</p>
  	endpoint_status: 	 <p>The endpoint status.</p>
-
     """
     endpoint_name: str
     endpoint_arn: str
@@ -10487,7 +9409,6 @@ class ModelDashboardEndpoint(Base):
     endpoint_status: str
 
 
-@dataclass
 class TransformJob(Base):
     """
      TransformJob
@@ -10517,7 +9438,6 @@ class TransformJob(Base):
  	data_processing
  	experiment_config
  	tags: 	 <p>A list of tags associated with the transform job.</p>
-
     """
     transform_job_name: Optional[str] = Unassigned()
     transform_job_arn: Optional[str] = Unassigned()
@@ -10543,7 +9463,6 @@ class TransformJob(Base):
     tags: Optional[List[Tag]] = Unassigned()
 
 
-@dataclass
 class ModelDashboardMonitoringSchedule(Base):
     """
      ModelDashboardMonitoringSchedule
@@ -10563,7 +9482,6 @@ class ModelDashboardMonitoringSchedule(Base):
  	monitoring_alert_summaries: 	 <p>A JSON array where each element is a summary for a monitoring alert.</p>
  	last_monitoring_execution_summary
  	batch_transform_input
-
     """
     monitoring_schedule_arn: Optional[str] = Unassigned()
     monitoring_schedule_name: Optional[str] = Unassigned()
@@ -10579,7 +9497,6 @@ class ModelDashboardMonitoringSchedule(Base):
     batch_transform_input: Optional[BatchTransformInput] = Unassigned()
 
 
-@dataclass
 class ModelDashboardModelCard(Base):
     """
      ModelDashboardModelCard
@@ -10599,7 +9516,6 @@ class ModelDashboardModelCard(Base):
  	tags: 	 <p>The tags associated with a model card.</p>
  	model_id: 	 <p>For models created in SageMaker, this is the model ARN. For models created outside of SageMaker, this is a user-customized string.</p>
  	risk_rating: 	 <p>A model card's risk rating. Can be low, medium, or high.</p>
-
     """
     model_card_arn: Optional[str] = Unassigned()
     model_card_name: Optional[str] = Unassigned()
@@ -10615,7 +9531,6 @@ class ModelDashboardModelCard(Base):
     risk_rating: Optional[str] = Unassigned()
 
 
-@dataclass
 class ModelDashboardModel(Base):
     """
      ModelDashboardModel
@@ -10628,7 +9543,6 @@ class ModelDashboardModel(Base):
  	last_batch_transform_job
  	monitoring_schedules: 	 <p>The monitoring schedules for a model.</p>
  	model_card: 	 <p>The model card for a model.</p>
-
     """
     model: Optional[Model] = Unassigned()
     endpoints: Optional[List[ModelDashboardEndpoint]] = Unassigned()
@@ -10637,7 +9551,6 @@ class ModelDashboardModel(Base):
     model_card: Optional[ModelDashboardModelCard] = Unassigned()
 
 
-@dataclass
 class ModelPackage(Base):
     """
      ModelPackage
@@ -10673,7 +9586,6 @@ class ModelPackage(Base):
  	customer_metadata_properties: 	 <p>The metadata properties for the model package. </p>
  	drift_check_baselines: 	 <p>Represents the drift check baselines that can be used when the model monitor is set using the model package.</p>
  	skip_model_validation: 	 <p>Indicates if you want to skip model validation.</p>
-
     """
     model_package_name: Optional[str] = Unassigned()
     model_package_group_name: Optional[str] = Unassigned()
@@ -10705,7 +9617,6 @@ class ModelPackage(Base):
     skip_model_validation: Optional[str] = Unassigned()
 
 
-@dataclass
 class ModelPackageGroup(Base):
     """
      ModelPackageGroup
@@ -10720,7 +9631,6 @@ class ModelPackageGroup(Base):
  	created_by
  	model_package_group_status: 	 <p>The status of the model group. This can be one of the following values.</p> <ul> <li> <p> <code>PENDING</code> - The model group is pending being created.</p> </li> <li> <p> <code>IN_PROGRESS</code> - The model group is in the process of being created.</p> </li> <li> <p> <code>COMPLETED</code> - The model group was successfully created.</p> </li> <li> <p> <code>FAILED</code> - The model group failed.</p> </li> <li> <p> <code>DELETING</code> - The model group is in the process of being deleted.</p> </li> <li> <p> <code>DELETE_FAILED</code> - SageMaker failed to delete the model group.</p> </li> </ul>
  	tags: 	 <p>A list of the tags associated with the model group. For more information, see <a href="https://docs.aws.amazon.com/general/latest/gr/aws_tagging.html">Tagging Amazon Web Services resources</a> in the <i>Amazon Web Services General Reference Guide</i>.</p>
-
     """
     model_package_group_name: Optional[str] = Unassigned()
     model_package_group_arn: Optional[str] = Unassigned()
@@ -10731,7 +9641,6 @@ class ModelPackageGroup(Base):
     tags: Optional[List[Tag]] = Unassigned()
 
 
-@dataclass
 class NestedFilters(Base):
     """
      NestedFilters
@@ -10741,13 +9650,11 @@ class NestedFilters(Base):
 	----------------------
  	nested_property_name: 	 <p>The name of the property to use in the nested filters. The value must match a listed property name, such as <code>InputDataConfig</code>.</p>
  	filters: 	 <p>A list of filters. Each filter acts on a property. Filters must contain at least one <code>Filters</code> value. For example, a <code>NestedFilters</code> call might include a filter on the <code>PropertyName</code> parameter of the <code>InputDataConfig</code> property: <code>InputDataConfig.DataSource.S3DataSource.S3Uri</code>.</p>
-
     """
     nested_property_name: str
     filters: List[Filter]
 
 
-@dataclass
 class OnlineStoreConfigUpdate(Base):
     """
      OnlineStoreConfigUpdate
@@ -10756,12 +9663,10 @@ class OnlineStoreConfigUpdate(Base):
  	 Attributes
 	----------------------
  	ttl_duration: 	 <p>Time to live duration, where the record is hard deleted after the expiration time is reached; <code>ExpiresAt</code> = <code>EventTime</code> + <code>TtlDuration</code>. For information on HardDelete, see the <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_feature_store_DeleteRecord.html">DeleteRecord</a> API in the Amazon SageMaker API Reference guide.</p>
-
     """
     ttl_duration: Optional[TtlDuration] = Unassigned()
 
 
-@dataclass
 class Parent(Base):
     """
      Parent
@@ -10771,13 +9676,11 @@ class Parent(Base):
 	----------------------
  	trial_name: 	 <p>The name of the trial.</p>
  	experiment_name: 	 <p>The name of the experiment.</p>
-
     """
     trial_name: Optional[str] = Unassigned()
     experiment_name: Optional[str] = Unassigned()
 
 
-@dataclass
 class Pipeline(Base):
     """
      Pipeline
@@ -10798,7 +9701,6 @@ class Pipeline(Base):
  	last_modified_by
  	parallelism_configuration: 	 <p>The parallelism configuration applied to the pipeline.</p>
  	tags: 	 <p>A list of tags that apply to the pipeline.</p>
-
     """
     pipeline_arn: Optional[str] = Unassigned()
     pipeline_name: Optional[str] = Unassigned()
@@ -10815,7 +9717,6 @@ class Pipeline(Base):
     tags: Optional[List[Tag]] = Unassigned()
 
 
-@dataclass
 class PipelineExecution(Base):
     """
      PipelineExecution
@@ -10837,7 +9738,6 @@ class PipelineExecution(Base):
  	parallelism_configuration: 	 <p>The parallelism configuration applied to the pipeline execution.</p>
  	selective_execution_config: 	 <p>The selective execution configuration applied to the pipeline run.</p>
  	pipeline_parameters: 	 <p>Contains a list of pipeline parameters. This list can be empty. </p>
-
     """
     pipeline_arn: Optional[str] = Unassigned()
     pipeline_execution_arn: Optional[str] = Unassigned()
@@ -10855,7 +9755,6 @@ class PipelineExecution(Base):
     pipeline_parameters: Optional[List[Parameter]] = Unassigned()
 
 
-@dataclass
 class ProcessingJob(Base):
     """
      ProcessingJob
@@ -10885,7 +9784,6 @@ class ProcessingJob(Base):
  	auto_m_l_job_arn: 	 <p>The Amazon Resource Name (ARN) of the AutoML job associated with this processing job.</p>
  	training_job_arn: 	 <p>The ARN of the training job associated with this processing job.</p>
  	tags: 	 <p>An array of key-value pairs. For more information, see <a href="https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/cost-alloc-tags.html#allocation-whatURL">Using Cost Allocation Tags</a> in the <i>Amazon Web Services Billing and Cost Management User Guide</i>.</p>
-
     """
     processing_inputs: Optional[List[ProcessingInput]] = Unassigned()
     processing_output_config: Optional[ProcessingOutputConfig] = Unassigned()
@@ -10911,7 +9809,6 @@ class ProcessingJob(Base):
     tags: Optional[List[Tag]] = Unassigned()
 
 
-@dataclass
 class ProfilerConfigForUpdate(Base):
     """
      ProfilerConfigForUpdate
@@ -10923,7 +9820,6 @@ class ProfilerConfigForUpdate(Base):
  	profiling_interval_in_milliseconds: 	 <p>A time interval for capturing system metrics in milliseconds. Available values are 100, 200, 500, 1000 (1 second), 5000 (5 seconds), and 60000 (1 minute) milliseconds. The default value is 500 milliseconds.</p>
  	profiling_parameters: 	 <p>Configuration information for capturing framework metrics. Available key strings for different profiling options are <code>DetailedProfilingConfig</code>, <code>PythonProfilingConfig</code>, and <code>DataLoaderProfilingConfig</code>. The following codes are configuration structures for the <code>ProfilingParameters</code> parameter. To learn more about how to configure the <code>ProfilingParameters</code> parameter, see <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/debugger-createtrainingjob-api.html">Use the SageMaker and Debugger Configuration API Operations to Create, Update, and Debug Your Training Job</a>. </p>
  	disable_profiler: 	 <p>To turn off Amazon SageMaker Debugger monitoring and profiling while a training job is in progress, set to <code>True</code>.</p>
-
     """
     s3_output_path: Optional[str] = Unassigned()
     profiling_interval_in_milliseconds: Optional[int] = Unassigned()
@@ -10931,7 +9827,6 @@ class ProfilerConfigForUpdate(Base):
     disable_profiler: Optional[bool] = Unassigned()
 
 
-@dataclass
 class Project(Base):
     """
      Project
@@ -10951,7 +9846,6 @@ class Project(Base):
  	tags: 	 <p>An array of key-value pairs. You can use tags to categorize your Amazon Web Services resources in different ways, for example, by purpose, owner, or environment. For more information, see <a href="https://docs.aws.amazon.com/general/latest/gr/aws_tagging.html">Tagging Amazon Web Services Resources</a>.</p>
  	last_modified_time: 	 <p>A timestamp container for when the project was last modified.</p>
  	last_modified_by
-
     """
     project_arn: Optional[str] = Unassigned()
     project_name: Optional[str] = Unassigned()
@@ -10967,7 +9861,6 @@ class Project(Base):
     last_modified_by: Optional[UserContext] = Unassigned()
 
 
-@dataclass
 class QueryFilters(Base):
     """
      QueryFilters
@@ -10982,7 +9875,6 @@ class QueryFilters(Base):
  	modified_before: 	 <p>Filter the lineage entities connected to the <code>StartArn</code>(s) before the last modified date.</p>
  	modified_after: 	 <p>Filter the lineage entities connected to the <code>StartArn</code>(s) after the last modified date.</p>
  	properties: 	 <p>Filter the lineage entities connected to the <code>StartArn</code>(s) by a set if property key value pairs. If multiple pairs are provided, an entity is included in the results if it matches any of the provided pairs.</p>
-
     """
     types: Optional[List[str]] = Unassigned()
     lineage_types: Optional[List[str]] = Unassigned()
@@ -10993,7 +9885,6 @@ class QueryFilters(Base):
     properties: Optional[Dict[str, str]] = Unassigned()
 
 
-@dataclass
 class Vertex(Base):
     """
      Vertex
@@ -11004,14 +9895,12 @@ class Vertex(Base):
  	arn: 	 <p>The Amazon Resource Name (ARN) of the lineage entity resource.</p>
  	type: 	 <p>The type of the lineage entity resource. For example: <code>DataSet</code>, <code>Model</code>, <code>Endpoint</code>, etc...</p>
  	lineage_type: 	 <p>The type of resource of the lineage entity.</p>
-
     """
     arn: Optional[str] = Unassigned()
     type: Optional[str] = Unassigned()
     lineage_type: Optional[str] = Unassigned()
 
 
-@dataclass
 class RemoteDebugConfigForUpdate(Base):
     """
      RemoteDebugConfigForUpdate
@@ -11020,12 +9909,10 @@ class RemoteDebugConfigForUpdate(Base):
  	 Attributes
 	----------------------
  	enable_remote_debug: 	 <p>If set to True, enables remote debugging.</p>
-
     """
     enable_remote_debug: Optional[bool] = Unassigned()
 
 
-@dataclass
 class RenderableTask(Base):
     """
      RenderableTask
@@ -11034,12 +9921,10 @@ class RenderableTask(Base):
  	 Attributes
 	----------------------
  	input: 	 <p>A JSON object that contains values for the variables defined in the template. It is made available to the template under the substitution variable <code>task.input</code>. For example, if you define a variable <code>task.input.text</code> in your template, you can supply the variable in the JSON object as <code>"text": "sample text"</code>.</p>
-
     """
     input: str
 
 
-@dataclass
 class RenderingError(Base):
     """
      RenderingError
@@ -11049,13 +9934,11 @@ class RenderingError(Base):
 	----------------------
  	code: 	 <p>A unique identifier for a specific class of errors.</p>
  	message: 	 <p>A human-readable message describing the error.</p>
-
     """
     code: str
     message: str
 
 
-@dataclass
 class ResourceConfigForUpdate(Base):
     """
      ResourceConfigForUpdate
@@ -11064,12 +9947,10 @@ class ResourceConfigForUpdate(Base):
  	 Attributes
 	----------------------
  	keep_alive_period_in_seconds: 	 <p>The <code>KeepAlivePeriodInSeconds</code> value specified in the <code>ResourceConfig</code> to update.</p>
-
     """
     keep_alive_period_in_seconds: int
 
 
-@dataclass
 class ResourceInUse(Base):
     """
      ResourceInUse
@@ -11078,12 +9959,10 @@ class ResourceInUse(Base):
  	 Attributes
 	----------------------
  	message
-
     """
     message: Optional[str] = Unassigned()
 
 
-@dataclass
 class ResourceLimitExceeded(Base):
     """
      ResourceLimitExceeded
@@ -11092,12 +9971,10 @@ class ResourceLimitExceeded(Base):
  	 Attributes
 	----------------------
  	message
-
     """
     message: Optional[str] = Unassigned()
 
 
-@dataclass
 class ResourceNotFound(Base):
     """
      ResourceNotFound
@@ -11106,12 +9983,10 @@ class ResourceNotFound(Base):
  	 Attributes
 	----------------------
  	message
-
     """
     message: Optional[str] = Unassigned()
 
 
-@dataclass
 class SearchExpression(Base):
     """
      SearchExpression
@@ -11123,7 +9998,6 @@ class SearchExpression(Base):
  	nested_filters: 	 <p>A list of nested filter objects.</p>
  	sub_expressions: 	 <p>A list of search expression objects.</p>
  	operator: 	 <p>A Boolean operator used to evaluate the search expression. If you want every conditional statement in all lists to be satisfied for the entire search expression to be true, specify <code>And</code>. If only a single conditional statement needs to be true for the entire search expression to be true, specify <code>Or</code>. The default value is <code>And</code>.</p>
-
     """
     filters: Optional[List[Filter]] = Unassigned()
     nested_filters: Optional[List[NestedFilters]] = Unassigned()
@@ -11131,7 +10005,6 @@ class SearchExpression(Base):
     operator: Optional[str] = Unassigned()
 
 
-@dataclass
 class TrainingJob(Base):
     """
      TrainingJob
@@ -11177,7 +10050,6 @@ class TrainingJob(Base):
  	environment: 	 <p>The environment variables to set in the Docker container.</p>
  	retry_strategy: 	 <p>The number of times to retry the job when the job fails due to an <code>InternalServerError</code>.</p>
  	tags: 	 <p>An array of key-value pairs. You can use tags to categorize your Amazon Web Services resources in different ways, for example, by purpose, owner, or environment. For more information, see <a href="https://docs.aws.amazon.com/general/latest/gr/aws_tagging.html">Tagging Amazon Web Services Resources</a>.</p>
-
     """
     training_job_name: Optional[str] = Unassigned()
     training_job_arn: Optional[str] = Unassigned()
@@ -11219,7 +10091,6 @@ class TrainingJob(Base):
     tags: Optional[List[Tag]] = Unassigned()
 
 
-@dataclass
 class TrialComponentSimpleSummary(Base):
     """
      TrialComponentSimpleSummary
@@ -11232,7 +10103,6 @@ class TrialComponentSimpleSummary(Base):
  	trial_component_source
  	creation_time: 	 <p>When the component was created.</p>
  	created_by
-
     """
     trial_component_name: Optional[str] = Unassigned()
     trial_component_arn: Optional[str] = Unassigned()
@@ -11241,7 +10111,6 @@ class TrialComponentSimpleSummary(Base):
     created_by: Optional[UserContext] = Unassigned()
 
 
-@dataclass
 class Trial(Base):
     """
      Trial
@@ -11261,7 +10130,6 @@ class Trial(Base):
  	metadata_properties
  	tags: 	 <p>The list of tags that are associated with the trial. You can use <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_Search.html">Search</a> API to search on the tags.</p>
  	trial_component_summaries: 	 <p>A list of the components associated with the trial. For each component, a summary of the component's properties is included.</p>
-
     """
     trial_name: Optional[str] = Unassigned()
     trial_arn: Optional[str] = Unassigned()
@@ -11277,7 +10145,6 @@ class Trial(Base):
     trial_component_summaries: Optional[List[TrialComponentSimpleSummary]] = Unassigned()
 
 
-@dataclass
 class TrialComponentSourceDetail(Base):
     """
      TrialComponentSourceDetail
@@ -11289,7 +10156,6 @@ class TrialComponentSourceDetail(Base):
  	training_job: 	 <p>Information about a training job that's the source of a trial component.</p>
  	processing_job: 	 <p>Information about a processing job that's the source of a trial component.</p>
  	transform_job: 	 <p>Information about a transform job that's the source of a trial component.</p>
-
     """
     source_arn: Optional[str] = Unassigned()
     training_job: Optional[TrainingJob] = Unassigned()
@@ -11297,7 +10163,6 @@ class TrialComponentSourceDetail(Base):
     transform_job: Optional[TransformJob] = Unassigned()
 
 
-@dataclass
 class TrialComponent(Base):
     """
      TrialComponent
@@ -11326,7 +10191,6 @@ class TrialComponent(Base):
  	tags: 	 <p>The list of tags that are associated with the component. You can use <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_Search.html">Search</a> API to search on the tags.</p>
  	parents: 	 <p>An array of the parents of the component. A parent is a trial the component is associated with and the experiment the trial is part of. A component might not have any parents.</p>
  	run_name: 	 <p>The name of the experiment run.</p>
-
     """
     trial_component_name: Optional[str] = Unassigned()
     display_name: Optional[str] = Unassigned()
@@ -11351,7 +10215,6 @@ class TrialComponent(Base):
     run_name: Optional[str] = Unassigned()
 
 
-@dataclass
 class SearchRecord(Base):
     """
      SearchRecord
@@ -11374,7 +10237,6 @@ class SearchRecord(Base):
  	hyper_parameter_tuning_job: 	 <p>The properties of a hyperparameter tuning job.</p>
  	model_card: 	 <p>An Amazon SageMaker Model Card that documents details about a machine learning model.</p>
  	model
-
     """
     training_job: Optional[TrainingJob] = Unassigned()
     experiment: Optional[Experiment] = Unassigned()
@@ -11393,7 +10255,6 @@ class SearchRecord(Base):
     model: Optional[ModelDashboardModel] = Unassigned()
 
 
-@dataclass
 class VisibilityConditions(Base):
     """
      VisibilityConditions
@@ -11403,13 +10264,11 @@ class VisibilityConditions(Base):
 	----------------------
  	key: 	 <p>The key that specifies the tag that you're using to filter the search results. It must be in the following format: <code>Tags.&lt;key&gt;</code>.</p>
  	value: 	 <p>The value for the tag that you're using to filter the search results.</p>
-
     """
     key: Optional[str] = Unassigned()
     value: Optional[str] = Unassigned()
 
 
-@dataclass
 class ServiceCatalogProvisioningUpdateDetails(Base):
     """
      ServiceCatalogProvisioningUpdateDetails
@@ -11419,13 +10278,11 @@ class ServiceCatalogProvisioningUpdateDetails(Base):
 	----------------------
  	provisioning_artifact_id: 	 <p>The ID of the provisioning artifact.</p>
  	provisioning_parameters: 	 <p>A list of key value pairs that you specify when you provision a product.</p>
-
     """
     provisioning_artifact_id: Optional[str] = Unassigned()
     provisioning_parameters: Optional[List[ProvisioningParameter]] = Unassigned()
 
 
-@dataclass
 class ThroughputConfigUpdate(Base):
     """
      ThroughputConfigUpdate
@@ -11436,14 +10293,12 @@ class ThroughputConfigUpdate(Base):
  	throughput_mode: 	 <p>Target throughput mode of the feature group. Throughput update is an asynchronous operation, and the outcome should be monitored by polling <code>LastUpdateStatus</code> field in <code>DescribeFeatureGroup</code> response. You cannot update a feature group's throughput while another update is in progress. </p>
  	provisioned_read_capacity_units: 	 <p>For provisioned feature groups with online store enabled, this indicates the read throughput you are billed for and can consume without throttling. </p>
  	provisioned_write_capacity_units: 	 <p>For provisioned feature groups, this indicates the write throughput you are billed for and can consume without throttling. </p>
-
     """
     throughput_mode: Optional[str] = Unassigned()
     provisioned_read_capacity_units: Optional[int] = Unassigned()
     provisioned_write_capacity_units: Optional[int] = Unassigned()
 
 
-@dataclass
 class VariantProperty(Base):
     """
      VariantProperty
@@ -11452,7 +10307,6 @@ class VariantProperty(Base):
  	 Attributes
 	----------------------
  	variant_property_type: 	 <p>The type of variant property. The supported values are:</p> <ul> <li> <p> <code>DesiredInstanceCount</code>: Overrides the existing variant instance counts using the <code>InitialInstanceCount</code> values in the <code>ProductionVariants</code> of <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_CreateEndpointConfig.html">CreateEndpointConfig</a>.</p> </li> <li> <p> <code>DesiredWeight</code>: Overrides the existing variant weights using the <code>InitialVariantWeight</code> values in the <code>ProductionVariants</code> of <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_CreateEndpointConfig.html">CreateEndpointConfig</a>.</p> </li> <li> <p> <code>DataCaptureConfig</code>: (Not currently supported.)</p> </li> </ul>
-
     """
     variant_property_type: str
 
