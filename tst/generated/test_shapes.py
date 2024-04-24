@@ -1,9 +1,9 @@
 import ast
 import unittest
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
-from generated.shapes import Base
+from generated.shapes import Base, AdditionalS3DataSource, Unassigned
 
 FILE_NAME = '../src/generated/shapes.py'
 
@@ -14,6 +14,24 @@ class TestGeneratedShape(unittest.TestCase):
         assert issubclass(Base, BaseModel)
         assert self._fetch_number_of_classes_in_file_not_inheriting_a_class(FILE_NAME,
                                                                             'Base') == 2  # 2 Because Base class itself does not inherit and Unassigned does not need to inherit
+
+    def test_pydantic_validation_for_generated_class_success(self):
+        additional_s3_data_source = AdditionalS3DataSource(s3_data_type='filestring', s3_uri='s3/uri')
+        assert isinstance(additional_s3_data_source.s3_data_type, str)
+        assert isinstance(additional_s3_data_source.s3_uri, str)
+        assert isinstance(additional_s3_data_source.compression_type, Unassigned)
+
+    def test_pydantic_validation_for_generated_class_success_with_optional_attributes_provided(self):
+        additional_s3_data_source = AdditionalS3DataSource(s3_data_type='filestring',
+                                                           s3_uri='s3/uri',
+                                                           compression_type='zip')
+        assert isinstance(additional_s3_data_source.s3_data_type, str)
+        assert isinstance(additional_s3_data_source.s3_uri, str)
+        assert isinstance(additional_s3_data_source.compression_type, str)
+
+    def test_pydantic_validation_for_generated_class_throws_error_for_incorrect_input(self):
+        with self.assertRaises(ValidationError):
+            AdditionalS3DataSource(s3_data_type='str', s3_uri=12)
 
     def _fetch_number_of_classes_in_file_not_inheriting_a_class(self,
                                                                 filepath: str,
