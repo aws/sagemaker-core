@@ -60,7 +60,7 @@ def wait(
     poll: int = 5,
     timeout: Optional[int] = None
 ):
-    stopped_status_codes = [
+    terminal_states = [
         "Completed",
         "Stopped",
         "Deleted",
@@ -76,7 +76,7 @@ def wait(
         resp = self.client.{operation}(**operation_input_args)
         status = resp["{status_shape_name}"]
 
-        if any(stopped_status.lower() in status.lower() for stopped_status in stopped_status_codes):
+        if any(terminal_state.lower() in status.lower() for terminal_state in terminal_states):
             break
 
         # TODO: Raise some generated TimeOutError
@@ -221,7 +221,7 @@ class ResourceGenerator(Generator):
 
         operation_inputs = ""
         for member in input_shape_members:
-            operation_inputs = operation_inputs + f"'{member}': {str(f'self.{convert_to_snake_case(member)}')}" + ", "
+            operation_inputs = operation_inputs + f"'{member}': {f'self.{convert_to_snake_case(member)}'}" + ", "
         operation_inputs = operation_inputs.rsplit(", ", 1)[0]
 
         operation_input_args = f"{{{operation_inputs}}}"
