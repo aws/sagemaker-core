@@ -29,7 +29,6 @@ class {class_name}:
 '''
 
 DATA_CLASS_TEMPLATE ='''
-@dataclass
 class {class_name}:
     """
     {docstring}
@@ -145,7 +144,7 @@ class ShapeGenerator(Generator):
     def generate_imports(self):
         imports = "import datetime\n"
         imports += "\n"
-        imports += "from dataclasses import dataclass\n"
+        imports += "from pydantic import BaseModel\n"
         imports += "from typing import List, Dict, Optional\n"
         imports += "\n"
         return imports
@@ -153,7 +152,7 @@ class ShapeGenerator(Generator):
     def generate_base_class(self):
         # more customizations would be added later
         return CLASS_TEMPLATE.format(
-            class_name="Base",
+            class_name="Base(BaseModel)",
             init_method_body=add_indent("pass", 4),
             docstring="TBA",
         )
