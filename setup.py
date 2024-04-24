@@ -11,6 +11,7 @@ setup(
     install_requires=[
         # Add your dependencies here
         'boto3>=1.34.0,<=2.0.0',
+        'pydantic>=2.7.0'
     ],
     classifiers=[
         'Development Status :: 3 - Alpha',
