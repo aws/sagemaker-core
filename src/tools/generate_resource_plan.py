@@ -64,18 +64,43 @@ class ResourceExtractor:
         '''
         self._extract_resource_plan_as_dataframe()
 
+
+    def _get_status_chain_and_states(self, shape_name, status_chain: list = None):
+        if status_chain is None:
+            status_chain = []
+            
+        member_data = self.shapes[shape_name]["members"]
+        status_name = next((member for member in member_data if "status" in member.lower()), None)      
+        if status_name is None:
+            return [], []
+        
+        status_shape_name = member_data[status_name]["shape"]
+        
+        status_chain.append({"status": status_name, "status_shape": status_shape_name})
+        
+        # base case when shape has list of status enums
+        if "enum" in self.shapes[status_shape_name]:
+            resource_states = self.shapes[status_shape_name]["enum"]
+            return status_chain, resource_states
+        else:
+            status_chain, resource_states = self._get_status_chain_and_states(status_shape_name, status_chain)       
+            return status_chain , resource_states
+        
+    
     def _extract_resource_plan_as_dataframe(self):
         # built a dataframe for each resources and it has
         # resource_name, type, class_methods, object_methods, additional_methods and raw_actions
-        self.df = pd.DataFrame(columns=['resource_name', 'type', 
-                                        'class_methods', 'object_methods', 'chain_resource_name',
-                                        'additional_methods', 'raw_actions'])
+        self.df = pd.DataFrame(columns=['resource_name', 'type', 'class_methods', 
+                                        'object_methods', 'chain_resource_name', 'additional_methods', 
+                                        'raw_actions', 'resource_status_chain', 'resource_states'])
 
         for resource, actions in sorted(self.resource_actions.items()):
             class_methods = set()
             object_methods = set()
             additional_methods = set()
             chain_resource_names = set()
+            resource_status_chain = set()
+            resource_primary_states = set()
 
             for action in actions:
                 action_low = action.lower()
@@ -85,7 +110,17 @@ class ResourceExtractor:
                 if action_low.split(resource_low)[0] == 'describe':
                     class_methods.add('get')
                     object_methods.add('refresh')
-                    continue
+                    
+                    # Find resource status chain and states if available
+                    output_shape_name = self.operations[action]["output"]["shape"]
+                    
+                    # Edge case where a resource has state but returns a resource dict instead of a list of members
+                    if "workforce" in output_shape_name.lower():
+                        resource_status_chain, resource_states = self._get_status_chain_and_states("Workforce")
+                    else:
+                        resource_status_chain, resource_states = self._get_status_chain_and_states(output_shape_name)
+    
+                    continue            
 
                 # Find chaining of resources
                 if action_low.split(resource_low)[0] == 'create':
@@ -118,7 +153,9 @@ class ResourceExtractor:
                 'object_methods': [list(sorted(object_methods))],
                 'chain_resource_name': [list(sorted(chain_resource_names))],
                 'additional_methods': [list(sorted(additional_methods))],
-                'raw_actions': [list(sorted(actions))]
+                'raw_actions': [list(sorted(actions))],
+                'resource_status_chain': [list(resource_status_chain)],
+                'primary_resource_states': [list(resource_states)]
             })
 
             self.df = pd.concat([self.df, new_row], ignore_index=True)
