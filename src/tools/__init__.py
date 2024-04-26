@@ -1,1 +1,1 @@
-from ..code_injection.se_de import _pascal_to_snake
+from ..code_injection.se_de import pascal_to_snake

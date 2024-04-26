@@ -12,6 +12,7 @@
 # language governing permissions and limitations under the License.
 """Utility module for common utility methods."""
 import re
+import subprocess
 
 
 def add_indent(text, num_spaces=4):
@@ -49,3 +50,12 @@ def convert_to_snake_case(entity_name):
     """
     snake_case_string = re.sub(r'(?<!^)(?=[A-Z])', '_', entity_name).lower()
     return snake_case_string
+
+
+def reformat_file_with_black(filename):
+    try:
+        # Run black with specific options using subprocess
+        subprocess.run(["black", "-l", "100", filename], check=True)
+        print(f"File '{filename}' reformatted successfully.")
+    except subprocess.CalledProcessError as e:
+        print(f"An error occurred while reformatting '{filename}': {e}")

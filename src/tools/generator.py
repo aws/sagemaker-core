@@ -11,7 +11,10 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 """Base class for common generator methods."""
-from src.util.util import add_indent, convert_to_snake_case
+import pprint
+import textwrap
+
+from src.util.util import reformat_file_with_black, convert_to_snake_case
 
 BASIC_JSON_TYPES_TO_PYTHON_TYPES = {
     "string": "str",
@@ -25,6 +28,8 @@ BASIC_JSON_TYPES_TO_PYTHON_TYPES = {
     "timestamp": "datetime.datetime",
 }
 
+SHAPE_DAG_FILE_PATH = "src/code_injection/shape_dag.py"
+
 
 class Generator:
     """Base class for common generator methods"""
@@ -34,6 +39,81 @@ class Generator:
         :param service_json: The Botocore Service Json in python dict format.
         """
         self.service_json = service_json
+        # write shape_metadata into json file
+        with open(SHAPE_DAG_FILE_PATH, 'w') as f:
+            f.write("SHAPE_DAG=")
+            f.write(textwrap.indent(pprint.pformat(self.shape_dag, width=1), '') + '\n')
+        reformat_file_with_black(SHAPE_DAG_FILE_PATH)
+
+    @property
+    def shape_dag(self):
+        """Parses the Service Json and generates the Shape DAG.
+
+        DAG is stored in a Dictionary data structure, and each key denotes a DAG Node.
+        Nodes can be of composite types: structure, list, map. Basic types (Ex. str, int, etc)
+        are omitted from compactness and can be inferred from composite type nodes.
+
+        The connections of Nodes are can be followed by using the shape.
+
+        Possible scenerios of a nested associations:
+
+        1. StructA → StructB → basic_type_member.
+        2. StructA → list → basic_type_member
+        3. StructA → list → StructB → basic_type_member
+        4. StructA → map → basic_type_member
+        5. StructA → map → StructBMapValue → basic_type_member
+        6. StructA → map → map → basic_type_member
+        7. StructA → map → list → basic_type_member
+
+        Example:
+
+           "ContainerDefinition": { # type: structure
+               "type":"structure",
+               "members":[
+                    {"name": "ModelName", "shape": "ModelName", "type": "string"},
+                    {"name": "ContainerDefinition", "shape": "ContainerDefinition", "type": "list"},
+                    {"name": "CustomerMetadata", "shape": "CustomerMetadataMap", "type": "map"},
+               ],
+           },
+           "ContainerDefinitionList": {  # type: list
+                "type":"list",
+                "member_shape":"ContainerDefinition",
+                "member_type":"ContainerDefinition", # potential types: string, structure
+           },
+           "CustomerMetadataMap": { # type: map
+                "type":"map",
+                "key_shape":"CustomerMetadataKey",
+                "key_type":"string",     # allowed types: string
+                "value_shape":"CustomerMetadataValue",
+                "value_type":"string", # potential types: string, structure, list, map
+            },
+
+        """
+        _dag = {}
+        _all_shapes = self.service_json["shapes"]
+        for shape, shape_attrs in _all_shapes.items():
+            shape_data = _all_shapes[shape]
+            if shape_data["type"] == "structure":
+                _dag[shape] = {"type": "structure", "members": []}
+                for member, member_attrs in shape_data["members"].items():
+                    shape_node_member = {"name": member, "shape": member_attrs["shape"]}
+                    member_shape_dict = _all_shapes[member_attrs["shape"]]
+                    shape_node_member["type"] = member_shape_dict["type"]
+                    _dag[shape]["members"].append(shape_node_member)
+            elif shape_data["type"] == "list":
+                _dag[shape] = {"type": "list"}
+                _list_member_shape = shape_data["member"]["shape"]
+                _dag[shape]["member_shape"] = _list_member_shape
+                _dag[shape]["member_type"] = _all_shapes[_list_member_shape]["type"]
+            elif shape_data["type"] == "map":
+                _dag[shape] = {"type": "map"}
+                _map_key_shape = shape_data["key"]["shape"]
+                _dag[shape]["key_shape"] = _map_key_shape
+                _map_value_shape = shape_data["value"]["shape"]
+                _dag[shape]["value_shape"] = _map_value_shape
+                _dag[shape]["key_type"] = _all_shapes[_map_key_shape]["type"]
+                _dag[shape]["value_type"] = _all_shapes[_map_value_shape]["type"]
+        return _dag
 
     def _evaluate_list_type(self, member_shape):
         list_shape_name = member_shape["member"]["shape"]
