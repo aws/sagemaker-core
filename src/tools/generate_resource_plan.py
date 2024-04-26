@@ -3,7 +3,7 @@ import os
 import pandas as pd
 
 CLASS_METHODS = set(['create', 'add', 'start', 'register', 'import', 'list', 'get'])
-OBJECT_METHODS = set(['refresh', 'delete', 'update', 'stop', 'deregister'])
+OBJECT_METHODS = set(['refresh', 'delete', 'update', 'stop', 'deregister', 'wait', 'wait_for_status'])
 
 '''
 This class is used to extract the resources and its actions from the service-2.json file.
@@ -100,7 +100,7 @@ class ResourceExtractor:
             additional_methods = set()
             chain_resource_names = set()
             resource_status_chain = set()
-            resource_primary_states = set()
+            resource_states = set()
 
             for action in actions:
                 action_low = action.lower()
@@ -113,13 +113,22 @@ class ResourceExtractor:
                     
                     # Find resource status chain and states if available
                     output_shape_name = self.operations[action]["output"]["shape"]
+                    output_members_data = self.shapes[output_shape_name]["members"]
                     
-                    # Edge case where a resource has state but returns a resource dict instead of a list of members
-                    if "workforce" in output_shape_name.lower():
-                        resource_status_chain, resource_states = self._get_status_chain_and_states("Workforce")
+                    # Edge case where a resource may have state but returns a single resource dict instead of a list of members
+                    if len(output_members_data) == 1:
+                        single_member_name = next(iter(output_members_data))
+                        single_member_shape_name = output_members_data[single_member_name]["shape"]
+                        resource_status_chain, resource_states = self._get_status_chain_and_states(single_member_shape_name)
                     else:
                         resource_status_chain, resource_states = self._get_status_chain_and_states(output_shape_name)
-    
+                    
+                    # Determine whether resource needs a wait or wait_for_status method
+                    if resource_low.endswith("job") or resource_low.endswith("jobv2"):
+                        object_methods.add("wait")
+                    elif any("inservice" in state.lower().replace("_", "") for state in resource_states):
+                        object_methods.add("wait_for_status")
+                        
                     continue            
 
                 # Find chaining of resources
@@ -155,7 +164,7 @@ class ResourceExtractor:
                 'additional_methods': [list(sorted(additional_methods))],
                 'raw_actions': [list(sorted(actions))],
                 'resource_status_chain': [list(resource_status_chain)],
-                'primary_resource_states': [list(resource_states)]
+                'resource_states': [list(resource_states)]
             })
 
             self.df = pd.concat([self.df, new_row], ignore_index=True)
