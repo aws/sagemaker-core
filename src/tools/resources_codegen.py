@@ -22,7 +22,7 @@ from constants import BASIC_JSON_TYPES_TO_PYTHON_TYPES, \
 from src.util.util import add_indent, convert_to_snake_case
 from resources_extractor import ResourcesExtractor
 from shapes_extractor import ShapesExtractor
-from templates import CREATE_METHOD_TEMPLATE, GET_METHOD_TEMPLATE
+from templates import CREATE_METHOD_TEMPLATE, GET_METHOD_TEMPLATE, REFRESH_METHOD_TEMPLATE
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
@@ -296,57 +296,79 @@ class ResourcesCodeGen():
         Auto-generate the GET method (describe API) for a resource.
 
         Args:
-            resource (str): The resource name.
+            resource_name (str): The resource name.
 
         Returns:
             str: The formatted Get Method template.
 
         """
-        # Get the operation and shapes for the 'get' method
-        resource_operation = self.operations["Describe" + resource_name]
+        resource_operation = self.operations["Describe" + resource]
         resource_operation_input_shape_name = resource_operation["input"]["shape"]
         resource_operation_output_shape_name = resource_operation["output"]["shape"]
 
-        # Generate the arguments for the 'get' method
-        typed_shape_members = self.shapes_extractor.generate_shape_members(resource_operation_input_shape_name)
-        describe_args = ",\n".join(f"{attr}: {type}" for attr, type in typed_shape_members.items())
-        describe_args += ","
+        resource_operation_input_shape_members = self.shapes[resource_operation_input_shape_name][
+            "members"].keys()
 
-        # Convert the resource name to snake case
+        operation_input_args = ""
+        for member in resource_operation_input_shape_members:
+            operation_input_args += f"'{member}' = {convert_to_snake_case(member)},\n"
+
+        operation_input_args = add_indent(operation_input_args, 8)
+
+        describe_args = ""
+        typed_shape_members = self.shapes_extractor.generate_shape_members(
+            resource_operation_input_shape_name
+        )
+
+        for attr, type in typed_shape_members.items():
+            describe_args += f"{attr}: {type},\n"
+        # remove the last \n
+        describe_args = describe_args.rstrip("\n")
+        describe_args = add_indent(describe_args)
+
         resource_lower = convert_to_snake_case(resource_name)
 
-        # Generate the input arguments for the operation
-        input_shape_members = self.shapes[resource_operation_input_shape_name]["members"].keys()
-        operation_input_args = {member: convert_to_snake_case(member) for member in input_shape_members}
-
-        # Convert the operation name to snake case
         operation = convert_to_snake_case("Describe" + resource_name)
 
-        # Initialize an empty string for the object attribute assignments
-        object_attribute_assignments = ""
-
-        # Get the members for the operation output shape
-        output_shape_members = self.shapes[resource_operation_output_shape_name]["members"]
-
-        # Generate the object attribute assignments
-        for member in output_shape_members.keys():
-            attribute_from_member = convert_to_snake_case(member)
-            object_attribute_assignments += f"{resource_lower}.{attribute_from_member} = response[\"{member}\"]\n"
-
-        # Add indentation to the object attribute assignments
-        object_attribute_assignments = add_indent(object_attribute_assignments, 4)
-
-        # Format the method using the GET_METHOD_TEMPLATE
         formatted_method = GET_METHOD_TEMPLATE.format(
             describe_args=describe_args,
             resource_lower=resource_lower,
             operation_input_args=operation_input_args,
             operation=operation,
-            object_attribute_assignments=object_attribute_assignments,
+            describe_operation_output_shape=resource_operation_output_shape_name,
         )
-
-        # Return the formatted method
         return formatted_method
+
+    def generate_refresh_method(self, resource_name):
+        """Auto-Generate 'refresh' object Method [describe API] for a resource.
+
+        Args:
+            resource_name (str): The resource name.
+
+        Returns:
+            str: The formatted Get Method template.
+        """
+        resource_operation = self.operations["Describe" + resource]
+        resource_operation_input_shape_name = resource_operation["input"]["shape"]
+        resource_operation_output_shape_name = resource_operation["output"]["shape"]
+
+        resource_operation_input_shape_members = self.shapes[resource_operation_input_shape_name][
+            "members"].keys()
+
+        operation_input_args = ""
+        for member in resource_operation_input_shape_members:
+            operation_input_args += f"'{member}' = self.{convert_to_snake_case(member)},\n"
+        operation_input_args = add_indent(operation_input_args, 8)
+
+        operation = convert_to_snake_case("Describe" + resource_name)
+
+        formatted_method = REFRESH_METHOD_TEMPLATE.format(
+            operation_input_args=operation_input_args,
+            operation=operation,
+            describe_operation_output_shape=resource_operation_output_shape_name,
+        )
+        return formatted_method
+
 
 if __name__ == "__main__":
     file_path = os.getcwd() + '/sample/sagemaker/2017-07-24/service-2.json'
