@@ -93,9 +93,13 @@ class ResourcesCodeGen():
 
         """
         imports = "import datetime\n"
+        # TODO: used for debugging remove in the final code
+        imports += "import pprint\n"
+        imports += "import boto3\n"
         imports += "\n"
         imports += "from pydantic import BaseModel\n"
         imports += "from typing import List, Dict, Optional\n"
+        imports += "from boto3.session import Session\n"
         imports += "from utils import Unassigned\n"
         imports += "from shapes import *\n"
         imports += "\n\n"
@@ -135,8 +139,9 @@ class ResourcesCodeGen():
                                                               additional_methods, 
                                                               raw_actions)
                 
-                file.write(resource_class)
-                file.write("\n\n")
+                if resource_class:
+                    file.write(resource_class)
+                    file.write("\n\n")
 
     def generate_resource_class(self, 
                                 resource_name: str, 
@@ -176,20 +181,24 @@ class ResourcesCodeGen():
     def generate_class_and_object_attributes(self, 
                                              resource_name: str, 
                                              class_methods: list) -> str:
-        resource_class = f"class {resource_name}(BaseModel):\n"
-        
+        resource_class = ""
         if 'get' in class_methods:
+            resource_class = f"class {resource_name}(BaseModel):\n"
             get_operation = self.operations["Describe" + resource_name]
             get_operation_shape = get_operation["output"]["shape"]
 
             init_data = self.shapes_extractor.generate_data_shape_members(get_operation_shape)
+            get_method = self.generate_get_method(resource_name)
             try:
-                data_class_members = add_indent(init_data, 4)
+                resource_class += add_indent(init_data, 4)
+                resource_class += "\n"
+                resource_class += add_indent(get_method, 4)
             except Exception:
                 print("DEBUG HELP\n", init_data)
                 raise
 
-            resource_class += data_class_members
+        else:
+            print(f"Resource {resource_name} does not have a GET method")
 
         return resource_class
     
@@ -215,7 +224,7 @@ class ResourcesCodeGen():
         """
         pass
 
-    def generate_get_method(self, resource) -> str:
+    def generate_get_method(self, resource_name) -> str:
         """
         Auto-generate the GET method (describe API) for a resource.
 
@@ -226,16 +235,16 @@ class ResourcesCodeGen():
             str: The formatted Get Method template.
 
         """
-        resource_operation = self.operations["Describe" + resource]
+        resource_operation = self.operations["Describe" + resource_name]
         resource_operation_input_shape_name = resource_operation["input"]["shape"]
         resource_operation_output_shape_name = resource_operation["output"]["shape"]
         describe_args = ""
-        typed_shape_members = self.generate_shape_members(resource_operation_input_shape_name)
+        typed_shape_members = self.shapes_extractor.generate_shape_members(resource_operation_input_shape_name)
         for attr, type in typed_shape_members.items():
             describe_args += f"{attr}: {type},\n"
         # remove the last \n
         describe_args = describe_args.rstrip("\n")
-        resource_lower = convert_to_snake_case(resource)
+        resource_lower = convert_to_snake_case(resource_name)
 
         input_shape_members = self.shapes[resource_operation_input_shape_name]["members"].keys()
 
@@ -243,7 +252,7 @@ class ResourcesCodeGen():
         for member in input_shape_members:
             operation_input_args[member] = convert_to_snake_case(member)
 
-        operation = convert_to_snake_case("Describe" + resource)
+        operation = convert_to_snake_case("Describe" + resource_name)
 
         # ToDo: The direct assignments would be replaced by multi-level deserialization logic.
         object_attribute_assignments = ""
