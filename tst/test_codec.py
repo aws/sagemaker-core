@@ -1,8 +1,8 @@
 import datetime
 from dateutil.tz import tzlocal
 import unittest
-from src.code_injection.se_de import pascal_to_snake
-from src.code_injection.se_de import deserializer
+from src.code_injection.codec import pascal_to_snake
+from src.code_injection.codec import deserializer
 
 
 class TestConversion(unittest.TestCase):

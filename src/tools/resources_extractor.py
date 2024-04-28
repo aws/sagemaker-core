@@ -1,21 +1,63 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"). You
+# may not use this file except in compliance with the License. A copy of
+# the License is located at
+#
+#     http://aws.amazon.com/apache2.0/
+#
+# or in the "license" file accompanying this file. This file is
+# distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
+# ANY KIND, either express or implied. See the License for the specific
+# language governing permissions and limitations under the License.
+"""A class for extracting resource information from a service JSON."""
 import json
 import os
 import pandas as pd
 
-CLASS_METHODS = set(['create', 'add', 'start', 'register', 'import', 'list', 'get'])
-OBJECT_METHODS = set(['refresh', 'delete', 'update', 'stop', 'deregister', 'wait', 'wait_for_status'])
+from constants import CLASS_METHODS, OBJECT_METHODS
+from pydantic import BaseModel
 
 '''
 This class is used to extract the resources and its actions from the service-2.json file.
 '''
-class ResourceExtractor:
+class ResourcesExtractor(BaseModel):
+    """
+    A class for extracting resource information from a service JSON.
 
-    # Wire additional methods to resources
+    Attributes:
+        service_json (dict): The service JSON containing operations and shapes.
+        operations (dict): The operations defined in the service JSON.
+        shapes (dict): The shapes defined in the service JSON.
+        resource_actions (dict): A dictionary mapping resources to their associated actions.
+        actions_under_resource (set): A set of actions that are performed on resources.
+        create_resources (set): A set of resources that can be created.
+        add_resources (set): A set of resources that can be added.
+        start_resources (set): A set of resources that can be started.
+        register_resources (set): A set of resources that can be registered.
+        import_resources (set): A set of resources that can be imported.
+        resources (set): A set of all resources.
+        df (DataFrame): A DataFrame containing resource information.
+
+    Methods:
+        _filter_actions_for_resources(resources): Filters actions based on the given resources.
+        _extract_resources_plan(): Extracts the resource plan from the service JSON.
+        _get_status_chain_and_states(shape_name, status_chain): Recursively extracts the status chain and states for a given shape.
+        _extract_resource_plan_as_dataframe(): Builds a DataFrame containing resource information.
+        get_resource_plan(): Returns the resource plan DataFrame.
+    """
+
     RESOURCE_TO_ADDITIONAL_METHODS = {
         'Cluster': ['DescribeClusterNode', 'ListClusterNodes'],
     }
     
     def __init__(self, service_json):
+        """
+        Initializes a ResourceExtractor object.
+
+        Args:
+            service_json (dict): The service JSON containing operations and shapes.
+        """
         self.service_json = service_json
         self.operations = self.service_json['operations']
         self.shapes = self.service_json['shapes']
@@ -24,10 +66,17 @@ class ResourceExtractor:
 
         self._extract_resources_plan()
         
-    
     def _filter_actions_for_resources(self, resources):
+        """
+        Filters actions based on the given resources.
+
+        Args:
+            resources (set): A set of resources.
+
+        Returns:
+            None
+        """
         for resource in sorted(resources, key=len, reverse=True):
-            # filter action in actions
             filtered_actions = set([a for a in self.actions if a.endswith(resource) or (a.startswith('List') and a.endswith(resource +'s'))])
             self.actions_under_resource.update(filtered_actions)
             self.resource_actions[resource] = filtered_actions
@@ -35,6 +84,12 @@ class ResourceExtractor:
             self.actions = self.actions - filtered_actions
 
     def _extract_resources_plan(self):
+        """
+        Extracts the resource plan from the service JSON.
+
+        Returns:
+            None
+        """
         self.actions = set(self.operations.keys())
         
         print(f"Total actions - {len(self.actions)}")
@@ -66,6 +121,17 @@ class ResourceExtractor:
 
 
     def _get_status_chain_and_states(self, shape_name, status_chain: list = None):
+        """
+        Recursively extracts the status chain and states for a given shape.
+
+        Args:
+            shape_name (str): The name of the shape.
+            status_chain (list): The current status chain.
+
+        Returns:
+            status_chain (list): The status chain for the shape.
+            resource_states (list): The states associated with the shape.
+        """
         if status_chain is None:
             status_chain = []
             
@@ -78,7 +144,6 @@ class ResourceExtractor:
         
         status_chain.append({"status": status_name, "status_shape": status_shape_name})
         
-        # base case when shape has list of status enums
         if "enum" in self.shapes[status_shape_name]:
             resource_states = self.shapes[status_shape_name]["enum"]
             return status_chain, resource_states
@@ -88,8 +153,12 @@ class ResourceExtractor:
         
     
     def _extract_resource_plan_as_dataframe(self):
-        # built a dataframe for each resources and it has
-        # resource_name, type, class_methods, object_methods, additional_methods and raw_actions
+        """
+        Builds a DataFrame containing resource information.
+
+        Returns:
+            None
+        """
         self.df = pd.DataFrame(columns=['resource_name', 'type', 'class_methods', 
                                         'object_methods', 'chain_resource_name', 'additional_methods', 
                                         'raw_actions', 'resource_status_chain', 'resource_states'])
@@ -106,16 +175,13 @@ class ResourceExtractor:
                 action_low = action.lower()
                 resource_low = resource.lower()
 
-                # describe action maps to get class method and refresh object method
                 if action_low.split(resource_low)[0] == 'describe':
                     class_methods.add('get')
                     object_methods.add('refresh')
                     
-                    # Find resource status chain and states if available
                     output_shape_name = self.operations[action]["output"]["shape"]
                     output_members_data = self.shapes[output_shape_name]["members"]
                     
-                    # Edge case where a resource may have state but returns a single resource dict instead of a list of members
                     if len(output_members_data) == 1:
                         single_member_name = next(iter(output_members_data))
                         single_member_shape_name = output_members_data[single_member_name]["shape"]
@@ -123,7 +189,6 @@ class ResourceExtractor:
                     else:
                         resource_status_chain, resource_states = self._get_status_chain_and_states(output_shape_name)
                     
-                    # Determine whether resource needs a wait or wait_for_status method
                     if resource_low.endswith("job") or resource_low.endswith("jobv2"):
                         object_methods.add("wait")
                     elif any("inservice" in state.lower().replace("_", "") for state in resource_states):
@@ -131,7 +196,6 @@ class ResourceExtractor:
                         
                     continue            
 
-                # Find chaining of resources
                 if action_low.split(resource_low)[0] == 'create':
                     shape_name = self.operations[action]['input']['shape']
                     input = self.shapes[shape_name]
@@ -141,7 +205,6 @@ class ResourceExtractor:
 
                             if chain_resource_name != resource and chain_resource_name in self.resources:
                                 chain_resource_names.add(chain_resource_name)
-                                #raise Exception(f"Chain Resource {chain_resource_names} for {resource} ")
 
                 if action_low.split(resource_low)[0] in CLASS_METHODS:
                     class_methods.add(action_low.split(resource_low)[0])
@@ -149,8 +212,6 @@ class ResourceExtractor:
                     object_methods.add(action_low.split(resource_low)[0])
                 else:
                     additional_methods.add(action)
-
-            # print(f"{resource} -- {sorted(class_methods)} -- {sorted(object_methods)} -- {sorted(chain_resource_names)} -- {sorted(additional_methods)} -- {sorted(actions)}")
 
             if resource in self.RESOURCE_TO_ADDITIONAL_METHODS:
                 additional_methods.update(self.RESOURCE_TO_ADDITIONAL_METHODS[resource])
@@ -172,6 +233,12 @@ class ResourceExtractor:
         self.df.to_csv('resource_plan.csv', index=False)
 
     def get_resource_plan(self):
+        """
+        Returns the resource plan DataFrame.
+
+        Returns:
+            df (DataFrame): The resource plan DataFrame.
+        """
         return self.df
     
 
@@ -179,4 +246,4 @@ class ResourceExtractor:
 file_path = os.getcwd() + '/sample/sagemaker/2017-07-24/service-2.json'
 with open(file_path, 'r') as file:
     data = json.load(file)
-resource_extractor = ResourceExtractor(data)
+resource_extractor = ResourcesExtractor(data)

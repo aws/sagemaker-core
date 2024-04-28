@@ -1,66 +1,53 @@
-from .generate_resource_plan import ResourceExtractor
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"). You
+# may not use this file except in compliance with the License. A copy of
+# the License is located at
+#
+#     http://aws.amazon.com/apache2.0/
+#
+# or in the "license" file accompanying this file. This file is
+# distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
+# ANY KIND, either express or implied. See the License for the specific
+# language governing permissions and limitations under the License.
+"""Generates the resource classes for the service model."""
+from .resources_extractor import ResourcesExtractor
 import json
 import os
 
-from src.tools.generator import Generator
+from src.tools.shapes_extractor import ShapesExtractor
 from src.util.util import add_indent, convert_to_snake_case
+from templates import GET_METHOD_TEMPLATE
 
-RESOURCE_CLASS_TEMPLATE ='''
-class {class_name}:
-{data_class_members}
-{init_method}
-{class_methods}
-{object_methods}
-'''
+from pydantic import BaseModel
 
-INIT_METHOD_TEMPLATE = '''
-def __init__(self, 
-    session: Optional[Session] = None, 
-    region: Optional[str] = None
-    {init_args}):
-    self.session = session
-    self.region = region
-    {init_assignments}
+class ResourcesCodeGenerator(BaseModel):
+    """
+    A class for generating resources based on a service JSON file.
 
-'''
+    Args:
+        file_path (str): The path to the service JSON file.
 
-CREATE_METHOD_TEMPLATE = '''
-@classmethod
-def create(
-    cls,
-    {create_args}
-    session: Optional[Session] = None,
-    region: Optional[str] = None,
-) -> Optional[object]:
+    Attributes:
+        version (str): The API version of the service.
+        protocol (str): The protocol used by the service.
+        service (str): The full name of the service.
+        service_id (str): The ID of the service.
+        uid (str): The unique identifier of the service.
+        operations (dict): The operations supported by the service.
+        shapes (dict): The shapes used by the service.
+        resources_extractor (ResourcesExtractor): An instance of the ResourcesExtractor class.
+        resources_plan (DataFrame): The resource plan in dataframe format.
+        shapes_extractor (ShapesExtractor): An instance of the ShapesExtractor class.
 
-'''
+    Raises:
+        Exception: If the service ID is not supported or the protocol is not supported.
 
-GET_METHOD_TEMPLATE = '''
-@classmethod
-def get(
-    cls,
-    {describe_args}
-    session: Optional[Session] = None,
-    region: Optional[str] = None,
-) -> Optional[object]:
-    {resource_lower} = cls(session, region)
+    """
 
-    operation_input_args = {operation_input_args}
-    response = {resource_lower}.client.{operation}(**operation_input_args)
-
-    pprint(response)
-
-    # deserialize the response
-{object_attribute_assignments}
-    return {resource_lower}
-'''
-
-
-class ResourceGenerator(Generator):
     def __init__(self, file_path):
         with open(file_path, 'r') as file:
-            service_json = json.load(file)
-        super().__init__(service_json)
+            self.service_json = json.load(file)
 
         self.version = self.service_json['metadata']['apiVersion']
         self.protocol = self.service_json['metadata']['protocol']
@@ -71,30 +58,47 @@ class ResourceGenerator(Generator):
         self.shapes = self.service_json['shapes']
 
         if self.service_id != 'SageMaker':
-            raise Exception(f"ServiceId {self.service_id} not supported")
+            raise Exception(f"ServiceId {self.service_id} not supported in this resource generator")
         
         if self.protocol != 'json':
-            raise Exception(f"Protocol {self.protocol} not supported")
+            raise Exception(f"Protocol {self.protocol} not supported in this resource generator")
     
-        self.resource_extractor = ResourceExtractor(self.service_json)
+        # Extract resources and its actions (aka resource plan) in dataframe format
+        self.resources_extractor = ResourcesExtractor(self.service_json)
+        self.resources_plan = self.resources_extractor.get_resource_plan()
+
+        self.shapes_extractor = ShapesExtractor(self.service_json)
+        self.shape_dag = self.shapes_extractor.shape_dag
+
         self.generate_resources()
 
     def generate_imports(self):
+        """
+        Generate the import statements for the generated resources file.
+
+        Returns:
+            str: The import statements.
+
+        """
         imports = "import datetime\n"
         imports += "\n"
-        imports += "from dataclasses import dataclass\n"
         imports += "from typing import List, Dict, Optional\n"
         imports += "\n"
         return imports
 
-
     def generate_resources(self, output_folder="src/generated"):
+        """
+        Generate the resources file.
+
+        Args:
+            output_folder (str, optional): The output folder path. Defaults to "src/generated".
+
+        """
         if not os.path.exists(output_folder):
             os.makedirs(output_folder)
         
         output_file = os.path.join(output_folder, f"resources.py")
-        self.df = self.resource_extractor.get_resource_plan()
-
+        
         with open(output_file, "w") as file:
             imports = self.generate_imports()
             file.write(imports)
@@ -108,18 +112,25 @@ class ResourceGenerator(Generator):
                 raw_actions = row['raw_actions']
 
     def generate_init_method(self, row):
+        """
+        Generate the __init__ method for a resource class.
+
+        Args:
+            row (Series): The row containing the resource information.
+
+        """
         pass
 
     def generate_get_method(self, resource):
-        """Auto-Generate GET Method [describe API] for a resource.
+        """
+        Auto-generate the GET method (describe API) for a resource.
 
-        Usage:
-            get_method_response = res_gen.generate_get_method("Model")
-            from pprint import pprint
-            pprint(get_method_response)
+        Args:
+            resource (str): The resource name.
 
-        :param resource: (str) Resource Name string. (Ex. Model)
-        :return: (str) Formatted Get Method template.
+        Returns:
+            str: The formatted Get Method template.
+
         """
         resource_operation = self.operations["Describe" + resource]
         resource_operation_input_shape_name = resource_operation["input"]["shape"]
@@ -158,11 +169,31 @@ class ResourceGenerator(Generator):
         return formatted_method
 
     def get_attributes_and_its_type(self, row) -> dict:
+        """
+        Get the attributes and their types for a resource.
+
+        Args:
+            row (Series): The row containing the resource information.
+
+        Returns:
+            dict: The attributes and their types.
+
+        """
         pass
 
     def generate_resource_class(self, row) -> str:
+        """
+        Generate the resource class for a resource.
+
+        Args:
+            row (Series): The row containing the resource information.
+
+        Returns:
+            str: The formatted resource class.
+
+        """
         pass
 
 if __name__ == "__main__":
     file_path = os.getcwd() + '/sample/sagemaker/2017-07-24/service-2.json'
-    resource_generator = ResourceGenerator(file_path)
+    resource_generator = ResourcesCodeGenerator(file_path)

@@ -19,29 +19,39 @@ import json
 import os
 import textwrap
 
-from src.tools.generator import Generator
+from src.tools.shapes_extractor import ShapesExtractor
 from src.util.util import add_indent, convert_to_snake_case
+from templates import SHAPE_CLASS_TEMPLATE, SHAPE_BASE_CLASS_TEMPLATE
 
-CLASS_TEMPLATE ='''
-class {class_name}:
-    """{docstring}"""
-{init_method_body}
-'''
+from pydantic import BaseModel
 
-DATA_CLASS_TEMPLATE ='''
-class {class_name}:
+class ShapesCodeGenerator(BaseModel):
     """
-    {docstring}
+    Generates shape classes based on an input Botocore service.json.
+
+    Attributes:
+        service_json (dict): The Botocore service.json containing the shape definitions.
+
+    Methods:
+        build_graph(): Builds a directed acyclic graph (DAG) representing the dependencies between shapes.
+        topological_sort(): Performs a topological sort on the DAG to determine the order in which shapes should be generated.
+        generate_data_class_for_shape(shape): Generates a data class for a given shape.
+        _generate_doc_string_for_shape(shape): Generates the docstring for a given shape.
+        generate_imports(): Generates the import statements for the generated shape classes.
+        generate_base_class(): Generates the base class for the shape classes.
+        _filter_input_output_shapes(shape): Filters out shapes that are used as input or output for operations.
+        generate_shapes(output_folder): Generates the shape classes and writes them to the specified output folder.
     """
-{data_class_members}
-'''
 
-
-class ShapeGenerator(Generator):
-    """Builds the pythonic structure from an input Botocore service.json"""
+    def __init__(self, service_json):
+        self.service_json = service_json
+        # TODO: Inject shapes_extractor than initializaing.
+        self.shapes_extractor = ShapesExtractor(service_json=service_json)
+        self.shape_dag = self.shapes_extractor.shape_dag
 
     def build_graph(self):
-        """Builds DAG for Service Json Shapes
+        """
+        Builds a directed acyclic graph (DAG) representing the dependencies between shapes.
 
         Steps:
         1. Loop over the Service Json shapes.
@@ -51,7 +61,6 @@ class ShapeGenerator(Generator):
                         CreateExperimentRequest -> [ExperimentEntityName, ExperimentDescription, TagList]
             1.2. else leaf node found (no dependent members), add association of node -> None.
 
-        :param data:
         :return: A dict which defines the structure of the DAG in the format:
             {key : [dependencies]}
             Example input:
@@ -86,9 +95,10 @@ class ShapeGenerator(Generator):
         return graph
 
     def topological_sort(self):
-        """Returns the topological sort of the DAG via depth-first-search traversal.
+        """
+        Performs a topological sort on the DAG to determine the order in which shapes should be generated.
 
-        :return:
+        :return: A list of shape names in the order of topological sort.
         """
         graph = self.build_graph()
         visited = set()
@@ -110,6 +120,12 @@ class ShapeGenerator(Generator):
         return stack
 
     def generate_data_class_for_shape(self, shape):
+        """
+        Generates a data class for a given shape.
+
+        :param shape: The name of the shape.
+        :return: The generated data class as a string.
+        """
         class_name = shape
         init_data = self.generate_data_shape_members(shape)
         try:
@@ -117,13 +133,19 @@ class ShapeGenerator(Generator):
         except Exception:
             print("DEBUG HELP\n", init_data)
             raise
-        return DATA_CLASS_TEMPLATE.format(
+        return SHAPE_CLASS_TEMPLATE.format(
             class_name=class_name + "(Base)",
             data_class_members=data_class_members,
             docstring=self._generate_doc_string_for_shape(shape),
         )
 
     def _generate_doc_string_for_shape(self, shape):
+        """
+        Generates the docstring for a given shape.
+
+        :param shape: The name of the shape.
+        :return: The generated docstring as a string.
+        """
         shape_dict = self.service_json["shapes"][shape]
 
         docstring = f" {shape}"
@@ -142,6 +164,11 @@ class ShapeGenerator(Generator):
         return docstring
 
     def generate_imports(self):
+        """
+        Generates the import statements for the generated shape classes.
+
+        :return: The generated import statements as a string.
+        """
         imports = "import datetime\n"
         imports += "\n"
         imports += "from pydantic import BaseModel\n"
@@ -150,16 +177,25 @@ class ShapeGenerator(Generator):
         return imports
 
     def generate_base_class(self):
+        """
+        Generates the base class for the shape classes.
+
+        :return: The generated base class as a string.
+        """
         # more customizations would be added later
-        return CLASS_TEMPLATE.format(
+        return SHAPE_BASE_CLASS_TEMPLATE.format(
             class_name="Base(BaseModel)",
             init_method_body=add_indent("pass", 4),
             docstring="TBA",
         )
 
     def _filter_input_output_shapes(self, shape):
-        """Filter Operation Input Output shapes, to not generate Shape Classes"""
+        """
+        Filters out shapes that are used as input or output for operations.
 
+        :param shape: The name of the shape.
+        :return: True if the shape should be generated, False otherwise.
+        """
         operation_input_output_shapes = []
         for operation, attrs in self.service_json["operations"].items():
             if attrs.get("input"):
@@ -172,6 +208,11 @@ class ShapeGenerator(Generator):
         return True
 
     def generate_shapes(self, output_folder="../../src/generated"):
+        """
+        Generates the shape classes and writes them to the specified output folder.
+
+        :param output_folder: The path to the output folder.
+        """
         if not os.path.exists(output_folder):
             os.makedirs(output_folder)
 
@@ -213,6 +254,6 @@ class ShapeGenerator(Generator):
 with open('../../sample/sagemaker/2017-07-24/service-2.json') as f:
     data = json.load(f)
 
-codegen = ShapeGenerator(service_json=data)
+codegen = ShapesCodeGenerator(service_json=data)
 
 codegen.generate_shapes()

@@ -10,31 +10,21 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-"""Base class for common generator methods."""
+"""Extracts the shapes to DAG structure."""
 import pprint
 import textwrap
 
+from constants import BASIC_JSON_TYPES_TO_PYTHON_TYPES, SHAPE_DAG_FILE_PATH
 from src.util.util import reformat_file_with_black, convert_to_snake_case
-
-BASIC_JSON_TYPES_TO_PYTHON_TYPES = {
-    "string": "str",
-    "integer": "int",
-    "boolean": "bool",
-    "long": "int",
-    "float": "float",
-    "map": "dict",
-    "double": "float",
-    "list": "list",
-    "timestamp": "datetime.datetime",
-}
-
-SHAPE_DAG_FILE_PATH = "src/code_injection/shape_dag.py"
+from pydantic import BaseModel
 
 
-class Generator:
-    """Base class for common generator methods"""
+class ShapesExtractor(BaseModel):
+    """Extracts the shapes to DAG structure."""
+
     def __init__(self, service_json=None):
         """
+        Initializes a new instance of the ShapesExtractor class.
 
         :param service_json: The Botocore Service Json in python dict format.
         """
@@ -47,7 +37,8 @@ class Generator:
 
     @property
     def shape_dag(self):
-        """Parses the Service Json and generates the Shape DAG.
+        """
+        Parses the Service Json and generates the Shape DAG.
 
         DAG is stored in a Dictionary data structure, and each key denotes a DAG Node.
         Nodes can be of composite types: structure, list, map. Basic types (Ex. str, int, etc)
@@ -55,7 +46,7 @@ class Generator:
 
         The connections of Nodes are can be followed by using the shape.
 
-        Possible scenerios of a nested associations:
+        Possible scenarios of nested associations:
 
         1. StructA → StructB → basic_type_member.
         2. StructA → list → basic_type_member
@@ -88,6 +79,8 @@ class Generator:
                 "value_type":"string", # potential types: string, structure, list, map
             },
 
+        :return: The generated Shape DAG.
+        :rtype: dict
         """
         _dag = {}
         _all_shapes = self.service_json["shapes"]
