@@ -14,7 +14,10 @@
 import json
 import os
 
-from constants import GENERATED_CLASSES_LOCATION, LICENCES_STRING
+from constants import BASIC_JSON_TYPES_TO_PYTHON_TYPES, \
+                        GENERATED_CLASSES_LOCATION, \
+                        RESOURCES_CODEGEN_FILE_NAME, \
+                        LICENCES_STRING
 from src.util.util import add_indent, convert_to_snake_case
 from resources_extractor import ResourcesExtractor
 #from shapes_extractor import ShapesExtractor
@@ -93,12 +96,14 @@ class ResourcesCodeGen():
         imports += "\n"
         imports += "from pydantic import BaseModel\n"
         imports += "from typing import List, Dict, Optional\n"
+        imports += "from utils import Unassigned\n"
         imports += "from shapes import *\n"
-        imports += "\n"
+        imports += "\n\n"
         return imports
 
     def generate_resources(self, 
-                           output_folder=GENERATED_CLASSES_LOCATION) -> None:
+                           output_folder=GENERATED_CLASSES_LOCATION,
+                           file_name=RESOURCES_CODEGEN_FILE_NAME) -> None:
         """
         Generate the resources file.
 
@@ -109,14 +114,13 @@ class ResourcesCodeGen():
         if not os.path.exists(output_folder):
             os.makedirs(output_folder)
         
-        output_file = os.path.join(output_folder, f"resources.py")
+        output_file = os.path.join(output_folder, file_name)
         
         with open(output_file, "w") as file:
             license = self.generate_license()
             file.write(license)
             imports = self.generate_imports()
             file.write(imports)
-            file.write("\n\n")
 
             for index, row in self.resources_plan.iterrows():
                 resource_name = row['resource_name']
@@ -154,13 +158,14 @@ class ResourcesCodeGen():
             str: The formatted resource class.
 
         """
-        class_attributes = self.generate_class_and_object_attributes(resource_name)
+        class_attributes = self.generate_class_and_object_attributes(resource_name=resource_name,
+                                                                     class_methods=class_methods)
         init_method = self.generate_init_method(resource_name)
         class_methods = self.generate_class_methods(class_methods)
         object_methods = self.generate_object_methods(object_methods)
         additional_methods = self.generate_additional_methods(additional_methods)
 
-        resource_class = f"class {resource_name}(BaseModel):\n"
+        resource_class = class_attributes
         # resource_class += class_methods
         # resource_class += object_methods
         # resource_class += additional_methods
@@ -168,7 +173,27 @@ class ResourcesCodeGen():
 
         return resource_class
     
-    def generate_class_and_object_attributes(self, resource_name: str) -> str:
+    def generate_class_and_object_attributes(self, 
+                                             resource_name: str, 
+                                             class_methods: list) -> str:
+        resource_class = f"class {resource_name}(BaseModel):\n"
+        
+        if 'get' in class_methods:
+            get_operation = self.operations["Describe" + resource_name]
+            get_operation_shape = get_operation["input"]["shape"]
+
+            init_data = self.generate_data_shape_members(get_operation_shape)
+            try:
+                data_class_members = add_indent(init_data, 4)
+            except Exception:
+                print("DEBUG HELP\n", init_data)
+                raise
+
+            resource_class += data_class_members
+
+        return resource_class
+    
+    def generate_class_attributes(self, resource_name: str) -> str:
         pass
     
     def generate_class_methods(self, class_methods: list) -> str:
@@ -237,6 +262,49 @@ class ResourcesCodeGen():
         )
         return formatted_method
 
+    # TODO: Loading on Shape Extractor is not working. Need to fix it.
+    # delete the file and reuse the code from shapes_extractor.py
+    def generate_shape_members(self, shape):
+        shape_dict = self.service_json['shapes'][shape]
+        members = shape_dict["members"]
+        required_args = shape_dict.get("required", [])
+        init_data_body = {}
+        # bring the required members in front
+        ordered_members = {key: members[key] for key in required_args if key in members}
+        ordered_members.update(members)
+        for member_name, member_attrs in ordered_members.items():
+            member_shape_name = member_attrs["shape"]
+            if self.service_json["shapes"][member_shape_name]:
+                member_shape = self.service_json["shapes"][member_shape_name]
+                member_shape_type = member_shape["type"]
+                if member_shape_type == "structure":
+                    member_type = member_shape_name
+                elif member_shape_type == "list":
+                    member_type = self._evaluate_list_type(member_shape)
+                elif member_shape_type == "map":
+                    member_type = self._evaluate_map_type(member_shape)
+                else:
+                    # Shape is a simple type like string
+                    member_type = BASIC_JSON_TYPES_TO_PYTHON_TYPES[member_shape_type]
+            else:
+                raise Exception("The Shape definition mush exist. The Json Data might be corrupt")
+            member_name_snake_case = convert_to_snake_case(member_name)
+            if member_name in required_args:
+                init_data_body[f"{member_name_snake_case}"] = f"{member_type}"
+            else:
+                init_data_body[f"{member_name_snake_case}"] = f"Optional[{member_type}] = Unassigned()"
+        return init_data_body
+    
+    def generate_data_shape_members(self, shape):
+        shape_members = self.generate_shape_members(shape)
+        init_data_body = ""
+        for attr, value in shape_members.items():
+            if attr == "lambda":
+                init_data_body += f"# {attr}: {value}\n"
+            else:
+                init_data_body += f"{attr}: {value}\n"
+        return init_data_body
+    
     def get_attributes_and_its_type(self, row) -> dict:
         """
         Get the attributes and their types for a resource.
