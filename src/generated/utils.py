@@ -12,6 +12,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 import datetime
+import boto3
 
 from pydantic import BaseModel
 from typing import Optional
@@ -25,4 +26,23 @@ class Unassigned:
         if cls._instance is None:
             cls._instance = super().__new__(cls)
         return cls._instance
+
+
+class SageMakerClient:
+    _instance = None
+
+    @staticmethod
+    def getInstance():
+        if SageMakerClient._instance == None:
+            SageMakerClient()
+        return SageMakerClient._instance
+
+    def __init__(self, session=None, region_name='us-west-2', service_name='sagemaker'):
+        if SageMakerClient._instance != None:
+            raise Exception("This class is a singleton!")
+        else:
+            if session is None:
+                session = boto3.Session(region_name=region_name)
+            SageMakerClient._instance = session.client(service_name)
+
 

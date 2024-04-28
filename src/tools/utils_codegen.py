@@ -45,8 +45,43 @@ class UtilsCodeGen():
             wrapped_class_definition = textwrap.indent(textwrap.dedent(class_definition_string),
                                                        prefix='')
             file.write(wrapped_class_definition)
-            file.write("\n")
+            file.write("\n\n")
 
+            # add Singleton class
+            client = self.generate_client()
+            file.write(client)
+            file.write("\n\n")
+
+    def generate_client(self) -> str:
+        """
+        Generate the singleton sagemaker client.
+
+        Returns:
+            str: The singleton sagemaker client.
+
+        """
+        client = '''\
+        class SageMakerClient:
+            _instance = None
+
+            @staticmethod
+            def getInstance():
+                if SageMakerClient._instance == None:
+                    SageMakerClient()
+                return SageMakerClient._instance
+
+            def __init__(self, session=None, region_name='us-west-2', service_name='sagemaker'):
+                if SageMakerClient._instance != None:
+                    raise Exception("This class is a singleton!")
+                else:
+                    if session is None:
+                        session = boto3.Session(region_name=region_name)
+                    SageMakerClient._instance = session.client(service_name)
+        '''
+        wrapped_client = textwrap.indent(textwrap.dedent(client),
+                                                             prefix='')
+        return wrapped_client
+    
     def generate_license(self) -> str:
         """
         Generate the license for the generated resources file.
@@ -66,6 +101,7 @@ class UtilsCodeGen():
 
         """
         imports = "import datetime\n"
+        imports += "import boto3\n"
         imports += "\n"
         imports += "from pydantic import BaseModel\n"
         imports += "from typing import Optional\n"
