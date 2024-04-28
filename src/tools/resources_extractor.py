@@ -16,12 +16,11 @@ import os
 import pandas as pd
 
 from constants import CLASS_METHODS, OBJECT_METHODS
-from pydantic import BaseModel
 
 '''
 This class is used to extract the resources and its actions from the service-2.json file.
 '''
-class ResourcesExtractor(BaseModel):
+class ResourcesExtractor():
     """
     A class for extracting resource information from a service JSON.
 

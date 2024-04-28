@@ -19,13 +19,14 @@ import json
 import os
 import textwrap
 
+from constants import LICENCES_STRING
 from src.tools.shapes_extractor import ShapesExtractor
 from src.util.util import add_indent, convert_to_snake_case
 from templates import SHAPE_CLASS_TEMPLATE, SHAPE_BASE_CLASS_TEMPLATE
 
 from pydantic import BaseModel
 
-class ShapesCodeGenerator(BaseModel):
+class ShapesCodeGen(BaseModel):
     """
     Generates shape classes based on an input Botocore service.json.
 
@@ -163,6 +164,15 @@ class ShapesCodeGenerator(BaseModel):
 
         return docstring
 
+    def generate_license(self):
+        """
+        Generates the license string.
+
+        Returns:
+            str: The license string.
+        """
+        return LICENCES_STRING
+    
     def generate_imports(self):
         """
         Generates the import statements for the generated shape classes.
@@ -220,6 +230,8 @@ class ShapesCodeGenerator(BaseModel):
         output_file = os.path.join(output_folder, f"shapes.py")
 
         with open(output_file, "w") as file:
+            license = self.generate_license()
+            file.write(license)
             imports = self.generate_imports()
             file.write(imports)
             base_class = self.generate_base_class()
@@ -254,6 +266,6 @@ class ShapesCodeGenerator(BaseModel):
 with open('../../sample/sagemaker/2017-07-24/service-2.json') as f:
     data = json.load(f)
 
-codegen = ShapesCodeGenerator(service_json=data)
+codegen = ShapesCodeGen(service_json=data)
 
 codegen.generate_shapes()

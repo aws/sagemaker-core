@@ -11,17 +11,16 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 """Generates the resource classes for the service model."""
-from .resources_extractor import ResourcesExtractor
 import json
 import os
 
-from src.tools.shapes_extractor import ShapesExtractor
+from constants import GENERATED_CLASSES_LOCATION, LICENCES_STRING
 from src.util.util import add_indent, convert_to_snake_case
+from resources_extractor import ResourcesExtractor
+#from shapes_extractor import ShapesExtractor
 from templates import GET_METHOD_TEMPLATE
 
-from pydantic import BaseModel
-
-class ResourcesCodeGenerator(BaseModel):
+class ResourcesCodeGen():
     """
     A class for generating resources based on a service JSON file.
 
@@ -67,12 +66,22 @@ class ResourcesCodeGenerator(BaseModel):
         self.resources_extractor = ResourcesExtractor(self.service_json)
         self.resources_plan = self.resources_extractor.get_resource_plan()
 
-        self.shapes_extractor = ShapesExtractor(self.service_json)
-        self.shape_dag = self.shapes_extractor.shape_dag
+        #self.shapes_extractor = ShapesExtractor(self.service_json)
+        #self.shape_dag = self.shapes_extractor.shape_dag
 
         self.generate_resources()
 
-    def generate_imports(self):
+    def generate_license(self) -> str:
+        """
+        Generate the license for the generated resources file.
+
+        Returns:
+            str: The license.
+
+        """
+        return LICENCES_STRING
+    
+    def generate_imports(self) -> str:
         """
         Generate the import statements for the generated resources file.
 
@@ -82,16 +91,19 @@ class ResourcesCodeGenerator(BaseModel):
         """
         imports = "import datetime\n"
         imports += "\n"
+        imports += "from pydantic import BaseModel\n"
         imports += "from typing import List, Dict, Optional\n"
+        imports += "from shapes import *\n"
         imports += "\n"
         return imports
 
-    def generate_resources(self, output_folder="src/generated"):
+    def generate_resources(self, 
+                           output_folder=GENERATED_CLASSES_LOCATION) -> None:
         """
         Generate the resources file.
 
         Args:
-            output_folder (str, optional): The output folder path. Defaults to "src/generated".
+            output_folder (str, optional): The output folder path. Defaults to "GENERATED_CLASSES_LOCATION".
 
         """
         if not os.path.exists(output_folder):
@@ -100,18 +112,75 @@ class ResourcesCodeGenerator(BaseModel):
         output_file = os.path.join(output_folder, f"resources.py")
         
         with open(output_file, "w") as file:
+            license = self.generate_license()
+            file.write(license)
             imports = self.generate_imports()
             file.write(imports)
             file.write("\n\n")
 
-            for index, row in self.df.iterrows():
+            for index, row in self.resources_plan.iterrows():
                 resource_name = row['resource_name']
                 class_methods = row['class_methods']
                 object_methods = row['object_methods']
                 additional_methods = row['additional_methods']
                 raw_actions = row['raw_actions']
 
-    def generate_init_method(self, row):
+                resource_class = self.generate_resource_class(resource_name, 
+                                                              class_methods, 
+                                                              object_methods, 
+                                                              additional_methods, 
+                                                              raw_actions)
+                
+                file.write(resource_class)
+                file.write("\n\n")
+
+    def generate_resource_class(self, 
+                                resource_name: str, 
+                                class_methods: list, 
+                                object_methods: list, 
+                                additional_methods: list, 
+                                raw_actions: list) -> str:
+        """
+        Generate the resource class for a resource.
+
+        Args:
+            resource_name (str): The name of the resource.
+            class_methods (list): The class methods.
+            object_methods (list): The object methods.
+            additional_methods (list): The additional methods.
+            raw_actions (list): The raw actions.
+
+        Returns:
+            str: The formatted resource class.
+
+        """
+        class_attributes = self.generate_class_and_object_attributes(resource_name)
+        init_method = self.generate_init_method(resource_name)
+        class_methods = self.generate_class_methods(class_methods)
+        object_methods = self.generate_object_methods(object_methods)
+        additional_methods = self.generate_additional_methods(additional_methods)
+
+        resource_class = f"class {resource_name}(BaseModel):\n"
+        # resource_class += class_methods
+        # resource_class += object_methods
+        # resource_class += additional_methods
+        # resource_class += raw_actions
+
+        return resource_class
+    
+    def generate_class_and_object_attributes(self, resource_name: str) -> str:
+        pass
+    
+    def generate_class_methods(self, class_methods: list) -> str:
+        pass
+
+    def generate_object_methods(self, object_methods: list) -> str:
+        pass
+
+    def generate_additional_methods(self, additional_methods: list) -> str:
+        pass
+
+    def generate_init_method(self, resource_name: str) -> str:
         """
         Generate the __init__ method for a resource class.
 
@@ -121,7 +190,7 @@ class ResourcesCodeGenerator(BaseModel):
         """
         pass
 
-    def generate_get_method(self, resource):
+    def generate_get_method(self, resource) -> str:
         """
         Auto-generate the GET method (describe API) for a resource.
 
@@ -181,19 +250,7 @@ class ResourcesCodeGenerator(BaseModel):
         """
         pass
 
-    def generate_resource_class(self, row) -> str:
-        """
-        Generate the resource class for a resource.
-
-        Args:
-            row (Series): The row containing the resource information.
-
-        Returns:
-            str: The formatted resource class.
-
-        """
-        pass
 
 if __name__ == "__main__":
     file_path = os.getcwd() + '/sample/sagemaker/2017-07-24/service-2.json'
-    resource_generator = ResourcesCodeGenerator(file_path)
+    resource_generator = ResourcesCodeGen(file_path)
