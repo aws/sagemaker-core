@@ -20,7 +20,7 @@ from constants import BASIC_JSON_TYPES_TO_PYTHON_TYPES, \
                         LICENCES_STRING
 from src.util.util import add_indent, convert_to_snake_case
 from resources_extractor import ResourcesExtractor
-#from shapes_extractor import ShapesExtractor
+from shapes_extractor import ShapesExtractor
 from templates import GET_METHOD_TEMPLATE
 
 class ResourcesCodeGen():
@@ -69,8 +69,8 @@ class ResourcesCodeGen():
         self.resources_extractor = ResourcesExtractor(self.service_json)
         self.resources_plan = self.resources_extractor.get_resource_plan()
 
-        #self.shapes_extractor = ShapesExtractor(self.service_json)
-        #self.shape_dag = self.shapes_extractor.shape_dag
+        self.shapes_extractor = ShapesExtractor(self.service_json)
+        self.shape_dag = self.shapes_extractor.get_shapes_dag()
 
         self.generate_resources()
 
@@ -180,9 +180,9 @@ class ResourcesCodeGen():
         
         if 'get' in class_methods:
             get_operation = self.operations["Describe" + resource_name]
-            get_operation_shape = get_operation["input"]["shape"]
+            get_operation_shape = get_operation["output"]["shape"]
 
-            init_data = self.generate_data_shape_members(get_operation_shape)
+            init_data = self.shapes_extractor.generate_data_shape_members(get_operation_shape)
             try:
                 data_class_members = add_indent(init_data, 4)
             except Exception:
@@ -261,49 +261,6 @@ class ResourcesCodeGen():
             object_attribute_assignments=object_attribute_assignments,
         )
         return formatted_method
-
-    # TODO: Loading on Shape Extractor is not working. Need to fix it.
-    # delete the file and reuse the code from shapes_extractor.py
-    def generate_shape_members(self, shape):
-        shape_dict = self.service_json['shapes'][shape]
-        members = shape_dict["members"]
-        required_args = shape_dict.get("required", [])
-        init_data_body = {}
-        # bring the required members in front
-        ordered_members = {key: members[key] for key in required_args if key in members}
-        ordered_members.update(members)
-        for member_name, member_attrs in ordered_members.items():
-            member_shape_name = member_attrs["shape"]
-            if self.service_json["shapes"][member_shape_name]:
-                member_shape = self.service_json["shapes"][member_shape_name]
-                member_shape_type = member_shape["type"]
-                if member_shape_type == "structure":
-                    member_type = member_shape_name
-                elif member_shape_type == "list":
-                    member_type = self._evaluate_list_type(member_shape)
-                elif member_shape_type == "map":
-                    member_type = self._evaluate_map_type(member_shape)
-                else:
-                    # Shape is a simple type like string
-                    member_type = BASIC_JSON_TYPES_TO_PYTHON_TYPES[member_shape_type]
-            else:
-                raise Exception("The Shape definition mush exist. The Json Data might be corrupt")
-            member_name_snake_case = convert_to_snake_case(member_name)
-            if member_name in required_args:
-                init_data_body[f"{member_name_snake_case}"] = f"{member_type}"
-            else:
-                init_data_body[f"{member_name_snake_case}"] = f"Optional[{member_type}] = Unassigned()"
-        return init_data_body
-    
-    def generate_data_shape_members(self, shape):
-        shape_members = self.generate_shape_members(shape)
-        init_data_body = ""
-        for attr, value in shape_members.items():
-            if attr == "lambda":
-                init_data_body += f"# {attr}: {value}\n"
-            else:
-                init_data_body += f"{attr}: {value}\n"
-        return init_data_body
     
     def get_attributes_and_its_type(self, row) -> dict:
         """

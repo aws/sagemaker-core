@@ -48,7 +48,7 @@ class ShapesCodeGen(BaseModel):
         self.service_json = service_json
         # TODO: Inject shapes_extractor than initializaing.
         self.shapes_extractor = ShapesExtractor(service_json=service_json)
-        self.shape_dag = self.shapes_extractor.shape_dag
+        self.shape_dag = self.shapes_extractor.get_shapes_dag()
 
     def build_graph(self):
         """

@@ -16,10 +16,9 @@ import textwrap
 
 from constants import BASIC_JSON_TYPES_TO_PYTHON_TYPES, SHAPE_DAG_FILE_PATH
 from src.util.util import reformat_file_with_black, convert_to_snake_case
-from pydantic import BaseModel
 
 
-class ShapesExtractor(BaseModel):
+class ShapesExtractor():
     """Extracts the shapes to DAG structure."""
 
     def __init__(self, service_json=None):
@@ -29,14 +28,15 @@ class ShapesExtractor(BaseModel):
         :param service_json: The Botocore Service Json in python dict format.
         """
         self.service_json = service_json
+        # TODO: Failing in the initialization of the class, need to fix it.
         # write shape_metadata into json file
-        with open(SHAPE_DAG_FILE_PATH, 'w') as f:
-            f.write("SHAPE_DAG=")
-            f.write(textwrap.indent(pprint.pformat(self.shape_dag, width=1), '') + '\n')
-        reformat_file_with_black(SHAPE_DAG_FILE_PATH)
+        # with open(SHAPE_DAG_FILE_PATH, 'w') as f:
+        #    f.write("SHAPE_DAG=")
+        #    f.write(textwrap.indent(pprint.pformat(self.shape_dag, width=1), '') + '\n')
+        # reformat_file_with_black(SHAPE_DAG_FILE_PATH)
 
-    @property
-    def shape_dag(self):
+    #@property
+    def get_shapes_dag(self):
         """
         Parses the Service Json and generates the Shape DAG.
 
