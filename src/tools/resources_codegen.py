@@ -27,7 +27,8 @@ from templates import CREATE_METHOD_TEMPLATE, GET_METHOD_TEMPLATE, REFRESH_METHO
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
 
-class ResourcesCodeGen():
+
+class ResourcesCodeGen:
     """
     A class for generating resources based on a service JSON file.
 
@@ -348,7 +349,7 @@ class ResourcesCodeGen():
         Returns:
             str: The formatted Get Method template.
         """
-        resource_operation = self.operations["Describe" + resource]
+        resource_operation = self.operations["Describe" + resource_name]
         resource_operation_input_shape_name = resource_operation["input"]["shape"]
         resource_operation_output_shape_name = resource_operation["output"]["shape"]
 
