@@ -39,7 +39,16 @@ def create(
     session: Optional[Session] = None,
     region: Optional[str] = None,
 ) -> Optional[object]:
+    {resource_lower} = cls(session, region)
 
+    operation_input_args = {operation_input_args}
+    response = {resource_lower}.client.{operation}(**operation_input_args)
+
+    pprint(response)
+
+    # deserialize the response
+{object_attribute_assignments}
+    return {resource_lower}
 '''
 
 GET_METHOD_TEMPLATE = '''

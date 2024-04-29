@@ -13,6 +13,7 @@
 """Generates the resource classes for the service model."""
 import json
 import os
+import logging
 
 from constants import BASIC_JSON_TYPES_TO_PYTHON_TYPES, \
                         GENERATED_CLASSES_LOCATION, \
@@ -21,7 +22,10 @@ from constants import BASIC_JSON_TYPES_TO_PYTHON_TYPES, \
 from src.util.util import add_indent, convert_to_snake_case
 from resources_extractor import ResourcesExtractor
 from shapes_extractor import ShapesExtractor
-from templates import GET_METHOD_TEMPLATE
+from templates import CREATE_METHOD_TEMPLATE, GET_METHOD_TEMPLATE
+
+logging.basicConfig(level=logging.INFO)
+log = logging.getLogger(__name__)
 
 class ResourcesCodeGen():
     """
@@ -48,30 +52,37 @@ class ResourcesCodeGen():
     """
 
     def __init__(self, file_path):
+        # Load the service JSON file
         with open(file_path, 'r') as file:
             self.service_json = json.load(file)
 
-        self.version = self.service_json['metadata']['apiVersion']
-        self.protocol = self.service_json['metadata']['protocol']
-        self.service = self.service_json['metadata']['serviceFullName']
-        self.service_id = self.service_json['metadata']['serviceId']
-        self.uid = self.service_json['metadata']['uid']
+        # Extract the metadata
+        metadata = self.service_json['metadata']
+        self.version = metadata['apiVersion']
+        self.protocol = metadata['protocol']
+        self.service = metadata['serviceFullName']
+        self.service_id = metadata['serviceId']
+        self.uid = metadata['uid']
+
+        # Check if the service ID and protocol are supported
+        if self.service_id != 'SageMaker':
+            raise Exception(f"ServiceId {self.service_id} not supported in this resource generator")
+        if self.protocol != 'json':
+            raise Exception(f"Protocol {self.protocol} not supported in this resource generator")
+
+        # Extract the operations and shapes
         self.operations = self.service_json['operations']
         self.shapes = self.service_json['shapes']
 
-        if self.service_id != 'SageMaker':
-            raise Exception(f"ServiceId {self.service_id} not supported in this resource generator")
-        
-        if self.protocol != 'json':
-            raise Exception(f"Protocol {self.protocol} not supported in this resource generator")
-    
-        # Extract resources and its actions (aka resource plan) in dataframe format
+        # Initialize the resources and shapes extractors
         self.resources_extractor = ResourcesExtractor(self.service_json)
-        self.resources_plan = self.resources_extractor.get_resource_plan()
-
         self.shapes_extractor = ShapesExtractor(self.service_json)
+
+        # Extract the resources plan and shapes DAG
+        self.resources_plan = self.resources_extractor.get_resource_plan()
         self.shape_dag = self.shapes_extractor.get_shapes_dag()
 
+        # Generate the resources
         self.generate_resources()
 
     def generate_license(self) -> str:
@@ -90,20 +101,24 @@ class ResourcesCodeGen():
 
         Returns:
             str: The import statements.
-
         """
-        imports = "import datetime\n"
-        # TODO: used for debugging remove in the final code
-        imports += "import pprint\n"
-        imports += "import boto3\n"
-        imports += "\n"
-        imports += "from pydantic import BaseModel\n"
-        imports += "from typing import List, Dict, Optional\n"
-        imports += "from boto3.session import Session\n"
-        imports += "from utils import Unassigned\n"
-        imports += "from shapes import *\n"
-        imports += "\n\n"
-        return imports
+        # List of import statements
+        imports = [
+            "import datetime",
+            "import boto3",
+            "import pprint",
+            "from pydantic import BaseModel",
+            "from typing import List, Dict, Optional",
+            "from boto3.session import Session",
+            "from utils import Unassigned",
+            "from shapes import *",
+        ]
+
+        formated_imports = "\n".join(imports)
+        formated_imports += "\n\n\n"
+
+        # Join the import statements with a newline character and return
+        return formated_imports
 
     def generate_resources(self, 
                            output_folder=GENERATED_CLASSES_LOCATION,
@@ -113,35 +128,40 @@ class ResourcesCodeGen():
 
         Args:
             output_folder (str, optional): The output folder path. Defaults to "GENERATED_CLASSES_LOCATION".
-
         """
-        if not os.path.exists(output_folder):
-            os.makedirs(output_folder)
+        # Check if the output folder exists, if not, create it
+        os.makedirs(output_folder, exist_ok=True)
         
+        # Create the full path for the output file
         output_file = os.path.join(output_folder, file_name)
         
+        # Open the output file
         with open(output_file, "w") as file:
-            license = self.generate_license()
-            file.write(license)
-            imports = self.generate_imports()
-            file.write(imports)
+            # Generate and write the license to the file
+            file.write(self.generate_license())
 
-            for index, row in self.resources_plan.iterrows():
+            # Generate and write the imports to the file
+            file.write(self.generate_imports())
+
+            # Iterate over the rows in the resources plan
+            for _, row in self.resources_plan.iterrows():
+                # Extract the necessary data from the row
                 resource_name = row['resource_name']
                 class_methods = row['class_methods']
                 object_methods = row['object_methods']
                 additional_methods = row['additional_methods']
                 raw_actions = row['raw_actions']
 
+                # Generate the resource class
                 resource_class = self.generate_resource_class(resource_name, 
                                                               class_methods, 
                                                               object_methods, 
                                                               additional_methods, 
                                                               raw_actions)
                 
+                # If the resource class was successfully generated, write it to the file
                 if resource_class:
-                    file.write(resource_class)
-                    file.write("\n\n")
+                    file.write(f"{resource_class}\n\n")
 
     def generate_resource_class(self, 
                                 resource_name: str, 
@@ -163,67 +183,114 @@ class ResourcesCodeGen():
             str: The formatted resource class.
 
         """
-        class_attributes = self.generate_class_and_object_attributes(resource_name=resource_name,
-                                                                     class_methods=class_methods)
-        init_method = self.generate_init_method(resource_name)
-        class_methods = self.generate_class_methods(class_methods)
-        object_methods = self.generate_object_methods(object_methods)
-        additional_methods = self.generate_additional_methods(additional_methods)
-
-        resource_class = class_attributes
-        # resource_class += class_methods
-        # resource_class += object_methods
-        # resource_class += additional_methods
-        # resource_class += raw_actions
-
-        return resource_class
-    
-    def generate_class_and_object_attributes(self, 
-                                             resource_name: str, 
-                                             class_methods: list) -> str:
+        # Initialize an empty string for the resource class
         resource_class = ""
+
+        # Check if 'get' is in the class methods
         if 'get' in class_methods:
+            # Start defining the class
             resource_class = f"class {resource_name}(BaseModel):\n"
+
+            # Get the operation and shape for the 'get' method
             get_operation = self.operations["Describe" + resource_name]
             get_operation_shape = get_operation["output"]["shape"]
 
-            init_data = self.shapes_extractor.generate_data_shape_members(get_operation_shape)
+            # Generate the class attributes based on the shape
+            class_attributes = self.shapes_extractor.generate_data_shape_members(get_operation_shape)
+
+            # Check if 'create' is in the class methods
+            if 'create' in class_methods:
+                # Generate the 'create' method
+                create_method = self.generate_create_method(resource_name)
+            else:
+                # If there's no 'create' method, log a message and set 'create_method' to an empty string
+                create_method = ""
+                log.warning(f"Resource {resource_name} does not have a CREATE method")
+
+            # Generate the 'get' method
             get_method = self.generate_get_method(resource_name)
+
             try:
-                resource_class += add_indent(init_data, 4)
+                # Add the class attributes, 'create' method, and 'get' method to the class definition
+                resource_class += add_indent(class_attributes, 4)
+
+                if create_method:
+                    resource_class += "\n"
+                    resource_class += add_indent(create_method, 4)
+
                 resource_class += "\n"
                 resource_class += add_indent(get_method, 4)
             except Exception:
-                print("DEBUG HELP\n", init_data)
+                # If there's an error, log the class attributes for debugging and raise the error
+                log.error(f"DEBUG HELP {class_attributes} \n {create_method} \n {get_method}")
                 raise
-
         else:
-            print(f"Resource {resource_name} does not have a GET method")
+            # If there's no 'get' method, log a message
+            # TODO: Handle the resources without 'get' differently
+            log.warning(f"Resource {resource_name} does not have a GET method")
 
+        # Return the class definition
         return resource_class
     
-    def generate_class_attributes(self, resource_name: str) -> str:
-        pass
-    
-    def generate_class_methods(self, class_methods: list) -> str:
-        pass
-
-    def generate_object_methods(self, object_methods: list) -> str:
-        pass
-
-    def generate_additional_methods(self, additional_methods: list) -> str:
-        pass
-
-    def generate_init_method(self, resource_name: str) -> str:
+    def generate_create_method(self, resource_name) -> str:
         """
-        Generate the __init__ method for a resource class.
+        Auto-generate the CREATE method for a resource.
 
         Args:
-            row (Series): The row containing the resource information.
+            resource (str): The resource name.
+
+        Returns:
+            str: The formatted Create Method template.
 
         """
-        pass
+        # Get the operation and shape for the 'create' method
+        operation = self.operations["Create" + resource_name]
+        operation_input_shape_name = operation["input"]["shape"]
 
+        # Generate the arguments for the 'create' method
+        typed_shape_members = self.shapes_extractor.generate_shape_members(operation_input_shape_name)
+        create_args = ",\n".join(f"{attr}: {type}" for attr, type in typed_shape_members.items())
+        create_args += ","
+
+        # Convert the resource name to snake case
+        resource_lower = convert_to_snake_case(resource_name)
+
+        # Generate the input arguments for the operation
+        input_shape_members = self.shapes[operation_input_shape_name]["members"].keys()
+        operation_input_args = {member: convert_to_snake_case(member) for member in input_shape_members}
+
+        # Convert the operation name to snake case
+        operation = convert_to_snake_case("Create" + resource_name)
+
+        # Initialize an empty string for the object attribute assignments
+        object_attribute_assignments = ""
+
+        # Check if the operation has an 'output'
+        if "output" in operation:
+            # Get the shape for the operation output
+            operation_output_shape_name = operation["output"]["shape"]
+            output_shape_members = self.shapes[operation_output_shape_name]["members"]
+
+            # Generate the object attribute assignments
+            for member in output_shape_members.keys():
+                attribute_from_member = convert_to_snake_case(member)
+                object_attribute_assignments += f"{resource_lower}.{attribute_from_member} = response[\"{member}\"]\n"
+
+            # Add indentation to the object attribute assignments
+            object_attribute_assignments = add_indent(object_attribute_assignments, 4)
+
+        # Format the method using the CREATE_METHOD_TEMPLATE
+        formatted_method = CREATE_METHOD_TEMPLATE.format(
+            create_args=create_args,
+            resource_lower=resource_lower,
+            operation_input_args=operation_input_args,
+            operation=operation,
+            object_attribute_assignments=object_attribute_assignments,
+        )
+
+        # Return the formatted method
+        return formatted_method
+    
     def generate_get_method(self, resource_name) -> str:
         """
         Auto-generate the GET method (describe API) for a resource.
@@ -235,33 +302,41 @@ class ResourcesCodeGen():
             str: The formatted Get Method template.
 
         """
+        # Get the operation and shapes for the 'get' method
         resource_operation = self.operations["Describe" + resource_name]
         resource_operation_input_shape_name = resource_operation["input"]["shape"]
         resource_operation_output_shape_name = resource_operation["output"]["shape"]
-        describe_args = ""
+
+        # Generate the arguments for the 'get' method
         typed_shape_members = self.shapes_extractor.generate_shape_members(resource_operation_input_shape_name)
-        for attr, type in typed_shape_members.items():
-            describe_args += f"{attr}: {type},\n"
-        # remove the last \n
-        describe_args = describe_args.rstrip("\n")
+        describe_args = ",\n".join(f"{attr}: {type}" for attr, type in typed_shape_members.items())
+        describe_args += ","
+
+        # Convert the resource name to snake case
         resource_lower = convert_to_snake_case(resource_name)
 
+        # Generate the input arguments for the operation
         input_shape_members = self.shapes[resource_operation_input_shape_name]["members"].keys()
+        operation_input_args = {member: convert_to_snake_case(member) for member in input_shape_members}
 
-        operation_input_args = {}
-        for member in input_shape_members:
-            operation_input_args[member] = convert_to_snake_case(member)
-
+        # Convert the operation name to snake case
         operation = convert_to_snake_case("Describe" + resource_name)
 
-        # ToDo: The direct assignments would be replaced by multi-level deserialization logic.
+        # Initialize an empty string for the object attribute assignments
         object_attribute_assignments = ""
+
+        # Get the members for the operation output shape
         output_shape_members = self.shapes[resource_operation_output_shape_name]["members"]
+
+        # Generate the object attribute assignments
         for member in output_shape_members.keys():
             attribute_from_member = convert_to_snake_case(member)
             object_attribute_assignments += f"{resource_lower}.{attribute_from_member} = response[\"{member}\"]\n"
+
+        # Add indentation to the object attribute assignments
         object_attribute_assignments = add_indent(object_attribute_assignments, 4)
 
+        # Format the method using the GET_METHOD_TEMPLATE
         formatted_method = GET_METHOD_TEMPLATE.format(
             describe_args=describe_args,
             resource_lower=resource_lower,
@@ -269,21 +344,9 @@ class ResourcesCodeGen():
             operation=operation,
             object_attribute_assignments=object_attribute_assignments,
         )
+
+        # Return the formatted method
         return formatted_method
-    
-    def get_attributes_and_its_type(self, row) -> dict:
-        """
-        Get the attributes and their types for a resource.
-
-        Args:
-            row (Series): The row containing the resource information.
-
-        Returns:
-            dict: The attributes and their types.
-
-        """
-        pass
-
 
 if __name__ == "__main__":
     file_path = os.getcwd() + '/sample/sagemaker/2017-07-24/service-2.json'

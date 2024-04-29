@@ -13,10 +13,13 @@
 """A class for extracting resource information from a service JSON."""
 import json
 import os
+import logging
 import pandas as pd
 
 from constants import CLASS_METHODS, OBJECT_METHODS
 
+logging.basicConfig(level=logging.INFO)
+log = logging.getLogger(__name__)
 '''
 This class is used to extract the resources and its actions from the service-2.json file.
 '''
@@ -91,7 +94,7 @@ class ResourcesExtractor():
         """
         self.actions = set(self.operations.keys())
         
-        print(f"Total actions - {len(self.actions)}")
+        log.info(f"Total actions - {len(self.actions)}")
         self.create_resources = set([key[len('Create'):] for key in self.actions if key.startswith('Create')])
         self._filter_actions_for_resources(self.create_resources)
 
@@ -108,14 +111,10 @@ class ResourcesExtractor():
         self._filter_actions_for_resources(self.import_resources)
 
         self.resources = self.create_resources | self.add_resources | self.start_resources | self.register_resources | self.import_resources
-        print(f"Total resource - {len(self.resources)}")
+        log.info(f"Total resource - {len(self.resources)}")
 
-        print(f"Total actions_under_resource - {len(self.actions_under_resource)}")
+        log.info(f"Total actions_under_resource - {len(self.actions_under_resource)}")
 
-        '''
-        for resource, self.actions in self.resource_actions.items():
-            print(f"{resource} -- {self.actions}")
-        '''
         self._extract_resource_plan_as_dataframe()
 
 
