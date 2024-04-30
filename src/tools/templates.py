@@ -88,6 +88,48 @@ def refresh(self) -> Optional[object]:
     return self
 '''
 
+WAIT_METHOD_TEMPLATE = '''
+@validate_call
+def wait(
+    self,
+    poll: int = 5,
+    timeout: Optional[int] = None
+) -> Optional[object]:
+    terminal_states = {terminal_resource_states}
+    start_time = time.time()
+    while True:
+        self.refresh()
+        current_status = self{status_key_path}
+        if current_status in terminal_states:
+            return
+        # TODO: Raise some generated TimeOutError
+        if timeout is not None and time.time() - start_time >= timeout:
+            raise Exception("Timeout exceeded. Final resource state - " + current_status)
+        time.sleep(poll)
+'''
+
+WAIT_FOR_STATUS_METHOD_TEMPLATE = '''
+@validate_call
+def wait_for_status(
+    self,
+    status: Literal{resource_states},
+    poll: int = 5,
+    timeout: Optional[int] = None
+) -> Optional[object]:
+    start_time = time.time()
+    while True:
+        self.refresh()
+        current_status = self{status_key_path}
+        
+        if status == current_status:
+            return
+            
+        # TODO: Raise some generated TimeOutError
+        if timeout is not None and time.time() - start_time >= timeout:
+            raise Exception("Timeout exceeded. Final resource state - " + current_status)
+        time.sleep(poll)
+'''
+
 DELETE_METHOD_TEMPLATE = '''
 def delete(self) -> None:
 

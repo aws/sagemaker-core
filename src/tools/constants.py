@@ -16,6 +16,8 @@ import os
 CLASS_METHODS = set(['create', 'add', 'start', 'register', 'import', 'list', 'get'])
 OBJECT_METHODS = set(['refresh', 'delete', 'update', 'stop', 'deregister', 'wait', 'wait_for_status'])
 
+TERMINAL_STATES = set(["Completed", "Stopped", "Deleted", "Failed", "Succeeded", "Cancelled"])
+
 BASIC_JSON_TYPES_TO_PYTHON_TYPES = {
     "string": "str",
     "integer": "int",

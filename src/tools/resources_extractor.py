@@ -140,7 +140,7 @@ class ResourcesExtractor():
         
         status_shape_name = member_data[status_name]["shape"]
         
-        status_chain.append({"status": status_name, "status_shape": status_shape_name})
+        status_chain.append({"name": status_name, "shape_name": status_shape_name})
         
         if "enum" in self.shapes[status_shape_name]:
             resource_states = self.shapes[status_shape_name]["enum"]
@@ -183,7 +183,9 @@ class ResourcesExtractor():
                     if len(output_members_data) == 1:
                         single_member_name = next(iter(output_members_data))
                         single_member_shape_name = output_members_data[single_member_name]["shape"]
-                        resource_status_chain, resource_states = self._get_status_chain_and_states(single_member_shape_name)
+                        status_chain = []
+                        status_chain.append({"name": single_member_name, "shape_name": single_member_shape_name })
+                        resource_status_chain, resource_states = self._get_status_chain_and_states(single_member_shape_name, status_chain)
                     else:
                         resource_status_chain, resource_states = self._get_status_chain_and_states(output_shape_name)
                     

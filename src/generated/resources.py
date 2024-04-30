@@ -295,6 +295,34 @@ class App(BaseModel):
         deserializer(app, response, 'DescribeAppResponse')
         return app
 
+    
+    def wait_for_status(
+        self,
+        status: str,
+        poll: int = 5,
+        timeout: Optional[int] = None
+    ):
+        start_time = datetime.time.time()
+    
+        while True:
+            operation_input_args = {'DomainId': self.domain_id, 'UserProfileName': self.user_profile_name, 'SpaceName': self.space_name, 'AppType': self.app_type, 'AppName': self.app_name}
+    
+            resp = self.client.describe_app(**operation_input_args)
+            current_status = resp["Status"]
+    
+            if status.lower() == current_status.lower():
+                return resp
+    
+            if "failed" in current_status.lower():
+                # TODO: if a resource can result in more specifc error (ex, CapacityError), raise that
+                raise Exception("Encountered failed state")
+                
+            # TODO: Raise some generated TimeOutError
+            if timeout is not None and datetime.time.time() - start_time >= timeout:
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
+    
+            datetime.time.sleep(poll)
+
 
 class AppImageConfig(BaseModel):
     app_image_config_arn: Optional[str] = Unassigned()
@@ -551,6 +579,34 @@ class AutoMLJob(BaseModel):
         deserializer(auto_m_l_job, response, 'DescribeAutoMLJobResponse')
         return auto_m_l_job
 
+    
+    def wait(
+        self,
+        poll: int = 5,
+        timeout: Optional[int] = None
+    ):
+        terminal_states = ['Completed', 'Failed', 'Stopped']
+    
+        start_time = datetime.time.time()
+    
+        while True:
+            operation_input_args = {'AutoMLJobName': self.auto_m_l_job_name}
+    
+            resp = self.client.describe_auto_m_l_job(**operation_input_args)
+            current_status = resp["AutoMLJobStatus"]
+    
+            if current_status in terminal_states:
+                if "failed" in current_status.lower():
+                    # TODO: if a resource can result in more specifc error (ex, CapacityError), raise that
+                    raise Exception("Encountered failed state")
+                return
+    
+            # TODO: Raise some generated TimeOutError
+            if timeout is not None and datetime.time.time() - start_time >= timeout:
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
+    
+            datetime.time.sleep(poll)
+
 
 class AutoMLJobV2(BaseModel):
     auto_m_l_job_name: str
@@ -645,6 +701,34 @@ class AutoMLJobV2(BaseModel):
         deserializer(auto_m_l_job_v2, response, 'DescribeAutoMLJobV2Response')
         return auto_m_l_job_v2
 
+    
+    def wait(
+        self,
+        poll: int = 5,
+        timeout: Optional[int] = None
+    ):
+        terminal_states = ['Completed', 'Failed', 'Stopped']
+    
+        start_time = datetime.time.time()
+    
+        while True:
+            operation_input_args = {'AutoMLJobName': self.auto_m_l_job_name}
+    
+            resp = self.client.describe_auto_m_l_job_v2(**operation_input_args)
+            current_status = resp["AutoMLJobStatus"]
+    
+            if current_status in terminal_states:
+                if "failed" in current_status.lower():
+                    # TODO: if a resource can result in more specifc error (ex, CapacityError), raise that
+                    raise Exception("Encountered failed state")
+                return
+    
+            # TODO: Raise some generated TimeOutError
+            if timeout is not None and datetime.time.time() - start_time >= timeout:
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
+    
+            datetime.time.sleep(poll)
+
 
 class Cluster(BaseModel):
     cluster_arn: str
@@ -718,6 +802,34 @@ class Cluster(BaseModel):
         # deserialize the response
         deserializer(cluster, response, 'DescribeClusterResponse')
         return cluster
+
+    
+    def wait_for_status(
+        self,
+        status: str,
+        poll: int = 5,
+        timeout: Optional[int] = None
+    ):
+        start_time = datetime.time.time()
+    
+        while True:
+            operation_input_args = {'ClusterName': self.cluster_name}
+    
+            resp = self.client.describe_cluster(**operation_input_args)
+            current_status = resp["ClusterStatus"]
+    
+            if status.lower() == current_status.lower():
+                return resp
+    
+            if "failed" in current_status.lower():
+                # TODO: if a resource can result in more specifc error (ex, CapacityError), raise that
+                raise Exception("Encountered failed state")
+                
+            # TODO: Raise some generated TimeOutError
+            if timeout is not None and datetime.time.time() - start_time >= timeout:
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
+    
+            datetime.time.sleep(poll)
 
 
 class CodeRepository(BaseModel):
@@ -888,6 +1000,34 @@ class CompilationJob(BaseModel):
         # deserialize the response
         deserializer(compilation_job, response, 'DescribeCompilationJobResponse')
         return compilation_job
+
+    
+    def wait(
+        self,
+        poll: int = 5,
+        timeout: Optional[int] = None
+    ):
+        terminal_states = ['COMPLETED', 'FAILED', 'STOPPED']
+    
+        start_time = datetime.time.time()
+    
+        while True:
+            operation_input_args = {'CompilationJobName': self.compilation_job_name}
+    
+            resp = self.client.describe_compilation_job(**operation_input_args)
+            current_status = resp["CompilationJobStatus"]
+    
+            if current_status in terminal_states:
+                if "failed" in current_status.lower():
+                    # TODO: if a resource can result in more specifc error (ex, CapacityError), raise that
+                    raise Exception("Encountered failed state")
+                return
+    
+            # TODO: Raise some generated TimeOutError
+            if timeout is not None and datetime.time.time() - start_time >= timeout:
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
+    
+            datetime.time.sleep(poll)
 
 
 class Context(BaseModel):
@@ -1246,6 +1386,34 @@ class Domain(BaseModel):
         deserializer(domain, response, 'DescribeDomainResponse')
         return domain
 
+    
+    def wait_for_status(
+        self,
+        status: str,
+        poll: int = 5,
+        timeout: Optional[int] = None
+    ):
+        start_time = datetime.time.time()
+    
+        while True:
+            operation_input_args = {'DomainId': self.domain_id}
+    
+            resp = self.client.describe_domain(**operation_input_args)
+            current_status = resp["Status"]
+    
+            if status.lower() == current_status.lower():
+                return resp
+    
+            if "failed" in current_status.lower():
+                # TODO: if a resource can result in more specifc error (ex, CapacityError), raise that
+                raise Exception("Encountered failed state")
+                
+            # TODO: Raise some generated TimeOutError
+            if timeout is not None and datetime.time.time() - start_time >= timeout:
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
+    
+            datetime.time.sleep(poll)
+
 
 class EdgeDeploymentPlan(BaseModel):
     edge_deployment_plan_arn: str
@@ -1422,6 +1590,34 @@ class EdgePackagingJob(BaseModel):
         deserializer(edge_packaging_job, response, 'DescribeEdgePackagingJobResponse')
         return edge_packaging_job
 
+    
+    def wait(
+        self,
+        poll: int = 5,
+        timeout: Optional[int] = None
+    ):
+        terminal_states = ['COMPLETED', 'FAILED', 'STOPPED']
+    
+        start_time = datetime.time.time()
+    
+        while True:
+            operation_input_args = {'EdgePackagingJobName': self.edge_packaging_job_name}
+    
+            resp = self.client.describe_edge_packaging_job(**operation_input_args)
+            current_status = resp["EdgePackagingJobStatus"]
+    
+            if current_status in terminal_states:
+                if "failed" in current_status.lower():
+                    # TODO: if a resource can result in more specifc error (ex, CapacityError), raise that
+                    raise Exception("Encountered failed state")
+                return
+    
+            # TODO: Raise some generated TimeOutError
+            if timeout is not None and datetime.time.time() - start_time >= timeout:
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
+    
+            datetime.time.sleep(poll)
+
 
 class Endpoint(BaseModel):
     endpoint_name: str
@@ -1502,6 +1698,34 @@ class Endpoint(BaseModel):
         # deserialize the response
         deserializer(endpoint, response, 'DescribeEndpointOutput')
         return endpoint
+
+    
+    def wait_for_status(
+        self,
+        status: str,
+        poll: int = 5,
+        timeout: Optional[int] = None
+    ):
+        start_time = datetime.time.time()
+    
+        while True:
+            operation_input_args = {'EndpointName': self.endpoint_name}
+    
+            resp = self.client.describe_endpoint(**operation_input_args)
+            current_status = resp["EndpointStatus"]
+    
+            if status.lower() == current_status.lower():
+                return resp
+    
+            if "failed" in current_status.lower():
+                # TODO: if a resource can result in more specifc error (ex, CapacityError), raise that
+                raise Exception("Encountered failed state")
+                
+            # TODO: Raise some generated TimeOutError
+            if timeout is not None and datetime.time.time() - start_time >= timeout:
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
+    
+            datetime.time.sleep(poll)
 
 
 class EndpointConfig(BaseModel):
@@ -1936,6 +2160,34 @@ class Hub(BaseModel):
         deserializer(hub, response, 'DescribeHubResponse')
         return hub
 
+    
+    def wait_for_status(
+        self,
+        status: str,
+        poll: int = 5,
+        timeout: Optional[int] = None
+    ):
+        start_time = datetime.time.time()
+    
+        while True:
+            operation_input_args = {'HubName': self.hub_name}
+    
+            resp = self.client.describe_hub(**operation_input_args)
+            current_status = resp["HubStatus"]
+    
+            if status.lower() == current_status.lower():
+                return resp
+    
+            if "failed" in current_status.lower():
+                # TODO: if a resource can result in more specifc error (ex, CapacityError), raise that
+                raise Exception("Encountered failed state")
+                
+            # TODO: Raise some generated TimeOutError
+            if timeout is not None and datetime.time.time() - start_time >= timeout:
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
+    
+            datetime.time.sleep(poll)
+
 
 class HubContent(BaseModel):
     hub_content_name: str
@@ -2172,6 +2424,34 @@ class HyperParameterTuningJob(BaseModel):
         # deserialize the response
         deserializer(hyper_parameter_tuning_job, response, 'DescribeHyperParameterTuningJobResponse')
         return hyper_parameter_tuning_job
+
+    
+    def wait(
+        self,
+        poll: int = 5,
+        timeout: Optional[int] = None
+    ):
+        terminal_states = ['Completed', 'Failed', 'Stopped', 'DeleteFailed']
+    
+        start_time = datetime.time.time()
+    
+        while True:
+            operation_input_args = {'HyperParameterTuningJobName': self.hyper_parameter_tuning_job_name}
+    
+            resp = self.client.describe_hyper_parameter_tuning_job(**operation_input_args)
+            current_status = resp["HyperParameterTuningJobStatus"]
+    
+            if current_status in terminal_states:
+                if "failed" in current_status.lower():
+                    # TODO: if a resource can result in more specifc error (ex, CapacityError), raise that
+                    raise Exception("Encountered failed state")
+                return
+    
+            # TODO: Raise some generated TimeOutError
+            if timeout is not None and datetime.time.time() - start_time >= timeout:
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
+    
+            datetime.time.sleep(poll)
 
 
 class Image(BaseModel):
@@ -2438,6 +2718,34 @@ class InferenceComponent(BaseModel):
         deserializer(inference_component, response, 'DescribeInferenceComponentOutput')
         return inference_component
 
+    
+    def wait_for_status(
+        self,
+        status: str,
+        poll: int = 5,
+        timeout: Optional[int] = None
+    ):
+        start_time = datetime.time.time()
+    
+        while True:
+            operation_input_args = {'InferenceComponentName': self.inference_component_name}
+    
+            resp = self.client.describe_inference_component(**operation_input_args)
+            current_status = resp["InferenceComponentStatus"]
+    
+            if status.lower() == current_status.lower():
+                return resp
+    
+            if "failed" in current_status.lower():
+                # TODO: if a resource can result in more specifc error (ex, CapacityError), raise that
+                raise Exception("Encountered failed state")
+                
+            # TODO: Raise some generated TimeOutError
+            if timeout is not None and datetime.time.time() - start_time >= timeout:
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
+    
+            datetime.time.sleep(poll)
+
 
 class InferenceExperiment(BaseModel):
     arn: str
@@ -2635,6 +2943,34 @@ class InferenceRecommendationsJob(BaseModel):
         deserializer(inference_recommendations_job, response, 'DescribeInferenceRecommendationsJobResponse')
         return inference_recommendations_job
 
+    
+    def wait(
+        self,
+        poll: int = 5,
+        timeout: Optional[int] = None
+    ):
+        terminal_states = ['COMPLETED', 'FAILED', 'STOPPED', 'DELETED']
+    
+        start_time = datetime.time.time()
+    
+        while True:
+            operation_input_args = {'JobName': self.job_name}
+    
+            resp = self.client.describe_inference_recommendations_job(**operation_input_args)
+            current_status = resp["Status"]
+    
+            if current_status in terminal_states:
+                if "failed" in current_status.lower():
+                    # TODO: if a resource can result in more specifc error (ex, CapacityError), raise that
+                    raise Exception("Encountered failed state")
+                return
+    
+            # TODO: Raise some generated TimeOutError
+            if timeout is not None and datetime.time.time() - start_time >= timeout:
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
+    
+            datetime.time.sleep(poll)
+
 
 class LabelingJob(BaseModel):
     labeling_job_status: str
@@ -2731,6 +3067,34 @@ class LabelingJob(BaseModel):
         # deserialize the response
         deserializer(labeling_job, response, 'DescribeLabelingJobResponse')
         return labeling_job
+
+    
+    def wait(
+        self,
+        poll: int = 5,
+        timeout: Optional[int] = None
+    ):
+        terminal_states = ['Completed', 'Failed', 'Stopped']
+    
+        start_time = datetime.time.time()
+    
+        while True:
+            operation_input_args = {'LabelingJobName': self.labeling_job_name}
+    
+            resp = self.client.describe_labeling_job(**operation_input_args)
+            current_status = resp["LabelingJobStatus"]
+    
+            if current_status in terminal_states:
+                if "failed" in current_status.lower():
+                    # TODO: if a resource can result in more specifc error (ex, CapacityError), raise that
+                    raise Exception("Encountered failed state")
+                return
+    
+            # TODO: Raise some generated TimeOutError
+            if timeout is not None and datetime.time.time() - start_time >= timeout:
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
+    
+            datetime.time.sleep(poll)
 
 
 class Model(BaseModel):
@@ -3059,6 +3423,34 @@ class ModelCardExportJob(BaseModel):
         # deserialize the response
         deserializer(model_card_export_job, response, 'DescribeModelCardExportJobResponse')
         return model_card_export_job
+
+    
+    def wait(
+        self,
+        poll: int = 5,
+        timeout: Optional[int] = None
+    ):
+        terminal_states = ['Completed', 'Failed']
+    
+        start_time = datetime.time.time()
+    
+        while True:
+            operation_input_args = {'ModelCardExportJobArn': self.model_card_export_job_arn}
+    
+            resp = self.client.describe_model_card_export_job(**operation_input_args)
+            current_status = resp["Status"]
+    
+            if current_status in terminal_states:
+                if "failed" in current_status.lower():
+                    # TODO: if a resource can result in more specifc error (ex, CapacityError), raise that
+                    raise Exception("Encountered failed state")
+                return
+    
+            # TODO: Raise some generated TimeOutError
+            if timeout is not None and datetime.time.time() - start_time >= timeout:
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
+    
+            datetime.time.sleep(poll)
 
 
 class ModelExplainabilityJobDefinition(BaseModel):
@@ -3639,6 +4031,34 @@ class NotebookInstance(BaseModel):
         deserializer(notebook_instance, response, 'DescribeNotebookInstanceOutput')
         return notebook_instance
 
+    
+    def wait_for_status(
+        self,
+        status: str,
+        poll: int = 5,
+        timeout: Optional[int] = None
+    ):
+        start_time = datetime.time.time()
+    
+        while True:
+            operation_input_args = {'NotebookInstanceName': self.notebook_instance_name}
+    
+            resp = self.client.describe_notebook_instance(**operation_input_args)
+            current_status = resp["NotebookInstanceStatus"]
+    
+            if status.lower() == current_status.lower():
+                return resp
+    
+            if "failed" in current_status.lower():
+                # TODO: if a resource can result in more specifc error (ex, CapacityError), raise that
+                raise Exception("Encountered failed state")
+                
+            # TODO: Raise some generated TimeOutError
+            if timeout is not None and datetime.time.time() - start_time >= timeout:
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
+    
+            datetime.time.sleep(poll)
+
 
 class NotebookInstanceLifecycleConfig(BaseModel):
     notebook_instance_lifecycle_config_arn: Optional[str] = Unassigned()
@@ -3958,6 +4378,34 @@ class ProcessingJob(BaseModel):
         deserializer(processing_job, response, 'DescribeProcessingJobResponse')
         return processing_job
 
+    
+    def wait(
+        self,
+        poll: int = 5,
+        timeout: Optional[int] = None
+    ):
+        terminal_states = ['Completed', 'Failed', 'Stopped']
+    
+        start_time = datetime.time.time()
+    
+        while True:
+            operation_input_args = {'ProcessingJobName': self.processing_job_name}
+    
+            resp = self.client.describe_processing_job(**operation_input_args)
+            current_status = resp["ProcessingJobStatus"]
+    
+            if current_status in terminal_states:
+                if "failed" in current_status.lower():
+                    # TODO: if a resource can result in more specifc error (ex, CapacityError), raise that
+                    raise Exception("Encountered failed state")
+                return
+    
+            # TODO: Raise some generated TimeOutError
+            if timeout is not None and datetime.time.time() - start_time >= timeout:
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
+    
+            datetime.time.sleep(poll)
+
 
 class Project(BaseModel):
     project_arn: str
@@ -4125,6 +4573,34 @@ class Space(BaseModel):
         # deserialize the response
         deserializer(space, response, 'DescribeSpaceResponse')
         return space
+
+    
+    def wait_for_status(
+        self,
+        status: str,
+        poll: int = 5,
+        timeout: Optional[int] = None
+    ):
+        start_time = datetime.time.time()
+    
+        while True:
+            operation_input_args = {'DomainId': self.domain_id, 'SpaceName': self.space_name}
+    
+            resp = self.client.describe_space(**operation_input_args)
+            current_status = resp["Status"]
+    
+            if status.lower() == current_status.lower():
+                return resp
+    
+            if "failed" in current_status.lower():
+                # TODO: if a resource can result in more specifc error (ex, CapacityError), raise that
+                raise Exception("Encountered failed state")
+                
+            # TODO: Raise some generated TimeOutError
+            if timeout is not None and datetime.time.time() - start_time >= timeout:
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
+    
+            datetime.time.sleep(poll)
 
 
 class StudioLifecycleConfig(BaseModel):
@@ -4349,6 +4825,34 @@ class TrainingJob(BaseModel):
         deserializer(training_job, response, 'DescribeTrainingJobResponse')
         return training_job
 
+    
+    def wait(
+        self,
+        poll: int = 5,
+        timeout: Optional[int] = None
+    ):
+        terminal_states = ['Completed', 'Failed', 'Stopped']
+    
+        start_time = datetime.time.time()
+    
+        while True:
+            operation_input_args = {'TrainingJobName': self.training_job_name}
+    
+            resp = self.client.describe_training_job(**operation_input_args)
+            current_status = resp["TrainingJobStatus"]
+    
+            if current_status in terminal_states:
+                if "failed" in current_status.lower():
+                    # TODO: if a resource can result in more specifc error (ex, CapacityError), raise that
+                    raise Exception("Encountered failed state")
+                return
+    
+            # TODO: Raise some generated TimeOutError
+            if timeout is not None and datetime.time.time() - start_time >= timeout:
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
+    
+            datetime.time.sleep(poll)
+
 
 class TransformJob(BaseModel):
     transform_job_name: str
@@ -4456,6 +4960,34 @@ class TransformJob(BaseModel):
         # deserialize the response
         deserializer(transform_job, response, 'DescribeTransformJobResponse')
         return transform_job
+
+    
+    def wait(
+        self,
+        poll: int = 5,
+        timeout: Optional[int] = None
+    ):
+        terminal_states = ['Completed', 'Failed', 'Stopped']
+    
+        start_time = datetime.time.time()
+    
+        while True:
+            operation_input_args = {'TransformJobName': self.transform_job_name}
+    
+            resp = self.client.describe_transform_job(**operation_input_args)
+            current_status = resp["TransformJobStatus"]
+    
+            if current_status in terminal_states:
+                if "failed" in current_status.lower():
+                    # TODO: if a resource can result in more specifc error (ex, CapacityError), raise that
+                    raise Exception("Encountered failed state")
+                return
+    
+            # TODO: Raise some generated TimeOutError
+            if timeout is not None and datetime.time.time() - start_time >= timeout:
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
+    
+            datetime.time.sleep(poll)
 
 
 class Trial(BaseModel):
@@ -4718,6 +5250,34 @@ class UserProfile(BaseModel):
         # deserialize the response
         deserializer(user_profile, response, 'DescribeUserProfileResponse')
         return user_profile
+
+    
+    def wait_for_status(
+        self,
+        status: str,
+        poll: int = 5,
+        timeout: Optional[int] = None
+    ):
+        start_time = datetime.time.time()
+    
+        while True:
+            operation_input_args = {'DomainId': self.domain_id, 'UserProfileName': self.user_profile_name}
+    
+            resp = self.client.describe_user_profile(**operation_input_args)
+            current_status = resp["Status"]
+    
+            if status.lower() == current_status.lower():
+                return resp
+    
+            if "failed" in current_status.lower():
+                # TODO: if a resource can result in more specifc error (ex, CapacityError), raise that
+                raise Exception("Encountered failed state")
+                
+            # TODO: Raise some generated TimeOutError
+            if timeout is not None and datetime.time.time() - start_time >= timeout:
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
+    
+            datetime.time.sleep(poll)
 
 
 class Workforce(BaseModel):
