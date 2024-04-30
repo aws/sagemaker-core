@@ -13,12 +13,14 @@
 # language governing permissions and limitations under the License.
 import datetime
 import boto3
-import pprint
+from pprint import pprint
 from pydantic import BaseModel
 from typing import List, Dict, Optional
 from boto3.session import Session
 from utils import Unassigned
 from shapes import *
+
+from src.code_injection.codec import deserializer
 
 
 class Action(BaseModel):
@@ -35,25 +37,33 @@ class Action(BaseModel):
     last_modified_by: Optional[UserContext] = Unassigned()
     metadata_properties: Optional[MetadataProperties] = Unassigned()
     lineage_group_arn: Optional[str] = Unassigned()
-
     
     @classmethod
     def create(
         cls,
         action_name: str,
-    source: ActionSource,
-    action_type: str,
-    description: Optional[str] = Unassigned(),
-    status: Optional[str] = Unassigned(),
-    properties: Optional[Dict[str, str]] = Unassigned(),
-    metadata_properties: Optional[MetadataProperties] = Unassigned(),
-    tags: Optional[List[Tag]] = Unassigned(),
+        source: ActionSource,
+        action_type: str,
+        description: Optional[str] = Unassigned(),
+        status: Optional[str] = Unassigned(),
+        properties: Optional[Dict[str, str]] = Unassigned(),
+        metadata_properties: Optional[MetadataProperties] = Unassigned(),
+        tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         action = cls(session, region)
     
-        operation_input_args = {'ActionName': 'action_name', 'Source': 'source', 'ActionType': 'action_type', 'Description': 'description', 'Status': 'status', 'Properties': 'properties', 'MetadataProperties': 'metadata_properties', 'Tags': 'tags'}
+        operation_input_args = {
+            'ActionName': action_name,
+            'Source': source,
+            'ActionType': action_type,
+            'Description': description,
+            'Status': status,
+            'Properties': properties,
+            'MetadataProperties': metadata_properties,
+            'Tags': tags,
+        }
         response = action.client.create_action(**operation_input_args)
     
         pprint(response)
@@ -61,7 +71,19 @@ class Action(BaseModel):
         # deserialize the response
     
         return action
-
+    
+    def refresh(
+        self
+    ) -> Optional[object]:
+    
+        operation_input_args = {
+            'ActionName': self.action_name,
+        }
+        response = self.client.describe_action(**operation_input_args)
+    
+        # deserialize the response
+        deserializer(self, response, 'DescribeActionResponse')
+        return self
     
     @classmethod
     def get(
@@ -72,26 +94,15 @@ class Action(BaseModel):
     ) -> Optional[object]:
         action = cls(session, region)
     
-        operation_input_args = {'ActionName': 'action_name'}
+        operation_input_args = {
+            'ActionName': action_name,
+        }
         response = action.client.describe_action(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        action.action_name = response["ActionName"]
-        action.action_arn = response["ActionArn"]
-        action.source = response["Source"]
-        action.action_type = response["ActionType"]
-        action.description = response["Description"]
-        action.status = response["Status"]
-        action.properties = response["Properties"]
-        action.creation_time = response["CreationTime"]
-        action.created_by = response["CreatedBy"]
-        action.last_modified_time = response["LastModifiedTime"]
-        action.last_modified_by = response["LastModifiedBy"]
-        action.metadata_properties = response["MetadataProperties"]
-        action.lineage_group_arn = response["LineageGroupArn"]
-    
+        deserializer(action, response, 'DescribeActionResponse')
         return action
 
 
@@ -107,24 +118,31 @@ class Algorithm(BaseModel):
     validation_specification: Optional[AlgorithmValidationSpecification] = Unassigned()
     product_id: Optional[str] = Unassigned()
     certify_for_marketplace: Optional[bool] = Unassigned()
-
     
     @classmethod
     def create(
         cls,
         algorithm_name: str,
-    training_specification: TrainingSpecification,
-    algorithm_description: Optional[str] = Unassigned(),
-    inference_specification: Optional[InferenceSpecification] = Unassigned(),
-    validation_specification: Optional[AlgorithmValidationSpecification] = Unassigned(),
-    certify_for_marketplace: Optional[bool] = Unassigned(),
-    tags: Optional[List[Tag]] = Unassigned(),
+        training_specification: TrainingSpecification,
+        algorithm_description: Optional[str] = Unassigned(),
+        inference_specification: Optional[InferenceSpecification] = Unassigned(),
+        validation_specification: Optional[AlgorithmValidationSpecification] = Unassigned(),
+        certify_for_marketplace: Optional[bool] = Unassigned(),
+        tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         algorithm = cls(session, region)
     
-        operation_input_args = {'AlgorithmName': 'algorithm_name', 'AlgorithmDescription': 'algorithm_description', 'TrainingSpecification': 'training_specification', 'InferenceSpecification': 'inference_specification', 'ValidationSpecification': 'validation_specification', 'CertifyForMarketplace': 'certify_for_marketplace', 'Tags': 'tags'}
+        operation_input_args = {
+            'AlgorithmName': algorithm_name,
+            'AlgorithmDescription': algorithm_description,
+            'TrainingSpecification': training_specification,
+            'InferenceSpecification': inference_specification,
+            'ValidationSpecification': validation_specification,
+            'CertifyForMarketplace': certify_for_marketplace,
+            'Tags': tags,
+        }
         response = algorithm.client.create_algorithm(**operation_input_args)
     
         pprint(response)
@@ -132,7 +150,19 @@ class Algorithm(BaseModel):
         # deserialize the response
     
         return algorithm
-
+    
+    def refresh(
+        self
+    ) -> Optional[object]:
+    
+        operation_input_args = {
+            'AlgorithmName': self.algorithm_name,
+        }
+        response = self.client.describe_algorithm(**operation_input_args)
+    
+        # deserialize the response
+        deserializer(self, response, 'DescribeAlgorithmOutput')
+        return self
     
     @classmethod
     def get(
@@ -143,24 +173,15 @@ class Algorithm(BaseModel):
     ) -> Optional[object]:
         algorithm = cls(session, region)
     
-        operation_input_args = {'AlgorithmName': 'algorithm_name'}
+        operation_input_args = {
+            'AlgorithmName': algorithm_name,
+        }
         response = algorithm.client.describe_algorithm(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        algorithm.algorithm_name = response["AlgorithmName"]
-        algorithm.algorithm_arn = response["AlgorithmArn"]
-        algorithm.algorithm_description = response["AlgorithmDescription"]
-        algorithm.creation_time = response["CreationTime"]
-        algorithm.training_specification = response["TrainingSpecification"]
-        algorithm.inference_specification = response["InferenceSpecification"]
-        algorithm.validation_specification = response["ValidationSpecification"]
-        algorithm.algorithm_status = response["AlgorithmStatus"]
-        algorithm.algorithm_status_details = response["AlgorithmStatusDetails"]
-        algorithm.product_id = response["ProductId"]
-        algorithm.certify_for_marketplace = response["CertifyForMarketplace"]
-    
+        deserializer(algorithm, response, 'DescribeAlgorithmOutput')
         return algorithm
 
 
@@ -177,24 +198,31 @@ class App(BaseModel):
     creation_time: Optional[datetime.datetime] = Unassigned()
     failure_reason: Optional[str] = Unassigned()
     resource_spec: Optional[ResourceSpec] = Unassigned()
-
     
     @classmethod
     def create(
         cls,
         domain_id: str,
-    app_type: str,
-    app_name: str,
-    user_profile_name: Optional[str] = Unassigned(),
-    space_name: Optional[str] = Unassigned(),
-    tags: Optional[List[Tag]] = Unassigned(),
-    resource_spec: Optional[ResourceSpec] = Unassigned(),
+        app_type: str,
+        app_name: str,
+        user_profile_name: Optional[str] = Unassigned(),
+        space_name: Optional[str] = Unassigned(),
+        tags: Optional[List[Tag]] = Unassigned(),
+        resource_spec: Optional[ResourceSpec] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         app = cls(session, region)
     
-        operation_input_args = {'DomainId': 'domain_id', 'UserProfileName': 'user_profile_name', 'SpaceName': 'space_name', 'AppType': 'app_type', 'AppName': 'app_name', 'Tags': 'tags', 'ResourceSpec': 'resource_spec'}
+        operation_input_args = {
+            'DomainId': domain_id,
+            'UserProfileName': user_profile_name,
+            'SpaceName': space_name,
+            'AppType': app_type,
+            'AppName': app_name,
+            'Tags': tags,
+            'ResourceSpec': resource_spec,
+        }
         response = app.client.create_app(**operation_input_args)
     
         pprint(response)
@@ -202,40 +230,50 @@ class App(BaseModel):
         # deserialize the response
     
         return app
-
+    
+    def refresh(
+        self
+    ) -> Optional[object]:
+    
+        operation_input_args = {
+            'DomainId': self.domain_id,
+            'UserProfileName': self.user_profile_name,
+            'SpaceName': self.space_name,
+            'AppType': self.app_type,
+            'AppName': self.app_name,
+        }
+        response = self.client.describe_app(**operation_input_args)
+    
+        # deserialize the response
+        deserializer(self, response, 'DescribeAppResponse')
+        return self
     
     @classmethod
     def get(
         cls,
         domain_id: str,
-    app_type: str,
-    app_name: str,
-    user_profile_name: Optional[str] = Unassigned(),
-    space_name: Optional[str] = Unassigned(),
+        app_type: str,
+        app_name: str,
+        user_profile_name: Optional[str] = Unassigned(),
+        space_name: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         app = cls(session, region)
     
-        operation_input_args = {'DomainId': 'domain_id', 'UserProfileName': 'user_profile_name', 'SpaceName': 'space_name', 'AppType': 'app_type', 'AppName': 'app_name'}
+        operation_input_args = {
+            'DomainId': domain_id,
+            'UserProfileName': user_profile_name,
+            'SpaceName': space_name,
+            'AppType': app_type,
+            'AppName': app_name,
+        }
         response = app.client.describe_app(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        app.app_arn = response["AppArn"]
-        app.app_type = response["AppType"]
-        app.app_name = response["AppName"]
-        app.domain_id = response["DomainId"]
-        app.user_profile_name = response["UserProfileName"]
-        app.space_name = response["SpaceName"]
-        app.status = response["Status"]
-        app.last_health_check_timestamp = response["LastHealthCheckTimestamp"]
-        app.last_user_activity_timestamp = response["LastUserActivityTimestamp"]
-        app.creation_time = response["CreationTime"]
-        app.failure_reason = response["FailureReason"]
-        app.resource_spec = response["ResourceSpec"]
-    
+        deserializer(app, response, 'DescribeAppResponse')
         return app
 
 
@@ -246,21 +284,25 @@ class AppImageConfig(BaseModel):
     last_modified_time: Optional[datetime.datetime] = Unassigned()
     kernel_gateway_image_config: Optional[KernelGatewayImageConfig] = Unassigned()
     jupyter_lab_app_image_config: Optional[JupyterLabAppImageConfig] = Unassigned()
-
     
     @classmethod
     def create(
         cls,
         app_image_config_name: str,
-    tags: Optional[List[Tag]] = Unassigned(),
-    kernel_gateway_image_config: Optional[KernelGatewayImageConfig] = Unassigned(),
-    jupyter_lab_app_image_config: Optional[JupyterLabAppImageConfig] = Unassigned(),
+        tags: Optional[List[Tag]] = Unassigned(),
+        kernel_gateway_image_config: Optional[KernelGatewayImageConfig] = Unassigned(),
+        jupyter_lab_app_image_config: Optional[JupyterLabAppImageConfig] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         app_image_config = cls(session, region)
     
-        operation_input_args = {'AppImageConfigName': 'app_image_config_name', 'Tags': 'tags', 'KernelGatewayImageConfig': 'kernel_gateway_image_config', 'JupyterLabAppImageConfig': 'jupyter_lab_app_image_config'}
+        operation_input_args = {
+            'AppImageConfigName': app_image_config_name,
+            'Tags': tags,
+            'KernelGatewayImageConfig': kernel_gateway_image_config,
+            'JupyterLabAppImageConfig': jupyter_lab_app_image_config,
+        }
         response = app_image_config.client.create_app_image_config(**operation_input_args)
     
         pprint(response)
@@ -268,7 +310,19 @@ class AppImageConfig(BaseModel):
         # deserialize the response
     
         return app_image_config
-
+    
+    def refresh(
+        self
+    ) -> Optional[object]:
+    
+        operation_input_args = {
+            'AppImageConfigName': self.app_image_config_name,
+        }
+        response = self.client.describe_app_image_config(**operation_input_args)
+    
+        # deserialize the response
+        deserializer(self, response, 'DescribeAppImageConfigResponse')
+        return self
     
     @classmethod
     def get(
@@ -279,19 +333,15 @@ class AppImageConfig(BaseModel):
     ) -> Optional[object]:
         app_image_config = cls(session, region)
     
-        operation_input_args = {'AppImageConfigName': 'app_image_config_name'}
+        operation_input_args = {
+            'AppImageConfigName': app_image_config_name,
+        }
         response = app_image_config.client.describe_app_image_config(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        app_image_config.app_image_config_arn = response["AppImageConfigArn"]
-        app_image_config.app_image_config_name = response["AppImageConfigName"]
-        app_image_config.creation_time = response["CreationTime"]
-        app_image_config.last_modified_time = response["LastModifiedTime"]
-        app_image_config.kernel_gateway_image_config = response["KernelGatewayImageConfig"]
-        app_image_config.jupyter_lab_app_image_config = response["JupyterLabAppImageConfig"]
-    
+        deserializer(app_image_config, response, 'DescribeAppImageConfigResponse')
         return app_image_config
 
 
@@ -307,23 +357,29 @@ class Artifact(BaseModel):
     last_modified_by: Optional[UserContext] = Unassigned()
     metadata_properties: Optional[MetadataProperties] = Unassigned()
     lineage_group_arn: Optional[str] = Unassigned()
-
     
     @classmethod
     def create(
         cls,
         source: ArtifactSource,
-    artifact_type: str,
-    artifact_name: Optional[str] = Unassigned(),
-    properties: Optional[Dict[str, str]] = Unassigned(),
-    metadata_properties: Optional[MetadataProperties] = Unassigned(),
-    tags: Optional[List[Tag]] = Unassigned(),
+        artifact_type: str,
+        artifact_name: Optional[str] = Unassigned(),
+        properties: Optional[Dict[str, str]] = Unassigned(),
+        metadata_properties: Optional[MetadataProperties] = Unassigned(),
+        tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         artifact = cls(session, region)
     
-        operation_input_args = {'ArtifactName': 'artifact_name', 'Source': 'source', 'ArtifactType': 'artifact_type', 'Properties': 'properties', 'MetadataProperties': 'metadata_properties', 'Tags': 'tags'}
+        operation_input_args = {
+            'ArtifactName': artifact_name,
+            'Source': source,
+            'ArtifactType': artifact_type,
+            'Properties': properties,
+            'MetadataProperties': metadata_properties,
+            'Tags': tags,
+        }
         response = artifact.client.create_artifact(**operation_input_args)
     
         pprint(response)
@@ -331,7 +387,19 @@ class Artifact(BaseModel):
         # deserialize the response
     
         return artifact
-
+    
+    def refresh(
+        self
+    ) -> Optional[object]:
+    
+        operation_input_args = {
+            'ArtifactArn': self.artifact_arn,
+        }
+        response = self.client.describe_artifact(**operation_input_args)
+    
+        # deserialize the response
+        deserializer(self, response, 'DescribeArtifactResponse')
+        return self
     
     @classmethod
     def get(
@@ -342,24 +410,15 @@ class Artifact(BaseModel):
     ) -> Optional[object]:
         artifact = cls(session, region)
     
-        operation_input_args = {'ArtifactArn': 'artifact_arn'}
+        operation_input_args = {
+            'ArtifactArn': artifact_arn,
+        }
         response = artifact.client.describe_artifact(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        artifact.artifact_name = response["ArtifactName"]
-        artifact.artifact_arn = response["ArtifactArn"]
-        artifact.source = response["Source"]
-        artifact.artifact_type = response["ArtifactType"]
-        artifact.properties = response["Properties"]
-        artifact.creation_time = response["CreationTime"]
-        artifact.created_by = response["CreatedBy"]
-        artifact.last_modified_time = response["LastModifiedTime"]
-        artifact.last_modified_by = response["LastModifiedBy"]
-        artifact.metadata_properties = response["MetadataProperties"]
-        artifact.lineage_group_arn = response["LineageGroupArn"]
-    
+        deserializer(artifact, response, 'DescribeArtifactResponse')
         return artifact
 
 
@@ -385,27 +444,37 @@ class AutoMLJob(BaseModel):
     resolved_attributes: Optional[ResolvedAttributes] = Unassigned()
     model_deploy_config: Optional[ModelDeployConfig] = Unassigned()
     model_deploy_result: Optional[ModelDeployResult] = Unassigned()
-
     
     @classmethod
     def create(
         cls,
         auto_m_l_job_name: str,
-    input_data_config: List[AutoMLChannel],
-    output_data_config: AutoMLOutputDataConfig,
-    role_arn: str,
-    problem_type: Optional[str] = Unassigned(),
-    auto_m_l_job_objective: Optional[AutoMLJobObjective] = Unassigned(),
-    auto_m_l_job_config: Optional[AutoMLJobConfig] = Unassigned(),
-    generate_candidate_definitions_only: Optional[bool] = Unassigned(),
-    tags: Optional[List[Tag]] = Unassigned(),
-    model_deploy_config: Optional[ModelDeployConfig] = Unassigned(),
+        input_data_config: List[AutoMLChannel],
+        output_data_config: AutoMLOutputDataConfig,
+        role_arn: str,
+        problem_type: Optional[str] = Unassigned(),
+        auto_m_l_job_objective: Optional[AutoMLJobObjective] = Unassigned(),
+        auto_m_l_job_config: Optional[AutoMLJobConfig] = Unassigned(),
+        generate_candidate_definitions_only: Optional[bool] = Unassigned(),
+        tags: Optional[List[Tag]] = Unassigned(),
+        model_deploy_config: Optional[ModelDeployConfig] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         auto_m_l_job = cls(session, region)
     
-        operation_input_args = {'AutoMLJobName': 'auto_m_l_job_name', 'InputDataConfig': 'input_data_config', 'OutputDataConfig': 'output_data_config', 'ProblemType': 'problem_type', 'AutoMLJobObjective': 'auto_m_l_job_objective', 'AutoMLJobConfig': 'auto_m_l_job_config', 'RoleArn': 'role_arn', 'GenerateCandidateDefinitionsOnly': 'generate_candidate_definitions_only', 'Tags': 'tags', 'ModelDeployConfig': 'model_deploy_config'}
+        operation_input_args = {
+            'AutoMLJobName': auto_m_l_job_name,
+            'InputDataConfig': input_data_config,
+            'OutputDataConfig': output_data_config,
+            'ProblemType': problem_type,
+            'AutoMLJobObjective': auto_m_l_job_objective,
+            'AutoMLJobConfig': auto_m_l_job_config,
+            'RoleArn': role_arn,
+            'GenerateCandidateDefinitionsOnly': generate_candidate_definitions_only,
+            'Tags': tags,
+            'ModelDeployConfig': model_deploy_config,
+        }
         response = auto_m_l_job.client.create_auto_m_l_job(**operation_input_args)
     
         pprint(response)
@@ -413,7 +482,19 @@ class AutoMLJob(BaseModel):
         # deserialize the response
     
         return auto_m_l_job
-
+    
+    def refresh(
+        self
+    ) -> Optional[object]:
+    
+        operation_input_args = {
+            'AutoMLJobName': self.auto_m_l_job_name,
+        }
+        response = self.client.describe_auto_m_l_job(**operation_input_args)
+    
+        # deserialize the response
+        deserializer(self, response, 'DescribeAutoMLJobResponse')
+        return self
     
     @classmethod
     def get(
@@ -424,34 +505,15 @@ class AutoMLJob(BaseModel):
     ) -> Optional[object]:
         auto_m_l_job = cls(session, region)
     
-        operation_input_args = {'AutoMLJobName': 'auto_m_l_job_name'}
+        operation_input_args = {
+            'AutoMLJobName': auto_m_l_job_name,
+        }
         response = auto_m_l_job.client.describe_auto_m_l_job(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        auto_m_l_job.auto_m_l_job_name = response["AutoMLJobName"]
-        auto_m_l_job.auto_m_l_job_arn = response["AutoMLJobArn"]
-        auto_m_l_job.input_data_config = response["InputDataConfig"]
-        auto_m_l_job.output_data_config = response["OutputDataConfig"]
-        auto_m_l_job.role_arn = response["RoleArn"]
-        auto_m_l_job.auto_m_l_job_objective = response["AutoMLJobObjective"]
-        auto_m_l_job.problem_type = response["ProblemType"]
-        auto_m_l_job.auto_m_l_job_config = response["AutoMLJobConfig"]
-        auto_m_l_job.creation_time = response["CreationTime"]
-        auto_m_l_job.end_time = response["EndTime"]
-        auto_m_l_job.last_modified_time = response["LastModifiedTime"]
-        auto_m_l_job.failure_reason = response["FailureReason"]
-        auto_m_l_job.partial_failure_reasons = response["PartialFailureReasons"]
-        auto_m_l_job.best_candidate = response["BestCandidate"]
-        auto_m_l_job.auto_m_l_job_status = response["AutoMLJobStatus"]
-        auto_m_l_job.auto_m_l_job_secondary_status = response["AutoMLJobSecondaryStatus"]
-        auto_m_l_job.generate_candidate_definitions_only = response["GenerateCandidateDefinitionsOnly"]
-        auto_m_l_job.auto_m_l_job_artifacts = response["AutoMLJobArtifacts"]
-        auto_m_l_job.resolved_attributes = response["ResolvedAttributes"]
-        auto_m_l_job.model_deploy_config = response["ModelDeployConfig"]
-        auto_m_l_job.model_deploy_result = response["ModelDeployResult"]
-    
+        deserializer(auto_m_l_job, response, 'DescribeAutoMLJobResponse')
         return auto_m_l_job
 
 
@@ -478,27 +540,37 @@ class AutoMLJobV2(BaseModel):
     model_deploy_result: Optional[ModelDeployResult] = Unassigned()
     data_split_config: Optional[AutoMLDataSplitConfig] = Unassigned()
     security_config: Optional[AutoMLSecurityConfig] = Unassigned()
-
     
     @classmethod
     def create(
         cls,
         auto_m_l_job_name: str,
-    auto_m_l_job_input_data_config: List[AutoMLJobChannel],
-    output_data_config: AutoMLOutputDataConfig,
-    auto_m_l_problem_type_config: AutoMLProblemTypeConfig,
-    role_arn: str,
-    tags: Optional[List[Tag]] = Unassigned(),
-    security_config: Optional[AutoMLSecurityConfig] = Unassigned(),
-    auto_m_l_job_objective: Optional[AutoMLJobObjective] = Unassigned(),
-    model_deploy_config: Optional[ModelDeployConfig] = Unassigned(),
-    data_split_config: Optional[AutoMLDataSplitConfig] = Unassigned(),
+        auto_m_l_job_input_data_config: List[AutoMLJobChannel],
+        output_data_config: AutoMLOutputDataConfig,
+        auto_m_l_problem_type_config: AutoMLProblemTypeConfig,
+        role_arn: str,
+        tags: Optional[List[Tag]] = Unassigned(),
+        security_config: Optional[AutoMLSecurityConfig] = Unassigned(),
+        auto_m_l_job_objective: Optional[AutoMLJobObjective] = Unassigned(),
+        model_deploy_config: Optional[ModelDeployConfig] = Unassigned(),
+        data_split_config: Optional[AutoMLDataSplitConfig] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         auto_m_l_job_v2 = cls(session, region)
     
-        operation_input_args = {'AutoMLJobName': 'auto_m_l_job_name', 'AutoMLJobInputDataConfig': 'auto_m_l_job_input_data_config', 'OutputDataConfig': 'output_data_config', 'AutoMLProblemTypeConfig': 'auto_m_l_problem_type_config', 'RoleArn': 'role_arn', 'Tags': 'tags', 'SecurityConfig': 'security_config', 'AutoMLJobObjective': 'auto_m_l_job_objective', 'ModelDeployConfig': 'model_deploy_config', 'DataSplitConfig': 'data_split_config'}
+        operation_input_args = {
+            'AutoMLJobName': auto_m_l_job_name,
+            'AutoMLJobInputDataConfig': auto_m_l_job_input_data_config,
+            'OutputDataConfig': output_data_config,
+            'AutoMLProblemTypeConfig': auto_m_l_problem_type_config,
+            'RoleArn': role_arn,
+            'Tags': tags,
+            'SecurityConfig': security_config,
+            'AutoMLJobObjective': auto_m_l_job_objective,
+            'ModelDeployConfig': model_deploy_config,
+            'DataSplitConfig': data_split_config,
+        }
         response = auto_m_l_job_v2.client.create_auto_m_l_job_v2(**operation_input_args)
     
         pprint(response)
@@ -506,7 +578,19 @@ class AutoMLJobV2(BaseModel):
         # deserialize the response
     
         return auto_m_l_job_v2
-
+    
+    def refresh(
+        self
+    ) -> Optional[object]:
+    
+        operation_input_args = {
+            'AutoMLJobName': self.auto_m_l_job_name,
+        }
+        response = self.client.describe_auto_m_l_job_v2(**operation_input_args)
+    
+        # deserialize the response
+        deserializer(self, response, 'DescribeAutoMLJobV2Response')
+        return self
     
     @classmethod
     def get(
@@ -517,35 +601,15 @@ class AutoMLJobV2(BaseModel):
     ) -> Optional[object]:
         auto_m_l_job_v2 = cls(session, region)
     
-        operation_input_args = {'AutoMLJobName': 'auto_m_l_job_name'}
+        operation_input_args = {
+            'AutoMLJobName': auto_m_l_job_name,
+        }
         response = auto_m_l_job_v2.client.describe_auto_m_l_job_v2(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        auto_m_l_job_v2.auto_m_l_job_name = response["AutoMLJobName"]
-        auto_m_l_job_v2.auto_m_l_job_arn = response["AutoMLJobArn"]
-        auto_m_l_job_v2.auto_m_l_job_input_data_config = response["AutoMLJobInputDataConfig"]
-        auto_m_l_job_v2.output_data_config = response["OutputDataConfig"]
-        auto_m_l_job_v2.role_arn = response["RoleArn"]
-        auto_m_l_job_v2.auto_m_l_job_objective = response["AutoMLJobObjective"]
-        auto_m_l_job_v2.auto_m_l_problem_type_config = response["AutoMLProblemTypeConfig"]
-        auto_m_l_job_v2.auto_m_l_problem_type_config_name = response["AutoMLProblemTypeConfigName"]
-        auto_m_l_job_v2.creation_time = response["CreationTime"]
-        auto_m_l_job_v2.end_time = response["EndTime"]
-        auto_m_l_job_v2.last_modified_time = response["LastModifiedTime"]
-        auto_m_l_job_v2.failure_reason = response["FailureReason"]
-        auto_m_l_job_v2.partial_failure_reasons = response["PartialFailureReasons"]
-        auto_m_l_job_v2.best_candidate = response["BestCandidate"]
-        auto_m_l_job_v2.auto_m_l_job_status = response["AutoMLJobStatus"]
-        auto_m_l_job_v2.auto_m_l_job_secondary_status = response["AutoMLJobSecondaryStatus"]
-        auto_m_l_job_v2.auto_m_l_job_artifacts = response["AutoMLJobArtifacts"]
-        auto_m_l_job_v2.resolved_attributes = response["ResolvedAttributes"]
-        auto_m_l_job_v2.model_deploy_config = response["ModelDeployConfig"]
-        auto_m_l_job_v2.model_deploy_result = response["ModelDeployResult"]
-        auto_m_l_job_v2.data_split_config = response["DataSplitConfig"]
-        auto_m_l_job_v2.security_config = response["SecurityConfig"]
-    
+        deserializer(auto_m_l_job_v2, response, 'DescribeAutoMLJobV2Response')
         return auto_m_l_job_v2
 
 
@@ -557,21 +621,25 @@ class Cluster(BaseModel):
     creation_time: Optional[datetime.datetime] = Unassigned()
     failure_message: Optional[str] = Unassigned()
     vpc_config: Optional[VpcConfig] = Unassigned()
-
     
     @classmethod
     def create(
         cls,
         cluster_name: str,
-    instance_groups: List[ClusterInstanceGroupSpecification],
-    vpc_config: Optional[VpcConfig] = Unassigned(),
-    tags: Optional[List[Tag]] = Unassigned(),
+        instance_groups: List[ClusterInstanceGroupSpecification],
+        vpc_config: Optional[VpcConfig] = Unassigned(),
+        tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         cluster = cls(session, region)
     
-        operation_input_args = {'ClusterName': 'cluster_name', 'InstanceGroups': 'instance_groups', 'VpcConfig': 'vpc_config', 'Tags': 'tags'}
+        operation_input_args = {
+            'ClusterName': cluster_name,
+            'InstanceGroups': instance_groups,
+            'VpcConfig': vpc_config,
+            'Tags': tags,
+        }
         response = cluster.client.create_cluster(**operation_input_args)
     
         pprint(response)
@@ -579,7 +647,19 @@ class Cluster(BaseModel):
         # deserialize the response
     
         return cluster
-
+    
+    def refresh(
+        self
+    ) -> Optional[object]:
+    
+        operation_input_args = {
+            'ClusterName': self.cluster_name,
+        }
+        response = self.client.describe_cluster(**operation_input_args)
+    
+        # deserialize the response
+        deserializer(self, response, 'DescribeClusterResponse')
+        return self
     
     @classmethod
     def get(
@@ -590,20 +670,15 @@ class Cluster(BaseModel):
     ) -> Optional[object]:
         cluster = cls(session, region)
     
-        operation_input_args = {'ClusterName': 'cluster_name'}
+        operation_input_args = {
+            'ClusterName': cluster_name,
+        }
         response = cluster.client.describe_cluster(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        cluster.cluster_arn = response["ClusterArn"]
-        cluster.cluster_name = response["ClusterName"]
-        cluster.cluster_status = response["ClusterStatus"]
-        cluster.creation_time = response["CreationTime"]
-        cluster.failure_message = response["FailureMessage"]
-        cluster.instance_groups = response["InstanceGroups"]
-        cluster.vpc_config = response["VpcConfig"]
-    
+        deserializer(cluster, response, 'DescribeClusterResponse')
         return cluster
 
 
@@ -613,20 +688,23 @@ class CodeRepository(BaseModel):
     creation_time: datetime.datetime
     last_modified_time: datetime.datetime
     git_config: Optional[GitConfig] = Unassigned()
-
     
     @classmethod
     def create(
         cls,
         code_repository_name: str,
-    git_config: GitConfig,
-    tags: Optional[List[Tag]] = Unassigned(),
+        git_config: GitConfig,
+        tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         code_repository = cls(session, region)
     
-        operation_input_args = {'CodeRepositoryName': 'code_repository_name', 'GitConfig': 'git_config', 'Tags': 'tags'}
+        operation_input_args = {
+            'CodeRepositoryName': code_repository_name,
+            'GitConfig': git_config,
+            'Tags': tags,
+        }
         response = code_repository.client.create_code_repository(**operation_input_args)
     
         pprint(response)
@@ -634,7 +712,19 @@ class CodeRepository(BaseModel):
         # deserialize the response
     
         return code_repository
-
+    
+    def refresh(
+        self
+    ) -> Optional[object]:
+    
+        operation_input_args = {
+            'CodeRepositoryName': self.code_repository_name,
+        }
+        response = self.client.describe_code_repository(**operation_input_args)
+    
+        # deserialize the response
+        deserializer(self, response, 'DescribeCodeRepositoryOutput')
+        return self
     
     @classmethod
     def get(
@@ -645,18 +735,15 @@ class CodeRepository(BaseModel):
     ) -> Optional[object]:
         code_repository = cls(session, region)
     
-        operation_input_args = {'CodeRepositoryName': 'code_repository_name'}
+        operation_input_args = {
+            'CodeRepositoryName': code_repository_name,
+        }
         response = code_repository.client.describe_code_repository(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        code_repository.code_repository_name = response["CodeRepositoryName"]
-        code_repository.code_repository_arn = response["CodeRepositoryArn"]
-        code_repository.creation_time = response["CreationTime"]
-        code_repository.last_modified_time = response["LastModifiedTime"]
-        code_repository.git_config = response["GitConfig"]
-    
+        deserializer(code_repository, response, 'DescribeCodeRepositoryOutput')
         return code_repository
 
 
@@ -679,25 +766,33 @@ class CompilationJob(BaseModel):
     model_digests: Optional[ModelDigests] = Unassigned()
     vpc_config: Optional[NeoVpcConfig] = Unassigned()
     derived_information: Optional[DerivedInformation] = Unassigned()
-
     
     @classmethod
     def create(
         cls,
         compilation_job_name: str,
-    role_arn: str,
-    output_config: OutputConfig,
-    stopping_condition: StoppingCondition,
-    model_package_version_arn: Optional[str] = Unassigned(),
-    input_config: Optional[InputConfig] = Unassigned(),
-    vpc_config: Optional[NeoVpcConfig] = Unassigned(),
-    tags: Optional[List[Tag]] = Unassigned(),
+        role_arn: str,
+        output_config: OutputConfig,
+        stopping_condition: StoppingCondition,
+        model_package_version_arn: Optional[str] = Unassigned(),
+        input_config: Optional[InputConfig] = Unassigned(),
+        vpc_config: Optional[NeoVpcConfig] = Unassigned(),
+        tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         compilation_job = cls(session, region)
     
-        operation_input_args = {'CompilationJobName': 'compilation_job_name', 'RoleArn': 'role_arn', 'ModelPackageVersionArn': 'model_package_version_arn', 'InputConfig': 'input_config', 'OutputConfig': 'output_config', 'VpcConfig': 'vpc_config', 'StoppingCondition': 'stopping_condition', 'Tags': 'tags'}
+        operation_input_args = {
+            'CompilationJobName': compilation_job_name,
+            'RoleArn': role_arn,
+            'ModelPackageVersionArn': model_package_version_arn,
+            'InputConfig': input_config,
+            'OutputConfig': output_config,
+            'VpcConfig': vpc_config,
+            'StoppingCondition': stopping_condition,
+            'Tags': tags,
+        }
         response = compilation_job.client.create_compilation_job(**operation_input_args)
     
         pprint(response)
@@ -705,7 +800,19 @@ class CompilationJob(BaseModel):
         # deserialize the response
     
         return compilation_job
-
+    
+    def refresh(
+        self
+    ) -> Optional[object]:
+    
+        operation_input_args = {
+            'CompilationJobName': self.compilation_job_name,
+        }
+        response = self.client.describe_compilation_job(**operation_input_args)
+    
+        # deserialize the response
+        deserializer(self, response, 'DescribeCompilationJobResponse')
+        return self
     
     @classmethod
     def get(
@@ -716,31 +823,15 @@ class CompilationJob(BaseModel):
     ) -> Optional[object]:
         compilation_job = cls(session, region)
     
-        operation_input_args = {'CompilationJobName': 'compilation_job_name'}
+        operation_input_args = {
+            'CompilationJobName': compilation_job_name,
+        }
         response = compilation_job.client.describe_compilation_job(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        compilation_job.compilation_job_name = response["CompilationJobName"]
-        compilation_job.compilation_job_arn = response["CompilationJobArn"]
-        compilation_job.compilation_job_status = response["CompilationJobStatus"]
-        compilation_job.compilation_start_time = response["CompilationStartTime"]
-        compilation_job.compilation_end_time = response["CompilationEndTime"]
-        compilation_job.stopping_condition = response["StoppingCondition"]
-        compilation_job.inference_image = response["InferenceImage"]
-        compilation_job.model_package_version_arn = response["ModelPackageVersionArn"]
-        compilation_job.creation_time = response["CreationTime"]
-        compilation_job.last_modified_time = response["LastModifiedTime"]
-        compilation_job.failure_reason = response["FailureReason"]
-        compilation_job.model_artifacts = response["ModelArtifacts"]
-        compilation_job.model_digests = response["ModelDigests"]
-        compilation_job.role_arn = response["RoleArn"]
-        compilation_job.input_config = response["InputConfig"]
-        compilation_job.output_config = response["OutputConfig"]
-        compilation_job.vpc_config = response["VpcConfig"]
-        compilation_job.derived_information = response["DerivedInformation"]
-    
+        deserializer(compilation_job, response, 'DescribeCompilationJobResponse')
         return compilation_job
 
 
@@ -756,23 +847,29 @@ class Context(BaseModel):
     last_modified_time: Optional[datetime.datetime] = Unassigned()
     last_modified_by: Optional[UserContext] = Unassigned()
     lineage_group_arn: Optional[str] = Unassigned()
-
     
     @classmethod
     def create(
         cls,
         context_name: str,
-    source: ContextSource,
-    context_type: str,
-    description: Optional[str] = Unassigned(),
-    properties: Optional[Dict[str, str]] = Unassigned(),
-    tags: Optional[List[Tag]] = Unassigned(),
+        source: ContextSource,
+        context_type: str,
+        description: Optional[str] = Unassigned(),
+        properties: Optional[Dict[str, str]] = Unassigned(),
+        tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         context = cls(session, region)
     
-        operation_input_args = {'ContextName': 'context_name', 'Source': 'source', 'ContextType': 'context_type', 'Description': 'description', 'Properties': 'properties', 'Tags': 'tags'}
+        operation_input_args = {
+            'ContextName': context_name,
+            'Source': source,
+            'ContextType': context_type,
+            'Description': description,
+            'Properties': properties,
+            'Tags': tags,
+        }
         response = context.client.create_context(**operation_input_args)
     
         pprint(response)
@@ -780,7 +877,19 @@ class Context(BaseModel):
         # deserialize the response
     
         return context
-
+    
+    def refresh(
+        self
+    ) -> Optional[object]:
+    
+        operation_input_args = {
+            'ContextName': self.context_name,
+        }
+        response = self.client.describe_context(**operation_input_args)
+    
+        # deserialize the response
+        deserializer(self, response, 'DescribeContextResponse')
+        return self
     
     @classmethod
     def get(
@@ -791,24 +900,15 @@ class Context(BaseModel):
     ) -> Optional[object]:
         context = cls(session, region)
     
-        operation_input_args = {'ContextName': 'context_name'}
+        operation_input_args = {
+            'ContextName': context_name,
+        }
         response = context.client.describe_context(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        context.context_name = response["ContextName"]
-        context.context_arn = response["ContextArn"]
-        context.source = response["Source"]
-        context.context_type = response["ContextType"]
-        context.description = response["Description"]
-        context.properties = response["Properties"]
-        context.creation_time = response["CreationTime"]
-        context.created_by = response["CreatedBy"]
-        context.last_modified_time = response["LastModifiedTime"]
-        context.last_modified_by = response["LastModifiedBy"]
-        context.lineage_group_arn = response["LineageGroupArn"]
-    
+        deserializer(context, response, 'DescribeContextResponse')
         return context
 
 
@@ -824,27 +924,37 @@ class DataQualityJobDefinition(BaseModel):
     data_quality_baseline_config: Optional[DataQualityBaselineConfig] = Unassigned()
     network_config: Optional[MonitoringNetworkConfig] = Unassigned()
     stopping_condition: Optional[MonitoringStoppingCondition] = Unassigned()
-
     
     @classmethod
     def create(
         cls,
         job_definition_name: str,
-    data_quality_app_specification: DataQualityAppSpecification,
-    data_quality_job_input: DataQualityJobInput,
-    data_quality_job_output_config: MonitoringOutputConfig,
-    job_resources: MonitoringResources,
-    role_arn: str,
-    data_quality_baseline_config: Optional[DataQualityBaselineConfig] = Unassigned(),
-    network_config: Optional[MonitoringNetworkConfig] = Unassigned(),
-    stopping_condition: Optional[MonitoringStoppingCondition] = Unassigned(),
-    tags: Optional[List[Tag]] = Unassigned(),
+        data_quality_app_specification: DataQualityAppSpecification,
+        data_quality_job_input: DataQualityJobInput,
+        data_quality_job_output_config: MonitoringOutputConfig,
+        job_resources: MonitoringResources,
+        role_arn: str,
+        data_quality_baseline_config: Optional[DataQualityBaselineConfig] = Unassigned(),
+        network_config: Optional[MonitoringNetworkConfig] = Unassigned(),
+        stopping_condition: Optional[MonitoringStoppingCondition] = Unassigned(),
+        tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         data_quality_job_definition = cls(session, region)
     
-        operation_input_args = {'JobDefinitionName': 'job_definition_name', 'DataQualityBaselineConfig': 'data_quality_baseline_config', 'DataQualityAppSpecification': 'data_quality_app_specification', 'DataQualityJobInput': 'data_quality_job_input', 'DataQualityJobOutputConfig': 'data_quality_job_output_config', 'JobResources': 'job_resources', 'NetworkConfig': 'network_config', 'RoleArn': 'role_arn', 'StoppingCondition': 'stopping_condition', 'Tags': 'tags'}
+        operation_input_args = {
+            'JobDefinitionName': job_definition_name,
+            'DataQualityBaselineConfig': data_quality_baseline_config,
+            'DataQualityAppSpecification': data_quality_app_specification,
+            'DataQualityJobInput': data_quality_job_input,
+            'DataQualityJobOutputConfig': data_quality_job_output_config,
+            'JobResources': job_resources,
+            'NetworkConfig': network_config,
+            'RoleArn': role_arn,
+            'StoppingCondition': stopping_condition,
+            'Tags': tags,
+        }
         response = data_quality_job_definition.client.create_data_quality_job_definition(**operation_input_args)
     
         pprint(response)
@@ -852,7 +962,19 @@ class DataQualityJobDefinition(BaseModel):
         # deserialize the response
     
         return data_quality_job_definition
-
+    
+    def refresh(
+        self
+    ) -> Optional[object]:
+    
+        operation_input_args = {
+            'JobDefinitionName': self.job_definition_name,
+        }
+        response = self.client.describe_data_quality_job_definition(**operation_input_args)
+    
+        # deserialize the response
+        deserializer(self, response, 'DescribeDataQualityJobDefinitionResponse')
+        return self
     
     @classmethod
     def get(
@@ -863,24 +985,15 @@ class DataQualityJobDefinition(BaseModel):
     ) -> Optional[object]:
         data_quality_job_definition = cls(session, region)
     
-        operation_input_args = {'JobDefinitionName': 'job_definition_name'}
+        operation_input_args = {
+            'JobDefinitionName': job_definition_name,
+        }
         response = data_quality_job_definition.client.describe_data_quality_job_definition(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        data_quality_job_definition.job_definition_arn = response["JobDefinitionArn"]
-        data_quality_job_definition.job_definition_name = response["JobDefinitionName"]
-        data_quality_job_definition.creation_time = response["CreationTime"]
-        data_quality_job_definition.data_quality_baseline_config = response["DataQualityBaselineConfig"]
-        data_quality_job_definition.data_quality_app_specification = response["DataQualityAppSpecification"]
-        data_quality_job_definition.data_quality_job_input = response["DataQualityJobInput"]
-        data_quality_job_definition.data_quality_job_output_config = response["DataQualityJobOutputConfig"]
-        data_quality_job_definition.job_resources = response["JobResources"]
-        data_quality_job_definition.network_config = response["NetworkConfig"]
-        data_quality_job_definition.role_arn = response["RoleArn"]
-        data_quality_job_definition.stopping_condition = response["StoppingCondition"]
-    
+        deserializer(data_quality_job_definition, response, 'DescribeDataQualityJobDefinitionResponse')
         return data_quality_job_definition
 
 
@@ -893,23 +1006,29 @@ class DeviceFleet(BaseModel):
     description: Optional[str] = Unassigned()
     role_arn: Optional[str] = Unassigned()
     iot_role_alias: Optional[str] = Unassigned()
-
     
     @classmethod
     def create(
         cls,
         device_fleet_name: str,
-    output_config: EdgeOutputConfig,
-    role_arn: Optional[str] = Unassigned(),
-    description: Optional[str] = Unassigned(),
-    tags: Optional[List[Tag]] = Unassigned(),
-    enable_iot_role_alias: Optional[bool] = Unassigned(),
+        output_config: EdgeOutputConfig,
+        role_arn: Optional[str] = Unassigned(),
+        description: Optional[str] = Unassigned(),
+        tags: Optional[List[Tag]] = Unassigned(),
+        enable_iot_role_alias: Optional[bool] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         device_fleet = cls(session, region)
     
-        operation_input_args = {'DeviceFleetName': 'device_fleet_name', 'RoleArn': 'role_arn', 'Description': 'description', 'OutputConfig': 'output_config', 'Tags': 'tags', 'EnableIotRoleAlias': 'enable_iot_role_alias'}
+        operation_input_args = {
+            'DeviceFleetName': device_fleet_name,
+            'RoleArn': role_arn,
+            'Description': description,
+            'OutputConfig': output_config,
+            'Tags': tags,
+            'EnableIotRoleAlias': enable_iot_role_alias,
+        }
         response = device_fleet.client.create_device_fleet(**operation_input_args)
     
         pprint(response)
@@ -917,7 +1036,19 @@ class DeviceFleet(BaseModel):
         # deserialize the response
     
         return device_fleet
-
+    
+    def refresh(
+        self
+    ) -> Optional[object]:
+    
+        operation_input_args = {
+            'DeviceFleetName': self.device_fleet_name,
+        }
+        response = self.client.describe_device_fleet(**operation_input_args)
+    
+        # deserialize the response
+        deserializer(self, response, 'DescribeDeviceFleetResponse')
+        return self
     
     @classmethod
     def get(
@@ -928,21 +1059,15 @@ class DeviceFleet(BaseModel):
     ) -> Optional[object]:
         device_fleet = cls(session, region)
     
-        operation_input_args = {'DeviceFleetName': 'device_fleet_name'}
+        operation_input_args = {
+            'DeviceFleetName': device_fleet_name,
+        }
         response = device_fleet.client.describe_device_fleet(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        device_fleet.device_fleet_name = response["DeviceFleetName"]
-        device_fleet.device_fleet_arn = response["DeviceFleetArn"]
-        device_fleet.output_config = response["OutputConfig"]
-        device_fleet.description = response["Description"]
-        device_fleet.creation_time = response["CreationTime"]
-        device_fleet.last_modified_time = response["LastModifiedTime"]
-        device_fleet.role_arn = response["RoleArn"]
-        device_fleet.iot_role_alias = response["IotRoleAlias"]
-    
+        deserializer(device_fleet, response, 'DescribeDeviceFleetResponse')
         return device_fleet
 
 
@@ -969,29 +1094,41 @@ class Domain(BaseModel):
     kms_key_id: Optional[str] = Unassigned()
     app_security_group_management: Optional[str] = Unassigned()
     default_space_settings: Optional[DefaultSpaceSettings] = Unassigned()
-
     
     @classmethod
     def create(
         cls,
         domain_name: str,
-    auth_mode: str,
-    default_user_settings: UserSettings,
-    subnet_ids: List[str],
-    vpc_id: str,
-    domain_settings: Optional[DomainSettings] = Unassigned(),
-    tags: Optional[List[Tag]] = Unassigned(),
-    app_network_access_type: Optional[str] = Unassigned(),
-    home_efs_file_system_kms_key_id: Optional[str] = Unassigned(),
-    kms_key_id: Optional[str] = Unassigned(),
-    app_security_group_management: Optional[str] = Unassigned(),
-    default_space_settings: Optional[DefaultSpaceSettings] = Unassigned(),
+        auth_mode: str,
+        default_user_settings: UserSettings,
+        subnet_ids: List[str],
+        vpc_id: str,
+        domain_settings: Optional[DomainSettings] = Unassigned(),
+        tags: Optional[List[Tag]] = Unassigned(),
+        app_network_access_type: Optional[str] = Unassigned(),
+        home_efs_file_system_kms_key_id: Optional[str] = Unassigned(),
+        kms_key_id: Optional[str] = Unassigned(),
+        app_security_group_management: Optional[str] = Unassigned(),
+        default_space_settings: Optional[DefaultSpaceSettings] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         domain = cls(session, region)
     
-        operation_input_args = {'DomainName': 'domain_name', 'AuthMode': 'auth_mode', 'DefaultUserSettings': 'default_user_settings', 'DomainSettings': 'domain_settings', 'SubnetIds': 'subnet_ids', 'VpcId': 'vpc_id', 'Tags': 'tags', 'AppNetworkAccessType': 'app_network_access_type', 'HomeEfsFileSystemKmsKeyId': 'home_efs_file_system_kms_key_id', 'KmsKeyId': 'kms_key_id', 'AppSecurityGroupManagement': 'app_security_group_management', 'DefaultSpaceSettings': 'default_space_settings'}
+        operation_input_args = {
+            'DomainName': domain_name,
+            'AuthMode': auth_mode,
+            'DefaultUserSettings': default_user_settings,
+            'DomainSettings': domain_settings,
+            'SubnetIds': subnet_ids,
+            'VpcId': vpc_id,
+            'Tags': tags,
+            'AppNetworkAccessType': app_network_access_type,
+            'HomeEfsFileSystemKmsKeyId': home_efs_file_system_kms_key_id,
+            'KmsKeyId': kms_key_id,
+            'AppSecurityGroupManagement': app_security_group_management,
+            'DefaultSpaceSettings': default_space_settings,
+        }
         response = domain.client.create_domain(**operation_input_args)
     
         pprint(response)
@@ -999,7 +1136,19 @@ class Domain(BaseModel):
         # deserialize the response
     
         return domain
-
+    
+    def refresh(
+        self
+    ) -> Optional[object]:
+    
+        operation_input_args = {
+            'DomainId': self.domain_id,
+        }
+        response = self.client.describe_domain(**operation_input_args)
+    
+        # deserialize the response
+        deserializer(self, response, 'DescribeDomainResponse')
+        return self
     
     @classmethod
     def get(
@@ -1010,35 +1159,15 @@ class Domain(BaseModel):
     ) -> Optional[object]:
         domain = cls(session, region)
     
-        operation_input_args = {'DomainId': 'domain_id'}
+        operation_input_args = {
+            'DomainId': domain_id,
+        }
         response = domain.client.describe_domain(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        domain.domain_arn = response["DomainArn"]
-        domain.domain_id = response["DomainId"]
-        domain.domain_name = response["DomainName"]
-        domain.home_efs_file_system_id = response["HomeEfsFileSystemId"]
-        domain.single_sign_on_managed_application_instance_id = response["SingleSignOnManagedApplicationInstanceId"]
-        domain.single_sign_on_application_arn = response["SingleSignOnApplicationArn"]
-        domain.status = response["Status"]
-        domain.creation_time = response["CreationTime"]
-        domain.last_modified_time = response["LastModifiedTime"]
-        domain.failure_reason = response["FailureReason"]
-        domain.security_group_id_for_domain_boundary = response["SecurityGroupIdForDomainBoundary"]
-        domain.auth_mode = response["AuthMode"]
-        domain.default_user_settings = response["DefaultUserSettings"]
-        domain.domain_settings = response["DomainSettings"]
-        domain.app_network_access_type = response["AppNetworkAccessType"]
-        domain.home_efs_file_system_kms_key_id = response["HomeEfsFileSystemKmsKeyId"]
-        domain.subnet_ids = response["SubnetIds"]
-        domain.url = response["Url"]
-        domain.vpc_id = response["VpcId"]
-        domain.kms_key_id = response["KmsKeyId"]
-        domain.app_security_group_management = response["AppSecurityGroupManagement"]
-        domain.default_space_settings = response["DefaultSpaceSettings"]
-    
+        deserializer(domain, response, 'DescribeDomainResponse')
         return domain
 
 
@@ -1054,22 +1183,27 @@ class EdgeDeploymentPlan(BaseModel):
     next_token: Optional[str] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
-
     
     @classmethod
     def create(
         cls,
         edge_deployment_plan_name: str,
-    model_configs: List[EdgeDeploymentModelConfig],
-    device_fleet_name: str,
-    stages: Optional[List[DeploymentStage]] = Unassigned(),
-    tags: Optional[List[Tag]] = Unassigned(),
+        model_configs: List[EdgeDeploymentModelConfig],
+        device_fleet_name: str,
+        stages: Optional[List[DeploymentStage]] = Unassigned(),
+        tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         edge_deployment_plan = cls(session, region)
     
-        operation_input_args = {'EdgeDeploymentPlanName': 'edge_deployment_plan_name', 'ModelConfigs': 'model_configs', 'DeviceFleetName': 'device_fleet_name', 'Stages': 'stages', 'Tags': 'tags'}
+        operation_input_args = {
+            'EdgeDeploymentPlanName': edge_deployment_plan_name,
+            'ModelConfigs': model_configs,
+            'DeviceFleetName': device_fleet_name,
+            'Stages': stages,
+            'Tags': tags,
+        }
         response = edge_deployment_plan.client.create_edge_deployment_plan(**operation_input_args)
     
         pprint(response)
@@ -1077,37 +1211,44 @@ class EdgeDeploymentPlan(BaseModel):
         # deserialize the response
     
         return edge_deployment_plan
-
+    
+    def refresh(
+        self
+    ) -> Optional[object]:
+    
+        operation_input_args = {
+            'EdgeDeploymentPlanName': self.edge_deployment_plan_name,
+            'NextToken': self.next_token,
+            'MaxResults': self.max_results,
+        }
+        response = self.client.describe_edge_deployment_plan(**operation_input_args)
+    
+        # deserialize the response
+        deserializer(self, response, 'DescribeEdgeDeploymentPlanResponse')
+        return self
     
     @classmethod
     def get(
         cls,
         edge_deployment_plan_name: str,
-    next_token: Optional[str] = Unassigned(),
-    max_results: Optional[int] = Unassigned(),
+        next_token: Optional[str] = Unassigned(),
+        max_results: Optional[int] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         edge_deployment_plan = cls(session, region)
     
-        operation_input_args = {'EdgeDeploymentPlanName': 'edge_deployment_plan_name', 'NextToken': 'next_token', 'MaxResults': 'max_results'}
+        operation_input_args = {
+            'EdgeDeploymentPlanName': edge_deployment_plan_name,
+            'NextToken': next_token,
+            'MaxResults': max_results,
+        }
         response = edge_deployment_plan.client.describe_edge_deployment_plan(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        edge_deployment_plan.edge_deployment_plan_arn = response["EdgeDeploymentPlanArn"]
-        edge_deployment_plan.edge_deployment_plan_name = response["EdgeDeploymentPlanName"]
-        edge_deployment_plan.model_configs = response["ModelConfigs"]
-        edge_deployment_plan.device_fleet_name = response["DeviceFleetName"]
-        edge_deployment_plan.edge_deployment_success = response["EdgeDeploymentSuccess"]
-        edge_deployment_plan.edge_deployment_pending = response["EdgeDeploymentPending"]
-        edge_deployment_plan.edge_deployment_failed = response["EdgeDeploymentFailed"]
-        edge_deployment_plan.stages = response["Stages"]
-        edge_deployment_plan.next_token = response["NextToken"]
-        edge_deployment_plan.creation_time = response["CreationTime"]
-        edge_deployment_plan.last_modified_time = response["LastModifiedTime"]
-    
+        deserializer(edge_deployment_plan, response, 'DescribeEdgeDeploymentPlanResponse')
         return edge_deployment_plan
 
 
@@ -1127,25 +1268,33 @@ class EdgePackagingJob(BaseModel):
     model_artifact: Optional[str] = Unassigned()
     model_signature: Optional[str] = Unassigned()
     preset_deployment_output: Optional[EdgePresetDeploymentOutput] = Unassigned()
-
     
     @classmethod
     def create(
         cls,
         edge_packaging_job_name: str,
-    compilation_job_name: str,
-    model_name: str,
-    model_version: str,
-    role_arn: str,
-    output_config: EdgeOutputConfig,
-    resource_key: Optional[str] = Unassigned(),
-    tags: Optional[List[Tag]] = Unassigned(),
+        compilation_job_name: str,
+        model_name: str,
+        model_version: str,
+        role_arn: str,
+        output_config: EdgeOutputConfig,
+        resource_key: Optional[str] = Unassigned(),
+        tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         edge_packaging_job = cls(session, region)
     
-        operation_input_args = {'EdgePackagingJobName': 'edge_packaging_job_name', 'CompilationJobName': 'compilation_job_name', 'ModelName': 'model_name', 'ModelVersion': 'model_version', 'RoleArn': 'role_arn', 'OutputConfig': 'output_config', 'ResourceKey': 'resource_key', 'Tags': 'tags'}
+        operation_input_args = {
+            'EdgePackagingJobName': edge_packaging_job_name,
+            'CompilationJobName': compilation_job_name,
+            'ModelName': model_name,
+            'ModelVersion': model_version,
+            'RoleArn': role_arn,
+            'OutputConfig': output_config,
+            'ResourceKey': resource_key,
+            'Tags': tags,
+        }
         response = edge_packaging_job.client.create_edge_packaging_job(**operation_input_args)
     
         pprint(response)
@@ -1153,7 +1302,19 @@ class EdgePackagingJob(BaseModel):
         # deserialize the response
     
         return edge_packaging_job
-
+    
+    def refresh(
+        self
+    ) -> Optional[object]:
+    
+        operation_input_args = {
+            'EdgePackagingJobName': self.edge_packaging_job_name,
+        }
+        response = self.client.describe_edge_packaging_job(**operation_input_args)
+    
+        # deserialize the response
+        deserializer(self, response, 'DescribeEdgePackagingJobResponse')
+        return self
     
     @classmethod
     def get(
@@ -1164,28 +1325,15 @@ class EdgePackagingJob(BaseModel):
     ) -> Optional[object]:
         edge_packaging_job = cls(session, region)
     
-        operation_input_args = {'EdgePackagingJobName': 'edge_packaging_job_name'}
+        operation_input_args = {
+            'EdgePackagingJobName': edge_packaging_job_name,
+        }
         response = edge_packaging_job.client.describe_edge_packaging_job(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        edge_packaging_job.edge_packaging_job_arn = response["EdgePackagingJobArn"]
-        edge_packaging_job.edge_packaging_job_name = response["EdgePackagingJobName"]
-        edge_packaging_job.compilation_job_name = response["CompilationJobName"]
-        edge_packaging_job.model_name = response["ModelName"]
-        edge_packaging_job.model_version = response["ModelVersion"]
-        edge_packaging_job.role_arn = response["RoleArn"]
-        edge_packaging_job.output_config = response["OutputConfig"]
-        edge_packaging_job.resource_key = response["ResourceKey"]
-        edge_packaging_job.edge_packaging_job_status = response["EdgePackagingJobStatus"]
-        edge_packaging_job.edge_packaging_job_status_message = response["EdgePackagingJobStatusMessage"]
-        edge_packaging_job.creation_time = response["CreationTime"]
-        edge_packaging_job.last_modified_time = response["LastModifiedTime"]
-        edge_packaging_job.model_artifact = response["ModelArtifact"]
-        edge_packaging_job.model_signature = response["ModelSignature"]
-        edge_packaging_job.preset_deployment_output = response["PresetDeploymentOutput"]
-    
+        deserializer(edge_packaging_job, response, 'DescribeEdgePackagingJobResponse')
         return edge_packaging_job
 
 
@@ -1204,21 +1352,25 @@ class Endpoint(BaseModel):
     pending_deployment_summary: Optional[PendingDeploymentSummary] = Unassigned()
     explainer_config: Optional[ExplainerConfig] = Unassigned()
     shadow_production_variants: Optional[List[ProductionVariantSummary]] = Unassigned()
-
     
     @classmethod
     def create(
         cls,
         endpoint_name: str,
-    endpoint_config_name: str,
-    deployment_config: Optional[DeploymentConfig] = Unassigned(),
-    tags: Optional[List[Tag]] = Unassigned(),
+        endpoint_config_name: str,
+        deployment_config: Optional[DeploymentConfig] = Unassigned(),
+        tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         endpoint = cls(session, region)
     
-        operation_input_args = {'EndpointName': 'endpoint_name', 'EndpointConfigName': 'endpoint_config_name', 'DeploymentConfig': 'deployment_config', 'Tags': 'tags'}
+        operation_input_args = {
+            'EndpointName': endpoint_name,
+            'EndpointConfigName': endpoint_config_name,
+            'DeploymentConfig': deployment_config,
+            'Tags': tags,
+        }
         response = endpoint.client.create_endpoint(**operation_input_args)
     
         pprint(response)
@@ -1226,7 +1378,19 @@ class Endpoint(BaseModel):
         # deserialize the response
     
         return endpoint
-
+    
+    def refresh(
+        self
+    ) -> Optional[object]:
+    
+        operation_input_args = {
+            'EndpointName': self.endpoint_name,
+        }
+        response = self.client.describe_endpoint(**operation_input_args)
+    
+        # deserialize the response
+        deserializer(self, response, 'DescribeEndpointOutput')
+        return self
     
     @classmethod
     def get(
@@ -1237,27 +1401,15 @@ class Endpoint(BaseModel):
     ) -> Optional[object]:
         endpoint = cls(session, region)
     
-        operation_input_args = {'EndpointName': 'endpoint_name'}
+        operation_input_args = {
+            'EndpointName': endpoint_name,
+        }
         response = endpoint.client.describe_endpoint(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        endpoint.endpoint_name = response["EndpointName"]
-        endpoint.endpoint_arn = response["EndpointArn"]
-        endpoint.endpoint_config_name = response["EndpointConfigName"]
-        endpoint.production_variants = response["ProductionVariants"]
-        endpoint.data_capture_config = response["DataCaptureConfig"]
-        endpoint.endpoint_status = response["EndpointStatus"]
-        endpoint.failure_reason = response["FailureReason"]
-        endpoint.creation_time = response["CreationTime"]
-        endpoint.last_modified_time = response["LastModifiedTime"]
-        endpoint.last_deployment_config = response["LastDeploymentConfig"]
-        endpoint.async_inference_config = response["AsyncInferenceConfig"]
-        endpoint.pending_deployment_summary = response["PendingDeploymentSummary"]
-        endpoint.explainer_config = response["ExplainerConfig"]
-        endpoint.shadow_production_variants = response["ShadowProductionVariants"]
-    
+        deserializer(endpoint, response, 'DescribeEndpointOutput')
         return endpoint
 
 
@@ -1274,28 +1426,39 @@ class EndpointConfig(BaseModel):
     execution_role_arn: Optional[str] = Unassigned()
     vpc_config: Optional[VpcConfig] = Unassigned()
     enable_network_isolation: Optional[bool] = Unassigned()
-
     
     @classmethod
     def create(
         cls,
         endpoint_config_name: str,
-    production_variants: List[ProductionVariant],
-    data_capture_config: Optional[DataCaptureConfig] = Unassigned(),
-    tags: Optional[List[Tag]] = Unassigned(),
-    kms_key_id: Optional[str] = Unassigned(),
-    async_inference_config: Optional[AsyncInferenceConfig] = Unassigned(),
-    explainer_config: Optional[ExplainerConfig] = Unassigned(),
-    shadow_production_variants: Optional[List[ProductionVariant]] = Unassigned(),
-    execution_role_arn: Optional[str] = Unassigned(),
-    vpc_config: Optional[VpcConfig] = Unassigned(),
-    enable_network_isolation: Optional[bool] = Unassigned(),
+        production_variants: List[ProductionVariant],
+        data_capture_config: Optional[DataCaptureConfig] = Unassigned(),
+        tags: Optional[List[Tag]] = Unassigned(),
+        kms_key_id: Optional[str] = Unassigned(),
+        async_inference_config: Optional[AsyncInferenceConfig] = Unassigned(),
+        explainer_config: Optional[ExplainerConfig] = Unassigned(),
+        shadow_production_variants: Optional[List[ProductionVariant]] = Unassigned(),
+        execution_role_arn: Optional[str] = Unassigned(),
+        vpc_config: Optional[VpcConfig] = Unassigned(),
+        enable_network_isolation: Optional[bool] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         endpoint_config = cls(session, region)
     
-        operation_input_args = {'EndpointConfigName': 'endpoint_config_name', 'ProductionVariants': 'production_variants', 'DataCaptureConfig': 'data_capture_config', 'Tags': 'tags', 'KmsKeyId': 'kms_key_id', 'AsyncInferenceConfig': 'async_inference_config', 'ExplainerConfig': 'explainer_config', 'ShadowProductionVariants': 'shadow_production_variants', 'ExecutionRoleArn': 'execution_role_arn', 'VpcConfig': 'vpc_config', 'EnableNetworkIsolation': 'enable_network_isolation'}
+        operation_input_args = {
+            'EndpointConfigName': endpoint_config_name,
+            'ProductionVariants': production_variants,
+            'DataCaptureConfig': data_capture_config,
+            'Tags': tags,
+            'KmsKeyId': kms_key_id,
+            'AsyncInferenceConfig': async_inference_config,
+            'ExplainerConfig': explainer_config,
+            'ShadowProductionVariants': shadow_production_variants,
+            'ExecutionRoleArn': execution_role_arn,
+            'VpcConfig': vpc_config,
+            'EnableNetworkIsolation': enable_network_isolation,
+        }
         response = endpoint_config.client.create_endpoint_config(**operation_input_args)
     
         pprint(response)
@@ -1303,7 +1466,19 @@ class EndpointConfig(BaseModel):
         # deserialize the response
     
         return endpoint_config
-
+    
+    def refresh(
+        self
+    ) -> Optional[object]:
+    
+        operation_input_args = {
+            'EndpointConfigName': self.endpoint_config_name,
+        }
+        response = self.client.describe_endpoint_config(**operation_input_args)
+    
+        # deserialize the response
+        deserializer(self, response, 'DescribeEndpointConfigOutput')
+        return self
     
     @classmethod
     def get(
@@ -1314,25 +1489,15 @@ class EndpointConfig(BaseModel):
     ) -> Optional[object]:
         endpoint_config = cls(session, region)
     
-        operation_input_args = {'EndpointConfigName': 'endpoint_config_name'}
+        operation_input_args = {
+            'EndpointConfigName': endpoint_config_name,
+        }
         response = endpoint_config.client.describe_endpoint_config(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        endpoint_config.endpoint_config_name = response["EndpointConfigName"]
-        endpoint_config.endpoint_config_arn = response["EndpointConfigArn"]
-        endpoint_config.production_variants = response["ProductionVariants"]
-        endpoint_config.data_capture_config = response["DataCaptureConfig"]
-        endpoint_config.kms_key_id = response["KmsKeyId"]
-        endpoint_config.creation_time = response["CreationTime"]
-        endpoint_config.async_inference_config = response["AsyncInferenceConfig"]
-        endpoint_config.explainer_config = response["ExplainerConfig"]
-        endpoint_config.shadow_production_variants = response["ShadowProductionVariants"]
-        endpoint_config.execution_role_arn = response["ExecutionRoleArn"]
-        endpoint_config.vpc_config = response["VpcConfig"]
-        endpoint_config.enable_network_isolation = response["EnableNetworkIsolation"]
-    
+        deserializer(endpoint_config, response, 'DescribeEndpointConfigOutput')
         return endpoint_config
 
 
@@ -1346,21 +1511,25 @@ class Experiment(BaseModel):
     created_by: Optional[UserContext] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
     last_modified_by: Optional[UserContext] = Unassigned()
-
     
     @classmethod
     def create(
         cls,
         experiment_name: str,
-    display_name: Optional[str] = Unassigned(),
-    description: Optional[str] = Unassigned(),
-    tags: Optional[List[Tag]] = Unassigned(),
+        display_name: Optional[str] = Unassigned(),
+        description: Optional[str] = Unassigned(),
+        tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         experiment = cls(session, region)
     
-        operation_input_args = {'ExperimentName': 'experiment_name', 'DisplayName': 'display_name', 'Description': 'description', 'Tags': 'tags'}
+        operation_input_args = {
+            'ExperimentName': experiment_name,
+            'DisplayName': display_name,
+            'Description': description,
+            'Tags': tags,
+        }
         response = experiment.client.create_experiment(**operation_input_args)
     
         pprint(response)
@@ -1368,7 +1537,19 @@ class Experiment(BaseModel):
         # deserialize the response
     
         return experiment
-
+    
+    def refresh(
+        self
+    ) -> Optional[object]:
+    
+        operation_input_args = {
+            'ExperimentName': self.experiment_name,
+        }
+        response = self.client.describe_experiment(**operation_input_args)
+    
+        # deserialize the response
+        deserializer(self, response, 'DescribeExperimentResponse')
+        return self
     
     @classmethod
     def get(
@@ -1379,22 +1560,15 @@ class Experiment(BaseModel):
     ) -> Optional[object]:
         experiment = cls(session, region)
     
-        operation_input_args = {'ExperimentName': 'experiment_name'}
+        operation_input_args = {
+            'ExperimentName': experiment_name,
+        }
         response = experiment.client.describe_experiment(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        experiment.experiment_name = response["ExperimentName"]
-        experiment.experiment_arn = response["ExperimentArn"]
-        experiment.display_name = response["DisplayName"]
-        experiment.source = response["Source"]
-        experiment.description = response["Description"]
-        experiment.creation_time = response["CreationTime"]
-        experiment.created_by = response["CreatedBy"]
-        experiment.last_modified_time = response["LastModifiedTime"]
-        experiment.last_modified_by = response["LastModifiedBy"]
-    
+        deserializer(experiment, response, 'DescribeExperimentResponse')
         return experiment
 
 
@@ -1417,27 +1591,37 @@ class FeatureGroup(BaseModel):
     failure_reason: Optional[str] = Unassigned()
     description: Optional[str] = Unassigned()
     online_store_total_size_bytes: Optional[int] = Unassigned()
-
     
     @classmethod
     def create(
         cls,
         feature_group_name: str,
-    record_identifier_feature_name: str,
-    event_time_feature_name: str,
-    feature_definitions: List[FeatureDefinition],
-    online_store_config: Optional[OnlineStoreConfig] = Unassigned(),
-    offline_store_config: Optional[OfflineStoreConfig] = Unassigned(),
-    throughput_config: Optional[ThroughputConfig] = Unassigned(),
-    role_arn: Optional[str] = Unassigned(),
-    description: Optional[str] = Unassigned(),
-    tags: Optional[List[Tag]] = Unassigned(),
+        record_identifier_feature_name: str,
+        event_time_feature_name: str,
+        feature_definitions: List[FeatureDefinition],
+        online_store_config: Optional[OnlineStoreConfig] = Unassigned(),
+        offline_store_config: Optional[OfflineStoreConfig] = Unassigned(),
+        throughput_config: Optional[ThroughputConfig] = Unassigned(),
+        role_arn: Optional[str] = Unassigned(),
+        description: Optional[str] = Unassigned(),
+        tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         feature_group = cls(session, region)
     
-        operation_input_args = {'FeatureGroupName': 'feature_group_name', 'RecordIdentifierFeatureName': 'record_identifier_feature_name', 'EventTimeFeatureName': 'event_time_feature_name', 'FeatureDefinitions': 'feature_definitions', 'OnlineStoreConfig': 'online_store_config', 'OfflineStoreConfig': 'offline_store_config', 'ThroughputConfig': 'throughput_config', 'RoleArn': 'role_arn', 'Description': 'description', 'Tags': 'tags'}
+        operation_input_args = {
+            'FeatureGroupName': feature_group_name,
+            'RecordIdentifierFeatureName': record_identifier_feature_name,
+            'EventTimeFeatureName': event_time_feature_name,
+            'FeatureDefinitions': feature_definitions,
+            'OnlineStoreConfig': online_store_config,
+            'OfflineStoreConfig': offline_store_config,
+            'ThroughputConfig': throughput_config,
+            'RoleArn': role_arn,
+            'Description': description,
+            'Tags': tags,
+        }
         response = feature_group.client.create_feature_group(**operation_input_args)
     
         pprint(response)
@@ -1445,43 +1629,41 @@ class FeatureGroup(BaseModel):
         # deserialize the response
     
         return feature_group
-
+    
+    def refresh(
+        self
+    ) -> Optional[object]:
+    
+        operation_input_args = {
+            'FeatureGroupName': self.feature_group_name,
+            'NextToken': self.next_token,
+        }
+        response = self.client.describe_feature_group(**operation_input_args)
+    
+        # deserialize the response
+        deserializer(self, response, 'DescribeFeatureGroupResponse')
+        return self
     
     @classmethod
     def get(
         cls,
         feature_group_name: str,
-    next_token: Optional[str] = Unassigned(),
+        next_token: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         feature_group = cls(session, region)
     
-        operation_input_args = {'FeatureGroupName': 'feature_group_name', 'NextToken': 'next_token'}
+        operation_input_args = {
+            'FeatureGroupName': feature_group_name,
+            'NextToken': next_token,
+        }
         response = feature_group.client.describe_feature_group(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        feature_group.feature_group_arn = response["FeatureGroupArn"]
-        feature_group.feature_group_name = response["FeatureGroupName"]
-        feature_group.record_identifier_feature_name = response["RecordIdentifierFeatureName"]
-        feature_group.event_time_feature_name = response["EventTimeFeatureName"]
-        feature_group.feature_definitions = response["FeatureDefinitions"]
-        feature_group.creation_time = response["CreationTime"]
-        feature_group.last_modified_time = response["LastModifiedTime"]
-        feature_group.online_store_config = response["OnlineStoreConfig"]
-        feature_group.offline_store_config = response["OfflineStoreConfig"]
-        feature_group.throughput_config = response["ThroughputConfig"]
-        feature_group.role_arn = response["RoleArn"]
-        feature_group.feature_group_status = response["FeatureGroupStatus"]
-        feature_group.offline_store_status = response["OfflineStoreStatus"]
-        feature_group.last_update_status = response["LastUpdateStatus"]
-        feature_group.failure_reason = response["FailureReason"]
-        feature_group.description = response["Description"]
-        feature_group.next_token = response["NextToken"]
-        feature_group.online_store_total_size_bytes = response["OnlineStoreTotalSizeBytes"]
-    
+        deserializer(feature_group, response, 'DescribeFeatureGroupResponse')
         return feature_group
 
 
@@ -1496,24 +1678,31 @@ class FlowDefinition(BaseModel):
     human_loop_activation_config: Optional[HumanLoopActivationConfig] = Unassigned()
     human_loop_config: Optional[HumanLoopConfig] = Unassigned()
     failure_reason: Optional[str] = Unassigned()
-
     
     @classmethod
     def create(
         cls,
         flow_definition_name: str,
-    output_config: FlowDefinitionOutputConfig,
-    role_arn: str,
-    human_loop_request_source: Optional[HumanLoopRequestSource] = Unassigned(),
-    human_loop_activation_config: Optional[HumanLoopActivationConfig] = Unassigned(),
-    human_loop_config: Optional[HumanLoopConfig] = Unassigned(),
-    tags: Optional[List[Tag]] = Unassigned(),
+        output_config: FlowDefinitionOutputConfig,
+        role_arn: str,
+        human_loop_request_source: Optional[HumanLoopRequestSource] = Unassigned(),
+        human_loop_activation_config: Optional[HumanLoopActivationConfig] = Unassigned(),
+        human_loop_config: Optional[HumanLoopConfig] = Unassigned(),
+        tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         flow_definition = cls(session, region)
     
-        operation_input_args = {'FlowDefinitionName': 'flow_definition_name', 'HumanLoopRequestSource': 'human_loop_request_source', 'HumanLoopActivationConfig': 'human_loop_activation_config', 'HumanLoopConfig': 'human_loop_config', 'OutputConfig': 'output_config', 'RoleArn': 'role_arn', 'Tags': 'tags'}
+        operation_input_args = {
+            'FlowDefinitionName': flow_definition_name,
+            'HumanLoopRequestSource': human_loop_request_source,
+            'HumanLoopActivationConfig': human_loop_activation_config,
+            'HumanLoopConfig': human_loop_config,
+            'OutputConfig': output_config,
+            'RoleArn': role_arn,
+            'Tags': tags,
+        }
         response = flow_definition.client.create_flow_definition(**operation_input_args)
     
         pprint(response)
@@ -1521,7 +1710,19 @@ class FlowDefinition(BaseModel):
         # deserialize the response
     
         return flow_definition
-
+    
+    def refresh(
+        self
+    ) -> Optional[object]:
+    
+        operation_input_args = {
+            'FlowDefinitionName': self.flow_definition_name,
+        }
+        response = self.client.describe_flow_definition(**operation_input_args)
+    
+        # deserialize the response
+        deserializer(self, response, 'DescribeFlowDefinitionResponse')
+        return self
     
     @classmethod
     def get(
@@ -1532,23 +1733,15 @@ class FlowDefinition(BaseModel):
     ) -> Optional[object]:
         flow_definition = cls(session, region)
     
-        operation_input_args = {'FlowDefinitionName': 'flow_definition_name'}
+        operation_input_args = {
+            'FlowDefinitionName': flow_definition_name,
+        }
         response = flow_definition.client.describe_flow_definition(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        flow_definition.flow_definition_arn = response["FlowDefinitionArn"]
-        flow_definition.flow_definition_name = response["FlowDefinitionName"]
-        flow_definition.flow_definition_status = response["FlowDefinitionStatus"]
-        flow_definition.creation_time = response["CreationTime"]
-        flow_definition.human_loop_request_source = response["HumanLoopRequestSource"]
-        flow_definition.human_loop_activation_config = response["HumanLoopActivationConfig"]
-        flow_definition.human_loop_config = response["HumanLoopConfig"]
-        flow_definition.output_config = response["OutputConfig"]
-        flow_definition.role_arn = response["RoleArn"]
-        flow_definition.failure_reason = response["FailureReason"]
-    
+        deserializer(flow_definition, response, 'DescribeFlowDefinitionResponse')
         return flow_definition
 
 
@@ -1563,23 +1756,29 @@ class Hub(BaseModel):
     hub_search_keywords: Optional[List[str]] = Unassigned()
     s3_storage_config: Optional[HubS3StorageConfig] = Unassigned()
     failure_reason: Optional[str] = Unassigned()
-
     
     @classmethod
     def create(
         cls,
         hub_name: str,
-    hub_description: str,
-    hub_display_name: Optional[str] = Unassigned(),
-    hub_search_keywords: Optional[List[str]] = Unassigned(),
-    s3_storage_config: Optional[HubS3StorageConfig] = Unassigned(),
-    tags: Optional[List[Tag]] = Unassigned(),
+        hub_description: str,
+        hub_display_name: Optional[str] = Unassigned(),
+        hub_search_keywords: Optional[List[str]] = Unassigned(),
+        s3_storage_config: Optional[HubS3StorageConfig] = Unassigned(),
+        tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         hub = cls(session, region)
     
-        operation_input_args = {'HubName': 'hub_name', 'HubDescription': 'hub_description', 'HubDisplayName': 'hub_display_name', 'HubSearchKeywords': 'hub_search_keywords', 'S3StorageConfig': 's3_storage_config', 'Tags': 'tags'}
+        operation_input_args = {
+            'HubName': hub_name,
+            'HubDescription': hub_description,
+            'HubDisplayName': hub_display_name,
+            'HubSearchKeywords': hub_search_keywords,
+            'S3StorageConfig': s3_storage_config,
+            'Tags': tags,
+        }
         response = hub.client.create_hub(**operation_input_args)
     
         pprint(response)
@@ -1587,7 +1786,19 @@ class Hub(BaseModel):
         # deserialize the response
     
         return hub
-
+    
+    def refresh(
+        self
+    ) -> Optional[object]:
+    
+        operation_input_args = {
+            'HubName': self.hub_name,
+        }
+        response = self.client.describe_hub(**operation_input_args)
+    
+        # deserialize the response
+        deserializer(self, response, 'DescribeHubResponse')
+        return self
     
     @classmethod
     def get(
@@ -1598,23 +1809,15 @@ class Hub(BaseModel):
     ) -> Optional[object]:
         hub = cls(session, region)
     
-        operation_input_args = {'HubName': 'hub_name'}
+        operation_input_args = {
+            'HubName': hub_name,
+        }
         response = hub.client.describe_hub(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        hub.hub_name = response["HubName"]
-        hub.hub_arn = response["HubArn"]
-        hub.hub_display_name = response["HubDisplayName"]
-        hub.hub_description = response["HubDescription"]
-        hub.hub_search_keywords = response["HubSearchKeywords"]
-        hub.s3_storage_config = response["S3StorageConfig"]
-        hub.hub_status = response["HubStatus"]
-        hub.failure_reason = response["FailureReason"]
-        hub.creation_time = response["CreationTime"]
-        hub.last_modified_time = response["LastModifiedTime"]
-    
+        deserializer(hub, response, 'DescribeHubResponse')
         return hub
 
 
@@ -1635,43 +1838,47 @@ class HubContent(BaseModel):
     hub_content_search_keywords: Optional[List[str]] = Unassigned()
     hub_content_dependencies: Optional[List[HubContentDependency]] = Unassigned()
     failure_reason: Optional[str] = Unassigned()
-
+    
+    def refresh(
+        self
+    ) -> Optional[object]:
+    
+        operation_input_args = {
+            'HubName': self.hub_name,
+            'HubContentType': self.hub_content_type,
+            'HubContentName': self.hub_content_name,
+            'HubContentVersion': self.hub_content_version,
+        }
+        response = self.client.describe_hub_content(**operation_input_args)
+    
+        # deserialize the response
+        deserializer(self, response, 'DescribeHubContentResponse')
+        return self
     
     @classmethod
     def get(
         cls,
         hub_name: str,
-    hub_content_type: str,
-    hub_content_name: str,
-    hub_content_version: Optional[str] = Unassigned(),
+        hub_content_type: str,
+        hub_content_name: str,
+        hub_content_version: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         hub_content = cls(session, region)
     
-        operation_input_args = {'HubName': 'hub_name', 'HubContentType': 'hub_content_type', 'HubContentName': 'hub_content_name', 'HubContentVersion': 'hub_content_version'}
+        operation_input_args = {
+            'HubName': hub_name,
+            'HubContentType': hub_content_type,
+            'HubContentName': hub_content_name,
+            'HubContentVersion': hub_content_version,
+        }
         response = hub_content.client.describe_hub_content(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        hub_content.hub_content_name = response["HubContentName"]
-        hub_content.hub_content_arn = response["HubContentArn"]
-        hub_content.hub_content_version = response["HubContentVersion"]
-        hub_content.hub_content_type = response["HubContentType"]
-        hub_content.document_schema_version = response["DocumentSchemaVersion"]
-        hub_content.hub_name = response["HubName"]
-        hub_content.hub_arn = response["HubArn"]
-        hub_content.hub_content_display_name = response["HubContentDisplayName"]
-        hub_content.hub_content_description = response["HubContentDescription"]
-        hub_content.hub_content_markdown = response["HubContentMarkdown"]
-        hub_content.hub_content_document = response["HubContentDocument"]
-        hub_content.hub_content_search_keywords = response["HubContentSearchKeywords"]
-        hub_content.hub_content_dependencies = response["HubContentDependencies"]
-        hub_content.hub_content_status = response["HubContentStatus"]
-        hub_content.failure_reason = response["FailureReason"]
-        hub_content.creation_time = response["CreationTime"]
-    
+        deserializer(hub_content, response, 'DescribeHubContentResponse')
         return hub_content
 
 
@@ -1681,20 +1888,23 @@ class HumanTaskUi(BaseModel):
     creation_time: datetime.datetime
     ui_template: UiTemplateInfo
     human_task_ui_status: Optional[str] = Unassigned()
-
     
     @classmethod
     def create(
         cls,
         human_task_ui_name: str,
-    ui_template: UiTemplate,
-    tags: Optional[List[Tag]] = Unassigned(),
+        ui_template: UiTemplate,
+        tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         human_task_ui = cls(session, region)
     
-        operation_input_args = {'HumanTaskUiName': 'human_task_ui_name', 'UiTemplate': 'ui_template', 'Tags': 'tags'}
+        operation_input_args = {
+            'HumanTaskUiName': human_task_ui_name,
+            'UiTemplate': ui_template,
+            'Tags': tags,
+        }
         response = human_task_ui.client.create_human_task_ui(**operation_input_args)
     
         pprint(response)
@@ -1702,7 +1912,19 @@ class HumanTaskUi(BaseModel):
         # deserialize the response
     
         return human_task_ui
-
+    
+    def refresh(
+        self
+    ) -> Optional[object]:
+    
+        operation_input_args = {
+            'HumanTaskUiName': self.human_task_ui_name,
+        }
+        response = self.client.describe_human_task_ui(**operation_input_args)
+    
+        # deserialize the response
+        deserializer(self, response, 'DescribeHumanTaskUiResponse')
+        return self
     
     @classmethod
     def get(
@@ -1713,18 +1935,15 @@ class HumanTaskUi(BaseModel):
     ) -> Optional[object]:
         human_task_ui = cls(session, region)
     
-        operation_input_args = {'HumanTaskUiName': 'human_task_ui_name'}
+        operation_input_args = {
+            'HumanTaskUiName': human_task_ui_name,
+        }
         response = human_task_ui.client.describe_human_task_ui(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        human_task_ui.human_task_ui_arn = response["HumanTaskUiArn"]
-        human_task_ui.human_task_ui_name = response["HumanTaskUiName"]
-        human_task_ui.human_task_ui_status = response["HumanTaskUiStatus"]
-        human_task_ui.creation_time = response["CreationTime"]
-        human_task_ui.ui_template = response["UiTemplate"]
-    
+        deserializer(human_task_ui, response, 'DescribeHumanTaskUiResponse')
         return human_task_ui
 
 
@@ -1747,24 +1966,31 @@ class HyperParameterTuningJob(BaseModel):
     failure_reason: Optional[str] = Unassigned()
     tuning_job_completion_details: Optional[HyperParameterTuningJobCompletionDetails] = Unassigned()
     consumed_resources: Optional[HyperParameterTuningJobConsumedResources] = Unassigned()
-
     
     @classmethod
     def create(
         cls,
         hyper_parameter_tuning_job_name: str,
-    hyper_parameter_tuning_job_config: HyperParameterTuningJobConfig,
-    training_job_definition: Optional[HyperParameterTrainingJobDefinition] = Unassigned(),
-    training_job_definitions: Optional[List[HyperParameterTrainingJobDefinition]] = Unassigned(),
-    warm_start_config: Optional[HyperParameterTuningJobWarmStartConfig] = Unassigned(),
-    tags: Optional[List[Tag]] = Unassigned(),
-    autotune: Optional[Autotune] = Unassigned(),
+        hyper_parameter_tuning_job_config: HyperParameterTuningJobConfig,
+        training_job_definition: Optional[HyperParameterTrainingJobDefinition] = Unassigned(),
+        training_job_definitions: Optional[List[HyperParameterTrainingJobDefinition]] = Unassigned(),
+        warm_start_config: Optional[HyperParameterTuningJobWarmStartConfig] = Unassigned(),
+        tags: Optional[List[Tag]] = Unassigned(),
+        autotune: Optional[Autotune] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         hyper_parameter_tuning_job = cls(session, region)
     
-        operation_input_args = {'HyperParameterTuningJobName': 'hyper_parameter_tuning_job_name', 'HyperParameterTuningJobConfig': 'hyper_parameter_tuning_job_config', 'TrainingJobDefinition': 'training_job_definition', 'TrainingJobDefinitions': 'training_job_definitions', 'WarmStartConfig': 'warm_start_config', 'Tags': 'tags', 'Autotune': 'autotune'}
+        operation_input_args = {
+            'HyperParameterTuningJobName': hyper_parameter_tuning_job_name,
+            'HyperParameterTuningJobConfig': hyper_parameter_tuning_job_config,
+            'TrainingJobDefinition': training_job_definition,
+            'TrainingJobDefinitions': training_job_definitions,
+            'WarmStartConfig': warm_start_config,
+            'Tags': tags,
+            'Autotune': autotune,
+        }
         response = hyper_parameter_tuning_job.client.create_hyper_parameter_tuning_job(**operation_input_args)
     
         pprint(response)
@@ -1772,7 +1998,19 @@ class HyperParameterTuningJob(BaseModel):
         # deserialize the response
     
         return hyper_parameter_tuning_job
-
+    
+    def refresh(
+        self
+    ) -> Optional[object]:
+    
+        operation_input_args = {
+            'HyperParameterTuningJobName': self.hyper_parameter_tuning_job_name,
+        }
+        response = self.client.describe_hyper_parameter_tuning_job(**operation_input_args)
+    
+        # deserialize the response
+        deserializer(self, response, 'DescribeHyperParameterTuningJobResponse')
+        return self
     
     @classmethod
     def get(
@@ -1783,31 +2021,15 @@ class HyperParameterTuningJob(BaseModel):
     ) -> Optional[object]:
         hyper_parameter_tuning_job = cls(session, region)
     
-        operation_input_args = {'HyperParameterTuningJobName': 'hyper_parameter_tuning_job_name'}
+        operation_input_args = {
+            'HyperParameterTuningJobName': hyper_parameter_tuning_job_name,
+        }
         response = hyper_parameter_tuning_job.client.describe_hyper_parameter_tuning_job(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        hyper_parameter_tuning_job.hyper_parameter_tuning_job_name = response["HyperParameterTuningJobName"]
-        hyper_parameter_tuning_job.hyper_parameter_tuning_job_arn = response["HyperParameterTuningJobArn"]
-        hyper_parameter_tuning_job.hyper_parameter_tuning_job_config = response["HyperParameterTuningJobConfig"]
-        hyper_parameter_tuning_job.training_job_definition = response["TrainingJobDefinition"]
-        hyper_parameter_tuning_job.training_job_definitions = response["TrainingJobDefinitions"]
-        hyper_parameter_tuning_job.hyper_parameter_tuning_job_status = response["HyperParameterTuningJobStatus"]
-        hyper_parameter_tuning_job.creation_time = response["CreationTime"]
-        hyper_parameter_tuning_job.hyper_parameter_tuning_end_time = response["HyperParameterTuningEndTime"]
-        hyper_parameter_tuning_job.last_modified_time = response["LastModifiedTime"]
-        hyper_parameter_tuning_job.training_job_status_counters = response["TrainingJobStatusCounters"]
-        hyper_parameter_tuning_job.objective_status_counters = response["ObjectiveStatusCounters"]
-        hyper_parameter_tuning_job.best_training_job = response["BestTrainingJob"]
-        hyper_parameter_tuning_job.overall_best_training_job = response["OverallBestTrainingJob"]
-        hyper_parameter_tuning_job.warm_start_config = response["WarmStartConfig"]
-        hyper_parameter_tuning_job.autotune = response["Autotune"]
-        hyper_parameter_tuning_job.failure_reason = response["FailureReason"]
-        hyper_parameter_tuning_job.tuning_job_completion_details = response["TuningJobCompletionDetails"]
-        hyper_parameter_tuning_job.consumed_resources = response["ConsumedResources"]
-    
+        deserializer(hyper_parameter_tuning_job, response, 'DescribeHyperParameterTuningJobResponse')
         return hyper_parameter_tuning_job
 
 
@@ -1821,22 +2043,27 @@ class Image(BaseModel):
     image_status: Optional[str] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
     role_arn: Optional[str] = Unassigned()
-
     
     @classmethod
     def create(
         cls,
         image_name: str,
-    role_arn: str,
-    description: Optional[str] = Unassigned(),
-    display_name: Optional[str] = Unassigned(),
-    tags: Optional[List[Tag]] = Unassigned(),
+        role_arn: str,
+        description: Optional[str] = Unassigned(),
+        display_name: Optional[str] = Unassigned(),
+        tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         image = cls(session, region)
     
-        operation_input_args = {'Description': 'description', 'DisplayName': 'display_name', 'ImageName': 'image_name', 'RoleArn': 'role_arn', 'Tags': 'tags'}
+        operation_input_args = {
+            'Description': description,
+            'DisplayName': display_name,
+            'ImageName': image_name,
+            'RoleArn': role_arn,
+            'Tags': tags,
+        }
         response = image.client.create_image(**operation_input_args)
     
         pprint(response)
@@ -1844,7 +2071,19 @@ class Image(BaseModel):
         # deserialize the response
     
         return image
-
+    
+    def refresh(
+        self
+    ) -> Optional[object]:
+    
+        operation_input_args = {
+            'ImageName': self.image_name,
+        }
+        response = self.client.describe_image(**operation_input_args)
+    
+        # deserialize the response
+        deserializer(self, response, 'DescribeImageResponse')
+        return self
     
     @classmethod
     def get(
@@ -1855,22 +2094,15 @@ class Image(BaseModel):
     ) -> Optional[object]:
         image = cls(session, region)
     
-        operation_input_args = {'ImageName': 'image_name'}
+        operation_input_args = {
+            'ImageName': image_name,
+        }
         response = image.client.describe_image(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        image.creation_time = response["CreationTime"]
-        image.description = response["Description"]
-        image.display_name = response["DisplayName"]
-        image.failure_reason = response["FailureReason"]
-        image.image_arn = response["ImageArn"]
-        image.image_name = response["ImageName"]
-        image.image_status = response["ImageStatus"]
-        image.last_modified_time = response["LastModifiedTime"]
-        image.role_arn = response["RoleArn"]
-    
+        deserializer(image, response, 'DescribeImageResponse')
         return image
 
 
@@ -1891,28 +2123,39 @@ class ImageVersion(BaseModel):
     processor: Optional[str] = Unassigned()
     horovod: Optional[bool] = Unassigned()
     release_notes: Optional[str] = Unassigned()
-
     
     @classmethod
     def create(
         cls,
         base_image: str,
-    client_token: str,
-    image_name: str,
-    aliases: Optional[List[str]] = Unassigned(),
-    vendor_guidance: Optional[str] = Unassigned(),
-    job_type: Optional[str] = Unassigned(),
-    m_l_framework: Optional[str] = Unassigned(),
-    programming_lang: Optional[str] = Unassigned(),
-    processor: Optional[str] = Unassigned(),
-    horovod: Optional[bool] = Unassigned(),
-    release_notes: Optional[str] = Unassigned(),
+        client_token: str,
+        image_name: str,
+        aliases: Optional[List[str]] = Unassigned(),
+        vendor_guidance: Optional[str] = Unassigned(),
+        job_type: Optional[str] = Unassigned(),
+        m_l_framework: Optional[str] = Unassigned(),
+        programming_lang: Optional[str] = Unassigned(),
+        processor: Optional[str] = Unassigned(),
+        horovod: Optional[bool] = Unassigned(),
+        release_notes: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         image_version = cls(session, region)
     
-        operation_input_args = {'BaseImage': 'base_image', 'ClientToken': 'client_token', 'ImageName': 'image_name', 'Aliases': 'aliases', 'VendorGuidance': 'vendor_guidance', 'JobType': 'job_type', 'MLFramework': 'm_l_framework', 'ProgrammingLang': 'programming_lang', 'Processor': 'processor', 'Horovod': 'horovod', 'ReleaseNotes': 'release_notes'}
+        operation_input_args = {
+            'BaseImage': base_image,
+            'ClientToken': client_token,
+            'ImageName': image_name,
+            'Aliases': aliases,
+            'VendorGuidance': vendor_guidance,
+            'JobType': job_type,
+            'MLFramework': m_l_framework,
+            'ProgrammingLang': programming_lang,
+            'Processor': processor,
+            'Horovod': horovod,
+            'ReleaseNotes': release_notes,
+        }
         response = image_version.client.create_image_version(**operation_input_args)
     
         pprint(response)
@@ -1920,42 +2163,44 @@ class ImageVersion(BaseModel):
         # deserialize the response
     
         return image_version
-
+    
+    def refresh(
+        self
+    ) -> Optional[object]:
+    
+        operation_input_args = {
+            'ImageName': self.image_name,
+            'Version': self.version,
+            'Alias': self.alias,
+        }
+        response = self.client.describe_image_version(**operation_input_args)
+    
+        # deserialize the response
+        deserializer(self, response, 'DescribeImageVersionResponse')
+        return self
     
     @classmethod
     def get(
         cls,
         image_name: str,
-    version: Optional[int] = Unassigned(),
-    alias: Optional[str] = Unassigned(),
+        version: Optional[int] = Unassigned(),
+        alias: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         image_version = cls(session, region)
     
-        operation_input_args = {'ImageName': 'image_name', 'Version': 'version', 'Alias': 'alias'}
+        operation_input_args = {
+            'ImageName': image_name,
+            'Version': version,
+            'Alias': alias,
+        }
         response = image_version.client.describe_image_version(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        image_version.base_image = response["BaseImage"]
-        image_version.container_image = response["ContainerImage"]
-        image_version.creation_time = response["CreationTime"]
-        image_version.failure_reason = response["FailureReason"]
-        image_version.image_arn = response["ImageArn"]
-        image_version.image_version_arn = response["ImageVersionArn"]
-        image_version.image_version_status = response["ImageVersionStatus"]
-        image_version.last_modified_time = response["LastModifiedTime"]
-        image_version.version = response["Version"]
-        image_version.vendor_guidance = response["VendorGuidance"]
-        image_version.job_type = response["JobType"]
-        image_version.m_l_framework = response["MLFramework"]
-        image_version.programming_lang = response["ProgrammingLang"]
-        image_version.processor = response["Processor"]
-        image_version.horovod = response["Horovod"]
-        image_version.release_notes = response["ReleaseNotes"]
-    
+        deserializer(image_version, response, 'DescribeImageVersionResponse')
         return image_version
 
 
@@ -1971,23 +2216,29 @@ class InferenceComponent(BaseModel):
     specification: Optional[InferenceComponentSpecificationSummary] = Unassigned()
     runtime_config: Optional[InferenceComponentRuntimeConfigSummary] = Unassigned()
     inference_component_status: Optional[str] = Unassigned()
-
     
     @classmethod
     def create(
         cls,
         inference_component_name: str,
-    endpoint_name: str,
-    variant_name: str,
-    specification: InferenceComponentSpecification,
-    runtime_config: InferenceComponentRuntimeConfig,
-    tags: Optional[List[Tag]] = Unassigned(),
+        endpoint_name: str,
+        variant_name: str,
+        specification: InferenceComponentSpecification,
+        runtime_config: InferenceComponentRuntimeConfig,
+        tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         inference_component = cls(session, region)
     
-        operation_input_args = {'InferenceComponentName': 'inference_component_name', 'EndpointName': 'endpoint_name', 'VariantName': 'variant_name', 'Specification': 'specification', 'RuntimeConfig': 'runtime_config', 'Tags': 'tags'}
+        operation_input_args = {
+            'InferenceComponentName': inference_component_name,
+            'EndpointName': endpoint_name,
+            'VariantName': variant_name,
+            'Specification': specification,
+            'RuntimeConfig': runtime_config,
+            'Tags': tags,
+        }
         response = inference_component.client.create_inference_component(**operation_input_args)
     
         pprint(response)
@@ -1995,7 +2246,19 @@ class InferenceComponent(BaseModel):
         # deserialize the response
     
         return inference_component
-
+    
+    def refresh(
+        self
+    ) -> Optional[object]:
+    
+        operation_input_args = {
+            'InferenceComponentName': self.inference_component_name,
+        }
+        response = self.client.describe_inference_component(**operation_input_args)
+    
+        # deserialize the response
+        deserializer(self, response, 'DescribeInferenceComponentOutput')
+        return self
     
     @classmethod
     def get(
@@ -2006,24 +2269,15 @@ class InferenceComponent(BaseModel):
     ) -> Optional[object]:
         inference_component = cls(session, region)
     
-        operation_input_args = {'InferenceComponentName': 'inference_component_name'}
+        operation_input_args = {
+            'InferenceComponentName': inference_component_name,
+        }
         response = inference_component.client.describe_inference_component(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        inference_component.inference_component_name = response["InferenceComponentName"]
-        inference_component.inference_component_arn = response["InferenceComponentArn"]
-        inference_component.endpoint_name = response["EndpointName"]
-        inference_component.endpoint_arn = response["EndpointArn"]
-        inference_component.variant_name = response["VariantName"]
-        inference_component.failure_reason = response["FailureReason"]
-        inference_component.specification = response["Specification"]
-        inference_component.runtime_config = response["RuntimeConfig"]
-        inference_component.creation_time = response["CreationTime"]
-        inference_component.last_modified_time = response["LastModifiedTime"]
-        inference_component.inference_component_status = response["InferenceComponentStatus"]
-    
+        deserializer(inference_component, response, 'DescribeInferenceComponentOutput')
         return inference_component
 
 
@@ -2044,28 +2298,39 @@ class InferenceExperiment(BaseModel):
     data_storage_config: Optional[InferenceExperimentDataStorageConfig] = Unassigned()
     shadow_mode_config: Optional[ShadowModeConfig] = Unassigned()
     kms_key: Optional[str] = Unassigned()
-
     
     @classmethod
     def create(
         cls,
         name: str,
-    type: str,
-    role_arn: str,
-    endpoint_name: str,
-    model_variants: List[ModelVariantConfig],
-    shadow_mode_config: ShadowModeConfig,
-    schedule: Optional[InferenceExperimentSchedule] = Unassigned(),
-    description: Optional[str] = Unassigned(),
-    data_storage_config: Optional[InferenceExperimentDataStorageConfig] = Unassigned(),
-    kms_key: Optional[str] = Unassigned(),
-    tags: Optional[List[Tag]] = Unassigned(),
+        type: str,
+        role_arn: str,
+        endpoint_name: str,
+        model_variants: List[ModelVariantConfig],
+        shadow_mode_config: ShadowModeConfig,
+        schedule: Optional[InferenceExperimentSchedule] = Unassigned(),
+        description: Optional[str] = Unassigned(),
+        data_storage_config: Optional[InferenceExperimentDataStorageConfig] = Unassigned(),
+        kms_key: Optional[str] = Unassigned(),
+        tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         inference_experiment = cls(session, region)
     
-        operation_input_args = {'Name': 'name', 'Type': 'type', 'Schedule': 'schedule', 'Description': 'description', 'RoleArn': 'role_arn', 'EndpointName': 'endpoint_name', 'ModelVariants': 'model_variants', 'DataStorageConfig': 'data_storage_config', 'ShadowModeConfig': 'shadow_mode_config', 'KmsKey': 'kms_key', 'Tags': 'tags'}
+        operation_input_args = {
+            'Name': name,
+            'Type': type,
+            'Schedule': schedule,
+            'Description': description,
+            'RoleArn': role_arn,
+            'EndpointName': endpoint_name,
+            'ModelVariants': model_variants,
+            'DataStorageConfig': data_storage_config,
+            'ShadowModeConfig': shadow_mode_config,
+            'KmsKey': kms_key,
+            'Tags': tags,
+        }
         response = inference_experiment.client.create_inference_experiment(**operation_input_args)
     
         pprint(response)
@@ -2073,7 +2338,19 @@ class InferenceExperiment(BaseModel):
         # deserialize the response
     
         return inference_experiment
-
+    
+    def refresh(
+        self
+    ) -> Optional[object]:
+    
+        operation_input_args = {
+            'Name': self.name,
+        }
+        response = self.client.describe_inference_experiment(**operation_input_args)
+    
+        # deserialize the response
+        deserializer(self, response, 'DescribeInferenceExperimentResponse')
+        return self
     
     @classmethod
     def get(
@@ -2084,29 +2361,15 @@ class InferenceExperiment(BaseModel):
     ) -> Optional[object]:
         inference_experiment = cls(session, region)
     
-        operation_input_args = {'Name': 'name'}
+        operation_input_args = {
+            'Name': name,
+        }
         response = inference_experiment.client.describe_inference_experiment(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        inference_experiment.arn = response["Arn"]
-        inference_experiment.name = response["Name"]
-        inference_experiment.type = response["Type"]
-        inference_experiment.schedule = response["Schedule"]
-        inference_experiment.status = response["Status"]
-        inference_experiment.status_reason = response["StatusReason"]
-        inference_experiment.description = response["Description"]
-        inference_experiment.creation_time = response["CreationTime"]
-        inference_experiment.completion_time = response["CompletionTime"]
-        inference_experiment.last_modified_time = response["LastModifiedTime"]
-        inference_experiment.role_arn = response["RoleArn"]
-        inference_experiment.endpoint_metadata = response["EndpointMetadata"]
-        inference_experiment.model_variants = response["ModelVariants"]
-        inference_experiment.data_storage_config = response["DataStorageConfig"]
-        inference_experiment.shadow_mode_config = response["ShadowModeConfig"]
-        inference_experiment.kms_key = response["KmsKey"]
-    
+        deserializer(inference_experiment, response, 'DescribeInferenceExperimentResponse')
         return inference_experiment
 
 
@@ -2125,25 +2388,33 @@ class InferenceRecommendationsJob(BaseModel):
     stopping_conditions: Optional[RecommendationJobStoppingConditions] = Unassigned()
     inference_recommendations: Optional[List[InferenceRecommendation]] = Unassigned()
     endpoint_performances: Optional[List[EndpointPerformance]] = Unassigned()
-
     
     @classmethod
     def create(
         cls,
         job_name: str,
-    job_type: str,
-    role_arn: str,
-    input_config: RecommendationJobInputConfig,
-    job_description: Optional[str] = Unassigned(),
-    stopping_conditions: Optional[RecommendationJobStoppingConditions] = Unassigned(),
-    output_config: Optional[RecommendationJobOutputConfig] = Unassigned(),
-    tags: Optional[List[Tag]] = Unassigned(),
+        job_type: str,
+        role_arn: str,
+        input_config: RecommendationJobInputConfig,
+        job_description: Optional[str] = Unassigned(),
+        stopping_conditions: Optional[RecommendationJobStoppingConditions] = Unassigned(),
+        output_config: Optional[RecommendationJobOutputConfig] = Unassigned(),
+        tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         inference_recommendations_job = cls(session, region)
     
-        operation_input_args = {'JobName': 'job_name', 'JobType': 'job_type', 'RoleArn': 'role_arn', 'InputConfig': 'input_config', 'JobDescription': 'job_description', 'StoppingConditions': 'stopping_conditions', 'OutputConfig': 'output_config', 'Tags': 'tags'}
+        operation_input_args = {
+            'JobName': job_name,
+            'JobType': job_type,
+            'RoleArn': role_arn,
+            'InputConfig': input_config,
+            'JobDescription': job_description,
+            'StoppingConditions': stopping_conditions,
+            'OutputConfig': output_config,
+            'Tags': tags,
+        }
         response = inference_recommendations_job.client.create_inference_recommendations_job(**operation_input_args)
     
         pprint(response)
@@ -2151,7 +2422,19 @@ class InferenceRecommendationsJob(BaseModel):
         # deserialize the response
     
         return inference_recommendations_job
-
+    
+    def refresh(
+        self
+    ) -> Optional[object]:
+    
+        operation_input_args = {
+            'JobName': self.job_name,
+        }
+        response = self.client.describe_inference_recommendations_job(**operation_input_args)
+    
+        # deserialize the response
+        deserializer(self, response, 'DescribeInferenceRecommendationsJobResponse')
+        return self
     
     @classmethod
     def get(
@@ -2162,27 +2445,15 @@ class InferenceRecommendationsJob(BaseModel):
     ) -> Optional[object]:
         inference_recommendations_job = cls(session, region)
     
-        operation_input_args = {'JobName': 'job_name'}
+        operation_input_args = {
+            'JobName': job_name,
+        }
         response = inference_recommendations_job.client.describe_inference_recommendations_job(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        inference_recommendations_job.job_name = response["JobName"]
-        inference_recommendations_job.job_description = response["JobDescription"]
-        inference_recommendations_job.job_type = response["JobType"]
-        inference_recommendations_job.job_arn = response["JobArn"]
-        inference_recommendations_job.role_arn = response["RoleArn"]
-        inference_recommendations_job.status = response["Status"]
-        inference_recommendations_job.creation_time = response["CreationTime"]
-        inference_recommendations_job.completion_time = response["CompletionTime"]
-        inference_recommendations_job.last_modified_time = response["LastModifiedTime"]
-        inference_recommendations_job.failure_reason = response["FailureReason"]
-        inference_recommendations_job.input_config = response["InputConfig"]
-        inference_recommendations_job.stopping_conditions = response["StoppingConditions"]
-        inference_recommendations_job.inference_recommendations = response["InferenceRecommendations"]
-        inference_recommendations_job.endpoint_performances = response["EndpointPerformances"]
-    
+        deserializer(inference_recommendations_job, response, 'DescribeInferenceRecommendationsJobResponse')
         return inference_recommendations_job
 
 
@@ -2205,27 +2476,37 @@ class LabelingJob(BaseModel):
     labeling_job_algorithms_config: Optional[LabelingJobAlgorithmsConfig] = Unassigned()
     tags: Optional[List[Tag]] = Unassigned()
     labeling_job_output: Optional[LabelingJobOutput] = Unassigned()
-
     
     @classmethod
     def create(
         cls,
         labeling_job_name: str,
-    label_attribute_name: str,
-    input_config: LabelingJobInputConfig,
-    output_config: LabelingJobOutputConfig,
-    role_arn: str,
-    human_task_config: HumanTaskConfig,
-    label_category_config_s3_uri: Optional[str] = Unassigned(),
-    stopping_conditions: Optional[LabelingJobStoppingConditions] = Unassigned(),
-    labeling_job_algorithms_config: Optional[LabelingJobAlgorithmsConfig] = Unassigned(),
-    tags: Optional[List[Tag]] = Unassigned(),
+        label_attribute_name: str,
+        input_config: LabelingJobInputConfig,
+        output_config: LabelingJobOutputConfig,
+        role_arn: str,
+        human_task_config: HumanTaskConfig,
+        label_category_config_s3_uri: Optional[str] = Unassigned(),
+        stopping_conditions: Optional[LabelingJobStoppingConditions] = Unassigned(),
+        labeling_job_algorithms_config: Optional[LabelingJobAlgorithmsConfig] = Unassigned(),
+        tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         labeling_job = cls(session, region)
     
-        operation_input_args = {'LabelingJobName': 'labeling_job_name', 'LabelAttributeName': 'label_attribute_name', 'InputConfig': 'input_config', 'OutputConfig': 'output_config', 'RoleArn': 'role_arn', 'LabelCategoryConfigS3Uri': 'label_category_config_s3_uri', 'StoppingConditions': 'stopping_conditions', 'LabelingJobAlgorithmsConfig': 'labeling_job_algorithms_config', 'HumanTaskConfig': 'human_task_config', 'Tags': 'tags'}
+        operation_input_args = {
+            'LabelingJobName': labeling_job_name,
+            'LabelAttributeName': label_attribute_name,
+            'InputConfig': input_config,
+            'OutputConfig': output_config,
+            'RoleArn': role_arn,
+            'LabelCategoryConfigS3Uri': label_category_config_s3_uri,
+            'StoppingConditions': stopping_conditions,
+            'LabelingJobAlgorithmsConfig': labeling_job_algorithms_config,
+            'HumanTaskConfig': human_task_config,
+            'Tags': tags,
+        }
         response = labeling_job.client.create_labeling_job(**operation_input_args)
     
         pprint(response)
@@ -2233,7 +2514,19 @@ class LabelingJob(BaseModel):
         # deserialize the response
     
         return labeling_job
-
+    
+    def refresh(
+        self
+    ) -> Optional[object]:
+    
+        operation_input_args = {
+            'LabelingJobName': self.labeling_job_name,
+        }
+        response = self.client.describe_labeling_job(**operation_input_args)
+    
+        # deserialize the response
+        deserializer(self, response, 'DescribeLabelingJobResponse')
+        return self
     
     @classmethod
     def get(
@@ -2244,31 +2537,15 @@ class LabelingJob(BaseModel):
     ) -> Optional[object]:
         labeling_job = cls(session, region)
     
-        operation_input_args = {'LabelingJobName': 'labeling_job_name'}
+        operation_input_args = {
+            'LabelingJobName': labeling_job_name,
+        }
         response = labeling_job.client.describe_labeling_job(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        labeling_job.labeling_job_status = response["LabelingJobStatus"]
-        labeling_job.label_counters = response["LabelCounters"]
-        labeling_job.failure_reason = response["FailureReason"]
-        labeling_job.creation_time = response["CreationTime"]
-        labeling_job.last_modified_time = response["LastModifiedTime"]
-        labeling_job.job_reference_code = response["JobReferenceCode"]
-        labeling_job.labeling_job_name = response["LabelingJobName"]
-        labeling_job.labeling_job_arn = response["LabelingJobArn"]
-        labeling_job.label_attribute_name = response["LabelAttributeName"]
-        labeling_job.input_config = response["InputConfig"]
-        labeling_job.output_config = response["OutputConfig"]
-        labeling_job.role_arn = response["RoleArn"]
-        labeling_job.label_category_config_s3_uri = response["LabelCategoryConfigS3Uri"]
-        labeling_job.stopping_conditions = response["StoppingConditions"]
-        labeling_job.labeling_job_algorithms_config = response["LabelingJobAlgorithmsConfig"]
-        labeling_job.human_task_config = response["HumanTaskConfig"]
-        labeling_job.tags = response["Tags"]
-        labeling_job.labeling_job_output = response["LabelingJobOutput"]
-    
+        deserializer(labeling_job, response, 'DescribeLabelingJobResponse')
         return labeling_job
 
 
@@ -2283,25 +2560,33 @@ class Model(BaseModel):
     vpc_config: Optional[VpcConfig] = Unassigned()
     enable_network_isolation: Optional[bool] = Unassigned()
     deployment_recommendation: Optional[DeploymentRecommendation] = Unassigned()
-
     
     @classmethod
     def create(
         cls,
         model_name: str,
-    primary_container: Optional[ContainerDefinition] = Unassigned(),
-    containers: Optional[List[ContainerDefinition]] = Unassigned(),
-    inference_execution_config: Optional[InferenceExecutionConfig] = Unassigned(),
-    execution_role_arn: Optional[str] = Unassigned(),
-    tags: Optional[List[Tag]] = Unassigned(),
-    vpc_config: Optional[VpcConfig] = Unassigned(),
-    enable_network_isolation: Optional[bool] = Unassigned(),
+        primary_container: Optional[ContainerDefinition] = Unassigned(),
+        containers: Optional[List[ContainerDefinition]] = Unassigned(),
+        inference_execution_config: Optional[InferenceExecutionConfig] = Unassigned(),
+        execution_role_arn: Optional[str] = Unassigned(),
+        tags: Optional[List[Tag]] = Unassigned(),
+        vpc_config: Optional[VpcConfig] = Unassigned(),
+        enable_network_isolation: Optional[bool] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         model = cls(session, region)
     
-        operation_input_args = {'ModelName': 'model_name', 'PrimaryContainer': 'primary_container', 'Containers': 'containers', 'InferenceExecutionConfig': 'inference_execution_config', 'ExecutionRoleArn': 'execution_role_arn', 'Tags': 'tags', 'VpcConfig': 'vpc_config', 'EnableNetworkIsolation': 'enable_network_isolation'}
+        operation_input_args = {
+            'ModelName': model_name,
+            'PrimaryContainer': primary_container,
+            'Containers': containers,
+            'InferenceExecutionConfig': inference_execution_config,
+            'ExecutionRoleArn': execution_role_arn,
+            'Tags': tags,
+            'VpcConfig': vpc_config,
+            'EnableNetworkIsolation': enable_network_isolation,
+        }
         response = model.client.create_model(**operation_input_args)
     
         pprint(response)
@@ -2309,7 +2594,19 @@ class Model(BaseModel):
         # deserialize the response
     
         return model
-
+    
+    def refresh(
+        self
+    ) -> Optional[object]:
+    
+        operation_input_args = {
+            'ModelName': self.model_name,
+        }
+        response = self.client.describe_model(**operation_input_args)
+    
+        # deserialize the response
+        deserializer(self, response, 'DescribeModelOutput')
+        return self
     
     @classmethod
     def get(
@@ -2320,23 +2617,15 @@ class Model(BaseModel):
     ) -> Optional[object]:
         model = cls(session, region)
     
-        operation_input_args = {'ModelName': 'model_name'}
+        operation_input_args = {
+            'ModelName': model_name,
+        }
         response = model.client.describe_model(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        model.model_name = response["ModelName"]
-        model.primary_container = response["PrimaryContainer"]
-        model.containers = response["Containers"]
-        model.inference_execution_config = response["InferenceExecutionConfig"]
-        model.execution_role_arn = response["ExecutionRoleArn"]
-        model.vpc_config = response["VpcConfig"]
-        model.creation_time = response["CreationTime"]
-        model.model_arn = response["ModelArn"]
-        model.enable_network_isolation = response["EnableNetworkIsolation"]
-        model.deployment_recommendation = response["DeploymentRecommendation"]
-    
+        deserializer(model, response, 'DescribeModelOutput')
         return model
 
 
@@ -2352,27 +2641,37 @@ class ModelBiasJobDefinition(BaseModel):
     model_bias_baseline_config: Optional[ModelBiasBaselineConfig] = Unassigned()
     network_config: Optional[MonitoringNetworkConfig] = Unassigned()
     stopping_condition: Optional[MonitoringStoppingCondition] = Unassigned()
-
     
     @classmethod
     def create(
         cls,
         job_definition_name: str,
-    model_bias_app_specification: ModelBiasAppSpecification,
-    model_bias_job_input: ModelBiasJobInput,
-    model_bias_job_output_config: MonitoringOutputConfig,
-    job_resources: MonitoringResources,
-    role_arn: str,
-    model_bias_baseline_config: Optional[ModelBiasBaselineConfig] = Unassigned(),
-    network_config: Optional[MonitoringNetworkConfig] = Unassigned(),
-    stopping_condition: Optional[MonitoringStoppingCondition] = Unassigned(),
-    tags: Optional[List[Tag]] = Unassigned(),
+        model_bias_app_specification: ModelBiasAppSpecification,
+        model_bias_job_input: ModelBiasJobInput,
+        model_bias_job_output_config: MonitoringOutputConfig,
+        job_resources: MonitoringResources,
+        role_arn: str,
+        model_bias_baseline_config: Optional[ModelBiasBaselineConfig] = Unassigned(),
+        network_config: Optional[MonitoringNetworkConfig] = Unassigned(),
+        stopping_condition: Optional[MonitoringStoppingCondition] = Unassigned(),
+        tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         model_bias_job_definition = cls(session, region)
     
-        operation_input_args = {'JobDefinitionName': 'job_definition_name', 'ModelBiasBaselineConfig': 'model_bias_baseline_config', 'ModelBiasAppSpecification': 'model_bias_app_specification', 'ModelBiasJobInput': 'model_bias_job_input', 'ModelBiasJobOutputConfig': 'model_bias_job_output_config', 'JobResources': 'job_resources', 'NetworkConfig': 'network_config', 'RoleArn': 'role_arn', 'StoppingCondition': 'stopping_condition', 'Tags': 'tags'}
+        operation_input_args = {
+            'JobDefinitionName': job_definition_name,
+            'ModelBiasBaselineConfig': model_bias_baseline_config,
+            'ModelBiasAppSpecification': model_bias_app_specification,
+            'ModelBiasJobInput': model_bias_job_input,
+            'ModelBiasJobOutputConfig': model_bias_job_output_config,
+            'JobResources': job_resources,
+            'NetworkConfig': network_config,
+            'RoleArn': role_arn,
+            'StoppingCondition': stopping_condition,
+            'Tags': tags,
+        }
         response = model_bias_job_definition.client.create_model_bias_job_definition(**operation_input_args)
     
         pprint(response)
@@ -2380,7 +2679,19 @@ class ModelBiasJobDefinition(BaseModel):
         # deserialize the response
     
         return model_bias_job_definition
-
+    
+    def refresh(
+        self
+    ) -> Optional[object]:
+    
+        operation_input_args = {
+            'JobDefinitionName': self.job_definition_name,
+        }
+        response = self.client.describe_model_bias_job_definition(**operation_input_args)
+    
+        # deserialize the response
+        deserializer(self, response, 'DescribeModelBiasJobDefinitionResponse')
+        return self
     
     @classmethod
     def get(
@@ -2391,24 +2702,15 @@ class ModelBiasJobDefinition(BaseModel):
     ) -> Optional[object]:
         model_bias_job_definition = cls(session, region)
     
-        operation_input_args = {'JobDefinitionName': 'job_definition_name'}
+        operation_input_args = {
+            'JobDefinitionName': job_definition_name,
+        }
         response = model_bias_job_definition.client.describe_model_bias_job_definition(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        model_bias_job_definition.job_definition_arn = response["JobDefinitionArn"]
-        model_bias_job_definition.job_definition_name = response["JobDefinitionName"]
-        model_bias_job_definition.creation_time = response["CreationTime"]
-        model_bias_job_definition.model_bias_baseline_config = response["ModelBiasBaselineConfig"]
-        model_bias_job_definition.model_bias_app_specification = response["ModelBiasAppSpecification"]
-        model_bias_job_definition.model_bias_job_input = response["ModelBiasJobInput"]
-        model_bias_job_definition.model_bias_job_output_config = response["ModelBiasJobOutputConfig"]
-        model_bias_job_definition.job_resources = response["JobResources"]
-        model_bias_job_definition.network_config = response["NetworkConfig"]
-        model_bias_job_definition.role_arn = response["RoleArn"]
-        model_bias_job_definition.stopping_condition = response["StoppingCondition"]
-    
+        deserializer(model_bias_job_definition, response, 'DescribeModelBiasJobDefinitionResponse')
         return model_bias_job_definition
 
 
@@ -2424,22 +2726,27 @@ class ModelCard(BaseModel):
     last_modified_time: Optional[datetime.datetime] = Unassigned()
     last_modified_by: Optional[UserContext] = Unassigned()
     model_card_processing_status: Optional[str] = Unassigned()
-
     
     @classmethod
     def create(
         cls,
         model_card_name: str,
-    content: str,
-    model_card_status: str,
-    security_config: Optional[ModelCardSecurityConfig] = Unassigned(),
-    tags: Optional[List[Tag]] = Unassigned(),
+        content: str,
+        model_card_status: str,
+        security_config: Optional[ModelCardSecurityConfig] = Unassigned(),
+        tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         model_card = cls(session, region)
     
-        operation_input_args = {'ModelCardName': 'model_card_name', 'SecurityConfig': 'security_config', 'Content': 'content', 'ModelCardStatus': 'model_card_status', 'Tags': 'tags'}
+        operation_input_args = {
+            'ModelCardName': model_card_name,
+            'SecurityConfig': security_config,
+            'Content': content,
+            'ModelCardStatus': model_card_status,
+            'Tags': tags,
+        }
         response = model_card.client.create_model_card(**operation_input_args)
     
         pprint(response)
@@ -2447,36 +2754,41 @@ class ModelCard(BaseModel):
         # deserialize the response
     
         return model_card
-
+    
+    def refresh(
+        self
+    ) -> Optional[object]:
+    
+        operation_input_args = {
+            'ModelCardName': self.model_card_name,
+            'ModelCardVersion': self.model_card_version,
+        }
+        response = self.client.describe_model_card(**operation_input_args)
+    
+        # deserialize the response
+        deserializer(self, response, 'DescribeModelCardResponse')
+        return self
     
     @classmethod
     def get(
         cls,
         model_card_name: str,
-    model_card_version: Optional[int] = Unassigned(),
+        model_card_version: Optional[int] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         model_card = cls(session, region)
     
-        operation_input_args = {'ModelCardName': 'model_card_name', 'ModelCardVersion': 'model_card_version'}
+        operation_input_args = {
+            'ModelCardName': model_card_name,
+            'ModelCardVersion': model_card_version,
+        }
         response = model_card.client.describe_model_card(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        model_card.model_card_arn = response["ModelCardArn"]
-        model_card.model_card_name = response["ModelCardName"]
-        model_card.model_card_version = response["ModelCardVersion"]
-        model_card.content = response["Content"]
-        model_card.model_card_status = response["ModelCardStatus"]
-        model_card.security_config = response["SecurityConfig"]
-        model_card.creation_time = response["CreationTime"]
-        model_card.created_by = response["CreatedBy"]
-        model_card.last_modified_time = response["LastModifiedTime"]
-        model_card.last_modified_by = response["LastModifiedBy"]
-        model_card.model_card_processing_status = response["ModelCardProcessingStatus"]
-    
+        deserializer(model_card, response, 'DescribeModelCardResponse')
         return model_card
 
 
@@ -2491,21 +2803,25 @@ class ModelCardExportJob(BaseModel):
     last_modified_at: datetime.datetime
     failure_reason: Optional[str] = Unassigned()
     export_artifacts: Optional[ModelCardExportArtifacts] = Unassigned()
-
     
     @classmethod
     def create(
         cls,
         model_card_name: str,
-    model_card_export_job_name: str,
-    output_config: ModelCardExportOutputConfig,
-    model_card_version: Optional[int] = Unassigned(),
+        model_card_export_job_name: str,
+        output_config: ModelCardExportOutputConfig,
+        model_card_version: Optional[int] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         model_card_export_job = cls(session, region)
     
-        operation_input_args = {'ModelCardName': 'model_card_name', 'ModelCardVersion': 'model_card_version', 'ModelCardExportJobName': 'model_card_export_job_name', 'OutputConfig': 'output_config'}
+        operation_input_args = {
+            'ModelCardName': model_card_name,
+            'ModelCardVersion': model_card_version,
+            'ModelCardExportJobName': model_card_export_job_name,
+            'OutputConfig': output_config,
+        }
         response = model_card_export_job.client.create_model_card_export_job(**operation_input_args)
     
         pprint(response)
@@ -2513,7 +2829,19 @@ class ModelCardExportJob(BaseModel):
         # deserialize the response
     
         return model_card_export_job
-
+    
+    def refresh(
+        self
+    ) -> Optional[object]:
+    
+        operation_input_args = {
+            'ModelCardExportJobArn': self.model_card_export_job_arn,
+        }
+        response = self.client.describe_model_card_export_job(**operation_input_args)
+    
+        # deserialize the response
+        deserializer(self, response, 'DescribeModelCardExportJobResponse')
+        return self
     
     @classmethod
     def get(
@@ -2524,23 +2852,15 @@ class ModelCardExportJob(BaseModel):
     ) -> Optional[object]:
         model_card_export_job = cls(session, region)
     
-        operation_input_args = {'ModelCardExportJobArn': 'model_card_export_job_arn'}
+        operation_input_args = {
+            'ModelCardExportJobArn': model_card_export_job_arn,
+        }
         response = model_card_export_job.client.describe_model_card_export_job(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        model_card_export_job.model_card_export_job_name = response["ModelCardExportJobName"]
-        model_card_export_job.model_card_export_job_arn = response["ModelCardExportJobArn"]
-        model_card_export_job.status = response["Status"]
-        model_card_export_job.model_card_name = response["ModelCardName"]
-        model_card_export_job.model_card_version = response["ModelCardVersion"]
-        model_card_export_job.output_config = response["OutputConfig"]
-        model_card_export_job.created_at = response["CreatedAt"]
-        model_card_export_job.last_modified_at = response["LastModifiedAt"]
-        model_card_export_job.failure_reason = response["FailureReason"]
-        model_card_export_job.export_artifacts = response["ExportArtifacts"]
-    
+        deserializer(model_card_export_job, response, 'DescribeModelCardExportJobResponse')
         return model_card_export_job
 
 
@@ -2556,27 +2876,37 @@ class ModelExplainabilityJobDefinition(BaseModel):
     model_explainability_baseline_config: Optional[ModelExplainabilityBaselineConfig] = Unassigned()
     network_config: Optional[MonitoringNetworkConfig] = Unassigned()
     stopping_condition: Optional[MonitoringStoppingCondition] = Unassigned()
-
     
     @classmethod
     def create(
         cls,
         job_definition_name: str,
-    model_explainability_app_specification: ModelExplainabilityAppSpecification,
-    model_explainability_job_input: ModelExplainabilityJobInput,
-    model_explainability_job_output_config: MonitoringOutputConfig,
-    job_resources: MonitoringResources,
-    role_arn: str,
-    model_explainability_baseline_config: Optional[ModelExplainabilityBaselineConfig] = Unassigned(),
-    network_config: Optional[MonitoringNetworkConfig] = Unassigned(),
-    stopping_condition: Optional[MonitoringStoppingCondition] = Unassigned(),
-    tags: Optional[List[Tag]] = Unassigned(),
+        model_explainability_app_specification: ModelExplainabilityAppSpecification,
+        model_explainability_job_input: ModelExplainabilityJobInput,
+        model_explainability_job_output_config: MonitoringOutputConfig,
+        job_resources: MonitoringResources,
+        role_arn: str,
+        model_explainability_baseline_config: Optional[ModelExplainabilityBaselineConfig] = Unassigned(),
+        network_config: Optional[MonitoringNetworkConfig] = Unassigned(),
+        stopping_condition: Optional[MonitoringStoppingCondition] = Unassigned(),
+        tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         model_explainability_job_definition = cls(session, region)
     
-        operation_input_args = {'JobDefinitionName': 'job_definition_name', 'ModelExplainabilityBaselineConfig': 'model_explainability_baseline_config', 'ModelExplainabilityAppSpecification': 'model_explainability_app_specification', 'ModelExplainabilityJobInput': 'model_explainability_job_input', 'ModelExplainabilityJobOutputConfig': 'model_explainability_job_output_config', 'JobResources': 'job_resources', 'NetworkConfig': 'network_config', 'RoleArn': 'role_arn', 'StoppingCondition': 'stopping_condition', 'Tags': 'tags'}
+        operation_input_args = {
+            'JobDefinitionName': job_definition_name,
+            'ModelExplainabilityBaselineConfig': model_explainability_baseline_config,
+            'ModelExplainabilityAppSpecification': model_explainability_app_specification,
+            'ModelExplainabilityJobInput': model_explainability_job_input,
+            'ModelExplainabilityJobOutputConfig': model_explainability_job_output_config,
+            'JobResources': job_resources,
+            'NetworkConfig': network_config,
+            'RoleArn': role_arn,
+            'StoppingCondition': stopping_condition,
+            'Tags': tags,
+        }
         response = model_explainability_job_definition.client.create_model_explainability_job_definition(**operation_input_args)
     
         pprint(response)
@@ -2584,7 +2914,19 @@ class ModelExplainabilityJobDefinition(BaseModel):
         # deserialize the response
     
         return model_explainability_job_definition
-
+    
+    def refresh(
+        self
+    ) -> Optional[object]:
+    
+        operation_input_args = {
+            'JobDefinitionName': self.job_definition_name,
+        }
+        response = self.client.describe_model_explainability_job_definition(**operation_input_args)
+    
+        # deserialize the response
+        deserializer(self, response, 'DescribeModelExplainabilityJobDefinitionResponse')
+        return self
     
     @classmethod
     def get(
@@ -2595,24 +2937,15 @@ class ModelExplainabilityJobDefinition(BaseModel):
     ) -> Optional[object]:
         model_explainability_job_definition = cls(session, region)
     
-        operation_input_args = {'JobDefinitionName': 'job_definition_name'}
+        operation_input_args = {
+            'JobDefinitionName': job_definition_name,
+        }
         response = model_explainability_job_definition.client.describe_model_explainability_job_definition(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        model_explainability_job_definition.job_definition_arn = response["JobDefinitionArn"]
-        model_explainability_job_definition.job_definition_name = response["JobDefinitionName"]
-        model_explainability_job_definition.creation_time = response["CreationTime"]
-        model_explainability_job_definition.model_explainability_baseline_config = response["ModelExplainabilityBaselineConfig"]
-        model_explainability_job_definition.model_explainability_app_specification = response["ModelExplainabilityAppSpecification"]
-        model_explainability_job_definition.model_explainability_job_input = response["ModelExplainabilityJobInput"]
-        model_explainability_job_definition.model_explainability_job_output_config = response["ModelExplainabilityJobOutputConfig"]
-        model_explainability_job_definition.job_resources = response["JobResources"]
-        model_explainability_job_definition.network_config = response["NetworkConfig"]
-        model_explainability_job_definition.role_arn = response["RoleArn"]
-        model_explainability_job_definition.stopping_condition = response["StoppingCondition"]
-    
+        deserializer(model_explainability_job_definition, response, 'DescribeModelExplainabilityJobDefinitionResponse')
         return model_explainability_job_definition
 
 
@@ -2644,37 +2977,57 @@ class ModelPackage(BaseModel):
     additional_inference_specifications: Optional[List[AdditionalInferenceSpecificationDefinition]] = Unassigned()
     skip_model_validation: Optional[str] = Unassigned()
     source_uri: Optional[str] = Unassigned()
-
     
     @classmethod
     def create(
         cls,
         model_package_name: Optional[str] = Unassigned(),
-    model_package_group_name: Optional[str] = Unassigned(),
-    model_package_description: Optional[str] = Unassigned(),
-    inference_specification: Optional[InferenceSpecification] = Unassigned(),
-    validation_specification: Optional[ModelPackageValidationSpecification] = Unassigned(),
-    source_algorithm_specification: Optional[SourceAlgorithmSpecification] = Unassigned(),
-    certify_for_marketplace: Optional[bool] = Unassigned(),
-    tags: Optional[List[Tag]] = Unassigned(),
-    model_approval_status: Optional[str] = Unassigned(),
-    metadata_properties: Optional[MetadataProperties] = Unassigned(),
-    model_metrics: Optional[ModelMetrics] = Unassigned(),
-    client_token: Optional[str] = Unassigned(),
-    domain: Optional[str] = Unassigned(),
-    task: Optional[str] = Unassigned(),
-    sample_payload_url: Optional[str] = Unassigned(),
-    customer_metadata_properties: Optional[Dict[str, str]] = Unassigned(),
-    drift_check_baselines: Optional[DriftCheckBaselines] = Unassigned(),
-    additional_inference_specifications: Optional[List[AdditionalInferenceSpecificationDefinition]] = Unassigned(),
-    skip_model_validation: Optional[str] = Unassigned(),
-    source_uri: Optional[str] = Unassigned(),
+        model_package_group_name: Optional[str] = Unassigned(),
+        model_package_description: Optional[str] = Unassigned(),
+        inference_specification: Optional[InferenceSpecification] = Unassigned(),
+        validation_specification: Optional[ModelPackageValidationSpecification] = Unassigned(),
+        source_algorithm_specification: Optional[SourceAlgorithmSpecification] = Unassigned(),
+        certify_for_marketplace: Optional[bool] = Unassigned(),
+        tags: Optional[List[Tag]] = Unassigned(),
+        model_approval_status: Optional[str] = Unassigned(),
+        metadata_properties: Optional[MetadataProperties] = Unassigned(),
+        model_metrics: Optional[ModelMetrics] = Unassigned(),
+        client_token: Optional[str] = Unassigned(),
+        domain: Optional[str] = Unassigned(),
+        task: Optional[str] = Unassigned(),
+        sample_payload_url: Optional[str] = Unassigned(),
+        customer_metadata_properties: Optional[Dict[str, str]] = Unassigned(),
+        drift_check_baselines: Optional[DriftCheckBaselines] = Unassigned(),
+        additional_inference_specifications: Optional[List[AdditionalInferenceSpecificationDefinition]] = Unassigned(),
+        skip_model_validation: Optional[str] = Unassigned(),
+        source_uri: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         model_package = cls(session, region)
     
-        operation_input_args = {'ModelPackageName': 'model_package_name', 'ModelPackageGroupName': 'model_package_group_name', 'ModelPackageDescription': 'model_package_description', 'InferenceSpecification': 'inference_specification', 'ValidationSpecification': 'validation_specification', 'SourceAlgorithmSpecification': 'source_algorithm_specification', 'CertifyForMarketplace': 'certify_for_marketplace', 'Tags': 'tags', 'ModelApprovalStatus': 'model_approval_status', 'MetadataProperties': 'metadata_properties', 'ModelMetrics': 'model_metrics', 'ClientToken': 'client_token', 'Domain': 'domain', 'Task': 'task', 'SamplePayloadUrl': 'sample_payload_url', 'CustomerMetadataProperties': 'customer_metadata_properties', 'DriftCheckBaselines': 'drift_check_baselines', 'AdditionalInferenceSpecifications': 'additional_inference_specifications', 'SkipModelValidation': 'skip_model_validation', 'SourceUri': 'source_uri'}
+        operation_input_args = {
+            'ModelPackageName': model_package_name,
+            'ModelPackageGroupName': model_package_group_name,
+            'ModelPackageDescription': model_package_description,
+            'InferenceSpecification': inference_specification,
+            'ValidationSpecification': validation_specification,
+            'SourceAlgorithmSpecification': source_algorithm_specification,
+            'CertifyForMarketplace': certify_for_marketplace,
+            'Tags': tags,
+            'ModelApprovalStatus': model_approval_status,
+            'MetadataProperties': metadata_properties,
+            'ModelMetrics': model_metrics,
+            'ClientToken': client_token,
+            'Domain': domain,
+            'Task': task,
+            'SamplePayloadUrl': sample_payload_url,
+            'CustomerMetadataProperties': customer_metadata_properties,
+            'DriftCheckBaselines': drift_check_baselines,
+            'AdditionalInferenceSpecifications': additional_inference_specifications,
+            'SkipModelValidation': skip_model_validation,
+            'SourceUri': source_uri,
+        }
         response = model_package.client.create_model_package(**operation_input_args)
     
         pprint(response)
@@ -2682,7 +3035,19 @@ class ModelPackage(BaseModel):
         # deserialize the response
     
         return model_package
-
+    
+    def refresh(
+        self
+    ) -> Optional[object]:
+    
+        operation_input_args = {
+            'ModelPackageName': self.model_package_name,
+        }
+        response = self.client.describe_model_package(**operation_input_args)
+    
+        # deserialize the response
+        deserializer(self, response, 'DescribeModelPackageOutput')
+        return self
     
     @classmethod
     def get(
@@ -2693,40 +3058,15 @@ class ModelPackage(BaseModel):
     ) -> Optional[object]:
         model_package = cls(session, region)
     
-        operation_input_args = {'ModelPackageName': 'model_package_name'}
+        operation_input_args = {
+            'ModelPackageName': model_package_name,
+        }
         response = model_package.client.describe_model_package(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        model_package.model_package_name = response["ModelPackageName"]
-        model_package.model_package_group_name = response["ModelPackageGroupName"]
-        model_package.model_package_version = response["ModelPackageVersion"]
-        model_package.model_package_arn = response["ModelPackageArn"]
-        model_package.model_package_description = response["ModelPackageDescription"]
-        model_package.creation_time = response["CreationTime"]
-        model_package.inference_specification = response["InferenceSpecification"]
-        model_package.source_algorithm_specification = response["SourceAlgorithmSpecification"]
-        model_package.validation_specification = response["ValidationSpecification"]
-        model_package.model_package_status = response["ModelPackageStatus"]
-        model_package.model_package_status_details = response["ModelPackageStatusDetails"]
-        model_package.certify_for_marketplace = response["CertifyForMarketplace"]
-        model_package.model_approval_status = response["ModelApprovalStatus"]
-        model_package.created_by = response["CreatedBy"]
-        model_package.metadata_properties = response["MetadataProperties"]
-        model_package.model_metrics = response["ModelMetrics"]
-        model_package.last_modified_time = response["LastModifiedTime"]
-        model_package.last_modified_by = response["LastModifiedBy"]
-        model_package.approval_description = response["ApprovalDescription"]
-        model_package.domain = response["Domain"]
-        model_package.task = response["Task"]
-        model_package.sample_payload_url = response["SamplePayloadUrl"]
-        model_package.customer_metadata_properties = response["CustomerMetadataProperties"]
-        model_package.drift_check_baselines = response["DriftCheckBaselines"]
-        model_package.additional_inference_specifications = response["AdditionalInferenceSpecifications"]
-        model_package.skip_model_validation = response["SkipModelValidation"]
-        model_package.source_uri = response["SourceUri"]
-    
+        deserializer(model_package, response, 'DescribeModelPackageOutput')
         return model_package
 
 
@@ -2737,20 +3077,23 @@ class ModelPackageGroup(BaseModel):
     created_by: UserContext
     model_package_group_status: str
     model_package_group_description: Optional[str] = Unassigned()
-
     
     @classmethod
     def create(
         cls,
         model_package_group_name: str,
-    model_package_group_description: Optional[str] = Unassigned(),
-    tags: Optional[List[Tag]] = Unassigned(),
+        model_package_group_description: Optional[str] = Unassigned(),
+        tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         model_package_group = cls(session, region)
     
-        operation_input_args = {'ModelPackageGroupName': 'model_package_group_name', 'ModelPackageGroupDescription': 'model_package_group_description', 'Tags': 'tags'}
+        operation_input_args = {
+            'ModelPackageGroupName': model_package_group_name,
+            'ModelPackageGroupDescription': model_package_group_description,
+            'Tags': tags,
+        }
         response = model_package_group.client.create_model_package_group(**operation_input_args)
     
         pprint(response)
@@ -2758,7 +3101,19 @@ class ModelPackageGroup(BaseModel):
         # deserialize the response
     
         return model_package_group
-
+    
+    def refresh(
+        self
+    ) -> Optional[object]:
+    
+        operation_input_args = {
+            'ModelPackageGroupName': self.model_package_group_name,
+        }
+        response = self.client.describe_model_package_group(**operation_input_args)
+    
+        # deserialize the response
+        deserializer(self, response, 'DescribeModelPackageGroupOutput')
+        return self
     
     @classmethod
     def get(
@@ -2769,19 +3124,15 @@ class ModelPackageGroup(BaseModel):
     ) -> Optional[object]:
         model_package_group = cls(session, region)
     
-        operation_input_args = {'ModelPackageGroupName': 'model_package_group_name'}
+        operation_input_args = {
+            'ModelPackageGroupName': model_package_group_name,
+        }
         response = model_package_group.client.describe_model_package_group(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        model_package_group.model_package_group_name = response["ModelPackageGroupName"]
-        model_package_group.model_package_group_arn = response["ModelPackageGroupArn"]
-        model_package_group.model_package_group_description = response["ModelPackageGroupDescription"]
-        model_package_group.creation_time = response["CreationTime"]
-        model_package_group.created_by = response["CreatedBy"]
-        model_package_group.model_package_group_status = response["ModelPackageGroupStatus"]
-    
+        deserializer(model_package_group, response, 'DescribeModelPackageGroupOutput')
         return model_package_group
 
 
@@ -2797,27 +3148,37 @@ class ModelQualityJobDefinition(BaseModel):
     model_quality_baseline_config: Optional[ModelQualityBaselineConfig] = Unassigned()
     network_config: Optional[MonitoringNetworkConfig] = Unassigned()
     stopping_condition: Optional[MonitoringStoppingCondition] = Unassigned()
-
     
     @classmethod
     def create(
         cls,
         job_definition_name: str,
-    model_quality_app_specification: ModelQualityAppSpecification,
-    model_quality_job_input: ModelQualityJobInput,
-    model_quality_job_output_config: MonitoringOutputConfig,
-    job_resources: MonitoringResources,
-    role_arn: str,
-    model_quality_baseline_config: Optional[ModelQualityBaselineConfig] = Unassigned(),
-    network_config: Optional[MonitoringNetworkConfig] = Unassigned(),
-    stopping_condition: Optional[MonitoringStoppingCondition] = Unassigned(),
-    tags: Optional[List[Tag]] = Unassigned(),
+        model_quality_app_specification: ModelQualityAppSpecification,
+        model_quality_job_input: ModelQualityJobInput,
+        model_quality_job_output_config: MonitoringOutputConfig,
+        job_resources: MonitoringResources,
+        role_arn: str,
+        model_quality_baseline_config: Optional[ModelQualityBaselineConfig] = Unassigned(),
+        network_config: Optional[MonitoringNetworkConfig] = Unassigned(),
+        stopping_condition: Optional[MonitoringStoppingCondition] = Unassigned(),
+        tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         model_quality_job_definition = cls(session, region)
     
-        operation_input_args = {'JobDefinitionName': 'job_definition_name', 'ModelQualityBaselineConfig': 'model_quality_baseline_config', 'ModelQualityAppSpecification': 'model_quality_app_specification', 'ModelQualityJobInput': 'model_quality_job_input', 'ModelQualityJobOutputConfig': 'model_quality_job_output_config', 'JobResources': 'job_resources', 'NetworkConfig': 'network_config', 'RoleArn': 'role_arn', 'StoppingCondition': 'stopping_condition', 'Tags': 'tags'}
+        operation_input_args = {
+            'JobDefinitionName': job_definition_name,
+            'ModelQualityBaselineConfig': model_quality_baseline_config,
+            'ModelQualityAppSpecification': model_quality_app_specification,
+            'ModelQualityJobInput': model_quality_job_input,
+            'ModelQualityJobOutputConfig': model_quality_job_output_config,
+            'JobResources': job_resources,
+            'NetworkConfig': network_config,
+            'RoleArn': role_arn,
+            'StoppingCondition': stopping_condition,
+            'Tags': tags,
+        }
         response = model_quality_job_definition.client.create_model_quality_job_definition(**operation_input_args)
     
         pprint(response)
@@ -2825,7 +3186,19 @@ class ModelQualityJobDefinition(BaseModel):
         # deserialize the response
     
         return model_quality_job_definition
-
+    
+    def refresh(
+        self
+    ) -> Optional[object]:
+    
+        operation_input_args = {
+            'JobDefinitionName': self.job_definition_name,
+        }
+        response = self.client.describe_model_quality_job_definition(**operation_input_args)
+    
+        # deserialize the response
+        deserializer(self, response, 'DescribeModelQualityJobDefinitionResponse')
+        return self
     
     @classmethod
     def get(
@@ -2836,24 +3209,15 @@ class ModelQualityJobDefinition(BaseModel):
     ) -> Optional[object]:
         model_quality_job_definition = cls(session, region)
     
-        operation_input_args = {'JobDefinitionName': 'job_definition_name'}
+        operation_input_args = {
+            'JobDefinitionName': job_definition_name,
+        }
         response = model_quality_job_definition.client.describe_model_quality_job_definition(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        model_quality_job_definition.job_definition_arn = response["JobDefinitionArn"]
-        model_quality_job_definition.job_definition_name = response["JobDefinitionName"]
-        model_quality_job_definition.creation_time = response["CreationTime"]
-        model_quality_job_definition.model_quality_baseline_config = response["ModelQualityBaselineConfig"]
-        model_quality_job_definition.model_quality_app_specification = response["ModelQualityAppSpecification"]
-        model_quality_job_definition.model_quality_job_input = response["ModelQualityJobInput"]
-        model_quality_job_definition.model_quality_job_output_config = response["ModelQualityJobOutputConfig"]
-        model_quality_job_definition.job_resources = response["JobResources"]
-        model_quality_job_definition.network_config = response["NetworkConfig"]
-        model_quality_job_definition.role_arn = response["RoleArn"]
-        model_quality_job_definition.stopping_condition = response["StoppingCondition"]
-    
+        deserializer(model_quality_job_definition, response, 'DescribeModelQualityJobDefinitionResponse')
         return model_quality_job_definition
 
 
@@ -2868,20 +3232,23 @@ class MonitoringSchedule(BaseModel):
     failure_reason: Optional[str] = Unassigned()
     endpoint_name: Optional[str] = Unassigned()
     last_monitoring_execution_summary: Optional[MonitoringExecutionSummary] = Unassigned()
-
     
     @classmethod
     def create(
         cls,
         monitoring_schedule_name: str,
-    monitoring_schedule_config: MonitoringScheduleConfig,
-    tags: Optional[List[Tag]] = Unassigned(),
+        monitoring_schedule_config: MonitoringScheduleConfig,
+        tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         monitoring_schedule = cls(session, region)
     
-        operation_input_args = {'MonitoringScheduleName': 'monitoring_schedule_name', 'MonitoringScheduleConfig': 'monitoring_schedule_config', 'Tags': 'tags'}
+        operation_input_args = {
+            'MonitoringScheduleName': monitoring_schedule_name,
+            'MonitoringScheduleConfig': monitoring_schedule_config,
+            'Tags': tags,
+        }
         response = monitoring_schedule.client.create_monitoring_schedule(**operation_input_args)
     
         pprint(response)
@@ -2889,7 +3256,19 @@ class MonitoringSchedule(BaseModel):
         # deserialize the response
     
         return monitoring_schedule
-
+    
+    def refresh(
+        self
+    ) -> Optional[object]:
+    
+        operation_input_args = {
+            'MonitoringScheduleName': self.monitoring_schedule_name,
+        }
+        response = self.client.describe_monitoring_schedule(**operation_input_args)
+    
+        # deserialize the response
+        deserializer(self, response, 'DescribeMonitoringScheduleResponse')
+        return self
     
     @classmethod
     def get(
@@ -2900,23 +3279,15 @@ class MonitoringSchedule(BaseModel):
     ) -> Optional[object]:
         monitoring_schedule = cls(session, region)
     
-        operation_input_args = {'MonitoringScheduleName': 'monitoring_schedule_name'}
+        operation_input_args = {
+            'MonitoringScheduleName': monitoring_schedule_name,
+        }
         response = monitoring_schedule.client.describe_monitoring_schedule(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        monitoring_schedule.monitoring_schedule_arn = response["MonitoringScheduleArn"]
-        monitoring_schedule.monitoring_schedule_name = response["MonitoringScheduleName"]
-        monitoring_schedule.monitoring_schedule_status = response["MonitoringScheduleStatus"]
-        monitoring_schedule.monitoring_type = response["MonitoringType"]
-        monitoring_schedule.failure_reason = response["FailureReason"]
-        monitoring_schedule.creation_time = response["CreationTime"]
-        monitoring_schedule.last_modified_time = response["LastModifiedTime"]
-        monitoring_schedule.monitoring_schedule_config = response["MonitoringScheduleConfig"]
-        monitoring_schedule.endpoint_name = response["EndpointName"]
-        monitoring_schedule.last_monitoring_execution_summary = response["LastMonitoringExecutionSummary"]
-    
+        deserializer(monitoring_schedule, response, 'DescribeMonitoringScheduleResponse')
         return monitoring_schedule
 
 
@@ -2943,33 +3314,49 @@ class NotebookInstance(BaseModel):
     root_access: Optional[str] = Unassigned()
     platform_identifier: Optional[str] = Unassigned()
     instance_metadata_service_configuration: Optional[InstanceMetadataServiceConfiguration] = Unassigned()
-
     
     @classmethod
     def create(
         cls,
         notebook_instance_name: str,
-    instance_type: str,
-    role_arn: str,
-    subnet_id: Optional[str] = Unassigned(),
-    security_group_ids: Optional[List[str]] = Unassigned(),
-    kms_key_id: Optional[str] = Unassigned(),
-    tags: Optional[List[Tag]] = Unassigned(),
-    lifecycle_config_name: Optional[str] = Unassigned(),
-    direct_internet_access: Optional[str] = Unassigned(),
-    volume_size_in_g_b: Optional[int] = Unassigned(),
-    accelerator_types: Optional[List[str]] = Unassigned(),
-    default_code_repository: Optional[str] = Unassigned(),
-    additional_code_repositories: Optional[List[str]] = Unassigned(),
-    root_access: Optional[str] = Unassigned(),
-    platform_identifier: Optional[str] = Unassigned(),
-    instance_metadata_service_configuration: Optional[InstanceMetadataServiceConfiguration] = Unassigned(),
+        instance_type: str,
+        role_arn: str,
+        subnet_id: Optional[str] = Unassigned(),
+        security_group_ids: Optional[List[str]] = Unassigned(),
+        kms_key_id: Optional[str] = Unassigned(),
+        tags: Optional[List[Tag]] = Unassigned(),
+        lifecycle_config_name: Optional[str] = Unassigned(),
+        direct_internet_access: Optional[str] = Unassigned(),
+        volume_size_in_g_b: Optional[int] = Unassigned(),
+        accelerator_types: Optional[List[str]] = Unassigned(),
+        default_code_repository: Optional[str] = Unassigned(),
+        additional_code_repositories: Optional[List[str]] = Unassigned(),
+        root_access: Optional[str] = Unassigned(),
+        platform_identifier: Optional[str] = Unassigned(),
+        instance_metadata_service_configuration: Optional[InstanceMetadataServiceConfiguration] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         notebook_instance = cls(session, region)
     
-        operation_input_args = {'NotebookInstanceName': 'notebook_instance_name', 'InstanceType': 'instance_type', 'SubnetId': 'subnet_id', 'SecurityGroupIds': 'security_group_ids', 'RoleArn': 'role_arn', 'KmsKeyId': 'kms_key_id', 'Tags': 'tags', 'LifecycleConfigName': 'lifecycle_config_name', 'DirectInternetAccess': 'direct_internet_access', 'VolumeSizeInGB': 'volume_size_in_g_b', 'AcceleratorTypes': 'accelerator_types', 'DefaultCodeRepository': 'default_code_repository', 'AdditionalCodeRepositories': 'additional_code_repositories', 'RootAccess': 'root_access', 'PlatformIdentifier': 'platform_identifier', 'InstanceMetadataServiceConfiguration': 'instance_metadata_service_configuration'}
+        operation_input_args = {
+            'NotebookInstanceName': notebook_instance_name,
+            'InstanceType': instance_type,
+            'SubnetId': subnet_id,
+            'SecurityGroupIds': security_group_ids,
+            'RoleArn': role_arn,
+            'KmsKeyId': kms_key_id,
+            'Tags': tags,
+            'LifecycleConfigName': lifecycle_config_name,
+            'DirectInternetAccess': direct_internet_access,
+            'VolumeSizeInGB': volume_size_in_g_b,
+            'AcceleratorTypes': accelerator_types,
+            'DefaultCodeRepository': default_code_repository,
+            'AdditionalCodeRepositories': additional_code_repositories,
+            'RootAccess': root_access,
+            'PlatformIdentifier': platform_identifier,
+            'InstanceMetadataServiceConfiguration': instance_metadata_service_configuration,
+        }
         response = notebook_instance.client.create_notebook_instance(**operation_input_args)
     
         pprint(response)
@@ -2977,7 +3364,19 @@ class NotebookInstance(BaseModel):
         # deserialize the response
     
         return notebook_instance
-
+    
+    def refresh(
+        self
+    ) -> Optional[object]:
+    
+        operation_input_args = {
+            'NotebookInstanceName': self.notebook_instance_name,
+        }
+        response = self.client.describe_notebook_instance(**operation_input_args)
+    
+        # deserialize the response
+        deserializer(self, response, 'DescribeNotebookInstanceOutput')
+        return self
     
     @classmethod
     def get(
@@ -2988,35 +3387,15 @@ class NotebookInstance(BaseModel):
     ) -> Optional[object]:
         notebook_instance = cls(session, region)
     
-        operation_input_args = {'NotebookInstanceName': 'notebook_instance_name'}
+        operation_input_args = {
+            'NotebookInstanceName': notebook_instance_name,
+        }
         response = notebook_instance.client.describe_notebook_instance(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        notebook_instance.notebook_instance_arn = response["NotebookInstanceArn"]
-        notebook_instance.notebook_instance_name = response["NotebookInstanceName"]
-        notebook_instance.notebook_instance_status = response["NotebookInstanceStatus"]
-        notebook_instance.failure_reason = response["FailureReason"]
-        notebook_instance.url = response["Url"]
-        notebook_instance.instance_type = response["InstanceType"]
-        notebook_instance.subnet_id = response["SubnetId"]
-        notebook_instance.security_groups = response["SecurityGroups"]
-        notebook_instance.role_arn = response["RoleArn"]
-        notebook_instance.kms_key_id = response["KmsKeyId"]
-        notebook_instance.network_interface_id = response["NetworkInterfaceId"]
-        notebook_instance.last_modified_time = response["LastModifiedTime"]
-        notebook_instance.creation_time = response["CreationTime"]
-        notebook_instance.notebook_instance_lifecycle_config_name = response["NotebookInstanceLifecycleConfigName"]
-        notebook_instance.direct_internet_access = response["DirectInternetAccess"]
-        notebook_instance.volume_size_in_g_b = response["VolumeSizeInGB"]
-        notebook_instance.accelerator_types = response["AcceleratorTypes"]
-        notebook_instance.default_code_repository = response["DefaultCodeRepository"]
-        notebook_instance.additional_code_repositories = response["AdditionalCodeRepositories"]
-        notebook_instance.root_access = response["RootAccess"]
-        notebook_instance.platform_identifier = response["PlatformIdentifier"]
-        notebook_instance.instance_metadata_service_configuration = response["InstanceMetadataServiceConfiguration"]
-    
+        deserializer(notebook_instance, response, 'DescribeNotebookInstanceOutput')
         return notebook_instance
 
 
@@ -3027,20 +3406,23 @@ class NotebookInstanceLifecycleConfig(BaseModel):
     on_start: Optional[List[NotebookInstanceLifecycleHook]] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
-
     
     @classmethod
     def create(
         cls,
         notebook_instance_lifecycle_config_name: str,
-    on_create: Optional[List[NotebookInstanceLifecycleHook]] = Unassigned(),
-    on_start: Optional[List[NotebookInstanceLifecycleHook]] = Unassigned(),
+        on_create: Optional[List[NotebookInstanceLifecycleHook]] = Unassigned(),
+        on_start: Optional[List[NotebookInstanceLifecycleHook]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         notebook_instance_lifecycle_config = cls(session, region)
     
-        operation_input_args = {'NotebookInstanceLifecycleConfigName': 'notebook_instance_lifecycle_config_name', 'OnCreate': 'on_create', 'OnStart': 'on_start'}
+        operation_input_args = {
+            'NotebookInstanceLifecycleConfigName': notebook_instance_lifecycle_config_name,
+            'OnCreate': on_create,
+            'OnStart': on_start,
+        }
         response = notebook_instance_lifecycle_config.client.create_notebook_instance_lifecycle_config(**operation_input_args)
     
         pprint(response)
@@ -3048,7 +3430,19 @@ class NotebookInstanceLifecycleConfig(BaseModel):
         # deserialize the response
     
         return notebook_instance_lifecycle_config
-
+    
+    def refresh(
+        self
+    ) -> Optional[object]:
+    
+        operation_input_args = {
+            'NotebookInstanceLifecycleConfigName': self.notebook_instance_lifecycle_config_name,
+        }
+        response = self.client.describe_notebook_instance_lifecycle_config(**operation_input_args)
+    
+        # deserialize the response
+        deserializer(self, response, 'DescribeNotebookInstanceLifecycleConfigOutput')
+        return self
     
     @classmethod
     def get(
@@ -3059,19 +3453,15 @@ class NotebookInstanceLifecycleConfig(BaseModel):
     ) -> Optional[object]:
         notebook_instance_lifecycle_config = cls(session, region)
     
-        operation_input_args = {'NotebookInstanceLifecycleConfigName': 'notebook_instance_lifecycle_config_name'}
+        operation_input_args = {
+            'NotebookInstanceLifecycleConfigName': notebook_instance_lifecycle_config_name,
+        }
         response = notebook_instance_lifecycle_config.client.describe_notebook_instance_lifecycle_config(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        notebook_instance_lifecycle_config.notebook_instance_lifecycle_config_arn = response["NotebookInstanceLifecycleConfigArn"]
-        notebook_instance_lifecycle_config.notebook_instance_lifecycle_config_name = response["NotebookInstanceLifecycleConfigName"]
-        notebook_instance_lifecycle_config.on_create = response["OnCreate"]
-        notebook_instance_lifecycle_config.on_start = response["OnStart"]
-        notebook_instance_lifecycle_config.last_modified_time = response["LastModifiedTime"]
-        notebook_instance_lifecycle_config.creation_time = response["CreationTime"]
-    
+        deserializer(notebook_instance_lifecycle_config, response, 'DescribeNotebookInstanceLifecycleConfigOutput')
         return notebook_instance_lifecycle_config
 
 
@@ -3089,26 +3479,35 @@ class Pipeline(BaseModel):
     created_by: Optional[UserContext] = Unassigned()
     last_modified_by: Optional[UserContext] = Unassigned()
     parallelism_configuration: Optional[ParallelismConfiguration] = Unassigned()
-
     
     @classmethod
     def create(
         cls,
         pipeline_name: str,
-    client_request_token: str,
-    role_arn: str,
-    pipeline_display_name: Optional[str] = Unassigned(),
-    pipeline_definition: Optional[str] = Unassigned(),
-    pipeline_definition_s3_location: Optional[PipelineDefinitionS3Location] = Unassigned(),
-    pipeline_description: Optional[str] = Unassigned(),
-    tags: Optional[List[Tag]] = Unassigned(),
-    parallelism_configuration: Optional[ParallelismConfiguration] = Unassigned(),
+        client_request_token: str,
+        role_arn: str,
+        pipeline_display_name: Optional[str] = Unassigned(),
+        pipeline_definition: Optional[str] = Unassigned(),
+        pipeline_definition_s3_location: Optional[PipelineDefinitionS3Location] = Unassigned(),
+        pipeline_description: Optional[str] = Unassigned(),
+        tags: Optional[List[Tag]] = Unassigned(),
+        parallelism_configuration: Optional[ParallelismConfiguration] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         pipeline = cls(session, region)
     
-        operation_input_args = {'PipelineName': 'pipeline_name', 'PipelineDisplayName': 'pipeline_display_name', 'PipelineDefinition': 'pipeline_definition', 'PipelineDefinitionS3Location': 'pipeline_definition_s3_location', 'PipelineDescription': 'pipeline_description', 'ClientRequestToken': 'client_request_token', 'RoleArn': 'role_arn', 'Tags': 'tags', 'ParallelismConfiguration': 'parallelism_configuration'}
+        operation_input_args = {
+            'PipelineName': pipeline_name,
+            'PipelineDisplayName': pipeline_display_name,
+            'PipelineDefinition': pipeline_definition,
+            'PipelineDefinitionS3Location': pipeline_definition_s3_location,
+            'PipelineDescription': pipeline_description,
+            'ClientRequestToken': client_request_token,
+            'RoleArn': role_arn,
+            'Tags': tags,
+            'ParallelismConfiguration': parallelism_configuration,
+        }
         response = pipeline.client.create_pipeline(**operation_input_args)
     
         pprint(response)
@@ -3116,7 +3515,19 @@ class Pipeline(BaseModel):
         # deserialize the response
     
         return pipeline
-
+    
+    def refresh(
+        self
+    ) -> Optional[object]:
+    
+        operation_input_args = {
+            'PipelineName': self.pipeline_name,
+        }
+        response = self.client.describe_pipeline(**operation_input_args)
+    
+        # deserialize the response
+        deserializer(self, response, 'DescribePipelineResponse')
+        return self
     
     @classmethod
     def get(
@@ -3127,26 +3538,15 @@ class Pipeline(BaseModel):
     ) -> Optional[object]:
         pipeline = cls(session, region)
     
-        operation_input_args = {'PipelineName': 'pipeline_name'}
+        operation_input_args = {
+            'PipelineName': pipeline_name,
+        }
         response = pipeline.client.describe_pipeline(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        pipeline.pipeline_arn = response["PipelineArn"]
-        pipeline.pipeline_name = response["PipelineName"]
-        pipeline.pipeline_display_name = response["PipelineDisplayName"]
-        pipeline.pipeline_definition = response["PipelineDefinition"]
-        pipeline.pipeline_description = response["PipelineDescription"]
-        pipeline.role_arn = response["RoleArn"]
-        pipeline.pipeline_status = response["PipelineStatus"]
-        pipeline.creation_time = response["CreationTime"]
-        pipeline.last_modified_time = response["LastModifiedTime"]
-        pipeline.last_run_time = response["LastRunTime"]
-        pipeline.created_by = response["CreatedBy"]
-        pipeline.last_modified_by = response["LastModifiedBy"]
-        pipeline.parallelism_configuration = response["ParallelismConfiguration"]
-    
+        deserializer(pipeline, response, 'DescribePipelineResponse')
         return pipeline
 
 
@@ -3164,7 +3564,19 @@ class PipelineExecution(BaseModel):
     last_modified_by: Optional[UserContext] = Unassigned()
     parallelism_configuration: Optional[ParallelismConfiguration] = Unassigned()
     selective_execution_config: Optional[SelectiveExecutionConfig] = Unassigned()
-
+    
+    def refresh(
+        self
+    ) -> Optional[object]:
+    
+        operation_input_args = {
+            'PipelineExecutionArn': self.pipeline_execution_arn,
+        }
+        response = self.client.describe_pipeline_execution(**operation_input_args)
+    
+        # deserialize the response
+        deserializer(self, response, 'DescribePipelineExecutionResponse')
+        return self
     
     @classmethod
     def get(
@@ -3175,26 +3587,15 @@ class PipelineExecution(BaseModel):
     ) -> Optional[object]:
         pipeline_execution = cls(session, region)
     
-        operation_input_args = {'PipelineExecutionArn': 'pipeline_execution_arn'}
+        operation_input_args = {
+            'PipelineExecutionArn': pipeline_execution_arn,
+        }
         response = pipeline_execution.client.describe_pipeline_execution(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        pipeline_execution.pipeline_arn = response["PipelineArn"]
-        pipeline_execution.pipeline_execution_arn = response["PipelineExecutionArn"]
-        pipeline_execution.pipeline_execution_display_name = response["PipelineExecutionDisplayName"]
-        pipeline_execution.pipeline_execution_status = response["PipelineExecutionStatus"]
-        pipeline_execution.pipeline_execution_description = response["PipelineExecutionDescription"]
-        pipeline_execution.pipeline_experiment_config = response["PipelineExperimentConfig"]
-        pipeline_execution.failure_reason = response["FailureReason"]
-        pipeline_execution.creation_time = response["CreationTime"]
-        pipeline_execution.last_modified_time = response["LastModifiedTime"]
-        pipeline_execution.created_by = response["CreatedBy"]
-        pipeline_execution.last_modified_by = response["LastModifiedBy"]
-        pipeline_execution.parallelism_configuration = response["ParallelismConfiguration"]
-        pipeline_execution.selective_execution_config = response["SelectiveExecutionConfig"]
-    
+        deserializer(pipeline_execution, response, 'DescribePipelineExecutionResponse')
         return pipeline_execution
 
 
@@ -3220,28 +3621,39 @@ class ProcessingJob(BaseModel):
     monitoring_schedule_arn: Optional[str] = Unassigned()
     auto_m_l_job_arn: Optional[str] = Unassigned()
     training_job_arn: Optional[str] = Unassigned()
-
     
     @classmethod
     def create(
         cls,
         processing_job_name: str,
-    processing_resources: ProcessingResources,
-    app_specification: AppSpecification,
-    role_arn: str,
-    processing_inputs: Optional[List[ProcessingInput]] = Unassigned(),
-    processing_output_config: Optional[ProcessingOutputConfig] = Unassigned(),
-    stopping_condition: Optional[ProcessingStoppingCondition] = Unassigned(),
-    environment: Optional[Dict[str, str]] = Unassigned(),
-    network_config: Optional[NetworkConfig] = Unassigned(),
-    tags: Optional[List[Tag]] = Unassigned(),
-    experiment_config: Optional[ExperimentConfig] = Unassigned(),
+        processing_resources: ProcessingResources,
+        app_specification: AppSpecification,
+        role_arn: str,
+        processing_inputs: Optional[List[ProcessingInput]] = Unassigned(),
+        processing_output_config: Optional[ProcessingOutputConfig] = Unassigned(),
+        stopping_condition: Optional[ProcessingStoppingCondition] = Unassigned(),
+        environment: Optional[Dict[str, str]] = Unassigned(),
+        network_config: Optional[NetworkConfig] = Unassigned(),
+        tags: Optional[List[Tag]] = Unassigned(),
+        experiment_config: Optional[ExperimentConfig] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         processing_job = cls(session, region)
     
-        operation_input_args = {'ProcessingInputs': 'processing_inputs', 'ProcessingOutputConfig': 'processing_output_config', 'ProcessingJobName': 'processing_job_name', 'ProcessingResources': 'processing_resources', 'StoppingCondition': 'stopping_condition', 'AppSpecification': 'app_specification', 'Environment': 'environment', 'NetworkConfig': 'network_config', 'RoleArn': 'role_arn', 'Tags': 'tags', 'ExperimentConfig': 'experiment_config'}
+        operation_input_args = {
+            'ProcessingInputs': processing_inputs,
+            'ProcessingOutputConfig': processing_output_config,
+            'ProcessingJobName': processing_job_name,
+            'ProcessingResources': processing_resources,
+            'StoppingCondition': stopping_condition,
+            'AppSpecification': app_specification,
+            'Environment': environment,
+            'NetworkConfig': network_config,
+            'RoleArn': role_arn,
+            'Tags': tags,
+            'ExperimentConfig': experiment_config,
+        }
         response = processing_job.client.create_processing_job(**operation_input_args)
     
         pprint(response)
@@ -3249,7 +3661,19 @@ class ProcessingJob(BaseModel):
         # deserialize the response
     
         return processing_job
-
+    
+    def refresh(
+        self
+    ) -> Optional[object]:
+    
+        operation_input_args = {
+            'ProcessingJobName': self.processing_job_name,
+        }
+        response = self.client.describe_processing_job(**operation_input_args)
+    
+        # deserialize the response
+        deserializer(self, response, 'DescribeProcessingJobResponse')
+        return self
     
     @classmethod
     def get(
@@ -3260,34 +3684,15 @@ class ProcessingJob(BaseModel):
     ) -> Optional[object]:
         processing_job = cls(session, region)
     
-        operation_input_args = {'ProcessingJobName': 'processing_job_name'}
+        operation_input_args = {
+            'ProcessingJobName': processing_job_name,
+        }
         response = processing_job.client.describe_processing_job(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        processing_job.processing_inputs = response["ProcessingInputs"]
-        processing_job.processing_output_config = response["ProcessingOutputConfig"]
-        processing_job.processing_job_name = response["ProcessingJobName"]
-        processing_job.processing_resources = response["ProcessingResources"]
-        processing_job.stopping_condition = response["StoppingCondition"]
-        processing_job.app_specification = response["AppSpecification"]
-        processing_job.environment = response["Environment"]
-        processing_job.network_config = response["NetworkConfig"]
-        processing_job.role_arn = response["RoleArn"]
-        processing_job.experiment_config = response["ExperimentConfig"]
-        processing_job.processing_job_arn = response["ProcessingJobArn"]
-        processing_job.processing_job_status = response["ProcessingJobStatus"]
-        processing_job.exit_message = response["ExitMessage"]
-        processing_job.failure_reason = response["FailureReason"]
-        processing_job.processing_end_time = response["ProcessingEndTime"]
-        processing_job.processing_start_time = response["ProcessingStartTime"]
-        processing_job.last_modified_time = response["LastModifiedTime"]
-        processing_job.creation_time = response["CreationTime"]
-        processing_job.monitoring_schedule_arn = response["MonitoringScheduleArn"]
-        processing_job.auto_m_l_job_arn = response["AutoMLJobArn"]
-        processing_job.training_job_arn = response["TrainingJobArn"]
-    
+        deserializer(processing_job, response, 'DescribeProcessingJobResponse')
         return processing_job
 
 
@@ -3303,21 +3708,25 @@ class Project(BaseModel):
     created_by: Optional[UserContext] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
     last_modified_by: Optional[UserContext] = Unassigned()
-
     
     @classmethod
     def create(
         cls,
         project_name: str,
-    service_catalog_provisioning_details: ServiceCatalogProvisioningDetails,
-    project_description: Optional[str] = Unassigned(),
-    tags: Optional[List[Tag]] = Unassigned(),
+        service_catalog_provisioning_details: ServiceCatalogProvisioningDetails,
+        project_description: Optional[str] = Unassigned(),
+        tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         project = cls(session, region)
     
-        operation_input_args = {'ProjectName': 'project_name', 'ProjectDescription': 'project_description', 'ServiceCatalogProvisioningDetails': 'service_catalog_provisioning_details', 'Tags': 'tags'}
+        operation_input_args = {
+            'ProjectName': project_name,
+            'ProjectDescription': project_description,
+            'ServiceCatalogProvisioningDetails': service_catalog_provisioning_details,
+            'Tags': tags,
+        }
         response = project.client.create_project(**operation_input_args)
     
         pprint(response)
@@ -3325,7 +3734,19 @@ class Project(BaseModel):
         # deserialize the response
     
         return project
-
+    
+    def refresh(
+        self
+    ) -> Optional[object]:
+    
+        operation_input_args = {
+            'ProjectName': self.project_name,
+        }
+        response = self.client.describe_project(**operation_input_args)
+    
+        # deserialize the response
+        deserializer(self, response, 'DescribeProjectOutput')
+        return self
     
     @classmethod
     def get(
@@ -3336,24 +3757,15 @@ class Project(BaseModel):
     ) -> Optional[object]:
         project = cls(session, region)
     
-        operation_input_args = {'ProjectName': 'project_name'}
+        operation_input_args = {
+            'ProjectName': project_name,
+        }
         response = project.client.describe_project(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        project.project_arn = response["ProjectArn"]
-        project.project_name = response["ProjectName"]
-        project.project_id = response["ProjectId"]
-        project.project_description = response["ProjectDescription"]
-        project.service_catalog_provisioning_details = response["ServiceCatalogProvisioningDetails"]
-        project.service_catalog_provisioned_product_details = response["ServiceCatalogProvisionedProductDetails"]
-        project.project_status = response["ProjectStatus"]
-        project.created_by = response["CreatedBy"]
-        project.creation_time = response["CreationTime"]
-        project.last_modified_time = response["LastModifiedTime"]
-        project.last_modified_by = response["LastModifiedBy"]
-    
+        deserializer(project, response, 'DescribeProjectOutput')
         return project
 
 
@@ -3371,24 +3783,31 @@ class Space(BaseModel):
     space_sharing_settings: Optional[SpaceSharingSettings] = Unassigned()
     space_display_name: Optional[str] = Unassigned()
     url: Optional[str] = Unassigned()
-
     
     @classmethod
     def create(
         cls,
         domain_id: str,
-    space_name: str,
-    tags: Optional[List[Tag]] = Unassigned(),
-    space_settings: Optional[SpaceSettings] = Unassigned(),
-    ownership_settings: Optional[OwnershipSettings] = Unassigned(),
-    space_sharing_settings: Optional[SpaceSharingSettings] = Unassigned(),
-    space_display_name: Optional[str] = Unassigned(),
+        space_name: str,
+        tags: Optional[List[Tag]] = Unassigned(),
+        space_settings: Optional[SpaceSettings] = Unassigned(),
+        ownership_settings: Optional[OwnershipSettings] = Unassigned(),
+        space_sharing_settings: Optional[SpaceSharingSettings] = Unassigned(),
+        space_display_name: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         space = cls(session, region)
     
-        operation_input_args = {'DomainId': 'domain_id', 'SpaceName': 'space_name', 'Tags': 'tags', 'SpaceSettings': 'space_settings', 'OwnershipSettings': 'ownership_settings', 'SpaceSharingSettings': 'space_sharing_settings', 'SpaceDisplayName': 'space_display_name'}
+        operation_input_args = {
+            'DomainId': domain_id,
+            'SpaceName': space_name,
+            'Tags': tags,
+            'SpaceSettings': space_settings,
+            'OwnershipSettings': ownership_settings,
+            'SpaceSharingSettings': space_sharing_settings,
+            'SpaceDisplayName': space_display_name,
+        }
         response = space.client.create_space(**operation_input_args)
     
         pprint(response)
@@ -3396,38 +3815,41 @@ class Space(BaseModel):
         # deserialize the response
     
         return space
-
+    
+    def refresh(
+        self
+    ) -> Optional[object]:
+    
+        operation_input_args = {
+            'DomainId': self.domain_id,
+            'SpaceName': self.space_name,
+        }
+        response = self.client.describe_space(**operation_input_args)
+    
+        # deserialize the response
+        deserializer(self, response, 'DescribeSpaceResponse')
+        return self
     
     @classmethod
     def get(
         cls,
         domain_id: str,
-    space_name: str,
+        space_name: str,
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         space = cls(session, region)
     
-        operation_input_args = {'DomainId': 'domain_id', 'SpaceName': 'space_name'}
+        operation_input_args = {
+            'DomainId': domain_id,
+            'SpaceName': space_name,
+        }
         response = space.client.describe_space(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        space.domain_id = response["DomainId"]
-        space.space_arn = response["SpaceArn"]
-        space.space_name = response["SpaceName"]
-        space.home_efs_file_system_uid = response["HomeEfsFileSystemUid"]
-        space.status = response["Status"]
-        space.last_modified_time = response["LastModifiedTime"]
-        space.creation_time = response["CreationTime"]
-        space.failure_reason = response["FailureReason"]
-        space.space_settings = response["SpaceSettings"]
-        space.ownership_settings = response["OwnershipSettings"]
-        space.space_sharing_settings = response["SpaceSharingSettings"]
-        space.space_display_name = response["SpaceDisplayName"]
-        space.url = response["Url"]
-    
+        deserializer(space, response, 'DescribeSpaceResponse')
         return space
 
 
@@ -3438,21 +3860,25 @@ class StudioLifecycleConfig(BaseModel):
     last_modified_time: Optional[datetime.datetime] = Unassigned()
     studio_lifecycle_config_content: Optional[str] = Unassigned()
     studio_lifecycle_config_app_type: Optional[str] = Unassigned()
-
     
     @classmethod
     def create(
         cls,
         studio_lifecycle_config_name: str,
-    studio_lifecycle_config_content: str,
-    studio_lifecycle_config_app_type: str,
-    tags: Optional[List[Tag]] = Unassigned(),
+        studio_lifecycle_config_content: str,
+        studio_lifecycle_config_app_type: str,
+        tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         studio_lifecycle_config = cls(session, region)
     
-        operation_input_args = {'StudioLifecycleConfigName': 'studio_lifecycle_config_name', 'StudioLifecycleConfigContent': 'studio_lifecycle_config_content', 'StudioLifecycleConfigAppType': 'studio_lifecycle_config_app_type', 'Tags': 'tags'}
+        operation_input_args = {
+            'StudioLifecycleConfigName': studio_lifecycle_config_name,
+            'StudioLifecycleConfigContent': studio_lifecycle_config_content,
+            'StudioLifecycleConfigAppType': studio_lifecycle_config_app_type,
+            'Tags': tags,
+        }
         response = studio_lifecycle_config.client.create_studio_lifecycle_config(**operation_input_args)
     
         pprint(response)
@@ -3460,7 +3886,19 @@ class StudioLifecycleConfig(BaseModel):
         # deserialize the response
     
         return studio_lifecycle_config
-
+    
+    def refresh(
+        self
+    ) -> Optional[object]:
+    
+        operation_input_args = {
+            'StudioLifecycleConfigName': self.studio_lifecycle_config_name,
+        }
+        response = self.client.describe_studio_lifecycle_config(**operation_input_args)
+    
+        # deserialize the response
+        deserializer(self, response, 'DescribeStudioLifecycleConfigResponse')
+        return self
     
     @classmethod
     def get(
@@ -3471,19 +3909,15 @@ class StudioLifecycleConfig(BaseModel):
     ) -> Optional[object]:
         studio_lifecycle_config = cls(session, region)
     
-        operation_input_args = {'StudioLifecycleConfigName': 'studio_lifecycle_config_name'}
+        operation_input_args = {
+            'StudioLifecycleConfigName': studio_lifecycle_config_name,
+        }
         response = studio_lifecycle_config.client.describe_studio_lifecycle_config(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        studio_lifecycle_config.studio_lifecycle_config_arn = response["StudioLifecycleConfigArn"]
-        studio_lifecycle_config.studio_lifecycle_config_name = response["StudioLifecycleConfigName"]
-        studio_lifecycle_config.creation_time = response["CreationTime"]
-        studio_lifecycle_config.last_modified_time = response["LastModifiedTime"]
-        studio_lifecycle_config.studio_lifecycle_config_content = response["StudioLifecycleConfigContent"]
-        studio_lifecycle_config.studio_lifecycle_config_app_type = response["StudioLifecycleConfigAppType"]
-    
+        deserializer(studio_lifecycle_config, response, 'DescribeStudioLifecycleConfigResponse')
         return studio_lifecycle_config
 
 
@@ -3531,41 +3965,65 @@ class TrainingJob(BaseModel):
     retry_strategy: Optional[RetryStrategy] = Unassigned()
     remote_debug_config: Optional[RemoteDebugConfig] = Unassigned()
     infra_check_config: Optional[InfraCheckConfig] = Unassigned()
-
     
     @classmethod
     def create(
         cls,
         training_job_name: str,
-    algorithm_specification: AlgorithmSpecification,
-    role_arn: str,
-    output_data_config: OutputDataConfig,
-    resource_config: ResourceConfig,
-    stopping_condition: StoppingCondition,
-    hyper_parameters: Optional[Dict[str, str]] = Unassigned(),
-    input_data_config: Optional[List[Channel]] = Unassigned(),
-    vpc_config: Optional[VpcConfig] = Unassigned(),
-    tags: Optional[List[Tag]] = Unassigned(),
-    enable_network_isolation: Optional[bool] = Unassigned(),
-    enable_inter_container_traffic_encryption: Optional[bool] = Unassigned(),
-    enable_managed_spot_training: Optional[bool] = Unassigned(),
-    checkpoint_config: Optional[CheckpointConfig] = Unassigned(),
-    debug_hook_config: Optional[DebugHookConfig] = Unassigned(),
-    debug_rule_configurations: Optional[List[DebugRuleConfiguration]] = Unassigned(),
-    tensor_board_output_config: Optional[TensorBoardOutputConfig] = Unassigned(),
-    experiment_config: Optional[ExperimentConfig] = Unassigned(),
-    profiler_config: Optional[ProfilerConfig] = Unassigned(),
-    profiler_rule_configurations: Optional[List[ProfilerRuleConfiguration]] = Unassigned(),
-    environment: Optional[Dict[str, str]] = Unassigned(),
-    retry_strategy: Optional[RetryStrategy] = Unassigned(),
-    remote_debug_config: Optional[RemoteDebugConfig] = Unassigned(),
-    infra_check_config: Optional[InfraCheckConfig] = Unassigned(),
+        algorithm_specification: AlgorithmSpecification,
+        role_arn: str,
+        output_data_config: OutputDataConfig,
+        resource_config: ResourceConfig,
+        stopping_condition: StoppingCondition,
+        hyper_parameters: Optional[Dict[str, str]] = Unassigned(),
+        input_data_config: Optional[List[Channel]] = Unassigned(),
+        vpc_config: Optional[VpcConfig] = Unassigned(),
+        tags: Optional[List[Tag]] = Unassigned(),
+        enable_network_isolation: Optional[bool] = Unassigned(),
+        enable_inter_container_traffic_encryption: Optional[bool] = Unassigned(),
+        enable_managed_spot_training: Optional[bool] = Unassigned(),
+        checkpoint_config: Optional[CheckpointConfig] = Unassigned(),
+        debug_hook_config: Optional[DebugHookConfig] = Unassigned(),
+        debug_rule_configurations: Optional[List[DebugRuleConfiguration]] = Unassigned(),
+        tensor_board_output_config: Optional[TensorBoardOutputConfig] = Unassigned(),
+        experiment_config: Optional[ExperimentConfig] = Unassigned(),
+        profiler_config: Optional[ProfilerConfig] = Unassigned(),
+        profiler_rule_configurations: Optional[List[ProfilerRuleConfiguration]] = Unassigned(),
+        environment: Optional[Dict[str, str]] = Unassigned(),
+        retry_strategy: Optional[RetryStrategy] = Unassigned(),
+        remote_debug_config: Optional[RemoteDebugConfig] = Unassigned(),
+        infra_check_config: Optional[InfraCheckConfig] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         training_job = cls(session, region)
     
-        operation_input_args = {'TrainingJobName': 'training_job_name', 'HyperParameters': 'hyper_parameters', 'AlgorithmSpecification': 'algorithm_specification', 'RoleArn': 'role_arn', 'InputDataConfig': 'input_data_config', 'OutputDataConfig': 'output_data_config', 'ResourceConfig': 'resource_config', 'VpcConfig': 'vpc_config', 'StoppingCondition': 'stopping_condition', 'Tags': 'tags', 'EnableNetworkIsolation': 'enable_network_isolation', 'EnableInterContainerTrafficEncryption': 'enable_inter_container_traffic_encryption', 'EnableManagedSpotTraining': 'enable_managed_spot_training', 'CheckpointConfig': 'checkpoint_config', 'DebugHookConfig': 'debug_hook_config', 'DebugRuleConfigurations': 'debug_rule_configurations', 'TensorBoardOutputConfig': 'tensor_board_output_config', 'ExperimentConfig': 'experiment_config', 'ProfilerConfig': 'profiler_config', 'ProfilerRuleConfigurations': 'profiler_rule_configurations', 'Environment': 'environment', 'RetryStrategy': 'retry_strategy', 'RemoteDebugConfig': 'remote_debug_config', 'InfraCheckConfig': 'infra_check_config'}
+        operation_input_args = {
+            'TrainingJobName': training_job_name,
+            'HyperParameters': hyper_parameters,
+            'AlgorithmSpecification': algorithm_specification,
+            'RoleArn': role_arn,
+            'InputDataConfig': input_data_config,
+            'OutputDataConfig': output_data_config,
+            'ResourceConfig': resource_config,
+            'VpcConfig': vpc_config,
+            'StoppingCondition': stopping_condition,
+            'Tags': tags,
+            'EnableNetworkIsolation': enable_network_isolation,
+            'EnableInterContainerTrafficEncryption': enable_inter_container_traffic_encryption,
+            'EnableManagedSpotTraining': enable_managed_spot_training,
+            'CheckpointConfig': checkpoint_config,
+            'DebugHookConfig': debug_hook_config,
+            'DebugRuleConfigurations': debug_rule_configurations,
+            'TensorBoardOutputConfig': tensor_board_output_config,
+            'ExperimentConfig': experiment_config,
+            'ProfilerConfig': profiler_config,
+            'ProfilerRuleConfigurations': profiler_rule_configurations,
+            'Environment': environment,
+            'RetryStrategy': retry_strategy,
+            'RemoteDebugConfig': remote_debug_config,
+            'InfraCheckConfig': infra_check_config,
+        }
         response = training_job.client.create_training_job(**operation_input_args)
     
         pprint(response)
@@ -3573,7 +4031,19 @@ class TrainingJob(BaseModel):
         # deserialize the response
     
         return training_job
-
+    
+    def refresh(
+        self
+    ) -> Optional[object]:
+    
+        operation_input_args = {
+            'TrainingJobName': self.training_job_name,
+        }
+        response = self.client.describe_training_job(**operation_input_args)
+    
+        # deserialize the response
+        deserializer(self, response, 'DescribeTrainingJobResponse')
+        return self
     
     @classmethod
     def get(
@@ -3584,56 +4054,15 @@ class TrainingJob(BaseModel):
     ) -> Optional[object]:
         training_job = cls(session, region)
     
-        operation_input_args = {'TrainingJobName': 'training_job_name'}
+        operation_input_args = {
+            'TrainingJobName': training_job_name,
+        }
         response = training_job.client.describe_training_job(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        training_job.training_job_name = response["TrainingJobName"]
-        training_job.training_job_arn = response["TrainingJobArn"]
-        training_job.tuning_job_arn = response["TuningJobArn"]
-        training_job.labeling_job_arn = response["LabelingJobArn"]
-        training_job.auto_m_l_job_arn = response["AutoMLJobArn"]
-        training_job.model_artifacts = response["ModelArtifacts"]
-        training_job.training_job_status = response["TrainingJobStatus"]
-        training_job.secondary_status = response["SecondaryStatus"]
-        training_job.failure_reason = response["FailureReason"]
-        training_job.hyper_parameters = response["HyperParameters"]
-        training_job.algorithm_specification = response["AlgorithmSpecification"]
-        training_job.role_arn = response["RoleArn"]
-        training_job.input_data_config = response["InputDataConfig"]
-        training_job.output_data_config = response["OutputDataConfig"]
-        training_job.resource_config = response["ResourceConfig"]
-        training_job.warm_pool_status = response["WarmPoolStatus"]
-        training_job.vpc_config = response["VpcConfig"]
-        training_job.stopping_condition = response["StoppingCondition"]
-        training_job.creation_time = response["CreationTime"]
-        training_job.training_start_time = response["TrainingStartTime"]
-        training_job.training_end_time = response["TrainingEndTime"]
-        training_job.last_modified_time = response["LastModifiedTime"]
-        training_job.secondary_status_transitions = response["SecondaryStatusTransitions"]
-        training_job.final_metric_data_list = response["FinalMetricDataList"]
-        training_job.enable_network_isolation = response["EnableNetworkIsolation"]
-        training_job.enable_inter_container_traffic_encryption = response["EnableInterContainerTrafficEncryption"]
-        training_job.enable_managed_spot_training = response["EnableManagedSpotTraining"]
-        training_job.checkpoint_config = response["CheckpointConfig"]
-        training_job.training_time_in_seconds = response["TrainingTimeInSeconds"]
-        training_job.billable_time_in_seconds = response["BillableTimeInSeconds"]
-        training_job.debug_hook_config = response["DebugHookConfig"]
-        training_job.experiment_config = response["ExperimentConfig"]
-        training_job.debug_rule_configurations = response["DebugRuleConfigurations"]
-        training_job.tensor_board_output_config = response["TensorBoardOutputConfig"]
-        training_job.debug_rule_evaluation_statuses = response["DebugRuleEvaluationStatuses"]
-        training_job.profiler_config = response["ProfilerConfig"]
-        training_job.profiler_rule_configurations = response["ProfilerRuleConfigurations"]
-        training_job.profiler_rule_evaluation_statuses = response["ProfilerRuleEvaluationStatuses"]
-        training_job.profiling_status = response["ProfilingStatus"]
-        training_job.environment = response["Environment"]
-        training_job.retry_strategy = response["RetryStrategy"]
-        training_job.remote_debug_config = response["RemoteDebugConfig"]
-        training_job.infra_check_config = response["InfraCheckConfig"]
-    
+        deserializer(training_job, response, 'DescribeTrainingJobResponse')
         return training_job
 
 
@@ -3659,31 +4088,45 @@ class TransformJob(BaseModel):
     auto_m_l_job_arn: Optional[str] = Unassigned()
     data_processing: Optional[DataProcessing] = Unassigned()
     experiment_config: Optional[ExperimentConfig] = Unassigned()
-
     
     @classmethod
     def create(
         cls,
         transform_job_name: str,
-    model_name: str,
-    transform_input: TransformInput,
-    transform_output: TransformOutput,
-    transform_resources: TransformResources,
-    max_concurrent_transforms: Optional[int] = Unassigned(),
-    model_client_config: Optional[ModelClientConfig] = Unassigned(),
-    max_payload_in_m_b: Optional[int] = Unassigned(),
-    batch_strategy: Optional[str] = Unassigned(),
-    environment: Optional[Dict[str, str]] = Unassigned(),
-    data_capture_config: Optional[BatchDataCaptureConfig] = Unassigned(),
-    data_processing: Optional[DataProcessing] = Unassigned(),
-    tags: Optional[List[Tag]] = Unassigned(),
-    experiment_config: Optional[ExperimentConfig] = Unassigned(),
+        model_name: str,
+        transform_input: TransformInput,
+        transform_output: TransformOutput,
+        transform_resources: TransformResources,
+        max_concurrent_transforms: Optional[int] = Unassigned(),
+        model_client_config: Optional[ModelClientConfig] = Unassigned(),
+        max_payload_in_m_b: Optional[int] = Unassigned(),
+        batch_strategy: Optional[str] = Unassigned(),
+        environment: Optional[Dict[str, str]] = Unassigned(),
+        data_capture_config: Optional[BatchDataCaptureConfig] = Unassigned(),
+        data_processing: Optional[DataProcessing] = Unassigned(),
+        tags: Optional[List[Tag]] = Unassigned(),
+        experiment_config: Optional[ExperimentConfig] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         transform_job = cls(session, region)
     
-        operation_input_args = {'TransformJobName': 'transform_job_name', 'ModelName': 'model_name', 'MaxConcurrentTransforms': 'max_concurrent_transforms', 'ModelClientConfig': 'model_client_config', 'MaxPayloadInMB': 'max_payload_in_m_b', 'BatchStrategy': 'batch_strategy', 'Environment': 'environment', 'TransformInput': 'transform_input', 'TransformOutput': 'transform_output', 'DataCaptureConfig': 'data_capture_config', 'TransformResources': 'transform_resources', 'DataProcessing': 'data_processing', 'Tags': 'tags', 'ExperimentConfig': 'experiment_config'}
+        operation_input_args = {
+            'TransformJobName': transform_job_name,
+            'ModelName': model_name,
+            'MaxConcurrentTransforms': max_concurrent_transforms,
+            'ModelClientConfig': model_client_config,
+            'MaxPayloadInMB': max_payload_in_m_b,
+            'BatchStrategy': batch_strategy,
+            'Environment': environment,
+            'TransformInput': transform_input,
+            'TransformOutput': transform_output,
+            'DataCaptureConfig': data_capture_config,
+            'TransformResources': transform_resources,
+            'DataProcessing': data_processing,
+            'Tags': tags,
+            'ExperimentConfig': experiment_config,
+        }
         response = transform_job.client.create_transform_job(**operation_input_args)
     
         pprint(response)
@@ -3691,7 +4134,19 @@ class TransformJob(BaseModel):
         # deserialize the response
     
         return transform_job
-
+    
+    def refresh(
+        self
+    ) -> Optional[object]:
+    
+        operation_input_args = {
+            'TransformJobName': self.transform_job_name,
+        }
+        response = self.client.describe_transform_job(**operation_input_args)
+    
+        # deserialize the response
+        deserializer(self, response, 'DescribeTransformJobResponse')
+        return self
     
     @classmethod
     def get(
@@ -3702,34 +4157,15 @@ class TransformJob(BaseModel):
     ) -> Optional[object]:
         transform_job = cls(session, region)
     
-        operation_input_args = {'TransformJobName': 'transform_job_name'}
+        operation_input_args = {
+            'TransformJobName': transform_job_name,
+        }
         response = transform_job.client.describe_transform_job(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        transform_job.transform_job_name = response["TransformJobName"]
-        transform_job.transform_job_arn = response["TransformJobArn"]
-        transform_job.transform_job_status = response["TransformJobStatus"]
-        transform_job.failure_reason = response["FailureReason"]
-        transform_job.model_name = response["ModelName"]
-        transform_job.max_concurrent_transforms = response["MaxConcurrentTransforms"]
-        transform_job.model_client_config = response["ModelClientConfig"]
-        transform_job.max_payload_in_m_b = response["MaxPayloadInMB"]
-        transform_job.batch_strategy = response["BatchStrategy"]
-        transform_job.environment = response["Environment"]
-        transform_job.transform_input = response["TransformInput"]
-        transform_job.transform_output = response["TransformOutput"]
-        transform_job.data_capture_config = response["DataCaptureConfig"]
-        transform_job.transform_resources = response["TransformResources"]
-        transform_job.creation_time = response["CreationTime"]
-        transform_job.transform_start_time = response["TransformStartTime"]
-        transform_job.transform_end_time = response["TransformEndTime"]
-        transform_job.labeling_job_arn = response["LabelingJobArn"]
-        transform_job.auto_m_l_job_arn = response["AutoMLJobArn"]
-        transform_job.data_processing = response["DataProcessing"]
-        transform_job.experiment_config = response["ExperimentConfig"]
-    
+        deserializer(transform_job, response, 'DescribeTransformJobResponse')
         return transform_job
 
 
@@ -3744,22 +4180,27 @@ class Trial(BaseModel):
     last_modified_time: Optional[datetime.datetime] = Unassigned()
     last_modified_by: Optional[UserContext] = Unassigned()
     metadata_properties: Optional[MetadataProperties] = Unassigned()
-
     
     @classmethod
     def create(
         cls,
         trial_name: str,
-    experiment_name: str,
-    display_name: Optional[str] = Unassigned(),
-    metadata_properties: Optional[MetadataProperties] = Unassigned(),
-    tags: Optional[List[Tag]] = Unassigned(),
+        experiment_name: str,
+        display_name: Optional[str] = Unassigned(),
+        metadata_properties: Optional[MetadataProperties] = Unassigned(),
+        tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         trial = cls(session, region)
     
-        operation_input_args = {'TrialName': 'trial_name', 'DisplayName': 'display_name', 'ExperimentName': 'experiment_name', 'MetadataProperties': 'metadata_properties', 'Tags': 'tags'}
+        operation_input_args = {
+            'TrialName': trial_name,
+            'DisplayName': display_name,
+            'ExperimentName': experiment_name,
+            'MetadataProperties': metadata_properties,
+            'Tags': tags,
+        }
         response = trial.client.create_trial(**operation_input_args)
     
         pprint(response)
@@ -3767,7 +4208,19 @@ class Trial(BaseModel):
         # deserialize the response
     
         return trial
-
+    
+    def refresh(
+        self
+    ) -> Optional[object]:
+    
+        operation_input_args = {
+            'TrialName': self.trial_name,
+        }
+        response = self.client.describe_trial(**operation_input_args)
+    
+        # deserialize the response
+        deserializer(self, response, 'DescribeTrialResponse')
+        return self
     
     @classmethod
     def get(
@@ -3778,23 +4231,15 @@ class Trial(BaseModel):
     ) -> Optional[object]:
         trial = cls(session, region)
     
-        operation_input_args = {'TrialName': 'trial_name'}
+        operation_input_args = {
+            'TrialName': trial_name,
+        }
         response = trial.client.describe_trial(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        trial.trial_name = response["TrialName"]
-        trial.trial_arn = response["TrialArn"]
-        trial.display_name = response["DisplayName"]
-        trial.experiment_name = response["ExperimentName"]
-        trial.source = response["Source"]
-        trial.creation_time = response["CreationTime"]
-        trial.created_by = response["CreatedBy"]
-        trial.last_modified_time = response["LastModifiedTime"]
-        trial.last_modified_by = response["LastModifiedBy"]
-        trial.metadata_properties = response["MetadataProperties"]
-    
+        deserializer(trial, response, 'DescribeTrialResponse')
         return trial
 
 
@@ -3817,27 +4262,37 @@ class TrialComponent(BaseModel):
     metrics: Optional[List[TrialComponentMetricSummary]] = Unassigned()
     lineage_group_arn: Optional[str] = Unassigned()
     sources: Optional[List[TrialComponentSource]] = Unassigned()
-
     
     @classmethod
     def create(
         cls,
         trial_component_name: str,
-    display_name: Optional[str] = Unassigned(),
-    status: Optional[TrialComponentStatus] = Unassigned(),
-    start_time: Optional[datetime.datetime] = Unassigned(),
-    end_time: Optional[datetime.datetime] = Unassigned(),
-    parameters: Optional[Dict[str, TrialComponentParameterValue]] = Unassigned(),
-    input_artifacts: Optional[Dict[str, TrialComponentArtifact]] = Unassigned(),
-    output_artifacts: Optional[Dict[str, TrialComponentArtifact]] = Unassigned(),
-    metadata_properties: Optional[MetadataProperties] = Unassigned(),
-    tags: Optional[List[Tag]] = Unassigned(),
+        display_name: Optional[str] = Unassigned(),
+        status: Optional[TrialComponentStatus] = Unassigned(),
+        start_time: Optional[datetime.datetime] = Unassigned(),
+        end_time: Optional[datetime.datetime] = Unassigned(),
+        parameters: Optional[Dict[str, TrialComponentParameterValue]] = Unassigned(),
+        input_artifacts: Optional[Dict[str, TrialComponentArtifact]] = Unassigned(),
+        output_artifacts: Optional[Dict[str, TrialComponentArtifact]] = Unassigned(),
+        metadata_properties: Optional[MetadataProperties] = Unassigned(),
+        tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         trial_component = cls(session, region)
     
-        operation_input_args = {'TrialComponentName': 'trial_component_name', 'DisplayName': 'display_name', 'Status': 'status', 'StartTime': 'start_time', 'EndTime': 'end_time', 'Parameters': 'parameters', 'InputArtifacts': 'input_artifacts', 'OutputArtifacts': 'output_artifacts', 'MetadataProperties': 'metadata_properties', 'Tags': 'tags'}
+        operation_input_args = {
+            'TrialComponentName': trial_component_name,
+            'DisplayName': display_name,
+            'Status': status,
+            'StartTime': start_time,
+            'EndTime': end_time,
+            'Parameters': parameters,
+            'InputArtifacts': input_artifacts,
+            'OutputArtifacts': output_artifacts,
+            'MetadataProperties': metadata_properties,
+            'Tags': tags,
+        }
         response = trial_component.client.create_trial_component(**operation_input_args)
     
         pprint(response)
@@ -3845,7 +4300,19 @@ class TrialComponent(BaseModel):
         # deserialize the response
     
         return trial_component
-
+    
+    def refresh(
+        self
+    ) -> Optional[object]:
+    
+        operation_input_args = {
+            'TrialComponentName': self.trial_component_name,
+        }
+        response = self.client.describe_trial_component(**operation_input_args)
+    
+        # deserialize the response
+        deserializer(self, response, 'DescribeTrialComponentResponse')
+        return self
     
     @classmethod
     def get(
@@ -3856,31 +4323,15 @@ class TrialComponent(BaseModel):
     ) -> Optional[object]:
         trial_component = cls(session, region)
     
-        operation_input_args = {'TrialComponentName': 'trial_component_name'}
+        operation_input_args = {
+            'TrialComponentName': trial_component_name,
+        }
         response = trial_component.client.describe_trial_component(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        trial_component.trial_component_name = response["TrialComponentName"]
-        trial_component.trial_component_arn = response["TrialComponentArn"]
-        trial_component.display_name = response["DisplayName"]
-        trial_component.source = response["Source"]
-        trial_component.status = response["Status"]
-        trial_component.start_time = response["StartTime"]
-        trial_component.end_time = response["EndTime"]
-        trial_component.creation_time = response["CreationTime"]
-        trial_component.created_by = response["CreatedBy"]
-        trial_component.last_modified_time = response["LastModifiedTime"]
-        trial_component.last_modified_by = response["LastModifiedBy"]
-        trial_component.parameters = response["Parameters"]
-        trial_component.input_artifacts = response["InputArtifacts"]
-        trial_component.output_artifacts = response["OutputArtifacts"]
-        trial_component.metadata_properties = response["MetadataProperties"]
-        trial_component.metrics = response["Metrics"]
-        trial_component.lineage_group_arn = response["LineageGroupArn"]
-        trial_component.sources = response["Sources"]
-    
+        deserializer(trial_component, response, 'DescribeTrialComponentResponse')
         return trial_component
 
 
@@ -3896,23 +4347,29 @@ class UserProfile(BaseModel):
     single_sign_on_user_identifier: Optional[str] = Unassigned()
     single_sign_on_user_value: Optional[str] = Unassigned()
     user_settings: Optional[UserSettings] = Unassigned()
-
     
     @classmethod
     def create(
         cls,
         domain_id: str,
-    user_profile_name: str,
-    single_sign_on_user_identifier: Optional[str] = Unassigned(),
-    single_sign_on_user_value: Optional[str] = Unassigned(),
-    tags: Optional[List[Tag]] = Unassigned(),
-    user_settings: Optional[UserSettings] = Unassigned(),
+        user_profile_name: str,
+        single_sign_on_user_identifier: Optional[str] = Unassigned(),
+        single_sign_on_user_value: Optional[str] = Unassigned(),
+        tags: Optional[List[Tag]] = Unassigned(),
+        user_settings: Optional[UserSettings] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         user_profile = cls(session, region)
     
-        operation_input_args = {'DomainId': 'domain_id', 'UserProfileName': 'user_profile_name', 'SingleSignOnUserIdentifier': 'single_sign_on_user_identifier', 'SingleSignOnUserValue': 'single_sign_on_user_value', 'Tags': 'tags', 'UserSettings': 'user_settings'}
+        operation_input_args = {
+            'DomainId': domain_id,
+            'UserProfileName': user_profile_name,
+            'SingleSignOnUserIdentifier': single_sign_on_user_identifier,
+            'SingleSignOnUserValue': single_sign_on_user_value,
+            'Tags': tags,
+            'UserSettings': user_settings,
+        }
         response = user_profile.client.create_user_profile(**operation_input_args)
     
         pprint(response)
@@ -3920,58 +4377,69 @@ class UserProfile(BaseModel):
         # deserialize the response
     
         return user_profile
-
+    
+    def refresh(
+        self
+    ) -> Optional[object]:
+    
+        operation_input_args = {
+            'DomainId': self.domain_id,
+            'UserProfileName': self.user_profile_name,
+        }
+        response = self.client.describe_user_profile(**operation_input_args)
+    
+        # deserialize the response
+        deserializer(self, response, 'DescribeUserProfileResponse')
+        return self
     
     @classmethod
     def get(
         cls,
         domain_id: str,
-    user_profile_name: str,
+        user_profile_name: str,
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         user_profile = cls(session, region)
     
-        operation_input_args = {'DomainId': 'domain_id', 'UserProfileName': 'user_profile_name'}
+        operation_input_args = {
+            'DomainId': domain_id,
+            'UserProfileName': user_profile_name,
+        }
         response = user_profile.client.describe_user_profile(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        user_profile.domain_id = response["DomainId"]
-        user_profile.user_profile_arn = response["UserProfileArn"]
-        user_profile.user_profile_name = response["UserProfileName"]
-        user_profile.home_efs_file_system_uid = response["HomeEfsFileSystemUid"]
-        user_profile.status = response["Status"]
-        user_profile.last_modified_time = response["LastModifiedTime"]
-        user_profile.creation_time = response["CreationTime"]
-        user_profile.failure_reason = response["FailureReason"]
-        user_profile.single_sign_on_user_identifier = response["SingleSignOnUserIdentifier"]
-        user_profile.single_sign_on_user_value = response["SingleSignOnUserValue"]
-        user_profile.user_settings = response["UserSettings"]
-    
+        deserializer(user_profile, response, 'DescribeUserProfileResponse')
         return user_profile
 
 
 class Workforce(BaseModel):
     workforce: Workforce
-
     
     @classmethod
     def create(
         cls,
         workforce_name: str,
-    cognito_config: Optional[CognitoConfig] = Unassigned(),
-    oidc_config: Optional[OidcConfig] = Unassigned(),
-    source_ip_config: Optional[SourceIpConfig] = Unassigned(),
-    tags: Optional[List[Tag]] = Unassigned(),
-    workforce_vpc_config: Optional[WorkforceVpcConfigRequest] = Unassigned(),
+        cognito_config: Optional[CognitoConfig] = Unassigned(),
+        oidc_config: Optional[OidcConfig] = Unassigned(),
+        source_ip_config: Optional[SourceIpConfig] = Unassigned(),
+        tags: Optional[List[Tag]] = Unassigned(),
+        workforce_vpc_config: Optional[WorkforceVpcConfigRequest] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         workforce = cls(session, region)
     
-        operation_input_args = {'CognitoConfig': 'cognito_config', 'OidcConfig': 'oidc_config', 'SourceIpConfig': 'source_ip_config', 'WorkforceName': 'workforce_name', 'Tags': 'tags', 'WorkforceVpcConfig': 'workforce_vpc_config'}
+        operation_input_args = {
+            'CognitoConfig': cognito_config,
+            'OidcConfig': oidc_config,
+            'SourceIpConfig': source_ip_config,
+            'WorkforceName': workforce_name,
+            'Tags': tags,
+            'WorkforceVpcConfig': workforce_vpc_config,
+        }
         response = workforce.client.create_workforce(**operation_input_args)
     
         pprint(response)
@@ -3979,7 +4447,19 @@ class Workforce(BaseModel):
         # deserialize the response
     
         return workforce
-
+    
+    def refresh(
+        self
+    ) -> Optional[object]:
+    
+        operation_input_args = {
+            'WorkforceName': self.workforce_name,
+        }
+        response = self.client.describe_workforce(**operation_input_args)
+    
+        # deserialize the response
+        deserializer(self, response, 'DescribeWorkforceResponse')
+        return self
     
     @classmethod
     def get(
@@ -3990,36 +4470,43 @@ class Workforce(BaseModel):
     ) -> Optional[object]:
         workforce = cls(session, region)
     
-        operation_input_args = {'WorkforceName': 'workforce_name'}
+        operation_input_args = {
+            'WorkforceName': workforce_name,
+        }
         response = workforce.client.describe_workforce(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        workforce.workforce = response["Workforce"]
-    
+        deserializer(workforce, response, 'DescribeWorkforceResponse')
         return workforce
 
 
 class Workteam(BaseModel):
     workteam: Workteam
-
     
     @classmethod
     def create(
         cls,
         workteam_name: str,
-    member_definitions: List[MemberDefinition],
-    description: str,
-    workforce_name: Optional[str] = Unassigned(),
-    notification_configuration: Optional[NotificationConfiguration] = Unassigned(),
-    tags: Optional[List[Tag]] = Unassigned(),
+        member_definitions: List[MemberDefinition],
+        description: str,
+        workforce_name: Optional[str] = Unassigned(),
+        notification_configuration: Optional[NotificationConfiguration] = Unassigned(),
+        tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         workteam = cls(session, region)
     
-        operation_input_args = {'WorkteamName': 'workteam_name', 'WorkforceName': 'workforce_name', 'MemberDefinitions': 'member_definitions', 'Description': 'description', 'NotificationConfiguration': 'notification_configuration', 'Tags': 'tags'}
+        operation_input_args = {
+            'WorkteamName': workteam_name,
+            'WorkforceName': workforce_name,
+            'MemberDefinitions': member_definitions,
+            'Description': description,
+            'NotificationConfiguration': notification_configuration,
+            'Tags': tags,
+        }
         response = workteam.client.create_workteam(**operation_input_args)
     
         pprint(response)
@@ -4027,7 +4514,19 @@ class Workteam(BaseModel):
         # deserialize the response
     
         return workteam
-
+    
+    def refresh(
+        self
+    ) -> Optional[object]:
+    
+        operation_input_args = {
+            'WorkteamName': self.workteam_name,
+        }
+        response = self.client.describe_workteam(**operation_input_args)
+    
+        # deserialize the response
+        deserializer(self, response, 'DescribeWorkteamResponse')
+        return self
     
     @classmethod
     def get(
@@ -4038,14 +4537,15 @@ class Workteam(BaseModel):
     ) -> Optional[object]:
         workteam = cls(session, region)
     
-        operation_input_args = {'WorkteamName': 'workteam_name'}
+        operation_input_args = {
+            'WorkteamName': workteam_name,
+        }
         response = workteam.client.describe_workteam(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        workteam.workteam = response["Workteam"]
-    
+        deserializer(workteam, response, 'DescribeWorkteamResponse')
         return workteam
 
 

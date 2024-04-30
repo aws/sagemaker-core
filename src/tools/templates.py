@@ -35,13 +35,15 @@ CREATE_METHOD_TEMPLATE = '''
 @classmethod
 def create(
     cls,
-    {create_args}
+{create_args}
     session: Optional[Session] = None,
     region: Optional[str] = None,
 ) -> Optional[object]:
     {resource_lower} = cls(session, region)
 
-    operation_input_args = {operation_input_args}
+    operation_input_args = {{
+{operation_input_args}
+    }}
     response = {resource_lower}.client.{operation}(**operation_input_args)
 
     pprint(response)
@@ -55,20 +57,37 @@ GET_METHOD_TEMPLATE = '''
 @classmethod
 def get(
     cls,
-    {describe_args}
+{describe_args}
     session: Optional[Session] = None,
     region: Optional[str] = None,
 ) -> Optional[object]:
     {resource_lower} = cls(session, region)
 
-    operation_input_args = {operation_input_args}
+    operation_input_args = {{
+{operation_input_args}
+    }}
     response = {resource_lower}.client.{operation}(**operation_input_args)
 
     pprint(response)
 
     # deserialize the response
-{object_attribute_assignments}
+    deserializer({resource_lower}, response, '{describe_operation_output_shape}')
     return {resource_lower}
+'''
+
+REFRESH_METHOD_TEMPLATE = '''
+def refresh(
+    self
+) -> Optional[object]:
+
+    operation_input_args = {{
+{operation_input_args}
+    }}
+    response = self.client.{operation}(**operation_input_args)
+
+    # deserialize the response
+    deserializer(self, response, '{describe_operation_output_shape}')
+    return self
 '''
 
 SHAPE_BASE_CLASS_TEMPLATE ='''

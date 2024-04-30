@@ -3,9 +3,10 @@ import unittest
 
 from pydantic import BaseModel, ValidationError
 
-from generated.shapes import Base, AdditionalS3DataSource, Unassigned
+from src.generated.shapes import Base, AdditionalS3DataSource, Unassigned
+from src.tools.constants import GENERATED_CLASSES_LOCATION, SHAPES_CODEGEN_FILE_NAME
 
-FILE_NAME = '../src/generated/shapes.py'
+FILE_NAME = GENERATED_CLASSES_LOCATION + "/" + SHAPES_CODEGEN_FILE_NAME
 
 
 class TestGeneratedShape(unittest.TestCase):

@@ -14,7 +14,7 @@
 import pprint
 import textwrap
 
-from constants import BASIC_JSON_TYPES_TO_PYTHON_TYPES, SHAPE_DAG_FILE_PATH
+from .constants import BASIC_JSON_TYPES_TO_PYTHON_TYPES, SHAPE_DAG_FILE_PATH
 from src.util.util import reformat_file_with_black, convert_to_snake_case
 
 
