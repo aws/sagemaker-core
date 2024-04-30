@@ -16,7 +16,7 @@ import os
 import logging
 import pandas as pd
 
-from .constants import CLASS_METHODS, OBJECT_METHODS
+from src.tools.constants import CLASS_METHODS, OBJECT_METHODS
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
