@@ -1,8 +1,6 @@
 import os
 from src.tools.resources_codegen import ResourcesCodeGen
-
-SERVICE_JSON_FILE_PATH = os.getcwd() + '/sample/sagemaker/2017-07-24/service-2.json'
-
+from src.tools.constants import SERVICE_JSON_FILE_PATH
 
 class TestGenerateResource:
     @classmethod

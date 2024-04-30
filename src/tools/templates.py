@@ -41,7 +41,9 @@ def create(
 ) -> Optional[object]:
     {resource_lower} = cls(session, region)
 
-    operation_input_args = {operation_input_args}
+    operation_input_args = {{
+{operation_input_args}
+    }}
     response = {resource_lower}.client.{operation}(**operation_input_args)
 
     pprint(response)

@@ -270,7 +270,7 @@ class ResourcesCodeGen:
         Auto-generate the CREATE method for a resource.
 
         Args:
-            resource (str): The resource name.
+            resource_name (str): The resource name.
 
         Returns:
             str: The formatted Create Method template.
@@ -291,7 +291,12 @@ class ResourcesCodeGen:
 
         # Generate the input arguments for the operation
         input_shape_members = self.shapes[operation_input_shape_name]["members"].keys()
-        operation_input_args = {member: convert_to_snake_case(member) for member in input_shape_members}
+        operation_input_args = ",\n".join(
+            f"'{member}': {convert_to_snake_case(member)}"
+            for member in input_shape_members
+        )
+        operation_input_args += ","
+        operation_input_args = add_indent(operation_input_args, 8)
 
         # Convert the operation name to snake case
         operation = convert_to_snake_case("Create" + resource_name)
@@ -343,22 +348,19 @@ class ResourcesCodeGen:
         resource_operation_input_shape_members = self.shapes[resource_operation_input_shape_name][
             "members"].keys()
 
-        operation_input_args = ""
-        for member in resource_operation_input_shape_members:
-            operation_input_args += f"'{member}': {convert_to_snake_case(member)},\n"
-        # remove the last \n
-        operation_input_args = operation_input_args.rstrip("\n")
+        operation_input_args = ",\n".join(
+            f"'{member}': {convert_to_snake_case(member)}"
+            for member in resource_operation_input_shape_members
+        )
+        operation_input_args += ","
         operation_input_args = add_indent(operation_input_args, 8)
 
-        describe_args = ""
         typed_shape_members = self.shapes_extractor.generate_shape_members(
             resource_operation_input_shape_name
         )
 
-        for attr, type in typed_shape_members.items():
-            describe_args += f"{attr}: {type},\n"
-        # remove the last \n
-        describe_args = describe_args.rstrip("\n")
+        describe_args = ",\n".join(f"{attr}: {type}" for attr, type in typed_shape_members.items())
+        describe_args += ","
         describe_args = add_indent(describe_args)
 
         resource_lower = convert_to_snake_case(resource_name)
@@ -390,11 +392,11 @@ class ResourcesCodeGen:
         resource_operation_input_shape_members = self.shapes[resource_operation_input_shape_name][
             "members"].keys()
 
-        operation_input_args = ""
-        for member in resource_operation_input_shape_members:
-            operation_input_args += f"'{member}': self.{convert_to_snake_case(member)},\n"
-        # remove the last \n
-        operation_input_args = operation_input_args.rstrip("\n")
+        operation_input_args = ",\n".join(
+            f"'{member}': self.{convert_to_snake_case(member)}"
+            for member in resource_operation_input_shape_members
+        )
+        operation_input_args += ","
         operation_input_args = add_indent(operation_input_args, 8)
 
         operation = convert_to_snake_case("Describe" + resource_name)
@@ -405,8 +407,3 @@ class ResourcesCodeGen:
             describe_operation_output_shape=resource_operation_output_shape_name,
         )
         return formatted_method
-
-
-if __name__ == "__main__":
-    file_path = os.getcwd() + '/sample/sagemaker/2017-07-24/service-2.json'
-    resource_generator = ResourcesCodeGen(file_path)

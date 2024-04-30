@@ -54,7 +54,16 @@ class Action(BaseModel):
     ) -> Optional[object]:
         action = cls(session, region)
     
-        operation_input_args = {'ActionName': 'action_name', 'Source': 'source', 'ActionType': 'action_type', 'Description': 'description', 'Status': 'status', 'Properties': 'properties', 'MetadataProperties': 'metadata_properties', 'Tags': 'tags'}
+        operation_input_args = {
+            'ActionName': action_name,
+            'Source': source,
+            'ActionType': action_type,
+            'Description': description,
+            'Status': status,
+            'Properties': properties,
+            'MetadataProperties': metadata_properties,
+            'Tags': tags,
+        }
         response = action.client.create_action(**operation_input_args)
     
         pprint(response)
@@ -125,7 +134,15 @@ class Algorithm(BaseModel):
     ) -> Optional[object]:
         algorithm = cls(session, region)
     
-        operation_input_args = {'AlgorithmName': 'algorithm_name', 'AlgorithmDescription': 'algorithm_description', 'TrainingSpecification': 'training_specification', 'InferenceSpecification': 'inference_specification', 'ValidationSpecification': 'validation_specification', 'CertifyForMarketplace': 'certify_for_marketplace', 'Tags': 'tags'}
+        operation_input_args = {
+            'AlgorithmName': algorithm_name,
+            'AlgorithmDescription': algorithm_description,
+            'TrainingSpecification': training_specification,
+            'InferenceSpecification': inference_specification,
+            'ValidationSpecification': validation_specification,
+            'CertifyForMarketplace': certify_for_marketplace,
+            'Tags': tags,
+        }
         response = algorithm.client.create_algorithm(**operation_input_args)
     
         pprint(response)
@@ -197,7 +214,15 @@ class App(BaseModel):
     ) -> Optional[object]:
         app = cls(session, region)
     
-        operation_input_args = {'DomainId': 'domain_id', 'UserProfileName': 'user_profile_name', 'SpaceName': 'space_name', 'AppType': 'app_type', 'AppName': 'app_name', 'Tags': 'tags', 'ResourceSpec': 'resource_spec'}
+        operation_input_args = {
+            'DomainId': domain_id,
+            'UserProfileName': user_profile_name,
+            'SpaceName': space_name,
+            'AppType': app_type,
+            'AppName': app_name,
+            'Tags': tags,
+            'ResourceSpec': resource_spec,
+        }
         response = app.client.create_app(**operation_input_args)
     
         pprint(response)
@@ -272,7 +297,12 @@ class AppImageConfig(BaseModel):
     ) -> Optional[object]:
         app_image_config = cls(session, region)
     
-        operation_input_args = {'AppImageConfigName': 'app_image_config_name', 'Tags': 'tags', 'KernelGatewayImageConfig': 'kernel_gateway_image_config', 'JupyterLabAppImageConfig': 'jupyter_lab_app_image_config'}
+        operation_input_args = {
+            'AppImageConfigName': app_image_config_name,
+            'Tags': tags,
+            'KernelGatewayImageConfig': kernel_gateway_image_config,
+            'JupyterLabAppImageConfig': jupyter_lab_app_image_config,
+        }
         response = app_image_config.client.create_app_image_config(**operation_input_args)
     
         pprint(response)
@@ -342,7 +372,14 @@ class Artifact(BaseModel):
     ) -> Optional[object]:
         artifact = cls(session, region)
     
-        operation_input_args = {'ArtifactName': 'artifact_name', 'Source': 'source', 'ArtifactType': 'artifact_type', 'Properties': 'properties', 'MetadataProperties': 'metadata_properties', 'Tags': 'tags'}
+        operation_input_args = {
+            'ArtifactName': artifact_name,
+            'Source': source,
+            'ArtifactType': artifact_type,
+            'Properties': properties,
+            'MetadataProperties': metadata_properties,
+            'Tags': tags,
+        }
         response = artifact.client.create_artifact(**operation_input_args)
     
         pprint(response)
@@ -426,7 +463,18 @@ class AutoMLJob(BaseModel):
     ) -> Optional[object]:
         auto_m_l_job = cls(session, region)
     
-        operation_input_args = {'AutoMLJobName': 'auto_m_l_job_name', 'InputDataConfig': 'input_data_config', 'OutputDataConfig': 'output_data_config', 'ProblemType': 'problem_type', 'AutoMLJobObjective': 'auto_m_l_job_objective', 'AutoMLJobConfig': 'auto_m_l_job_config', 'RoleArn': 'role_arn', 'GenerateCandidateDefinitionsOnly': 'generate_candidate_definitions_only', 'Tags': 'tags', 'ModelDeployConfig': 'model_deploy_config'}
+        operation_input_args = {
+            'AutoMLJobName': auto_m_l_job_name,
+            'InputDataConfig': input_data_config,
+            'OutputDataConfig': output_data_config,
+            'ProblemType': problem_type,
+            'AutoMLJobObjective': auto_m_l_job_objective,
+            'AutoMLJobConfig': auto_m_l_job_config,
+            'RoleArn': role_arn,
+            'GenerateCandidateDefinitionsOnly': generate_candidate_definitions_only,
+            'Tags': tags,
+            'ModelDeployConfig': model_deploy_config,
+        }
         response = auto_m_l_job.client.create_auto_m_l_job(**operation_input_args)
     
         pprint(response)
@@ -511,7 +559,18 @@ class AutoMLJobV2(BaseModel):
     ) -> Optional[object]:
         auto_m_l_job_v2 = cls(session, region)
     
-        operation_input_args = {'AutoMLJobName': 'auto_m_l_job_name', 'AutoMLJobInputDataConfig': 'auto_m_l_job_input_data_config', 'OutputDataConfig': 'output_data_config', 'AutoMLProblemTypeConfig': 'auto_m_l_problem_type_config', 'RoleArn': 'role_arn', 'Tags': 'tags', 'SecurityConfig': 'security_config', 'AutoMLJobObjective': 'auto_m_l_job_objective', 'ModelDeployConfig': 'model_deploy_config', 'DataSplitConfig': 'data_split_config'}
+        operation_input_args = {
+            'AutoMLJobName': auto_m_l_job_name,
+            'AutoMLJobInputDataConfig': auto_m_l_job_input_data_config,
+            'OutputDataConfig': output_data_config,
+            'AutoMLProblemTypeConfig': auto_m_l_problem_type_config,
+            'RoleArn': role_arn,
+            'Tags': tags,
+            'SecurityConfig': security_config,
+            'AutoMLJobObjective': auto_m_l_job_objective,
+            'ModelDeployConfig': model_deploy_config,
+            'DataSplitConfig': data_split_config,
+        }
         response = auto_m_l_job_v2.client.create_auto_m_l_job_v2(**operation_input_args)
     
         pprint(response)
@@ -575,7 +634,12 @@ class Cluster(BaseModel):
     ) -> Optional[object]:
         cluster = cls(session, region)
     
-        operation_input_args = {'ClusterName': 'cluster_name', 'InstanceGroups': 'instance_groups', 'VpcConfig': 'vpc_config', 'Tags': 'tags'}
+        operation_input_args = {
+            'ClusterName': cluster_name,
+            'InstanceGroups': instance_groups,
+            'VpcConfig': vpc_config,
+            'Tags': tags,
+        }
         response = cluster.client.create_cluster(**operation_input_args)
     
         pprint(response)
@@ -636,7 +700,11 @@ class CodeRepository(BaseModel):
     ) -> Optional[object]:
         code_repository = cls(session, region)
     
-        operation_input_args = {'CodeRepositoryName': 'code_repository_name', 'GitConfig': 'git_config', 'Tags': 'tags'}
+        operation_input_args = {
+            'CodeRepositoryName': code_repository_name,
+            'GitConfig': git_config,
+            'Tags': tags,
+        }
         response = code_repository.client.create_code_repository(**operation_input_args)
     
         pprint(response)
@@ -715,7 +783,16 @@ class CompilationJob(BaseModel):
     ) -> Optional[object]:
         compilation_job = cls(session, region)
     
-        operation_input_args = {'CompilationJobName': 'compilation_job_name', 'RoleArn': 'role_arn', 'ModelPackageVersionArn': 'model_package_version_arn', 'InputConfig': 'input_config', 'OutputConfig': 'output_config', 'VpcConfig': 'vpc_config', 'StoppingCondition': 'stopping_condition', 'Tags': 'tags'}
+        operation_input_args = {
+            'CompilationJobName': compilation_job_name,
+            'RoleArn': role_arn,
+            'ModelPackageVersionArn': model_package_version_arn,
+            'InputConfig': input_config,
+            'OutputConfig': output_config,
+            'VpcConfig': vpc_config,
+            'StoppingCondition': stopping_condition,
+            'Tags': tags,
+        }
         response = compilation_job.client.create_compilation_job(**operation_input_args)
     
         pprint(response)
@@ -785,7 +862,14 @@ class Context(BaseModel):
     ) -> Optional[object]:
         context = cls(session, region)
     
-        operation_input_args = {'ContextName': 'context_name', 'Source': 'source', 'ContextType': 'context_type', 'Description': 'description', 'Properties': 'properties', 'Tags': 'tags'}
+        operation_input_args = {
+            'ContextName': context_name,
+            'Source': source,
+            'ContextType': context_type,
+            'Description': description,
+            'Properties': properties,
+            'Tags': tags,
+        }
         response = context.client.create_context(**operation_input_args)
     
         pprint(response)
@@ -859,7 +943,18 @@ class DataQualityJobDefinition(BaseModel):
     ) -> Optional[object]:
         data_quality_job_definition = cls(session, region)
     
-        operation_input_args = {'JobDefinitionName': 'job_definition_name', 'DataQualityBaselineConfig': 'data_quality_baseline_config', 'DataQualityAppSpecification': 'data_quality_app_specification', 'DataQualityJobInput': 'data_quality_job_input', 'DataQualityJobOutputConfig': 'data_quality_job_output_config', 'JobResources': 'job_resources', 'NetworkConfig': 'network_config', 'RoleArn': 'role_arn', 'StoppingCondition': 'stopping_condition', 'Tags': 'tags'}
+        operation_input_args = {
+            'JobDefinitionName': job_definition_name,
+            'DataQualityBaselineConfig': data_quality_baseline_config,
+            'DataQualityAppSpecification': data_quality_app_specification,
+            'DataQualityJobInput': data_quality_job_input,
+            'DataQualityJobOutputConfig': data_quality_job_output_config,
+            'JobResources': job_resources,
+            'NetworkConfig': network_config,
+            'RoleArn': role_arn,
+            'StoppingCondition': stopping_condition,
+            'Tags': tags,
+        }
         response = data_quality_job_definition.client.create_data_quality_job_definition(**operation_input_args)
     
         pprint(response)
@@ -926,7 +1021,14 @@ class DeviceFleet(BaseModel):
     ) -> Optional[object]:
         device_fleet = cls(session, region)
     
-        operation_input_args = {'DeviceFleetName': 'device_fleet_name', 'RoleArn': 'role_arn', 'Description': 'description', 'OutputConfig': 'output_config', 'Tags': 'tags', 'EnableIotRoleAlias': 'enable_iot_role_alias'}
+        operation_input_args = {
+            'DeviceFleetName': device_fleet_name,
+            'RoleArn': role_arn,
+            'Description': description,
+            'OutputConfig': output_config,
+            'Tags': tags,
+            'EnableIotRoleAlias': enable_iot_role_alias,
+        }
         response = device_fleet.client.create_device_fleet(**operation_input_args)
     
         pprint(response)
@@ -1013,7 +1115,20 @@ class Domain(BaseModel):
     ) -> Optional[object]:
         domain = cls(session, region)
     
-        operation_input_args = {'DomainName': 'domain_name', 'AuthMode': 'auth_mode', 'DefaultUserSettings': 'default_user_settings', 'DomainSettings': 'domain_settings', 'SubnetIds': 'subnet_ids', 'VpcId': 'vpc_id', 'Tags': 'tags', 'AppNetworkAccessType': 'app_network_access_type', 'HomeEfsFileSystemKmsKeyId': 'home_efs_file_system_kms_key_id', 'KmsKeyId': 'kms_key_id', 'AppSecurityGroupManagement': 'app_security_group_management', 'DefaultSpaceSettings': 'default_space_settings'}
+        operation_input_args = {
+            'DomainName': domain_name,
+            'AuthMode': auth_mode,
+            'DefaultUserSettings': default_user_settings,
+            'DomainSettings': domain_settings,
+            'SubnetIds': subnet_ids,
+            'VpcId': vpc_id,
+            'Tags': tags,
+            'AppNetworkAccessType': app_network_access_type,
+            'HomeEfsFileSystemKmsKeyId': home_efs_file_system_kms_key_id,
+            'KmsKeyId': kms_key_id,
+            'AppSecurityGroupManagement': app_security_group_management,
+            'DefaultSpaceSettings': default_space_settings,
+        }
         response = domain.client.create_domain(**operation_input_args)
     
         pprint(response)
@@ -1082,7 +1197,13 @@ class EdgeDeploymentPlan(BaseModel):
     ) -> Optional[object]:
         edge_deployment_plan = cls(session, region)
     
-        operation_input_args = {'EdgeDeploymentPlanName': 'edge_deployment_plan_name', 'ModelConfigs': 'model_configs', 'DeviceFleetName': 'device_fleet_name', 'Stages': 'stages', 'Tags': 'tags'}
+        operation_input_args = {
+            'EdgeDeploymentPlanName': edge_deployment_plan_name,
+            'ModelConfigs': model_configs,
+            'DeviceFleetName': device_fleet_name,
+            'Stages': stages,
+            'Tags': tags,
+        }
         response = edge_deployment_plan.client.create_edge_deployment_plan(**operation_input_args)
     
         pprint(response)
@@ -1164,7 +1285,16 @@ class EdgePackagingJob(BaseModel):
     ) -> Optional[object]:
         edge_packaging_job = cls(session, region)
     
-        operation_input_args = {'EdgePackagingJobName': 'edge_packaging_job_name', 'CompilationJobName': 'compilation_job_name', 'ModelName': 'model_name', 'ModelVersion': 'model_version', 'RoleArn': 'role_arn', 'OutputConfig': 'output_config', 'ResourceKey': 'resource_key', 'Tags': 'tags'}
+        operation_input_args = {
+            'EdgePackagingJobName': edge_packaging_job_name,
+            'CompilationJobName': compilation_job_name,
+            'ModelName': model_name,
+            'ModelVersion': model_version,
+            'RoleArn': role_arn,
+            'OutputConfig': output_config,
+            'ResourceKey': resource_key,
+            'Tags': tags,
+        }
         response = edge_packaging_job.client.create_edge_packaging_job(**operation_input_args)
     
         pprint(response)
@@ -1235,7 +1365,12 @@ class Endpoint(BaseModel):
     ) -> Optional[object]:
         endpoint = cls(session, region)
     
-        operation_input_args = {'EndpointName': 'endpoint_name', 'EndpointConfigName': 'endpoint_config_name', 'DeploymentConfig': 'deployment_config', 'Tags': 'tags'}
+        operation_input_args = {
+            'EndpointName': endpoint_name,
+            'EndpointConfigName': endpoint_config_name,
+            'DeploymentConfig': deployment_config,
+            'Tags': tags,
+        }
         response = endpoint.client.create_endpoint(**operation_input_args)
     
         pprint(response)
@@ -1311,7 +1446,19 @@ class EndpointConfig(BaseModel):
     ) -> Optional[object]:
         endpoint_config = cls(session, region)
     
-        operation_input_args = {'EndpointConfigName': 'endpoint_config_name', 'ProductionVariants': 'production_variants', 'DataCaptureConfig': 'data_capture_config', 'Tags': 'tags', 'KmsKeyId': 'kms_key_id', 'AsyncInferenceConfig': 'async_inference_config', 'ExplainerConfig': 'explainer_config', 'ShadowProductionVariants': 'shadow_production_variants', 'ExecutionRoleArn': 'execution_role_arn', 'VpcConfig': 'vpc_config', 'EnableNetworkIsolation': 'enable_network_isolation'}
+        operation_input_args = {
+            'EndpointConfigName': endpoint_config_name,
+            'ProductionVariants': production_variants,
+            'DataCaptureConfig': data_capture_config,
+            'Tags': tags,
+            'KmsKeyId': kms_key_id,
+            'AsyncInferenceConfig': async_inference_config,
+            'ExplainerConfig': explainer_config,
+            'ShadowProductionVariants': shadow_production_variants,
+            'ExecutionRoleArn': execution_role_arn,
+            'VpcConfig': vpc_config,
+            'EnableNetworkIsolation': enable_network_isolation,
+        }
         response = endpoint_config.client.create_endpoint_config(**operation_input_args)
     
         pprint(response)
@@ -1377,7 +1524,12 @@ class Experiment(BaseModel):
     ) -> Optional[object]:
         experiment = cls(session, region)
     
-        operation_input_args = {'ExperimentName': 'experiment_name', 'DisplayName': 'display_name', 'Description': 'description', 'Tags': 'tags'}
+        operation_input_args = {
+            'ExperimentName': experiment_name,
+            'DisplayName': display_name,
+            'Description': description,
+            'Tags': tags,
+        }
         response = experiment.client.create_experiment(**operation_input_args)
     
         pprint(response)
@@ -1458,7 +1610,18 @@ class FeatureGroup(BaseModel):
     ) -> Optional[object]:
         feature_group = cls(session, region)
     
-        operation_input_args = {'FeatureGroupName': 'feature_group_name', 'RecordIdentifierFeatureName': 'record_identifier_feature_name', 'EventTimeFeatureName': 'event_time_feature_name', 'FeatureDefinitions': 'feature_definitions', 'OnlineStoreConfig': 'online_store_config', 'OfflineStoreConfig': 'offline_store_config', 'ThroughputConfig': 'throughput_config', 'RoleArn': 'role_arn', 'Description': 'description', 'Tags': 'tags'}
+        operation_input_args = {
+            'FeatureGroupName': feature_group_name,
+            'RecordIdentifierFeatureName': record_identifier_feature_name,
+            'EventTimeFeatureName': event_time_feature_name,
+            'FeatureDefinitions': feature_definitions,
+            'OnlineStoreConfig': online_store_config,
+            'OfflineStoreConfig': offline_store_config,
+            'ThroughputConfig': throughput_config,
+            'RoleArn': role_arn,
+            'Description': description,
+            'Tags': tags,
+        }
         response = feature_group.client.create_feature_group(**operation_input_args)
     
         pprint(response)
@@ -1531,7 +1694,15 @@ class FlowDefinition(BaseModel):
     ) -> Optional[object]:
         flow_definition = cls(session, region)
     
-        operation_input_args = {'FlowDefinitionName': 'flow_definition_name', 'HumanLoopRequestSource': 'human_loop_request_source', 'HumanLoopActivationConfig': 'human_loop_activation_config', 'HumanLoopConfig': 'human_loop_config', 'OutputConfig': 'output_config', 'RoleArn': 'role_arn', 'Tags': 'tags'}
+        operation_input_args = {
+            'FlowDefinitionName': flow_definition_name,
+            'HumanLoopRequestSource': human_loop_request_source,
+            'HumanLoopActivationConfig': human_loop_activation_config,
+            'HumanLoopConfig': human_loop_config,
+            'OutputConfig': output_config,
+            'RoleArn': role_arn,
+            'Tags': tags,
+        }
         response = flow_definition.client.create_flow_definition(**operation_input_args)
     
         pprint(response)
@@ -1600,7 +1771,14 @@ class Hub(BaseModel):
     ) -> Optional[object]:
         hub = cls(session, region)
     
-        operation_input_args = {'HubName': 'hub_name', 'HubDescription': 'hub_description', 'HubDisplayName': 'hub_display_name', 'HubSearchKeywords': 'hub_search_keywords', 'S3StorageConfig': 's3_storage_config', 'Tags': 'tags'}
+        operation_input_args = {
+            'HubName': hub_name,
+            'HubDescription': hub_description,
+            'HubDisplayName': hub_display_name,
+            'HubSearchKeywords': hub_search_keywords,
+            'S3StorageConfig': s3_storage_config,
+            'Tags': tags,
+        }
         response = hub.client.create_hub(**operation_input_args)
     
         pprint(response)
@@ -1722,7 +1900,11 @@ class HumanTaskUi(BaseModel):
     ) -> Optional[object]:
         human_task_ui = cls(session, region)
     
-        operation_input_args = {'HumanTaskUiName': 'human_task_ui_name', 'UiTemplate': 'ui_template', 'Tags': 'tags'}
+        operation_input_args = {
+            'HumanTaskUiName': human_task_ui_name,
+            'UiTemplate': ui_template,
+            'Tags': tags,
+        }
         response = human_task_ui.client.create_human_task_ui(**operation_input_args)
     
         pprint(response)
@@ -1800,7 +1982,15 @@ class HyperParameterTuningJob(BaseModel):
     ) -> Optional[object]:
         hyper_parameter_tuning_job = cls(session, region)
     
-        operation_input_args = {'HyperParameterTuningJobName': 'hyper_parameter_tuning_job_name', 'HyperParameterTuningJobConfig': 'hyper_parameter_tuning_job_config', 'TrainingJobDefinition': 'training_job_definition', 'TrainingJobDefinitions': 'training_job_definitions', 'WarmStartConfig': 'warm_start_config', 'Tags': 'tags', 'Autotune': 'autotune'}
+        operation_input_args = {
+            'HyperParameterTuningJobName': hyper_parameter_tuning_job_name,
+            'HyperParameterTuningJobConfig': hyper_parameter_tuning_job_config,
+            'TrainingJobDefinition': training_job_definition,
+            'TrainingJobDefinitions': training_job_definitions,
+            'WarmStartConfig': warm_start_config,
+            'Tags': tags,
+            'Autotune': autotune,
+        }
         response = hyper_parameter_tuning_job.client.create_hyper_parameter_tuning_job(**operation_input_args)
     
         pprint(response)
@@ -1867,7 +2057,13 @@ class Image(BaseModel):
     ) -> Optional[object]:
         image = cls(session, region)
     
-        operation_input_args = {'Description': 'description', 'DisplayName': 'display_name', 'ImageName': 'image_name', 'RoleArn': 'role_arn', 'Tags': 'tags'}
+        operation_input_args = {
+            'Description': description,
+            'DisplayName': display_name,
+            'ImageName': image_name,
+            'RoleArn': role_arn,
+            'Tags': tags,
+        }
         response = image.client.create_image(**operation_input_args)
     
         pprint(response)
@@ -1947,7 +2143,19 @@ class ImageVersion(BaseModel):
     ) -> Optional[object]:
         image_version = cls(session, region)
     
-        operation_input_args = {'BaseImage': 'base_image', 'ClientToken': 'client_token', 'ImageName': 'image_name', 'Aliases': 'aliases', 'VendorGuidance': 'vendor_guidance', 'JobType': 'job_type', 'MLFramework': 'm_l_framework', 'ProgrammingLang': 'programming_lang', 'Processor': 'processor', 'Horovod': 'horovod', 'ReleaseNotes': 'release_notes'}
+        operation_input_args = {
+            'BaseImage': base_image,
+            'ClientToken': client_token,
+            'ImageName': image_name,
+            'Aliases': aliases,
+            'VendorGuidance': vendor_guidance,
+            'JobType': job_type,
+            'MLFramework': m_l_framework,
+            'ProgrammingLang': programming_lang,
+            'Processor': processor,
+            'Horovod': horovod,
+            'ReleaseNotes': release_notes,
+        }
         response = image_version.client.create_image_version(**operation_input_args)
     
         pprint(response)
@@ -2023,7 +2231,14 @@ class InferenceComponent(BaseModel):
     ) -> Optional[object]:
         inference_component = cls(session, region)
     
-        operation_input_args = {'InferenceComponentName': 'inference_component_name', 'EndpointName': 'endpoint_name', 'VariantName': 'variant_name', 'Specification': 'specification', 'RuntimeConfig': 'runtime_config', 'Tags': 'tags'}
+        operation_input_args = {
+            'InferenceComponentName': inference_component_name,
+            'EndpointName': endpoint_name,
+            'VariantName': variant_name,
+            'Specification': specification,
+            'RuntimeConfig': runtime_config,
+            'Tags': tags,
+        }
         response = inference_component.client.create_inference_component(**operation_input_args)
     
         pprint(response)
@@ -2103,7 +2318,19 @@ class InferenceExperiment(BaseModel):
     ) -> Optional[object]:
         inference_experiment = cls(session, region)
     
-        operation_input_args = {'Name': 'name', 'Type': 'type', 'Schedule': 'schedule', 'Description': 'description', 'RoleArn': 'role_arn', 'EndpointName': 'endpoint_name', 'ModelVariants': 'model_variants', 'DataStorageConfig': 'data_storage_config', 'ShadowModeConfig': 'shadow_mode_config', 'KmsKey': 'kms_key', 'Tags': 'tags'}
+        operation_input_args = {
+            'Name': name,
+            'Type': type,
+            'Schedule': schedule,
+            'Description': description,
+            'RoleArn': role_arn,
+            'EndpointName': endpoint_name,
+            'ModelVariants': model_variants,
+            'DataStorageConfig': data_storage_config,
+            'ShadowModeConfig': shadow_mode_config,
+            'KmsKey': kms_key,
+            'Tags': tags,
+        }
         response = inference_experiment.client.create_inference_experiment(**operation_input_args)
     
         pprint(response)
@@ -2178,7 +2405,16 @@ class InferenceRecommendationsJob(BaseModel):
     ) -> Optional[object]:
         inference_recommendations_job = cls(session, region)
     
-        operation_input_args = {'JobName': 'job_name', 'JobType': 'job_type', 'RoleArn': 'role_arn', 'InputConfig': 'input_config', 'JobDescription': 'job_description', 'StoppingConditions': 'stopping_conditions', 'OutputConfig': 'output_config', 'Tags': 'tags'}
+        operation_input_args = {
+            'JobName': job_name,
+            'JobType': job_type,
+            'RoleArn': role_arn,
+            'InputConfig': input_config,
+            'JobDescription': job_description,
+            'StoppingConditions': stopping_conditions,
+            'OutputConfig': output_config,
+            'Tags': tags,
+        }
         response = inference_recommendations_job.client.create_inference_recommendations_job(**operation_input_args)
     
         pprint(response)
@@ -2259,7 +2495,18 @@ class LabelingJob(BaseModel):
     ) -> Optional[object]:
         labeling_job = cls(session, region)
     
-        operation_input_args = {'LabelingJobName': 'labeling_job_name', 'LabelAttributeName': 'label_attribute_name', 'InputConfig': 'input_config', 'OutputConfig': 'output_config', 'RoleArn': 'role_arn', 'LabelCategoryConfigS3Uri': 'label_category_config_s3_uri', 'StoppingConditions': 'stopping_conditions', 'LabelingJobAlgorithmsConfig': 'labeling_job_algorithms_config', 'HumanTaskConfig': 'human_task_config', 'Tags': 'tags'}
+        operation_input_args = {
+            'LabelingJobName': labeling_job_name,
+            'LabelAttributeName': label_attribute_name,
+            'InputConfig': input_config,
+            'OutputConfig': output_config,
+            'RoleArn': role_arn,
+            'LabelCategoryConfigS3Uri': label_category_config_s3_uri,
+            'StoppingConditions': stopping_conditions,
+            'LabelingJobAlgorithmsConfig': labeling_job_algorithms_config,
+            'HumanTaskConfig': human_task_config,
+            'Tags': tags,
+        }
         response = labeling_job.client.create_labeling_job(**operation_input_args)
     
         pprint(response)
@@ -2330,7 +2577,16 @@ class Model(BaseModel):
     ) -> Optional[object]:
         model = cls(session, region)
     
-        operation_input_args = {'ModelName': 'model_name', 'PrimaryContainer': 'primary_container', 'Containers': 'containers', 'InferenceExecutionConfig': 'inference_execution_config', 'ExecutionRoleArn': 'execution_role_arn', 'Tags': 'tags', 'VpcConfig': 'vpc_config', 'EnableNetworkIsolation': 'enable_network_isolation'}
+        operation_input_args = {
+            'ModelName': model_name,
+            'PrimaryContainer': primary_container,
+            'Containers': containers,
+            'InferenceExecutionConfig': inference_execution_config,
+            'ExecutionRoleArn': execution_role_arn,
+            'Tags': tags,
+            'VpcConfig': vpc_config,
+            'EnableNetworkIsolation': enable_network_isolation,
+        }
         response = model.client.create_model(**operation_input_args)
     
         pprint(response)
@@ -2404,7 +2660,18 @@ class ModelBiasJobDefinition(BaseModel):
     ) -> Optional[object]:
         model_bias_job_definition = cls(session, region)
     
-        operation_input_args = {'JobDefinitionName': 'job_definition_name', 'ModelBiasBaselineConfig': 'model_bias_baseline_config', 'ModelBiasAppSpecification': 'model_bias_app_specification', 'ModelBiasJobInput': 'model_bias_job_input', 'ModelBiasJobOutputConfig': 'model_bias_job_output_config', 'JobResources': 'job_resources', 'NetworkConfig': 'network_config', 'RoleArn': 'role_arn', 'StoppingCondition': 'stopping_condition', 'Tags': 'tags'}
+        operation_input_args = {
+            'JobDefinitionName': job_definition_name,
+            'ModelBiasBaselineConfig': model_bias_baseline_config,
+            'ModelBiasAppSpecification': model_bias_app_specification,
+            'ModelBiasJobInput': model_bias_job_input,
+            'ModelBiasJobOutputConfig': model_bias_job_output_config,
+            'JobResources': job_resources,
+            'NetworkConfig': network_config,
+            'RoleArn': role_arn,
+            'StoppingCondition': stopping_condition,
+            'Tags': tags,
+        }
         response = model_bias_job_definition.client.create_model_bias_job_definition(**operation_input_args)
     
         pprint(response)
@@ -2473,7 +2740,13 @@ class ModelCard(BaseModel):
     ) -> Optional[object]:
         model_card = cls(session, region)
     
-        operation_input_args = {'ModelCardName': 'model_card_name', 'SecurityConfig': 'security_config', 'Content': 'content', 'ModelCardStatus': 'model_card_status', 'Tags': 'tags'}
+        operation_input_args = {
+            'ModelCardName': model_card_name,
+            'SecurityConfig': security_config,
+            'Content': content,
+            'ModelCardStatus': model_card_status,
+            'Tags': tags,
+        }
         response = model_card.client.create_model_card(**operation_input_args)
     
         pprint(response)
@@ -2543,7 +2816,12 @@ class ModelCardExportJob(BaseModel):
     ) -> Optional[object]:
         model_card_export_job = cls(session, region)
     
-        operation_input_args = {'ModelCardName': 'model_card_name', 'ModelCardVersion': 'model_card_version', 'ModelCardExportJobName': 'model_card_export_job_name', 'OutputConfig': 'output_config'}
+        operation_input_args = {
+            'ModelCardName': model_card_name,
+            'ModelCardVersion': model_card_version,
+            'ModelCardExportJobName': model_card_export_job_name,
+            'OutputConfig': output_config,
+        }
         response = model_card_export_job.client.create_model_card_export_job(**operation_input_args)
     
         pprint(response)
@@ -2617,7 +2895,18 @@ class ModelExplainabilityJobDefinition(BaseModel):
     ) -> Optional[object]:
         model_explainability_job_definition = cls(session, region)
     
-        operation_input_args = {'JobDefinitionName': 'job_definition_name', 'ModelExplainabilityBaselineConfig': 'model_explainability_baseline_config', 'ModelExplainabilityAppSpecification': 'model_explainability_app_specification', 'ModelExplainabilityJobInput': 'model_explainability_job_input', 'ModelExplainabilityJobOutputConfig': 'model_explainability_job_output_config', 'JobResources': 'job_resources', 'NetworkConfig': 'network_config', 'RoleArn': 'role_arn', 'StoppingCondition': 'stopping_condition', 'Tags': 'tags'}
+        operation_input_args = {
+            'JobDefinitionName': job_definition_name,
+            'ModelExplainabilityBaselineConfig': model_explainability_baseline_config,
+            'ModelExplainabilityAppSpecification': model_explainability_app_specification,
+            'ModelExplainabilityJobInput': model_explainability_job_input,
+            'ModelExplainabilityJobOutputConfig': model_explainability_job_output_config,
+            'JobResources': job_resources,
+            'NetworkConfig': network_config,
+            'RoleArn': role_arn,
+            'StoppingCondition': stopping_condition,
+            'Tags': tags,
+        }
         response = model_explainability_job_definition.client.create_model_explainability_job_definition(**operation_input_args)
     
         pprint(response)
@@ -2717,7 +3006,28 @@ class ModelPackage(BaseModel):
     ) -> Optional[object]:
         model_package = cls(session, region)
     
-        operation_input_args = {'ModelPackageName': 'model_package_name', 'ModelPackageGroupName': 'model_package_group_name', 'ModelPackageDescription': 'model_package_description', 'InferenceSpecification': 'inference_specification', 'ValidationSpecification': 'validation_specification', 'SourceAlgorithmSpecification': 'source_algorithm_specification', 'CertifyForMarketplace': 'certify_for_marketplace', 'Tags': 'tags', 'ModelApprovalStatus': 'model_approval_status', 'MetadataProperties': 'metadata_properties', 'ModelMetrics': 'model_metrics', 'ClientToken': 'client_token', 'Domain': 'domain', 'Task': 'task', 'SamplePayloadUrl': 'sample_payload_url', 'CustomerMetadataProperties': 'customer_metadata_properties', 'DriftCheckBaselines': 'drift_check_baselines', 'AdditionalInferenceSpecifications': 'additional_inference_specifications', 'SkipModelValidation': 'skip_model_validation', 'SourceUri': 'source_uri'}
+        operation_input_args = {
+            'ModelPackageName': model_package_name,
+            'ModelPackageGroupName': model_package_group_name,
+            'ModelPackageDescription': model_package_description,
+            'InferenceSpecification': inference_specification,
+            'ValidationSpecification': validation_specification,
+            'SourceAlgorithmSpecification': source_algorithm_specification,
+            'CertifyForMarketplace': certify_for_marketplace,
+            'Tags': tags,
+            'ModelApprovalStatus': model_approval_status,
+            'MetadataProperties': metadata_properties,
+            'ModelMetrics': model_metrics,
+            'ClientToken': client_token,
+            'Domain': domain,
+            'Task': task,
+            'SamplePayloadUrl': sample_payload_url,
+            'CustomerMetadataProperties': customer_metadata_properties,
+            'DriftCheckBaselines': drift_check_baselines,
+            'AdditionalInferenceSpecifications': additional_inference_specifications,
+            'SkipModelValidation': skip_model_validation,
+            'SourceUri': source_uri,
+        }
         response = model_package.client.create_model_package(**operation_input_args)
     
         pprint(response)
@@ -2779,7 +3089,11 @@ class ModelPackageGroup(BaseModel):
     ) -> Optional[object]:
         model_package_group = cls(session, region)
     
-        operation_input_args = {'ModelPackageGroupName': 'model_package_group_name', 'ModelPackageGroupDescription': 'model_package_group_description', 'Tags': 'tags'}
+        operation_input_args = {
+            'ModelPackageGroupName': model_package_group_name,
+            'ModelPackageGroupDescription': model_package_group_description,
+            'Tags': tags,
+        }
         response = model_package_group.client.create_model_package_group(**operation_input_args)
     
         pprint(response)
@@ -2853,7 +3167,18 @@ class ModelQualityJobDefinition(BaseModel):
     ) -> Optional[object]:
         model_quality_job_definition = cls(session, region)
     
-        operation_input_args = {'JobDefinitionName': 'job_definition_name', 'ModelQualityBaselineConfig': 'model_quality_baseline_config', 'ModelQualityAppSpecification': 'model_quality_app_specification', 'ModelQualityJobInput': 'model_quality_job_input', 'ModelQualityJobOutputConfig': 'model_quality_job_output_config', 'JobResources': 'job_resources', 'NetworkConfig': 'network_config', 'RoleArn': 'role_arn', 'StoppingCondition': 'stopping_condition', 'Tags': 'tags'}
+        operation_input_args = {
+            'JobDefinitionName': job_definition_name,
+            'ModelQualityBaselineConfig': model_quality_baseline_config,
+            'ModelQualityAppSpecification': model_quality_app_specification,
+            'ModelQualityJobInput': model_quality_job_input,
+            'ModelQualityJobOutputConfig': model_quality_job_output_config,
+            'JobResources': job_resources,
+            'NetworkConfig': network_config,
+            'RoleArn': role_arn,
+            'StoppingCondition': stopping_condition,
+            'Tags': tags,
+        }
         response = model_quality_job_definition.client.create_model_quality_job_definition(**operation_input_args)
     
         pprint(response)
@@ -2919,7 +3244,11 @@ class MonitoringSchedule(BaseModel):
     ) -> Optional[object]:
         monitoring_schedule = cls(session, region)
     
-        operation_input_args = {'MonitoringScheduleName': 'monitoring_schedule_name', 'MonitoringScheduleConfig': 'monitoring_schedule_config', 'Tags': 'tags'}
+        operation_input_args = {
+            'MonitoringScheduleName': monitoring_schedule_name,
+            'MonitoringScheduleConfig': monitoring_schedule_config,
+            'Tags': tags,
+        }
         response = monitoring_schedule.client.create_monitoring_schedule(**operation_input_args)
     
         pprint(response)
@@ -3010,7 +3339,24 @@ class NotebookInstance(BaseModel):
     ) -> Optional[object]:
         notebook_instance = cls(session, region)
     
-        operation_input_args = {'NotebookInstanceName': 'notebook_instance_name', 'InstanceType': 'instance_type', 'SubnetId': 'subnet_id', 'SecurityGroupIds': 'security_group_ids', 'RoleArn': 'role_arn', 'KmsKeyId': 'kms_key_id', 'Tags': 'tags', 'LifecycleConfigName': 'lifecycle_config_name', 'DirectInternetAccess': 'direct_internet_access', 'VolumeSizeInGB': 'volume_size_in_g_b', 'AcceleratorTypes': 'accelerator_types', 'DefaultCodeRepository': 'default_code_repository', 'AdditionalCodeRepositories': 'additional_code_repositories', 'RootAccess': 'root_access', 'PlatformIdentifier': 'platform_identifier', 'InstanceMetadataServiceConfiguration': 'instance_metadata_service_configuration'}
+        operation_input_args = {
+            'NotebookInstanceName': notebook_instance_name,
+            'InstanceType': instance_type,
+            'SubnetId': subnet_id,
+            'SecurityGroupIds': security_group_ids,
+            'RoleArn': role_arn,
+            'KmsKeyId': kms_key_id,
+            'Tags': tags,
+            'LifecycleConfigName': lifecycle_config_name,
+            'DirectInternetAccess': direct_internet_access,
+            'VolumeSizeInGB': volume_size_in_g_b,
+            'AcceleratorTypes': accelerator_types,
+            'DefaultCodeRepository': default_code_repository,
+            'AdditionalCodeRepositories': additional_code_repositories,
+            'RootAccess': root_access,
+            'PlatformIdentifier': platform_identifier,
+            'InstanceMetadataServiceConfiguration': instance_metadata_service_configuration,
+        }
         response = notebook_instance.client.create_notebook_instance(**operation_input_args)
     
         pprint(response)
@@ -3072,7 +3418,11 @@ class NotebookInstanceLifecycleConfig(BaseModel):
     ) -> Optional[object]:
         notebook_instance_lifecycle_config = cls(session, region)
     
-        operation_input_args = {'NotebookInstanceLifecycleConfigName': 'notebook_instance_lifecycle_config_name', 'OnCreate': 'on_create', 'OnStart': 'on_start'}
+        operation_input_args = {
+            'NotebookInstanceLifecycleConfigName': notebook_instance_lifecycle_config_name,
+            'OnCreate': on_create,
+            'OnStart': on_start,
+        }
         response = notebook_instance_lifecycle_config.client.create_notebook_instance_lifecycle_config(**operation_input_args)
     
         pprint(response)
@@ -3147,7 +3497,17 @@ class Pipeline(BaseModel):
     ) -> Optional[object]:
         pipeline = cls(session, region)
     
-        operation_input_args = {'PipelineName': 'pipeline_name', 'PipelineDisplayName': 'pipeline_display_name', 'PipelineDefinition': 'pipeline_definition', 'PipelineDefinitionS3Location': 'pipeline_definition_s3_location', 'PipelineDescription': 'pipeline_description', 'ClientRequestToken': 'client_request_token', 'RoleArn': 'role_arn', 'Tags': 'tags', 'ParallelismConfiguration': 'parallelism_configuration'}
+        operation_input_args = {
+            'PipelineName': pipeline_name,
+            'PipelineDisplayName': pipeline_display_name,
+            'PipelineDefinition': pipeline_definition,
+            'PipelineDefinitionS3Location': pipeline_definition_s3_location,
+            'PipelineDescription': pipeline_description,
+            'ClientRequestToken': client_request_token,
+            'RoleArn': role_arn,
+            'Tags': tags,
+            'ParallelismConfiguration': parallelism_configuration,
+        }
         response = pipeline.client.create_pipeline(**operation_input_args)
     
         pprint(response)
@@ -3281,7 +3641,19 @@ class ProcessingJob(BaseModel):
     ) -> Optional[object]:
         processing_job = cls(session, region)
     
-        operation_input_args = {'ProcessingInputs': 'processing_inputs', 'ProcessingOutputConfig': 'processing_output_config', 'ProcessingJobName': 'processing_job_name', 'ProcessingResources': 'processing_resources', 'StoppingCondition': 'stopping_condition', 'AppSpecification': 'app_specification', 'Environment': 'environment', 'NetworkConfig': 'network_config', 'RoleArn': 'role_arn', 'Tags': 'tags', 'ExperimentConfig': 'experiment_config'}
+        operation_input_args = {
+            'ProcessingInputs': processing_inputs,
+            'ProcessingOutputConfig': processing_output_config,
+            'ProcessingJobName': processing_job_name,
+            'ProcessingResources': processing_resources,
+            'StoppingCondition': stopping_condition,
+            'AppSpecification': app_specification,
+            'Environment': environment,
+            'NetworkConfig': network_config,
+            'RoleArn': role_arn,
+            'Tags': tags,
+            'ExperimentConfig': experiment_config,
+        }
         response = processing_job.client.create_processing_job(**operation_input_args)
     
         pprint(response)
@@ -3349,7 +3721,12 @@ class Project(BaseModel):
     ) -> Optional[object]:
         project = cls(session, region)
     
-        operation_input_args = {'ProjectName': 'project_name', 'ProjectDescription': 'project_description', 'ServiceCatalogProvisioningDetails': 'service_catalog_provisioning_details', 'Tags': 'tags'}
+        operation_input_args = {
+            'ProjectName': project_name,
+            'ProjectDescription': project_description,
+            'ServiceCatalogProvisioningDetails': service_catalog_provisioning_details,
+            'Tags': tags,
+        }
         response = project.client.create_project(**operation_input_args)
     
         pprint(response)
@@ -3422,7 +3799,15 @@ class Space(BaseModel):
     ) -> Optional[object]:
         space = cls(session, region)
     
-        operation_input_args = {'DomainId': 'domain_id', 'SpaceName': 'space_name', 'Tags': 'tags', 'SpaceSettings': 'space_settings', 'OwnershipSettings': 'ownership_settings', 'SpaceSharingSettings': 'space_sharing_settings', 'SpaceDisplayName': 'space_display_name'}
+        operation_input_args = {
+            'DomainId': domain_id,
+            'SpaceName': space_name,
+            'Tags': tags,
+            'SpaceSettings': space_settings,
+            'OwnershipSettings': ownership_settings,
+            'SpaceSharingSettings': space_sharing_settings,
+            'SpaceDisplayName': space_display_name,
+        }
         response = space.client.create_space(**operation_input_args)
     
         pprint(response)
@@ -3488,7 +3873,12 @@ class StudioLifecycleConfig(BaseModel):
     ) -> Optional[object]:
         studio_lifecycle_config = cls(session, region)
     
-        operation_input_args = {'StudioLifecycleConfigName': 'studio_lifecycle_config_name', 'StudioLifecycleConfigContent': 'studio_lifecycle_config_content', 'StudioLifecycleConfigAppType': 'studio_lifecycle_config_app_type', 'Tags': 'tags'}
+        operation_input_args = {
+            'StudioLifecycleConfigName': studio_lifecycle_config_name,
+            'StudioLifecycleConfigContent': studio_lifecycle_config_content,
+            'StudioLifecycleConfigAppType': studio_lifecycle_config_app_type,
+            'Tags': tags,
+        }
         response = studio_lifecycle_config.client.create_studio_lifecycle_config(**operation_input_args)
     
         pprint(response)
@@ -3608,7 +3998,32 @@ class TrainingJob(BaseModel):
     ) -> Optional[object]:
         training_job = cls(session, region)
     
-        operation_input_args = {'TrainingJobName': 'training_job_name', 'HyperParameters': 'hyper_parameters', 'AlgorithmSpecification': 'algorithm_specification', 'RoleArn': 'role_arn', 'InputDataConfig': 'input_data_config', 'OutputDataConfig': 'output_data_config', 'ResourceConfig': 'resource_config', 'VpcConfig': 'vpc_config', 'StoppingCondition': 'stopping_condition', 'Tags': 'tags', 'EnableNetworkIsolation': 'enable_network_isolation', 'EnableInterContainerTrafficEncryption': 'enable_inter_container_traffic_encryption', 'EnableManagedSpotTraining': 'enable_managed_spot_training', 'CheckpointConfig': 'checkpoint_config', 'DebugHookConfig': 'debug_hook_config', 'DebugRuleConfigurations': 'debug_rule_configurations', 'TensorBoardOutputConfig': 'tensor_board_output_config', 'ExperimentConfig': 'experiment_config', 'ProfilerConfig': 'profiler_config', 'ProfilerRuleConfigurations': 'profiler_rule_configurations', 'Environment': 'environment', 'RetryStrategy': 'retry_strategy', 'RemoteDebugConfig': 'remote_debug_config', 'InfraCheckConfig': 'infra_check_config'}
+        operation_input_args = {
+            'TrainingJobName': training_job_name,
+            'HyperParameters': hyper_parameters,
+            'AlgorithmSpecification': algorithm_specification,
+            'RoleArn': role_arn,
+            'InputDataConfig': input_data_config,
+            'OutputDataConfig': output_data_config,
+            'ResourceConfig': resource_config,
+            'VpcConfig': vpc_config,
+            'StoppingCondition': stopping_condition,
+            'Tags': tags,
+            'EnableNetworkIsolation': enable_network_isolation,
+            'EnableInterContainerTrafficEncryption': enable_inter_container_traffic_encryption,
+            'EnableManagedSpotTraining': enable_managed_spot_training,
+            'CheckpointConfig': checkpoint_config,
+            'DebugHookConfig': debug_hook_config,
+            'DebugRuleConfigurations': debug_rule_configurations,
+            'TensorBoardOutputConfig': tensor_board_output_config,
+            'ExperimentConfig': experiment_config,
+            'ProfilerConfig': profiler_config,
+            'ProfilerRuleConfigurations': profiler_rule_configurations,
+            'Environment': environment,
+            'RetryStrategy': retry_strategy,
+            'RemoteDebugConfig': remote_debug_config,
+            'InfraCheckConfig': infra_check_config,
+        }
         response = training_job.client.create_training_job(**operation_input_args)
     
         pprint(response)
@@ -3696,7 +4111,22 @@ class TransformJob(BaseModel):
     ) -> Optional[object]:
         transform_job = cls(session, region)
     
-        operation_input_args = {'TransformJobName': 'transform_job_name', 'ModelName': 'model_name', 'MaxConcurrentTransforms': 'max_concurrent_transforms', 'ModelClientConfig': 'model_client_config', 'MaxPayloadInMB': 'max_payload_in_m_b', 'BatchStrategy': 'batch_strategy', 'Environment': 'environment', 'TransformInput': 'transform_input', 'TransformOutput': 'transform_output', 'DataCaptureConfig': 'data_capture_config', 'TransformResources': 'transform_resources', 'DataProcessing': 'data_processing', 'Tags': 'tags', 'ExperimentConfig': 'experiment_config'}
+        operation_input_args = {
+            'TransformJobName': transform_job_name,
+            'ModelName': model_name,
+            'MaxConcurrentTransforms': max_concurrent_transforms,
+            'ModelClientConfig': model_client_config,
+            'MaxPayloadInMB': max_payload_in_m_b,
+            'BatchStrategy': batch_strategy,
+            'Environment': environment,
+            'TransformInput': transform_input,
+            'TransformOutput': transform_output,
+            'DataCaptureConfig': data_capture_config,
+            'TransformResources': transform_resources,
+            'DataProcessing': data_processing,
+            'Tags': tags,
+            'ExperimentConfig': experiment_config,
+        }
         response = transform_job.client.create_transform_job(**operation_input_args)
     
         pprint(response)
@@ -3764,7 +4194,13 @@ class Trial(BaseModel):
     ) -> Optional[object]:
         trial = cls(session, region)
     
-        operation_input_args = {'TrialName': 'trial_name', 'DisplayName': 'display_name', 'ExperimentName': 'experiment_name', 'MetadataProperties': 'metadata_properties', 'Tags': 'tags'}
+        operation_input_args = {
+            'TrialName': trial_name,
+            'DisplayName': display_name,
+            'ExperimentName': experiment_name,
+            'MetadataProperties': metadata_properties,
+            'Tags': tags,
+        }
         response = trial.client.create_trial(**operation_input_args)
     
         pprint(response)
@@ -3845,7 +4281,18 @@ class TrialComponent(BaseModel):
     ) -> Optional[object]:
         trial_component = cls(session, region)
     
-        operation_input_args = {'TrialComponentName': 'trial_component_name', 'DisplayName': 'display_name', 'Status': 'status', 'StartTime': 'start_time', 'EndTime': 'end_time', 'Parameters': 'parameters', 'InputArtifacts': 'input_artifacts', 'OutputArtifacts': 'output_artifacts', 'MetadataProperties': 'metadata_properties', 'Tags': 'tags'}
+        operation_input_args = {
+            'TrialComponentName': trial_component_name,
+            'DisplayName': display_name,
+            'Status': status,
+            'StartTime': start_time,
+            'EndTime': end_time,
+            'Parameters': parameters,
+            'InputArtifacts': input_artifacts,
+            'OutputArtifacts': output_artifacts,
+            'MetadataProperties': metadata_properties,
+            'Tags': tags,
+        }
         response = trial_component.client.create_trial_component(**operation_input_args)
     
         pprint(response)
@@ -3915,7 +4362,14 @@ class UserProfile(BaseModel):
     ) -> Optional[object]:
         user_profile = cls(session, region)
     
-        operation_input_args = {'DomainId': 'domain_id', 'UserProfileName': 'user_profile_name', 'SingleSignOnUserIdentifier': 'single_sign_on_user_identifier', 'SingleSignOnUserValue': 'single_sign_on_user_value', 'Tags': 'tags', 'UserSettings': 'user_settings'}
+        operation_input_args = {
+            'DomainId': domain_id,
+            'UserProfileName': user_profile_name,
+            'SingleSignOnUserIdentifier': single_sign_on_user_identifier,
+            'SingleSignOnUserValue': single_sign_on_user_value,
+            'Tags': tags,
+            'UserSettings': user_settings,
+        }
         response = user_profile.client.create_user_profile(**operation_input_args)
     
         pprint(response)
@@ -3978,7 +4432,14 @@ class Workforce(BaseModel):
     ) -> Optional[object]:
         workforce = cls(session, region)
     
-        operation_input_args = {'CognitoConfig': 'cognito_config', 'OidcConfig': 'oidc_config', 'SourceIpConfig': 'source_ip_config', 'WorkforceName': 'workforce_name', 'Tags': 'tags', 'WorkforceVpcConfig': 'workforce_vpc_config'}
+        operation_input_args = {
+            'CognitoConfig': cognito_config,
+            'OidcConfig': oidc_config,
+            'SourceIpConfig': source_ip_config,
+            'WorkforceName': workforce_name,
+            'Tags': tags,
+            'WorkforceVpcConfig': workforce_vpc_config,
+        }
         response = workforce.client.create_workforce(**operation_input_args)
     
         pprint(response)
@@ -4038,7 +4499,14 @@ class Workteam(BaseModel):
     ) -> Optional[object]:
         workteam = cls(session, region)
     
-        operation_input_args = {'WorkteamName': 'workteam_name', 'WorkforceName': 'workforce_name', 'MemberDefinitions': 'member_definitions', 'Description': 'description', 'NotificationConfiguration': 'notification_configuration', 'Tags': 'tags'}
+        operation_input_args = {
+            'WorkteamName': workteam_name,
+            'WorkforceName': workforce_name,
+            'MemberDefinitions': member_definitions,
+            'Description': description,
+            'NotificationConfiguration': notification_configuration,
+            'Tags': tags,
+        }
         response = workteam.client.create_workteam(**operation_input_args)
     
         pprint(response)
