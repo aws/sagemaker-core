@@ -1,5 +1,5 @@
 import os
-from src.tools.generate_resource import ResourceGenerator
+from src.tools.resources_codegen import ResourcesCodeGen
 
 SERVICE_JSON_FILE_PATH = os.getcwd() + '/sample/sagemaker/2017-07-24/service-2.json'
 
@@ -8,7 +8,7 @@ class TestGenerateResource:
     @classmethod
     def setup_class(cls):
         # Initialize parameters here
-        cls.resource_generator = ResourceGenerator(SERVICE_JSON_FILE_PATH)
+        cls.resource_generator = ResourcesCodeGen(SERVICE_JSON_FILE_PATH)
 
     def test_generate_get_method(self):
         expected_output = '''
@@ -26,11 +26,11 @@ def get(
     app = cls(session, region)
 
     operation_input_args = {
-        'DomainId' = domain_id,
-        'UserProfileName' = user_profile_name,
-        'SpaceName' = space_name,
-        'AppType' = app_type,
-        'AppName' = app_name,
+        'DomainId': domain_id,
+        'UserProfileName': user_profile_name,
+        'SpaceName': space_name,
+        'AppType': app_type,
+        'AppName': app_name,
     }
     response = app.client.describe_app(**operation_input_args)
 
@@ -49,11 +49,11 @@ def refresh(
 ) -> Optional[object]:
 
     operation_input_args = {
-        'DomainId' = self.domain_id,
-        'UserProfileName' = self.user_profile_name,
-        'SpaceName' = self.space_name,
-        'AppType' = self.app_type,
-        'AppName' = self.app_name,
+        'DomainId': self.domain_id,
+        'UserProfileName': self.user_profile_name,
+        'SpaceName': self.space_name,
+        'AppType': self.app_type,
+        'AppName': self.app_name,
     }
     response = self.client.describe_app(**operation_input_args)
 

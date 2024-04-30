@@ -35,7 +35,7 @@ CREATE_METHOD_TEMPLATE = '''
 @classmethod
 def create(
     cls,
-    {create_args}
+{create_args}
     session: Optional[Session] = None,
     region: Optional[str] = None,
 ) -> Optional[object]:

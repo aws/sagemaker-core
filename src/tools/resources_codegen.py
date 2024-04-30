@@ -15,14 +15,14 @@ import json
 import os
 import logging
 
-from constants import BASIC_JSON_TYPES_TO_PYTHON_TYPES, \
+from .constants import BASIC_JSON_TYPES_TO_PYTHON_TYPES, \
                         GENERATED_CLASSES_LOCATION, \
                         RESOURCES_CODEGEN_FILE_NAME, \
                         LICENCES_STRING
 from src.util.util import add_indent, convert_to_snake_case
-from resources_extractor import ResourcesExtractor
-from shapes_extractor import ShapesExtractor
-from templates import CREATE_METHOD_TEMPLATE, GET_METHOD_TEMPLATE, REFRESH_METHOD_TEMPLATE
+from .resources_extractor import ResourcesExtractor
+from .shapes_extractor import ShapesExtractor
+from .templates import CREATE_METHOD_TEMPLATE, GET_METHOD_TEMPLATE, REFRESH_METHOD_TEMPLATE
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
@@ -107,12 +107,13 @@ class ResourcesCodeGen:
         imports = [
             "import datetime",
             "import boto3",
-            "import pprint",
+            "from pprint import pprint",
             "from pydantic import BaseModel",
             "from typing import List, Dict, Optional",
             "from boto3.session import Session",
             "from utils import Unassigned",
             "from shapes import *",
+            "\nfrom src.code_injection.codec import deserializer"
         ]
 
         formated_imports = "\n".join(imports)
@@ -164,6 +165,44 @@ class ResourcesCodeGen:
                 if resource_class:
                     file.write(f"{resource_class}\n\n")
 
+    def _evaluate_create_method(self, resource_name, class_methods):
+        """Evaluate the Create method
+
+        Args:
+            resource_name (str): The name of the resource.
+            class_methods (list): The class methods.
+
+        Returns:
+            str: Formatted create method if needed for a resource, else returns empty string.
+        """
+        if 'create' in class_methods:
+            # Generate the 'create' method
+            create_method = self.generate_create_method(resource_name)
+        else:
+            # If there's no 'create' method, log a message and set 'create_method' to an empty string
+            create_method = ""
+            log.warning(f"Resource {resource_name} does not have a CREATE method")
+        return create_method
+
+    def _evaluate_refresh_method(self, resource_name, object_methods):
+        """Evaluate the refresh method.
+
+        Args:
+            resource_name (str): The name of the resource.
+            object_methods (list): The object methods.
+
+        Returns:
+            str: Formatted refresh method if needed for a resource, else returns empty string.
+        """
+        if 'refresh' in object_methods:
+            # Generate the 'refresh' method
+            refresh_method = self.generate_refresh_method(resource_name)
+        else:
+            # If there's no 'refresh' method, log a message and set 'refresh_method' to an empty string
+            refresh_method = ""
+            log.warning(f"Resource {resource_name} does not have a REFRESH method")
+        return refresh_method
+
     def generate_resource_class(self, 
                                 resource_name: str, 
                                 class_methods: list, 
@@ -199,31 +238,24 @@ class ResourcesCodeGen:
             # Generate the class attributes based on the shape
             class_attributes = self.shapes_extractor.generate_data_shape_members(get_operation_shape)
 
-            # Check if 'create' is in the class methods
-            if 'create' in class_methods:
-                # Generate the 'create' method
-                create_method = self.generate_create_method(resource_name)
-            else:
-                # If there's no 'create' method, log a message and set 'create_method' to an empty string
-                create_method = ""
-                log.warning(f"Resource {resource_name} does not have a CREATE method")
-
             # Generate the 'get' method
             get_method = self.generate_get_method(resource_name)
 
             try:
-                # Add the class attributes, 'create' method, and 'get' method to the class definition
+                # Add the class attributes and methods to the class definition
                 resource_class += add_indent(class_attributes, 4)
 
-                if create_method:
-                    resource_class += "\n"
+                if create_method := self._evaluate_create_method(resource_name, class_methods):
                     resource_class += add_indent(create_method, 4)
 
-                resource_class += "\n"
+                if refresh_method := self._evaluate_refresh_method(resource_name, object_methods):
+                    resource_class += add_indent(refresh_method, 4)
+
                 resource_class += add_indent(get_method, 4)
             except Exception:
                 # If there's an error, log the class attributes for debugging and raise the error
-                log.error(f"DEBUG HELP {class_attributes} \n {create_method} \n {get_method}")
+                log.error(f"DEBUG HELP {class_attributes} \n {create_method} \n {get_method} \n"
+                          f"{refresh_method}")
                 raise
         else:
             # If there's no 'get' method, log a message
@@ -252,6 +284,7 @@ class ResourcesCodeGen:
         typed_shape_members = self.shapes_extractor.generate_shape_members(operation_input_shape_name)
         create_args = ",\n".join(f"{attr}: {type}" for attr, type in typed_shape_members.items())
         create_args += ","
+        create_args = add_indent(create_args)
 
         # Convert the resource name to snake case
         resource_lower = convert_to_snake_case(resource_name)
@@ -303,7 +336,7 @@ class ResourcesCodeGen:
             str: The formatted Get Method template.
 
         """
-        resource_operation = self.operations["Describe" + resource]
+        resource_operation = self.operations["Describe" + resource_name]
         resource_operation_input_shape_name = resource_operation["input"]["shape"]
         resource_operation_output_shape_name = resource_operation["output"]["shape"]
 
@@ -312,8 +345,9 @@ class ResourcesCodeGen:
 
         operation_input_args = ""
         for member in resource_operation_input_shape_members:
-            operation_input_args += f"'{member}' = {convert_to_snake_case(member)},\n"
-
+            operation_input_args += f"'{member}': {convert_to_snake_case(member)},\n"
+        # remove the last \n
+        operation_input_args = operation_input_args.rstrip("\n")
         operation_input_args = add_indent(operation_input_args, 8)
 
         describe_args = ""
@@ -358,7 +392,9 @@ class ResourcesCodeGen:
 
         operation_input_args = ""
         for member in resource_operation_input_shape_members:
-            operation_input_args += f"'{member}' = self.{convert_to_snake_case(member)},\n"
+            operation_input_args += f"'{member}': self.{convert_to_snake_case(member)},\n"
+        # remove the last \n
+        operation_input_args = operation_input_args.rstrip("\n")
         operation_input_args = add_indent(operation_input_args, 8)
 
         operation = convert_to_snake_case("Describe" + resource_name)
