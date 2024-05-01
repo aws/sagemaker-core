@@ -112,9 +112,10 @@ class ResourcesCodeGen:
         imports = [
             "import datetime",
             "import boto3",
+            "import time",
             "from pprint import pprint",
-            "from pydantic import BaseModel",
-            "from typing import List, Dict, Optional",
+            "from pydantic import BaseModel, validate_call",
+            "from typing import List, Dict, Optional, Literal",
             "from boto3.session import Session",
             "from utils import Unassigned",
             "from shapes import *",
@@ -206,12 +207,11 @@ class ResourcesCodeGen:
         if 'wait' in object_methods:    
             wait_method = self.generate_wait_method(resource_status_chain, resource_states)
         else:
-            # If there's no 'wait' method, log a message and set 'wait_method' to an empty string
+            # If there's no 'wait' method, set 'wait_method' to an empty string
             wait_method = ""
-            log.warning(f"Resource {resource_name} does not have a WAIT method")
         return wait_method
     
-    def _evaluate_wait_for_status_method(self, resource_name, object_methods, resource_status_chain):
+    def _evaluate_wait_for_status_method(self, object_methods, resource_status_chain, resource_states):
         """Evaluate the wait_for_status method.
 
         Args:
@@ -223,11 +223,10 @@ class ResourcesCodeGen:
             str: Formatted refresh method if needed for a resource, else returns empty string.
         """
         if 'wait_for_status' in object_methods:
-            wait_for_status_method  = self.generate_wait_for_status_method(resource_status_chain)
+            wait_for_status_method  = self.generate_wait_for_status_method(resource_status_chain, resource_states)
         else:
-            # If there's no 'wait_for_status' method, log a message and set 'wait_for_status' method to an empty string
+            # If there's no 'wait_for_status' method, set 'wait_for_status' method to an empty string
             wait_for_status_method = ""
-            log.warning(f"Resource {resource_name} does not have a WAIT method")
         return wait_for_status_method
     
     def generate_resource_class(self, 
@@ -292,8 +291,7 @@ class ResourcesCodeGen:
                                                              resource_status_chain, resource_states):
                     resource_class += add_indent(wait_method, 4)
                     
-                if wait_for_status_method := self._evaluate_wait_for_status_method(resource_name, object_methods, 
-                                                                                   resource_status_chain):
+                if wait_for_status_method := self._evaluate_wait_for_status_method(object_methods, resource_status_chain, resource_states):
                     resource_class += add_indent(wait_for_status_method, 4)
                                         
             except Exception:
@@ -541,7 +539,7 @@ class ResourcesCodeGen:
         )
         return formatted_method
     
-    def generate_wait_for_status_method(self, resource_status_chain) -> str:
+    def generate_wait_for_status_method(self, resource_status_chain, resource_states) -> str:
         """Auto-Generate WAIT_FOR_STATUS Method for a waitable resource.
 
         Args:
@@ -557,6 +555,7 @@ class ResourcesCodeGen:
             status_key_path += f'.{convert_to_snake_case(member["name"])}'
 
         formatted_method = WAIT_FOR_STATUS_METHOD_TEMPLATE.format(
+            resource_states=resource_states,
             status_key_path=status_key_path
         )
         return formatted_method

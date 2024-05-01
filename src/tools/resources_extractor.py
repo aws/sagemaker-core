@@ -191,7 +191,7 @@ class ResourcesExtractor():
                     
                     if resource_low.endswith("job") or resource_low.endswith("jobv2"):
                         object_methods.add("wait")
-                    elif any("inservice" in state.lower().replace("_", "") for state in resource_states):
+                    elif resource_states and resource_low != "action":
                         object_methods.add("wait_for_status")
                         
                     continue            

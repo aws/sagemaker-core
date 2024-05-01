@@ -97,14 +97,18 @@ def wait(
 ) -> Optional[object]:
     terminal_states = {terminal_resource_states}
     start_time = time.time()
+    
     while True:
         self.refresh()
         current_status = self{status_key_path}
+        
         if current_status in terminal_states:
             return
+            
         # TODO: Raise some generated TimeOutError
         if timeout is not None and time.time() - start_time >= timeout:
             raise Exception("Timeout exceeded. Final resource state - " + current_status)
+            
         time.sleep(poll)
 '''
 
@@ -117,6 +121,7 @@ def wait_for_status(
     timeout: Optional[int] = None
 ) -> Optional[object]:
     start_time = time.time()
+    
     while True:
         self.refresh()
         current_status = self{status_key_path}
