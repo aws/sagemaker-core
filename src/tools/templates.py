@@ -76,9 +76,7 @@ def get(
 '''
 
 REFRESH_METHOD_TEMPLATE = '''
-def refresh(
-    self
-) -> Optional[object]:
+def refresh(self) -> Optional[object]:
 
     operation_input_args = {{
 {operation_input_args}
@@ -88,6 +86,24 @@ def refresh(
     # deserialize the response
     deserializer(self, response, '{describe_operation_output_shape}')
     return self
+'''
+
+DELETE_METHOD_TEMPLATE = '''
+def delete(self) -> None:
+
+    operation_input_args = {{
+{operation_input_args}
+    }}
+    self.client.{operation}(**operation_input_args)
+'''
+
+STOP_METHOD_TEMPLATE = '''
+def stop(self) -> None:
+
+    operation_input_args = {{
+{operation_input_args}
+    }}
+    self.client.{operation}(**operation_input_args)
 '''
 
 SHAPE_BASE_CLASS_TEMPLATE ='''

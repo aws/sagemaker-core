@@ -72,9 +72,7 @@ class Action(BaseModel):
     
         return action
     
-    def refresh(
-        self
-    ) -> Optional[object]:
+    def refresh(self) -> Optional[object]:
     
         operation_input_args = {
             'ActionName': self.action_name,
@@ -84,6 +82,13 @@ class Action(BaseModel):
         # deserialize the response
         deserializer(self, response, 'DescribeActionResponse')
         return self
+    
+    def delete(self) -> None:
+    
+        operation_input_args = {
+            'ActionName': self.action_name,
+        }
+        self.client.delete_action(**operation_input_args)
     
     @classmethod
     def get(
@@ -151,9 +156,7 @@ class Algorithm(BaseModel):
     
         return algorithm
     
-    def refresh(
-        self
-    ) -> Optional[object]:
+    def refresh(self) -> Optional[object]:
     
         operation_input_args = {
             'AlgorithmName': self.algorithm_name,
@@ -163,6 +166,13 @@ class Algorithm(BaseModel):
         # deserialize the response
         deserializer(self, response, 'DescribeAlgorithmOutput')
         return self
+    
+    def delete(self) -> None:
+    
+        operation_input_args = {
+            'AlgorithmName': self.algorithm_name,
+        }
+        self.client.delete_algorithm(**operation_input_args)
     
     @classmethod
     def get(
@@ -231,9 +241,7 @@ class App(BaseModel):
     
         return app
     
-    def refresh(
-        self
-    ) -> Optional[object]:
+    def refresh(self) -> Optional[object]:
     
         operation_input_args = {
             'DomainId': self.domain_id,
@@ -247,6 +255,17 @@ class App(BaseModel):
         # deserialize the response
         deserializer(self, response, 'DescribeAppResponse')
         return self
+    
+    def delete(self) -> None:
+    
+        operation_input_args = {
+            'DomainId': self.domain_id,
+            'UserProfileName': self.user_profile_name,
+            'SpaceName': self.space_name,
+            'AppType': self.app_type,
+            'AppName': self.app_name,
+        }
+        self.client.delete_app(**operation_input_args)
     
     @classmethod
     def get(
@@ -311,9 +330,7 @@ class AppImageConfig(BaseModel):
     
         return app_image_config
     
-    def refresh(
-        self
-    ) -> Optional[object]:
+    def refresh(self) -> Optional[object]:
     
         operation_input_args = {
             'AppImageConfigName': self.app_image_config_name,
@@ -323,6 +340,13 @@ class AppImageConfig(BaseModel):
         # deserialize the response
         deserializer(self, response, 'DescribeAppImageConfigResponse')
         return self
+    
+    def delete(self) -> None:
+    
+        operation_input_args = {
+            'AppImageConfigName': self.app_image_config_name,
+        }
+        self.client.delete_app_image_config(**operation_input_args)
     
     @classmethod
     def get(
@@ -388,9 +412,7 @@ class Artifact(BaseModel):
     
         return artifact
     
-    def refresh(
-        self
-    ) -> Optional[object]:
+    def refresh(self) -> Optional[object]:
     
         operation_input_args = {
             'ArtifactArn': self.artifact_arn,
@@ -400,6 +422,14 @@ class Artifact(BaseModel):
         # deserialize the response
         deserializer(self, response, 'DescribeArtifactResponse')
         return self
+    
+    def delete(self) -> None:
+    
+        operation_input_args = {
+            'ArtifactArn': self.artifact_arn,
+            'Source': self.source,
+        }
+        self.client.delete_artifact(**operation_input_args)
     
     @classmethod
     def get(
@@ -483,9 +513,7 @@ class AutoMLJob(BaseModel):
     
         return auto_m_l_job
     
-    def refresh(
-        self
-    ) -> Optional[object]:
+    def refresh(self) -> Optional[object]:
     
         operation_input_args = {
             'AutoMLJobName': self.auto_m_l_job_name,
@@ -495,6 +523,13 @@ class AutoMLJob(BaseModel):
         # deserialize the response
         deserializer(self, response, 'DescribeAutoMLJobResponse')
         return self
+    
+    def stop(self) -> None:
+    
+        operation_input_args = {
+            'AutoMLJobName': self.auto_m_l_job_name,
+        }
+        self.client.stop_auto_m_l_job(**operation_input_args)
     
     @classmethod
     def get(
@@ -579,9 +614,7 @@ class AutoMLJobV2(BaseModel):
     
         return auto_m_l_job_v2
     
-    def refresh(
-        self
-    ) -> Optional[object]:
+    def refresh(self) -> Optional[object]:
     
         operation_input_args = {
             'AutoMLJobName': self.auto_m_l_job_name,
@@ -648,9 +681,7 @@ class Cluster(BaseModel):
     
         return cluster
     
-    def refresh(
-        self
-    ) -> Optional[object]:
+    def refresh(self) -> Optional[object]:
     
         operation_input_args = {
             'ClusterName': self.cluster_name,
@@ -660,6 +691,13 @@ class Cluster(BaseModel):
         # deserialize the response
         deserializer(self, response, 'DescribeClusterResponse')
         return self
+    
+    def delete(self) -> None:
+    
+        operation_input_args = {
+            'ClusterName': self.cluster_name,
+        }
+        self.client.delete_cluster(**operation_input_args)
     
     @classmethod
     def get(
@@ -713,9 +751,7 @@ class CodeRepository(BaseModel):
     
         return code_repository
     
-    def refresh(
-        self
-    ) -> Optional[object]:
+    def refresh(self) -> Optional[object]:
     
         operation_input_args = {
             'CodeRepositoryName': self.code_repository_name,
@@ -725,6 +761,13 @@ class CodeRepository(BaseModel):
         # deserialize the response
         deserializer(self, response, 'DescribeCodeRepositoryOutput')
         return self
+    
+    def delete(self) -> None:
+    
+        operation_input_args = {
+            'CodeRepositoryName': self.code_repository_name,
+        }
+        self.client.delete_code_repository(**operation_input_args)
     
     @classmethod
     def get(
@@ -801,9 +844,7 @@ class CompilationJob(BaseModel):
     
         return compilation_job
     
-    def refresh(
-        self
-    ) -> Optional[object]:
+    def refresh(self) -> Optional[object]:
     
         operation_input_args = {
             'CompilationJobName': self.compilation_job_name,
@@ -813,6 +854,20 @@ class CompilationJob(BaseModel):
         # deserialize the response
         deserializer(self, response, 'DescribeCompilationJobResponse')
         return self
+    
+    def delete(self) -> None:
+    
+        operation_input_args = {
+            'CompilationJobName': self.compilation_job_name,
+        }
+        self.client.delete_compilation_job(**operation_input_args)
+    
+    def stop(self) -> None:
+    
+        operation_input_args = {
+            'CompilationJobName': self.compilation_job_name,
+        }
+        self.client.stop_compilation_job(**operation_input_args)
     
     @classmethod
     def get(
@@ -878,9 +933,7 @@ class Context(BaseModel):
     
         return context
     
-    def refresh(
-        self
-    ) -> Optional[object]:
+    def refresh(self) -> Optional[object]:
     
         operation_input_args = {
             'ContextName': self.context_name,
@@ -890,6 +943,13 @@ class Context(BaseModel):
         # deserialize the response
         deserializer(self, response, 'DescribeContextResponse')
         return self
+    
+    def delete(self) -> None:
+    
+        operation_input_args = {
+            'ContextName': self.context_name,
+        }
+        self.client.delete_context(**operation_input_args)
     
     @classmethod
     def get(
@@ -963,9 +1023,7 @@ class DataQualityJobDefinition(BaseModel):
     
         return data_quality_job_definition
     
-    def refresh(
-        self
-    ) -> Optional[object]:
+    def refresh(self) -> Optional[object]:
     
         operation_input_args = {
             'JobDefinitionName': self.job_definition_name,
@@ -975,6 +1033,13 @@ class DataQualityJobDefinition(BaseModel):
         # deserialize the response
         deserializer(self, response, 'DescribeDataQualityJobDefinitionResponse')
         return self
+    
+    def delete(self) -> None:
+    
+        operation_input_args = {
+            'JobDefinitionName': self.job_definition_name,
+        }
+        self.client.delete_data_quality_job_definition(**operation_input_args)
     
     @classmethod
     def get(
@@ -1037,9 +1102,7 @@ class DeviceFleet(BaseModel):
     
         return device_fleet
     
-    def refresh(
-        self
-    ) -> Optional[object]:
+    def refresh(self) -> Optional[object]:
     
         operation_input_args = {
             'DeviceFleetName': self.device_fleet_name,
@@ -1049,6 +1112,13 @@ class DeviceFleet(BaseModel):
         # deserialize the response
         deserializer(self, response, 'DescribeDeviceFleetResponse')
         return self
+    
+    def delete(self) -> None:
+    
+        operation_input_args = {
+            'DeviceFleetName': self.device_fleet_name,
+        }
+        self.client.delete_device_fleet(**operation_input_args)
     
     @classmethod
     def get(
@@ -1137,9 +1207,7 @@ class Domain(BaseModel):
     
         return domain
     
-    def refresh(
-        self
-    ) -> Optional[object]:
+    def refresh(self) -> Optional[object]:
     
         operation_input_args = {
             'DomainId': self.domain_id,
@@ -1149,6 +1217,14 @@ class Domain(BaseModel):
         # deserialize the response
         deserializer(self, response, 'DescribeDomainResponse')
         return self
+    
+    def delete(self) -> None:
+    
+        operation_input_args = {
+            'DomainId': self.domain_id,
+            'RetentionPolicy': self.retention_policy,
+        }
+        self.client.delete_domain(**operation_input_args)
     
     @classmethod
     def get(
@@ -1212,9 +1288,7 @@ class EdgeDeploymentPlan(BaseModel):
     
         return edge_deployment_plan
     
-    def refresh(
-        self
-    ) -> Optional[object]:
+    def refresh(self) -> Optional[object]:
     
         operation_input_args = {
             'EdgeDeploymentPlanName': self.edge_deployment_plan_name,
@@ -1226,6 +1300,13 @@ class EdgeDeploymentPlan(BaseModel):
         # deserialize the response
         deserializer(self, response, 'DescribeEdgeDeploymentPlanResponse')
         return self
+    
+    def delete(self) -> None:
+    
+        operation_input_args = {
+            'EdgeDeploymentPlanName': self.edge_deployment_plan_name,
+        }
+        self.client.delete_edge_deployment_plan(**operation_input_args)
     
     @classmethod
     def get(
@@ -1303,9 +1384,7 @@ class EdgePackagingJob(BaseModel):
     
         return edge_packaging_job
     
-    def refresh(
-        self
-    ) -> Optional[object]:
+    def refresh(self) -> Optional[object]:
     
         operation_input_args = {
             'EdgePackagingJobName': self.edge_packaging_job_name,
@@ -1315,6 +1394,13 @@ class EdgePackagingJob(BaseModel):
         # deserialize the response
         deserializer(self, response, 'DescribeEdgePackagingJobResponse')
         return self
+    
+    def stop(self) -> None:
+    
+        operation_input_args = {
+            'EdgePackagingJobName': self.edge_packaging_job_name,
+        }
+        self.client.stop_edge_packaging_job(**operation_input_args)
     
     @classmethod
     def get(
@@ -1379,9 +1465,7 @@ class Endpoint(BaseModel):
     
         return endpoint
     
-    def refresh(
-        self
-    ) -> Optional[object]:
+    def refresh(self) -> Optional[object]:
     
         operation_input_args = {
             'EndpointName': self.endpoint_name,
@@ -1391,6 +1475,13 @@ class Endpoint(BaseModel):
         # deserialize the response
         deserializer(self, response, 'DescribeEndpointOutput')
         return self
+    
+    def delete(self) -> None:
+    
+        operation_input_args = {
+            'EndpointName': self.endpoint_name,
+        }
+        self.client.delete_endpoint(**operation_input_args)
     
     @classmethod
     def get(
@@ -1467,9 +1558,7 @@ class EndpointConfig(BaseModel):
     
         return endpoint_config
     
-    def refresh(
-        self
-    ) -> Optional[object]:
+    def refresh(self) -> Optional[object]:
     
         operation_input_args = {
             'EndpointConfigName': self.endpoint_config_name,
@@ -1479,6 +1568,13 @@ class EndpointConfig(BaseModel):
         # deserialize the response
         deserializer(self, response, 'DescribeEndpointConfigOutput')
         return self
+    
+    def delete(self) -> None:
+    
+        operation_input_args = {
+            'EndpointConfigName': self.endpoint_config_name,
+        }
+        self.client.delete_endpoint_config(**operation_input_args)
     
     @classmethod
     def get(
@@ -1538,9 +1634,7 @@ class Experiment(BaseModel):
     
         return experiment
     
-    def refresh(
-        self
-    ) -> Optional[object]:
+    def refresh(self) -> Optional[object]:
     
         operation_input_args = {
             'ExperimentName': self.experiment_name,
@@ -1550,6 +1644,13 @@ class Experiment(BaseModel):
         # deserialize the response
         deserializer(self, response, 'DescribeExperimentResponse')
         return self
+    
+    def delete(self) -> None:
+    
+        operation_input_args = {
+            'ExperimentName': self.experiment_name,
+        }
+        self.client.delete_experiment(**operation_input_args)
     
     @classmethod
     def get(
@@ -1630,9 +1731,7 @@ class FeatureGroup(BaseModel):
     
         return feature_group
     
-    def refresh(
-        self
-    ) -> Optional[object]:
+    def refresh(self) -> Optional[object]:
     
         operation_input_args = {
             'FeatureGroupName': self.feature_group_name,
@@ -1643,6 +1742,13 @@ class FeatureGroup(BaseModel):
         # deserialize the response
         deserializer(self, response, 'DescribeFeatureGroupResponse')
         return self
+    
+    def delete(self) -> None:
+    
+        operation_input_args = {
+            'FeatureGroupName': self.feature_group_name,
+        }
+        self.client.delete_feature_group(**operation_input_args)
     
     @classmethod
     def get(
@@ -1711,9 +1817,7 @@ class FlowDefinition(BaseModel):
     
         return flow_definition
     
-    def refresh(
-        self
-    ) -> Optional[object]:
+    def refresh(self) -> Optional[object]:
     
         operation_input_args = {
             'FlowDefinitionName': self.flow_definition_name,
@@ -1723,6 +1827,13 @@ class FlowDefinition(BaseModel):
         # deserialize the response
         deserializer(self, response, 'DescribeFlowDefinitionResponse')
         return self
+    
+    def delete(self) -> None:
+    
+        operation_input_args = {
+            'FlowDefinitionName': self.flow_definition_name,
+        }
+        self.client.delete_flow_definition(**operation_input_args)
     
     @classmethod
     def get(
@@ -1787,9 +1898,7 @@ class Hub(BaseModel):
     
         return hub
     
-    def refresh(
-        self
-    ) -> Optional[object]:
+    def refresh(self) -> Optional[object]:
     
         operation_input_args = {
             'HubName': self.hub_name,
@@ -1799,6 +1908,13 @@ class Hub(BaseModel):
         # deserialize the response
         deserializer(self, response, 'DescribeHubResponse')
         return self
+    
+    def delete(self) -> None:
+    
+        operation_input_args = {
+            'HubName': self.hub_name,
+        }
+        self.client.delete_hub(**operation_input_args)
     
     @classmethod
     def get(
@@ -1839,9 +1955,7 @@ class HubContent(BaseModel):
     hub_content_dependencies: Optional[List[HubContentDependency]] = Unassigned()
     failure_reason: Optional[str] = Unassigned()
     
-    def refresh(
-        self
-    ) -> Optional[object]:
+    def refresh(self) -> Optional[object]:
     
         operation_input_args = {
             'HubName': self.hub_name,
@@ -1854,6 +1968,16 @@ class HubContent(BaseModel):
         # deserialize the response
         deserializer(self, response, 'DescribeHubContentResponse')
         return self
+    
+    def delete(self) -> None:
+    
+        operation_input_args = {
+            'HubName': self.hub_name,
+            'HubContentType': self.hub_content_type,
+            'HubContentName': self.hub_content_name,
+            'HubContentVersion': self.hub_content_version,
+        }
+        self.client.delete_hub_content(**operation_input_args)
     
     @classmethod
     def get(
@@ -1913,9 +2037,7 @@ class HumanTaskUi(BaseModel):
     
         return human_task_ui
     
-    def refresh(
-        self
-    ) -> Optional[object]:
+    def refresh(self) -> Optional[object]:
     
         operation_input_args = {
             'HumanTaskUiName': self.human_task_ui_name,
@@ -1925,6 +2047,13 @@ class HumanTaskUi(BaseModel):
         # deserialize the response
         deserializer(self, response, 'DescribeHumanTaskUiResponse')
         return self
+    
+    def delete(self) -> None:
+    
+        operation_input_args = {
+            'HumanTaskUiName': self.human_task_ui_name,
+        }
+        self.client.delete_human_task_ui(**operation_input_args)
     
     @classmethod
     def get(
@@ -1999,9 +2128,7 @@ class HyperParameterTuningJob(BaseModel):
     
         return hyper_parameter_tuning_job
     
-    def refresh(
-        self
-    ) -> Optional[object]:
+    def refresh(self) -> Optional[object]:
     
         operation_input_args = {
             'HyperParameterTuningJobName': self.hyper_parameter_tuning_job_name,
@@ -2011,6 +2138,20 @@ class HyperParameterTuningJob(BaseModel):
         # deserialize the response
         deserializer(self, response, 'DescribeHyperParameterTuningJobResponse')
         return self
+    
+    def delete(self) -> None:
+    
+        operation_input_args = {
+            'HyperParameterTuningJobName': self.hyper_parameter_tuning_job_name,
+        }
+        self.client.delete_hyper_parameter_tuning_job(**operation_input_args)
+    
+    def stop(self) -> None:
+    
+        operation_input_args = {
+            'HyperParameterTuningJobName': self.hyper_parameter_tuning_job_name,
+        }
+        self.client.stop_hyper_parameter_tuning_job(**operation_input_args)
     
     @classmethod
     def get(
@@ -2072,9 +2213,7 @@ class Image(BaseModel):
     
         return image
     
-    def refresh(
-        self
-    ) -> Optional[object]:
+    def refresh(self) -> Optional[object]:
     
         operation_input_args = {
             'ImageName': self.image_name,
@@ -2084,6 +2223,13 @@ class Image(BaseModel):
         # deserialize the response
         deserializer(self, response, 'DescribeImageResponse')
         return self
+    
+    def delete(self) -> None:
+    
+        operation_input_args = {
+            'ImageName': self.image_name,
+        }
+        self.client.delete_image(**operation_input_args)
     
     @classmethod
     def get(
@@ -2164,9 +2310,7 @@ class ImageVersion(BaseModel):
     
         return image_version
     
-    def refresh(
-        self
-    ) -> Optional[object]:
+    def refresh(self) -> Optional[object]:
     
         operation_input_args = {
             'ImageName': self.image_name,
@@ -2178,6 +2322,15 @@ class ImageVersion(BaseModel):
         # deserialize the response
         deserializer(self, response, 'DescribeImageVersionResponse')
         return self
+    
+    def delete(self) -> None:
+    
+        operation_input_args = {
+            'ImageName': self.image_name,
+            'Version': self.version,
+            'Alias': self.alias,
+        }
+        self.client.delete_image_version(**operation_input_args)
     
     @classmethod
     def get(
@@ -2247,9 +2400,7 @@ class InferenceComponent(BaseModel):
     
         return inference_component
     
-    def refresh(
-        self
-    ) -> Optional[object]:
+    def refresh(self) -> Optional[object]:
     
         operation_input_args = {
             'InferenceComponentName': self.inference_component_name,
@@ -2259,6 +2410,13 @@ class InferenceComponent(BaseModel):
         # deserialize the response
         deserializer(self, response, 'DescribeInferenceComponentOutput')
         return self
+    
+    def delete(self) -> None:
+    
+        operation_input_args = {
+            'InferenceComponentName': self.inference_component_name,
+        }
+        self.client.delete_inference_component(**operation_input_args)
     
     @classmethod
     def get(
@@ -2339,9 +2497,7 @@ class InferenceExperiment(BaseModel):
     
         return inference_experiment
     
-    def refresh(
-        self
-    ) -> Optional[object]:
+    def refresh(self) -> Optional[object]:
     
         operation_input_args = {
             'Name': self.name,
@@ -2351,6 +2507,24 @@ class InferenceExperiment(BaseModel):
         # deserialize the response
         deserializer(self, response, 'DescribeInferenceExperimentResponse')
         return self
+    
+    def delete(self) -> None:
+    
+        operation_input_args = {
+            'Name': self.name,
+        }
+        self.client.delete_inference_experiment(**operation_input_args)
+    
+    def stop(self) -> None:
+    
+        operation_input_args = {
+            'Name': self.name,
+            'ModelVariantActions': self.model_variant_actions,
+            'DesiredModelVariants': self.desired_model_variants,
+            'DesiredState': self.desired_state,
+            'Reason': self.reason,
+        }
+        self.client.stop_inference_experiment(**operation_input_args)
     
     @classmethod
     def get(
@@ -2423,9 +2597,7 @@ class InferenceRecommendationsJob(BaseModel):
     
         return inference_recommendations_job
     
-    def refresh(
-        self
-    ) -> Optional[object]:
+    def refresh(self) -> Optional[object]:
     
         operation_input_args = {
             'JobName': self.job_name,
@@ -2435,6 +2607,13 @@ class InferenceRecommendationsJob(BaseModel):
         # deserialize the response
         deserializer(self, response, 'DescribeInferenceRecommendationsJobResponse')
         return self
+    
+    def stop(self) -> None:
+    
+        operation_input_args = {
+            'JobName': self.job_name,
+        }
+        self.client.stop_inference_recommendations_job(**operation_input_args)
     
     @classmethod
     def get(
@@ -2515,9 +2694,7 @@ class LabelingJob(BaseModel):
     
         return labeling_job
     
-    def refresh(
-        self
-    ) -> Optional[object]:
+    def refresh(self) -> Optional[object]:
     
         operation_input_args = {
             'LabelingJobName': self.labeling_job_name,
@@ -2527,6 +2704,13 @@ class LabelingJob(BaseModel):
         # deserialize the response
         deserializer(self, response, 'DescribeLabelingJobResponse')
         return self
+    
+    def stop(self) -> None:
+    
+        operation_input_args = {
+            'LabelingJobName': self.labeling_job_name,
+        }
+        self.client.stop_labeling_job(**operation_input_args)
     
     @classmethod
     def get(
@@ -2595,9 +2779,7 @@ class Model(BaseModel):
     
         return model
     
-    def refresh(
-        self
-    ) -> Optional[object]:
+    def refresh(self) -> Optional[object]:
     
         operation_input_args = {
             'ModelName': self.model_name,
@@ -2607,6 +2789,13 @@ class Model(BaseModel):
         # deserialize the response
         deserializer(self, response, 'DescribeModelOutput')
         return self
+    
+    def delete(self) -> None:
+    
+        operation_input_args = {
+            'ModelName': self.model_name,
+        }
+        self.client.delete_model(**operation_input_args)
     
     @classmethod
     def get(
@@ -2680,9 +2869,7 @@ class ModelBiasJobDefinition(BaseModel):
     
         return model_bias_job_definition
     
-    def refresh(
-        self
-    ) -> Optional[object]:
+    def refresh(self) -> Optional[object]:
     
         operation_input_args = {
             'JobDefinitionName': self.job_definition_name,
@@ -2692,6 +2879,13 @@ class ModelBiasJobDefinition(BaseModel):
         # deserialize the response
         deserializer(self, response, 'DescribeModelBiasJobDefinitionResponse')
         return self
+    
+    def delete(self) -> None:
+    
+        operation_input_args = {
+            'JobDefinitionName': self.job_definition_name,
+        }
+        self.client.delete_model_bias_job_definition(**operation_input_args)
     
     @classmethod
     def get(
@@ -2755,9 +2949,7 @@ class ModelCard(BaseModel):
     
         return model_card
     
-    def refresh(
-        self
-    ) -> Optional[object]:
+    def refresh(self) -> Optional[object]:
     
         operation_input_args = {
             'ModelCardName': self.model_card_name,
@@ -2768,6 +2960,13 @@ class ModelCard(BaseModel):
         # deserialize the response
         deserializer(self, response, 'DescribeModelCardResponse')
         return self
+    
+    def delete(self) -> None:
+    
+        operation_input_args = {
+            'ModelCardName': self.model_card_name,
+        }
+        self.client.delete_model_card(**operation_input_args)
     
     @classmethod
     def get(
@@ -2830,9 +3029,7 @@ class ModelCardExportJob(BaseModel):
     
         return model_card_export_job
     
-    def refresh(
-        self
-    ) -> Optional[object]:
+    def refresh(self) -> Optional[object]:
     
         operation_input_args = {
             'ModelCardExportJobArn': self.model_card_export_job_arn,
@@ -2915,9 +3112,7 @@ class ModelExplainabilityJobDefinition(BaseModel):
     
         return model_explainability_job_definition
     
-    def refresh(
-        self
-    ) -> Optional[object]:
+    def refresh(self) -> Optional[object]:
     
         operation_input_args = {
             'JobDefinitionName': self.job_definition_name,
@@ -2927,6 +3122,13 @@ class ModelExplainabilityJobDefinition(BaseModel):
         # deserialize the response
         deserializer(self, response, 'DescribeModelExplainabilityJobDefinitionResponse')
         return self
+    
+    def delete(self) -> None:
+    
+        operation_input_args = {
+            'JobDefinitionName': self.job_definition_name,
+        }
+        self.client.delete_model_explainability_job_definition(**operation_input_args)
     
     @classmethod
     def get(
@@ -3036,9 +3238,7 @@ class ModelPackage(BaseModel):
     
         return model_package
     
-    def refresh(
-        self
-    ) -> Optional[object]:
+    def refresh(self) -> Optional[object]:
     
         operation_input_args = {
             'ModelPackageName': self.model_package_name,
@@ -3048,6 +3248,13 @@ class ModelPackage(BaseModel):
         # deserialize the response
         deserializer(self, response, 'DescribeModelPackageOutput')
         return self
+    
+    def delete(self) -> None:
+    
+        operation_input_args = {
+            'ModelPackageName': self.model_package_name,
+        }
+        self.client.delete_model_package(**operation_input_args)
     
     @classmethod
     def get(
@@ -3102,9 +3309,7 @@ class ModelPackageGroup(BaseModel):
     
         return model_package_group
     
-    def refresh(
-        self
-    ) -> Optional[object]:
+    def refresh(self) -> Optional[object]:
     
         operation_input_args = {
             'ModelPackageGroupName': self.model_package_group_name,
@@ -3114,6 +3319,13 @@ class ModelPackageGroup(BaseModel):
         # deserialize the response
         deserializer(self, response, 'DescribeModelPackageGroupOutput')
         return self
+    
+    def delete(self) -> None:
+    
+        operation_input_args = {
+            'ModelPackageGroupName': self.model_package_group_name,
+        }
+        self.client.delete_model_package_group(**operation_input_args)
     
     @classmethod
     def get(
@@ -3187,9 +3399,7 @@ class ModelQualityJobDefinition(BaseModel):
     
         return model_quality_job_definition
     
-    def refresh(
-        self
-    ) -> Optional[object]:
+    def refresh(self) -> Optional[object]:
     
         operation_input_args = {
             'JobDefinitionName': self.job_definition_name,
@@ -3199,6 +3409,13 @@ class ModelQualityJobDefinition(BaseModel):
         # deserialize the response
         deserializer(self, response, 'DescribeModelQualityJobDefinitionResponse')
         return self
+    
+    def delete(self) -> None:
+    
+        operation_input_args = {
+            'JobDefinitionName': self.job_definition_name,
+        }
+        self.client.delete_model_quality_job_definition(**operation_input_args)
     
     @classmethod
     def get(
@@ -3257,9 +3474,7 @@ class MonitoringSchedule(BaseModel):
     
         return monitoring_schedule
     
-    def refresh(
-        self
-    ) -> Optional[object]:
+    def refresh(self) -> Optional[object]:
     
         operation_input_args = {
             'MonitoringScheduleName': self.monitoring_schedule_name,
@@ -3269,6 +3484,20 @@ class MonitoringSchedule(BaseModel):
         # deserialize the response
         deserializer(self, response, 'DescribeMonitoringScheduleResponse')
         return self
+    
+    def delete(self) -> None:
+    
+        operation_input_args = {
+            'MonitoringScheduleName': self.monitoring_schedule_name,
+        }
+        self.client.delete_monitoring_schedule(**operation_input_args)
+    
+    def stop(self) -> None:
+    
+        operation_input_args = {
+            'MonitoringScheduleName': self.monitoring_schedule_name,
+        }
+        self.client.stop_monitoring_schedule(**operation_input_args)
     
     @classmethod
     def get(
@@ -3365,9 +3594,7 @@ class NotebookInstance(BaseModel):
     
         return notebook_instance
     
-    def refresh(
-        self
-    ) -> Optional[object]:
+    def refresh(self) -> Optional[object]:
     
         operation_input_args = {
             'NotebookInstanceName': self.notebook_instance_name,
@@ -3377,6 +3604,20 @@ class NotebookInstance(BaseModel):
         # deserialize the response
         deserializer(self, response, 'DescribeNotebookInstanceOutput')
         return self
+    
+    def delete(self) -> None:
+    
+        operation_input_args = {
+            'NotebookInstanceName': self.notebook_instance_name,
+        }
+        self.client.delete_notebook_instance(**operation_input_args)
+    
+    def stop(self) -> None:
+    
+        operation_input_args = {
+            'NotebookInstanceName': self.notebook_instance_name,
+        }
+        self.client.stop_notebook_instance(**operation_input_args)
     
     @classmethod
     def get(
@@ -3431,9 +3672,7 @@ class NotebookInstanceLifecycleConfig(BaseModel):
     
         return notebook_instance_lifecycle_config
     
-    def refresh(
-        self
-    ) -> Optional[object]:
+    def refresh(self) -> Optional[object]:
     
         operation_input_args = {
             'NotebookInstanceLifecycleConfigName': self.notebook_instance_lifecycle_config_name,
@@ -3443,6 +3682,13 @@ class NotebookInstanceLifecycleConfig(BaseModel):
         # deserialize the response
         deserializer(self, response, 'DescribeNotebookInstanceLifecycleConfigOutput')
         return self
+    
+    def delete(self) -> None:
+    
+        operation_input_args = {
+            'NotebookInstanceLifecycleConfigName': self.notebook_instance_lifecycle_config_name,
+        }
+        self.client.delete_notebook_instance_lifecycle_config(**operation_input_args)
     
     @classmethod
     def get(
@@ -3516,9 +3762,7 @@ class Pipeline(BaseModel):
     
         return pipeline
     
-    def refresh(
-        self
-    ) -> Optional[object]:
+    def refresh(self) -> Optional[object]:
     
         operation_input_args = {
             'PipelineName': self.pipeline_name,
@@ -3528,6 +3772,14 @@ class Pipeline(BaseModel):
         # deserialize the response
         deserializer(self, response, 'DescribePipelineResponse')
         return self
+    
+    def delete(self) -> None:
+    
+        operation_input_args = {
+            'PipelineName': self.pipeline_name,
+            'ClientRequestToken': self.client_request_token,
+        }
+        self.client.delete_pipeline(**operation_input_args)
     
     @classmethod
     def get(
@@ -3565,9 +3817,7 @@ class PipelineExecution(BaseModel):
     parallelism_configuration: Optional[ParallelismConfiguration] = Unassigned()
     selective_execution_config: Optional[SelectiveExecutionConfig] = Unassigned()
     
-    def refresh(
-        self
-    ) -> Optional[object]:
+    def refresh(self) -> Optional[object]:
     
         operation_input_args = {
             'PipelineExecutionArn': self.pipeline_execution_arn,
@@ -3577,6 +3827,14 @@ class PipelineExecution(BaseModel):
         # deserialize the response
         deserializer(self, response, 'DescribePipelineExecutionResponse')
         return self
+    
+    def stop(self) -> None:
+    
+        operation_input_args = {
+            'PipelineExecutionArn': self.pipeline_execution_arn,
+            'ClientRequestToken': self.client_request_token,
+        }
+        self.client.stop_pipeline_execution(**operation_input_args)
     
     @classmethod
     def get(
@@ -3662,9 +3920,7 @@ class ProcessingJob(BaseModel):
     
         return processing_job
     
-    def refresh(
-        self
-    ) -> Optional[object]:
+    def refresh(self) -> Optional[object]:
     
         operation_input_args = {
             'ProcessingJobName': self.processing_job_name,
@@ -3674,6 +3930,13 @@ class ProcessingJob(BaseModel):
         # deserialize the response
         deserializer(self, response, 'DescribeProcessingJobResponse')
         return self
+    
+    def stop(self) -> None:
+    
+        operation_input_args = {
+            'ProcessingJobName': self.processing_job_name,
+        }
+        self.client.stop_processing_job(**operation_input_args)
     
     @classmethod
     def get(
@@ -3735,9 +3998,7 @@ class Project(BaseModel):
     
         return project
     
-    def refresh(
-        self
-    ) -> Optional[object]:
+    def refresh(self) -> Optional[object]:
     
         operation_input_args = {
             'ProjectName': self.project_name,
@@ -3747,6 +4008,13 @@ class Project(BaseModel):
         # deserialize the response
         deserializer(self, response, 'DescribeProjectOutput')
         return self
+    
+    def delete(self) -> None:
+    
+        operation_input_args = {
+            'ProjectName': self.project_name,
+        }
+        self.client.delete_project(**operation_input_args)
     
     @classmethod
     def get(
@@ -3816,9 +4084,7 @@ class Space(BaseModel):
     
         return space
     
-    def refresh(
-        self
-    ) -> Optional[object]:
+    def refresh(self) -> Optional[object]:
     
         operation_input_args = {
             'DomainId': self.domain_id,
@@ -3829,6 +4095,14 @@ class Space(BaseModel):
         # deserialize the response
         deserializer(self, response, 'DescribeSpaceResponse')
         return self
+    
+    def delete(self) -> None:
+    
+        operation_input_args = {
+            'DomainId': self.domain_id,
+            'SpaceName': self.space_name,
+        }
+        self.client.delete_space(**operation_input_args)
     
     @classmethod
     def get(
@@ -3887,9 +4161,7 @@ class StudioLifecycleConfig(BaseModel):
     
         return studio_lifecycle_config
     
-    def refresh(
-        self
-    ) -> Optional[object]:
+    def refresh(self) -> Optional[object]:
     
         operation_input_args = {
             'StudioLifecycleConfigName': self.studio_lifecycle_config_name,
@@ -3899,6 +4171,13 @@ class StudioLifecycleConfig(BaseModel):
         # deserialize the response
         deserializer(self, response, 'DescribeStudioLifecycleConfigResponse')
         return self
+    
+    def delete(self) -> None:
+    
+        operation_input_args = {
+            'StudioLifecycleConfigName': self.studio_lifecycle_config_name,
+        }
+        self.client.delete_studio_lifecycle_config(**operation_input_args)
     
     @classmethod
     def get(
@@ -4032,9 +4311,7 @@ class TrainingJob(BaseModel):
     
         return training_job
     
-    def refresh(
-        self
-    ) -> Optional[object]:
+    def refresh(self) -> Optional[object]:
     
         operation_input_args = {
             'TrainingJobName': self.training_job_name,
@@ -4044,6 +4321,13 @@ class TrainingJob(BaseModel):
         # deserialize the response
         deserializer(self, response, 'DescribeTrainingJobResponse')
         return self
+    
+    def stop(self) -> None:
+    
+        operation_input_args = {
+            'TrainingJobName': self.training_job_name,
+        }
+        self.client.stop_training_job(**operation_input_args)
     
     @classmethod
     def get(
@@ -4135,9 +4419,7 @@ class TransformJob(BaseModel):
     
         return transform_job
     
-    def refresh(
-        self
-    ) -> Optional[object]:
+    def refresh(self) -> Optional[object]:
     
         operation_input_args = {
             'TransformJobName': self.transform_job_name,
@@ -4147,6 +4429,13 @@ class TransformJob(BaseModel):
         # deserialize the response
         deserializer(self, response, 'DescribeTransformJobResponse')
         return self
+    
+    def stop(self) -> None:
+    
+        operation_input_args = {
+            'TransformJobName': self.transform_job_name,
+        }
+        self.client.stop_transform_job(**operation_input_args)
     
     @classmethod
     def get(
@@ -4209,9 +4498,7 @@ class Trial(BaseModel):
     
         return trial
     
-    def refresh(
-        self
-    ) -> Optional[object]:
+    def refresh(self) -> Optional[object]:
     
         operation_input_args = {
             'TrialName': self.trial_name,
@@ -4221,6 +4508,13 @@ class Trial(BaseModel):
         # deserialize the response
         deserializer(self, response, 'DescribeTrialResponse')
         return self
+    
+    def delete(self) -> None:
+    
+        operation_input_args = {
+            'TrialName': self.trial_name,
+        }
+        self.client.delete_trial(**operation_input_args)
     
     @classmethod
     def get(
@@ -4301,9 +4595,7 @@ class TrialComponent(BaseModel):
     
         return trial_component
     
-    def refresh(
-        self
-    ) -> Optional[object]:
+    def refresh(self) -> Optional[object]:
     
         operation_input_args = {
             'TrialComponentName': self.trial_component_name,
@@ -4313,6 +4605,13 @@ class TrialComponent(BaseModel):
         # deserialize the response
         deserializer(self, response, 'DescribeTrialComponentResponse')
         return self
+    
+    def delete(self) -> None:
+    
+        operation_input_args = {
+            'TrialComponentName': self.trial_component_name,
+        }
+        self.client.delete_trial_component(**operation_input_args)
     
     @classmethod
     def get(
@@ -4378,9 +4677,7 @@ class UserProfile(BaseModel):
     
         return user_profile
     
-    def refresh(
-        self
-    ) -> Optional[object]:
+    def refresh(self) -> Optional[object]:
     
         operation_input_args = {
             'DomainId': self.domain_id,
@@ -4391,6 +4688,14 @@ class UserProfile(BaseModel):
         # deserialize the response
         deserializer(self, response, 'DescribeUserProfileResponse')
         return self
+    
+    def delete(self) -> None:
+    
+        operation_input_args = {
+            'DomainId': self.domain_id,
+            'UserProfileName': self.user_profile_name,
+        }
+        self.client.delete_user_profile(**operation_input_args)
     
     @classmethod
     def get(
@@ -4448,9 +4753,7 @@ class Workforce(BaseModel):
     
         return workforce
     
-    def refresh(
-        self
-    ) -> Optional[object]:
+    def refresh(self) -> Optional[object]:
     
         operation_input_args = {
             'WorkforceName': self.workforce_name,
@@ -4460,6 +4763,13 @@ class Workforce(BaseModel):
         # deserialize the response
         deserializer(self, response, 'DescribeWorkforceResponse')
         return self
+    
+    def delete(self) -> None:
+    
+        operation_input_args = {
+            'WorkforceName': self.workforce_name,
+        }
+        self.client.delete_workforce(**operation_input_args)
     
     @classmethod
     def get(
@@ -4515,9 +4825,7 @@ class Workteam(BaseModel):
     
         return workteam
     
-    def refresh(
-        self
-    ) -> Optional[object]:
+    def refresh(self) -> Optional[object]:
     
         operation_input_args = {
             'WorkteamName': self.workteam_name,
@@ -4527,6 +4835,13 @@ class Workteam(BaseModel):
         # deserialize the response
         deserializer(self, response, 'DescribeWorkteamResponse')
         return self
+    
+    def delete(self) -> None:
+    
+        operation_input_args = {
+            'WorkteamName': self.workteam_name,
+        }
+        self.client.delete_workteam(**operation_input_args)
     
     @classmethod
     def get(

@@ -22,7 +22,8 @@ from .constants import BASIC_JSON_TYPES_TO_PYTHON_TYPES, \
 from src.util.util import add_indent, convert_to_snake_case
 from .resources_extractor import ResourcesExtractor
 from .shapes_extractor import ShapesExtractor
-from .templates import CREATE_METHOD_TEMPLATE, GET_METHOD_TEMPLATE, REFRESH_METHOD_TEMPLATE
+from .templates import CREATE_METHOD_TEMPLATE, GET_METHOD_TEMPLATE, REFRESH_METHOD_TEMPLATE, \
+    STOP_METHOD_TEMPLATE, DELETE_METHOD_TEMPLATE
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
@@ -165,43 +166,22 @@ class ResourcesCodeGen:
                 if resource_class:
                     file.write(f"{resource_class}\n\n")
 
-    def _evaluate_create_method(self, resource_name, class_methods):
-        """Evaluate the Create method
+    def _evaluate_method(self, resource_name, method_name, methods):
+        """Evaluate the specified method for a resource.
 
         Args:
             resource_name (str): The name of the resource.
-            class_methods (list): The class methods.
+            method_name (str): The name of the method to evaluate.
+            methods (list): The list of methods for the resource.
 
         Returns:
-            str: Formatted create method if needed for a resource, else returns empty string.
+            str: Formatted method if needed for a resource, else returns an empty string.
         """
-        if 'create' in class_methods:
-            # Generate the 'create' method
-            create_method = self.generate_create_method(resource_name)
+        if method_name in methods:
+            return getattr(self, f"generate_{method_name}_method")(resource_name)
         else:
-            # If there's no 'create' method, log a message and set 'create_method' to an empty string
-            create_method = ""
-            log.warning(f"Resource {resource_name} does not have a CREATE method")
-        return create_method
-
-    def _evaluate_refresh_method(self, resource_name, object_methods):
-        """Evaluate the refresh method.
-
-        Args:
-            resource_name (str): The name of the resource.
-            object_methods (list): The object methods.
-
-        Returns:
-            str: Formatted refresh method if needed for a resource, else returns empty string.
-        """
-        if 'refresh' in object_methods:
-            # Generate the 'refresh' method
-            refresh_method = self.generate_refresh_method(resource_name)
-        else:
-            # If there's no 'refresh' method, log a message and set 'refresh_method' to an empty string
-            refresh_method = ""
-            log.warning(f"Resource {resource_name} does not have a REFRESH method")
-        return refresh_method
+            log.warning(f"Resource {resource_name} does not have a {method_name.upper()} method")
+            return ""
 
     def generate_resource_class(self, 
                                 resource_name: str, 
@@ -245,11 +225,17 @@ class ResourcesCodeGen:
                 # Add the class attributes and methods to the class definition
                 resource_class += add_indent(class_attributes, 4)
 
-                if create_method := self._evaluate_create_method(resource_name, class_methods):
+                if create_method := self._evaluate_method(resource_name, "create", class_methods):
                     resource_class += add_indent(create_method, 4)
 
-                if refresh_method := self._evaluate_refresh_method(resource_name, object_methods):
+                if refresh_method := self._evaluate_method(resource_name, "refresh", object_methods):
                     resource_class += add_indent(refresh_method, 4)
+
+                if delete_method := self._evaluate_method(resource_name, "delete", object_methods):
+                    resource_class += add_indent(delete_method, 4)
+
+                if stop_method := self._evaluate_method(resource_name, "stop", object_methods):
+                    resource_class += add_indent(stop_method, 4)
 
                 resource_class += add_indent(get_method, 4)
             except Exception:
@@ -264,7 +250,33 @@ class ResourcesCodeGen:
 
         # Return the class definition
         return resource_class
-    
+
+    def _generate_operation_input_args(self, resource_operation, is_class_method):
+        """Generate the operation input arguments string.
+
+        Args:
+            resource_operation (dict): The resource operation dictionary.
+            is_class_method (bool): Indicates method is class method, else object method.
+
+        Returns:
+            str: The formatted operation input arguments string.
+        """
+        input_shape_name = resource_operation["input"]["shape"]
+        input_shape_members = list(self.shapes[input_shape_name]["members"].keys())
+
+        if is_class_method:
+            args = (f"'{member}': {convert_to_snake_case(member)}"
+            for member in input_shape_members)
+        else:
+            args = (f"'{member}': self.{convert_to_snake_case(member)}"
+                    for member in input_shape_members)
+
+        operation_input_args = ",\n".join(args)
+        operation_input_args += ","
+        operation_input_args = add_indent(operation_input_args, 8)
+
+        return operation_input_args
+
     def generate_create_method(self, resource_name) -> str:
         """
         Auto-generate the CREATE method for a resource.
@@ -277,7 +289,8 @@ class ResourcesCodeGen:
 
         """
         # Get the operation and shape for the 'create' method
-        operation = self.operations["Create" + resource_name]
+        operation_name = "Create" + resource_name
+        operation = self.operations[operation_name]
         operation_input_shape_name = operation["input"]["shape"]
 
         # Generate the arguments for the 'create' method
@@ -289,17 +302,12 @@ class ResourcesCodeGen:
         # Convert the resource name to snake case
         resource_lower = convert_to_snake_case(resource_name)
 
-        # Generate the input arguments for the operation
-        input_shape_members = self.shapes[operation_input_shape_name]["members"].keys()
-        operation_input_args = ",\n".join(
-            f"'{member}': {convert_to_snake_case(member)}"
-            for member in input_shape_members
+        operation_input_args = self._generate_operation_input_args(
+            operation, is_class_method=True
         )
-        operation_input_args += ","
-        operation_input_args = add_indent(operation_input_args, 8)
 
         # Convert the operation name to snake case
-        operation = convert_to_snake_case("Create" + resource_name)
+        operation = convert_to_snake_case(operation_name)
 
         # Initialize an empty string for the object attribute assignments
         object_attribute_assignments = ""
@@ -341,19 +349,14 @@ class ResourcesCodeGen:
             str: The formatted Get Method template.
 
         """
-        resource_operation = self.operations["Describe" + resource_name]
+        operation_name = "Describe" + resource_name
+        resource_operation = self.operations[operation_name]
         resource_operation_input_shape_name = resource_operation["input"]["shape"]
         resource_operation_output_shape_name = resource_operation["output"]["shape"]
 
-        resource_operation_input_shape_members = self.shapes[resource_operation_input_shape_name][
-            "members"].keys()
-
-        operation_input_args = ",\n".join(
-            f"'{member}': {convert_to_snake_case(member)}"
-            for member in resource_operation_input_shape_members
+        operation_input_args = self._generate_operation_input_args(
+            resource_operation, is_class_method=True
         )
-        operation_input_args += ","
-        operation_input_args = add_indent(operation_input_args, 8)
 
         typed_shape_members = self.shapes_extractor.generate_shape_members(
             resource_operation_input_shape_name
@@ -365,7 +368,7 @@ class ResourcesCodeGen:
 
         resource_lower = convert_to_snake_case(resource_name)
 
-        operation = convert_to_snake_case("Describe" + resource_name)
+        operation = convert_to_snake_case(operation_name)
 
         formatted_method = GET_METHOD_TEMPLATE.format(
             describe_args=describe_args,
@@ -383,27 +386,69 @@ class ResourcesCodeGen:
             resource_name (str): The resource name.
 
         Returns:
-            str: The formatted Get Method template.
+            str: The formatted refresh Method template.
         """
-        resource_operation = self.operations["Describe" + resource_name]
-        resource_operation_input_shape_name = resource_operation["input"]["shape"]
+        operation_name = "Describe" + resource_name
+        resource_operation = self.operations[operation_name]
         resource_operation_output_shape_name = resource_operation["output"]["shape"]
 
-        resource_operation_input_shape_members = self.shapes[resource_operation_input_shape_name][
-            "members"].keys()
-
-        operation_input_args = ",\n".join(
-            f"'{member}': self.{convert_to_snake_case(member)}"
-            for member in resource_operation_input_shape_members
+        operation_input_args = self._generate_operation_input_args(
+            resource_operation, is_class_method=False
         )
-        operation_input_args += ","
-        operation_input_args = add_indent(operation_input_args, 8)
 
-        operation = convert_to_snake_case("Describe" + resource_name)
+        operation = convert_to_snake_case(operation_name)
 
         formatted_method = REFRESH_METHOD_TEMPLATE.format(
             operation_input_args=operation_input_args,
             operation=operation,
             describe_operation_output_shape=resource_operation_output_shape_name,
+        )
+        return formatted_method
+
+    def generate_delete_method(self, resource_name):
+        """Auto-Generate 'delete' object Method [delete API] for a resource.
+
+        Args:
+            resource_name (str): The resource name.
+
+        Returns:
+            str: The formatted delete Method template.
+        """
+        operation_name = "Delete" + resource_name
+        resource_operation = self.operations[operation_name]
+
+        operation_input_args = self._generate_operation_input_args(
+            resource_operation, is_class_method=False
+        )
+
+        operation = convert_to_snake_case(operation_name)
+
+        formatted_method = DELETE_METHOD_TEMPLATE.format(
+            operation_input_args=operation_input_args,
+            operation=operation,
+        )
+        return formatted_method
+
+    def generate_stop_method(self, resource_name):
+        """Auto-Generate 'stop' object Method [delete API] for a resource.
+
+        Args:
+            resource_name (str): The resource name.
+
+        Returns:
+            str: The formatted stop Method template.
+        """
+        operation_name = "Stop" + resource_name
+        resource_operation = self.operations[operation_name]
+
+        operation_input_args = self._generate_operation_input_args(
+            resource_operation, is_class_method=False
+        )
+
+        operation = convert_to_snake_case(operation_name)
+
+        formatted_method = STOP_METHOD_TEMPLATE.format(
+            operation_input_args=operation_input_args,
+            operation=operation,
         )
         return formatted_method
