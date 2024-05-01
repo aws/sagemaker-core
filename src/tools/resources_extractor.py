@@ -117,6 +117,31 @@ class ResourcesExtractor():
 
         self._extract_resource_plan_as_dataframe()
 
+    def get_status_chain_and_states(self, resource_name):
+        """
+        Extract the status chain and states for a given resource.
+
+        Args:
+            resource_name (str): The name of the resource
+
+        Returns:
+            status_chain (list): The status chain for the resource.
+            resource_states (list): The states associated with the resource.
+        """
+        resource_operation = self.operations["Describe" + resource_name]
+        resource_operation_output_shape_name = resource_operation["output"]["shape"]
+        output_members_data = self.shapes[resource_operation_output_shape_name]["members"]
+        if len(output_members_data) == 1:
+            single_member_name = next(iter(output_members_data))
+            single_member_shape_name = output_members_data[single_member_name]["shape"]
+            status_chain = []
+            status_chain.append({"name": single_member_name, "shape_name": single_member_shape_name })
+            resource_status_chain, resource_states = self._get_status_chain_and_states(single_member_shape_name, status_chain)
+        else:
+            resource_status_chain, resource_states = self._get_status_chain_and_states(resource_operation_output_shape_name)
+            
+        return resource_status_chain, resource_states
+        
 
     def _get_status_chain_and_states(self, shape_name, status_chain: list = None):
         """
@@ -180,14 +205,7 @@ class ResourcesExtractor():
                     output_shape_name = self.operations[action]["output"]["shape"]
                     output_members_data = self.shapes[output_shape_name]["members"]
                     
-                    if len(output_members_data) == 1:
-                        single_member_name = next(iter(output_members_data))
-                        single_member_shape_name = output_members_data[single_member_name]["shape"]
-                        status_chain = []
-                        status_chain.append({"name": single_member_name, "shape_name": single_member_shape_name })
-                        resource_status_chain, resource_states = self._get_status_chain_and_states(single_member_shape_name, status_chain)
-                    else:
-                        resource_status_chain, resource_states = self._get_status_chain_and_states(output_shape_name)
+                    resource_status_chain, resource_states = self.get_status_chain_and_states(resource)
                     
                     if resource_low.endswith("job") or resource_low.endswith("jobv2"):
                         object_methods.add("wait")
