@@ -15,15 +15,16 @@ import json
 import os
 import logging
 
-from .constants import BASIC_JSON_TYPES_TO_PYTHON_TYPES, \
+from src.tools.constants import BASIC_JSON_TYPES_TO_PYTHON_TYPES, \
                         GENERATED_CLASSES_LOCATION, \
                         RESOURCES_CODEGEN_FILE_NAME, \
-                        LICENCES_STRING
+                        LICENCES_STRING, \
+                        TERMINAL_STATES
 from src.util.util import add_indent, convert_to_snake_case
-from .resources_extractor import ResourcesExtractor
-from .shapes_extractor import ShapesExtractor
-from .templates import CREATE_METHOD_TEMPLATE, GET_METHOD_TEMPLATE, REFRESH_METHOD_TEMPLATE, \
-    STOP_METHOD_TEMPLATE, DELETE_METHOD_TEMPLATE
+from src.tools.resources_extractor import ResourcesExtractor
+from src.tools.shapes_extractor import ShapesExtractor
+from src.tools.templates import CREATE_METHOD_TEMPLATE, GET_METHOD_TEMPLATE, REFRESH_METHOD_TEMPLATE, \
+    STOP_METHOD_TEMPLATE, DELETE_METHOD_TEMPLATE, WAIT_METHOD_TEMPLATE, WAIT_FOR_STATUS_METHOD_TEMPLATE
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
@@ -108,9 +109,10 @@ class ResourcesCodeGen:
         imports = [
             "import datetime",
             "import boto3",
+            "import time",
             "from pprint import pprint",
-            "from pydantic import BaseModel",
-            "from typing import List, Dict, Optional",
+            "from pydantic import BaseModel, validate_call",
+            "from typing import List, Dict, Optional, Literal",
             "from boto3.session import Session",
             "from utils import Unassigned",
             "from shapes import *",
@@ -154,13 +156,17 @@ class ResourcesCodeGen:
                 object_methods = row['object_methods']
                 additional_methods = row['additional_methods']
                 raw_actions = row['raw_actions']
+                resource_status_chain = row['resource_status_chain']
+                resource_states = row['resource_states']
 
                 # Generate the resource class
                 resource_class = self.generate_resource_class(resource_name, 
                                                               class_methods, 
                                                               object_methods, 
                                                               additional_methods, 
-                                                              raw_actions)
+                                                              raw_actions,
+                                                              resource_status_chain,
+                                                              resource_states)
                 
                 # If the resource class was successfully generated, write it to the file
                 if resource_class:
@@ -182,13 +188,15 @@ class ResourcesCodeGen:
         else:
             log.warning(f"Resource {resource_name} does not have a {method_name.upper()} method")
             return ""
-
+    
     def generate_resource_class(self, 
                                 resource_name: str, 
                                 class_methods: list, 
                                 object_methods: list, 
                                 additional_methods: list, 
-                                raw_actions: list) -> str:
+                                raw_actions: list,
+                                resource_status_chain: list,
+                                resource_states: list) -> str:
         """
         Generate the resource class for a resource.
 
@@ -236,8 +244,15 @@ class ResourcesCodeGen:
 
                 if stop_method := self._evaluate_method(resource_name, "stop", object_methods):
                     resource_class += add_indent(stop_method, 4)
+                
+                if wait_method := self._evaluate_method(resource_name, "wait", object_methods):
+                    resource_class += add_indent(wait_method, 4)
+                    
+                if wait_for_status_method := self._evaluate_method(resource_name, "wait_for_status", object_methods):
+                    resource_class += add_indent(wait_for_status_method, 4)
 
                 resource_class += add_indent(get_method, 4)
+                                        
             except Exception:
                 # If there's an error, log the class attributes for debugging and raise the error
                 log.error(f"DEBUG HELP {class_attributes} \n {create_method} \n {get_method} \n"
@@ -450,5 +465,60 @@ class ResourcesCodeGen:
         formatted_method = STOP_METHOD_TEMPLATE.format(
             operation_input_args=operation_input_args,
             operation=operation,
+        )
+        return formatted_method
+    
+    def generate_wait_method(self, resource_name) -> str:
+        """Auto-Generate WAIT Method for a waitable resource.
+
+        Args:
+            resource_name (str): The resource name.
+            
+        Returns:
+            str: The formatted Wait Method template.
+
+        """
+        resource_status_chain, resource_states = self.resources_extractor.get_status_chain_and_states(resource_name)
+        
+        # Get terminal states for resource
+        terminal_resource_states = []
+        for state in resource_states:
+            # Handles when a resource has terminal states like UpdateCompleted, CreateFailed, etc.
+            # Checking lower because case is not consistent accross resources (ie, COMPLETED vs Completed)
+            if any(terminal_state.lower() in state.lower() for terminal_state in TERMINAL_STATES):
+                terminal_resource_states.append(state)
+    
+        # Get resource status key path
+        status_key_path = ""
+        for member in resource_status_chain:
+            status_key_path += f'.{convert_to_snake_case(member["name"])}'
+
+
+        formatted_method = WAIT_METHOD_TEMPLATE.format(
+            terminal_resource_states=terminal_resource_states,
+            status_key_path=status_key_path
+        )
+        return formatted_method
+    
+    def generate_wait_for_status_method(self, resource_name) -> str:
+        """Auto-Generate WAIT_FOR_STATUS Method for a waitable resource.
+
+        Args:
+            resource_name (str): The resource name.
+            
+        Returns:
+            str: The formatted wait_for_status Method template.
+
+        """
+        resource_status_chain, resource_states = self.resources_extractor.get_status_chain_and_states(resource_name)
+
+        # Get resource status key path
+        status_key_path = ""
+        for member in resource_status_chain:
+            status_key_path += f'.{convert_to_snake_case(member["name"])}'
+
+        formatted_method = WAIT_FOR_STATUS_METHOD_TEMPLATE.format(
+            resource_states=resource_states,
+            status_key_path=status_key_path
         )
         return formatted_method

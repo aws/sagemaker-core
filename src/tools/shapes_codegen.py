@@ -19,10 +19,10 @@ import json
 import os
 import textwrap
 
-from constants import LICENCES_STRING
+from src.tools.constants import LICENCES_STRING
 from src.tools.shapes_extractor import ShapesExtractor
 from src.util.util import add_indent, convert_to_snake_case
-from templates import SHAPE_CLASS_TEMPLATE, SHAPE_BASE_CLASS_TEMPLATE
+from src.tools.templates import SHAPE_CLASS_TEMPLATE, SHAPE_BASE_CLASS_TEMPLATE
 
 from pydantic import BaseModel
 

@@ -13,9 +13,10 @@
 # language governing permissions and limitations under the License.
 import datetime
 import boto3
+import time
 from pprint import pprint
-from pydantic import BaseModel
-from typing import List, Dict, Optional
+from pydantic import BaseModel, validate_call
+from typing import List, Dict, Optional, Literal
 from boto3.session import Session
 from utils import Unassigned
 from shapes import *
@@ -174,6 +175,28 @@ class Algorithm(BaseModel):
         }
         self.client.delete_algorithm(**operation_input_args)
     
+    @validate_call
+    def wait_for_status(
+        self,
+        status: Literal['Pending', 'InProgress', 'Completed', 'Failed', 'Deleting'],
+        poll: int = 5,
+        timeout: Optional[int] = None
+    ) -> Optional[object]:
+        start_time = time.time()
+    
+        while True:
+            self.refresh()
+            current_status = self.algorithm_status
+    
+            if status == current_status:
+                return
+    
+            # TODO: Raise some generated TimeOutError
+            if timeout is not None and time.time() - start_time >= timeout:
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
+    
+            time.sleep(poll)
+    
     @classmethod
     def get(
         cls,
@@ -266,6 +289,28 @@ class App(BaseModel):
             'AppName': self.app_name,
         }
         self.client.delete_app(**operation_input_args)
+    
+    @validate_call
+    def wait_for_status(
+        self,
+        status: Literal['Deleted', 'Deleting', 'Failed', 'InService', 'Pending'],
+        poll: int = 5,
+        timeout: Optional[int] = None
+    ) -> Optional[object]:
+        start_time = time.time()
+    
+        while True:
+            self.refresh()
+            current_status = self.status
+    
+            if status == current_status:
+                return
+    
+            # TODO: Raise some generated TimeOutError
+            if timeout is not None and time.time() - start_time >= timeout:
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
+    
+            time.sleep(poll)
     
     @classmethod
     def get(
@@ -531,6 +576,28 @@ class AutoMLJob(BaseModel):
         }
         self.client.stop_auto_m_l_job(**operation_input_args)
     
+    @validate_call
+    def wait(
+        self,
+        poll: int = 5,
+        timeout: Optional[int] = None
+    ) -> Optional[object]:
+        terminal_states = ['Completed', 'Failed', 'Stopped']
+        start_time = time.time()
+    
+        while True:
+            self.refresh()
+            current_status = self.auto_m_l_job_status
+    
+            if current_status in terminal_states:
+                return
+    
+            # TODO: Raise some generated TimeOutError
+            if timeout is not None and time.time() - start_time >= timeout:
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
+    
+            time.sleep(poll)
+    
     @classmethod
     def get(
         cls,
@@ -625,6 +692,28 @@ class AutoMLJobV2(BaseModel):
         deserializer(self, response, 'DescribeAutoMLJobV2Response')
         return self
     
+    @validate_call
+    def wait(
+        self,
+        poll: int = 5,
+        timeout: Optional[int] = None
+    ) -> Optional[object]:
+        terminal_states = ['Completed', 'Failed', 'Stopped']
+        start_time = time.time()
+    
+        while True:
+            self.refresh()
+            current_status = self.auto_m_l_job_status
+    
+            if current_status in terminal_states:
+                return
+    
+            # TODO: Raise some generated TimeOutError
+            if timeout is not None and time.time() - start_time >= timeout:
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
+    
+            time.sleep(poll)
+    
     @classmethod
     def get(
         cls,
@@ -698,6 +787,28 @@ class Cluster(BaseModel):
             'ClusterName': self.cluster_name,
         }
         self.client.delete_cluster(**operation_input_args)
+    
+    @validate_call
+    def wait_for_status(
+        self,
+        status: Literal['Creating', 'Deleting', 'Failed', 'InService', 'RollingBack', 'SystemUpdating', 'Updating'],
+        poll: int = 5,
+        timeout: Optional[int] = None
+    ) -> Optional[object]:
+        start_time = time.time()
+    
+        while True:
+            self.refresh()
+            current_status = self.cluster_status
+    
+            if status == current_status:
+                return
+    
+            # TODO: Raise some generated TimeOutError
+            if timeout is not None and time.time() - start_time >= timeout:
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
+    
+            time.sleep(poll)
     
     @classmethod
     def get(
@@ -868,6 +979,28 @@ class CompilationJob(BaseModel):
             'CompilationJobName': self.compilation_job_name,
         }
         self.client.stop_compilation_job(**operation_input_args)
+    
+    @validate_call
+    def wait(
+        self,
+        poll: int = 5,
+        timeout: Optional[int] = None
+    ) -> Optional[object]:
+        terminal_states = ['COMPLETED', 'FAILED', 'STOPPED']
+        start_time = time.time()
+    
+        while True:
+            self.refresh()
+            current_status = self.compilation_job_status
+    
+            if current_status in terminal_states:
+                return
+    
+            # TODO: Raise some generated TimeOutError
+            if timeout is not None and time.time() - start_time >= timeout:
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
+    
+            time.sleep(poll)
     
     @classmethod
     def get(
@@ -1226,6 +1359,28 @@ class Domain(BaseModel):
         }
         self.client.delete_domain(**operation_input_args)
     
+    @validate_call
+    def wait_for_status(
+        self,
+        status: Literal['Deleting', 'Failed', 'InService', 'Pending', 'Updating', 'Update_Failed', 'Delete_Failed'],
+        poll: int = 5,
+        timeout: Optional[int] = None
+    ) -> Optional[object]:
+        start_time = time.time()
+    
+        while True:
+            self.refresh()
+            current_status = self.status
+    
+            if status == current_status:
+                return
+    
+            # TODO: Raise some generated TimeOutError
+            if timeout is not None and time.time() - start_time >= timeout:
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
+    
+            time.sleep(poll)
+    
     @classmethod
     def get(
         cls,
@@ -1402,6 +1557,28 @@ class EdgePackagingJob(BaseModel):
         }
         self.client.stop_edge_packaging_job(**operation_input_args)
     
+    @validate_call
+    def wait(
+        self,
+        poll: int = 5,
+        timeout: Optional[int] = None
+    ) -> Optional[object]:
+        terminal_states = ['COMPLETED', 'FAILED', 'STOPPED']
+        start_time = time.time()
+    
+        while True:
+            self.refresh()
+            current_status = self.edge_packaging_job_status
+    
+            if current_status in terminal_states:
+                return
+    
+            # TODO: Raise some generated TimeOutError
+            if timeout is not None and time.time() - start_time >= timeout:
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
+    
+            time.sleep(poll)
+    
     @classmethod
     def get(
         cls,
@@ -1482,6 +1659,28 @@ class Endpoint(BaseModel):
             'EndpointName': self.endpoint_name,
         }
         self.client.delete_endpoint(**operation_input_args)
+    
+    @validate_call
+    def wait_for_status(
+        self,
+        status: Literal['OutOfService', 'Creating', 'Updating', 'SystemUpdating', 'RollingBack', 'InService', 'Deleting', 'Failed', 'UpdateRollbackFailed'],
+        poll: int = 5,
+        timeout: Optional[int] = None
+    ) -> Optional[object]:
+        start_time = time.time()
+    
+        while True:
+            self.refresh()
+            current_status = self.endpoint_status
+    
+            if status == current_status:
+                return
+    
+            # TODO: Raise some generated TimeOutError
+            if timeout is not None and time.time() - start_time >= timeout:
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
+    
+            time.sleep(poll)
     
     @classmethod
     def get(
@@ -1750,6 +1949,28 @@ class FeatureGroup(BaseModel):
         }
         self.client.delete_feature_group(**operation_input_args)
     
+    @validate_call
+    def wait_for_status(
+        self,
+        status: Literal['Creating', 'Created', 'CreateFailed', 'Deleting', 'DeleteFailed'],
+        poll: int = 5,
+        timeout: Optional[int] = None
+    ) -> Optional[object]:
+        start_time = time.time()
+    
+        while True:
+            self.refresh()
+            current_status = self.feature_group_status
+    
+            if status == current_status:
+                return
+    
+            # TODO: Raise some generated TimeOutError
+            if timeout is not None and time.time() - start_time >= timeout:
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
+    
+            time.sleep(poll)
+    
     @classmethod
     def get(
         cls,
@@ -1835,6 +2056,28 @@ class FlowDefinition(BaseModel):
         }
         self.client.delete_flow_definition(**operation_input_args)
     
+    @validate_call
+    def wait_for_status(
+        self,
+        status: Literal['Initializing', 'Active', 'Failed', 'Deleting'],
+        poll: int = 5,
+        timeout: Optional[int] = None
+    ) -> Optional[object]:
+        start_time = time.time()
+    
+        while True:
+            self.refresh()
+            current_status = self.flow_definition_status
+    
+            if status == current_status:
+                return
+    
+            # TODO: Raise some generated TimeOutError
+            if timeout is not None and time.time() - start_time >= timeout:
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
+    
+            time.sleep(poll)
+    
     @classmethod
     def get(
         cls,
@@ -1916,6 +2159,28 @@ class Hub(BaseModel):
         }
         self.client.delete_hub(**operation_input_args)
     
+    @validate_call
+    def wait_for_status(
+        self,
+        status: Literal['InService', 'Creating', 'Updating', 'Deleting', 'CreateFailed', 'UpdateFailed', 'DeleteFailed'],
+        poll: int = 5,
+        timeout: Optional[int] = None
+    ) -> Optional[object]:
+        start_time = time.time()
+    
+        while True:
+            self.refresh()
+            current_status = self.hub_status
+    
+            if status == current_status:
+                return
+    
+            # TODO: Raise some generated TimeOutError
+            if timeout is not None and time.time() - start_time >= timeout:
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
+    
+            time.sleep(poll)
+    
     @classmethod
     def get(
         cls,
@@ -1978,6 +2243,28 @@ class HubContent(BaseModel):
             'HubContentVersion': self.hub_content_version,
         }
         self.client.delete_hub_content(**operation_input_args)
+    
+    @validate_call
+    def wait_for_status(
+        self,
+        status: Literal['Available', 'Importing', 'Deleting', 'ImportFailed', 'DeleteFailed'],
+        poll: int = 5,
+        timeout: Optional[int] = None
+    ) -> Optional[object]:
+        start_time = time.time()
+    
+        while True:
+            self.refresh()
+            current_status = self.hub_content_status
+    
+            if status == current_status:
+                return
+    
+            # TODO: Raise some generated TimeOutError
+            if timeout is not None and time.time() - start_time >= timeout:
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
+    
+            time.sleep(poll)
     
     @classmethod
     def get(
@@ -2054,6 +2341,28 @@ class HumanTaskUi(BaseModel):
             'HumanTaskUiName': self.human_task_ui_name,
         }
         self.client.delete_human_task_ui(**operation_input_args)
+    
+    @validate_call
+    def wait_for_status(
+        self,
+        status: Literal['Active', 'Deleting'],
+        poll: int = 5,
+        timeout: Optional[int] = None
+    ) -> Optional[object]:
+        start_time = time.time()
+    
+        while True:
+            self.refresh()
+            current_status = self.human_task_ui_status
+    
+            if status == current_status:
+                return
+    
+            # TODO: Raise some generated TimeOutError
+            if timeout is not None and time.time() - start_time >= timeout:
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
+    
+            time.sleep(poll)
     
     @classmethod
     def get(
@@ -2153,6 +2462,28 @@ class HyperParameterTuningJob(BaseModel):
         }
         self.client.stop_hyper_parameter_tuning_job(**operation_input_args)
     
+    @validate_call
+    def wait(
+        self,
+        poll: int = 5,
+        timeout: Optional[int] = None
+    ) -> Optional[object]:
+        terminal_states = ['Completed', 'Failed', 'Stopped', 'DeleteFailed']
+        start_time = time.time()
+    
+        while True:
+            self.refresh()
+            current_status = self.hyper_parameter_tuning_job_status
+    
+            if current_status in terminal_states:
+                return
+    
+            # TODO: Raise some generated TimeOutError
+            if timeout is not None and time.time() - start_time >= timeout:
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
+    
+            time.sleep(poll)
+    
     @classmethod
     def get(
         cls,
@@ -2230,6 +2561,28 @@ class Image(BaseModel):
             'ImageName': self.image_name,
         }
         self.client.delete_image(**operation_input_args)
+    
+    @validate_call
+    def wait_for_status(
+        self,
+        status: Literal['CREATING', 'CREATED', 'CREATE_FAILED', 'UPDATING', 'UPDATE_FAILED', 'DELETING', 'DELETE_FAILED'],
+        poll: int = 5,
+        timeout: Optional[int] = None
+    ) -> Optional[object]:
+        start_time = time.time()
+    
+        while True:
+            self.refresh()
+            current_status = self.image_status
+    
+            if status == current_status:
+                return
+    
+            # TODO: Raise some generated TimeOutError
+            if timeout is not None and time.time() - start_time >= timeout:
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
+    
+            time.sleep(poll)
     
     @classmethod
     def get(
@@ -2332,6 +2685,28 @@ class ImageVersion(BaseModel):
         }
         self.client.delete_image_version(**operation_input_args)
     
+    @validate_call
+    def wait_for_status(
+        self,
+        status: Literal['CREATING', 'CREATED', 'CREATE_FAILED', 'DELETING', 'DELETE_FAILED'],
+        poll: int = 5,
+        timeout: Optional[int] = None
+    ) -> Optional[object]:
+        start_time = time.time()
+    
+        while True:
+            self.refresh()
+            current_status = self.image_version_status
+    
+            if status == current_status:
+                return
+    
+            # TODO: Raise some generated TimeOutError
+            if timeout is not None and time.time() - start_time >= timeout:
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
+    
+            time.sleep(poll)
+    
     @classmethod
     def get(
         cls,
@@ -2417,6 +2792,28 @@ class InferenceComponent(BaseModel):
             'InferenceComponentName': self.inference_component_name,
         }
         self.client.delete_inference_component(**operation_input_args)
+    
+    @validate_call
+    def wait_for_status(
+        self,
+        status: Literal['InService', 'Creating', 'Updating', 'Failed', 'Deleting'],
+        poll: int = 5,
+        timeout: Optional[int] = None
+    ) -> Optional[object]:
+        start_time = time.time()
+    
+        while True:
+            self.refresh()
+            current_status = self.inference_component_status
+    
+            if status == current_status:
+                return
+    
+            # TODO: Raise some generated TimeOutError
+            if timeout is not None and time.time() - start_time >= timeout:
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
+    
+            time.sleep(poll)
     
     @classmethod
     def get(
@@ -2526,6 +2923,28 @@ class InferenceExperiment(BaseModel):
         }
         self.client.stop_inference_experiment(**operation_input_args)
     
+    @validate_call
+    def wait_for_status(
+        self,
+        status: Literal['Creating', 'Created', 'Updating', 'Running', 'Starting', 'Stopping', 'Completed', 'Cancelled'],
+        poll: int = 5,
+        timeout: Optional[int] = None
+    ) -> Optional[object]:
+        start_time = time.time()
+    
+        while True:
+            self.refresh()
+            current_status = self.status
+    
+            if status == current_status:
+                return
+    
+            # TODO: Raise some generated TimeOutError
+            if timeout is not None and time.time() - start_time >= timeout:
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
+    
+            time.sleep(poll)
+    
     @classmethod
     def get(
         cls,
@@ -2614,6 +3033,28 @@ class InferenceRecommendationsJob(BaseModel):
             'JobName': self.job_name,
         }
         self.client.stop_inference_recommendations_job(**operation_input_args)
+    
+    @validate_call
+    def wait(
+        self,
+        poll: int = 5,
+        timeout: Optional[int] = None
+    ) -> Optional[object]:
+        terminal_states = ['COMPLETED', 'FAILED', 'STOPPED', 'DELETED']
+        start_time = time.time()
+    
+        while True:
+            self.refresh()
+            current_status = self.status
+    
+            if current_status in terminal_states:
+                return
+    
+            # TODO: Raise some generated TimeOutError
+            if timeout is not None and time.time() - start_time >= timeout:
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
+    
+            time.sleep(poll)
     
     @classmethod
     def get(
@@ -2711,6 +3152,28 @@ class LabelingJob(BaseModel):
             'LabelingJobName': self.labeling_job_name,
         }
         self.client.stop_labeling_job(**operation_input_args)
+    
+    @validate_call
+    def wait(
+        self,
+        poll: int = 5,
+        timeout: Optional[int] = None
+    ) -> Optional[object]:
+        terminal_states = ['Completed', 'Failed', 'Stopped']
+        start_time = time.time()
+    
+        while True:
+            self.refresh()
+            current_status = self.labeling_job_status
+    
+            if current_status in terminal_states:
+                return
+    
+            # TODO: Raise some generated TimeOutError
+            if timeout is not None and time.time() - start_time >= timeout:
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
+    
+            time.sleep(poll)
     
     @classmethod
     def get(
@@ -2968,6 +3431,28 @@ class ModelCard(BaseModel):
         }
         self.client.delete_model_card(**operation_input_args)
     
+    @validate_call
+    def wait_for_status(
+        self,
+        status: Literal['Draft', 'PendingReview', 'Approved', 'Archived'],
+        poll: int = 5,
+        timeout: Optional[int] = None
+    ) -> Optional[object]:
+        start_time = time.time()
+    
+        while True:
+            self.refresh()
+            current_status = self.model_card_status
+    
+            if status == current_status:
+                return
+    
+            # TODO: Raise some generated TimeOutError
+            if timeout is not None and time.time() - start_time >= timeout:
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
+    
+            time.sleep(poll)
+    
     @classmethod
     def get(
         cls,
@@ -3039,6 +3524,28 @@ class ModelCardExportJob(BaseModel):
         # deserialize the response
         deserializer(self, response, 'DescribeModelCardExportJobResponse')
         return self
+    
+    @validate_call
+    def wait(
+        self,
+        poll: int = 5,
+        timeout: Optional[int] = None
+    ) -> Optional[object]:
+        terminal_states = ['Completed', 'Failed']
+        start_time = time.time()
+    
+        while True:
+            self.refresh()
+            current_status = self.status
+    
+            if current_status in terminal_states:
+                return
+    
+            # TODO: Raise some generated TimeOutError
+            if timeout is not None and time.time() - start_time >= timeout:
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
+    
+            time.sleep(poll)
     
     @classmethod
     def get(
@@ -3256,6 +3763,28 @@ class ModelPackage(BaseModel):
         }
         self.client.delete_model_package(**operation_input_args)
     
+    @validate_call
+    def wait_for_status(
+        self,
+        status: Literal['Pending', 'InProgress', 'Completed', 'Failed', 'Deleting'],
+        poll: int = 5,
+        timeout: Optional[int] = None
+    ) -> Optional[object]:
+        start_time = time.time()
+    
+        while True:
+            self.refresh()
+            current_status = self.model_package_status
+    
+            if status == current_status:
+                return
+    
+            # TODO: Raise some generated TimeOutError
+            if timeout is not None and time.time() - start_time >= timeout:
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
+    
+            time.sleep(poll)
+    
     @classmethod
     def get(
         cls,
@@ -3326,6 +3855,28 @@ class ModelPackageGroup(BaseModel):
             'ModelPackageGroupName': self.model_package_group_name,
         }
         self.client.delete_model_package_group(**operation_input_args)
+    
+    @validate_call
+    def wait_for_status(
+        self,
+        status: Literal['Pending', 'InProgress', 'Completed', 'Failed', 'Deleting', 'DeleteFailed'],
+        poll: int = 5,
+        timeout: Optional[int] = None
+    ) -> Optional[object]:
+        start_time = time.time()
+    
+        while True:
+            self.refresh()
+            current_status = self.model_package_group_status
+    
+            if status == current_status:
+                return
+    
+            # TODO: Raise some generated TimeOutError
+            if timeout is not None and time.time() - start_time >= timeout:
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
+    
+            time.sleep(poll)
     
     @classmethod
     def get(
@@ -3499,6 +4050,28 @@ class MonitoringSchedule(BaseModel):
         }
         self.client.stop_monitoring_schedule(**operation_input_args)
     
+    @validate_call
+    def wait_for_status(
+        self,
+        status: Literal['Pending', 'Failed', 'Scheduled', 'Stopped'],
+        poll: int = 5,
+        timeout: Optional[int] = None
+    ) -> Optional[object]:
+        start_time = time.time()
+    
+        while True:
+            self.refresh()
+            current_status = self.monitoring_schedule_status
+    
+            if status == current_status:
+                return
+    
+            # TODO: Raise some generated TimeOutError
+            if timeout is not None and time.time() - start_time >= timeout:
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
+    
+            time.sleep(poll)
+    
     @classmethod
     def get(
         cls,
@@ -3618,6 +4191,28 @@ class NotebookInstance(BaseModel):
             'NotebookInstanceName': self.notebook_instance_name,
         }
         self.client.stop_notebook_instance(**operation_input_args)
+    
+    @validate_call
+    def wait_for_status(
+        self,
+        status: Literal['Pending', 'InService', 'Stopping', 'Stopped', 'Failed', 'Deleting', 'Updating'],
+        poll: int = 5,
+        timeout: Optional[int] = None
+    ) -> Optional[object]:
+        start_time = time.time()
+    
+        while True:
+            self.refresh()
+            current_status = self.notebook_instance_status
+    
+            if status == current_status:
+                return
+    
+            # TODO: Raise some generated TimeOutError
+            if timeout is not None and time.time() - start_time >= timeout:
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
+    
+            time.sleep(poll)
     
     @classmethod
     def get(
@@ -3781,6 +4376,28 @@ class Pipeline(BaseModel):
         }
         self.client.delete_pipeline(**operation_input_args)
     
+    @validate_call
+    def wait_for_status(
+        self,
+        status: Literal['Active', 'Deleting'],
+        poll: int = 5,
+        timeout: Optional[int] = None
+    ) -> Optional[object]:
+        start_time = time.time()
+    
+        while True:
+            self.refresh()
+            current_status = self.pipeline_status
+    
+            if status == current_status:
+                return
+    
+            # TODO: Raise some generated TimeOutError
+            if timeout is not None and time.time() - start_time >= timeout:
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
+    
+            time.sleep(poll)
+    
     @classmethod
     def get(
         cls,
@@ -3835,6 +4452,28 @@ class PipelineExecution(BaseModel):
             'ClientRequestToken': self.client_request_token,
         }
         self.client.stop_pipeline_execution(**operation_input_args)
+    
+    @validate_call
+    def wait_for_status(
+        self,
+        status: Literal['Executing', 'Stopping', 'Stopped', 'Failed', 'Succeeded'],
+        poll: int = 5,
+        timeout: Optional[int] = None
+    ) -> Optional[object]:
+        start_time = time.time()
+    
+        while True:
+            self.refresh()
+            current_status = self.pipeline_execution_status
+    
+            if status == current_status:
+                return
+    
+            # TODO: Raise some generated TimeOutError
+            if timeout is not None and time.time() - start_time >= timeout:
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
+    
+            time.sleep(poll)
     
     @classmethod
     def get(
@@ -3938,6 +4577,28 @@ class ProcessingJob(BaseModel):
         }
         self.client.stop_processing_job(**operation_input_args)
     
+    @validate_call
+    def wait(
+        self,
+        poll: int = 5,
+        timeout: Optional[int] = None
+    ) -> Optional[object]:
+        terminal_states = ['Completed', 'Failed', 'Stopped']
+        start_time = time.time()
+    
+        while True:
+            self.refresh()
+            current_status = self.processing_job_status
+    
+            if current_status in terminal_states:
+                return
+    
+            # TODO: Raise some generated TimeOutError
+            if timeout is not None and time.time() - start_time >= timeout:
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
+    
+            time.sleep(poll)
+    
     @classmethod
     def get(
         cls,
@@ -4015,6 +4676,28 @@ class Project(BaseModel):
             'ProjectName': self.project_name,
         }
         self.client.delete_project(**operation_input_args)
+    
+    @validate_call
+    def wait_for_status(
+        self,
+        status: Literal['Pending', 'CreateInProgress', 'CreateCompleted', 'CreateFailed', 'DeleteInProgress', 'DeleteFailed', 'DeleteCompleted', 'UpdateInProgress', 'UpdateCompleted', 'UpdateFailed'],
+        poll: int = 5,
+        timeout: Optional[int] = None
+    ) -> Optional[object]:
+        start_time = time.time()
+    
+        while True:
+            self.refresh()
+            current_status = self.project_status
+    
+            if status == current_status:
+                return
+    
+            # TODO: Raise some generated TimeOutError
+            if timeout is not None and time.time() - start_time >= timeout:
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
+    
+            time.sleep(poll)
     
     @classmethod
     def get(
@@ -4103,6 +4786,28 @@ class Space(BaseModel):
             'SpaceName': self.space_name,
         }
         self.client.delete_space(**operation_input_args)
+    
+    @validate_call
+    def wait_for_status(
+        self,
+        status: Literal['Deleting', 'Failed', 'InService', 'Pending', 'Updating', 'Update_Failed', 'Delete_Failed'],
+        poll: int = 5,
+        timeout: Optional[int] = None
+    ) -> Optional[object]:
+        start_time = time.time()
+    
+        while True:
+            self.refresh()
+            current_status = self.status
+    
+            if status == current_status:
+                return
+    
+            # TODO: Raise some generated TimeOutError
+            if timeout is not None and time.time() - start_time >= timeout:
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
+    
+            time.sleep(poll)
     
     @classmethod
     def get(
@@ -4329,6 +5034,28 @@ class TrainingJob(BaseModel):
         }
         self.client.stop_training_job(**operation_input_args)
     
+    @validate_call
+    def wait(
+        self,
+        poll: int = 5,
+        timeout: Optional[int] = None
+    ) -> Optional[object]:
+        terminal_states = ['Completed', 'Failed', 'Stopped']
+        start_time = time.time()
+    
+        while True:
+            self.refresh()
+            current_status = self.training_job_status
+    
+            if current_status in terminal_states:
+                return
+    
+            # TODO: Raise some generated TimeOutError
+            if timeout is not None and time.time() - start_time >= timeout:
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
+    
+            time.sleep(poll)
+    
     @classmethod
     def get(
         cls,
@@ -4436,6 +5163,28 @@ class TransformJob(BaseModel):
             'TransformJobName': self.transform_job_name,
         }
         self.client.stop_transform_job(**operation_input_args)
+    
+    @validate_call
+    def wait(
+        self,
+        poll: int = 5,
+        timeout: Optional[int] = None
+    ) -> Optional[object]:
+        terminal_states = ['Completed', 'Failed', 'Stopped']
+        start_time = time.time()
+    
+        while True:
+            self.refresh()
+            current_status = self.transform_job_status
+    
+            if current_status in terminal_states:
+                return
+    
+            # TODO: Raise some generated TimeOutError
+            if timeout is not None and time.time() - start_time >= timeout:
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
+    
+            time.sleep(poll)
     
     @classmethod
     def get(
@@ -4613,6 +5362,28 @@ class TrialComponent(BaseModel):
         }
         self.client.delete_trial_component(**operation_input_args)
     
+    @validate_call
+    def wait_for_status(
+        self,
+        status: Literal['InProgress', 'Completed', 'Failed', 'Stopping', 'Stopped'],
+        poll: int = 5,
+        timeout: Optional[int] = None
+    ) -> Optional[object]:
+        start_time = time.time()
+    
+        while True:
+            self.refresh()
+            current_status = self.status.primary_status
+    
+            if status == current_status:
+                return
+    
+            # TODO: Raise some generated TimeOutError
+            if timeout is not None and time.time() - start_time >= timeout:
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
+    
+            time.sleep(poll)
+    
     @classmethod
     def get(
         cls,
@@ -4697,6 +5468,28 @@ class UserProfile(BaseModel):
         }
         self.client.delete_user_profile(**operation_input_args)
     
+    @validate_call
+    def wait_for_status(
+        self,
+        status: Literal['Deleting', 'Failed', 'InService', 'Pending', 'Updating', 'Update_Failed', 'Delete_Failed'],
+        poll: int = 5,
+        timeout: Optional[int] = None
+    ) -> Optional[object]:
+        start_time = time.time()
+    
+        while True:
+            self.refresh()
+            current_status = self.status
+    
+            if status == current_status:
+                return
+    
+            # TODO: Raise some generated TimeOutError
+            if timeout is not None and time.time() - start_time >= timeout:
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
+    
+            time.sleep(poll)
+    
     @classmethod
     def get(
         cls,
@@ -4770,6 +5563,28 @@ class Workforce(BaseModel):
             'WorkforceName': self.workforce_name,
         }
         self.client.delete_workforce(**operation_input_args)
+    
+    @validate_call
+    def wait_for_status(
+        self,
+        status: Literal['Initializing', 'Updating', 'Deleting', 'Failed', 'Active'],
+        poll: int = 5,
+        timeout: Optional[int] = None
+    ) -> Optional[object]:
+        start_time = time.time()
+    
+        while True:
+            self.refresh()
+            current_status = self.workforce.status
+    
+            if status == current_status:
+                return
+    
+            # TODO: Raise some generated TimeOutError
+            if timeout is not None and time.time() - start_time >= timeout:
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
+    
+            time.sleep(poll)
     
     @classmethod
     def get(

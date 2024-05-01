@@ -120,4 +120,56 @@ def stop(self) -> None:
     self.client.stop_compilation_job(**operation_input_args)
 '''
         assert self.resource_generator.generate_stop_method("CompilationJob") == expected_output
+        
+    def test_generate_wait_method(self):
+        expected_output = '''
+@validate_call
+def wait(
+    self,
+    poll: int = 5,
+    timeout: Optional[int] = None
+) -> Optional[object]:
+    terminal_states = ['Completed', 'Failed', 'Stopped']
+    start_time = time.time()
+
+    while True:
+        self.refresh()
+        current_status = self.training_job_status
+
+        if current_status in terminal_states:
+            return
+
+        # TODO: Raise some generated TimeOutError
+        if timeout is not None and time.time() - start_time >= timeout:
+            raise Exception("Timeout exceeded. Final resource state - " + current_status)
+
+        time.sleep(poll)
+'''
+        assert self.resource_generator.generate_wait_method("TrainingJob") == expected_output
+        
+    def test_generate_wait_for_status_method(self):
+        expected_output = '''
+@validate_call
+def wait_for_status(
+    self,
+    status: Literal['InService', 'Creating', 'Updating', 'Failed', 'Deleting'],
+    poll: int = 5,
+    timeout: Optional[int] = None
+) -> Optional[object]:
+    start_time = time.time()
+
+    while True:
+        self.refresh()
+        current_status = self.inference_component_status
+
+        if status == current_status:
+            return
+
+        # TODO: Raise some generated TimeOutError
+        if timeout is not None and time.time() - start_time >= timeout:
+            raise Exception("Timeout exceeded. Final resource state - " + current_status)
+
+        time.sleep(poll)
+'''
+        assert self.resource_generator.generate_wait_for_status_method("InferenceComponent") == expected_output
 
