@@ -39,23 +39,22 @@ def create(
     session: Optional[Session] = None,
     region: Optional[str] = None,
 ) -> Optional[object]:
+    logger.debug(f"Creating {resource_lower} resource.")
     client = SageMakerClient(session=session, region_name=region, service_name='{service_name}')
     
     operation_input_args = {{
 {operation_input_args}
     }}
-
-    # serialize the request
+    logger.debug(f"Input request: {{operation_input_args}}")
+    # serialize the input request
     operation_input_args = cls._serialize(operation_input_args)
-
+    logger.debug(f"Serialized input request: {{operation_input_args}}")
+    
+    # create the resource
     response = client.{operation}(**operation_input_args)
+    logger.debug(f"Response: {{response}}")
 
-    pprint(response)
-
-    # deserialize the response
-{object_attribute_assignments}
-    # return {resource_lower}
-    return response
+    return cls.get({resource_identifier}, session=session, region=region)
 '''
 
 GET_METHOD_TEMPLATE = '''

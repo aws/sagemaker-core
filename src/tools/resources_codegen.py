@@ -174,7 +174,7 @@ class ResourcesCodeGen:
 
             # Generate and write the base class to the file
             file.write(self.generate_base_class())
-
+            
             # Iterate over the rows in the resources plan
             for _, row in self.resources_plan.iterrows():
                 # Extract the necessary data from the row
@@ -336,8 +336,8 @@ class ResourcesCodeGen:
         operation_input_shape_name = operation["input"]["shape"]
 
         # Generate the arguments for the 'create' method
-        typed_shape_members = self.shapes_extractor.generate_shape_members(operation_input_shape_name)
-        create_args = ",\n".join(f"{attr}: {type}" for attr, type in typed_shape_members.items())
+        required_members = self.shapes_extractor.generate_shape_members(operation_input_shape_name)
+        create_args = ",\n".join(f"{attr}: {type}" for attr, type in required_members.items())
         create_args += ","
         create_args = add_indent(create_args)
 
@@ -368,6 +368,15 @@ class ResourcesCodeGen:
             # Add indentation to the object attribute assignments
             object_attribute_assignments = add_indent(object_attribute_assignments, 4)
 
+        # Get the identifier(s)
+        describe_operation = self.operations["Describe" + resource_name]
+        describe_operation_input_shape_name = describe_operation["input"]["shape"]
+
+        required_members = self.shapes_extractor.get_required_members(
+            describe_operation_input_shape_name
+        )
+        resource_identifier = ", ".join(required_members)
+
         # Format the method using the CREATE_METHOD_TEMPLATE
         formatted_method = CREATE_METHOD_TEMPLATE.format(
             create_args=create_args,
@@ -376,6 +385,7 @@ class ResourcesCodeGen:
             operation_input_args=operation_input_args,
             operation=operation,
             object_attribute_assignments=object_attribute_assignments,
+            resource_identifier=resource_identifier,
         )
 
         # Return the formatted method
