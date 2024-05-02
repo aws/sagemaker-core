@@ -45,3 +45,13 @@ class TestGeneratedShape(unittest.TestCase):
                     if not any(base_class.id == base_class_name for base_class in node.bases):
                         count = count + 1
         return count
+    def test_serialize_method_returns_dict(self):
+        additional_s3_data_source = AdditionalS3DataSource(s3_data_type='filestring', s3_uri='s3/uri')
+        serialized_data = additional_s3_data_source.serialize()
+        assert isinstance(serialized_data, dict)
+
+    def test_serialize_method_returns_correct_data(self):
+        additional_s3_data_source = AdditionalS3DataSource(s3_data_type='filestring', s3_uri='s3/uri')
+        serialized_data = additional_s3_data_source.serialize()
+        assert serialized_data['S3DataType'] == 'filestring'
+        assert serialized_data['S3Uri'] == 's3/uri'
