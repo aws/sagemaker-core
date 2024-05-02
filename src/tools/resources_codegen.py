@@ -20,7 +20,7 @@ from src.tools.constants import GENERATED_CLASSES_LOCATION, \
                         TERMINAL_STATES, \
                         BASIC_IMPORTS_STRING, \
                         LOGGER_STRING
-from src.util.util import add_indent, convert_to_snake_case
+from src.util.util import add_indent, convert_to_snake_case, snake_to_pascal
 from src.tools.resources_extractor import ResourcesExtractor
 from src.tools.shapes_extractor import ShapesExtractor
 from src.tools.templates import CREATE_METHOD_TEMPLATE, \
@@ -336,8 +336,8 @@ class ResourcesCodeGen:
         operation_input_shape_name = operation["input"]["shape"]
 
         # Generate the arguments for the 'create' method
-        required_members = self.shapes_extractor.generate_shape_members(operation_input_shape_name)
-        create_args = ",\n".join(f"{attr}: {type}" for attr, type in required_members.items())
+        typed_shape_members = self.shapes_extractor.generate_shape_members(operation_input_shape_name)
+        create_args = ",\n".join(f"{attr}: {type}" for attr, type in typed_shape_members.items())
         create_args += ","
         create_args = add_indent(create_args)
 
@@ -375,7 +375,19 @@ class ResourcesCodeGen:
         required_members = self.shapes_extractor.get_required_members(
             describe_operation_input_shape_name
         )
-        resource_identifier = ", ".join(required_members)
+
+        create_required_members = self.shapes_extractor.get_required_members(
+            operation_input_shape_name
+        )
+
+        identifiers = []
+        for member in required_members:
+            if member not in create_required_members:
+                identifiers.append(f"{member}=response[\'{snake_to_pascal(member)}\']")
+            else:
+                identifiers.append(f"{member}={member}")
+
+        resource_identifier = ", ".join(identifiers)
 
         # Format the method using the CREATE_METHOD_TEMPLATE
         formatted_method = CREATE_METHOD_TEMPLATE.format(

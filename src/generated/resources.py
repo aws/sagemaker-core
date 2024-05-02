@@ -108,7 +108,7 @@ class Action(Base):
         response = client.create_action(**operation_input_args)
         logger.debug(f"Response: {response}")
     
-        return cls.get(action_name, session=session, region=region)
+        return cls.get(action_name=action_name, session=session, region=region)
     
     @classmethod
     def get(
@@ -196,7 +196,7 @@ class Algorithm(Base):
         response = client.create_algorithm(**operation_input_args)
         logger.debug(f"Response: {response}")
     
-        return cls.get(algorithm_name, session=session, region=region)
+        return cls.get(algorithm_name=algorithm_name, session=session, region=region)
     
     @classmethod
     def get(
@@ -307,7 +307,7 @@ class App(Base):
         response = client.create_app(**operation_input_args)
         logger.debug(f"Response: {response}")
     
-        return cls.get(domain_id, app_type, app_name, session=session, region=region)
+        return cls.get(domain_id=domain_id, app_type=app_type, app_name=app_name, session=session, region=region)
     
     @classmethod
     def get(
@@ -422,7 +422,7 @@ class AppImageConfig(Base):
         response = client.create_app_image_config(**operation_input_args)
         logger.debug(f"Response: {response}")
     
-        return cls.get(app_image_config_name, session=session, region=region)
+        return cls.get(app_image_config_name=app_image_config_name, session=session, region=region)
     
     @classmethod
     def get(
@@ -508,7 +508,7 @@ class Artifact(Base):
         response = client.create_artifact(**operation_input_args)
         logger.debug(f"Response: {response}")
     
-        return cls.get(artifact_arn, session=session, region=region)
+        return cls.get(artifact_arn=response['ArtifactArn'], session=session, region=region)
     
     @classmethod
     def get(
@@ -613,7 +613,7 @@ class AutoMLJob(Base):
         response = client.create_auto_m_l_job(**operation_input_args)
         logger.debug(f"Response: {response}")
     
-        return cls.get(auto_m_l_job_name, session=session, region=region)
+        return cls.get(auto_m_l_job_name=auto_m_l_job_name, session=session, region=region)
     
     @classmethod
     def get(
@@ -740,7 +740,7 @@ class AutoMLJobV2(Base):
         response = client.create_auto_m_l_job_v2(**operation_input_args)
         logger.debug(f"Response: {response}")
     
-        return cls.get(auto_m_l_job_name, session=session, region=region)
+        return cls.get(auto_m_l_job_name=auto_m_l_job_name, session=session, region=region)
     
     @classmethod
     def get(
@@ -833,7 +833,7 @@ class Cluster(Base):
         response = client.create_cluster(**operation_input_args)
         logger.debug(f"Response: {response}")
     
-        return cls.get(cluster_name, session=session, region=region)
+        return cls.get(cluster_name=cluster_name, session=session, region=region)
     
     @classmethod
     def get(
@@ -929,7 +929,7 @@ class CodeRepository(Base):
         response = client.create_code_repository(**operation_input_args)
         logger.debug(f"Response: {response}")
     
-        return cls.get(code_repository_name, session=session, region=region)
+        return cls.get(code_repository_name=code_repository_name, session=session, region=region)
     
     @classmethod
     def get(
@@ -1026,7 +1026,7 @@ class CompilationJob(Base):
         response = client.create_compilation_job(**operation_input_args)
         logger.debug(f"Response: {response}")
     
-        return cls.get(compilation_job_name, session=session, region=region)
+        return cls.get(compilation_job_name=compilation_job_name, session=session, region=region)
     
     @classmethod
     def get(
@@ -1141,7 +1141,7 @@ class Context(Base):
         response = client.create_context(**operation_input_args)
         logger.debug(f"Response: {response}")
     
-        return cls.get(context_name, session=session, region=region)
+        return cls.get(context_name=context_name, session=session, region=region)
     
     @classmethod
     def get(
@@ -1235,7 +1235,7 @@ class DataQualityJobDefinition(Base):
         response = client.create_data_quality_job_definition(**operation_input_args)
         logger.debug(f"Response: {response}")
     
-        return cls.get(job_definition_name, session=session, region=region)
+        return cls.get(job_definition_name=job_definition_name, session=session, region=region)
     
     @classmethod
     def get(
@@ -1318,7 +1318,7 @@ class DeviceFleet(Base):
         response = client.create_device_fleet(**operation_input_args)
         logger.debug(f"Response: {response}")
     
-        return cls.get(device_fleet_name, session=session, region=region)
+        return cls.get(device_fleet_name=device_fleet_name, session=session, region=region)
     
     @classmethod
     def get(
@@ -1427,7 +1427,7 @@ class Domain(Base):
         response = client.create_domain(**operation_input_args)
         logger.debug(f"Response: {response}")
     
-        return cls.get(domain_id, session=session, region=region)
+        return cls.get(domain_id=response['DomainId'], session=session, region=region)
     
     @classmethod
     def get(
@@ -1534,7 +1534,7 @@ class EdgeDeploymentPlan(Base):
         response = client.create_edge_deployment_plan(**operation_input_args)
         logger.debug(f"Response: {response}")
     
-        return cls.get(edge_deployment_plan_name, session=session, region=region)
+        return cls.get(edge_deployment_plan_name=edge_deployment_plan_name, session=session, region=region)
     
     @classmethod
     def get(
@@ -1634,7 +1634,7 @@ class EdgePackagingJob(Base):
         response = client.create_edge_packaging_job(**operation_input_args)
         logger.debug(f"Response: {response}")
     
-        return cls.get(edge_packaging_job_name, session=session, region=region)
+        return cls.get(edge_packaging_job_name=edge_packaging_job_name, session=session, region=region)
     
     @classmethod
     def get(
@@ -1741,7 +1741,7 @@ class Endpoint(Base):
         response = client.create_endpoint(**operation_input_args)
         logger.debug(f"Response: {response}")
     
-        return cls.get(endpoint_name, session=session, region=region)
+        return cls.get(endpoint_name=endpoint_name, session=session, region=region)
     
     @classmethod
     def get(
@@ -1860,7 +1860,7 @@ class EndpointConfig(Base):
         response = client.create_endpoint_config(**operation_input_args)
         logger.debug(f"Response: {response}")
     
-        return cls.get(endpoint_config_name, session=session, region=region)
+        return cls.get(endpoint_config_name=endpoint_config_name, session=session, region=region)
     
     @classmethod
     def get(
@@ -1940,7 +1940,7 @@ class Experiment(Base):
         response = client.create_experiment(**operation_input_args)
         logger.debug(f"Response: {response}")
     
-        return cls.get(experiment_name, session=session, region=region)
+        return cls.get(experiment_name=experiment_name, session=session, region=region)
     
     @classmethod
     def get(
@@ -2041,7 +2041,7 @@ class FeatureGroup(Base):
         response = client.create_feature_group(**operation_input_args)
         logger.debug(f"Response: {response}")
     
-        return cls.get(feature_group_name, session=session, region=region)
+        return cls.get(feature_group_name=feature_group_name, session=session, region=region)
     
     @classmethod
     def get(
@@ -2153,7 +2153,7 @@ class FlowDefinition(Base):
         response = client.create_flow_definition(**operation_input_args)
         logger.debug(f"Response: {response}")
     
-        return cls.get(flow_definition_name, session=session, region=region)
+        return cls.get(flow_definition_name=flow_definition_name, session=session, region=region)
     
     @classmethod
     def get(
@@ -2260,7 +2260,7 @@ class Hub(Base):
         response = client.create_hub(**operation_input_args)
         logger.debug(f"Response: {response}")
     
-        return cls.get(hub_name, session=session, region=region)
+        return cls.get(hub_name=hub_name, session=session, region=region)
     
     @classmethod
     def get(
@@ -2447,7 +2447,7 @@ class HumanTaskUi(Base):
         response = client.create_human_task_ui(**operation_input_args)
         logger.debug(f"Response: {response}")
     
-        return cls.get(human_task_ui_name, session=session, region=region)
+        return cls.get(human_task_ui_name=human_task_ui_name, session=session, region=region)
     
     @classmethod
     def get(
@@ -2564,7 +2564,7 @@ class HyperParameterTuningJob(Base):
         response = client.create_hyper_parameter_tuning_job(**operation_input_args)
         logger.debug(f"Response: {response}")
     
-        return cls.get(hyper_parameter_tuning_job_name, session=session, region=region)
+        return cls.get(hyper_parameter_tuning_job_name=hyper_parameter_tuning_job_name, session=session, region=region)
     
     @classmethod
     def get(
@@ -2675,7 +2675,7 @@ class Image(Base):
         response = client.create_image(**operation_input_args)
         logger.debug(f"Response: {response}")
     
-        return cls.get(image_name, session=session, region=region)
+        return cls.get(image_name=image_name, session=session, region=region)
     
     @classmethod
     def get(
@@ -2798,7 +2798,7 @@ class ImageVersion(Base):
         response = client.create_image_version(**operation_input_args)
         logger.debug(f"Response: {response}")
     
-        return cls.get(image_name, session=session, region=region)
+        return cls.get(image_name=image_name, session=session, region=region)
     
     @classmethod
     def get(
@@ -2914,7 +2914,7 @@ class InferenceComponent(Base):
         response = client.create_inference_component(**operation_input_args)
         logger.debug(f"Response: {response}")
     
-        return cls.get(inference_component_name, session=session, region=region)
+        return cls.get(inference_component_name=inference_component_name, session=session, region=region)
     
     @classmethod
     def get(
@@ -3037,7 +3037,7 @@ class InferenceExperiment(Base):
         response = client.create_inference_experiment(**operation_input_args)
         logger.debug(f"Response: {response}")
     
-        return cls.get(name, session=session, region=region)
+        return cls.get(name=name, session=session, region=region)
     
     @classmethod
     def get(
@@ -3163,7 +3163,7 @@ class InferenceRecommendationsJob(Base):
         response = client.create_inference_recommendations_job(**operation_input_args)
         logger.debug(f"Response: {response}")
     
-        return cls.get(job_name, session=session, region=region)
+        return cls.get(job_name=job_name, session=session, region=region)
     
     @classmethod
     def get(
@@ -3286,7 +3286,7 @@ class LabelingJob(Base):
         response = client.create_labeling_job(**operation_input_args)
         logger.debug(f"Response: {response}")
     
-        return cls.get(labeling_job_name, session=session, region=region)
+        return cls.get(labeling_job_name=labeling_job_name, session=session, region=region)
     
     @classmethod
     def get(
@@ -3397,7 +3397,7 @@ class Model(Base):
         response = client.create_model(**operation_input_args)
         logger.debug(f"Response: {response}")
     
-        return cls.get(model_name, session=session, region=region)
+        return cls.get(model_name=model_name, session=session, region=region)
     
     @classmethod
     def get(
@@ -3491,7 +3491,7 @@ class ModelBiasJobDefinition(Base):
         response = client.create_model_bias_job_definition(**operation_input_args)
         logger.debug(f"Response: {response}")
     
-        return cls.get(job_definition_name, session=session, region=region)
+        return cls.get(job_definition_name=job_definition_name, session=session, region=region)
     
     @classmethod
     def get(
@@ -3575,7 +3575,7 @@ class ModelCard(Base):
         response = client.create_model_card(**operation_input_args)
         logger.debug(f"Response: {response}")
     
-        return cls.get(model_card_name, session=session, region=region)
+        return cls.get(model_card_name=model_card_name, session=session, region=region)
     
     @classmethod
     def get(
@@ -3681,7 +3681,7 @@ class ModelCardExportJob(Base):
         response = client.create_model_card_export_job(**operation_input_args)
         logger.debug(f"Response: {response}")
     
-        return cls.get(model_card_export_job_arn, session=session, region=region)
+        return cls.get(model_card_export_job_arn=response['ModelCardExportJobArn'], session=session, region=region)
     
     @classmethod
     def get(
@@ -3790,7 +3790,7 @@ class ModelExplainabilityJobDefinition(Base):
         response = client.create_model_explainability_job_definition(**operation_input_args)
         logger.debug(f"Response: {response}")
     
-        return cls.get(job_definition_name, session=session, region=region)
+        return cls.get(job_definition_name=job_definition_name, session=session, region=region)
     
     @classmethod
     def get(
@@ -3920,7 +3920,7 @@ class ModelPackage(Base):
         response = client.create_model_package(**operation_input_args)
         logger.debug(f"Response: {response}")
     
-        return cls.get(model_package_name, session=session, region=region)
+        return cls.get(model_package_name=response['ModelPackageName'], session=session, region=region)
     
     @classmethod
     def get(
@@ -4017,7 +4017,7 @@ class ModelPackageGroup(Base):
         response = client.create_model_package_group(**operation_input_args)
         logger.debug(f"Response: {response}")
     
-        return cls.get(model_package_group_name, session=session, region=region)
+        return cls.get(model_package_group_name=model_package_group_name, session=session, region=region)
     
     @classmethod
     def get(
@@ -4133,7 +4133,7 @@ class ModelQualityJobDefinition(Base):
         response = client.create_model_quality_job_definition(**operation_input_args)
         logger.debug(f"Response: {response}")
     
-        return cls.get(job_definition_name, session=session, region=region)
+        return cls.get(job_definition_name=job_definition_name, session=session, region=region)
     
     @classmethod
     def get(
@@ -4212,7 +4212,7 @@ class MonitoringSchedule(Base):
         response = client.create_monitoring_schedule(**operation_input_args)
         logger.debug(f"Response: {response}")
     
-        return cls.get(monitoring_schedule_name, session=session, region=region)
+        return cls.get(monitoring_schedule_name=monitoring_schedule_name, session=session, region=region)
     
     @classmethod
     def get(
@@ -4358,7 +4358,7 @@ class NotebookInstance(Base):
         response = client.create_notebook_instance(**operation_input_args)
         logger.debug(f"Response: {response}")
     
-        return cls.get(notebook_instance_name, session=session, region=region)
+        return cls.get(notebook_instance_name=notebook_instance_name, session=session, region=region)
     
     @classmethod
     def get(
@@ -4462,7 +4462,7 @@ class NotebookInstanceLifecycleConfig(Base):
         response = client.create_notebook_instance_lifecycle_config(**operation_input_args)
         logger.debug(f"Response: {response}")
     
-        return cls.get(notebook_instance_lifecycle_config_name, session=session, region=region)
+        return cls.get(notebook_instance_lifecycle_config_name=notebook_instance_lifecycle_config_name, session=session, region=region)
     
     @classmethod
     def get(
@@ -4556,7 +4556,7 @@ class Pipeline(Base):
         response = client.create_pipeline(**operation_input_args)
         logger.debug(f"Response: {response}")
     
-        return cls.get(pipeline_name, session=session, region=region)
+        return cls.get(pipeline_name=pipeline_name, session=session, region=region)
     
     @classmethod
     def get(
@@ -4762,7 +4762,7 @@ class ProcessingJob(Base):
         response = client.create_processing_job(**operation_input_args)
         logger.debug(f"Response: {response}")
     
-        return cls.get(processing_job_name, session=session, region=region)
+        return cls.get(processing_job_name=processing_job_name, session=session, region=region)
     
     @classmethod
     def get(
@@ -4866,7 +4866,7 @@ class Project(Base):
         response = client.create_project(**operation_input_args)
         logger.debug(f"Response: {response}")
     
-        return cls.get(project_name, session=session, region=region)
+        return cls.get(project_name=project_name, session=session, region=region)
     
     @classmethod
     def get(
@@ -4978,7 +4978,7 @@ class Space(Base):
         response = client.create_space(**operation_input_args)
         logger.debug(f"Response: {response}")
     
-        return cls.get(domain_id, space_name, session=session, region=region)
+        return cls.get(domain_id=domain_id, space_name=space_name, session=session, region=region)
     
     @classmethod
     def get(
@@ -5081,7 +5081,7 @@ class StudioLifecycleConfig(Base):
         response = client.create_studio_lifecycle_config(**operation_input_args)
         logger.debug(f"Response: {response}")
     
-        return cls.get(studio_lifecycle_config_name, session=session, region=region)
+        return cls.get(studio_lifecycle_config_name=studio_lifecycle_config_name, session=session, region=region)
     
     @classmethod
     def get(
@@ -5235,7 +5235,7 @@ class TrainingJob(Base):
         response = client.create_training_job(**operation_input_args)
         logger.debug(f"Response: {response}")
     
-        return cls.get(training_job_name, session=session, region=region)
+        return cls.get(training_job_name=training_job_name, session=session, region=region)
     
     @classmethod
     def get(
@@ -5369,7 +5369,7 @@ class TransformJob(Base):
         response = client.create_transform_job(**operation_input_args)
         logger.debug(f"Response: {response}")
     
-        return cls.get(transform_job_name, session=session, region=region)
+        return cls.get(transform_job_name=transform_job_name, session=session, region=region)
     
     @classmethod
     def get(
@@ -5474,7 +5474,7 @@ class Trial(Base):
         response = client.create_trial(**operation_input_args)
         logger.debug(f"Response: {response}")
     
-        return cls.get(trial_name, session=session, region=region)
+        return cls.get(trial_name=trial_name, session=session, region=region)
     
     @classmethod
     def get(
@@ -5575,7 +5575,7 @@ class TrialComponent(Base):
         response = client.create_trial_component(**operation_input_args)
         logger.debug(f"Response: {response}")
     
-        return cls.get(trial_component_name, session=session, region=region)
+        return cls.get(trial_component_name=trial_component_name, session=session, region=region)
     
     @classmethod
     def get(
@@ -5683,7 +5683,7 @@ class UserProfile(Base):
         response = client.create_user_profile(**operation_input_args)
         logger.debug(f"Response: {response}")
     
-        return cls.get(domain_id, user_profile_name, session=session, region=region)
+        return cls.get(domain_id=domain_id, user_profile_name=user_profile_name, session=session, region=region)
     
     @classmethod
     def get(
@@ -5785,7 +5785,7 @@ class Workforce(Base):
         response = client.create_workforce(**operation_input_args)
         logger.debug(f"Response: {response}")
     
-        return cls.get(workforce_name, session=session, region=region)
+        return cls.get(workforce_name=workforce_name, session=session, region=region)
     
     @classmethod
     def get(
@@ -5883,7 +5883,7 @@ class Workteam(Base):
         response = client.create_workteam(**operation_input_args)
         logger.debug(f"Response: {response}")
     
-        return cls.get(workteam_name, session=session, region=region)
+        return cls.get(workteam_name=workteam_name, session=session, region=region)
     
     @classmethod
     def get(
