@@ -18,7 +18,7 @@ from pprint import pprint
 from pydantic import BaseModel, validate_call
 from typing import List, Dict, Optional, Literal
 from boto3.session import Session
-from utils import Unassigned
+from utils import SageMakerClient, Unassigned
 from shapes import *
 
 from src.code_injection.codec import deserializer
@@ -53,8 +53,8 @@ class Action(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        action = cls(session, region)
-    
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'ActionName': action_name,
             'Source': source,
@@ -65,7 +65,10 @@ class Action(BaseModel):
             'MetadataProperties': metadata_properties,
             'Tags': tags,
         }
-        response = action.client.create_action(**operation_input_args)
+    
+        # serialize the request
+    
+        response = client.create_action(**operation_input_args)
     
         pprint(response)
     
@@ -138,8 +141,8 @@ class Algorithm(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        algorithm = cls(session, region)
-    
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'AlgorithmName': algorithm_name,
             'AlgorithmDescription': algorithm_description,
@@ -149,7 +152,10 @@ class Algorithm(BaseModel):
             'CertifyForMarketplace': certify_for_marketplace,
             'Tags': tags,
         }
-        response = algorithm.client.create_algorithm(**operation_input_args)
+    
+        # serialize the request
+    
+        response = client.create_algorithm(**operation_input_args)
     
         pprint(response)
     
@@ -245,8 +251,8 @@ class App(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        app = cls(session, region)
-    
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'DomainId': domain_id,
             'UserProfileName': user_profile_name,
@@ -256,7 +262,10 @@ class App(BaseModel):
             'Tags': tags,
             'ResourceSpec': resource_spec,
         }
-        response = app.client.create_app(**operation_input_args)
+    
+        # serialize the request
+    
+        response = client.create_app(**operation_input_args)
     
         pprint(response)
     
@@ -359,15 +368,18 @@ class AppImageConfig(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        app_image_config = cls(session, region)
-    
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'AppImageConfigName': app_image_config_name,
             'Tags': tags,
             'KernelGatewayImageConfig': kernel_gateway_image_config,
             'JupyterLabAppImageConfig': jupyter_lab_app_image_config,
         }
-        response = app_image_config.client.create_app_image_config(**operation_input_args)
+    
+        # serialize the request
+    
+        response = client.create_app_image_config(**operation_input_args)
     
         pprint(response)
     
@@ -439,8 +451,8 @@ class Artifact(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        artifact = cls(session, region)
-    
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'ArtifactName': artifact_name,
             'Source': source,
@@ -449,7 +461,10 @@ class Artifact(BaseModel):
             'MetadataProperties': metadata_properties,
             'Tags': tags,
         }
-        response = artifact.client.create_artifact(**operation_input_args)
+    
+        # serialize the request
+    
+        response = client.create_artifact(**operation_input_args)
     
         pprint(response)
     
@@ -536,8 +551,8 @@ class AutoMLJob(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        auto_m_l_job = cls(session, region)
-    
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'AutoMLJobName': auto_m_l_job_name,
             'InputDataConfig': input_data_config,
@@ -550,7 +565,10 @@ class AutoMLJob(BaseModel):
             'Tags': tags,
             'ModelDeployConfig': model_deploy_config,
         }
-        response = auto_m_l_job.client.create_auto_m_l_job(**operation_input_args)
+    
+        # serialize the request
+    
+        response = client.create_auto_m_l_job(**operation_input_args)
     
         pprint(response)
     
@@ -659,8 +677,8 @@ class AutoMLJobV2(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        auto_m_l_job_v2 = cls(session, region)
-    
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'AutoMLJobName': auto_m_l_job_name,
             'AutoMLJobInputDataConfig': auto_m_l_job_input_data_config,
@@ -673,7 +691,10 @@ class AutoMLJobV2(BaseModel):
             'ModelDeployConfig': model_deploy_config,
             'DataSplitConfig': data_split_config,
         }
-        response = auto_m_l_job_v2.client.create_auto_m_l_job_v2(**operation_input_args)
+    
+        # serialize the request
+    
+        response = client.create_auto_m_l_job_v2(**operation_input_args)
     
         pprint(response)
     
@@ -754,15 +775,18 @@ class Cluster(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        cluster = cls(session, region)
-    
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'ClusterName': cluster_name,
             'InstanceGroups': instance_groups,
             'VpcConfig': vpc_config,
             'Tags': tags,
         }
-        response = cluster.client.create_cluster(**operation_input_args)
+    
+        # serialize the request
+    
+        response = client.create_cluster(**operation_input_args)
     
         pprint(response)
     
@@ -847,14 +871,17 @@ class CodeRepository(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        code_repository = cls(session, region)
-    
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'CodeRepositoryName': code_repository_name,
             'GitConfig': git_config,
             'Tags': tags,
         }
-        response = code_repository.client.create_code_repository(**operation_input_args)
+    
+        # serialize the request
+    
+        response = client.create_code_repository(**operation_input_args)
     
         pprint(response)
     
@@ -935,8 +962,8 @@ class CompilationJob(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        compilation_job = cls(session, region)
-    
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'CompilationJobName': compilation_job_name,
             'RoleArn': role_arn,
@@ -947,7 +974,10 @@ class CompilationJob(BaseModel):
             'StoppingCondition': stopping_condition,
             'Tags': tags,
         }
-        response = compilation_job.client.create_compilation_job(**operation_input_args)
+    
+        # serialize the request
+    
+        response = client.create_compilation_job(**operation_input_args)
     
         pprint(response)
     
@@ -1048,8 +1078,8 @@ class Context(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        context = cls(session, region)
-    
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'ContextName': context_name,
             'Source': source,
@@ -1058,7 +1088,10 @@ class Context(BaseModel):
             'Properties': properties,
             'Tags': tags,
         }
-        response = context.client.create_context(**operation_input_args)
+    
+        # serialize the request
+    
+        response = client.create_context(**operation_input_args)
     
         pprint(response)
     
@@ -1134,8 +1167,8 @@ class DataQualityJobDefinition(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        data_quality_job_definition = cls(session, region)
-    
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'JobDefinitionName': job_definition_name,
             'DataQualityBaselineConfig': data_quality_baseline_config,
@@ -1148,7 +1181,10 @@ class DataQualityJobDefinition(BaseModel):
             'StoppingCondition': stopping_condition,
             'Tags': tags,
         }
-        response = data_quality_job_definition.client.create_data_quality_job_definition(**operation_input_args)
+    
+        # serialize the request
+    
+        response = client.create_data_quality_job_definition(**operation_input_args)
     
         pprint(response)
     
@@ -1217,8 +1253,8 @@ class DeviceFleet(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        device_fleet = cls(session, region)
-    
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'DeviceFleetName': device_fleet_name,
             'RoleArn': role_arn,
@@ -1227,7 +1263,10 @@ class DeviceFleet(BaseModel):
             'Tags': tags,
             'EnableIotRoleAlias': enable_iot_role_alias,
         }
-        response = device_fleet.client.create_device_fleet(**operation_input_args)
+    
+        # serialize the request
+    
+        response = client.create_device_fleet(**operation_input_args)
     
         pprint(response)
     
@@ -1316,8 +1355,8 @@ class Domain(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        domain = cls(session, region)
-    
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'DomainName': domain_name,
             'AuthMode': auth_mode,
@@ -1332,7 +1371,10 @@ class Domain(BaseModel):
             'AppSecurityGroupManagement': app_security_group_management,
             'DefaultSpaceSettings': default_space_settings,
         }
-        response = domain.client.create_domain(**operation_input_args)
+    
+        # serialize the request
+    
+        response = client.create_domain(**operation_input_args)
     
         pprint(response)
     
@@ -1426,8 +1468,8 @@ class EdgeDeploymentPlan(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        edge_deployment_plan = cls(session, region)
-    
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'EdgeDeploymentPlanName': edge_deployment_plan_name,
             'ModelConfigs': model_configs,
@@ -1435,7 +1477,10 @@ class EdgeDeploymentPlan(BaseModel):
             'Stages': stages,
             'Tags': tags,
         }
-        response = edge_deployment_plan.client.create_edge_deployment_plan(**operation_input_args)
+    
+        # serialize the request
+    
+        response = client.create_edge_deployment_plan(**operation_input_args)
     
         pprint(response)
     
@@ -1519,8 +1564,8 @@ class EdgePackagingJob(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        edge_packaging_job = cls(session, region)
-    
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'EdgePackagingJobName': edge_packaging_job_name,
             'CompilationJobName': compilation_job_name,
@@ -1531,7 +1576,10 @@ class EdgePackagingJob(BaseModel):
             'ResourceKey': resource_key,
             'Tags': tags,
         }
-        response = edge_packaging_job.client.create_edge_packaging_job(**operation_input_args)
+    
+        # serialize the request
+    
+        response = client.create_edge_packaging_job(**operation_input_args)
     
         pprint(response)
     
@@ -1626,15 +1674,18 @@ class Endpoint(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        endpoint = cls(session, region)
-    
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'EndpointName': endpoint_name,
             'EndpointConfigName': endpoint_config_name,
             'DeploymentConfig': deployment_config,
             'Tags': tags,
         }
-        response = endpoint.client.create_endpoint(**operation_input_args)
+    
+        # serialize the request
+    
+        response = client.create_endpoint(**operation_input_args)
     
         pprint(response)
     
@@ -1734,8 +1785,8 @@ class EndpointConfig(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        endpoint_config = cls(session, region)
-    
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'EndpointConfigName': endpoint_config_name,
             'ProductionVariants': production_variants,
@@ -1749,7 +1800,10 @@ class EndpointConfig(BaseModel):
             'VpcConfig': vpc_config,
             'EnableNetworkIsolation': enable_network_isolation,
         }
-        response = endpoint_config.client.create_endpoint_config(**operation_input_args)
+    
+        # serialize the request
+    
+        response = client.create_endpoint_config(**operation_input_args)
     
         pprint(response)
     
@@ -1817,15 +1871,18 @@ class Experiment(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        experiment = cls(session, region)
-    
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'ExperimentName': experiment_name,
             'DisplayName': display_name,
             'Description': description,
             'Tags': tags,
         }
-        response = experiment.client.create_experiment(**operation_input_args)
+    
+        # serialize the request
+    
+        response = client.create_experiment(**operation_input_args)
     
         pprint(response)
     
@@ -1908,8 +1965,8 @@ class FeatureGroup(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        feature_group = cls(session, region)
-    
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'FeatureGroupName': feature_group_name,
             'RecordIdentifierFeatureName': record_identifier_feature_name,
@@ -1922,7 +1979,10 @@ class FeatureGroup(BaseModel):
             'Description': description,
             'Tags': tags,
         }
-        response = feature_group.client.create_feature_group(**operation_input_args)
+    
+        # serialize the request
+    
+        response = client.create_feature_group(**operation_input_args)
     
         pprint(response)
     
@@ -2019,8 +2079,8 @@ class FlowDefinition(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        flow_definition = cls(session, region)
-    
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'FlowDefinitionName': flow_definition_name,
             'HumanLoopRequestSource': human_loop_request_source,
@@ -2030,7 +2090,10 @@ class FlowDefinition(BaseModel):
             'RoleArn': role_arn,
             'Tags': tags,
         }
-        response = flow_definition.client.create_flow_definition(**operation_input_args)
+    
+        # serialize the request
+    
+        response = client.create_flow_definition(**operation_input_args)
     
         pprint(response)
     
@@ -2123,8 +2186,8 @@ class Hub(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        hub = cls(session, region)
-    
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'HubName': hub_name,
             'HubDescription': hub_description,
@@ -2133,7 +2196,10 @@ class Hub(BaseModel):
             'S3StorageConfig': s3_storage_config,
             'Tags': tags,
         }
-        response = hub.client.create_hub(**operation_input_args)
+    
+        # serialize the request
+    
+        response = client.create_hub(**operation_input_args)
     
         pprint(response)
     
@@ -2309,14 +2375,17 @@ class HumanTaskUi(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        human_task_ui = cls(session, region)
-    
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'HumanTaskUiName': human_task_ui_name,
             'UiTemplate': ui_template,
             'Tags': tags,
         }
-        response = human_task_ui.client.create_human_task_ui(**operation_input_args)
+    
+        # serialize the request
+    
+        response = client.create_human_task_ui(**operation_input_args)
     
         pprint(response)
     
@@ -2418,8 +2487,8 @@ class HyperParameterTuningJob(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        hyper_parameter_tuning_job = cls(session, region)
-    
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'HyperParameterTuningJobName': hyper_parameter_tuning_job_name,
             'HyperParameterTuningJobConfig': hyper_parameter_tuning_job_config,
@@ -2429,7 +2498,10 @@ class HyperParameterTuningJob(BaseModel):
             'Tags': tags,
             'Autotune': autotune,
         }
-        response = hyper_parameter_tuning_job.client.create_hyper_parameter_tuning_job(**operation_input_args)
+    
+        # serialize the request
+    
+        response = client.create_hyper_parameter_tuning_job(**operation_input_args)
     
         pprint(response)
     
@@ -2527,8 +2599,8 @@ class Image(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        image = cls(session, region)
-    
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'Description': description,
             'DisplayName': display_name,
@@ -2536,7 +2608,10 @@ class Image(BaseModel):
             'RoleArn': role_arn,
             'Tags': tags,
         }
-        response = image.client.create_image(**operation_input_args)
+    
+        # serialize the request
+    
+        response = client.create_image(**operation_input_args)
     
         pprint(response)
     
@@ -2640,8 +2715,8 @@ class ImageVersion(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        image_version = cls(session, region)
-    
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'BaseImage': base_image,
             'ClientToken': client_token,
@@ -2655,7 +2730,10 @@ class ImageVersion(BaseModel):
             'Horovod': horovod,
             'ReleaseNotes': release_notes,
         }
-        response = image_version.client.create_image_version(**operation_input_args)
+    
+        # serialize the request
+    
+        response = client.create_image_version(**operation_input_args)
     
         pprint(response)
     
@@ -2757,8 +2835,8 @@ class InferenceComponent(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        inference_component = cls(session, region)
-    
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'InferenceComponentName': inference_component_name,
             'EndpointName': endpoint_name,
@@ -2767,7 +2845,10 @@ class InferenceComponent(BaseModel):
             'RuntimeConfig': runtime_config,
             'Tags': tags,
         }
-        response = inference_component.client.create_inference_component(**operation_input_args)
+    
+        # serialize the request
+    
+        response = client.create_inference_component(**operation_input_args)
     
         pprint(response)
     
@@ -2871,8 +2952,8 @@ class InferenceExperiment(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        inference_experiment = cls(session, region)
-    
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'Name': name,
             'Type': type,
@@ -2886,7 +2967,10 @@ class InferenceExperiment(BaseModel):
             'KmsKey': kms_key,
             'Tags': tags,
         }
-        response = inference_experiment.client.create_inference_experiment(**operation_input_args)
+    
+        # serialize the request
+    
+        response = client.create_inference_experiment(**operation_input_args)
     
         pprint(response)
     
@@ -2996,8 +3080,8 @@ class InferenceRecommendationsJob(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        inference_recommendations_job = cls(session, region)
-    
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'JobName': job_name,
             'JobType': job_type,
@@ -3008,7 +3092,10 @@ class InferenceRecommendationsJob(BaseModel):
             'OutputConfig': output_config,
             'Tags': tags,
         }
-        response = inference_recommendations_job.client.create_inference_recommendations_job(**operation_input_args)
+    
+        # serialize the request
+    
+        response = client.create_inference_recommendations_job(**operation_input_args)
     
         pprint(response)
     
@@ -3113,8 +3200,8 @@ class LabelingJob(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        labeling_job = cls(session, region)
-    
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'LabelingJobName': labeling_job_name,
             'LabelAttributeName': label_attribute_name,
@@ -3127,7 +3214,10 @@ class LabelingJob(BaseModel):
             'HumanTaskConfig': human_task_config,
             'Tags': tags,
         }
-        response = labeling_job.client.create_labeling_job(**operation_input_args)
+    
+        # serialize the request
+    
+        response = client.create_labeling_job(**operation_input_args)
     
         pprint(response)
     
@@ -3222,8 +3312,8 @@ class Model(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        model = cls(session, region)
-    
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'ModelName': model_name,
             'PrimaryContainer': primary_container,
@@ -3234,7 +3324,10 @@ class Model(BaseModel):
             'VpcConfig': vpc_config,
             'EnableNetworkIsolation': enable_network_isolation,
         }
-        response = model.client.create_model(**operation_input_args)
+    
+        # serialize the request
+    
+        response = client.create_model(**operation_input_args)
     
         pprint(response)
     
@@ -3310,8 +3403,8 @@ class ModelBiasJobDefinition(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        model_bias_job_definition = cls(session, region)
-    
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'JobDefinitionName': job_definition_name,
             'ModelBiasBaselineConfig': model_bias_baseline_config,
@@ -3324,7 +3417,10 @@ class ModelBiasJobDefinition(BaseModel):
             'StoppingCondition': stopping_condition,
             'Tags': tags,
         }
-        response = model_bias_job_definition.client.create_model_bias_job_definition(**operation_input_args)
+    
+        # serialize the request
+    
+        response = client.create_model_bias_job_definition(**operation_input_args)
     
         pprint(response)
     
@@ -3395,8 +3491,8 @@ class ModelCard(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        model_card = cls(session, region)
-    
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'ModelCardName': model_card_name,
             'SecurityConfig': security_config,
@@ -3404,7 +3500,10 @@ class ModelCard(BaseModel):
             'ModelCardStatus': model_card_status,
             'Tags': tags,
         }
-        response = model_card.client.create_model_card(**operation_input_args)
+    
+        # serialize the request
+    
+        response = client.create_model_card(**operation_input_args)
     
         pprint(response)
     
@@ -3498,15 +3597,18 @@ class ModelCardExportJob(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        model_card_export_job = cls(session, region)
-    
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'ModelCardName': model_card_name,
             'ModelCardVersion': model_card_version,
             'ModelCardExportJobName': model_card_export_job_name,
             'OutputConfig': output_config,
         }
-        response = model_card_export_job.client.create_model_card_export_job(**operation_input_args)
+    
+        # serialize the request
+    
+        response = client.create_model_card_export_job(**operation_input_args)
     
         pprint(response)
     
@@ -3597,8 +3699,8 @@ class ModelExplainabilityJobDefinition(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        model_explainability_job_definition = cls(session, region)
-    
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'JobDefinitionName': job_definition_name,
             'ModelExplainabilityBaselineConfig': model_explainability_baseline_config,
@@ -3611,7 +3713,10 @@ class ModelExplainabilityJobDefinition(BaseModel):
             'StoppingCondition': stopping_condition,
             'Tags': tags,
         }
-        response = model_explainability_job_definition.client.create_model_explainability_job_definition(**operation_input_args)
+    
+        # serialize the request
+    
+        response = client.create_model_explainability_job_definition(**operation_input_args)
     
         pprint(response)
     
@@ -3713,8 +3818,8 @@ class ModelPackage(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        model_package = cls(session, region)
-    
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'ModelPackageName': model_package_name,
             'ModelPackageGroupName': model_package_group_name,
@@ -3737,7 +3842,10 @@ class ModelPackage(BaseModel):
             'SkipModelValidation': skip_model_validation,
             'SourceUri': source_uri,
         }
-        response = model_package.client.create_model_package(**operation_input_args)
+    
+        # serialize the request
+    
+        response = client.create_model_package(**operation_input_args)
     
         pprint(response)
     
@@ -3823,14 +3931,17 @@ class ModelPackageGroup(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        model_package_group = cls(session, region)
-    
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'ModelPackageGroupName': model_package_group_name,
             'ModelPackageGroupDescription': model_package_group_description,
             'Tags': tags,
         }
-        response = model_package_group.client.create_model_package_group(**operation_input_args)
+    
+        # serialize the request
+    
+        response = client.create_model_package_group(**operation_input_args)
     
         pprint(response)
     
@@ -3928,8 +4039,8 @@ class ModelQualityJobDefinition(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        model_quality_job_definition = cls(session, region)
-    
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'JobDefinitionName': job_definition_name,
             'ModelQualityBaselineConfig': model_quality_baseline_config,
@@ -3942,7 +4053,10 @@ class ModelQualityJobDefinition(BaseModel):
             'StoppingCondition': stopping_condition,
             'Tags': tags,
         }
-        response = model_quality_job_definition.client.create_model_quality_job_definition(**operation_input_args)
+    
+        # serialize the request
+    
+        response = client.create_model_quality_job_definition(**operation_input_args)
     
         pprint(response)
     
@@ -4010,14 +4124,17 @@ class MonitoringSchedule(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        monitoring_schedule = cls(session, region)
-    
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'MonitoringScheduleName': monitoring_schedule_name,
             'MonitoringScheduleConfig': monitoring_schedule_config,
             'Tags': tags,
         }
-        response = monitoring_schedule.client.create_monitoring_schedule(**operation_input_args)
+    
+        # serialize the request
+    
+        response = client.create_monitoring_schedule(**operation_input_args)
     
         pprint(response)
     
@@ -4139,8 +4256,8 @@ class NotebookInstance(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        notebook_instance = cls(session, region)
-    
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'NotebookInstanceName': notebook_instance_name,
             'InstanceType': instance_type,
@@ -4159,7 +4276,10 @@ class NotebookInstance(BaseModel):
             'PlatformIdentifier': platform_identifier,
             'InstanceMetadataServiceConfiguration': instance_metadata_service_configuration,
         }
-        response = notebook_instance.client.create_notebook_instance(**operation_input_args)
+    
+        # serialize the request
+    
+        response = client.create_notebook_instance(**operation_input_args)
     
         pprint(response)
     
@@ -4252,14 +4372,17 @@ class NotebookInstanceLifecycleConfig(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        notebook_instance_lifecycle_config = cls(session, region)
-    
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'NotebookInstanceLifecycleConfigName': notebook_instance_lifecycle_config_name,
             'OnCreate': on_create,
             'OnStart': on_start,
         }
-        response = notebook_instance_lifecycle_config.client.create_notebook_instance_lifecycle_config(**operation_input_args)
+    
+        # serialize the request
+    
+        response = client.create_notebook_instance_lifecycle_config(**operation_input_args)
     
         pprint(response)
     
@@ -4336,8 +4459,8 @@ class Pipeline(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        pipeline = cls(session, region)
-    
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'PipelineName': pipeline_name,
             'PipelineDisplayName': pipeline_display_name,
@@ -4349,7 +4472,10 @@ class Pipeline(BaseModel):
             'Tags': tags,
             'ParallelismConfiguration': parallelism_configuration,
         }
-        response = pipeline.client.create_pipeline(**operation_input_args)
+    
+        # serialize the request
+    
+        response = client.create_pipeline(**operation_input_args)
     
         pprint(response)
     
@@ -4536,8 +4662,8 @@ class ProcessingJob(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        processing_job = cls(session, region)
-    
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'ProcessingInputs': processing_inputs,
             'ProcessingOutputConfig': processing_output_config,
@@ -4551,7 +4677,10 @@ class ProcessingJob(BaseModel):
             'Tags': tags,
             'ExperimentConfig': experiment_config,
         }
-        response = processing_job.client.create_processing_job(**operation_input_args)
+    
+        # serialize the request
+    
+        response = client.create_processing_job(**operation_input_args)
     
         pprint(response)
     
@@ -4643,15 +4772,18 @@ class Project(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        project = cls(session, region)
-    
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'ProjectName': project_name,
             'ProjectDescription': project_description,
             'ServiceCatalogProvisioningDetails': service_catalog_provisioning_details,
             'Tags': tags,
         }
-        response = project.client.create_project(**operation_input_args)
+    
+        # serialize the request
+    
+        response = client.create_project(**operation_input_args)
     
         pprint(response)
     
@@ -4748,8 +4880,8 @@ class Space(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        space = cls(session, region)
-    
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'DomainId': domain_id,
             'SpaceName': space_name,
@@ -4759,7 +4891,10 @@ class Space(BaseModel):
             'SpaceSharingSettings': space_sharing_settings,
             'SpaceDisplayName': space_display_name,
         }
-        response = space.client.create_space(**operation_input_args)
+    
+        # serialize the request
+    
+        response = client.create_space(**operation_input_args)
     
         pprint(response)
     
@@ -4850,15 +4985,18 @@ class StudioLifecycleConfig(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        studio_lifecycle_config = cls(session, region)
-    
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'StudioLifecycleConfigName': studio_lifecycle_config_name,
             'StudioLifecycleConfigContent': studio_lifecycle_config_content,
             'StudioLifecycleConfigAppType': studio_lifecycle_config_app_type,
             'Tags': tags,
         }
-        response = studio_lifecycle_config.client.create_studio_lifecycle_config(**operation_input_args)
+    
+        # serialize the request
+    
+        response = client.create_studio_lifecycle_config(**operation_input_args)
     
         pprint(response)
     
@@ -4980,8 +5118,8 @@ class TrainingJob(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        training_job = cls(session, region)
-    
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'TrainingJobName': training_job_name,
             'HyperParameters': hyper_parameters,
@@ -5008,7 +5146,10 @@ class TrainingJob(BaseModel):
             'RemoteDebugConfig': remote_debug_config,
             'InfraCheckConfig': infra_check_config,
         }
-        response = training_job.client.create_training_job(**operation_input_args)
+    
+        # serialize the request
+    
+        response = client.create_training_job(**operation_input_args)
     
         pprint(response)
     
@@ -5120,8 +5261,8 @@ class TransformJob(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        transform_job = cls(session, region)
-    
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'TransformJobName': transform_job_name,
             'ModelName': model_name,
@@ -5138,7 +5279,10 @@ class TransformJob(BaseModel):
             'Tags': tags,
             'ExperimentConfig': experiment_config,
         }
-        response = transform_job.client.create_transform_job(**operation_input_args)
+    
+        # serialize the request
+    
+        response = client.create_transform_job(**operation_input_args)
     
         pprint(response)
     
@@ -5230,8 +5374,8 @@ class Trial(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        trial = cls(session, region)
-    
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'TrialName': trial_name,
             'DisplayName': display_name,
@@ -5239,7 +5383,10 @@ class Trial(BaseModel):
             'MetadataProperties': metadata_properties,
             'Tags': tags,
         }
-        response = trial.client.create_trial(**operation_input_args)
+    
+        # serialize the request
+    
+        response = client.create_trial(**operation_input_args)
     
         pprint(response)
     
@@ -5322,8 +5469,8 @@ class TrialComponent(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        trial_component = cls(session, region)
-    
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'TrialComponentName': trial_component_name,
             'DisplayName': display_name,
@@ -5336,7 +5483,10 @@ class TrialComponent(BaseModel):
             'MetadataProperties': metadata_properties,
             'Tags': tags,
         }
-        response = trial_component.client.create_trial_component(**operation_input_args)
+    
+        # serialize the request
+    
+        response = client.create_trial_component(**operation_input_args)
     
         pprint(response)
     
@@ -5430,8 +5580,8 @@ class UserProfile(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        user_profile = cls(session, region)
-    
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'DomainId': domain_id,
             'UserProfileName': user_profile_name,
@@ -5440,7 +5590,10 @@ class UserProfile(BaseModel):
             'Tags': tags,
             'UserSettings': user_settings,
         }
-        response = user_profile.client.create_user_profile(**operation_input_args)
+    
+        # serialize the request
+    
+        response = client.create_user_profile(**operation_input_args)
     
         pprint(response)
     
@@ -5528,8 +5681,8 @@ class Workforce(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        workforce = cls(session, region)
-    
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'CognitoConfig': cognito_config,
             'OidcConfig': oidc_config,
@@ -5538,7 +5691,10 @@ class Workforce(BaseModel):
             'Tags': tags,
             'WorkforceVpcConfig': workforce_vpc_config,
         }
-        response = workforce.client.create_workforce(**operation_input_args)
+    
+        # serialize the request
+    
+        response = client.create_workforce(**operation_input_args)
     
         pprint(response)
     
@@ -5622,8 +5778,8 @@ class Workteam(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        workteam = cls(session, region)
-    
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'WorkteamName': workteam_name,
             'WorkforceName': workforce_name,
@@ -5632,7 +5788,10 @@ class Workteam(BaseModel):
             'NotificationConfiguration': notification_configuration,
             'Tags': tags,
         }
-        response = workteam.client.create_workteam(**operation_input_args)
+    
+        # serialize the request
+    
+        response = client.create_workteam(**operation_input_args)
     
         pprint(response)
     

@@ -109,7 +109,7 @@ class ResourcesCodeGen:
             "from pydantic import BaseModel, validate_call",
             "from typing import List, Dict, Optional, Literal",
             "from boto3.session import Session",
-            "from utils import Unassigned",
+            "from utils import SageMakerClient, Unassigned",
             "from shapes import *",
             "\nfrom src.code_injection.codec import deserializer"
         ]
@@ -339,6 +339,7 @@ class ResourcesCodeGen:
         # Format the method using the CREATE_METHOD_TEMPLATE
         formatted_method = CREATE_METHOD_TEMPLATE.format(
             create_args=create_args,
+            service_name='sagemaker', # TODO: change service name based on the service - runtime, sagemaker, etc.
             resource_lower=resource_lower,
             operation_input_args=operation_input_args,
             operation=operation,

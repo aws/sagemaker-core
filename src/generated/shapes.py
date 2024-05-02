@@ -21,6 +21,30 @@ class Base(BaseModel):
     """TBA"""
     pass
 
+    def serialize(self):
+        result = {}
+        for attr, value in self.__dict__.items():
+            if isinstance(value, Unassigned):
+                continue
+            
+            components = attr.split('_')
+            pascal_attr = ''.join(x.title() for x in components[0:])
+            if isinstance(value, List):
+                result[pascal_attr] = self._serialize_list(value)
+            elif isinstance(value, Dict):
+                result[pascal_attr] = self._serialize_dict(value)
+            elif hasattr(value, 'serialize'):
+                result[pascal_attr] = value.serialize()
+            else:
+                result[pascal_attr] = value
+        return result
+
+    def _serialize_list(self, value: List):
+        return [v.serialize() if hasattr(v, 'serialize') else v for v in value]
+    
+    def _serialize_dict(self, value: Dict):
+        return {k: v.serialize() if hasattr(v, 'serialize') else v for k, v in value.items()}
+
 
 class Unassigned:
     """A custom type used to signify an undefined optional argument."""
