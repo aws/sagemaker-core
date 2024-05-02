@@ -46,6 +46,7 @@ def create(
     }}
 
     # serialize the request
+    operation_input_args = cls._serialize(operation_input_args)
 
     response = client.{operation}(**operation_input_args)
 
@@ -53,7 +54,8 @@ def create(
 
     # deserialize the response
 {object_attribute_assignments}
-    return {resource_lower}
+    # return {resource_lower}
+    return response
 '''
 
 GET_METHOD_TEMPLATE = '''
@@ -155,6 +157,35 @@ def stop(self) -> None:
 {operation_input_args}
     }}
     self.client.{operation}(**operation_input_args)
+'''
+
+RESOURCE_BASE_CLASS_TEMPLATE ='''
+class Base(BaseModel):
+    @classmethod
+    def _serialize(cls, data: Dict) -> Dict:
+        result = {{}}
+        for attr, value in data.items():
+            if isinstance(value, Unassigned):
+                continue
+            
+            if isinstance(value, List):
+                result[attr] = cls._serialize_list(value)
+            elif isinstance(value, Dict):
+                result[attr] = cls._serialize_dict(value)
+            elif hasattr(value, 'serialize'):
+                result[attr] = value.serialize()
+            else:
+                result[attr] = value
+        return result
+    
+    @classmethod
+    def _serialize_list(value: List):
+        return [v.serialize() if hasattr(v, 'serialize') else v for v in value]
+    
+    @classmethod
+    def _serialize_dict(value: Dict):
+        return {{k: v.serialize() if hasattr(v, 'serialize') else v for k, v in value.items()}}
+
 '''
 
 SHAPE_BASE_CLASS_TEMPLATE ='''
