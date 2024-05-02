@@ -30,7 +30,7 @@ BASIC_JSON_TYPES_TO_PYTHON_TYPES = {
     "timestamp": "datetime.datetime",
 }
 
-SHAPE_DAG_FILE_PATH = os.getcwd() + 'src/code_injection/shape_dag.py'
+SHAPE_DAG_FILE_PATH = os.getcwd() + '/src/code_injection/shape_dag.py'
 
 LICENCES_STRING = '''
 # Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.

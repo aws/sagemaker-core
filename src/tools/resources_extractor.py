@@ -23,10 +23,13 @@ log = logging.getLogger(__name__)
 '''
 This class is used to extract the resources and its actions from the service-2.json file.
 '''
-class ResourcesExtractor():
+class ResourcesExtractor:
     """
     A class for extracting resource information from a service JSON.
-
+    
+    Args:
+        service_json (dict): The Botocore service.json containing the shape definitions.
+    
     Attributes:
         service_json (dict): The service JSON containing operations and shapes.
         operations (dict): The operations defined in the service JSON.
@@ -53,7 +56,7 @@ class ResourcesExtractor():
         'Cluster': ['DescribeClusterNode', 'ListClusterNodes'],
     }
     
-    def __init__(self, service_json):
+    def __init__(self, service_json: dict):
         """
         Initializes a ResourceExtractor object.
 

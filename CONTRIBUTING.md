@@ -1,10 +1,43 @@
 # Contribution guidelines for sagemaker-code-gen
 
+## Setting up Enviornment using Pyenv
+* Set up prerequisites following guide here -  https://github.com/pyenv/pyenv/wiki#suggested-build-environment
+
+* Install Pyenv
+```
+curl https://pyenv.run | bash
+```
+
+* Add the following to  ~/.zshrc to load Pyenv automatically
+```
+export PYENV_ROOT="$HOME/.pyenv"
+export PATH="$PYENV_ROOT/bin:$PATH"
+eval "$(pyenv init path)"
+eval "$(pyenv init -)"
+eval "$(pyenv virtualenv-init -)"
+```
+
+* Install Python Version and setup virtual-env
+```
+pyenv install 3.10.14
+pyenv virtualenv 3.10.14 py3.10.14
+pyenv activate py3.10.14
+```
+
+* Install dependencies required for CodeGen and set PYTHONPATH
+```
+pip install -e ".[codegen]"
+source .env
+```
+
+## Run CodeGen
+* To generate all CodeGen code run the below
+```
+python src/tools/codegen.py
+```
+
 ## Testing
 * To check for regressions in existing flows, make sure to run: `pytest tst`. For new unit test coverage added make sure `pytest tst` validates them. 
-
-```angular2html
-# assuming operating within `sagemaker-code-gen` workspace 
-export PYTHONPATH=${PYTHONPATH}:#{pwd}
+```
 pytest tst
 ```

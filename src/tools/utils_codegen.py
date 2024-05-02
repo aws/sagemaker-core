@@ -13,10 +13,10 @@
 import os
 import textwrap
 
-from constants import GENERATED_CLASSES_LOCATION, \
+from src.tools.constants import GENERATED_CLASSES_LOCATION, \
     UTILS_CODEGEN_FILE_NAME, LICENCES_STRING
 
-class UtilsCodeGen():
+class UtilsCodeGen:
 
     def generate_utils(self, 
                        output_folder=GENERATED_CLASSES_LOCATION, 

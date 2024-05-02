@@ -15,23 +15,25 @@
 To run the script be sure to set the PYTHONPATH
 export PYTHONPATH=<sagemaker-code-gen repo directory>:$PYTHONPATH
 """
-import json
 import os
 import textwrap
 
-from src.tools.constants import LICENCES_STRING
+from src.tools.constants import LICENCES_STRING, GENERATED_CLASSES_LOCATION, SHAPES_CODEGEN_FILE_NAME
 from src.tools.shapes_extractor import ShapesExtractor
 from src.util.util import add_indent, convert_to_snake_case
 from src.tools.templates import SHAPE_CLASS_TEMPLATE, SHAPE_BASE_CLASS_TEMPLATE
 
-from pydantic import BaseModel
-
-class ShapesCodeGen(BaseModel):
+class ShapesCodeGen:
     """
     Generates shape classes based on an input Botocore service.json.
-
+    
+    Args:
+        service_json (dict): The Botocore service.json containing the shape definitions.
+        
     Attributes:
         service_json (dict): The Botocore service.json containing the shape definitions.
+        shapes_extractor (ShapesExtractor): An instance of the ShapesExtractor class.
+        shape_dag (dict): Shape DAG generated from service.json
 
     Methods:
         build_graph(): Builds a directed acyclic graph (DAG) representing the dependencies between shapes.
@@ -44,9 +46,8 @@ class ShapesCodeGen(BaseModel):
         generate_shapes(output_folder): Generates the shape classes and writes them to the specified output folder.
     """
 
-    def __init__(self, service_json):
+    def __init__(self, service_json: dict):
         self.service_json = service_json
-        # TODO: Inject shapes_extractor than initializaing.
         self.shapes_extractor = ShapesExtractor(service_json=service_json)
         self.shape_dag = self.shapes_extractor.get_shapes_dag()
 
@@ -128,7 +129,7 @@ class ShapesCodeGen(BaseModel):
         :return: The generated data class as a string.
         """
         class_name = shape
-        init_data = self.generate_data_shape_members(shape)
+        init_data = self.shapes_extractor.generate_data_shape_members(shape)
         try:
             data_class_members = add_indent(init_data, 4)
         except Exception:
@@ -217,27 +218,36 @@ class ShapesCodeGen(BaseModel):
             return False
         return True
 
-    def generate_shapes(self, output_folder="../../src/generated"):
+    def generate_shapes(self,
+                        output_folder=GENERATED_CLASSES_LOCATION, 
+                        file_name=SHAPES_CODEGEN_FILE_NAME) -> None:
         """
         Generates the shape classes and writes them to the specified output folder.
 
         :param output_folder: The path to the output folder.
         """
-        if not os.path.exists(output_folder):
-            os.makedirs(output_folder)
+        # Check if the output folder exists, if not, create it
+        os.makedirs(output_folder, exist_ok=True)
+        
+        # Create the full path for the output file
+        output_file = os.path.join(output_folder, file_name)
 
-        #current_datetime = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
-        output_file = os.path.join(output_folder, f"shapes.py")
-
+        # Open the output file
         with open(output_file, "w") as file:
+            # Generate and write the license to the file
             license = self.generate_license()
             file.write(license)
+            
+            # Generate and write the imports to the file
             imports = self.generate_imports()
             file.write(imports)
+            
+            # Generate and write Base Class
             base_class = self.generate_base_class()
             file.write(base_class)
             file.write("\n\n")
-            # add Unassigned class
+            
+            # Write Unassigned Class
             class_definition_string = '''\
             class Unassigned:
                 """A custom type used to signify an undefined optional argument."""
@@ -252,20 +262,17 @@ class ShapesCodeGen(BaseModel):
                                                        prefix='')
             file.write(wrapped_class_definition)
             file.write("\n")
-            # iterate through shapes in topological order and generate classes.
+            
+            # Iterate through shapes in topological order and generate classes
             topological_order = self.topological_sort()
             for shape in topological_order:
+                
+                # Extract the necessary data for the shape
                 if self._filter_input_output_shapes(shape):
                     shape_dict = self.service_json['shapes'][shape]
                     shape_type = shape_dict["type"]
                     if shape_type == "structure":
+                        
+                        # Generate and write data class for shape
                         shape_class = self.generate_data_class_for_shape(shape)
                         file.write(shape_class)
-
-
-with open('../../sample/sagemaker/2017-07-24/service-2.json') as f:
-    data = json.load(f)
-
-codegen = ShapesCodeGen(service_json=data)
-
-codegen.generate_shapes()

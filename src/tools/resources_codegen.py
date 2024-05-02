@@ -11,12 +11,10 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 """Generates the resource classes for the service model."""
-import json
 import os
 import logging
 
-from src.tools.constants import BASIC_JSON_TYPES_TO_PYTHON_TYPES, \
-                        GENERATED_CLASSES_LOCATION, \
+from src.tools.constants import GENERATED_CLASSES_LOCATION, \
                         RESOURCES_CODEGEN_FILE_NAME, \
                         LICENCES_STRING, \
                         TERMINAL_STATES
@@ -35,9 +33,10 @@ class ResourcesCodeGen:
     A class for generating resources based on a service JSON file.
 
     Args:
-        file_path (str): The path to the service JSON file.
-
+        service_json (dict): The Botocore service.json containing the shape definitions.
+        
     Attributes:
+        service_json (dict): The Botocore service.json containing the shape definitions.
         version (str): The API version of the service.
         protocol (str): The protocol used by the service.
         service (str): The full name of the service.
@@ -54,10 +53,9 @@ class ResourcesCodeGen:
 
     """
 
-    def __init__(self, file_path):
-        # Load the service JSON file
-        with open(file_path, 'r') as file:
-            self.service_json = json.load(file)
+    def __init__(self, service_json: dict):
+        # Initialize the service_json dict
+        self.service_json = service_json
 
         # Extract the metadata
         metadata = self.service_json['metadata']
@@ -78,15 +76,12 @@ class ResourcesCodeGen:
         self.shapes = self.service_json['shapes']
 
         # Initialize the resources and shapes extractors
-        self.resources_extractor = ResourcesExtractor(self.service_json)
-        self.shapes_extractor = ShapesExtractor(self.service_json)
+        self.resources_extractor = ResourcesExtractor(service_json=service_json)
+        self.shapes_extractor = ShapesExtractor(service_json=service_json)
 
         # Extract the resources plan and shapes DAG
         self.resources_plan = self.resources_extractor.get_resource_plan()
         self.shape_dag = self.shapes_extractor.get_shapes_dag()
-
-        # Generate the resources
-        self.generate_resources()
 
     def generate_license(self) -> str:
         """

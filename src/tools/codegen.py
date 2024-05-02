@@ -11,14 +11,14 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 """Generates the code for the service model."""
-from constants import SERVICE_JSON_FILE_PATH
-from utils_codegen import UtilsCodeGen
-# TODO: shapes_codegen is failing with alias='json' error. Need to fix it.
-#from shapes_codegen import ShapesCodeGen
-from resources_codegen import ResourcesCodeGen
+import json
+from src.tools.constants import SERVICE_JSON_FILE_PATH
+from src.tools.utils_codegen import UtilsCodeGen
+from src.tools.shapes_codegen import ShapesCodeGen
+from src.tools.resources_codegen import ResourcesCodeGen
 
 def generate_code(utils_code_gen: UtilsCodeGen, 
-                  #shapes_code_gen: ShapesCodeGen,
+                  shapes_code_gen: ShapesCodeGen,
                   resources_code_gen: ResourcesCodeGen) -> None:
     """
     Generates the code for the given code generators.
@@ -35,7 +35,7 @@ def generate_code(utils_code_gen: UtilsCodeGen,
         None
     """
     utils_code_gen.generate_utils()
-    #shapes_code_gen.generate_shapes()
+    shapes_code_gen.generate_shapes()
     resources_code_gen.generate_resources()
 
 ''' 
@@ -43,10 +43,13 @@ Initializes all the code generator classes and triggers generator.
 '''
 if __name__ == "__main__":
     # TODO: Inject service JSON file path & run through with all the sagemaker service JSON files
+    with open(SERVICE_JSON_FILE_PATH, 'r') as file:
+        service_json = json.load(file)
+    
     utils_code_gen = UtilsCodeGen()
-    #shapes_code_gen = ShapesCodeGen()
-    resources_code_gen = ResourcesCodeGen(file_path=SERVICE_JSON_FILE_PATH)
+    shapes_code_gen = ShapesCodeGen(service_json=service_json)
+    resources_code_gen = ResourcesCodeGen(service_json=service_json)
 
     generate_code(utils_code_gen=utils_code_gen,
-                  #shapes_code_gen=shapes_code_gen,
+                  shapes_code_gen=shapes_code_gen,
                   resources_code_gen=resources_code_gen)
