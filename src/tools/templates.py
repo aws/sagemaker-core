@@ -189,9 +189,6 @@ class Base(BaseModel):
 
 SHAPE_BASE_CLASS_TEMPLATE ='''
 class {class_name}:
-    """{docstring}"""
-{init_method_body}
-
     def serialize(self):
         result = {{}}
         for attr, value in self.__dict__.items():

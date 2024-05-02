@@ -196,8 +196,6 @@ class ShapesCodeGen:
         # more customizations would be added later
         return SHAPE_BASE_CLASS_TEMPLATE.format(
             class_name="Base(BaseModel)",
-            init_method_body=add_indent("pass", 4),
-            docstring="TBA",
         )
 
     def _filter_input_output_shapes(self, shape):
