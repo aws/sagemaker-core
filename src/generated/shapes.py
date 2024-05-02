@@ -18,9 +18,6 @@ from typing import List, Dict, Optional
 
 
 class Base(BaseModel):
-    """TBA"""
-    pass
-
     def serialize(self):
         result = {}
         for attr, value in self.__dict__.items():
