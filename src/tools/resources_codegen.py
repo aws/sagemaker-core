@@ -17,12 +17,17 @@ import logging
 from src.tools.constants import GENERATED_CLASSES_LOCATION, \
                         RESOURCES_CODEGEN_FILE_NAME, \
                         LICENCES_STRING, \
-                        TERMINAL_STATES
-from src.util.util import add_indent, convert_to_snake_case
+                        TERMINAL_STATES, \
+                        BASIC_IMPORTS_STRING, \
+                        LOGGER_STRING
+from src.util.util import add_indent, convert_to_snake_case, snake_to_pascal
 from src.tools.resources_extractor import ResourcesExtractor
 from src.tools.shapes_extractor import ShapesExtractor
-from src.tools.templates import CREATE_METHOD_TEMPLATE, GET_METHOD_TEMPLATE, REFRESH_METHOD_TEMPLATE, \
-    STOP_METHOD_TEMPLATE, DELETE_METHOD_TEMPLATE, WAIT_METHOD_TEMPLATE, WAIT_FOR_STATUS_METHOD_TEMPLATE
+from src.tools.templates import CREATE_METHOD_TEMPLATE, \
+    GET_METHOD_TEMPLATE, REFRESH_METHOD_TEMPLATE, \
+    RESOURCE_BASE_CLASS_TEMPLATE, \
+    STOP_METHOD_TEMPLATE, DELETE_METHOD_TEMPLATE, \
+    WAIT_METHOD_TEMPLATE, WAIT_FOR_STATUS_METHOD_TEMPLATE
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
@@ -102,6 +107,7 @@ class ResourcesCodeGen:
         """
         # List of import statements
         imports = [
+            BASIC_IMPORTS_STRING,
             "import datetime",
             "import boto3",
             "import time",
@@ -109,16 +115,36 @@ class ResourcesCodeGen:
             "from pydantic import BaseModel, validate_call",
             "from typing import List, Dict, Optional, Literal",
             "from boto3.session import Session",
-            "from utils import Unassigned",
+            "from utils import SageMakerClient, Unassigned",
             "from shapes import *",
             "\nfrom src.code_injection.codec import deserializer"
         ]
 
         formated_imports = "\n".join(imports)
-        formated_imports += "\n\n\n"
+        formated_imports += "\n\n"
 
         # Join the import statements with a newline character and return
         return formated_imports
+    
+    def generate_base_class(self) -> str:
+        """
+        Generate the base class for the resources.
+
+        Returns:
+            str: The base class.
+
+        """
+        return RESOURCE_BASE_CLASS_TEMPLATE
+    
+    def generate_logging(self) -> str:
+        """
+        Generate the logging statements for the generated resources file.
+
+        Returns:
+            str: The logging statements.
+
+        """
+        return LOGGER_STRING
 
     def generate_resources(self, 
                            output_folder=GENERATED_CLASSES_LOCATION,
@@ -143,6 +169,12 @@ class ResourcesCodeGen:
             # Generate and write the imports to the file
             file.write(self.generate_imports())
 
+            # Generate and write the logging statements to the file
+            file.write(self.generate_logging())
+
+            # Generate and write the base class to the file
+            file.write(self.generate_base_class())
+            
             # Iterate over the rows in the resources plan
             for _, row in self.resources_plan.iterrows():
                 # Extract the necessary data from the row
@@ -212,7 +244,7 @@ class ResourcesCodeGen:
         # Check if 'get' is in the class methods
         if 'get' in class_methods:
             # Start defining the class
-            resource_class = f"class {resource_name}(BaseModel):\n"
+            resource_class = f"class {resource_name}(Base):\n"
 
             # Get the operation and shape for the 'get' method
             get_operation = self.operations["Describe" + resource_name]
@@ -231,6 +263,8 @@ class ResourcesCodeGen:
                 if create_method := self._evaluate_method(resource_name, "create", class_methods):
                     resource_class += add_indent(create_method, 4)
 
+                resource_class += add_indent(get_method, 4)
+
                 if refresh_method := self._evaluate_method(resource_name, "refresh", object_methods):
                     resource_class += add_indent(refresh_method, 4)
 
@@ -245,8 +279,6 @@ class ResourcesCodeGen:
                     
                 if wait_for_status_method := self._evaluate_method(resource_name, "wait_for_status", object_methods):
                     resource_class += add_indent(wait_for_status_method, 4)
-
-                resource_class += add_indent(get_method, 4)
                                         
             except Exception:
                 # If there's an error, log the class attributes for debugging and raise the error
@@ -336,13 +368,36 @@ class ResourcesCodeGen:
             # Add indentation to the object attribute assignments
             object_attribute_assignments = add_indent(object_attribute_assignments, 4)
 
+        # Get the identifier(s)
+        describe_operation = self.operations["Describe" + resource_name]
+        describe_operation_input_shape_name = describe_operation["input"]["shape"]
+
+        required_members = self.shapes_extractor.get_required_members(
+            describe_operation_input_shape_name
+        )
+
+        create_required_members = self.shapes_extractor.get_required_members(
+            operation_input_shape_name
+        )
+
+        identifiers = []
+        for member in required_members:
+            if member not in create_required_members:
+                identifiers.append(f"{member}=response[\'{snake_to_pascal(member)}\']")
+            else:
+                identifiers.append(f"{member}={member}")
+
+        resource_identifier = ", ".join(identifiers)
+
         # Format the method using the CREATE_METHOD_TEMPLATE
         formatted_method = CREATE_METHOD_TEMPLATE.format(
             create_args=create_args,
+            service_name='sagemaker', # TODO: change service name based on the service - runtime, sagemaker, etc.
             resource_lower=resource_lower,
             operation_input_args=operation_input_args,
             operation=operation,
             object_attribute_assignments=object_attribute_assignments,
+            resource_identifier=resource_identifier,
         )
 
         # Return the formatted method

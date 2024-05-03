@@ -47,6 +47,16 @@ LICENCES_STRING = '''
 # language governing permissions and limitations under the License.
 '''
 
+BASIC_IMPORTS_STRING = '''
+import logging
+'''
+
+LOGGER_STRING = '''
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+'''
+
 # TODO: The file name should be injected, we should update it to be more generic
 SERVICE_JSON_FILE_PATH = os.getcwd() + '/sample/sagemaker/2017-07-24/service-2.json'
 

@@ -11,6 +11,9 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+
+import logging
+
 import datetime
 import boto3
 import time
@@ -18,13 +21,43 @@ from pprint import pprint
 from pydantic import BaseModel, validate_call
 from typing import List, Dict, Optional, Literal
 from boto3.session import Session
-from utils import Unassigned
+from utils import SageMakerClient, Unassigned
 from shapes import *
 
 from src.code_injection.codec import deserializer
 
 
-class Action(BaseModel):
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+
+class Base(BaseModel):
+    @classmethod
+    def _serialize(cls, data: Dict) -> Dict:
+        result = {{}}
+        for attr, value in data.items():
+            if isinstance(value, Unassigned):
+                continue
+            
+            if isinstance(value, List):
+                result[attr] = cls._serialize_list(value)
+            elif isinstance(value, Dict):
+                result[attr] = cls._serialize_dict(value)
+            elif hasattr(value, 'serialize'):
+                result[attr] = value.serialize()
+            else:
+                result[attr] = value
+        return result
+    
+    @classmethod
+    def _serialize_list(value: List):
+        return [v.serialize() if hasattr(v, 'serialize') else v for v in value]
+    
+    @classmethod
+    def _serialize_dict(value: Dict):
+        return {{k: v.serialize() if hasattr(v, 'serialize') else v for k, v in value.items()}}
+
+class Action(Base):
     action_name: Optional[str] = Unassigned()
     action_arn: Optional[str] = Unassigned()
     source: Optional[ActionSource] = Unassigned()
@@ -53,8 +86,9 @@ class Action(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        action = cls(session, region)
-    
+        logger.debug(f"Creating action resource.")
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'ActionName': action_name,
             'Source': source,
@@ -65,31 +99,16 @@ class Action(BaseModel):
             'MetadataProperties': metadata_properties,
             'Tags': tags,
         }
-        response = action.client.create_action(**operation_input_args)
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = cls._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+        
+        # create the resource
+        response = client.create_action(**operation_input_args)
+        logger.debug(f"Response: {response}")
     
-        pprint(response)
-    
-        # deserialize the response
-    
-        return action
-    
-    def refresh(self) -> Optional[object]:
-    
-        operation_input_args = {
-            'ActionName': self.action_name,
-        }
-        response = self.client.describe_action(**operation_input_args)
-    
-        # deserialize the response
-        deserializer(self, response, 'DescribeActionResponse')
-        return self
-    
-    def delete(self) -> None:
-    
-        operation_input_args = {
-            'ActionName': self.action_name,
-        }
-        self.client.delete_action(**operation_input_args)
+        return cls.get(action_name=action_name, session=session, region=region)
     
     @classmethod
     def get(
@@ -110,9 +129,27 @@ class Action(BaseModel):
         # deserialize the response
         deserializer(action, response, 'DescribeActionResponse')
         return action
+    
+    def refresh(self) -> Optional[object]:
+    
+        operation_input_args = {
+            'ActionName': self.action_name,
+        }
+        response = self.client.describe_action(**operation_input_args)
+    
+        # deserialize the response
+        deserializer(self, response, 'DescribeActionResponse')
+        return self
+    
+    def delete(self) -> None:
+    
+        operation_input_args = {
+            'ActionName': self.action_name,
+        }
+        self.client.delete_action(**operation_input_args)
 
 
-class Algorithm(BaseModel):
+class Algorithm(Base):
     algorithm_name: str
     algorithm_arn: str
     creation_time: datetime.datetime
@@ -138,8 +175,9 @@ class Algorithm(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        algorithm = cls(session, region)
-    
+        logger.debug(f"Creating algorithm resource.")
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'AlgorithmName': algorithm_name,
             'AlgorithmDescription': algorithm_description,
@@ -149,12 +187,35 @@ class Algorithm(BaseModel):
             'CertifyForMarketplace': certify_for_marketplace,
             'Tags': tags,
         }
-        response = algorithm.client.create_algorithm(**operation_input_args)
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = cls._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+        
+        # create the resource
+        response = client.create_algorithm(**operation_input_args)
+        logger.debug(f"Response: {response}")
+    
+        return cls.get(algorithm_name=algorithm_name, session=session, region=region)
+    
+    @classmethod
+    def get(
+        cls,
+        algorithm_name: str,
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional[object]:
+        algorithm = cls(session, region)
+    
+        operation_input_args = {
+            'AlgorithmName': algorithm_name,
+        }
+        response = algorithm.client.describe_algorithm(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-    
+        deserializer(algorithm, response, 'DescribeAlgorithmOutput')
         return algorithm
     
     def refresh(self) -> Optional[object]:
@@ -196,29 +257,9 @@ class Algorithm(BaseModel):
                 raise Exception("Timeout exceeded. Final resource state - " + current_status)
     
             time.sleep(poll)
-    
-    @classmethod
-    def get(
-        cls,
-        algorithm_name: str,
-        session: Optional[Session] = None,
-        region: Optional[str] = None,
-    ) -> Optional[object]:
-        algorithm = cls(session, region)
-    
-        operation_input_args = {
-            'AlgorithmName': algorithm_name,
-        }
-        response = algorithm.client.describe_algorithm(**operation_input_args)
-    
-        pprint(response)
-    
-        # deserialize the response
-        deserializer(algorithm, response, 'DescribeAlgorithmOutput')
-        return algorithm
 
 
-class App(BaseModel):
+class App(Base):
     app_arn: Optional[str] = Unassigned()
     app_type: Optional[str] = Unassigned()
     app_name: Optional[str] = Unassigned()
@@ -245,8 +286,9 @@ class App(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        app = cls(session, region)
-    
+        logger.debug(f"Creating app resource.")
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'DomainId': domain_id,
             'UserProfileName': user_profile_name,
@@ -256,12 +298,43 @@ class App(BaseModel):
             'Tags': tags,
             'ResourceSpec': resource_spec,
         }
-        response = app.client.create_app(**operation_input_args)
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = cls._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+        
+        # create the resource
+        response = client.create_app(**operation_input_args)
+        logger.debug(f"Response: {response}")
+    
+        return cls.get(domain_id=domain_id, app_type=app_type, app_name=app_name, session=session, region=region)
+    
+    @classmethod
+    def get(
+        cls,
+        domain_id: str,
+        app_type: str,
+        app_name: str,
+        user_profile_name: Optional[str] = Unassigned(),
+        space_name: Optional[str] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional[object]:
+        app = cls(session, region)
+    
+        operation_input_args = {
+            'DomainId': domain_id,
+            'UserProfileName': user_profile_name,
+            'SpaceName': space_name,
+            'AppType': app_type,
+            'AppName': app_name,
+        }
+        response = app.client.describe_app(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-    
+        deserializer(app, response, 'DescribeAppResponse')
         return app
     
     def refresh(self) -> Optional[object]:
@@ -311,37 +384,9 @@ class App(BaseModel):
                 raise Exception("Timeout exceeded. Final resource state - " + current_status)
     
             time.sleep(poll)
-    
-    @classmethod
-    def get(
-        cls,
-        domain_id: str,
-        app_type: str,
-        app_name: str,
-        user_profile_name: Optional[str] = Unassigned(),
-        space_name: Optional[str] = Unassigned(),
-        session: Optional[Session] = None,
-        region: Optional[str] = None,
-    ) -> Optional[object]:
-        app = cls(session, region)
-    
-        operation_input_args = {
-            'DomainId': domain_id,
-            'UserProfileName': user_profile_name,
-            'SpaceName': space_name,
-            'AppType': app_type,
-            'AppName': app_name,
-        }
-        response = app.client.describe_app(**operation_input_args)
-    
-        pprint(response)
-    
-        # deserialize the response
-        deserializer(app, response, 'DescribeAppResponse')
-        return app
 
 
-class AppImageConfig(BaseModel):
+class AppImageConfig(Base):
     app_image_config_arn: Optional[str] = Unassigned()
     app_image_config_name: Optional[str] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
@@ -359,39 +404,25 @@ class AppImageConfig(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        app_image_config = cls(session, region)
-    
+        logger.debug(f"Creating app_image_config resource.")
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'AppImageConfigName': app_image_config_name,
             'Tags': tags,
             'KernelGatewayImageConfig': kernel_gateway_image_config,
             'JupyterLabAppImageConfig': jupyter_lab_app_image_config,
         }
-        response = app_image_config.client.create_app_image_config(**operation_input_args)
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = cls._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+        
+        # create the resource
+        response = client.create_app_image_config(**operation_input_args)
+        logger.debug(f"Response: {response}")
     
-        pprint(response)
-    
-        # deserialize the response
-    
-        return app_image_config
-    
-    def refresh(self) -> Optional[object]:
-    
-        operation_input_args = {
-            'AppImageConfigName': self.app_image_config_name,
-        }
-        response = self.client.describe_app_image_config(**operation_input_args)
-    
-        # deserialize the response
-        deserializer(self, response, 'DescribeAppImageConfigResponse')
-        return self
-    
-    def delete(self) -> None:
-    
-        operation_input_args = {
-            'AppImageConfigName': self.app_image_config_name,
-        }
-        self.client.delete_app_image_config(**operation_input_args)
+        return cls.get(app_image_config_name=app_image_config_name, session=session, region=region)
     
     @classmethod
     def get(
@@ -412,9 +443,27 @@ class AppImageConfig(BaseModel):
         # deserialize the response
         deserializer(app_image_config, response, 'DescribeAppImageConfigResponse')
         return app_image_config
+    
+    def refresh(self) -> Optional[object]:
+    
+        operation_input_args = {
+            'AppImageConfigName': self.app_image_config_name,
+        }
+        response = self.client.describe_app_image_config(**operation_input_args)
+    
+        # deserialize the response
+        deserializer(self, response, 'DescribeAppImageConfigResponse')
+        return self
+    
+    def delete(self) -> None:
+    
+        operation_input_args = {
+            'AppImageConfigName': self.app_image_config_name,
+        }
+        self.client.delete_app_image_config(**operation_input_args)
 
 
-class Artifact(BaseModel):
+class Artifact(Base):
     artifact_name: Optional[str] = Unassigned()
     artifact_arn: Optional[str] = Unassigned()
     source: Optional[ArtifactSource] = Unassigned()
@@ -439,8 +488,9 @@ class Artifact(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        artifact = cls(session, region)
-    
+        logger.debug(f"Creating artifact resource.")
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'ArtifactName': artifact_name,
             'Source': source,
@@ -449,32 +499,16 @@ class Artifact(BaseModel):
             'MetadataProperties': metadata_properties,
             'Tags': tags,
         }
-        response = artifact.client.create_artifact(**operation_input_args)
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = cls._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+        
+        # create the resource
+        response = client.create_artifact(**operation_input_args)
+        logger.debug(f"Response: {response}")
     
-        pprint(response)
-    
-        # deserialize the response
-    
-        return artifact
-    
-    def refresh(self) -> Optional[object]:
-    
-        operation_input_args = {
-            'ArtifactArn': self.artifact_arn,
-        }
-        response = self.client.describe_artifact(**operation_input_args)
-    
-        # deserialize the response
-        deserializer(self, response, 'DescribeArtifactResponse')
-        return self
-    
-    def delete(self) -> None:
-    
-        operation_input_args = {
-            'ArtifactArn': self.artifact_arn,
-            'Source': self.source,
-        }
-        self.client.delete_artifact(**operation_input_args)
+        return cls.get(artifact_arn=response['ArtifactArn'], session=session, region=region)
     
     @classmethod
     def get(
@@ -495,9 +529,28 @@ class Artifact(BaseModel):
         # deserialize the response
         deserializer(artifact, response, 'DescribeArtifactResponse')
         return artifact
+    
+    def refresh(self) -> Optional[object]:
+    
+        operation_input_args = {
+            'ArtifactArn': self.artifact_arn,
+        }
+        response = self.client.describe_artifact(**operation_input_args)
+    
+        # deserialize the response
+        deserializer(self, response, 'DescribeArtifactResponse')
+        return self
+    
+    def delete(self) -> None:
+    
+        operation_input_args = {
+            'ArtifactArn': self.artifact_arn,
+            'Source': self.source,
+        }
+        self.client.delete_artifact(**operation_input_args)
 
 
-class AutoMLJob(BaseModel):
+class AutoMLJob(Base):
     auto_m_l_job_name: str
     auto_m_l_job_arn: str
     input_data_config: List[AutoMLChannel]
@@ -536,8 +589,9 @@ class AutoMLJob(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        auto_m_l_job = cls(session, region)
-    
+        logger.debug(f"Creating auto_m_l_job resource.")
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'AutoMLJobName': auto_m_l_job_name,
             'InputDataConfig': input_data_config,
@@ -550,12 +604,35 @@ class AutoMLJob(BaseModel):
             'Tags': tags,
             'ModelDeployConfig': model_deploy_config,
         }
-        response = auto_m_l_job.client.create_auto_m_l_job(**operation_input_args)
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = cls._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+        
+        # create the resource
+        response = client.create_auto_m_l_job(**operation_input_args)
+        logger.debug(f"Response: {response}")
+    
+        return cls.get(auto_m_l_job_name=auto_m_l_job_name, session=session, region=region)
+    
+    @classmethod
+    def get(
+        cls,
+        auto_m_l_job_name: str,
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional[object]:
+        auto_m_l_job = cls(session, region)
+    
+        operation_input_args = {
+            'AutoMLJobName': auto_m_l_job_name,
+        }
+        response = auto_m_l_job.client.describe_auto_m_l_job(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-    
+        deserializer(auto_m_l_job, response, 'DescribeAutoMLJobResponse')
         return auto_m_l_job
     
     def refresh(self) -> Optional[object]:
@@ -597,29 +674,9 @@ class AutoMLJob(BaseModel):
                 raise Exception("Timeout exceeded. Final resource state - " + current_status)
     
             time.sleep(poll)
-    
-    @classmethod
-    def get(
-        cls,
-        auto_m_l_job_name: str,
-        session: Optional[Session] = None,
-        region: Optional[str] = None,
-    ) -> Optional[object]:
-        auto_m_l_job = cls(session, region)
-    
-        operation_input_args = {
-            'AutoMLJobName': auto_m_l_job_name,
-        }
-        response = auto_m_l_job.client.describe_auto_m_l_job(**operation_input_args)
-    
-        pprint(response)
-    
-        # deserialize the response
-        deserializer(auto_m_l_job, response, 'DescribeAutoMLJobResponse')
-        return auto_m_l_job
 
 
-class AutoMLJobV2(BaseModel):
+class AutoMLJobV2(Base):
     auto_m_l_job_name: str
     auto_m_l_job_arn: str
     auto_m_l_job_input_data_config: List[AutoMLJobChannel]
@@ -659,8 +716,9 @@ class AutoMLJobV2(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        auto_m_l_job_v2 = cls(session, region)
-    
+        logger.debug(f"Creating auto_m_l_job_v2 resource.")
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'AutoMLJobName': auto_m_l_job_name,
             'AutoMLJobInputDataConfig': auto_m_l_job_input_data_config,
@@ -673,12 +731,35 @@ class AutoMLJobV2(BaseModel):
             'ModelDeployConfig': model_deploy_config,
             'DataSplitConfig': data_split_config,
         }
-        response = auto_m_l_job_v2.client.create_auto_m_l_job_v2(**operation_input_args)
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = cls._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+        
+        # create the resource
+        response = client.create_auto_m_l_job_v2(**operation_input_args)
+        logger.debug(f"Response: {response}")
+    
+        return cls.get(auto_m_l_job_name=auto_m_l_job_name, session=session, region=region)
+    
+    @classmethod
+    def get(
+        cls,
+        auto_m_l_job_name: str,
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional[object]:
+        auto_m_l_job_v2 = cls(session, region)
+    
+        operation_input_args = {
+            'AutoMLJobName': auto_m_l_job_name,
+        }
+        response = auto_m_l_job_v2.client.describe_auto_m_l_job_v2(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-    
+        deserializer(auto_m_l_job_v2, response, 'DescribeAutoMLJobV2Response')
         return auto_m_l_job_v2
     
     def refresh(self) -> Optional[object]:
@@ -713,29 +794,9 @@ class AutoMLJobV2(BaseModel):
                 raise Exception("Timeout exceeded. Final resource state - " + current_status)
     
             time.sleep(poll)
-    
-    @classmethod
-    def get(
-        cls,
-        auto_m_l_job_name: str,
-        session: Optional[Session] = None,
-        region: Optional[str] = None,
-    ) -> Optional[object]:
-        auto_m_l_job_v2 = cls(session, region)
-    
-        operation_input_args = {
-            'AutoMLJobName': auto_m_l_job_name,
-        }
-        response = auto_m_l_job_v2.client.describe_auto_m_l_job_v2(**operation_input_args)
-    
-        pprint(response)
-    
-        # deserialize the response
-        deserializer(auto_m_l_job_v2, response, 'DescribeAutoMLJobV2Response')
-        return auto_m_l_job_v2
 
 
-class Cluster(BaseModel):
+class Cluster(Base):
     cluster_arn: str
     cluster_status: str
     instance_groups: List[ClusterInstanceGroupDetails]
@@ -754,20 +815,44 @@ class Cluster(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        cluster = cls(session, region)
-    
+        logger.debug(f"Creating cluster resource.")
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'ClusterName': cluster_name,
             'InstanceGroups': instance_groups,
             'VpcConfig': vpc_config,
             'Tags': tags,
         }
-        response = cluster.client.create_cluster(**operation_input_args)
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = cls._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+        
+        # create the resource
+        response = client.create_cluster(**operation_input_args)
+        logger.debug(f"Response: {response}")
+    
+        return cls.get(cluster_name=cluster_name, session=session, region=region)
+    
+    @classmethod
+    def get(
+        cls,
+        cluster_name: str,
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional[object]:
+        cluster = cls(session, region)
+    
+        operation_input_args = {
+            'ClusterName': cluster_name,
+        }
+        response = cluster.client.describe_cluster(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-    
+        deserializer(cluster, response, 'DescribeClusterResponse')
         return cluster
     
     def refresh(self) -> Optional[object]:
@@ -809,29 +894,9 @@ class Cluster(BaseModel):
                 raise Exception("Timeout exceeded. Final resource state - " + current_status)
     
             time.sleep(poll)
-    
-    @classmethod
-    def get(
-        cls,
-        cluster_name: str,
-        session: Optional[Session] = None,
-        region: Optional[str] = None,
-    ) -> Optional[object]:
-        cluster = cls(session, region)
-    
-        operation_input_args = {
-            'ClusterName': cluster_name,
-        }
-        response = cluster.client.describe_cluster(**operation_input_args)
-    
-        pprint(response)
-    
-        # deserialize the response
-        deserializer(cluster, response, 'DescribeClusterResponse')
-        return cluster
 
 
-class CodeRepository(BaseModel):
+class CodeRepository(Base):
     code_repository_name: str
     code_repository_arn: str
     creation_time: datetime.datetime
@@ -847,38 +912,24 @@ class CodeRepository(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        code_repository = cls(session, region)
-    
+        logger.debug(f"Creating code_repository resource.")
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'CodeRepositoryName': code_repository_name,
             'GitConfig': git_config,
             'Tags': tags,
         }
-        response = code_repository.client.create_code_repository(**operation_input_args)
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = cls._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+        
+        # create the resource
+        response = client.create_code_repository(**operation_input_args)
+        logger.debug(f"Response: {response}")
     
-        pprint(response)
-    
-        # deserialize the response
-    
-        return code_repository
-    
-    def refresh(self) -> Optional[object]:
-    
-        operation_input_args = {
-            'CodeRepositoryName': self.code_repository_name,
-        }
-        response = self.client.describe_code_repository(**operation_input_args)
-    
-        # deserialize the response
-        deserializer(self, response, 'DescribeCodeRepositoryOutput')
-        return self
-    
-    def delete(self) -> None:
-    
-        operation_input_args = {
-            'CodeRepositoryName': self.code_repository_name,
-        }
-        self.client.delete_code_repository(**operation_input_args)
+        return cls.get(code_repository_name=code_repository_name, session=session, region=region)
     
     @classmethod
     def get(
@@ -899,9 +950,27 @@ class CodeRepository(BaseModel):
         # deserialize the response
         deserializer(code_repository, response, 'DescribeCodeRepositoryOutput')
         return code_repository
+    
+    def refresh(self) -> Optional[object]:
+    
+        operation_input_args = {
+            'CodeRepositoryName': self.code_repository_name,
+        }
+        response = self.client.describe_code_repository(**operation_input_args)
+    
+        # deserialize the response
+        deserializer(self, response, 'DescribeCodeRepositoryOutput')
+        return self
+    
+    def delete(self) -> None:
+    
+        operation_input_args = {
+            'CodeRepositoryName': self.code_repository_name,
+        }
+        self.client.delete_code_repository(**operation_input_args)
 
 
-class CompilationJob(BaseModel):
+class CompilationJob(Base):
     compilation_job_name: str
     compilation_job_arn: str
     compilation_job_status: str
@@ -935,8 +1004,9 @@ class CompilationJob(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        compilation_job = cls(session, region)
-    
+        logger.debug(f"Creating compilation_job resource.")
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'CompilationJobName': compilation_job_name,
             'RoleArn': role_arn,
@@ -947,12 +1017,35 @@ class CompilationJob(BaseModel):
             'StoppingCondition': stopping_condition,
             'Tags': tags,
         }
-        response = compilation_job.client.create_compilation_job(**operation_input_args)
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = cls._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+        
+        # create the resource
+        response = client.create_compilation_job(**operation_input_args)
+        logger.debug(f"Response: {response}")
+    
+        return cls.get(compilation_job_name=compilation_job_name, session=session, region=region)
+    
+    @classmethod
+    def get(
+        cls,
+        compilation_job_name: str,
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional[object]:
+        compilation_job = cls(session, region)
+    
+        operation_input_args = {
+            'CompilationJobName': compilation_job_name,
+        }
+        response = compilation_job.client.describe_compilation_job(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-    
+        deserializer(compilation_job, response, 'DescribeCompilationJobResponse')
         return compilation_job
     
     def refresh(self) -> Optional[object]:
@@ -1001,29 +1094,9 @@ class CompilationJob(BaseModel):
                 raise Exception("Timeout exceeded. Final resource state - " + current_status)
     
             time.sleep(poll)
-    
-    @classmethod
-    def get(
-        cls,
-        compilation_job_name: str,
-        session: Optional[Session] = None,
-        region: Optional[str] = None,
-    ) -> Optional[object]:
-        compilation_job = cls(session, region)
-    
-        operation_input_args = {
-            'CompilationJobName': compilation_job_name,
-        }
-        response = compilation_job.client.describe_compilation_job(**operation_input_args)
-    
-        pprint(response)
-    
-        # deserialize the response
-        deserializer(compilation_job, response, 'DescribeCompilationJobResponse')
-        return compilation_job
 
 
-class Context(BaseModel):
+class Context(Base):
     context_name: Optional[str] = Unassigned()
     context_arn: Optional[str] = Unassigned()
     source: Optional[ContextSource] = Unassigned()
@@ -1048,8 +1121,9 @@ class Context(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        context = cls(session, region)
-    
+        logger.debug(f"Creating context resource.")
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'ContextName': context_name,
             'Source': source,
@@ -1058,31 +1132,16 @@ class Context(BaseModel):
             'Properties': properties,
             'Tags': tags,
         }
-        response = context.client.create_context(**operation_input_args)
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = cls._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+        
+        # create the resource
+        response = client.create_context(**operation_input_args)
+        logger.debug(f"Response: {response}")
     
-        pprint(response)
-    
-        # deserialize the response
-    
-        return context
-    
-    def refresh(self) -> Optional[object]:
-    
-        operation_input_args = {
-            'ContextName': self.context_name,
-        }
-        response = self.client.describe_context(**operation_input_args)
-    
-        # deserialize the response
-        deserializer(self, response, 'DescribeContextResponse')
-        return self
-    
-    def delete(self) -> None:
-    
-        operation_input_args = {
-            'ContextName': self.context_name,
-        }
-        self.client.delete_context(**operation_input_args)
+        return cls.get(context_name=context_name, session=session, region=region)
     
     @classmethod
     def get(
@@ -1103,9 +1162,27 @@ class Context(BaseModel):
         # deserialize the response
         deserializer(context, response, 'DescribeContextResponse')
         return context
+    
+    def refresh(self) -> Optional[object]:
+    
+        operation_input_args = {
+            'ContextName': self.context_name,
+        }
+        response = self.client.describe_context(**operation_input_args)
+    
+        # deserialize the response
+        deserializer(self, response, 'DescribeContextResponse')
+        return self
+    
+    def delete(self) -> None:
+    
+        operation_input_args = {
+            'ContextName': self.context_name,
+        }
+        self.client.delete_context(**operation_input_args)
 
 
-class DataQualityJobDefinition(BaseModel):
+class DataQualityJobDefinition(Base):
     job_definition_arn: str
     job_definition_name: str
     creation_time: datetime.datetime
@@ -1134,8 +1211,9 @@ class DataQualityJobDefinition(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        data_quality_job_definition = cls(session, region)
-    
+        logger.debug(f"Creating data_quality_job_definition resource.")
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'JobDefinitionName': job_definition_name,
             'DataQualityBaselineConfig': data_quality_baseline_config,
@@ -1148,31 +1226,16 @@ class DataQualityJobDefinition(BaseModel):
             'StoppingCondition': stopping_condition,
             'Tags': tags,
         }
-        response = data_quality_job_definition.client.create_data_quality_job_definition(**operation_input_args)
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = cls._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+        
+        # create the resource
+        response = client.create_data_quality_job_definition(**operation_input_args)
+        logger.debug(f"Response: {response}")
     
-        pprint(response)
-    
-        # deserialize the response
-    
-        return data_quality_job_definition
-    
-    def refresh(self) -> Optional[object]:
-    
-        operation_input_args = {
-            'JobDefinitionName': self.job_definition_name,
-        }
-        response = self.client.describe_data_quality_job_definition(**operation_input_args)
-    
-        # deserialize the response
-        deserializer(self, response, 'DescribeDataQualityJobDefinitionResponse')
-        return self
-    
-    def delete(self) -> None:
-    
-        operation_input_args = {
-            'JobDefinitionName': self.job_definition_name,
-        }
-        self.client.delete_data_quality_job_definition(**operation_input_args)
+        return cls.get(job_definition_name=job_definition_name, session=session, region=region)
     
     @classmethod
     def get(
@@ -1193,9 +1256,27 @@ class DataQualityJobDefinition(BaseModel):
         # deserialize the response
         deserializer(data_quality_job_definition, response, 'DescribeDataQualityJobDefinitionResponse')
         return data_quality_job_definition
+    
+    def refresh(self) -> Optional[object]:
+    
+        operation_input_args = {
+            'JobDefinitionName': self.job_definition_name,
+        }
+        response = self.client.describe_data_quality_job_definition(**operation_input_args)
+    
+        # deserialize the response
+        deserializer(self, response, 'DescribeDataQualityJobDefinitionResponse')
+        return self
+    
+    def delete(self) -> None:
+    
+        operation_input_args = {
+            'JobDefinitionName': self.job_definition_name,
+        }
+        self.client.delete_data_quality_job_definition(**operation_input_args)
 
 
-class DeviceFleet(BaseModel):
+class DeviceFleet(Base):
     device_fleet_name: str
     device_fleet_arn: str
     output_config: EdgeOutputConfig
@@ -1217,8 +1298,9 @@ class DeviceFleet(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        device_fleet = cls(session, region)
-    
+        logger.debug(f"Creating device_fleet resource.")
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'DeviceFleetName': device_fleet_name,
             'RoleArn': role_arn,
@@ -1227,31 +1309,16 @@ class DeviceFleet(BaseModel):
             'Tags': tags,
             'EnableIotRoleAlias': enable_iot_role_alias,
         }
-        response = device_fleet.client.create_device_fleet(**operation_input_args)
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = cls._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+        
+        # create the resource
+        response = client.create_device_fleet(**operation_input_args)
+        logger.debug(f"Response: {response}")
     
-        pprint(response)
-    
-        # deserialize the response
-    
-        return device_fleet
-    
-    def refresh(self) -> Optional[object]:
-    
-        operation_input_args = {
-            'DeviceFleetName': self.device_fleet_name,
-        }
-        response = self.client.describe_device_fleet(**operation_input_args)
-    
-        # deserialize the response
-        deserializer(self, response, 'DescribeDeviceFleetResponse')
-        return self
-    
-    def delete(self) -> None:
-    
-        operation_input_args = {
-            'DeviceFleetName': self.device_fleet_name,
-        }
-        self.client.delete_device_fleet(**operation_input_args)
+        return cls.get(device_fleet_name=device_fleet_name, session=session, region=region)
     
     @classmethod
     def get(
@@ -1272,9 +1339,27 @@ class DeviceFleet(BaseModel):
         # deserialize the response
         deserializer(device_fleet, response, 'DescribeDeviceFleetResponse')
         return device_fleet
+    
+    def refresh(self) -> Optional[object]:
+    
+        operation_input_args = {
+            'DeviceFleetName': self.device_fleet_name,
+        }
+        response = self.client.describe_device_fleet(**operation_input_args)
+    
+        # deserialize the response
+        deserializer(self, response, 'DescribeDeviceFleetResponse')
+        return self
+    
+    def delete(self) -> None:
+    
+        operation_input_args = {
+            'DeviceFleetName': self.device_fleet_name,
+        }
+        self.client.delete_device_fleet(**operation_input_args)
 
 
-class Domain(BaseModel):
+class Domain(Base):
     domain_arn: Optional[str] = Unassigned()
     domain_id: Optional[str] = Unassigned()
     domain_name: Optional[str] = Unassigned()
@@ -1316,8 +1401,9 @@ class Domain(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        domain = cls(session, region)
-    
+        logger.debug(f"Creating domain resource.")
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'DomainName': domain_name,
             'AuthMode': auth_mode,
@@ -1332,12 +1418,35 @@ class Domain(BaseModel):
             'AppSecurityGroupManagement': app_security_group_management,
             'DefaultSpaceSettings': default_space_settings,
         }
-        response = domain.client.create_domain(**operation_input_args)
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = cls._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+        
+        # create the resource
+        response = client.create_domain(**operation_input_args)
+        logger.debug(f"Response: {response}")
+    
+        return cls.get(domain_id=response['DomainId'], session=session, region=region)
+    
+    @classmethod
+    def get(
+        cls,
+        domain_id: str,
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional[object]:
+        domain = cls(session, region)
+    
+        operation_input_args = {
+            'DomainId': domain_id,
+        }
+        response = domain.client.describe_domain(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-    
+        deserializer(domain, response, 'DescribeDomainResponse')
         return domain
     
     def refresh(self) -> Optional[object]:
@@ -1380,29 +1489,9 @@ class Domain(BaseModel):
                 raise Exception("Timeout exceeded. Final resource state - " + current_status)
     
             time.sleep(poll)
-    
-    @classmethod
-    def get(
-        cls,
-        domain_id: str,
-        session: Optional[Session] = None,
-        region: Optional[str] = None,
-    ) -> Optional[object]:
-        domain = cls(session, region)
-    
-        operation_input_args = {
-            'DomainId': domain_id,
-        }
-        response = domain.client.describe_domain(**operation_input_args)
-    
-        pprint(response)
-    
-        # deserialize the response
-        deserializer(domain, response, 'DescribeDomainResponse')
-        return domain
 
 
-class EdgeDeploymentPlan(BaseModel):
+class EdgeDeploymentPlan(Base):
     edge_deployment_plan_arn: str
     edge_deployment_plan_name: str
     model_configs: List[EdgeDeploymentModelConfig]
@@ -1426,8 +1515,9 @@ class EdgeDeploymentPlan(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        edge_deployment_plan = cls(session, region)
-    
+        logger.debug(f"Creating edge_deployment_plan resource.")
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'EdgeDeploymentPlanName': edge_deployment_plan_name,
             'ModelConfigs': model_configs,
@@ -1435,33 +1525,16 @@ class EdgeDeploymentPlan(BaseModel):
             'Stages': stages,
             'Tags': tags,
         }
-        response = edge_deployment_plan.client.create_edge_deployment_plan(**operation_input_args)
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = cls._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+        
+        # create the resource
+        response = client.create_edge_deployment_plan(**operation_input_args)
+        logger.debug(f"Response: {response}")
     
-        pprint(response)
-    
-        # deserialize the response
-    
-        return edge_deployment_plan
-    
-    def refresh(self) -> Optional[object]:
-    
-        operation_input_args = {
-            'EdgeDeploymentPlanName': self.edge_deployment_plan_name,
-            'NextToken': self.next_token,
-            'MaxResults': self.max_results,
-        }
-        response = self.client.describe_edge_deployment_plan(**operation_input_args)
-    
-        # deserialize the response
-        deserializer(self, response, 'DescribeEdgeDeploymentPlanResponse')
-        return self
-    
-    def delete(self) -> None:
-    
-        operation_input_args = {
-            'EdgeDeploymentPlanName': self.edge_deployment_plan_name,
-        }
-        self.client.delete_edge_deployment_plan(**operation_input_args)
+        return cls.get(edge_deployment_plan_name=edge_deployment_plan_name, session=session, region=region)
     
     @classmethod
     def get(
@@ -1486,9 +1559,29 @@ class EdgeDeploymentPlan(BaseModel):
         # deserialize the response
         deserializer(edge_deployment_plan, response, 'DescribeEdgeDeploymentPlanResponse')
         return edge_deployment_plan
+    
+    def refresh(self) -> Optional[object]:
+    
+        operation_input_args = {
+            'EdgeDeploymentPlanName': self.edge_deployment_plan_name,
+            'NextToken': self.next_token,
+            'MaxResults': self.max_results,
+        }
+        response = self.client.describe_edge_deployment_plan(**operation_input_args)
+    
+        # deserialize the response
+        deserializer(self, response, 'DescribeEdgeDeploymentPlanResponse')
+        return self
+    
+    def delete(self) -> None:
+    
+        operation_input_args = {
+            'EdgeDeploymentPlanName': self.edge_deployment_plan_name,
+        }
+        self.client.delete_edge_deployment_plan(**operation_input_args)
 
 
-class EdgePackagingJob(BaseModel):
+class EdgePackagingJob(Base):
     edge_packaging_job_arn: str
     edge_packaging_job_name: str
     edge_packaging_job_status: str
@@ -1519,8 +1612,9 @@ class EdgePackagingJob(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        edge_packaging_job = cls(session, region)
-    
+        logger.debug(f"Creating edge_packaging_job resource.")
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'EdgePackagingJobName': edge_packaging_job_name,
             'CompilationJobName': compilation_job_name,
@@ -1531,12 +1625,35 @@ class EdgePackagingJob(BaseModel):
             'ResourceKey': resource_key,
             'Tags': tags,
         }
-        response = edge_packaging_job.client.create_edge_packaging_job(**operation_input_args)
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = cls._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+        
+        # create the resource
+        response = client.create_edge_packaging_job(**operation_input_args)
+        logger.debug(f"Response: {response}")
+    
+        return cls.get(edge_packaging_job_name=edge_packaging_job_name, session=session, region=region)
+    
+    @classmethod
+    def get(
+        cls,
+        edge_packaging_job_name: str,
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional[object]:
+        edge_packaging_job = cls(session, region)
+    
+        operation_input_args = {
+            'EdgePackagingJobName': edge_packaging_job_name,
+        }
+        response = edge_packaging_job.client.describe_edge_packaging_job(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-    
+        deserializer(edge_packaging_job, response, 'DescribeEdgePackagingJobResponse')
         return edge_packaging_job
     
     def refresh(self) -> Optional[object]:
@@ -1578,29 +1695,9 @@ class EdgePackagingJob(BaseModel):
                 raise Exception("Timeout exceeded. Final resource state - " + current_status)
     
             time.sleep(poll)
-    
-    @classmethod
-    def get(
-        cls,
-        edge_packaging_job_name: str,
-        session: Optional[Session] = None,
-        region: Optional[str] = None,
-    ) -> Optional[object]:
-        edge_packaging_job = cls(session, region)
-    
-        operation_input_args = {
-            'EdgePackagingJobName': edge_packaging_job_name,
-        }
-        response = edge_packaging_job.client.describe_edge_packaging_job(**operation_input_args)
-    
-        pprint(response)
-    
-        # deserialize the response
-        deserializer(edge_packaging_job, response, 'DescribeEdgePackagingJobResponse')
-        return edge_packaging_job
 
 
-class Endpoint(BaseModel):
+class Endpoint(Base):
     endpoint_name: str
     endpoint_arn: str
     endpoint_status: str
@@ -1626,20 +1723,44 @@ class Endpoint(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        endpoint = cls(session, region)
-    
+        logger.debug(f"Creating endpoint resource.")
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'EndpointName': endpoint_name,
             'EndpointConfigName': endpoint_config_name,
             'DeploymentConfig': deployment_config,
             'Tags': tags,
         }
-        response = endpoint.client.create_endpoint(**operation_input_args)
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = cls._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+        
+        # create the resource
+        response = client.create_endpoint(**operation_input_args)
+        logger.debug(f"Response: {response}")
+    
+        return cls.get(endpoint_name=endpoint_name, session=session, region=region)
+    
+    @classmethod
+    def get(
+        cls,
+        endpoint_name: str,
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional[object]:
+        endpoint = cls(session, region)
+    
+        operation_input_args = {
+            'EndpointName': endpoint_name,
+        }
+        response = endpoint.client.describe_endpoint(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-    
+        deserializer(endpoint, response, 'DescribeEndpointOutput')
         return endpoint
     
     def refresh(self) -> Optional[object]:
@@ -1681,29 +1802,9 @@ class Endpoint(BaseModel):
                 raise Exception("Timeout exceeded. Final resource state - " + current_status)
     
             time.sleep(poll)
-    
-    @classmethod
-    def get(
-        cls,
-        endpoint_name: str,
-        session: Optional[Session] = None,
-        region: Optional[str] = None,
-    ) -> Optional[object]:
-        endpoint = cls(session, region)
-    
-        operation_input_args = {
-            'EndpointName': endpoint_name,
-        }
-        response = endpoint.client.describe_endpoint(**operation_input_args)
-    
-        pprint(response)
-    
-        # deserialize the response
-        deserializer(endpoint, response, 'DescribeEndpointOutput')
-        return endpoint
 
 
-class EndpointConfig(BaseModel):
+class EndpointConfig(Base):
     endpoint_config_name: str
     endpoint_config_arn: str
     production_variants: List[ProductionVariant]
@@ -1734,8 +1835,9 @@ class EndpointConfig(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        endpoint_config = cls(session, region)
-    
+        logger.debug(f"Creating endpoint_config resource.")
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'EndpointConfigName': endpoint_config_name,
             'ProductionVariants': production_variants,
@@ -1749,31 +1851,16 @@ class EndpointConfig(BaseModel):
             'VpcConfig': vpc_config,
             'EnableNetworkIsolation': enable_network_isolation,
         }
-        response = endpoint_config.client.create_endpoint_config(**operation_input_args)
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = cls._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+        
+        # create the resource
+        response = client.create_endpoint_config(**operation_input_args)
+        logger.debug(f"Response: {response}")
     
-        pprint(response)
-    
-        # deserialize the response
-    
-        return endpoint_config
-    
-    def refresh(self) -> Optional[object]:
-    
-        operation_input_args = {
-            'EndpointConfigName': self.endpoint_config_name,
-        }
-        response = self.client.describe_endpoint_config(**operation_input_args)
-    
-        # deserialize the response
-        deserializer(self, response, 'DescribeEndpointConfigOutput')
-        return self
-    
-    def delete(self) -> None:
-    
-        operation_input_args = {
-            'EndpointConfigName': self.endpoint_config_name,
-        }
-        self.client.delete_endpoint_config(**operation_input_args)
+        return cls.get(endpoint_config_name=endpoint_config_name, session=session, region=region)
     
     @classmethod
     def get(
@@ -1794,9 +1881,27 @@ class EndpointConfig(BaseModel):
         # deserialize the response
         deserializer(endpoint_config, response, 'DescribeEndpointConfigOutput')
         return endpoint_config
+    
+    def refresh(self) -> Optional[object]:
+    
+        operation_input_args = {
+            'EndpointConfigName': self.endpoint_config_name,
+        }
+        response = self.client.describe_endpoint_config(**operation_input_args)
+    
+        # deserialize the response
+        deserializer(self, response, 'DescribeEndpointConfigOutput')
+        return self
+    
+    def delete(self) -> None:
+    
+        operation_input_args = {
+            'EndpointConfigName': self.endpoint_config_name,
+        }
+        self.client.delete_endpoint_config(**operation_input_args)
 
 
-class Experiment(BaseModel):
+class Experiment(Base):
     experiment_name: Optional[str] = Unassigned()
     experiment_arn: Optional[str] = Unassigned()
     display_name: Optional[str] = Unassigned()
@@ -1817,39 +1922,25 @@ class Experiment(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        experiment = cls(session, region)
-    
+        logger.debug(f"Creating experiment resource.")
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'ExperimentName': experiment_name,
             'DisplayName': display_name,
             'Description': description,
             'Tags': tags,
         }
-        response = experiment.client.create_experiment(**operation_input_args)
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = cls._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+        
+        # create the resource
+        response = client.create_experiment(**operation_input_args)
+        logger.debug(f"Response: {response}")
     
-        pprint(response)
-    
-        # deserialize the response
-    
-        return experiment
-    
-    def refresh(self) -> Optional[object]:
-    
-        operation_input_args = {
-            'ExperimentName': self.experiment_name,
-        }
-        response = self.client.describe_experiment(**operation_input_args)
-    
-        # deserialize the response
-        deserializer(self, response, 'DescribeExperimentResponse')
-        return self
-    
-    def delete(self) -> None:
-    
-        operation_input_args = {
-            'ExperimentName': self.experiment_name,
-        }
-        self.client.delete_experiment(**operation_input_args)
+        return cls.get(experiment_name=experiment_name, session=session, region=region)
     
     @classmethod
     def get(
@@ -1870,9 +1961,27 @@ class Experiment(BaseModel):
         # deserialize the response
         deserializer(experiment, response, 'DescribeExperimentResponse')
         return experiment
+    
+    def refresh(self) -> Optional[object]:
+    
+        operation_input_args = {
+            'ExperimentName': self.experiment_name,
+        }
+        response = self.client.describe_experiment(**operation_input_args)
+    
+        # deserialize the response
+        deserializer(self, response, 'DescribeExperimentResponse')
+        return self
+    
+    def delete(self) -> None:
+    
+        operation_input_args = {
+            'ExperimentName': self.experiment_name,
+        }
+        self.client.delete_experiment(**operation_input_args)
 
 
-class FeatureGroup(BaseModel):
+class FeatureGroup(Base):
     feature_group_arn: str
     feature_group_name: str
     record_identifier_feature_name: str
@@ -1908,8 +2017,9 @@ class FeatureGroup(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        feature_group = cls(session, region)
-    
+        logger.debug(f"Creating feature_group resource.")
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'FeatureGroupName': feature_group_name,
             'RecordIdentifierFeatureName': record_identifier_feature_name,
@@ -1922,12 +2032,37 @@ class FeatureGroup(BaseModel):
             'Description': description,
             'Tags': tags,
         }
-        response = feature_group.client.create_feature_group(**operation_input_args)
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = cls._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+        
+        # create the resource
+        response = client.create_feature_group(**operation_input_args)
+        logger.debug(f"Response: {response}")
+    
+        return cls.get(feature_group_name=feature_group_name, session=session, region=region)
+    
+    @classmethod
+    def get(
+        cls,
+        feature_group_name: str,
+        next_token: Optional[str] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional[object]:
+        feature_group = cls(session, region)
+    
+        operation_input_args = {
+            'FeatureGroupName': feature_group_name,
+            'NextToken': next_token,
+        }
+        response = feature_group.client.describe_feature_group(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-    
+        deserializer(feature_group, response, 'DescribeFeatureGroupResponse')
         return feature_group
     
     def refresh(self) -> Optional[object]:
@@ -1970,31 +2105,9 @@ class FeatureGroup(BaseModel):
                 raise Exception("Timeout exceeded. Final resource state - " + current_status)
     
             time.sleep(poll)
-    
-    @classmethod
-    def get(
-        cls,
-        feature_group_name: str,
-        next_token: Optional[str] = Unassigned(),
-        session: Optional[Session] = None,
-        region: Optional[str] = None,
-    ) -> Optional[object]:
-        feature_group = cls(session, region)
-    
-        operation_input_args = {
-            'FeatureGroupName': feature_group_name,
-            'NextToken': next_token,
-        }
-        response = feature_group.client.describe_feature_group(**operation_input_args)
-    
-        pprint(response)
-    
-        # deserialize the response
-        deserializer(feature_group, response, 'DescribeFeatureGroupResponse')
-        return feature_group
 
 
-class FlowDefinition(BaseModel):
+class FlowDefinition(Base):
     flow_definition_arn: str
     flow_definition_name: str
     flow_definition_status: str
@@ -2019,8 +2132,9 @@ class FlowDefinition(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        flow_definition = cls(session, region)
-    
+        logger.debug(f"Creating flow_definition resource.")
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'FlowDefinitionName': flow_definition_name,
             'HumanLoopRequestSource': human_loop_request_source,
@@ -2030,12 +2144,35 @@ class FlowDefinition(BaseModel):
             'RoleArn': role_arn,
             'Tags': tags,
         }
-        response = flow_definition.client.create_flow_definition(**operation_input_args)
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = cls._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+        
+        # create the resource
+        response = client.create_flow_definition(**operation_input_args)
+        logger.debug(f"Response: {response}")
+    
+        return cls.get(flow_definition_name=flow_definition_name, session=session, region=region)
+    
+    @classmethod
+    def get(
+        cls,
+        flow_definition_name: str,
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional[object]:
+        flow_definition = cls(session, region)
+    
+        operation_input_args = {
+            'FlowDefinitionName': flow_definition_name,
+        }
+        response = flow_definition.client.describe_flow_definition(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-    
+        deserializer(flow_definition, response, 'DescribeFlowDefinitionResponse')
         return flow_definition
     
     def refresh(self) -> Optional[object]:
@@ -2077,29 +2214,9 @@ class FlowDefinition(BaseModel):
                 raise Exception("Timeout exceeded. Final resource state - " + current_status)
     
             time.sleep(poll)
-    
-    @classmethod
-    def get(
-        cls,
-        flow_definition_name: str,
-        session: Optional[Session] = None,
-        region: Optional[str] = None,
-    ) -> Optional[object]:
-        flow_definition = cls(session, region)
-    
-        operation_input_args = {
-            'FlowDefinitionName': flow_definition_name,
-        }
-        response = flow_definition.client.describe_flow_definition(**operation_input_args)
-    
-        pprint(response)
-    
-        # deserialize the response
-        deserializer(flow_definition, response, 'DescribeFlowDefinitionResponse')
-        return flow_definition
 
 
-class Hub(BaseModel):
+class Hub(Base):
     hub_name: str
     hub_arn: str
     hub_status: str
@@ -2123,8 +2240,9 @@ class Hub(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        hub = cls(session, region)
-    
+        logger.debug(f"Creating hub resource.")
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'HubName': hub_name,
             'HubDescription': hub_description,
@@ -2133,12 +2251,35 @@ class Hub(BaseModel):
             'S3StorageConfig': s3_storage_config,
             'Tags': tags,
         }
-        response = hub.client.create_hub(**operation_input_args)
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = cls._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+        
+        # create the resource
+        response = client.create_hub(**operation_input_args)
+        logger.debug(f"Response: {response}")
+    
+        return cls.get(hub_name=hub_name, session=session, region=region)
+    
+    @classmethod
+    def get(
+        cls,
+        hub_name: str,
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional[object]:
+        hub = cls(session, region)
+    
+        operation_input_args = {
+            'HubName': hub_name,
+        }
+        response = hub.client.describe_hub(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-    
+        deserializer(hub, response, 'DescribeHubResponse')
         return hub
     
     def refresh(self) -> Optional[object]:
@@ -2180,29 +2321,9 @@ class Hub(BaseModel):
                 raise Exception("Timeout exceeded. Final resource state - " + current_status)
     
             time.sleep(poll)
-    
-    @classmethod
-    def get(
-        cls,
-        hub_name: str,
-        session: Optional[Session] = None,
-        region: Optional[str] = None,
-    ) -> Optional[object]:
-        hub = cls(session, region)
-    
-        operation_input_args = {
-            'HubName': hub_name,
-        }
-        response = hub.client.describe_hub(**operation_input_args)
-    
-        pprint(response)
-    
-        # deserialize the response
-        deserializer(hub, response, 'DescribeHubResponse')
-        return hub
 
 
-class HubContent(BaseModel):
+class HubContent(Base):
     hub_content_name: str
     hub_content_arn: str
     hub_content_version: str
@@ -2219,6 +2340,32 @@ class HubContent(BaseModel):
     hub_content_search_keywords: Optional[List[str]] = Unassigned()
     hub_content_dependencies: Optional[List[HubContentDependency]] = Unassigned()
     failure_reason: Optional[str] = Unassigned()
+    
+    @classmethod
+    def get(
+        cls,
+        hub_name: str,
+        hub_content_type: str,
+        hub_content_name: str,
+        hub_content_version: Optional[str] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional[object]:
+        hub_content = cls(session, region)
+    
+        operation_input_args = {
+            'HubName': hub_name,
+            'HubContentType': hub_content_type,
+            'HubContentName': hub_content_name,
+            'HubContentVersion': hub_content_version,
+        }
+        response = hub_content.client.describe_hub_content(**operation_input_args)
+    
+        pprint(response)
+    
+        # deserialize the response
+        deserializer(hub_content, response, 'DescribeHubContentResponse')
+        return hub_content
     
     def refresh(self) -> Optional[object]:
     
@@ -2265,35 +2412,9 @@ class HubContent(BaseModel):
                 raise Exception("Timeout exceeded. Final resource state - " + current_status)
     
             time.sleep(poll)
-    
-    @classmethod
-    def get(
-        cls,
-        hub_name: str,
-        hub_content_type: str,
-        hub_content_name: str,
-        hub_content_version: Optional[str] = Unassigned(),
-        session: Optional[Session] = None,
-        region: Optional[str] = None,
-    ) -> Optional[object]:
-        hub_content = cls(session, region)
-    
-        operation_input_args = {
-            'HubName': hub_name,
-            'HubContentType': hub_content_type,
-            'HubContentName': hub_content_name,
-            'HubContentVersion': hub_content_version,
-        }
-        response = hub_content.client.describe_hub_content(**operation_input_args)
-    
-        pprint(response)
-    
-        # deserialize the response
-        deserializer(hub_content, response, 'DescribeHubContentResponse')
-        return hub_content
 
 
-class HumanTaskUi(BaseModel):
+class HumanTaskUi(Base):
     human_task_ui_arn: str
     human_task_ui_name: str
     creation_time: datetime.datetime
@@ -2309,19 +2430,43 @@ class HumanTaskUi(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        human_task_ui = cls(session, region)
-    
+        logger.debug(f"Creating human_task_ui resource.")
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'HumanTaskUiName': human_task_ui_name,
             'UiTemplate': ui_template,
             'Tags': tags,
         }
-        response = human_task_ui.client.create_human_task_ui(**operation_input_args)
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = cls._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+        
+        # create the resource
+        response = client.create_human_task_ui(**operation_input_args)
+        logger.debug(f"Response: {response}")
+    
+        return cls.get(human_task_ui_name=human_task_ui_name, session=session, region=region)
+    
+    @classmethod
+    def get(
+        cls,
+        human_task_ui_name: str,
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional[object]:
+        human_task_ui = cls(session, region)
+    
+        operation_input_args = {
+            'HumanTaskUiName': human_task_ui_name,
+        }
+        response = human_task_ui.client.describe_human_task_ui(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-    
+        deserializer(human_task_ui, response, 'DescribeHumanTaskUiResponse')
         return human_task_ui
     
     def refresh(self) -> Optional[object]:
@@ -2363,29 +2508,9 @@ class HumanTaskUi(BaseModel):
                 raise Exception("Timeout exceeded. Final resource state - " + current_status)
     
             time.sleep(poll)
-    
-    @classmethod
-    def get(
-        cls,
-        human_task_ui_name: str,
-        session: Optional[Session] = None,
-        region: Optional[str] = None,
-    ) -> Optional[object]:
-        human_task_ui = cls(session, region)
-    
-        operation_input_args = {
-            'HumanTaskUiName': human_task_ui_name,
-        }
-        response = human_task_ui.client.describe_human_task_ui(**operation_input_args)
-    
-        pprint(response)
-    
-        # deserialize the response
-        deserializer(human_task_ui, response, 'DescribeHumanTaskUiResponse')
-        return human_task_ui
 
 
-class HyperParameterTuningJob(BaseModel):
+class HyperParameterTuningJob(Base):
     hyper_parameter_tuning_job_name: str
     hyper_parameter_tuning_job_arn: str
     hyper_parameter_tuning_job_config: HyperParameterTuningJobConfig
@@ -2418,8 +2543,9 @@ class HyperParameterTuningJob(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        hyper_parameter_tuning_job = cls(session, region)
-    
+        logger.debug(f"Creating hyper_parameter_tuning_job resource.")
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'HyperParameterTuningJobName': hyper_parameter_tuning_job_name,
             'HyperParameterTuningJobConfig': hyper_parameter_tuning_job_config,
@@ -2429,12 +2555,35 @@ class HyperParameterTuningJob(BaseModel):
             'Tags': tags,
             'Autotune': autotune,
         }
-        response = hyper_parameter_tuning_job.client.create_hyper_parameter_tuning_job(**operation_input_args)
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = cls._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+        
+        # create the resource
+        response = client.create_hyper_parameter_tuning_job(**operation_input_args)
+        logger.debug(f"Response: {response}")
+    
+        return cls.get(hyper_parameter_tuning_job_name=hyper_parameter_tuning_job_name, session=session, region=region)
+    
+    @classmethod
+    def get(
+        cls,
+        hyper_parameter_tuning_job_name: str,
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional[object]:
+        hyper_parameter_tuning_job = cls(session, region)
+    
+        operation_input_args = {
+            'HyperParameterTuningJobName': hyper_parameter_tuning_job_name,
+        }
+        response = hyper_parameter_tuning_job.client.describe_hyper_parameter_tuning_job(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-    
+        deserializer(hyper_parameter_tuning_job, response, 'DescribeHyperParameterTuningJobResponse')
         return hyper_parameter_tuning_job
     
     def refresh(self) -> Optional[object]:
@@ -2483,29 +2632,9 @@ class HyperParameterTuningJob(BaseModel):
                 raise Exception("Timeout exceeded. Final resource state - " + current_status)
     
             time.sleep(poll)
-    
-    @classmethod
-    def get(
-        cls,
-        hyper_parameter_tuning_job_name: str,
-        session: Optional[Session] = None,
-        region: Optional[str] = None,
-    ) -> Optional[object]:
-        hyper_parameter_tuning_job = cls(session, region)
-    
-        operation_input_args = {
-            'HyperParameterTuningJobName': hyper_parameter_tuning_job_name,
-        }
-        response = hyper_parameter_tuning_job.client.describe_hyper_parameter_tuning_job(**operation_input_args)
-    
-        pprint(response)
-    
-        # deserialize the response
-        deserializer(hyper_parameter_tuning_job, response, 'DescribeHyperParameterTuningJobResponse')
-        return hyper_parameter_tuning_job
 
 
-class Image(BaseModel):
+class Image(Base):
     creation_time: Optional[datetime.datetime] = Unassigned()
     description: Optional[str] = Unassigned()
     display_name: Optional[str] = Unassigned()
@@ -2527,8 +2656,9 @@ class Image(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        image = cls(session, region)
-    
+        logger.debug(f"Creating image resource.")
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'Description': description,
             'DisplayName': display_name,
@@ -2536,12 +2666,35 @@ class Image(BaseModel):
             'RoleArn': role_arn,
             'Tags': tags,
         }
-        response = image.client.create_image(**operation_input_args)
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = cls._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+        
+        # create the resource
+        response = client.create_image(**operation_input_args)
+        logger.debug(f"Response: {response}")
+    
+        return cls.get(image_name=image_name, session=session, region=region)
+    
+    @classmethod
+    def get(
+        cls,
+        image_name: str,
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional[object]:
+        image = cls(session, region)
+    
+        operation_input_args = {
+            'ImageName': image_name,
+        }
+        response = image.client.describe_image(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-    
+        deserializer(image, response, 'DescribeImageResponse')
         return image
     
     def refresh(self) -> Optional[object]:
@@ -2583,29 +2736,9 @@ class Image(BaseModel):
                 raise Exception("Timeout exceeded. Final resource state - " + current_status)
     
             time.sleep(poll)
-    
-    @classmethod
-    def get(
-        cls,
-        image_name: str,
-        session: Optional[Session] = None,
-        region: Optional[str] = None,
-    ) -> Optional[object]:
-        image = cls(session, region)
-    
-        operation_input_args = {
-            'ImageName': image_name,
-        }
-        response = image.client.describe_image(**operation_input_args)
-    
-        pprint(response)
-    
-        # deserialize the response
-        deserializer(image, response, 'DescribeImageResponse')
-        return image
 
 
-class ImageVersion(BaseModel):
+class ImageVersion(Base):
     base_image: Optional[str] = Unassigned()
     container_image: Optional[str] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
@@ -2640,8 +2773,9 @@ class ImageVersion(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        image_version = cls(session, region)
-    
+        logger.debug(f"Creating image_version resource.")
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'BaseImage': base_image,
             'ClientToken': client_token,
@@ -2655,12 +2789,39 @@ class ImageVersion(BaseModel):
             'Horovod': horovod,
             'ReleaseNotes': release_notes,
         }
-        response = image_version.client.create_image_version(**operation_input_args)
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = cls._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+        
+        # create the resource
+        response = client.create_image_version(**operation_input_args)
+        logger.debug(f"Response: {response}")
+    
+        return cls.get(image_name=image_name, session=session, region=region)
+    
+    @classmethod
+    def get(
+        cls,
+        image_name: str,
+        version: Optional[int] = Unassigned(),
+        alias: Optional[str] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional[object]:
+        image_version = cls(session, region)
+    
+        operation_input_args = {
+            'ImageName': image_name,
+            'Version': version,
+            'Alias': alias,
+        }
+        response = image_version.client.describe_image_version(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-    
+        deserializer(image_version, response, 'DescribeImageVersionResponse')
         return image_version
     
     def refresh(self) -> Optional[object]:
@@ -2706,33 +2867,9 @@ class ImageVersion(BaseModel):
                 raise Exception("Timeout exceeded. Final resource state - " + current_status)
     
             time.sleep(poll)
-    
-    @classmethod
-    def get(
-        cls,
-        image_name: str,
-        version: Optional[int] = Unassigned(),
-        alias: Optional[str] = Unassigned(),
-        session: Optional[Session] = None,
-        region: Optional[str] = None,
-    ) -> Optional[object]:
-        image_version = cls(session, region)
-    
-        operation_input_args = {
-            'ImageName': image_name,
-            'Version': version,
-            'Alias': alias,
-        }
-        response = image_version.client.describe_image_version(**operation_input_args)
-    
-        pprint(response)
-    
-        # deserialize the response
-        deserializer(image_version, response, 'DescribeImageVersionResponse')
-        return image_version
 
 
-class InferenceComponent(BaseModel):
+class InferenceComponent(Base):
     inference_component_name: str
     inference_component_arn: str
     endpoint_name: str
@@ -2757,8 +2894,9 @@ class InferenceComponent(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        inference_component = cls(session, region)
-    
+        logger.debug(f"Creating inference_component resource.")
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'InferenceComponentName': inference_component_name,
             'EndpointName': endpoint_name,
@@ -2767,12 +2905,35 @@ class InferenceComponent(BaseModel):
             'RuntimeConfig': runtime_config,
             'Tags': tags,
         }
-        response = inference_component.client.create_inference_component(**operation_input_args)
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = cls._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+        
+        # create the resource
+        response = client.create_inference_component(**operation_input_args)
+        logger.debug(f"Response: {response}")
+    
+        return cls.get(inference_component_name=inference_component_name, session=session, region=region)
+    
+    @classmethod
+    def get(
+        cls,
+        inference_component_name: str,
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional[object]:
+        inference_component = cls(session, region)
+    
+        operation_input_args = {
+            'InferenceComponentName': inference_component_name,
+        }
+        response = inference_component.client.describe_inference_component(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-    
+        deserializer(inference_component, response, 'DescribeInferenceComponentOutput')
         return inference_component
     
     def refresh(self) -> Optional[object]:
@@ -2814,29 +2975,9 @@ class InferenceComponent(BaseModel):
                 raise Exception("Timeout exceeded. Final resource state - " + current_status)
     
             time.sleep(poll)
-    
-    @classmethod
-    def get(
-        cls,
-        inference_component_name: str,
-        session: Optional[Session] = None,
-        region: Optional[str] = None,
-    ) -> Optional[object]:
-        inference_component = cls(session, region)
-    
-        operation_input_args = {
-            'InferenceComponentName': inference_component_name,
-        }
-        response = inference_component.client.describe_inference_component(**operation_input_args)
-    
-        pprint(response)
-    
-        # deserialize the response
-        deserializer(inference_component, response, 'DescribeInferenceComponentOutput')
-        return inference_component
 
 
-class InferenceExperiment(BaseModel):
+class InferenceExperiment(Base):
     arn: str
     name: str
     type: str
@@ -2871,8 +3012,9 @@ class InferenceExperiment(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        inference_experiment = cls(session, region)
-    
+        logger.debug(f"Creating inference_experiment resource.")
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'Name': name,
             'Type': type,
@@ -2886,12 +3028,35 @@ class InferenceExperiment(BaseModel):
             'KmsKey': kms_key,
             'Tags': tags,
         }
-        response = inference_experiment.client.create_inference_experiment(**operation_input_args)
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = cls._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+        
+        # create the resource
+        response = client.create_inference_experiment(**operation_input_args)
+        logger.debug(f"Response: {response}")
+    
+        return cls.get(name=name, session=session, region=region)
+    
+    @classmethod
+    def get(
+        cls,
+        name: str,
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional[object]:
+        inference_experiment = cls(session, region)
+    
+        operation_input_args = {
+            'Name': name,
+        }
+        response = inference_experiment.client.describe_inference_experiment(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-    
+        deserializer(inference_experiment, response, 'DescribeInferenceExperimentResponse')
         return inference_experiment
     
     def refresh(self) -> Optional[object]:
@@ -2944,29 +3109,9 @@ class InferenceExperiment(BaseModel):
                 raise Exception("Timeout exceeded. Final resource state - " + current_status)
     
             time.sleep(poll)
-    
-    @classmethod
-    def get(
-        cls,
-        name: str,
-        session: Optional[Session] = None,
-        region: Optional[str] = None,
-    ) -> Optional[object]:
-        inference_experiment = cls(session, region)
-    
-        operation_input_args = {
-            'Name': name,
-        }
-        response = inference_experiment.client.describe_inference_experiment(**operation_input_args)
-    
-        pprint(response)
-    
-        # deserialize the response
-        deserializer(inference_experiment, response, 'DescribeInferenceExperimentResponse')
-        return inference_experiment
 
 
-class InferenceRecommendationsJob(BaseModel):
+class InferenceRecommendationsJob(Base):
     job_name: str
     job_type: str
     job_arn: str
@@ -2996,8 +3141,9 @@ class InferenceRecommendationsJob(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        inference_recommendations_job = cls(session, region)
-    
+        logger.debug(f"Creating inference_recommendations_job resource.")
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'JobName': job_name,
             'JobType': job_type,
@@ -3008,12 +3154,35 @@ class InferenceRecommendationsJob(BaseModel):
             'OutputConfig': output_config,
             'Tags': tags,
         }
-        response = inference_recommendations_job.client.create_inference_recommendations_job(**operation_input_args)
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = cls._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+        
+        # create the resource
+        response = client.create_inference_recommendations_job(**operation_input_args)
+        logger.debug(f"Response: {response}")
+    
+        return cls.get(job_name=job_name, session=session, region=region)
+    
+    @classmethod
+    def get(
+        cls,
+        job_name: str,
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional[object]:
+        inference_recommendations_job = cls(session, region)
+    
+        operation_input_args = {
+            'JobName': job_name,
+        }
+        response = inference_recommendations_job.client.describe_inference_recommendations_job(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-    
+        deserializer(inference_recommendations_job, response, 'DescribeInferenceRecommendationsJobResponse')
         return inference_recommendations_job
     
     def refresh(self) -> Optional[object]:
@@ -3055,29 +3224,9 @@ class InferenceRecommendationsJob(BaseModel):
                 raise Exception("Timeout exceeded. Final resource state - " + current_status)
     
             time.sleep(poll)
-    
-    @classmethod
-    def get(
-        cls,
-        job_name: str,
-        session: Optional[Session] = None,
-        region: Optional[str] = None,
-    ) -> Optional[object]:
-        inference_recommendations_job = cls(session, region)
-    
-        operation_input_args = {
-            'JobName': job_name,
-        }
-        response = inference_recommendations_job.client.describe_inference_recommendations_job(**operation_input_args)
-    
-        pprint(response)
-    
-        # deserialize the response
-        deserializer(inference_recommendations_job, response, 'DescribeInferenceRecommendationsJobResponse')
-        return inference_recommendations_job
 
 
-class LabelingJob(BaseModel):
+class LabelingJob(Base):
     labeling_job_status: str
     label_counters: LabelCounters
     creation_time: datetime.datetime
@@ -3113,8 +3262,9 @@ class LabelingJob(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        labeling_job = cls(session, region)
-    
+        logger.debug(f"Creating labeling_job resource.")
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'LabelingJobName': labeling_job_name,
             'LabelAttributeName': label_attribute_name,
@@ -3127,12 +3277,35 @@ class LabelingJob(BaseModel):
             'HumanTaskConfig': human_task_config,
             'Tags': tags,
         }
-        response = labeling_job.client.create_labeling_job(**operation_input_args)
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = cls._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+        
+        # create the resource
+        response = client.create_labeling_job(**operation_input_args)
+        logger.debug(f"Response: {response}")
+    
+        return cls.get(labeling_job_name=labeling_job_name, session=session, region=region)
+    
+    @classmethod
+    def get(
+        cls,
+        labeling_job_name: str,
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional[object]:
+        labeling_job = cls(session, region)
+    
+        operation_input_args = {
+            'LabelingJobName': labeling_job_name,
+        }
+        response = labeling_job.client.describe_labeling_job(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-    
+        deserializer(labeling_job, response, 'DescribeLabelingJobResponse')
         return labeling_job
     
     def refresh(self) -> Optional[object]:
@@ -3174,29 +3347,9 @@ class LabelingJob(BaseModel):
                 raise Exception("Timeout exceeded. Final resource state - " + current_status)
     
             time.sleep(poll)
-    
-    @classmethod
-    def get(
-        cls,
-        labeling_job_name: str,
-        session: Optional[Session] = None,
-        region: Optional[str] = None,
-    ) -> Optional[object]:
-        labeling_job = cls(session, region)
-    
-        operation_input_args = {
-            'LabelingJobName': labeling_job_name,
-        }
-        response = labeling_job.client.describe_labeling_job(**operation_input_args)
-    
-        pprint(response)
-    
-        # deserialize the response
-        deserializer(labeling_job, response, 'DescribeLabelingJobResponse')
-        return labeling_job
 
 
-class Model(BaseModel):
+class Model(Base):
     model_name: str
     creation_time: datetime.datetime
     model_arn: str
@@ -3222,8 +3375,9 @@ class Model(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        model = cls(session, region)
-    
+        logger.debug(f"Creating model resource.")
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'ModelName': model_name,
             'PrimaryContainer': primary_container,
@@ -3234,31 +3388,16 @@ class Model(BaseModel):
             'VpcConfig': vpc_config,
             'EnableNetworkIsolation': enable_network_isolation,
         }
-        response = model.client.create_model(**operation_input_args)
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = cls._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+        
+        # create the resource
+        response = client.create_model(**operation_input_args)
+        logger.debug(f"Response: {response}")
     
-        pprint(response)
-    
-        # deserialize the response
-    
-        return model
-    
-    def refresh(self) -> Optional[object]:
-    
-        operation_input_args = {
-            'ModelName': self.model_name,
-        }
-        response = self.client.describe_model(**operation_input_args)
-    
-        # deserialize the response
-        deserializer(self, response, 'DescribeModelOutput')
-        return self
-    
-    def delete(self) -> None:
-    
-        operation_input_args = {
-            'ModelName': self.model_name,
-        }
-        self.client.delete_model(**operation_input_args)
+        return cls.get(model_name=model_name, session=session, region=region)
     
     @classmethod
     def get(
@@ -3279,9 +3418,27 @@ class Model(BaseModel):
         # deserialize the response
         deserializer(model, response, 'DescribeModelOutput')
         return model
+    
+    def refresh(self) -> Optional[object]:
+    
+        operation_input_args = {
+            'ModelName': self.model_name,
+        }
+        response = self.client.describe_model(**operation_input_args)
+    
+        # deserialize the response
+        deserializer(self, response, 'DescribeModelOutput')
+        return self
+    
+    def delete(self) -> None:
+    
+        operation_input_args = {
+            'ModelName': self.model_name,
+        }
+        self.client.delete_model(**operation_input_args)
 
 
-class ModelBiasJobDefinition(BaseModel):
+class ModelBiasJobDefinition(Base):
     job_definition_arn: str
     job_definition_name: str
     creation_time: datetime.datetime
@@ -3310,8 +3467,9 @@ class ModelBiasJobDefinition(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        model_bias_job_definition = cls(session, region)
-    
+        logger.debug(f"Creating model_bias_job_definition resource.")
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'JobDefinitionName': job_definition_name,
             'ModelBiasBaselineConfig': model_bias_baseline_config,
@@ -3324,31 +3482,16 @@ class ModelBiasJobDefinition(BaseModel):
             'StoppingCondition': stopping_condition,
             'Tags': tags,
         }
-        response = model_bias_job_definition.client.create_model_bias_job_definition(**operation_input_args)
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = cls._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+        
+        # create the resource
+        response = client.create_model_bias_job_definition(**operation_input_args)
+        logger.debug(f"Response: {response}")
     
-        pprint(response)
-    
-        # deserialize the response
-    
-        return model_bias_job_definition
-    
-    def refresh(self) -> Optional[object]:
-    
-        operation_input_args = {
-            'JobDefinitionName': self.job_definition_name,
-        }
-        response = self.client.describe_model_bias_job_definition(**operation_input_args)
-    
-        # deserialize the response
-        deserializer(self, response, 'DescribeModelBiasJobDefinitionResponse')
-        return self
-    
-    def delete(self) -> None:
-    
-        operation_input_args = {
-            'JobDefinitionName': self.job_definition_name,
-        }
-        self.client.delete_model_bias_job_definition(**operation_input_args)
+        return cls.get(job_definition_name=job_definition_name, session=session, region=region)
     
     @classmethod
     def get(
@@ -3369,9 +3512,27 @@ class ModelBiasJobDefinition(BaseModel):
         # deserialize the response
         deserializer(model_bias_job_definition, response, 'DescribeModelBiasJobDefinitionResponse')
         return model_bias_job_definition
+    
+    def refresh(self) -> Optional[object]:
+    
+        operation_input_args = {
+            'JobDefinitionName': self.job_definition_name,
+        }
+        response = self.client.describe_model_bias_job_definition(**operation_input_args)
+    
+        # deserialize the response
+        deserializer(self, response, 'DescribeModelBiasJobDefinitionResponse')
+        return self
+    
+    def delete(self) -> None:
+    
+        operation_input_args = {
+            'JobDefinitionName': self.job_definition_name,
+        }
+        self.client.delete_model_bias_job_definition(**operation_input_args)
 
 
-class ModelCard(BaseModel):
+class ModelCard(Base):
     model_card_arn: str
     model_card_name: str
     model_card_version: int
@@ -3395,8 +3556,9 @@ class ModelCard(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        model_card = cls(session, region)
-    
+        logger.debug(f"Creating model_card resource.")
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'ModelCardName': model_card_name,
             'SecurityConfig': security_config,
@@ -3404,12 +3566,37 @@ class ModelCard(BaseModel):
             'ModelCardStatus': model_card_status,
             'Tags': tags,
         }
-        response = model_card.client.create_model_card(**operation_input_args)
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = cls._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+        
+        # create the resource
+        response = client.create_model_card(**operation_input_args)
+        logger.debug(f"Response: {response}")
+    
+        return cls.get(model_card_name=model_card_name, session=session, region=region)
+    
+    @classmethod
+    def get(
+        cls,
+        model_card_name: str,
+        model_card_version: Optional[int] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional[object]:
+        model_card = cls(session, region)
+    
+        operation_input_args = {
+            'ModelCardName': model_card_name,
+            'ModelCardVersion': model_card_version,
+        }
+        response = model_card.client.describe_model_card(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-    
+        deserializer(model_card, response, 'DescribeModelCardResponse')
         return model_card
     
     def refresh(self) -> Optional[object]:
@@ -3452,31 +3639,9 @@ class ModelCard(BaseModel):
                 raise Exception("Timeout exceeded. Final resource state - " + current_status)
     
             time.sleep(poll)
-    
-    @classmethod
-    def get(
-        cls,
-        model_card_name: str,
-        model_card_version: Optional[int] = Unassigned(),
-        session: Optional[Session] = None,
-        region: Optional[str] = None,
-    ) -> Optional[object]:
-        model_card = cls(session, region)
-    
-        operation_input_args = {
-            'ModelCardName': model_card_name,
-            'ModelCardVersion': model_card_version,
-        }
-        response = model_card.client.describe_model_card(**operation_input_args)
-    
-        pprint(response)
-    
-        # deserialize the response
-        deserializer(model_card, response, 'DescribeModelCardResponse')
-        return model_card
 
 
-class ModelCardExportJob(BaseModel):
+class ModelCardExportJob(Base):
     model_card_export_job_name: str
     model_card_export_job_arn: str
     status: str
@@ -3498,20 +3663,44 @@ class ModelCardExportJob(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        model_card_export_job = cls(session, region)
-    
+        logger.debug(f"Creating model_card_export_job resource.")
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'ModelCardName': model_card_name,
             'ModelCardVersion': model_card_version,
             'ModelCardExportJobName': model_card_export_job_name,
             'OutputConfig': output_config,
         }
-        response = model_card_export_job.client.create_model_card_export_job(**operation_input_args)
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = cls._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+        
+        # create the resource
+        response = client.create_model_card_export_job(**operation_input_args)
+        logger.debug(f"Response: {response}")
+    
+        return cls.get(model_card_export_job_arn=response['ModelCardExportJobArn'], session=session, region=region)
+    
+    @classmethod
+    def get(
+        cls,
+        model_card_export_job_arn: str,
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional[object]:
+        model_card_export_job = cls(session, region)
+    
+        operation_input_args = {
+            'ModelCardExportJobArn': model_card_export_job_arn,
+        }
+        response = model_card_export_job.client.describe_model_card_export_job(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-    
+        deserializer(model_card_export_job, response, 'DescribeModelCardExportJobResponse')
         return model_card_export_job
     
     def refresh(self) -> Optional[object]:
@@ -3546,29 +3735,9 @@ class ModelCardExportJob(BaseModel):
                 raise Exception("Timeout exceeded. Final resource state - " + current_status)
     
             time.sleep(poll)
-    
-    @classmethod
-    def get(
-        cls,
-        model_card_export_job_arn: str,
-        session: Optional[Session] = None,
-        region: Optional[str] = None,
-    ) -> Optional[object]:
-        model_card_export_job = cls(session, region)
-    
-        operation_input_args = {
-            'ModelCardExportJobArn': model_card_export_job_arn,
-        }
-        response = model_card_export_job.client.describe_model_card_export_job(**operation_input_args)
-    
-        pprint(response)
-    
-        # deserialize the response
-        deserializer(model_card_export_job, response, 'DescribeModelCardExportJobResponse')
-        return model_card_export_job
 
 
-class ModelExplainabilityJobDefinition(BaseModel):
+class ModelExplainabilityJobDefinition(Base):
     job_definition_arn: str
     job_definition_name: str
     creation_time: datetime.datetime
@@ -3597,8 +3766,9 @@ class ModelExplainabilityJobDefinition(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        model_explainability_job_definition = cls(session, region)
-    
+        logger.debug(f"Creating model_explainability_job_definition resource.")
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'JobDefinitionName': job_definition_name,
             'ModelExplainabilityBaselineConfig': model_explainability_baseline_config,
@@ -3611,31 +3781,16 @@ class ModelExplainabilityJobDefinition(BaseModel):
             'StoppingCondition': stopping_condition,
             'Tags': tags,
         }
-        response = model_explainability_job_definition.client.create_model_explainability_job_definition(**operation_input_args)
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = cls._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+        
+        # create the resource
+        response = client.create_model_explainability_job_definition(**operation_input_args)
+        logger.debug(f"Response: {response}")
     
-        pprint(response)
-    
-        # deserialize the response
-    
-        return model_explainability_job_definition
-    
-    def refresh(self) -> Optional[object]:
-    
-        operation_input_args = {
-            'JobDefinitionName': self.job_definition_name,
-        }
-        response = self.client.describe_model_explainability_job_definition(**operation_input_args)
-    
-        # deserialize the response
-        deserializer(self, response, 'DescribeModelExplainabilityJobDefinitionResponse')
-        return self
-    
-    def delete(self) -> None:
-    
-        operation_input_args = {
-            'JobDefinitionName': self.job_definition_name,
-        }
-        self.client.delete_model_explainability_job_definition(**operation_input_args)
+        return cls.get(job_definition_name=job_definition_name, session=session, region=region)
     
     @classmethod
     def get(
@@ -3656,9 +3811,27 @@ class ModelExplainabilityJobDefinition(BaseModel):
         # deserialize the response
         deserializer(model_explainability_job_definition, response, 'DescribeModelExplainabilityJobDefinitionResponse')
         return model_explainability_job_definition
+    
+    def refresh(self) -> Optional[object]:
+    
+        operation_input_args = {
+            'JobDefinitionName': self.job_definition_name,
+        }
+        response = self.client.describe_model_explainability_job_definition(**operation_input_args)
+    
+        # deserialize the response
+        deserializer(self, response, 'DescribeModelExplainabilityJobDefinitionResponse')
+        return self
+    
+    def delete(self) -> None:
+    
+        operation_input_args = {
+            'JobDefinitionName': self.job_definition_name,
+        }
+        self.client.delete_model_explainability_job_definition(**operation_input_args)
 
 
-class ModelPackage(BaseModel):
+class ModelPackage(Base):
     model_package_name: str
     model_package_arn: str
     creation_time: datetime.datetime
@@ -3713,8 +3886,9 @@ class ModelPackage(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        model_package = cls(session, region)
-    
+        logger.debug(f"Creating model_package resource.")
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'ModelPackageName': model_package_name,
             'ModelPackageGroupName': model_package_group_name,
@@ -3737,12 +3911,35 @@ class ModelPackage(BaseModel):
             'SkipModelValidation': skip_model_validation,
             'SourceUri': source_uri,
         }
-        response = model_package.client.create_model_package(**operation_input_args)
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = cls._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+        
+        # create the resource
+        response = client.create_model_package(**operation_input_args)
+        logger.debug(f"Response: {response}")
+    
+        return cls.get(model_package_name=response['ModelPackageName'], session=session, region=region)
+    
+    @classmethod
+    def get(
+        cls,
+        model_package_name: str,
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional[object]:
+        model_package = cls(session, region)
+    
+        operation_input_args = {
+            'ModelPackageName': model_package_name,
+        }
+        response = model_package.client.describe_model_package(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-    
+        deserializer(model_package, response, 'DescribeModelPackageOutput')
         return model_package
     
     def refresh(self) -> Optional[object]:
@@ -3784,29 +3981,9 @@ class ModelPackage(BaseModel):
                 raise Exception("Timeout exceeded. Final resource state - " + current_status)
     
             time.sleep(poll)
-    
-    @classmethod
-    def get(
-        cls,
-        model_package_name: str,
-        session: Optional[Session] = None,
-        region: Optional[str] = None,
-    ) -> Optional[object]:
-        model_package = cls(session, region)
-    
-        operation_input_args = {
-            'ModelPackageName': model_package_name,
-        }
-        response = model_package.client.describe_model_package(**operation_input_args)
-    
-        pprint(response)
-    
-        # deserialize the response
-        deserializer(model_package, response, 'DescribeModelPackageOutput')
-        return model_package
 
 
-class ModelPackageGroup(BaseModel):
+class ModelPackageGroup(Base):
     model_package_group_name: str
     model_package_group_arn: str
     creation_time: datetime.datetime
@@ -3823,19 +4000,43 @@ class ModelPackageGroup(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        model_package_group = cls(session, region)
-    
+        logger.debug(f"Creating model_package_group resource.")
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'ModelPackageGroupName': model_package_group_name,
             'ModelPackageGroupDescription': model_package_group_description,
             'Tags': tags,
         }
-        response = model_package_group.client.create_model_package_group(**operation_input_args)
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = cls._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+        
+        # create the resource
+        response = client.create_model_package_group(**operation_input_args)
+        logger.debug(f"Response: {response}")
+    
+        return cls.get(model_package_group_name=model_package_group_name, session=session, region=region)
+    
+    @classmethod
+    def get(
+        cls,
+        model_package_group_name: str,
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional[object]:
+        model_package_group = cls(session, region)
+    
+        operation_input_args = {
+            'ModelPackageGroupName': model_package_group_name,
+        }
+        response = model_package_group.client.describe_model_package_group(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-    
+        deserializer(model_package_group, response, 'DescribeModelPackageGroupOutput')
         return model_package_group
     
     def refresh(self) -> Optional[object]:
@@ -3877,29 +4078,9 @@ class ModelPackageGroup(BaseModel):
                 raise Exception("Timeout exceeded. Final resource state - " + current_status)
     
             time.sleep(poll)
-    
-    @classmethod
-    def get(
-        cls,
-        model_package_group_name: str,
-        session: Optional[Session] = None,
-        region: Optional[str] = None,
-    ) -> Optional[object]:
-        model_package_group = cls(session, region)
-    
-        operation_input_args = {
-            'ModelPackageGroupName': model_package_group_name,
-        }
-        response = model_package_group.client.describe_model_package_group(**operation_input_args)
-    
-        pprint(response)
-    
-        # deserialize the response
-        deserializer(model_package_group, response, 'DescribeModelPackageGroupOutput')
-        return model_package_group
 
 
-class ModelQualityJobDefinition(BaseModel):
+class ModelQualityJobDefinition(Base):
     job_definition_arn: str
     job_definition_name: str
     creation_time: datetime.datetime
@@ -3928,8 +4109,9 @@ class ModelQualityJobDefinition(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        model_quality_job_definition = cls(session, region)
-    
+        logger.debug(f"Creating model_quality_job_definition resource.")
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'JobDefinitionName': job_definition_name,
             'ModelQualityBaselineConfig': model_quality_baseline_config,
@@ -3942,31 +4124,16 @@ class ModelQualityJobDefinition(BaseModel):
             'StoppingCondition': stopping_condition,
             'Tags': tags,
         }
-        response = model_quality_job_definition.client.create_model_quality_job_definition(**operation_input_args)
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = cls._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+        
+        # create the resource
+        response = client.create_model_quality_job_definition(**operation_input_args)
+        logger.debug(f"Response: {response}")
     
-        pprint(response)
-    
-        # deserialize the response
-    
-        return model_quality_job_definition
-    
-    def refresh(self) -> Optional[object]:
-    
-        operation_input_args = {
-            'JobDefinitionName': self.job_definition_name,
-        }
-        response = self.client.describe_model_quality_job_definition(**operation_input_args)
-    
-        # deserialize the response
-        deserializer(self, response, 'DescribeModelQualityJobDefinitionResponse')
-        return self
-    
-    def delete(self) -> None:
-    
-        operation_input_args = {
-            'JobDefinitionName': self.job_definition_name,
-        }
-        self.client.delete_model_quality_job_definition(**operation_input_args)
+        return cls.get(job_definition_name=job_definition_name, session=session, region=region)
     
     @classmethod
     def get(
@@ -3987,9 +4154,27 @@ class ModelQualityJobDefinition(BaseModel):
         # deserialize the response
         deserializer(model_quality_job_definition, response, 'DescribeModelQualityJobDefinitionResponse')
         return model_quality_job_definition
+    
+    def refresh(self) -> Optional[object]:
+    
+        operation_input_args = {
+            'JobDefinitionName': self.job_definition_name,
+        }
+        response = self.client.describe_model_quality_job_definition(**operation_input_args)
+    
+        # deserialize the response
+        deserializer(self, response, 'DescribeModelQualityJobDefinitionResponse')
+        return self
+    
+    def delete(self) -> None:
+    
+        operation_input_args = {
+            'JobDefinitionName': self.job_definition_name,
+        }
+        self.client.delete_model_quality_job_definition(**operation_input_args)
 
 
-class MonitoringSchedule(BaseModel):
+class MonitoringSchedule(Base):
     monitoring_schedule_arn: str
     monitoring_schedule_name: str
     monitoring_schedule_status: str
@@ -4010,19 +4195,43 @@ class MonitoringSchedule(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        monitoring_schedule = cls(session, region)
-    
+        logger.debug(f"Creating monitoring_schedule resource.")
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'MonitoringScheduleName': monitoring_schedule_name,
             'MonitoringScheduleConfig': monitoring_schedule_config,
             'Tags': tags,
         }
-        response = monitoring_schedule.client.create_monitoring_schedule(**operation_input_args)
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = cls._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+        
+        # create the resource
+        response = client.create_monitoring_schedule(**operation_input_args)
+        logger.debug(f"Response: {response}")
+    
+        return cls.get(monitoring_schedule_name=monitoring_schedule_name, session=session, region=region)
+    
+    @classmethod
+    def get(
+        cls,
+        monitoring_schedule_name: str,
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional[object]:
+        monitoring_schedule = cls(session, region)
+    
+        operation_input_args = {
+            'MonitoringScheduleName': monitoring_schedule_name,
+        }
+        response = monitoring_schedule.client.describe_monitoring_schedule(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-    
+        deserializer(monitoring_schedule, response, 'DescribeMonitoringScheduleResponse')
         return monitoring_schedule
     
     def refresh(self) -> Optional[object]:
@@ -4071,29 +4280,9 @@ class MonitoringSchedule(BaseModel):
                 raise Exception("Timeout exceeded. Final resource state - " + current_status)
     
             time.sleep(poll)
-    
-    @classmethod
-    def get(
-        cls,
-        monitoring_schedule_name: str,
-        session: Optional[Session] = None,
-        region: Optional[str] = None,
-    ) -> Optional[object]:
-        monitoring_schedule = cls(session, region)
-    
-        operation_input_args = {
-            'MonitoringScheduleName': monitoring_schedule_name,
-        }
-        response = monitoring_schedule.client.describe_monitoring_schedule(**operation_input_args)
-    
-        pprint(response)
-    
-        # deserialize the response
-        deserializer(monitoring_schedule, response, 'DescribeMonitoringScheduleResponse')
-        return monitoring_schedule
 
 
-class NotebookInstance(BaseModel):
+class NotebookInstance(Base):
     notebook_instance_arn: Optional[str] = Unassigned()
     notebook_instance_name: Optional[str] = Unassigned()
     notebook_instance_status: Optional[str] = Unassigned()
@@ -4139,8 +4328,9 @@ class NotebookInstance(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        notebook_instance = cls(session, region)
-    
+        logger.debug(f"Creating notebook_instance resource.")
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'NotebookInstanceName': notebook_instance_name,
             'InstanceType': instance_type,
@@ -4159,12 +4349,35 @@ class NotebookInstance(BaseModel):
             'PlatformIdentifier': platform_identifier,
             'InstanceMetadataServiceConfiguration': instance_metadata_service_configuration,
         }
-        response = notebook_instance.client.create_notebook_instance(**operation_input_args)
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = cls._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+        
+        # create the resource
+        response = client.create_notebook_instance(**operation_input_args)
+        logger.debug(f"Response: {response}")
+    
+        return cls.get(notebook_instance_name=notebook_instance_name, session=session, region=region)
+    
+    @classmethod
+    def get(
+        cls,
+        notebook_instance_name: str,
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional[object]:
+        notebook_instance = cls(session, region)
+    
+        operation_input_args = {
+            'NotebookInstanceName': notebook_instance_name,
+        }
+        response = notebook_instance.client.describe_notebook_instance(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-    
+        deserializer(notebook_instance, response, 'DescribeNotebookInstanceOutput')
         return notebook_instance
     
     def refresh(self) -> Optional[object]:
@@ -4213,29 +4426,9 @@ class NotebookInstance(BaseModel):
                 raise Exception("Timeout exceeded. Final resource state - " + current_status)
     
             time.sleep(poll)
-    
-    @classmethod
-    def get(
-        cls,
-        notebook_instance_name: str,
-        session: Optional[Session] = None,
-        region: Optional[str] = None,
-    ) -> Optional[object]:
-        notebook_instance = cls(session, region)
-    
-        operation_input_args = {
-            'NotebookInstanceName': notebook_instance_name,
-        }
-        response = notebook_instance.client.describe_notebook_instance(**operation_input_args)
-    
-        pprint(response)
-    
-        # deserialize the response
-        deserializer(notebook_instance, response, 'DescribeNotebookInstanceOutput')
-        return notebook_instance
 
 
-class NotebookInstanceLifecycleConfig(BaseModel):
+class NotebookInstanceLifecycleConfig(Base):
     notebook_instance_lifecycle_config_arn: Optional[str] = Unassigned()
     notebook_instance_lifecycle_config_name: Optional[str] = Unassigned()
     on_create: Optional[List[NotebookInstanceLifecycleHook]] = Unassigned()
@@ -4252,38 +4445,24 @@ class NotebookInstanceLifecycleConfig(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        notebook_instance_lifecycle_config = cls(session, region)
-    
+        logger.debug(f"Creating notebook_instance_lifecycle_config resource.")
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'NotebookInstanceLifecycleConfigName': notebook_instance_lifecycle_config_name,
             'OnCreate': on_create,
             'OnStart': on_start,
         }
-        response = notebook_instance_lifecycle_config.client.create_notebook_instance_lifecycle_config(**operation_input_args)
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = cls._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+        
+        # create the resource
+        response = client.create_notebook_instance_lifecycle_config(**operation_input_args)
+        logger.debug(f"Response: {response}")
     
-        pprint(response)
-    
-        # deserialize the response
-    
-        return notebook_instance_lifecycle_config
-    
-    def refresh(self) -> Optional[object]:
-    
-        operation_input_args = {
-            'NotebookInstanceLifecycleConfigName': self.notebook_instance_lifecycle_config_name,
-        }
-        response = self.client.describe_notebook_instance_lifecycle_config(**operation_input_args)
-    
-        # deserialize the response
-        deserializer(self, response, 'DescribeNotebookInstanceLifecycleConfigOutput')
-        return self
-    
-    def delete(self) -> None:
-    
-        operation_input_args = {
-            'NotebookInstanceLifecycleConfigName': self.notebook_instance_lifecycle_config_name,
-        }
-        self.client.delete_notebook_instance_lifecycle_config(**operation_input_args)
+        return cls.get(notebook_instance_lifecycle_config_name=notebook_instance_lifecycle_config_name, session=session, region=region)
     
     @classmethod
     def get(
@@ -4304,9 +4483,27 @@ class NotebookInstanceLifecycleConfig(BaseModel):
         # deserialize the response
         deserializer(notebook_instance_lifecycle_config, response, 'DescribeNotebookInstanceLifecycleConfigOutput')
         return notebook_instance_lifecycle_config
+    
+    def refresh(self) -> Optional[object]:
+    
+        operation_input_args = {
+            'NotebookInstanceLifecycleConfigName': self.notebook_instance_lifecycle_config_name,
+        }
+        response = self.client.describe_notebook_instance_lifecycle_config(**operation_input_args)
+    
+        # deserialize the response
+        deserializer(self, response, 'DescribeNotebookInstanceLifecycleConfigOutput')
+        return self
+    
+    def delete(self) -> None:
+    
+        operation_input_args = {
+            'NotebookInstanceLifecycleConfigName': self.notebook_instance_lifecycle_config_name,
+        }
+        self.client.delete_notebook_instance_lifecycle_config(**operation_input_args)
 
 
-class Pipeline(BaseModel):
+class Pipeline(Base):
     pipeline_arn: Optional[str] = Unassigned()
     pipeline_name: Optional[str] = Unassigned()
     pipeline_display_name: Optional[str] = Unassigned()
@@ -4336,8 +4533,9 @@ class Pipeline(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        pipeline = cls(session, region)
-    
+        logger.debug(f"Creating pipeline resource.")
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'PipelineName': pipeline_name,
             'PipelineDisplayName': pipeline_display_name,
@@ -4349,12 +4547,35 @@ class Pipeline(BaseModel):
             'Tags': tags,
             'ParallelismConfiguration': parallelism_configuration,
         }
-        response = pipeline.client.create_pipeline(**operation_input_args)
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = cls._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+        
+        # create the resource
+        response = client.create_pipeline(**operation_input_args)
+        logger.debug(f"Response: {response}")
+    
+        return cls.get(pipeline_name=pipeline_name, session=session, region=region)
+    
+    @classmethod
+    def get(
+        cls,
+        pipeline_name: str,
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional[object]:
+        pipeline = cls(session, region)
+    
+        operation_input_args = {
+            'PipelineName': pipeline_name,
+        }
+        response = pipeline.client.describe_pipeline(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-    
+        deserializer(pipeline, response, 'DescribePipelineResponse')
         return pipeline
     
     def refresh(self) -> Optional[object]:
@@ -4397,29 +4618,9 @@ class Pipeline(BaseModel):
                 raise Exception("Timeout exceeded. Final resource state - " + current_status)
     
             time.sleep(poll)
-    
-    @classmethod
-    def get(
-        cls,
-        pipeline_name: str,
-        session: Optional[Session] = None,
-        region: Optional[str] = None,
-    ) -> Optional[object]:
-        pipeline = cls(session, region)
-    
-        operation_input_args = {
-            'PipelineName': pipeline_name,
-        }
-        response = pipeline.client.describe_pipeline(**operation_input_args)
-    
-        pprint(response)
-    
-        # deserialize the response
-        deserializer(pipeline, response, 'DescribePipelineResponse')
-        return pipeline
 
 
-class PipelineExecution(BaseModel):
+class PipelineExecution(Base):
     pipeline_arn: Optional[str] = Unassigned()
     pipeline_execution_arn: Optional[str] = Unassigned()
     pipeline_execution_display_name: Optional[str] = Unassigned()
@@ -4433,6 +4634,26 @@ class PipelineExecution(BaseModel):
     last_modified_by: Optional[UserContext] = Unassigned()
     parallelism_configuration: Optional[ParallelismConfiguration] = Unassigned()
     selective_execution_config: Optional[SelectiveExecutionConfig] = Unassigned()
+    
+    @classmethod
+    def get(
+        cls,
+        pipeline_execution_arn: str,
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional[object]:
+        pipeline_execution = cls(session, region)
+    
+        operation_input_args = {
+            'PipelineExecutionArn': pipeline_execution_arn,
+        }
+        response = pipeline_execution.client.describe_pipeline_execution(**operation_input_args)
+    
+        pprint(response)
+    
+        # deserialize the response
+        deserializer(pipeline_execution, response, 'DescribePipelineExecutionResponse')
+        return pipeline_execution
     
     def refresh(self) -> Optional[object]:
     
@@ -4474,29 +4695,9 @@ class PipelineExecution(BaseModel):
                 raise Exception("Timeout exceeded. Final resource state - " + current_status)
     
             time.sleep(poll)
-    
-    @classmethod
-    def get(
-        cls,
-        pipeline_execution_arn: str,
-        session: Optional[Session] = None,
-        region: Optional[str] = None,
-    ) -> Optional[object]:
-        pipeline_execution = cls(session, region)
-    
-        operation_input_args = {
-            'PipelineExecutionArn': pipeline_execution_arn,
-        }
-        response = pipeline_execution.client.describe_pipeline_execution(**operation_input_args)
-    
-        pprint(response)
-    
-        # deserialize the response
-        deserializer(pipeline_execution, response, 'DescribePipelineExecutionResponse')
-        return pipeline_execution
 
 
-class ProcessingJob(BaseModel):
+class ProcessingJob(Base):
     processing_job_name: str
     processing_resources: ProcessingResources
     app_specification: AppSpecification
@@ -4536,8 +4737,9 @@ class ProcessingJob(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        processing_job = cls(session, region)
-    
+        logger.debug(f"Creating processing_job resource.")
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'ProcessingInputs': processing_inputs,
             'ProcessingOutputConfig': processing_output_config,
@@ -4551,12 +4753,35 @@ class ProcessingJob(BaseModel):
             'Tags': tags,
             'ExperimentConfig': experiment_config,
         }
-        response = processing_job.client.create_processing_job(**operation_input_args)
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = cls._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+        
+        # create the resource
+        response = client.create_processing_job(**operation_input_args)
+        logger.debug(f"Response: {response}")
+    
+        return cls.get(processing_job_name=processing_job_name, session=session, region=region)
+    
+    @classmethod
+    def get(
+        cls,
+        processing_job_name: str,
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional[object]:
+        processing_job = cls(session, region)
+    
+        operation_input_args = {
+            'ProcessingJobName': processing_job_name,
+        }
+        response = processing_job.client.describe_processing_job(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-    
+        deserializer(processing_job, response, 'DescribeProcessingJobResponse')
         return processing_job
     
     def refresh(self) -> Optional[object]:
@@ -4598,29 +4823,9 @@ class ProcessingJob(BaseModel):
                 raise Exception("Timeout exceeded. Final resource state - " + current_status)
     
             time.sleep(poll)
-    
-    @classmethod
-    def get(
-        cls,
-        processing_job_name: str,
-        session: Optional[Session] = None,
-        region: Optional[str] = None,
-    ) -> Optional[object]:
-        processing_job = cls(session, region)
-    
-        operation_input_args = {
-            'ProcessingJobName': processing_job_name,
-        }
-        response = processing_job.client.describe_processing_job(**operation_input_args)
-    
-        pprint(response)
-    
-        # deserialize the response
-        deserializer(processing_job, response, 'DescribeProcessingJobResponse')
-        return processing_job
 
 
-class Project(BaseModel):
+class Project(Base):
     project_arn: str
     project_name: str
     project_id: str
@@ -4643,20 +4848,44 @@ class Project(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        project = cls(session, region)
-    
+        logger.debug(f"Creating project resource.")
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'ProjectName': project_name,
             'ProjectDescription': project_description,
             'ServiceCatalogProvisioningDetails': service_catalog_provisioning_details,
             'Tags': tags,
         }
-        response = project.client.create_project(**operation_input_args)
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = cls._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+        
+        # create the resource
+        response = client.create_project(**operation_input_args)
+        logger.debug(f"Response: {response}")
+    
+        return cls.get(project_name=project_name, session=session, region=region)
+    
+    @classmethod
+    def get(
+        cls,
+        project_name: str,
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional[object]:
+        project = cls(session, region)
+    
+        operation_input_args = {
+            'ProjectName': project_name,
+        }
+        response = project.client.describe_project(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-    
+        deserializer(project, response, 'DescribeProjectOutput')
         return project
     
     def refresh(self) -> Optional[object]:
@@ -4698,29 +4927,9 @@ class Project(BaseModel):
                 raise Exception("Timeout exceeded. Final resource state - " + current_status)
     
             time.sleep(poll)
-    
-    @classmethod
-    def get(
-        cls,
-        project_name: str,
-        session: Optional[Session] = None,
-        region: Optional[str] = None,
-    ) -> Optional[object]:
-        project = cls(session, region)
-    
-        operation_input_args = {
-            'ProjectName': project_name,
-        }
-        response = project.client.describe_project(**operation_input_args)
-    
-        pprint(response)
-    
-        # deserialize the response
-        deserializer(project, response, 'DescribeProjectOutput')
-        return project
 
 
-class Space(BaseModel):
+class Space(Base):
     domain_id: Optional[str] = Unassigned()
     space_arn: Optional[str] = Unassigned()
     space_name: Optional[str] = Unassigned()
@@ -4748,8 +4957,9 @@ class Space(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        space = cls(session, region)
-    
+        logger.debug(f"Creating space resource.")
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'DomainId': domain_id,
             'SpaceName': space_name,
@@ -4759,12 +4969,37 @@ class Space(BaseModel):
             'SpaceSharingSettings': space_sharing_settings,
             'SpaceDisplayName': space_display_name,
         }
-        response = space.client.create_space(**operation_input_args)
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = cls._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+        
+        # create the resource
+        response = client.create_space(**operation_input_args)
+        logger.debug(f"Response: {response}")
+    
+        return cls.get(domain_id=domain_id, space_name=space_name, session=session, region=region)
+    
+    @classmethod
+    def get(
+        cls,
+        domain_id: str,
+        space_name: str,
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional[object]:
+        space = cls(session, region)
+    
+        operation_input_args = {
+            'DomainId': domain_id,
+            'SpaceName': space_name,
+        }
+        response = space.client.describe_space(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-    
+        deserializer(space, response, 'DescribeSpaceResponse')
         return space
     
     def refresh(self) -> Optional[object]:
@@ -4808,31 +5043,9 @@ class Space(BaseModel):
                 raise Exception("Timeout exceeded. Final resource state - " + current_status)
     
             time.sleep(poll)
-    
-    @classmethod
-    def get(
-        cls,
-        domain_id: str,
-        space_name: str,
-        session: Optional[Session] = None,
-        region: Optional[str] = None,
-    ) -> Optional[object]:
-        space = cls(session, region)
-    
-        operation_input_args = {
-            'DomainId': domain_id,
-            'SpaceName': space_name,
-        }
-        response = space.client.describe_space(**operation_input_args)
-    
-        pprint(response)
-    
-        # deserialize the response
-        deserializer(space, response, 'DescribeSpaceResponse')
-        return space
 
 
-class StudioLifecycleConfig(BaseModel):
+class StudioLifecycleConfig(Base):
     studio_lifecycle_config_arn: Optional[str] = Unassigned()
     studio_lifecycle_config_name: Optional[str] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
@@ -4850,39 +5063,25 @@ class StudioLifecycleConfig(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        studio_lifecycle_config = cls(session, region)
-    
+        logger.debug(f"Creating studio_lifecycle_config resource.")
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'StudioLifecycleConfigName': studio_lifecycle_config_name,
             'StudioLifecycleConfigContent': studio_lifecycle_config_content,
             'StudioLifecycleConfigAppType': studio_lifecycle_config_app_type,
             'Tags': tags,
         }
-        response = studio_lifecycle_config.client.create_studio_lifecycle_config(**operation_input_args)
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = cls._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+        
+        # create the resource
+        response = client.create_studio_lifecycle_config(**operation_input_args)
+        logger.debug(f"Response: {response}")
     
-        pprint(response)
-    
-        # deserialize the response
-    
-        return studio_lifecycle_config
-    
-    def refresh(self) -> Optional[object]:
-    
-        operation_input_args = {
-            'StudioLifecycleConfigName': self.studio_lifecycle_config_name,
-        }
-        response = self.client.describe_studio_lifecycle_config(**operation_input_args)
-    
-        # deserialize the response
-        deserializer(self, response, 'DescribeStudioLifecycleConfigResponse')
-        return self
-    
-    def delete(self) -> None:
-    
-        operation_input_args = {
-            'StudioLifecycleConfigName': self.studio_lifecycle_config_name,
-        }
-        self.client.delete_studio_lifecycle_config(**operation_input_args)
+        return cls.get(studio_lifecycle_config_name=studio_lifecycle_config_name, session=session, region=region)
     
     @classmethod
     def get(
@@ -4903,9 +5102,27 @@ class StudioLifecycleConfig(BaseModel):
         # deserialize the response
         deserializer(studio_lifecycle_config, response, 'DescribeStudioLifecycleConfigResponse')
         return studio_lifecycle_config
+    
+    def refresh(self) -> Optional[object]:
+    
+        operation_input_args = {
+            'StudioLifecycleConfigName': self.studio_lifecycle_config_name,
+        }
+        response = self.client.describe_studio_lifecycle_config(**operation_input_args)
+    
+        # deserialize the response
+        deserializer(self, response, 'DescribeStudioLifecycleConfigResponse')
+        return self
+    
+    def delete(self) -> None:
+    
+        operation_input_args = {
+            'StudioLifecycleConfigName': self.studio_lifecycle_config_name,
+        }
+        self.client.delete_studio_lifecycle_config(**operation_input_args)
 
 
-class TrainingJob(BaseModel):
+class TrainingJob(Base):
     training_job_name: str
     training_job_arn: str
     model_artifacts: ModelArtifacts
@@ -4980,8 +5197,9 @@ class TrainingJob(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        training_job = cls(session, region)
-    
+        logger.debug(f"Creating training_job resource.")
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'TrainingJobName': training_job_name,
             'HyperParameters': hyper_parameters,
@@ -5008,12 +5226,35 @@ class TrainingJob(BaseModel):
             'RemoteDebugConfig': remote_debug_config,
             'InfraCheckConfig': infra_check_config,
         }
-        response = training_job.client.create_training_job(**operation_input_args)
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = cls._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+        
+        # create the resource
+        response = client.create_training_job(**operation_input_args)
+        logger.debug(f"Response: {response}")
+    
+        return cls.get(training_job_name=training_job_name, session=session, region=region)
+    
+    @classmethod
+    def get(
+        cls,
+        training_job_name: str,
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional[object]:
+        training_job = cls(session, region)
+    
+        operation_input_args = {
+            'TrainingJobName': training_job_name,
+        }
+        response = training_job.client.describe_training_job(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-    
+        deserializer(training_job, response, 'DescribeTrainingJobResponse')
         return training_job
     
     def refresh(self) -> Optional[object]:
@@ -5055,29 +5296,9 @@ class TrainingJob(BaseModel):
                 raise Exception("Timeout exceeded. Final resource state - " + current_status)
     
             time.sleep(poll)
-    
-    @classmethod
-    def get(
-        cls,
-        training_job_name: str,
-        session: Optional[Session] = None,
-        region: Optional[str] = None,
-    ) -> Optional[object]:
-        training_job = cls(session, region)
-    
-        operation_input_args = {
-            'TrainingJobName': training_job_name,
-        }
-        response = training_job.client.describe_training_job(**operation_input_args)
-    
-        pprint(response)
-    
-        # deserialize the response
-        deserializer(training_job, response, 'DescribeTrainingJobResponse')
-        return training_job
 
 
-class TransformJob(BaseModel):
+class TransformJob(Base):
     transform_job_name: str
     transform_job_arn: str
     transform_job_status: str
@@ -5120,8 +5341,9 @@ class TransformJob(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        transform_job = cls(session, region)
-    
+        logger.debug(f"Creating transform_job resource.")
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'TransformJobName': transform_job_name,
             'ModelName': model_name,
@@ -5138,12 +5360,35 @@ class TransformJob(BaseModel):
             'Tags': tags,
             'ExperimentConfig': experiment_config,
         }
-        response = transform_job.client.create_transform_job(**operation_input_args)
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = cls._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+        
+        # create the resource
+        response = client.create_transform_job(**operation_input_args)
+        logger.debug(f"Response: {response}")
+    
+        return cls.get(transform_job_name=transform_job_name, session=session, region=region)
+    
+    @classmethod
+    def get(
+        cls,
+        transform_job_name: str,
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional[object]:
+        transform_job = cls(session, region)
+    
+        operation_input_args = {
+            'TransformJobName': transform_job_name,
+        }
+        response = transform_job.client.describe_transform_job(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-    
+        deserializer(transform_job, response, 'DescribeTransformJobResponse')
         return transform_job
     
     def refresh(self) -> Optional[object]:
@@ -5185,29 +5430,9 @@ class TransformJob(BaseModel):
                 raise Exception("Timeout exceeded. Final resource state - " + current_status)
     
             time.sleep(poll)
-    
-    @classmethod
-    def get(
-        cls,
-        transform_job_name: str,
-        session: Optional[Session] = None,
-        region: Optional[str] = None,
-    ) -> Optional[object]:
-        transform_job = cls(session, region)
-    
-        operation_input_args = {
-            'TransformJobName': transform_job_name,
-        }
-        response = transform_job.client.describe_transform_job(**operation_input_args)
-    
-        pprint(response)
-    
-        # deserialize the response
-        deserializer(transform_job, response, 'DescribeTransformJobResponse')
-        return transform_job
 
 
-class Trial(BaseModel):
+class Trial(Base):
     trial_name: Optional[str] = Unassigned()
     trial_arn: Optional[str] = Unassigned()
     display_name: Optional[str] = Unassigned()
@@ -5230,8 +5455,9 @@ class Trial(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        trial = cls(session, region)
-    
+        logger.debug(f"Creating trial resource.")
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'TrialName': trial_name,
             'DisplayName': display_name,
@@ -5239,31 +5465,16 @@ class Trial(BaseModel):
             'MetadataProperties': metadata_properties,
             'Tags': tags,
         }
-        response = trial.client.create_trial(**operation_input_args)
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = cls._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+        
+        # create the resource
+        response = client.create_trial(**operation_input_args)
+        logger.debug(f"Response: {response}")
     
-        pprint(response)
-    
-        # deserialize the response
-    
-        return trial
-    
-    def refresh(self) -> Optional[object]:
-    
-        operation_input_args = {
-            'TrialName': self.trial_name,
-        }
-        response = self.client.describe_trial(**operation_input_args)
-    
-        # deserialize the response
-        deserializer(self, response, 'DescribeTrialResponse')
-        return self
-    
-    def delete(self) -> None:
-    
-        operation_input_args = {
-            'TrialName': self.trial_name,
-        }
-        self.client.delete_trial(**operation_input_args)
+        return cls.get(trial_name=trial_name, session=session, region=region)
     
     @classmethod
     def get(
@@ -5284,9 +5495,27 @@ class Trial(BaseModel):
         # deserialize the response
         deserializer(trial, response, 'DescribeTrialResponse')
         return trial
+    
+    def refresh(self) -> Optional[object]:
+    
+        operation_input_args = {
+            'TrialName': self.trial_name,
+        }
+        response = self.client.describe_trial(**operation_input_args)
+    
+        # deserialize the response
+        deserializer(self, response, 'DescribeTrialResponse')
+        return self
+    
+    def delete(self) -> None:
+    
+        operation_input_args = {
+            'TrialName': self.trial_name,
+        }
+        self.client.delete_trial(**operation_input_args)
 
 
-class TrialComponent(BaseModel):
+class TrialComponent(Base):
     trial_component_name: Optional[str] = Unassigned()
     trial_component_arn: Optional[str] = Unassigned()
     display_name: Optional[str] = Unassigned()
@@ -5322,8 +5551,9 @@ class TrialComponent(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        trial_component = cls(session, region)
-    
+        logger.debug(f"Creating trial_component resource.")
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'TrialComponentName': trial_component_name,
             'DisplayName': display_name,
@@ -5336,12 +5566,35 @@ class TrialComponent(BaseModel):
             'MetadataProperties': metadata_properties,
             'Tags': tags,
         }
-        response = trial_component.client.create_trial_component(**operation_input_args)
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = cls._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+        
+        # create the resource
+        response = client.create_trial_component(**operation_input_args)
+        logger.debug(f"Response: {response}")
+    
+        return cls.get(trial_component_name=trial_component_name, session=session, region=region)
+    
+    @classmethod
+    def get(
+        cls,
+        trial_component_name: str,
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional[object]:
+        trial_component = cls(session, region)
+    
+        operation_input_args = {
+            'TrialComponentName': trial_component_name,
+        }
+        response = trial_component.client.describe_trial_component(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-    
+        deserializer(trial_component, response, 'DescribeTrialComponentResponse')
         return trial_component
     
     def refresh(self) -> Optional[object]:
@@ -5383,29 +5636,9 @@ class TrialComponent(BaseModel):
                 raise Exception("Timeout exceeded. Final resource state - " + current_status)
     
             time.sleep(poll)
-    
-    @classmethod
-    def get(
-        cls,
-        trial_component_name: str,
-        session: Optional[Session] = None,
-        region: Optional[str] = None,
-    ) -> Optional[object]:
-        trial_component = cls(session, region)
-    
-        operation_input_args = {
-            'TrialComponentName': trial_component_name,
-        }
-        response = trial_component.client.describe_trial_component(**operation_input_args)
-    
-        pprint(response)
-    
-        # deserialize the response
-        deserializer(trial_component, response, 'DescribeTrialComponentResponse')
-        return trial_component
 
 
-class UserProfile(BaseModel):
+class UserProfile(Base):
     domain_id: Optional[str] = Unassigned()
     user_profile_arn: Optional[str] = Unassigned()
     user_profile_name: Optional[str] = Unassigned()
@@ -5430,8 +5663,9 @@ class UserProfile(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        user_profile = cls(session, region)
-    
+        logger.debug(f"Creating user_profile resource.")
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'DomainId': domain_id,
             'UserProfileName': user_profile_name,
@@ -5440,12 +5674,37 @@ class UserProfile(BaseModel):
             'Tags': tags,
             'UserSettings': user_settings,
         }
-        response = user_profile.client.create_user_profile(**operation_input_args)
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = cls._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+        
+        # create the resource
+        response = client.create_user_profile(**operation_input_args)
+        logger.debug(f"Response: {response}")
+    
+        return cls.get(domain_id=domain_id, user_profile_name=user_profile_name, session=session, region=region)
+    
+    @classmethod
+    def get(
+        cls,
+        domain_id: str,
+        user_profile_name: str,
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional[object]:
+        user_profile = cls(session, region)
+    
+        operation_input_args = {
+            'DomainId': domain_id,
+            'UserProfileName': user_profile_name,
+        }
+        response = user_profile.client.describe_user_profile(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-    
+        deserializer(user_profile, response, 'DescribeUserProfileResponse')
         return user_profile
     
     def refresh(self) -> Optional[object]:
@@ -5489,31 +5748,9 @@ class UserProfile(BaseModel):
                 raise Exception("Timeout exceeded. Final resource state - " + current_status)
     
             time.sleep(poll)
-    
-    @classmethod
-    def get(
-        cls,
-        domain_id: str,
-        user_profile_name: str,
-        session: Optional[Session] = None,
-        region: Optional[str] = None,
-    ) -> Optional[object]:
-        user_profile = cls(session, region)
-    
-        operation_input_args = {
-            'DomainId': domain_id,
-            'UserProfileName': user_profile_name,
-        }
-        response = user_profile.client.describe_user_profile(**operation_input_args)
-    
-        pprint(response)
-    
-        # deserialize the response
-        deserializer(user_profile, response, 'DescribeUserProfileResponse')
-        return user_profile
 
 
-class Workforce(BaseModel):
+class Workforce(Base):
     workforce: Workforce
     
     @classmethod
@@ -5528,8 +5765,9 @@ class Workforce(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        workforce = cls(session, region)
-    
+        logger.debug(f"Creating workforce resource.")
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'CognitoConfig': cognito_config,
             'OidcConfig': oidc_config,
@@ -5538,12 +5776,35 @@ class Workforce(BaseModel):
             'Tags': tags,
             'WorkforceVpcConfig': workforce_vpc_config,
         }
-        response = workforce.client.create_workforce(**operation_input_args)
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = cls._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+        
+        # create the resource
+        response = client.create_workforce(**operation_input_args)
+        logger.debug(f"Response: {response}")
+    
+        return cls.get(workforce_name=workforce_name, session=session, region=region)
+    
+    @classmethod
+    def get(
+        cls,
+        workforce_name: str,
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional[object]:
+        workforce = cls(session, region)
+    
+        operation_input_args = {
+            'WorkforceName': workforce_name,
+        }
+        response = workforce.client.describe_workforce(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-    
+        deserializer(workforce, response, 'DescribeWorkforceResponse')
         return workforce
     
     def refresh(self) -> Optional[object]:
@@ -5585,29 +5846,9 @@ class Workforce(BaseModel):
                 raise Exception("Timeout exceeded. Final resource state - " + current_status)
     
             time.sleep(poll)
-    
-    @classmethod
-    def get(
-        cls,
-        workforce_name: str,
-        session: Optional[Session] = None,
-        region: Optional[str] = None,
-    ) -> Optional[object]:
-        workforce = cls(session, region)
-    
-        operation_input_args = {
-            'WorkforceName': workforce_name,
-        }
-        response = workforce.client.describe_workforce(**operation_input_args)
-    
-        pprint(response)
-    
-        # deserialize the response
-        deserializer(workforce, response, 'DescribeWorkforceResponse')
-        return workforce
 
 
-class Workteam(BaseModel):
+class Workteam(Base):
     workteam: Workteam
     
     @classmethod
@@ -5622,8 +5863,9 @@ class Workteam(BaseModel):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        workteam = cls(session, region)
-    
+        logger.debug(f"Creating workteam resource.")
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        
         operation_input_args = {
             'WorkteamName': workteam_name,
             'WorkforceName': workforce_name,
@@ -5632,31 +5874,16 @@ class Workteam(BaseModel):
             'NotificationConfiguration': notification_configuration,
             'Tags': tags,
         }
-        response = workteam.client.create_workteam(**operation_input_args)
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = cls._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+        
+        # create the resource
+        response = client.create_workteam(**operation_input_args)
+        logger.debug(f"Response: {response}")
     
-        pprint(response)
-    
-        # deserialize the response
-    
-        return workteam
-    
-    def refresh(self) -> Optional[object]:
-    
-        operation_input_args = {
-            'WorkteamName': self.workteam_name,
-        }
-        response = self.client.describe_workteam(**operation_input_args)
-    
-        # deserialize the response
-        deserializer(self, response, 'DescribeWorkteamResponse')
-        return self
-    
-    def delete(self) -> None:
-    
-        operation_input_args = {
-            'WorkteamName': self.workteam_name,
-        }
-        self.client.delete_workteam(**operation_input_args)
+        return cls.get(workteam_name=workteam_name, session=session, region=region)
     
     @classmethod
     def get(
@@ -5677,5 +5904,23 @@ class Workteam(BaseModel):
         # deserialize the response
         deserializer(workteam, response, 'DescribeWorkteamResponse')
         return workteam
+    
+    def refresh(self) -> Optional[object]:
+    
+        operation_input_args = {
+            'WorkteamName': self.workteam_name,
+        }
+        response = self.client.describe_workteam(**operation_input_args)
+    
+        # deserialize the response
+        deserializer(self, response, 'DescribeWorkteamResponse')
+        return self
+    
+    def delete(self) -> None:
+    
+        operation_input_args = {
+            'WorkteamName': self.workteam_name,
+        }
+        self.client.delete_workteam(**operation_input_args)
 
 

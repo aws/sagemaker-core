@@ -189,3 +189,9 @@ class ShapesExtractor:
             else:
                 init_data_body[f"{member_name_snake_case}"] = f"Optional[{member_type}] = Unassigned()"
         return init_data_body
+    
+    def get_required_members(self, shape):
+        shape_dict = self.service_json['shapes'][shape]
+        required_args = shape_dict.get("required", [])
+
+        return [convert_to_snake_case(arg) for arg in required_args]
