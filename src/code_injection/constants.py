@@ -12,7 +12,7 @@
 # language governing permissions and limitations under the License.
 """Constants used in the code_injection modules."""
 
-BASIC_TYPES = ["string", "boolean", "integer", "long", "double", "timestamp"]
+BASIC_TYPES = ["string", "boolean", "integer", "long", "double", "timestamp", "float"]
 STRUCTURE_TYPE = "structure"
 MAP_TYPE = "map"
 LIST_TYPE = "list"
