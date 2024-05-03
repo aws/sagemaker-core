@@ -29,7 +29,8 @@ def create(
     session: Optional[Session] = None,
     region: Optional[str] = None,
 ) -> Optional[object]:
-    compilation_job = cls(session, region)
+    logger.debug(f"Creating compilation_job resource.")
+    client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
 
     operation_input_args = {
         'CompilationJobName': compilation_job_name,
@@ -41,13 +42,16 @@ def create(
         'StoppingCondition': stopping_condition,
         'Tags': tags,
     }
-    response = compilation_job.client.create_compilation_job(**operation_input_args)
+    logger.debug(f"Input request: {operation_input_args}")
+    # serialize the input request
+    operation_input_args = cls._serialize(operation_input_args)
+    logger.debug(f"Serialized input request: {operation_input_args}")
 
-    pprint(response)
+    # create the resource
+    response = client.create_compilation_job(**operation_input_args)
+    logger.debug(f"Response: {response}")
 
-    # deserialize the response
-
-    return compilation_job
+    return cls.get(compilation_job_name=compilation_job_name, session=session, region=region)
 '''
         assert self.resource_generator.generate_create_method("CompilationJob") == expected_output
 
@@ -64,8 +68,6 @@ def get(
     session: Optional[Session] = None,
     region: Optional[str] = None,
 ) -> Optional[object]:
-    app = cls(session, region)
-
     operation_input_args = {
         'DomainId': domain_id,
         'UserProfileName': user_profile_name,
@@ -73,12 +75,14 @@ def get(
         'AppType': app_type,
         'AppName': app_name,
     }
-    response = app.client.describe_app(**operation_input_args)
+    client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+    response = client.describe_app(**operation_input_args)
 
     pprint(response)
 
     # deserialize the response
-    deserializer(app, response, 'DescribeAppResponse')
+    transformed_response = transform(response, 'DescribeAppResponse')
+    app = cls(**transformed_response)
     return app
 '''
         assert self.resource_generator.generate_get_method("App") == expected_output
@@ -97,7 +101,7 @@ def refresh(self) -> Optional[object]:
     response = self.client.describe_app(**operation_input_args)
 
     # deserialize the response
-    deserializer(self, response, 'DescribeAppResponse')
+
     return self
 '''
         assert self.resource_generator.generate_refresh_method("App") == expected_output

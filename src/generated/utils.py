@@ -60,7 +60,7 @@ class SageMakerClient(metaclass=SingletonMeta):
             logger.warning("No boto3 session provided. Creating a new session.")
             session = Session()
 
-        if region is None:
+        if region_name is None:
             logger.warning("No region provided. Using default region.")
             region = session.region_name
 

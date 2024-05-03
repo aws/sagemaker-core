@@ -21,10 +21,10 @@ from pprint import pprint
 from pydantic import BaseModel, validate_call
 from typing import List, Dict, Optional, Literal
 from boto3.session import Session
-from utils import SageMakerClient, Unassigned
-from shapes import *
+from .utils import SageMakerClient, Unassigned
+from .shapes import *
 
-from src.code_injection.codec import deserializer
+from src.code_injection.codec import transform
 
 
 logging.basicConfig(level=logging.INFO)
@@ -88,7 +88,7 @@ class Action(Base):
     ) -> Optional[object]:
         logger.debug(f"Creating action resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-        
+    
         operation_input_args = {
             'ActionName': action_name,
             'Source': source,
@@ -103,7 +103,7 @@ class Action(Base):
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
-        
+    
         # create the resource
         response = client.create_action(**operation_input_args)
         logger.debug(f"Response: {response}")
@@ -117,17 +117,17 @@ class Action(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        action = cls(session, region)
-    
         operation_input_args = {
             'ActionName': action_name,
         }
-        response = action.client.describe_action(**operation_input_args)
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        response = client.describe_action(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        deserializer(action, response, 'DescribeActionResponse')
+        transformed_response = transform(response, 'DescribeActionResponse')
+        action = cls(**transformed_response)
         return action
     
     def refresh(self) -> Optional[object]:
@@ -138,7 +138,7 @@ class Action(Base):
         response = self.client.describe_action(**operation_input_args)
     
         # deserialize the response
-        deserializer(self, response, 'DescribeActionResponse')
+    
         return self
     
     def delete(self) -> None:
@@ -177,7 +177,7 @@ class Algorithm(Base):
     ) -> Optional[object]:
         logger.debug(f"Creating algorithm resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-        
+    
         operation_input_args = {
             'AlgorithmName': algorithm_name,
             'AlgorithmDescription': algorithm_description,
@@ -191,7 +191,7 @@ class Algorithm(Base):
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
-        
+    
         # create the resource
         response = client.create_algorithm(**operation_input_args)
         logger.debug(f"Response: {response}")
@@ -205,17 +205,17 @@ class Algorithm(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        algorithm = cls(session, region)
-    
         operation_input_args = {
             'AlgorithmName': algorithm_name,
         }
-        response = algorithm.client.describe_algorithm(**operation_input_args)
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        response = client.describe_algorithm(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        deserializer(algorithm, response, 'DescribeAlgorithmOutput')
+        transformed_response = transform(response, 'DescribeAlgorithmOutput')
+        algorithm = cls(**transformed_response)
         return algorithm
     
     def refresh(self) -> Optional[object]:
@@ -226,7 +226,7 @@ class Algorithm(Base):
         response = self.client.describe_algorithm(**operation_input_args)
     
         # deserialize the response
-        deserializer(self, response, 'DescribeAlgorithmOutput')
+    
         return self
     
     def delete(self) -> None:
@@ -288,7 +288,7 @@ class App(Base):
     ) -> Optional[object]:
         logger.debug(f"Creating app resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-        
+    
         operation_input_args = {
             'DomainId': domain_id,
             'UserProfileName': user_profile_name,
@@ -302,7 +302,7 @@ class App(Base):
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
-        
+    
         # create the resource
         response = client.create_app(**operation_input_args)
         logger.debug(f"Response: {response}")
@@ -320,8 +320,6 @@ class App(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        app = cls(session, region)
-    
         operation_input_args = {
             'DomainId': domain_id,
             'UserProfileName': user_profile_name,
@@ -329,12 +327,14 @@ class App(Base):
             'AppType': app_type,
             'AppName': app_name,
         }
-        response = app.client.describe_app(**operation_input_args)
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        response = client.describe_app(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        deserializer(app, response, 'DescribeAppResponse')
+        transformed_response = transform(response, 'DescribeAppResponse')
+        app = cls(**transformed_response)
         return app
     
     def refresh(self) -> Optional[object]:
@@ -349,7 +349,7 @@ class App(Base):
         response = self.client.describe_app(**operation_input_args)
     
         # deserialize the response
-        deserializer(self, response, 'DescribeAppResponse')
+    
         return self
     
     def delete(self) -> None:
@@ -406,7 +406,7 @@ class AppImageConfig(Base):
     ) -> Optional[object]:
         logger.debug(f"Creating app_image_config resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-        
+    
         operation_input_args = {
             'AppImageConfigName': app_image_config_name,
             'Tags': tags,
@@ -417,7 +417,7 @@ class AppImageConfig(Base):
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
-        
+    
         # create the resource
         response = client.create_app_image_config(**operation_input_args)
         logger.debug(f"Response: {response}")
@@ -431,17 +431,17 @@ class AppImageConfig(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        app_image_config = cls(session, region)
-    
         operation_input_args = {
             'AppImageConfigName': app_image_config_name,
         }
-        response = app_image_config.client.describe_app_image_config(**operation_input_args)
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        response = client.describe_app_image_config(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        deserializer(app_image_config, response, 'DescribeAppImageConfigResponse')
+        transformed_response = transform(response, 'DescribeAppImageConfigResponse')
+        app_image_config = cls(**transformed_response)
         return app_image_config
     
     def refresh(self) -> Optional[object]:
@@ -452,7 +452,7 @@ class AppImageConfig(Base):
         response = self.client.describe_app_image_config(**operation_input_args)
     
         # deserialize the response
-        deserializer(self, response, 'DescribeAppImageConfigResponse')
+    
         return self
     
     def delete(self) -> None:
@@ -490,7 +490,7 @@ class Artifact(Base):
     ) -> Optional[object]:
         logger.debug(f"Creating artifact resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-        
+    
         operation_input_args = {
             'ArtifactName': artifact_name,
             'Source': source,
@@ -503,7 +503,7 @@ class Artifact(Base):
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
-        
+    
         # create the resource
         response = client.create_artifact(**operation_input_args)
         logger.debug(f"Response: {response}")
@@ -517,17 +517,17 @@ class Artifact(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        artifact = cls(session, region)
-    
         operation_input_args = {
             'ArtifactArn': artifact_arn,
         }
-        response = artifact.client.describe_artifact(**operation_input_args)
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        response = client.describe_artifact(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        deserializer(artifact, response, 'DescribeArtifactResponse')
+        transformed_response = transform(response, 'DescribeArtifactResponse')
+        artifact = cls(**transformed_response)
         return artifact
     
     def refresh(self) -> Optional[object]:
@@ -538,7 +538,7 @@ class Artifact(Base):
         response = self.client.describe_artifact(**operation_input_args)
     
         # deserialize the response
-        deserializer(self, response, 'DescribeArtifactResponse')
+    
         return self
     
     def delete(self) -> None:
@@ -591,7 +591,7 @@ class AutoMLJob(Base):
     ) -> Optional[object]:
         logger.debug(f"Creating auto_m_l_job resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-        
+    
         operation_input_args = {
             'AutoMLJobName': auto_m_l_job_name,
             'InputDataConfig': input_data_config,
@@ -608,7 +608,7 @@ class AutoMLJob(Base):
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
-        
+    
         # create the resource
         response = client.create_auto_m_l_job(**operation_input_args)
         logger.debug(f"Response: {response}")
@@ -622,17 +622,17 @@ class AutoMLJob(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        auto_m_l_job = cls(session, region)
-    
         operation_input_args = {
             'AutoMLJobName': auto_m_l_job_name,
         }
-        response = auto_m_l_job.client.describe_auto_m_l_job(**operation_input_args)
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        response = client.describe_auto_m_l_job(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        deserializer(auto_m_l_job, response, 'DescribeAutoMLJobResponse')
+        transformed_response = transform(response, 'DescribeAutoMLJobResponse')
+        auto_m_l_job = cls(**transformed_response)
         return auto_m_l_job
     
     def refresh(self) -> Optional[object]:
@@ -643,7 +643,7 @@ class AutoMLJob(Base):
         response = self.client.describe_auto_m_l_job(**operation_input_args)
     
         # deserialize the response
-        deserializer(self, response, 'DescribeAutoMLJobResponse')
+    
         return self
     
     def stop(self) -> None:
@@ -718,7 +718,7 @@ class AutoMLJobV2(Base):
     ) -> Optional[object]:
         logger.debug(f"Creating auto_m_l_job_v2 resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-        
+    
         operation_input_args = {
             'AutoMLJobName': auto_m_l_job_name,
             'AutoMLJobInputDataConfig': auto_m_l_job_input_data_config,
@@ -735,7 +735,7 @@ class AutoMLJobV2(Base):
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
-        
+    
         # create the resource
         response = client.create_auto_m_l_job_v2(**operation_input_args)
         logger.debug(f"Response: {response}")
@@ -749,17 +749,17 @@ class AutoMLJobV2(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        auto_m_l_job_v2 = cls(session, region)
-    
         operation_input_args = {
             'AutoMLJobName': auto_m_l_job_name,
         }
-        response = auto_m_l_job_v2.client.describe_auto_m_l_job_v2(**operation_input_args)
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        response = client.describe_auto_m_l_job_v2(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        deserializer(auto_m_l_job_v2, response, 'DescribeAutoMLJobV2Response')
+        transformed_response = transform(response, 'DescribeAutoMLJobV2Response')
+        auto_m_l_job_v2 = cls(**transformed_response)
         return auto_m_l_job_v2
     
     def refresh(self) -> Optional[object]:
@@ -770,7 +770,7 @@ class AutoMLJobV2(Base):
         response = self.client.describe_auto_m_l_job_v2(**operation_input_args)
     
         # deserialize the response
-        deserializer(self, response, 'DescribeAutoMLJobV2Response')
+    
         return self
     
     @validate_call
@@ -817,7 +817,7 @@ class Cluster(Base):
     ) -> Optional[object]:
         logger.debug(f"Creating cluster resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-        
+    
         operation_input_args = {
             'ClusterName': cluster_name,
             'InstanceGroups': instance_groups,
@@ -828,7 +828,7 @@ class Cluster(Base):
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
-        
+    
         # create the resource
         response = client.create_cluster(**operation_input_args)
         logger.debug(f"Response: {response}")
@@ -842,17 +842,17 @@ class Cluster(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        cluster = cls(session, region)
-    
         operation_input_args = {
             'ClusterName': cluster_name,
         }
-        response = cluster.client.describe_cluster(**operation_input_args)
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        response = client.describe_cluster(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        deserializer(cluster, response, 'DescribeClusterResponse')
+        transformed_response = transform(response, 'DescribeClusterResponse')
+        cluster = cls(**transformed_response)
         return cluster
     
     def refresh(self) -> Optional[object]:
@@ -863,7 +863,7 @@ class Cluster(Base):
         response = self.client.describe_cluster(**operation_input_args)
     
         # deserialize the response
-        deserializer(self, response, 'DescribeClusterResponse')
+    
         return self
     
     def delete(self) -> None:
@@ -914,7 +914,7 @@ class CodeRepository(Base):
     ) -> Optional[object]:
         logger.debug(f"Creating code_repository resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-        
+    
         operation_input_args = {
             'CodeRepositoryName': code_repository_name,
             'GitConfig': git_config,
@@ -924,7 +924,7 @@ class CodeRepository(Base):
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
-        
+    
         # create the resource
         response = client.create_code_repository(**operation_input_args)
         logger.debug(f"Response: {response}")
@@ -938,17 +938,17 @@ class CodeRepository(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        code_repository = cls(session, region)
-    
         operation_input_args = {
             'CodeRepositoryName': code_repository_name,
         }
-        response = code_repository.client.describe_code_repository(**operation_input_args)
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        response = client.describe_code_repository(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        deserializer(code_repository, response, 'DescribeCodeRepositoryOutput')
+        transformed_response = transform(response, 'DescribeCodeRepositoryOutput')
+        code_repository = cls(**transformed_response)
         return code_repository
     
     def refresh(self) -> Optional[object]:
@@ -959,7 +959,7 @@ class CodeRepository(Base):
         response = self.client.describe_code_repository(**operation_input_args)
     
         # deserialize the response
-        deserializer(self, response, 'DescribeCodeRepositoryOutput')
+    
         return self
     
     def delete(self) -> None:
@@ -1006,7 +1006,7 @@ class CompilationJob(Base):
     ) -> Optional[object]:
         logger.debug(f"Creating compilation_job resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-        
+    
         operation_input_args = {
             'CompilationJobName': compilation_job_name,
             'RoleArn': role_arn,
@@ -1021,7 +1021,7 @@ class CompilationJob(Base):
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
-        
+    
         # create the resource
         response = client.create_compilation_job(**operation_input_args)
         logger.debug(f"Response: {response}")
@@ -1035,17 +1035,17 @@ class CompilationJob(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        compilation_job = cls(session, region)
-    
         operation_input_args = {
             'CompilationJobName': compilation_job_name,
         }
-        response = compilation_job.client.describe_compilation_job(**operation_input_args)
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        response = client.describe_compilation_job(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        deserializer(compilation_job, response, 'DescribeCompilationJobResponse')
+        transformed_response = transform(response, 'DescribeCompilationJobResponse')
+        compilation_job = cls(**transformed_response)
         return compilation_job
     
     def refresh(self) -> Optional[object]:
@@ -1056,7 +1056,7 @@ class CompilationJob(Base):
         response = self.client.describe_compilation_job(**operation_input_args)
     
         # deserialize the response
-        deserializer(self, response, 'DescribeCompilationJobResponse')
+    
         return self
     
     def delete(self) -> None:
@@ -1123,7 +1123,7 @@ class Context(Base):
     ) -> Optional[object]:
         logger.debug(f"Creating context resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-        
+    
         operation_input_args = {
             'ContextName': context_name,
             'Source': source,
@@ -1136,7 +1136,7 @@ class Context(Base):
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
-        
+    
         # create the resource
         response = client.create_context(**operation_input_args)
         logger.debug(f"Response: {response}")
@@ -1150,17 +1150,17 @@ class Context(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        context = cls(session, region)
-    
         operation_input_args = {
             'ContextName': context_name,
         }
-        response = context.client.describe_context(**operation_input_args)
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        response = client.describe_context(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        deserializer(context, response, 'DescribeContextResponse')
+        transformed_response = transform(response, 'DescribeContextResponse')
+        context = cls(**transformed_response)
         return context
     
     def refresh(self) -> Optional[object]:
@@ -1171,7 +1171,7 @@ class Context(Base):
         response = self.client.describe_context(**operation_input_args)
     
         # deserialize the response
-        deserializer(self, response, 'DescribeContextResponse')
+    
         return self
     
     def delete(self) -> None:
@@ -1213,7 +1213,7 @@ class DataQualityJobDefinition(Base):
     ) -> Optional[object]:
         logger.debug(f"Creating data_quality_job_definition resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-        
+    
         operation_input_args = {
             'JobDefinitionName': job_definition_name,
             'DataQualityBaselineConfig': data_quality_baseline_config,
@@ -1230,7 +1230,7 @@ class DataQualityJobDefinition(Base):
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
-        
+    
         # create the resource
         response = client.create_data_quality_job_definition(**operation_input_args)
         logger.debug(f"Response: {response}")
@@ -1244,17 +1244,17 @@ class DataQualityJobDefinition(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        data_quality_job_definition = cls(session, region)
-    
         operation_input_args = {
             'JobDefinitionName': job_definition_name,
         }
-        response = data_quality_job_definition.client.describe_data_quality_job_definition(**operation_input_args)
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        response = client.describe_data_quality_job_definition(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        deserializer(data_quality_job_definition, response, 'DescribeDataQualityJobDefinitionResponse')
+        transformed_response = transform(response, 'DescribeDataQualityJobDefinitionResponse')
+        data_quality_job_definition = cls(**transformed_response)
         return data_quality_job_definition
     
     def refresh(self) -> Optional[object]:
@@ -1265,7 +1265,7 @@ class DataQualityJobDefinition(Base):
         response = self.client.describe_data_quality_job_definition(**operation_input_args)
     
         # deserialize the response
-        deserializer(self, response, 'DescribeDataQualityJobDefinitionResponse')
+    
         return self
     
     def delete(self) -> None:
@@ -1300,7 +1300,7 @@ class DeviceFleet(Base):
     ) -> Optional[object]:
         logger.debug(f"Creating device_fleet resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-        
+    
         operation_input_args = {
             'DeviceFleetName': device_fleet_name,
             'RoleArn': role_arn,
@@ -1313,7 +1313,7 @@ class DeviceFleet(Base):
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
-        
+    
         # create the resource
         response = client.create_device_fleet(**operation_input_args)
         logger.debug(f"Response: {response}")
@@ -1327,17 +1327,17 @@ class DeviceFleet(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        device_fleet = cls(session, region)
-    
         operation_input_args = {
             'DeviceFleetName': device_fleet_name,
         }
-        response = device_fleet.client.describe_device_fleet(**operation_input_args)
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        response = client.describe_device_fleet(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        deserializer(device_fleet, response, 'DescribeDeviceFleetResponse')
+        transformed_response = transform(response, 'DescribeDeviceFleetResponse')
+        device_fleet = cls(**transformed_response)
         return device_fleet
     
     def refresh(self) -> Optional[object]:
@@ -1348,7 +1348,7 @@ class DeviceFleet(Base):
         response = self.client.describe_device_fleet(**operation_input_args)
     
         # deserialize the response
-        deserializer(self, response, 'DescribeDeviceFleetResponse')
+    
         return self
     
     def delete(self) -> None:
@@ -1403,7 +1403,7 @@ class Domain(Base):
     ) -> Optional[object]:
         logger.debug(f"Creating domain resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-        
+    
         operation_input_args = {
             'DomainName': domain_name,
             'AuthMode': auth_mode,
@@ -1422,7 +1422,7 @@ class Domain(Base):
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
-        
+    
         # create the resource
         response = client.create_domain(**operation_input_args)
         logger.debug(f"Response: {response}")
@@ -1436,17 +1436,17 @@ class Domain(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        domain = cls(session, region)
-    
         operation_input_args = {
             'DomainId': domain_id,
         }
-        response = domain.client.describe_domain(**operation_input_args)
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        response = client.describe_domain(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        deserializer(domain, response, 'DescribeDomainResponse')
+        transformed_response = transform(response, 'DescribeDomainResponse')
+        domain = cls(**transformed_response)
         return domain
     
     def refresh(self) -> Optional[object]:
@@ -1457,7 +1457,7 @@ class Domain(Base):
         response = self.client.describe_domain(**operation_input_args)
     
         # deserialize the response
-        deserializer(self, response, 'DescribeDomainResponse')
+    
         return self
     
     def delete(self) -> None:
@@ -1517,7 +1517,7 @@ class EdgeDeploymentPlan(Base):
     ) -> Optional[object]:
         logger.debug(f"Creating edge_deployment_plan resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-        
+    
         operation_input_args = {
             'EdgeDeploymentPlanName': edge_deployment_plan_name,
             'ModelConfigs': model_configs,
@@ -1529,7 +1529,7 @@ class EdgeDeploymentPlan(Base):
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
-        
+    
         # create the resource
         response = client.create_edge_deployment_plan(**operation_input_args)
         logger.debug(f"Response: {response}")
@@ -1545,19 +1545,19 @@ class EdgeDeploymentPlan(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        edge_deployment_plan = cls(session, region)
-    
         operation_input_args = {
             'EdgeDeploymentPlanName': edge_deployment_plan_name,
             'NextToken': next_token,
             'MaxResults': max_results,
         }
-        response = edge_deployment_plan.client.describe_edge_deployment_plan(**operation_input_args)
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        response = client.describe_edge_deployment_plan(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        deserializer(edge_deployment_plan, response, 'DescribeEdgeDeploymentPlanResponse')
+        transformed_response = transform(response, 'DescribeEdgeDeploymentPlanResponse')
+        edge_deployment_plan = cls(**transformed_response)
         return edge_deployment_plan
     
     def refresh(self) -> Optional[object]:
@@ -1570,7 +1570,7 @@ class EdgeDeploymentPlan(Base):
         response = self.client.describe_edge_deployment_plan(**operation_input_args)
     
         # deserialize the response
-        deserializer(self, response, 'DescribeEdgeDeploymentPlanResponse')
+    
         return self
     
     def delete(self) -> None:
@@ -1614,7 +1614,7 @@ class EdgePackagingJob(Base):
     ) -> Optional[object]:
         logger.debug(f"Creating edge_packaging_job resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-        
+    
         operation_input_args = {
             'EdgePackagingJobName': edge_packaging_job_name,
             'CompilationJobName': compilation_job_name,
@@ -1629,7 +1629,7 @@ class EdgePackagingJob(Base):
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
-        
+    
         # create the resource
         response = client.create_edge_packaging_job(**operation_input_args)
         logger.debug(f"Response: {response}")
@@ -1643,17 +1643,17 @@ class EdgePackagingJob(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        edge_packaging_job = cls(session, region)
-    
         operation_input_args = {
             'EdgePackagingJobName': edge_packaging_job_name,
         }
-        response = edge_packaging_job.client.describe_edge_packaging_job(**operation_input_args)
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        response = client.describe_edge_packaging_job(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        deserializer(edge_packaging_job, response, 'DescribeEdgePackagingJobResponse')
+        transformed_response = transform(response, 'DescribeEdgePackagingJobResponse')
+        edge_packaging_job = cls(**transformed_response)
         return edge_packaging_job
     
     def refresh(self) -> Optional[object]:
@@ -1664,7 +1664,7 @@ class EdgePackagingJob(Base):
         response = self.client.describe_edge_packaging_job(**operation_input_args)
     
         # deserialize the response
-        deserializer(self, response, 'DescribeEdgePackagingJobResponse')
+    
         return self
     
     def stop(self) -> None:
@@ -1725,7 +1725,7 @@ class Endpoint(Base):
     ) -> Optional[object]:
         logger.debug(f"Creating endpoint resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-        
+    
         operation_input_args = {
             'EndpointName': endpoint_name,
             'EndpointConfigName': endpoint_config_name,
@@ -1736,7 +1736,7 @@ class Endpoint(Base):
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
-        
+    
         # create the resource
         response = client.create_endpoint(**operation_input_args)
         logger.debug(f"Response: {response}")
@@ -1750,17 +1750,17 @@ class Endpoint(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        endpoint = cls(session, region)
-    
         operation_input_args = {
             'EndpointName': endpoint_name,
         }
-        response = endpoint.client.describe_endpoint(**operation_input_args)
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        response = client.describe_endpoint(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        deserializer(endpoint, response, 'DescribeEndpointOutput')
+        transformed_response = transform(response, 'DescribeEndpointOutput')
+        endpoint = cls(**transformed_response)
         return endpoint
     
     def refresh(self) -> Optional[object]:
@@ -1771,7 +1771,7 @@ class Endpoint(Base):
         response = self.client.describe_endpoint(**operation_input_args)
     
         # deserialize the response
-        deserializer(self, response, 'DescribeEndpointOutput')
+    
         return self
     
     def delete(self) -> None:
@@ -1837,7 +1837,7 @@ class EndpointConfig(Base):
     ) -> Optional[object]:
         logger.debug(f"Creating endpoint_config resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-        
+    
         operation_input_args = {
             'EndpointConfigName': endpoint_config_name,
             'ProductionVariants': production_variants,
@@ -1855,7 +1855,7 @@ class EndpointConfig(Base):
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
-        
+    
         # create the resource
         response = client.create_endpoint_config(**operation_input_args)
         logger.debug(f"Response: {response}")
@@ -1869,17 +1869,17 @@ class EndpointConfig(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        endpoint_config = cls(session, region)
-    
         operation_input_args = {
             'EndpointConfigName': endpoint_config_name,
         }
-        response = endpoint_config.client.describe_endpoint_config(**operation_input_args)
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        response = client.describe_endpoint_config(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        deserializer(endpoint_config, response, 'DescribeEndpointConfigOutput')
+        transformed_response = transform(response, 'DescribeEndpointConfigOutput')
+        endpoint_config = cls(**transformed_response)
         return endpoint_config
     
     def refresh(self) -> Optional[object]:
@@ -1890,7 +1890,7 @@ class EndpointConfig(Base):
         response = self.client.describe_endpoint_config(**operation_input_args)
     
         # deserialize the response
-        deserializer(self, response, 'DescribeEndpointConfigOutput')
+    
         return self
     
     def delete(self) -> None:
@@ -1924,7 +1924,7 @@ class Experiment(Base):
     ) -> Optional[object]:
         logger.debug(f"Creating experiment resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-        
+    
         operation_input_args = {
             'ExperimentName': experiment_name,
             'DisplayName': display_name,
@@ -1935,7 +1935,7 @@ class Experiment(Base):
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
-        
+    
         # create the resource
         response = client.create_experiment(**operation_input_args)
         logger.debug(f"Response: {response}")
@@ -1949,17 +1949,17 @@ class Experiment(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        experiment = cls(session, region)
-    
         operation_input_args = {
             'ExperimentName': experiment_name,
         }
-        response = experiment.client.describe_experiment(**operation_input_args)
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        response = client.describe_experiment(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        deserializer(experiment, response, 'DescribeExperimentResponse')
+        transformed_response = transform(response, 'DescribeExperimentResponse')
+        experiment = cls(**transformed_response)
         return experiment
     
     def refresh(self) -> Optional[object]:
@@ -1970,7 +1970,7 @@ class Experiment(Base):
         response = self.client.describe_experiment(**operation_input_args)
     
         # deserialize the response
-        deserializer(self, response, 'DescribeExperimentResponse')
+    
         return self
     
     def delete(self) -> None:
@@ -2019,7 +2019,7 @@ class FeatureGroup(Base):
     ) -> Optional[object]:
         logger.debug(f"Creating feature_group resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-        
+    
         operation_input_args = {
             'FeatureGroupName': feature_group_name,
             'RecordIdentifierFeatureName': record_identifier_feature_name,
@@ -2036,7 +2036,7 @@ class FeatureGroup(Base):
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
-        
+    
         # create the resource
         response = client.create_feature_group(**operation_input_args)
         logger.debug(f"Response: {response}")
@@ -2051,18 +2051,18 @@ class FeatureGroup(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        feature_group = cls(session, region)
-    
         operation_input_args = {
             'FeatureGroupName': feature_group_name,
             'NextToken': next_token,
         }
-        response = feature_group.client.describe_feature_group(**operation_input_args)
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        response = client.describe_feature_group(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        deserializer(feature_group, response, 'DescribeFeatureGroupResponse')
+        transformed_response = transform(response, 'DescribeFeatureGroupResponse')
+        feature_group = cls(**transformed_response)
         return feature_group
     
     def refresh(self) -> Optional[object]:
@@ -2074,7 +2074,7 @@ class FeatureGroup(Base):
         response = self.client.describe_feature_group(**operation_input_args)
     
         # deserialize the response
-        deserializer(self, response, 'DescribeFeatureGroupResponse')
+    
         return self
     
     def delete(self) -> None:
@@ -2134,7 +2134,7 @@ class FlowDefinition(Base):
     ) -> Optional[object]:
         logger.debug(f"Creating flow_definition resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-        
+    
         operation_input_args = {
             'FlowDefinitionName': flow_definition_name,
             'HumanLoopRequestSource': human_loop_request_source,
@@ -2148,7 +2148,7 @@ class FlowDefinition(Base):
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
-        
+    
         # create the resource
         response = client.create_flow_definition(**operation_input_args)
         logger.debug(f"Response: {response}")
@@ -2162,17 +2162,17 @@ class FlowDefinition(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        flow_definition = cls(session, region)
-    
         operation_input_args = {
             'FlowDefinitionName': flow_definition_name,
         }
-        response = flow_definition.client.describe_flow_definition(**operation_input_args)
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        response = client.describe_flow_definition(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        deserializer(flow_definition, response, 'DescribeFlowDefinitionResponse')
+        transformed_response = transform(response, 'DescribeFlowDefinitionResponse')
+        flow_definition = cls(**transformed_response)
         return flow_definition
     
     def refresh(self) -> Optional[object]:
@@ -2183,7 +2183,7 @@ class FlowDefinition(Base):
         response = self.client.describe_flow_definition(**operation_input_args)
     
         # deserialize the response
-        deserializer(self, response, 'DescribeFlowDefinitionResponse')
+    
         return self
     
     def delete(self) -> None:
@@ -2242,7 +2242,7 @@ class Hub(Base):
     ) -> Optional[object]:
         logger.debug(f"Creating hub resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-        
+    
         operation_input_args = {
             'HubName': hub_name,
             'HubDescription': hub_description,
@@ -2255,7 +2255,7 @@ class Hub(Base):
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
-        
+    
         # create the resource
         response = client.create_hub(**operation_input_args)
         logger.debug(f"Response: {response}")
@@ -2269,17 +2269,17 @@ class Hub(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        hub = cls(session, region)
-    
         operation_input_args = {
             'HubName': hub_name,
         }
-        response = hub.client.describe_hub(**operation_input_args)
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        response = client.describe_hub(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        deserializer(hub, response, 'DescribeHubResponse')
+        transformed_response = transform(response, 'DescribeHubResponse')
+        hub = cls(**transformed_response)
         return hub
     
     def refresh(self) -> Optional[object]:
@@ -2290,7 +2290,7 @@ class Hub(Base):
         response = self.client.describe_hub(**operation_input_args)
     
         # deserialize the response
-        deserializer(self, response, 'DescribeHubResponse')
+    
         return self
     
     def delete(self) -> None:
@@ -2351,20 +2351,20 @@ class HubContent(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        hub_content = cls(session, region)
-    
         operation_input_args = {
             'HubName': hub_name,
             'HubContentType': hub_content_type,
             'HubContentName': hub_content_name,
             'HubContentVersion': hub_content_version,
         }
-        response = hub_content.client.describe_hub_content(**operation_input_args)
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        response = client.describe_hub_content(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        deserializer(hub_content, response, 'DescribeHubContentResponse')
+        transformed_response = transform(response, 'DescribeHubContentResponse')
+        hub_content = cls(**transformed_response)
         return hub_content
     
     def refresh(self) -> Optional[object]:
@@ -2378,7 +2378,7 @@ class HubContent(Base):
         response = self.client.describe_hub_content(**operation_input_args)
     
         # deserialize the response
-        deserializer(self, response, 'DescribeHubContentResponse')
+    
         return self
     
     def delete(self) -> None:
@@ -2432,7 +2432,7 @@ class HumanTaskUi(Base):
     ) -> Optional[object]:
         logger.debug(f"Creating human_task_ui resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-        
+    
         operation_input_args = {
             'HumanTaskUiName': human_task_ui_name,
             'UiTemplate': ui_template,
@@ -2442,7 +2442,7 @@ class HumanTaskUi(Base):
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
-        
+    
         # create the resource
         response = client.create_human_task_ui(**operation_input_args)
         logger.debug(f"Response: {response}")
@@ -2456,17 +2456,17 @@ class HumanTaskUi(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        human_task_ui = cls(session, region)
-    
         operation_input_args = {
             'HumanTaskUiName': human_task_ui_name,
         }
-        response = human_task_ui.client.describe_human_task_ui(**operation_input_args)
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        response = client.describe_human_task_ui(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        deserializer(human_task_ui, response, 'DescribeHumanTaskUiResponse')
+        transformed_response = transform(response, 'DescribeHumanTaskUiResponse')
+        human_task_ui = cls(**transformed_response)
         return human_task_ui
     
     def refresh(self) -> Optional[object]:
@@ -2477,7 +2477,7 @@ class HumanTaskUi(Base):
         response = self.client.describe_human_task_ui(**operation_input_args)
     
         # deserialize the response
-        deserializer(self, response, 'DescribeHumanTaskUiResponse')
+    
         return self
     
     def delete(self) -> None:
@@ -2545,7 +2545,7 @@ class HyperParameterTuningJob(Base):
     ) -> Optional[object]:
         logger.debug(f"Creating hyper_parameter_tuning_job resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-        
+    
         operation_input_args = {
             'HyperParameterTuningJobName': hyper_parameter_tuning_job_name,
             'HyperParameterTuningJobConfig': hyper_parameter_tuning_job_config,
@@ -2559,7 +2559,7 @@ class HyperParameterTuningJob(Base):
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
-        
+    
         # create the resource
         response = client.create_hyper_parameter_tuning_job(**operation_input_args)
         logger.debug(f"Response: {response}")
@@ -2573,17 +2573,17 @@ class HyperParameterTuningJob(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        hyper_parameter_tuning_job = cls(session, region)
-    
         operation_input_args = {
             'HyperParameterTuningJobName': hyper_parameter_tuning_job_name,
         }
-        response = hyper_parameter_tuning_job.client.describe_hyper_parameter_tuning_job(**operation_input_args)
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        response = client.describe_hyper_parameter_tuning_job(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        deserializer(hyper_parameter_tuning_job, response, 'DescribeHyperParameterTuningJobResponse')
+        transformed_response = transform(response, 'DescribeHyperParameterTuningJobResponse')
+        hyper_parameter_tuning_job = cls(**transformed_response)
         return hyper_parameter_tuning_job
     
     def refresh(self) -> Optional[object]:
@@ -2594,7 +2594,7 @@ class HyperParameterTuningJob(Base):
         response = self.client.describe_hyper_parameter_tuning_job(**operation_input_args)
     
         # deserialize the response
-        deserializer(self, response, 'DescribeHyperParameterTuningJobResponse')
+    
         return self
     
     def delete(self) -> None:
@@ -2658,7 +2658,7 @@ class Image(Base):
     ) -> Optional[object]:
         logger.debug(f"Creating image resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-        
+    
         operation_input_args = {
             'Description': description,
             'DisplayName': display_name,
@@ -2670,7 +2670,7 @@ class Image(Base):
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
-        
+    
         # create the resource
         response = client.create_image(**operation_input_args)
         logger.debug(f"Response: {response}")
@@ -2684,17 +2684,17 @@ class Image(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        image = cls(session, region)
-    
         operation_input_args = {
             'ImageName': image_name,
         }
-        response = image.client.describe_image(**operation_input_args)
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        response = client.describe_image(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        deserializer(image, response, 'DescribeImageResponse')
+        transformed_response = transform(response, 'DescribeImageResponse')
+        image = cls(**transformed_response)
         return image
     
     def refresh(self) -> Optional[object]:
@@ -2705,7 +2705,7 @@ class Image(Base):
         response = self.client.describe_image(**operation_input_args)
     
         # deserialize the response
-        deserializer(self, response, 'DescribeImageResponse')
+    
         return self
     
     def delete(self) -> None:
@@ -2775,7 +2775,7 @@ class ImageVersion(Base):
     ) -> Optional[object]:
         logger.debug(f"Creating image_version resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-        
+    
         operation_input_args = {
             'BaseImage': base_image,
             'ClientToken': client_token,
@@ -2793,7 +2793,7 @@ class ImageVersion(Base):
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
-        
+    
         # create the resource
         response = client.create_image_version(**operation_input_args)
         logger.debug(f"Response: {response}")
@@ -2809,19 +2809,19 @@ class ImageVersion(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        image_version = cls(session, region)
-    
         operation_input_args = {
             'ImageName': image_name,
             'Version': version,
             'Alias': alias,
         }
-        response = image_version.client.describe_image_version(**operation_input_args)
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        response = client.describe_image_version(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        deserializer(image_version, response, 'DescribeImageVersionResponse')
+        transformed_response = transform(response, 'DescribeImageVersionResponse')
+        image_version = cls(**transformed_response)
         return image_version
     
     def refresh(self) -> Optional[object]:
@@ -2834,7 +2834,7 @@ class ImageVersion(Base):
         response = self.client.describe_image_version(**operation_input_args)
     
         # deserialize the response
-        deserializer(self, response, 'DescribeImageVersionResponse')
+    
         return self
     
     def delete(self) -> None:
@@ -2896,7 +2896,7 @@ class InferenceComponent(Base):
     ) -> Optional[object]:
         logger.debug(f"Creating inference_component resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-        
+    
         operation_input_args = {
             'InferenceComponentName': inference_component_name,
             'EndpointName': endpoint_name,
@@ -2909,7 +2909,7 @@ class InferenceComponent(Base):
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
-        
+    
         # create the resource
         response = client.create_inference_component(**operation_input_args)
         logger.debug(f"Response: {response}")
@@ -2923,17 +2923,17 @@ class InferenceComponent(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        inference_component = cls(session, region)
-    
         operation_input_args = {
             'InferenceComponentName': inference_component_name,
         }
-        response = inference_component.client.describe_inference_component(**operation_input_args)
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        response = client.describe_inference_component(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        deserializer(inference_component, response, 'DescribeInferenceComponentOutput')
+        transformed_response = transform(response, 'DescribeInferenceComponentOutput')
+        inference_component = cls(**transformed_response)
         return inference_component
     
     def refresh(self) -> Optional[object]:
@@ -2944,7 +2944,7 @@ class InferenceComponent(Base):
         response = self.client.describe_inference_component(**operation_input_args)
     
         # deserialize the response
-        deserializer(self, response, 'DescribeInferenceComponentOutput')
+    
         return self
     
     def delete(self) -> None:
@@ -3014,7 +3014,7 @@ class InferenceExperiment(Base):
     ) -> Optional[object]:
         logger.debug(f"Creating inference_experiment resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-        
+    
         operation_input_args = {
             'Name': name,
             'Type': type,
@@ -3032,7 +3032,7 @@ class InferenceExperiment(Base):
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
-        
+    
         # create the resource
         response = client.create_inference_experiment(**operation_input_args)
         logger.debug(f"Response: {response}")
@@ -3046,17 +3046,17 @@ class InferenceExperiment(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        inference_experiment = cls(session, region)
-    
         operation_input_args = {
             'Name': name,
         }
-        response = inference_experiment.client.describe_inference_experiment(**operation_input_args)
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        response = client.describe_inference_experiment(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        deserializer(inference_experiment, response, 'DescribeInferenceExperimentResponse')
+        transformed_response = transform(response, 'DescribeInferenceExperimentResponse')
+        inference_experiment = cls(**transformed_response)
         return inference_experiment
     
     def refresh(self) -> Optional[object]:
@@ -3067,7 +3067,7 @@ class InferenceExperiment(Base):
         response = self.client.describe_inference_experiment(**operation_input_args)
     
         # deserialize the response
-        deserializer(self, response, 'DescribeInferenceExperimentResponse')
+    
         return self
     
     def delete(self) -> None:
@@ -3143,7 +3143,7 @@ class InferenceRecommendationsJob(Base):
     ) -> Optional[object]:
         logger.debug(f"Creating inference_recommendations_job resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-        
+    
         operation_input_args = {
             'JobName': job_name,
             'JobType': job_type,
@@ -3158,7 +3158,7 @@ class InferenceRecommendationsJob(Base):
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
-        
+    
         # create the resource
         response = client.create_inference_recommendations_job(**operation_input_args)
         logger.debug(f"Response: {response}")
@@ -3172,17 +3172,17 @@ class InferenceRecommendationsJob(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        inference_recommendations_job = cls(session, region)
-    
         operation_input_args = {
             'JobName': job_name,
         }
-        response = inference_recommendations_job.client.describe_inference_recommendations_job(**operation_input_args)
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        response = client.describe_inference_recommendations_job(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        deserializer(inference_recommendations_job, response, 'DescribeInferenceRecommendationsJobResponse')
+        transformed_response = transform(response, 'DescribeInferenceRecommendationsJobResponse')
+        inference_recommendations_job = cls(**transformed_response)
         return inference_recommendations_job
     
     def refresh(self) -> Optional[object]:
@@ -3193,7 +3193,7 @@ class InferenceRecommendationsJob(Base):
         response = self.client.describe_inference_recommendations_job(**operation_input_args)
     
         # deserialize the response
-        deserializer(self, response, 'DescribeInferenceRecommendationsJobResponse')
+    
         return self
     
     def stop(self) -> None:
@@ -3264,7 +3264,7 @@ class LabelingJob(Base):
     ) -> Optional[object]:
         logger.debug(f"Creating labeling_job resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-        
+    
         operation_input_args = {
             'LabelingJobName': labeling_job_name,
             'LabelAttributeName': label_attribute_name,
@@ -3281,7 +3281,7 @@ class LabelingJob(Base):
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
-        
+    
         # create the resource
         response = client.create_labeling_job(**operation_input_args)
         logger.debug(f"Response: {response}")
@@ -3295,17 +3295,17 @@ class LabelingJob(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        labeling_job = cls(session, region)
-    
         operation_input_args = {
             'LabelingJobName': labeling_job_name,
         }
-        response = labeling_job.client.describe_labeling_job(**operation_input_args)
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        response = client.describe_labeling_job(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        deserializer(labeling_job, response, 'DescribeLabelingJobResponse')
+        transformed_response = transform(response, 'DescribeLabelingJobResponse')
+        labeling_job = cls(**transformed_response)
         return labeling_job
     
     def refresh(self) -> Optional[object]:
@@ -3316,7 +3316,7 @@ class LabelingJob(Base):
         response = self.client.describe_labeling_job(**operation_input_args)
     
         # deserialize the response
-        deserializer(self, response, 'DescribeLabelingJobResponse')
+    
         return self
     
     def stop(self) -> None:
@@ -3377,7 +3377,7 @@ class Model(Base):
     ) -> Optional[object]:
         logger.debug(f"Creating model resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-        
+    
         operation_input_args = {
             'ModelName': model_name,
             'PrimaryContainer': primary_container,
@@ -3392,7 +3392,7 @@ class Model(Base):
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
-        
+    
         # create the resource
         response = client.create_model(**operation_input_args)
         logger.debug(f"Response: {response}")
@@ -3406,17 +3406,17 @@ class Model(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        model = cls(session, region)
-    
         operation_input_args = {
             'ModelName': model_name,
         }
-        response = model.client.describe_model(**operation_input_args)
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        response = client.describe_model(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        deserializer(model, response, 'DescribeModelOutput')
+        transformed_response = transform(response, 'DescribeModelOutput')
+        model = cls(**transformed_response)
         return model
     
     def refresh(self) -> Optional[object]:
@@ -3427,7 +3427,7 @@ class Model(Base):
         response = self.client.describe_model(**operation_input_args)
     
         # deserialize the response
-        deserializer(self, response, 'DescribeModelOutput')
+    
         return self
     
     def delete(self) -> None:
@@ -3469,7 +3469,7 @@ class ModelBiasJobDefinition(Base):
     ) -> Optional[object]:
         logger.debug(f"Creating model_bias_job_definition resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-        
+    
         operation_input_args = {
             'JobDefinitionName': job_definition_name,
             'ModelBiasBaselineConfig': model_bias_baseline_config,
@@ -3486,7 +3486,7 @@ class ModelBiasJobDefinition(Base):
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
-        
+    
         # create the resource
         response = client.create_model_bias_job_definition(**operation_input_args)
         logger.debug(f"Response: {response}")
@@ -3500,17 +3500,17 @@ class ModelBiasJobDefinition(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        model_bias_job_definition = cls(session, region)
-    
         operation_input_args = {
             'JobDefinitionName': job_definition_name,
         }
-        response = model_bias_job_definition.client.describe_model_bias_job_definition(**operation_input_args)
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        response = client.describe_model_bias_job_definition(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        deserializer(model_bias_job_definition, response, 'DescribeModelBiasJobDefinitionResponse')
+        transformed_response = transform(response, 'DescribeModelBiasJobDefinitionResponse')
+        model_bias_job_definition = cls(**transformed_response)
         return model_bias_job_definition
     
     def refresh(self) -> Optional[object]:
@@ -3521,7 +3521,7 @@ class ModelBiasJobDefinition(Base):
         response = self.client.describe_model_bias_job_definition(**operation_input_args)
     
         # deserialize the response
-        deserializer(self, response, 'DescribeModelBiasJobDefinitionResponse')
+    
         return self
     
     def delete(self) -> None:
@@ -3558,7 +3558,7 @@ class ModelCard(Base):
     ) -> Optional[object]:
         logger.debug(f"Creating model_card resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-        
+    
         operation_input_args = {
             'ModelCardName': model_card_name,
             'SecurityConfig': security_config,
@@ -3570,7 +3570,7 @@ class ModelCard(Base):
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
-        
+    
         # create the resource
         response = client.create_model_card(**operation_input_args)
         logger.debug(f"Response: {response}")
@@ -3585,18 +3585,18 @@ class ModelCard(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        model_card = cls(session, region)
-    
         operation_input_args = {
             'ModelCardName': model_card_name,
             'ModelCardVersion': model_card_version,
         }
-        response = model_card.client.describe_model_card(**operation_input_args)
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        response = client.describe_model_card(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        deserializer(model_card, response, 'DescribeModelCardResponse')
+        transformed_response = transform(response, 'DescribeModelCardResponse')
+        model_card = cls(**transformed_response)
         return model_card
     
     def refresh(self) -> Optional[object]:
@@ -3608,7 +3608,7 @@ class ModelCard(Base):
         response = self.client.describe_model_card(**operation_input_args)
     
         # deserialize the response
-        deserializer(self, response, 'DescribeModelCardResponse')
+    
         return self
     
     def delete(self) -> None:
@@ -3665,7 +3665,7 @@ class ModelCardExportJob(Base):
     ) -> Optional[object]:
         logger.debug(f"Creating model_card_export_job resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-        
+    
         operation_input_args = {
             'ModelCardName': model_card_name,
             'ModelCardVersion': model_card_version,
@@ -3676,7 +3676,7 @@ class ModelCardExportJob(Base):
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
-        
+    
         # create the resource
         response = client.create_model_card_export_job(**operation_input_args)
         logger.debug(f"Response: {response}")
@@ -3690,17 +3690,17 @@ class ModelCardExportJob(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        model_card_export_job = cls(session, region)
-    
         operation_input_args = {
             'ModelCardExportJobArn': model_card_export_job_arn,
         }
-        response = model_card_export_job.client.describe_model_card_export_job(**operation_input_args)
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        response = client.describe_model_card_export_job(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        deserializer(model_card_export_job, response, 'DescribeModelCardExportJobResponse')
+        transformed_response = transform(response, 'DescribeModelCardExportJobResponse')
+        model_card_export_job = cls(**transformed_response)
         return model_card_export_job
     
     def refresh(self) -> Optional[object]:
@@ -3711,7 +3711,7 @@ class ModelCardExportJob(Base):
         response = self.client.describe_model_card_export_job(**operation_input_args)
     
         # deserialize the response
-        deserializer(self, response, 'DescribeModelCardExportJobResponse')
+    
         return self
     
     @validate_call
@@ -3768,7 +3768,7 @@ class ModelExplainabilityJobDefinition(Base):
     ) -> Optional[object]:
         logger.debug(f"Creating model_explainability_job_definition resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-        
+    
         operation_input_args = {
             'JobDefinitionName': job_definition_name,
             'ModelExplainabilityBaselineConfig': model_explainability_baseline_config,
@@ -3785,7 +3785,7 @@ class ModelExplainabilityJobDefinition(Base):
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
-        
+    
         # create the resource
         response = client.create_model_explainability_job_definition(**operation_input_args)
         logger.debug(f"Response: {response}")
@@ -3799,17 +3799,17 @@ class ModelExplainabilityJobDefinition(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        model_explainability_job_definition = cls(session, region)
-    
         operation_input_args = {
             'JobDefinitionName': job_definition_name,
         }
-        response = model_explainability_job_definition.client.describe_model_explainability_job_definition(**operation_input_args)
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        response = client.describe_model_explainability_job_definition(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        deserializer(model_explainability_job_definition, response, 'DescribeModelExplainabilityJobDefinitionResponse')
+        transformed_response = transform(response, 'DescribeModelExplainabilityJobDefinitionResponse')
+        model_explainability_job_definition = cls(**transformed_response)
         return model_explainability_job_definition
     
     def refresh(self) -> Optional[object]:
@@ -3820,7 +3820,7 @@ class ModelExplainabilityJobDefinition(Base):
         response = self.client.describe_model_explainability_job_definition(**operation_input_args)
     
         # deserialize the response
-        deserializer(self, response, 'DescribeModelExplainabilityJobDefinitionResponse')
+    
         return self
     
     def delete(self) -> None:
@@ -3888,7 +3888,7 @@ class ModelPackage(Base):
     ) -> Optional[object]:
         logger.debug(f"Creating model_package resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-        
+    
         operation_input_args = {
             'ModelPackageName': model_package_name,
             'ModelPackageGroupName': model_package_group_name,
@@ -3915,7 +3915,7 @@ class ModelPackage(Base):
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
-        
+    
         # create the resource
         response = client.create_model_package(**operation_input_args)
         logger.debug(f"Response: {response}")
@@ -3929,17 +3929,17 @@ class ModelPackage(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        model_package = cls(session, region)
-    
         operation_input_args = {
             'ModelPackageName': model_package_name,
         }
-        response = model_package.client.describe_model_package(**operation_input_args)
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        response = client.describe_model_package(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        deserializer(model_package, response, 'DescribeModelPackageOutput')
+        transformed_response = transform(response, 'DescribeModelPackageOutput')
+        model_package = cls(**transformed_response)
         return model_package
     
     def refresh(self) -> Optional[object]:
@@ -3950,7 +3950,7 @@ class ModelPackage(Base):
         response = self.client.describe_model_package(**operation_input_args)
     
         # deserialize the response
-        deserializer(self, response, 'DescribeModelPackageOutput')
+    
         return self
     
     def delete(self) -> None:
@@ -4002,7 +4002,7 @@ class ModelPackageGroup(Base):
     ) -> Optional[object]:
         logger.debug(f"Creating model_package_group resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-        
+    
         operation_input_args = {
             'ModelPackageGroupName': model_package_group_name,
             'ModelPackageGroupDescription': model_package_group_description,
@@ -4012,7 +4012,7 @@ class ModelPackageGroup(Base):
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
-        
+    
         # create the resource
         response = client.create_model_package_group(**operation_input_args)
         logger.debug(f"Response: {response}")
@@ -4026,17 +4026,17 @@ class ModelPackageGroup(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        model_package_group = cls(session, region)
-    
         operation_input_args = {
             'ModelPackageGroupName': model_package_group_name,
         }
-        response = model_package_group.client.describe_model_package_group(**operation_input_args)
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        response = client.describe_model_package_group(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        deserializer(model_package_group, response, 'DescribeModelPackageGroupOutput')
+        transformed_response = transform(response, 'DescribeModelPackageGroupOutput')
+        model_package_group = cls(**transformed_response)
         return model_package_group
     
     def refresh(self) -> Optional[object]:
@@ -4047,7 +4047,7 @@ class ModelPackageGroup(Base):
         response = self.client.describe_model_package_group(**operation_input_args)
     
         # deserialize the response
-        deserializer(self, response, 'DescribeModelPackageGroupOutput')
+    
         return self
     
     def delete(self) -> None:
@@ -4111,7 +4111,7 @@ class ModelQualityJobDefinition(Base):
     ) -> Optional[object]:
         logger.debug(f"Creating model_quality_job_definition resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-        
+    
         operation_input_args = {
             'JobDefinitionName': job_definition_name,
             'ModelQualityBaselineConfig': model_quality_baseline_config,
@@ -4128,7 +4128,7 @@ class ModelQualityJobDefinition(Base):
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
-        
+    
         # create the resource
         response = client.create_model_quality_job_definition(**operation_input_args)
         logger.debug(f"Response: {response}")
@@ -4142,17 +4142,17 @@ class ModelQualityJobDefinition(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        model_quality_job_definition = cls(session, region)
-    
         operation_input_args = {
             'JobDefinitionName': job_definition_name,
         }
-        response = model_quality_job_definition.client.describe_model_quality_job_definition(**operation_input_args)
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        response = client.describe_model_quality_job_definition(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        deserializer(model_quality_job_definition, response, 'DescribeModelQualityJobDefinitionResponse')
+        transformed_response = transform(response, 'DescribeModelQualityJobDefinitionResponse')
+        model_quality_job_definition = cls(**transformed_response)
         return model_quality_job_definition
     
     def refresh(self) -> Optional[object]:
@@ -4163,7 +4163,7 @@ class ModelQualityJobDefinition(Base):
         response = self.client.describe_model_quality_job_definition(**operation_input_args)
     
         # deserialize the response
-        deserializer(self, response, 'DescribeModelQualityJobDefinitionResponse')
+    
         return self
     
     def delete(self) -> None:
@@ -4197,7 +4197,7 @@ class MonitoringSchedule(Base):
     ) -> Optional[object]:
         logger.debug(f"Creating monitoring_schedule resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-        
+    
         operation_input_args = {
             'MonitoringScheduleName': monitoring_schedule_name,
             'MonitoringScheduleConfig': monitoring_schedule_config,
@@ -4207,7 +4207,7 @@ class MonitoringSchedule(Base):
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
-        
+    
         # create the resource
         response = client.create_monitoring_schedule(**operation_input_args)
         logger.debug(f"Response: {response}")
@@ -4221,17 +4221,17 @@ class MonitoringSchedule(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        monitoring_schedule = cls(session, region)
-    
         operation_input_args = {
             'MonitoringScheduleName': monitoring_schedule_name,
         }
-        response = monitoring_schedule.client.describe_monitoring_schedule(**operation_input_args)
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        response = client.describe_monitoring_schedule(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        deserializer(monitoring_schedule, response, 'DescribeMonitoringScheduleResponse')
+        transformed_response = transform(response, 'DescribeMonitoringScheduleResponse')
+        monitoring_schedule = cls(**transformed_response)
         return monitoring_schedule
     
     def refresh(self) -> Optional[object]:
@@ -4242,7 +4242,7 @@ class MonitoringSchedule(Base):
         response = self.client.describe_monitoring_schedule(**operation_input_args)
     
         # deserialize the response
-        deserializer(self, response, 'DescribeMonitoringScheduleResponse')
+    
         return self
     
     def delete(self) -> None:
@@ -4330,7 +4330,7 @@ class NotebookInstance(Base):
     ) -> Optional[object]:
         logger.debug(f"Creating notebook_instance resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-        
+    
         operation_input_args = {
             'NotebookInstanceName': notebook_instance_name,
             'InstanceType': instance_type,
@@ -4353,7 +4353,7 @@ class NotebookInstance(Base):
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
-        
+    
         # create the resource
         response = client.create_notebook_instance(**operation_input_args)
         logger.debug(f"Response: {response}")
@@ -4367,17 +4367,17 @@ class NotebookInstance(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        notebook_instance = cls(session, region)
-    
         operation_input_args = {
             'NotebookInstanceName': notebook_instance_name,
         }
-        response = notebook_instance.client.describe_notebook_instance(**operation_input_args)
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        response = client.describe_notebook_instance(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        deserializer(notebook_instance, response, 'DescribeNotebookInstanceOutput')
+        transformed_response = transform(response, 'DescribeNotebookInstanceOutput')
+        notebook_instance = cls(**transformed_response)
         return notebook_instance
     
     def refresh(self) -> Optional[object]:
@@ -4388,7 +4388,7 @@ class NotebookInstance(Base):
         response = self.client.describe_notebook_instance(**operation_input_args)
     
         # deserialize the response
-        deserializer(self, response, 'DescribeNotebookInstanceOutput')
+    
         return self
     
     def delete(self) -> None:
@@ -4447,7 +4447,7 @@ class NotebookInstanceLifecycleConfig(Base):
     ) -> Optional[object]:
         logger.debug(f"Creating notebook_instance_lifecycle_config resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-        
+    
         operation_input_args = {
             'NotebookInstanceLifecycleConfigName': notebook_instance_lifecycle_config_name,
             'OnCreate': on_create,
@@ -4457,7 +4457,7 @@ class NotebookInstanceLifecycleConfig(Base):
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
-        
+    
         # create the resource
         response = client.create_notebook_instance_lifecycle_config(**operation_input_args)
         logger.debug(f"Response: {response}")
@@ -4471,17 +4471,17 @@ class NotebookInstanceLifecycleConfig(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        notebook_instance_lifecycle_config = cls(session, region)
-    
         operation_input_args = {
             'NotebookInstanceLifecycleConfigName': notebook_instance_lifecycle_config_name,
         }
-        response = notebook_instance_lifecycle_config.client.describe_notebook_instance_lifecycle_config(**operation_input_args)
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        response = client.describe_notebook_instance_lifecycle_config(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        deserializer(notebook_instance_lifecycle_config, response, 'DescribeNotebookInstanceLifecycleConfigOutput')
+        transformed_response = transform(response, 'DescribeNotebookInstanceLifecycleConfigOutput')
+        notebook_instance_lifecycle_config = cls(**transformed_response)
         return notebook_instance_lifecycle_config
     
     def refresh(self) -> Optional[object]:
@@ -4492,7 +4492,7 @@ class NotebookInstanceLifecycleConfig(Base):
         response = self.client.describe_notebook_instance_lifecycle_config(**operation_input_args)
     
         # deserialize the response
-        deserializer(self, response, 'DescribeNotebookInstanceLifecycleConfigOutput')
+    
         return self
     
     def delete(self) -> None:
@@ -4535,7 +4535,7 @@ class Pipeline(Base):
     ) -> Optional[object]:
         logger.debug(f"Creating pipeline resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-        
+    
         operation_input_args = {
             'PipelineName': pipeline_name,
             'PipelineDisplayName': pipeline_display_name,
@@ -4551,7 +4551,7 @@ class Pipeline(Base):
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
-        
+    
         # create the resource
         response = client.create_pipeline(**operation_input_args)
         logger.debug(f"Response: {response}")
@@ -4565,17 +4565,17 @@ class Pipeline(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        pipeline = cls(session, region)
-    
         operation_input_args = {
             'PipelineName': pipeline_name,
         }
-        response = pipeline.client.describe_pipeline(**operation_input_args)
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        response = client.describe_pipeline(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        deserializer(pipeline, response, 'DescribePipelineResponse')
+        transformed_response = transform(response, 'DescribePipelineResponse')
+        pipeline = cls(**transformed_response)
         return pipeline
     
     def refresh(self) -> Optional[object]:
@@ -4586,7 +4586,7 @@ class Pipeline(Base):
         response = self.client.describe_pipeline(**operation_input_args)
     
         # deserialize the response
-        deserializer(self, response, 'DescribePipelineResponse')
+    
         return self
     
     def delete(self) -> None:
@@ -4642,17 +4642,17 @@ class PipelineExecution(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        pipeline_execution = cls(session, region)
-    
         operation_input_args = {
             'PipelineExecutionArn': pipeline_execution_arn,
         }
-        response = pipeline_execution.client.describe_pipeline_execution(**operation_input_args)
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        response = client.describe_pipeline_execution(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        deserializer(pipeline_execution, response, 'DescribePipelineExecutionResponse')
+        transformed_response = transform(response, 'DescribePipelineExecutionResponse')
+        pipeline_execution = cls(**transformed_response)
         return pipeline_execution
     
     def refresh(self) -> Optional[object]:
@@ -4663,7 +4663,7 @@ class PipelineExecution(Base):
         response = self.client.describe_pipeline_execution(**operation_input_args)
     
         # deserialize the response
-        deserializer(self, response, 'DescribePipelineExecutionResponse')
+    
         return self
     
     def stop(self) -> None:
@@ -4739,7 +4739,7 @@ class ProcessingJob(Base):
     ) -> Optional[object]:
         logger.debug(f"Creating processing_job resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-        
+    
         operation_input_args = {
             'ProcessingInputs': processing_inputs,
             'ProcessingOutputConfig': processing_output_config,
@@ -4757,7 +4757,7 @@ class ProcessingJob(Base):
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
-        
+    
         # create the resource
         response = client.create_processing_job(**operation_input_args)
         logger.debug(f"Response: {response}")
@@ -4771,17 +4771,17 @@ class ProcessingJob(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        processing_job = cls(session, region)
-    
         operation_input_args = {
             'ProcessingJobName': processing_job_name,
         }
-        response = processing_job.client.describe_processing_job(**operation_input_args)
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        response = client.describe_processing_job(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        deserializer(processing_job, response, 'DescribeProcessingJobResponse')
+        transformed_response = transform(response, 'DescribeProcessingJobResponse')
+        processing_job = cls(**transformed_response)
         return processing_job
     
     def refresh(self) -> Optional[object]:
@@ -4792,7 +4792,7 @@ class ProcessingJob(Base):
         response = self.client.describe_processing_job(**operation_input_args)
     
         # deserialize the response
-        deserializer(self, response, 'DescribeProcessingJobResponse')
+    
         return self
     
     def stop(self) -> None:
@@ -4850,7 +4850,7 @@ class Project(Base):
     ) -> Optional[object]:
         logger.debug(f"Creating project resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-        
+    
         operation_input_args = {
             'ProjectName': project_name,
             'ProjectDescription': project_description,
@@ -4861,7 +4861,7 @@ class Project(Base):
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
-        
+    
         # create the resource
         response = client.create_project(**operation_input_args)
         logger.debug(f"Response: {response}")
@@ -4875,17 +4875,17 @@ class Project(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        project = cls(session, region)
-    
         operation_input_args = {
             'ProjectName': project_name,
         }
-        response = project.client.describe_project(**operation_input_args)
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        response = client.describe_project(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        deserializer(project, response, 'DescribeProjectOutput')
+        transformed_response = transform(response, 'DescribeProjectOutput')
+        project = cls(**transformed_response)
         return project
     
     def refresh(self) -> Optional[object]:
@@ -4896,7 +4896,7 @@ class Project(Base):
         response = self.client.describe_project(**operation_input_args)
     
         # deserialize the response
-        deserializer(self, response, 'DescribeProjectOutput')
+    
         return self
     
     def delete(self) -> None:
@@ -4959,7 +4959,7 @@ class Space(Base):
     ) -> Optional[object]:
         logger.debug(f"Creating space resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-        
+    
         operation_input_args = {
             'DomainId': domain_id,
             'SpaceName': space_name,
@@ -4973,7 +4973,7 @@ class Space(Base):
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
-        
+    
         # create the resource
         response = client.create_space(**operation_input_args)
         logger.debug(f"Response: {response}")
@@ -4988,18 +4988,18 @@ class Space(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        space = cls(session, region)
-    
         operation_input_args = {
             'DomainId': domain_id,
             'SpaceName': space_name,
         }
-        response = space.client.describe_space(**operation_input_args)
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        response = client.describe_space(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        deserializer(space, response, 'DescribeSpaceResponse')
+        transformed_response = transform(response, 'DescribeSpaceResponse')
+        space = cls(**transformed_response)
         return space
     
     def refresh(self) -> Optional[object]:
@@ -5011,7 +5011,7 @@ class Space(Base):
         response = self.client.describe_space(**operation_input_args)
     
         # deserialize the response
-        deserializer(self, response, 'DescribeSpaceResponse')
+    
         return self
     
     def delete(self) -> None:
@@ -5065,7 +5065,7 @@ class StudioLifecycleConfig(Base):
     ) -> Optional[object]:
         logger.debug(f"Creating studio_lifecycle_config resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-        
+    
         operation_input_args = {
             'StudioLifecycleConfigName': studio_lifecycle_config_name,
             'StudioLifecycleConfigContent': studio_lifecycle_config_content,
@@ -5076,7 +5076,7 @@ class StudioLifecycleConfig(Base):
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
-        
+    
         # create the resource
         response = client.create_studio_lifecycle_config(**operation_input_args)
         logger.debug(f"Response: {response}")
@@ -5090,17 +5090,17 @@ class StudioLifecycleConfig(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        studio_lifecycle_config = cls(session, region)
-    
         operation_input_args = {
             'StudioLifecycleConfigName': studio_lifecycle_config_name,
         }
-        response = studio_lifecycle_config.client.describe_studio_lifecycle_config(**operation_input_args)
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        response = client.describe_studio_lifecycle_config(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        deserializer(studio_lifecycle_config, response, 'DescribeStudioLifecycleConfigResponse')
+        transformed_response = transform(response, 'DescribeStudioLifecycleConfigResponse')
+        studio_lifecycle_config = cls(**transformed_response)
         return studio_lifecycle_config
     
     def refresh(self) -> Optional[object]:
@@ -5111,7 +5111,7 @@ class StudioLifecycleConfig(Base):
         response = self.client.describe_studio_lifecycle_config(**operation_input_args)
     
         # deserialize the response
-        deserializer(self, response, 'DescribeStudioLifecycleConfigResponse')
+    
         return self
     
     def delete(self) -> None:
@@ -5199,7 +5199,7 @@ class TrainingJob(Base):
     ) -> Optional[object]:
         logger.debug(f"Creating training_job resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-        
+    
         operation_input_args = {
             'TrainingJobName': training_job_name,
             'HyperParameters': hyper_parameters,
@@ -5230,7 +5230,7 @@ class TrainingJob(Base):
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
-        
+    
         # create the resource
         response = client.create_training_job(**operation_input_args)
         logger.debug(f"Response: {response}")
@@ -5244,17 +5244,17 @@ class TrainingJob(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        training_job = cls(session, region)
-    
         operation_input_args = {
             'TrainingJobName': training_job_name,
         }
-        response = training_job.client.describe_training_job(**operation_input_args)
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        response = client.describe_training_job(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        deserializer(training_job, response, 'DescribeTrainingJobResponse')
+        transformed_response = transform(response, 'DescribeTrainingJobResponse')
+        training_job = cls(**transformed_response)
         return training_job
     
     def refresh(self) -> Optional[object]:
@@ -5265,7 +5265,7 @@ class TrainingJob(Base):
         response = self.client.describe_training_job(**operation_input_args)
     
         # deserialize the response
-        deserializer(self, response, 'DescribeTrainingJobResponse')
+    
         return self
     
     def stop(self) -> None:
@@ -5343,7 +5343,7 @@ class TransformJob(Base):
     ) -> Optional[object]:
         logger.debug(f"Creating transform_job resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-        
+    
         operation_input_args = {
             'TransformJobName': transform_job_name,
             'ModelName': model_name,
@@ -5364,7 +5364,7 @@ class TransformJob(Base):
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
-        
+    
         # create the resource
         response = client.create_transform_job(**operation_input_args)
         logger.debug(f"Response: {response}")
@@ -5378,17 +5378,17 @@ class TransformJob(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        transform_job = cls(session, region)
-    
         operation_input_args = {
             'TransformJobName': transform_job_name,
         }
-        response = transform_job.client.describe_transform_job(**operation_input_args)
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        response = client.describe_transform_job(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        deserializer(transform_job, response, 'DescribeTransformJobResponse')
+        transformed_response = transform(response, 'DescribeTransformJobResponse')
+        transform_job = cls(**transformed_response)
         return transform_job
     
     def refresh(self) -> Optional[object]:
@@ -5399,7 +5399,7 @@ class TransformJob(Base):
         response = self.client.describe_transform_job(**operation_input_args)
     
         # deserialize the response
-        deserializer(self, response, 'DescribeTransformJobResponse')
+    
         return self
     
     def stop(self) -> None:
@@ -5457,7 +5457,7 @@ class Trial(Base):
     ) -> Optional[object]:
         logger.debug(f"Creating trial resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-        
+    
         operation_input_args = {
             'TrialName': trial_name,
             'DisplayName': display_name,
@@ -5469,7 +5469,7 @@ class Trial(Base):
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
-        
+    
         # create the resource
         response = client.create_trial(**operation_input_args)
         logger.debug(f"Response: {response}")
@@ -5483,17 +5483,17 @@ class Trial(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        trial = cls(session, region)
-    
         operation_input_args = {
             'TrialName': trial_name,
         }
-        response = trial.client.describe_trial(**operation_input_args)
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        response = client.describe_trial(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        deserializer(trial, response, 'DescribeTrialResponse')
+        transformed_response = transform(response, 'DescribeTrialResponse')
+        trial = cls(**transformed_response)
         return trial
     
     def refresh(self) -> Optional[object]:
@@ -5504,7 +5504,7 @@ class Trial(Base):
         response = self.client.describe_trial(**operation_input_args)
     
         # deserialize the response
-        deserializer(self, response, 'DescribeTrialResponse')
+    
         return self
     
     def delete(self) -> None:
@@ -5553,7 +5553,7 @@ class TrialComponent(Base):
     ) -> Optional[object]:
         logger.debug(f"Creating trial_component resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-        
+    
         operation_input_args = {
             'TrialComponentName': trial_component_name,
             'DisplayName': display_name,
@@ -5570,7 +5570,7 @@ class TrialComponent(Base):
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
-        
+    
         # create the resource
         response = client.create_trial_component(**operation_input_args)
         logger.debug(f"Response: {response}")
@@ -5584,17 +5584,17 @@ class TrialComponent(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        trial_component = cls(session, region)
-    
         operation_input_args = {
             'TrialComponentName': trial_component_name,
         }
-        response = trial_component.client.describe_trial_component(**operation_input_args)
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        response = client.describe_trial_component(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        deserializer(trial_component, response, 'DescribeTrialComponentResponse')
+        transformed_response = transform(response, 'DescribeTrialComponentResponse')
+        trial_component = cls(**transformed_response)
         return trial_component
     
     def refresh(self) -> Optional[object]:
@@ -5605,7 +5605,7 @@ class TrialComponent(Base):
         response = self.client.describe_trial_component(**operation_input_args)
     
         # deserialize the response
-        deserializer(self, response, 'DescribeTrialComponentResponse')
+    
         return self
     
     def delete(self) -> None:
@@ -5665,7 +5665,7 @@ class UserProfile(Base):
     ) -> Optional[object]:
         logger.debug(f"Creating user_profile resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-        
+    
         operation_input_args = {
             'DomainId': domain_id,
             'UserProfileName': user_profile_name,
@@ -5678,7 +5678,7 @@ class UserProfile(Base):
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
-        
+    
         # create the resource
         response = client.create_user_profile(**operation_input_args)
         logger.debug(f"Response: {response}")
@@ -5693,18 +5693,18 @@ class UserProfile(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        user_profile = cls(session, region)
-    
         operation_input_args = {
             'DomainId': domain_id,
             'UserProfileName': user_profile_name,
         }
-        response = user_profile.client.describe_user_profile(**operation_input_args)
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        response = client.describe_user_profile(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        deserializer(user_profile, response, 'DescribeUserProfileResponse')
+        transformed_response = transform(response, 'DescribeUserProfileResponse')
+        user_profile = cls(**transformed_response)
         return user_profile
     
     def refresh(self) -> Optional[object]:
@@ -5716,7 +5716,7 @@ class UserProfile(Base):
         response = self.client.describe_user_profile(**operation_input_args)
     
         # deserialize the response
-        deserializer(self, response, 'DescribeUserProfileResponse')
+    
         return self
     
     def delete(self) -> None:
@@ -5767,7 +5767,7 @@ class Workforce(Base):
     ) -> Optional[object]:
         logger.debug(f"Creating workforce resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-        
+    
         operation_input_args = {
             'CognitoConfig': cognito_config,
             'OidcConfig': oidc_config,
@@ -5780,7 +5780,7 @@ class Workforce(Base):
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
-        
+    
         # create the resource
         response = client.create_workforce(**operation_input_args)
         logger.debug(f"Response: {response}")
@@ -5794,17 +5794,17 @@ class Workforce(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        workforce = cls(session, region)
-    
         operation_input_args = {
             'WorkforceName': workforce_name,
         }
-        response = workforce.client.describe_workforce(**operation_input_args)
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        response = client.describe_workforce(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        deserializer(workforce, response, 'DescribeWorkforceResponse')
+        transformed_response = transform(response, 'DescribeWorkforceResponse')
+        workforce = cls(**transformed_response)
         return workforce
     
     def refresh(self) -> Optional[object]:
@@ -5815,7 +5815,7 @@ class Workforce(Base):
         response = self.client.describe_workforce(**operation_input_args)
     
         # deserialize the response
-        deserializer(self, response, 'DescribeWorkforceResponse')
+    
         return self
     
     def delete(self) -> None:
@@ -5865,7 +5865,7 @@ class Workteam(Base):
     ) -> Optional[object]:
         logger.debug(f"Creating workteam resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-        
+    
         operation_input_args = {
             'WorkteamName': workteam_name,
             'WorkforceName': workforce_name,
@@ -5878,7 +5878,7 @@ class Workteam(Base):
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
-        
+    
         # create the resource
         response = client.create_workteam(**operation_input_args)
         logger.debug(f"Response: {response}")
@@ -5892,17 +5892,17 @@ class Workteam(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
-        workteam = cls(session, region)
-    
         operation_input_args = {
             'WorkteamName': workteam_name,
         }
-        response = workteam.client.describe_workteam(**operation_input_args)
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        response = client.describe_workteam(**operation_input_args)
     
         pprint(response)
     
         # deserialize the response
-        deserializer(workteam, response, 'DescribeWorkteamResponse')
+        transformed_response = transform(response, 'DescribeWorkteamResponse')
+        workteam = cls(**transformed_response)
         return workteam
     
     def refresh(self) -> Optional[object]:
@@ -5913,7 +5913,7 @@ class Workteam(Base):
         response = self.client.describe_workteam(**operation_input_args)
     
         # deserialize the response
-        deserializer(self, response, 'DescribeWorkteamResponse')
+    
         return self
     
     def delete(self) -> None:

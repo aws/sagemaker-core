@@ -41,7 +41,7 @@ def create(
 ) -> Optional[object]:
     logger.debug(f"Creating {resource_lower} resource.")
     client = SageMakerClient(session=session, region_name=region, service_name='{service_name}')
-    
+
     operation_input_args = {{
 {operation_input_args}
     }}
@@ -49,7 +49,7 @@ def create(
     # serialize the input request
     operation_input_args = cls._serialize(operation_input_args)
     logger.debug(f"Serialized input request: {{operation_input_args}}")
-    
+
     # create the resource
     response = client.{operation}(**operation_input_args)
     logger.debug(f"Response: {{response}}")
@@ -65,17 +65,17 @@ def get(
     session: Optional[Session] = None,
     region: Optional[str] = None,
 ) -> Optional[object]:
-    {resource_lower} = cls(session, region)
-
     operation_input_args = {{
 {operation_input_args}
     }}
-    response = {resource_lower}.client.{operation}(**operation_input_args)
+    client = SageMakerClient(session=session, region_name=region, service_name='{service_name}')
+    response = client.{operation}(**operation_input_args)
 
     pprint(response)
 
     # deserialize the response
-    deserializer({resource_lower}, response, '{describe_operation_output_shape}')
+    transformed_response = transform(response, '{describe_operation_output_shape}')
+    {resource_lower} = cls(**transformed_response)
     return {resource_lower}
 '''
 
@@ -88,7 +88,7 @@ def refresh(self) -> Optional[object]:
     response = self.client.{operation}(**operation_input_args)
 
     # deserialize the response
-    deserializer(self, response, '{describe_operation_output_shape}')
+
     return self
 '''
 

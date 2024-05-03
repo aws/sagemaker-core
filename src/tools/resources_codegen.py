@@ -11,8 +11,8 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 """Generates the resource classes for the service model."""
-import os
 import logging
+import os
 
 from src.tools.constants import GENERATED_CLASSES_LOCATION, \
                         RESOURCES_CODEGEN_FILE_NAME, \
@@ -86,7 +86,6 @@ class ResourcesCodeGen:
 
         # Extract the resources plan and shapes DAG
         self.resources_plan = self.resources_extractor.get_resource_plan()
-        self.shape_dag = self.shapes_extractor.get_shapes_dag()
 
     def generate_license(self) -> str:
         """
@@ -115,9 +114,9 @@ class ResourcesCodeGen:
             "from pydantic import BaseModel, validate_call",
             "from typing import List, Dict, Optional, Literal",
             "from boto3.session import Session",
-            "from utils import SageMakerClient, Unassigned",
-            "from shapes import *",
-            "\nfrom src.code_injection.codec import deserializer"
+            "from .utils import SageMakerClient, Unassigned",
+            "from .shapes import *",
+            "\nfrom src.code_injection.codec import transform"
         ]
 
         formated_imports = "\n".join(imports)
@@ -146,7 +145,7 @@ class ResourcesCodeGen:
         """
         return LOGGER_STRING
 
-    def generate_resources(self, 
+    def generate_resources(self,
                            output_folder=GENERATED_CLASSES_LOCATION,
                            file_name=RESOURCES_CODEGEN_FILE_NAME) -> None:
         """
@@ -436,6 +435,7 @@ class ResourcesCodeGen:
         operation = convert_to_snake_case(operation_name)
 
         formatted_method = GET_METHOD_TEMPLATE.format(
+            service_name='sagemaker', # TODO: change service name based on the service - runtime, sagemaker, etc.
             describe_args=describe_args,
             resource_lower=resource_lower,
             operation_input_args=operation_input_args,
@@ -455,7 +455,8 @@ class ResourcesCodeGen:
         """
         operation_name = "Describe" + resource_name
         resource_operation = self.operations[operation_name]
-        resource_operation_output_shape_name = resource_operation["output"]["shape"]
+        # ToDo Refresh method instance update logic is yet to be strategised
+        # resource_operation_output_shape_name = resource_operation["output"]["shape"]
 
         operation_input_args = self._generate_operation_input_args(
             resource_operation, is_class_method=False
@@ -466,7 +467,8 @@ class ResourcesCodeGen:
         formatted_method = REFRESH_METHOD_TEMPLATE.format(
             operation_input_args=operation_input_args,
             operation=operation,
-            describe_operation_output_shape=resource_operation_output_shape_name,
+            # ToDo Refresh method instance update logic is yet to be strategised
+            # describe_operation_output_shape=resource_operation_output_shape_name,
         )
         return formatted_method
 

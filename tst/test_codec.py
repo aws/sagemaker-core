@@ -1,8 +1,10 @@
 import datetime
 from dateutil.tz import tzlocal
+from pprint import pprint
 import unittest
 from src.code_injection.codec import pascal_to_snake
-from src.code_injection.codec import deserializer
+from src.code_injection.codec import transform
+from src.generated.resources import Model, TrialComponent, AutoMLJobV2
 
 
 class TestConversion(unittest.TestCase):
@@ -36,8 +38,9 @@ def test_deserializer_for_structure_type():
                                                                'S3Uri': 's3://sagemaker-us-west-2-616250812882/session-default-prefix/large-model-lmi/code/mymodel-7B.tar.gz'}},
                           'ModelDataUrl': 's3://sagemaker-us-west-2-616250812882/session-default-prefix/large-model-lmi/code/mymodel-7B.tar.gz'}
     }
-    instance = DummyResourceClass()
-    deserializer(instance, describe_model_response, "DescribeModelOutput")
+    transformed_data = transform(describe_model_response, "DescribeModelOutput")
+    pprint(transformed_data)
+    instance = Model(**transformed_data)
     assert instance.execution_role_arn == "arn:aws:iam::616250812882:role/SageMakerRole"
     assert not instance.enable_network_isolation
     assert instance.primary_container.model_data_source.s3_data_source.s3_data_type == 'S3Object'
@@ -57,9 +60,12 @@ def test_deserializer_for_list_type():
           "Environment": {"ENV_VAR_2": "ENV_VAR_2_VALUE"}}
      ],
         'RecommendationStatus': 'COMPLETED'},
+        'ModelArn': 'arn:aws:sagemaker:us-west-2:616250812882:model/lmi-model-falcon-7b-1710367662-a49c',
+        'ModelName': 'lmi-model-falcon-7b-1710367662-a49c',
     }
-    instance = DummyResourceClass()
-    deserializer(instance, describe_model_response, "DescribeModelOutput")
+    transformed_data = transform(describe_model_response, "DescribeModelOutput")
+    pprint(transformed_data)
+    instance = Model(**transformed_data)
     real_time_inference_recommendations = instance.deployment_recommendation.\
         real_time_inference_recommendations
     assert type(real_time_inference_recommendations) == list
@@ -81,8 +87,9 @@ def test_deserializer_for_map_type():
                         'SageMaker.InstanceType': {'StringValue': 'ml.g5.4xlarge'}},
          'TrialComponentArn': 'arn:aws:sagemaker:us-west-2:616250812882:experiment-trial-component/huggingface-pytorch-training-2024-01-10-02-32-59-730-aws-training-job',
          'TrialComponentName': 'huggingface-pytorch-training-2024-01-10-02-32-59-730-aws-training-job'}
-    instance = DummyResourceClass()
-    deserializer(instance, describe_trial_component_response, "DescribeTrialComponentResponse")
+    transformed_data = transform(describe_trial_component_response, "DescribeTrialComponentResponse")
+    pprint(transformed_data)
+    instance = TrialComponent(**transformed_data)
     parameters = instance.parameters
     assert type(parameters) == dict
     assert parameters["SageMaker.InstanceType"].string_value == 'ml.g5.4xlarge'
@@ -94,6 +101,13 @@ def test_deserializer_for_map_type():
     # StructA -> map(string, list) -> list(structure) -> map(string, string)
     describe_auto_ml_job_v2_response = {
         'AutoMLJobArn': 'arn:aws:sagemaker:us-west-2:616250812882:automl-job/python-sdk-integ-test-base-job',
+        'AutoMLJobInputDataConfig': [{'ChannelType': 'training',
+                                      'ContentType': 'text/csv;header=present',
+                                      'DataSource': {'S3DataSource': {'S3DataType': 'S3Prefix',
+                                                                      'S3Uri': 's3://sagemaker-us-west-2-616250812882/sagemaker/beta-automl-xgboost/input/iris_training.csv'}}}],
+        'AutoMLJobName': 'python-sdk-integ-test-base-job',
+        'AutoMLJobSecondaryStatus': 'Completed',
+        'AutoMLJobStatus': 'Completed',
         'AutoMLProblemTypeConfig': {'TabularJobConfig': {'CompletionCriteria': {'MaxCandidates': 3},
                                                          'GenerateCandidateDefinitionsOnly': False,
                                                          'TargetAttributeName': 'virginica'},
@@ -142,11 +156,15 @@ def test_deserializer_for_map_type():
                           'LastModifiedTime': datetime.datetime(2021, 10, 4, 11, 8, 9, 941000,
                                                                 tzinfo=tzlocal()),
                           'ObjectiveStatus': 'Succeeded'
-                          }
-        }
-    instance2 = DummyResourceClass()
-    deserializer(instance2, describe_auto_ml_job_v2_response, "DescribeAutoMLJobV2Response")
-    best_candidate = instance2.best_candidate
+                          },
+        'OutputDataConfig': {'S3OutputPath': 's3://sagemaker-us-west-2-616250812882/'},
+        'RoleArn': 'arn:aws:iam::616250812882:role/SageMakerRole',
+        'CreationTime': datetime.datetime(2024, 3, 13, 15, 7, 44, 459000, tzinfo=tzlocal()),
+        'LastModifiedTime': datetime.datetime(2021, 10, 4, 11, 8, 9, 941000, tzinfo=tzlocal()),
+    }
+    transformed_data = transform(describe_auto_ml_job_v2_response, "DescribeAutoMLJobV2Response")
+    instance = AutoMLJobV2(**transformed_data)
+    best_candidate = instance.best_candidate
     inference_container_definitions = best_candidate.inference_container_definitions
     assert type(inference_container_definitions) == dict
     assert best_candidate.candidate_name == 'python-sdk-integ-test-base-jobTA-001-143b672d'
@@ -155,7 +173,7 @@ def test_deserializer_for_map_type():
     assert inference_container_definitions_def1[0].image == "dummy-image-1"
     assert inference_container_definitions_def1[1].environment == {"ENV_VAR_2": "ENV_VAR_2_VALUE"}
     # StructA -> map(string, map)
-    assert instance2.auto_m_l_problem_type_config.time_series_forecasting_job_config.transformations.filling == {'map1_key': {'map2_key': 'map2_val'}}
+    assert instance.auto_m_l_problem_type_config.time_series_forecasting_job_config.transformations.filling == {'map1_key': {'map2_key': 'map2_val'}}
 
 
 if __name__ == '__main__':
