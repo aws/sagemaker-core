@@ -30,7 +30,7 @@ def create(
     region: Optional[str] = None,
 ) -> Optional[object]:
     logger.debug(f"Creating compilation_job resource.")
-    client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+    client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
 
     operation_input_args = {
         'CompilationJobName': compilation_job_name,
@@ -75,7 +75,7 @@ def get(
         'AppType': app_type,
         'AppName': app_name,
     }
-    client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+    client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
     response = client.describe_app(**operation_input_args)
 
     pprint(response)
@@ -98,10 +98,11 @@ def refresh(self) -> Optional[object]:
         'AppType': self.app_type,
         'AppName': self.app_name,
     }
-    response = self.client.describe_app(**operation_input_args)
+    client = SageMakerClient().client
+    response = client.describe_app(**operation_input_args)
 
-    # deserialize the response
-
+    # deserialize response and update self
+    transform(response, 'DescribeAppResponse', self)
     return self
 '''
         assert self.resource_generator.generate_refresh_method("App") == expected_output
@@ -150,7 +151,7 @@ def wait(
         # TODO: Raise some generated TimeOutError
         if timeout is not None and time.time() - start_time >= timeout:
             raise Exception("Timeout exceeded. Final resource state - " + current_status)
-
+        print("-", end="")
         time.sleep(poll)
 '''
         assert self.resource_generator.generate_wait_method("TrainingJob") == expected_output
@@ -176,7 +177,7 @@ def wait_for_status(
         # TODO: Raise some generated TimeOutError
         if timeout is not None and time.time() - start_time >= timeout:
             raise Exception("Timeout exceeded. Final resource state - " + current_status)
-
+        print("-", end="")
         time.sleep(poll)
 '''
         assert self.resource_generator.generate_wait_for_status_method("InferenceComponent") == expected_output

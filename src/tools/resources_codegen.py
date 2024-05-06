@@ -455,8 +455,7 @@ class ResourcesCodeGen:
         """
         operation_name = "Describe" + resource_name
         resource_operation = self.operations[operation_name]
-        # ToDo Refresh method instance update logic is yet to be strategised
-        # resource_operation_output_shape_name = resource_operation["output"]["shape"]
+        resource_operation_output_shape_name = resource_operation["output"]["shape"]
 
         operation_input_args = self._generate_operation_input_args(
             resource_operation, is_class_method=False
@@ -467,8 +466,7 @@ class ResourcesCodeGen:
         formatted_method = REFRESH_METHOD_TEMPLATE.format(
             operation_input_args=operation_input_args,
             operation=operation,
-            # ToDo Refresh method instance update logic is yet to be strategised
-            # describe_operation_output_shape=resource_operation_output_shape_name,
+            describe_operation_output_shape=resource_operation_output_shape_name,
         )
         return formatted_method
 

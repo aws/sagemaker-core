@@ -173,13 +173,15 @@ def _evaluate_map_type(raw_map, shape) -> dict:
 
     return _evaluated_map
 
-def transform(data, shape) -> dict:
+
+def transform(data, shape, object_instance=None) -> dict:
     """
     Transforms the given data based on the given shape.
 
     Args:
         data (dict): The data to be transformed.
         shape (str): The shape of the data.
+        object_instance (object): The object to be transformed. (Optional)
 
     Returns:
         dict: The transformed data.
@@ -206,23 +208,27 @@ def transform(data, shape) -> dict:
         if _member_type in BASIC_TYPES:
             logging.debug(f"Basic type encountered, evaluating member: {member}")
             # 2. assign response value
-            result[attribute_name] = data[_member_name]
+            evaluated_value = data[_member_name]
         elif _member_type == STRUCTURE_TYPE:
             logging.debug(f"Structure type encountered, evaluating member: {member}")
             # 2. assign response value
-            result[attribute_name] = transform(data[_member_name], _member_shape)
+            evaluated_value = transform(data[_member_name], _member_shape)
         elif _member_type == LIST_TYPE:
             logging.debug(f"List type encountered, evaluating member: {member}")
             _list_type_shape = SHAPE_DAG[_member_shape]
             # 2. assign response value
-            result[attribute_name] = _evaluate_list_type(data[_member_name],
+            evaluated_value = _evaluate_list_type(data[_member_name],
                                                    _list_type_shape)
         elif _member_type == MAP_TYPE:
             logging.debug(f"Map type encountered, evaluating member: {member}")
             _map_type_shape = SHAPE_DAG[_member_shape]
             # 2. assign response value
-            result[attribute_name] = _evaluate_map_type(data[_member_name], _map_type_shape)
+            evaluated_value = _evaluate_map_type(data[_member_name], _map_type_shape)
         else:
             raise ValueError(f"Unexpected member type encountered: {_member_type}")
+
+        result[attribute_name] = evaluated_value
+        if object_instance:
+            setattr(object_instance, attribute_name, evaluated_value)
 
     return result

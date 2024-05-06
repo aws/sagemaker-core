@@ -34,7 +34,7 @@ logger = logging.getLogger(__name__)
 class Base(BaseModel):
     @classmethod
     def _serialize(cls, data: Dict) -> Dict:
-        result = {{}}
+        result = {}
         for attr, value in data.items():
             if isinstance(value, Unassigned):
                 continue
@@ -50,12 +50,12 @@ class Base(BaseModel):
         return result
     
     @classmethod
-    def _serialize_list(value: List):
+    def _serialize_list(cls, value: List):
         return [v.serialize() if hasattr(v, 'serialize') else v for v in value]
     
     @classmethod
-    def _serialize_dict(value: Dict):
-        return {{k: v.serialize() if hasattr(v, 'serialize') else v for k, v in value.items()}}
+    def _serialize_dict(cls, value: Dict):
+        return {k: v.serialize() if hasattr(v, 'serialize') else v for k, v in value.items()}
 
 class Action(Base):
     action_name: Optional[str] = Unassigned()
@@ -87,7 +87,7 @@ class Action(Base):
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating action resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
     
         operation_input_args = {
             'ActionName': action_name,
@@ -120,7 +120,7 @@ class Action(Base):
         operation_input_args = {
             'ActionName': action_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
         response = client.describe_action(**operation_input_args)
     
         pprint(response)
@@ -135,10 +135,11 @@ class Action(Base):
         operation_input_args = {
             'ActionName': self.action_name,
         }
-        response = self.client.describe_action(**operation_input_args)
+        client = SageMakerClient().client
+        response = client.describe_action(**operation_input_args)
     
-        # deserialize the response
-    
+        # deserialize response and update self
+        transform(response, 'DescribeActionResponse', self)
         return self
     
     def delete(self) -> None:
@@ -176,7 +177,7 @@ class Algorithm(Base):
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating algorithm resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
     
         operation_input_args = {
             'AlgorithmName': algorithm_name,
@@ -208,7 +209,7 @@ class Algorithm(Base):
         operation_input_args = {
             'AlgorithmName': algorithm_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
         response = client.describe_algorithm(**operation_input_args)
     
         pprint(response)
@@ -223,10 +224,11 @@ class Algorithm(Base):
         operation_input_args = {
             'AlgorithmName': self.algorithm_name,
         }
-        response = self.client.describe_algorithm(**operation_input_args)
+        client = SageMakerClient().client
+        response = client.describe_algorithm(**operation_input_args)
     
-        # deserialize the response
-    
+        # deserialize response and update self
+        transform(response, 'DescribeAlgorithmOutput', self)
         return self
     
     def delete(self) -> None:
@@ -255,7 +257,7 @@ class Algorithm(Base):
             # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
                 raise Exception("Timeout exceeded. Final resource state - " + current_status)
-    
+            print("-", end="")
             time.sleep(poll)
 
 
@@ -287,7 +289,7 @@ class App(Base):
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating app resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
     
         operation_input_args = {
             'DomainId': domain_id,
@@ -327,7 +329,7 @@ class App(Base):
             'AppType': app_type,
             'AppName': app_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
         response = client.describe_app(**operation_input_args)
     
         pprint(response)
@@ -346,10 +348,11 @@ class App(Base):
             'AppType': self.app_type,
             'AppName': self.app_name,
         }
-        response = self.client.describe_app(**operation_input_args)
+        client = SageMakerClient().client
+        response = client.describe_app(**operation_input_args)
     
-        # deserialize the response
-    
+        # deserialize response and update self
+        transform(response, 'DescribeAppResponse', self)
         return self
     
     def delete(self) -> None:
@@ -382,7 +385,7 @@ class App(Base):
             # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
                 raise Exception("Timeout exceeded. Final resource state - " + current_status)
-    
+            print("-", end="")
             time.sleep(poll)
 
 
@@ -405,7 +408,7 @@ class AppImageConfig(Base):
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating app_image_config resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
     
         operation_input_args = {
             'AppImageConfigName': app_image_config_name,
@@ -434,7 +437,7 @@ class AppImageConfig(Base):
         operation_input_args = {
             'AppImageConfigName': app_image_config_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
         response = client.describe_app_image_config(**operation_input_args)
     
         pprint(response)
@@ -449,10 +452,11 @@ class AppImageConfig(Base):
         operation_input_args = {
             'AppImageConfigName': self.app_image_config_name,
         }
-        response = self.client.describe_app_image_config(**operation_input_args)
+        client = SageMakerClient().client
+        response = client.describe_app_image_config(**operation_input_args)
     
-        # deserialize the response
-    
+        # deserialize response and update self
+        transform(response, 'DescribeAppImageConfigResponse', self)
         return self
     
     def delete(self) -> None:
@@ -489,7 +493,7 @@ class Artifact(Base):
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating artifact resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
     
         operation_input_args = {
             'ArtifactName': artifact_name,
@@ -520,7 +524,7 @@ class Artifact(Base):
         operation_input_args = {
             'ArtifactArn': artifact_arn,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
         response = client.describe_artifact(**operation_input_args)
     
         pprint(response)
@@ -535,10 +539,11 @@ class Artifact(Base):
         operation_input_args = {
             'ArtifactArn': self.artifact_arn,
         }
-        response = self.client.describe_artifact(**operation_input_args)
+        client = SageMakerClient().client
+        response = client.describe_artifact(**operation_input_args)
     
-        # deserialize the response
-    
+        # deserialize response and update self
+        transform(response, 'DescribeArtifactResponse', self)
         return self
     
     def delete(self) -> None:
@@ -590,7 +595,7 @@ class AutoMLJob(Base):
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating auto_m_l_job resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
     
         operation_input_args = {
             'AutoMLJobName': auto_m_l_job_name,
@@ -625,7 +630,7 @@ class AutoMLJob(Base):
         operation_input_args = {
             'AutoMLJobName': auto_m_l_job_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
         response = client.describe_auto_m_l_job(**operation_input_args)
     
         pprint(response)
@@ -640,10 +645,11 @@ class AutoMLJob(Base):
         operation_input_args = {
             'AutoMLJobName': self.auto_m_l_job_name,
         }
-        response = self.client.describe_auto_m_l_job(**operation_input_args)
+        client = SageMakerClient().client
+        response = client.describe_auto_m_l_job(**operation_input_args)
     
-        # deserialize the response
-    
+        # deserialize response and update self
+        transform(response, 'DescribeAutoMLJobResponse', self)
         return self
     
     def stop(self) -> None:
@@ -672,7 +678,7 @@ class AutoMLJob(Base):
             # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
                 raise Exception("Timeout exceeded. Final resource state - " + current_status)
-    
+            print("-", end="")
             time.sleep(poll)
 
 
@@ -717,7 +723,7 @@ class AutoMLJobV2(Base):
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating auto_m_l_job_v2 resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
     
         operation_input_args = {
             'AutoMLJobName': auto_m_l_job_name,
@@ -752,7 +758,7 @@ class AutoMLJobV2(Base):
         operation_input_args = {
             'AutoMLJobName': auto_m_l_job_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
         response = client.describe_auto_m_l_job_v2(**operation_input_args)
     
         pprint(response)
@@ -767,10 +773,11 @@ class AutoMLJobV2(Base):
         operation_input_args = {
             'AutoMLJobName': self.auto_m_l_job_name,
         }
-        response = self.client.describe_auto_m_l_job_v2(**operation_input_args)
+        client = SageMakerClient().client
+        response = client.describe_auto_m_l_job_v2(**operation_input_args)
     
-        # deserialize the response
-    
+        # deserialize response and update self
+        transform(response, 'DescribeAutoMLJobV2Response', self)
         return self
     
     @validate_call
@@ -792,7 +799,7 @@ class AutoMLJobV2(Base):
             # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
                 raise Exception("Timeout exceeded. Final resource state - " + current_status)
-    
+            print("-", end="")
             time.sleep(poll)
 
 
@@ -816,7 +823,7 @@ class Cluster(Base):
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating cluster resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
     
         operation_input_args = {
             'ClusterName': cluster_name,
@@ -845,7 +852,7 @@ class Cluster(Base):
         operation_input_args = {
             'ClusterName': cluster_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
         response = client.describe_cluster(**operation_input_args)
     
         pprint(response)
@@ -860,10 +867,11 @@ class Cluster(Base):
         operation_input_args = {
             'ClusterName': self.cluster_name,
         }
-        response = self.client.describe_cluster(**operation_input_args)
+        client = SageMakerClient().client
+        response = client.describe_cluster(**operation_input_args)
     
-        # deserialize the response
-    
+        # deserialize response and update self
+        transform(response, 'DescribeClusterResponse', self)
         return self
     
     def delete(self) -> None:
@@ -892,7 +900,7 @@ class Cluster(Base):
             # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
                 raise Exception("Timeout exceeded. Final resource state - " + current_status)
-    
+            print("-", end="")
             time.sleep(poll)
 
 
@@ -913,7 +921,7 @@ class CodeRepository(Base):
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating code_repository resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
     
         operation_input_args = {
             'CodeRepositoryName': code_repository_name,
@@ -941,7 +949,7 @@ class CodeRepository(Base):
         operation_input_args = {
             'CodeRepositoryName': code_repository_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
         response = client.describe_code_repository(**operation_input_args)
     
         pprint(response)
@@ -956,10 +964,11 @@ class CodeRepository(Base):
         operation_input_args = {
             'CodeRepositoryName': self.code_repository_name,
         }
-        response = self.client.describe_code_repository(**operation_input_args)
+        client = SageMakerClient().client
+        response = client.describe_code_repository(**operation_input_args)
     
-        # deserialize the response
-    
+        # deserialize response and update self
+        transform(response, 'DescribeCodeRepositoryOutput', self)
         return self
     
     def delete(self) -> None:
@@ -1005,7 +1014,7 @@ class CompilationJob(Base):
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating compilation_job resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
     
         operation_input_args = {
             'CompilationJobName': compilation_job_name,
@@ -1038,7 +1047,7 @@ class CompilationJob(Base):
         operation_input_args = {
             'CompilationJobName': compilation_job_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
         response = client.describe_compilation_job(**operation_input_args)
     
         pprint(response)
@@ -1053,10 +1062,11 @@ class CompilationJob(Base):
         operation_input_args = {
             'CompilationJobName': self.compilation_job_name,
         }
-        response = self.client.describe_compilation_job(**operation_input_args)
+        client = SageMakerClient().client
+        response = client.describe_compilation_job(**operation_input_args)
     
-        # deserialize the response
-    
+        # deserialize response and update self
+        transform(response, 'DescribeCompilationJobResponse', self)
         return self
     
     def delete(self) -> None:
@@ -1092,7 +1102,7 @@ class CompilationJob(Base):
             # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
                 raise Exception("Timeout exceeded. Final resource state - " + current_status)
-    
+            print("-", end="")
             time.sleep(poll)
 
 
@@ -1122,7 +1132,7 @@ class Context(Base):
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating context resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
     
         operation_input_args = {
             'ContextName': context_name,
@@ -1153,7 +1163,7 @@ class Context(Base):
         operation_input_args = {
             'ContextName': context_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
         response = client.describe_context(**operation_input_args)
     
         pprint(response)
@@ -1168,10 +1178,11 @@ class Context(Base):
         operation_input_args = {
             'ContextName': self.context_name,
         }
-        response = self.client.describe_context(**operation_input_args)
+        client = SageMakerClient().client
+        response = client.describe_context(**operation_input_args)
     
-        # deserialize the response
-    
+        # deserialize response and update self
+        transform(response, 'DescribeContextResponse', self)
         return self
     
     def delete(self) -> None:
@@ -1212,7 +1223,7 @@ class DataQualityJobDefinition(Base):
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating data_quality_job_definition resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
     
         operation_input_args = {
             'JobDefinitionName': job_definition_name,
@@ -1247,7 +1258,7 @@ class DataQualityJobDefinition(Base):
         operation_input_args = {
             'JobDefinitionName': job_definition_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
         response = client.describe_data_quality_job_definition(**operation_input_args)
     
         pprint(response)
@@ -1262,10 +1273,11 @@ class DataQualityJobDefinition(Base):
         operation_input_args = {
             'JobDefinitionName': self.job_definition_name,
         }
-        response = self.client.describe_data_quality_job_definition(**operation_input_args)
+        client = SageMakerClient().client
+        response = client.describe_data_quality_job_definition(**operation_input_args)
     
-        # deserialize the response
-    
+        # deserialize response and update self
+        transform(response, 'DescribeDataQualityJobDefinitionResponse', self)
         return self
     
     def delete(self) -> None:
@@ -1299,7 +1311,7 @@ class DeviceFleet(Base):
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating device_fleet resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
     
         operation_input_args = {
             'DeviceFleetName': device_fleet_name,
@@ -1330,7 +1342,7 @@ class DeviceFleet(Base):
         operation_input_args = {
             'DeviceFleetName': device_fleet_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
         response = client.describe_device_fleet(**operation_input_args)
     
         pprint(response)
@@ -1345,10 +1357,11 @@ class DeviceFleet(Base):
         operation_input_args = {
             'DeviceFleetName': self.device_fleet_name,
         }
-        response = self.client.describe_device_fleet(**operation_input_args)
+        client = SageMakerClient().client
+        response = client.describe_device_fleet(**operation_input_args)
     
-        # deserialize the response
-    
+        # deserialize response and update self
+        transform(response, 'DescribeDeviceFleetResponse', self)
         return self
     
     def delete(self) -> None:
@@ -1402,7 +1415,7 @@ class Domain(Base):
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating domain resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
     
         operation_input_args = {
             'DomainName': domain_name,
@@ -1439,7 +1452,7 @@ class Domain(Base):
         operation_input_args = {
             'DomainId': domain_id,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
         response = client.describe_domain(**operation_input_args)
     
         pprint(response)
@@ -1454,10 +1467,11 @@ class Domain(Base):
         operation_input_args = {
             'DomainId': self.domain_id,
         }
-        response = self.client.describe_domain(**operation_input_args)
+        client = SageMakerClient().client
+        response = client.describe_domain(**operation_input_args)
     
-        # deserialize the response
-    
+        # deserialize response and update self
+        transform(response, 'DescribeDomainResponse', self)
         return self
     
     def delete(self) -> None:
@@ -1487,7 +1501,7 @@ class Domain(Base):
             # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
                 raise Exception("Timeout exceeded. Final resource state - " + current_status)
-    
+            print("-", end="")
             time.sleep(poll)
 
 
@@ -1516,7 +1530,7 @@ class EdgeDeploymentPlan(Base):
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating edge_deployment_plan resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
     
         operation_input_args = {
             'EdgeDeploymentPlanName': edge_deployment_plan_name,
@@ -1550,7 +1564,7 @@ class EdgeDeploymentPlan(Base):
             'NextToken': next_token,
             'MaxResults': max_results,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
         response = client.describe_edge_deployment_plan(**operation_input_args)
     
         pprint(response)
@@ -1567,10 +1581,11 @@ class EdgeDeploymentPlan(Base):
             'NextToken': self.next_token,
             'MaxResults': self.max_results,
         }
-        response = self.client.describe_edge_deployment_plan(**operation_input_args)
+        client = SageMakerClient().client
+        response = client.describe_edge_deployment_plan(**operation_input_args)
     
-        # deserialize the response
-    
+        # deserialize response and update self
+        transform(response, 'DescribeEdgeDeploymentPlanResponse', self)
         return self
     
     def delete(self) -> None:
@@ -1613,7 +1628,7 @@ class EdgePackagingJob(Base):
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating edge_packaging_job resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
     
         operation_input_args = {
             'EdgePackagingJobName': edge_packaging_job_name,
@@ -1646,7 +1661,7 @@ class EdgePackagingJob(Base):
         operation_input_args = {
             'EdgePackagingJobName': edge_packaging_job_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
         response = client.describe_edge_packaging_job(**operation_input_args)
     
         pprint(response)
@@ -1661,10 +1676,11 @@ class EdgePackagingJob(Base):
         operation_input_args = {
             'EdgePackagingJobName': self.edge_packaging_job_name,
         }
-        response = self.client.describe_edge_packaging_job(**operation_input_args)
+        client = SageMakerClient().client
+        response = client.describe_edge_packaging_job(**operation_input_args)
     
-        # deserialize the response
-    
+        # deserialize response and update self
+        transform(response, 'DescribeEdgePackagingJobResponse', self)
         return self
     
     def stop(self) -> None:
@@ -1693,7 +1709,7 @@ class EdgePackagingJob(Base):
             # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
                 raise Exception("Timeout exceeded. Final resource state - " + current_status)
-    
+            print("-", end="")
             time.sleep(poll)
 
 
@@ -1724,7 +1740,7 @@ class Endpoint(Base):
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating endpoint resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
     
         operation_input_args = {
             'EndpointName': endpoint_name,
@@ -1753,7 +1769,7 @@ class Endpoint(Base):
         operation_input_args = {
             'EndpointName': endpoint_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
         response = client.describe_endpoint(**operation_input_args)
     
         pprint(response)
@@ -1768,10 +1784,11 @@ class Endpoint(Base):
         operation_input_args = {
             'EndpointName': self.endpoint_name,
         }
-        response = self.client.describe_endpoint(**operation_input_args)
+        client = SageMakerClient().client
+        response = client.describe_endpoint(**operation_input_args)
     
-        # deserialize the response
-    
+        # deserialize response and update self
+        transform(response, 'DescribeEndpointOutput', self)
         return self
     
     def delete(self) -> None:
@@ -1800,7 +1817,7 @@ class Endpoint(Base):
             # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
                 raise Exception("Timeout exceeded. Final resource state - " + current_status)
-    
+            print("-", end="")
             time.sleep(poll)
 
 
@@ -1836,7 +1853,7 @@ class EndpointConfig(Base):
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating endpoint_config resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
     
         operation_input_args = {
             'EndpointConfigName': endpoint_config_name,
@@ -1872,7 +1889,7 @@ class EndpointConfig(Base):
         operation_input_args = {
             'EndpointConfigName': endpoint_config_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
         response = client.describe_endpoint_config(**operation_input_args)
     
         pprint(response)
@@ -1887,10 +1904,11 @@ class EndpointConfig(Base):
         operation_input_args = {
             'EndpointConfigName': self.endpoint_config_name,
         }
-        response = self.client.describe_endpoint_config(**operation_input_args)
+        client = SageMakerClient().client
+        response = client.describe_endpoint_config(**operation_input_args)
     
-        # deserialize the response
-    
+        # deserialize response and update self
+        transform(response, 'DescribeEndpointConfigOutput', self)
         return self
     
     def delete(self) -> None:
@@ -1923,7 +1941,7 @@ class Experiment(Base):
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating experiment resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
     
         operation_input_args = {
             'ExperimentName': experiment_name,
@@ -1952,7 +1970,7 @@ class Experiment(Base):
         operation_input_args = {
             'ExperimentName': experiment_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
         response = client.describe_experiment(**operation_input_args)
     
         pprint(response)
@@ -1967,10 +1985,11 @@ class Experiment(Base):
         operation_input_args = {
             'ExperimentName': self.experiment_name,
         }
-        response = self.client.describe_experiment(**operation_input_args)
+        client = SageMakerClient().client
+        response = client.describe_experiment(**operation_input_args)
     
-        # deserialize the response
-    
+        # deserialize response and update self
+        transform(response, 'DescribeExperimentResponse', self)
         return self
     
     def delete(self) -> None:
@@ -2018,7 +2037,7 @@ class FeatureGroup(Base):
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating feature_group resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
     
         operation_input_args = {
             'FeatureGroupName': feature_group_name,
@@ -2055,7 +2074,7 @@ class FeatureGroup(Base):
             'FeatureGroupName': feature_group_name,
             'NextToken': next_token,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
         response = client.describe_feature_group(**operation_input_args)
     
         pprint(response)
@@ -2071,10 +2090,11 @@ class FeatureGroup(Base):
             'FeatureGroupName': self.feature_group_name,
             'NextToken': self.next_token,
         }
-        response = self.client.describe_feature_group(**operation_input_args)
+        client = SageMakerClient().client
+        response = client.describe_feature_group(**operation_input_args)
     
-        # deserialize the response
-    
+        # deserialize response and update self
+        transform(response, 'DescribeFeatureGroupResponse', self)
         return self
     
     def delete(self) -> None:
@@ -2103,7 +2123,7 @@ class FeatureGroup(Base):
             # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
                 raise Exception("Timeout exceeded. Final resource state - " + current_status)
-    
+            print("-", end="")
             time.sleep(poll)
 
 
@@ -2133,7 +2153,7 @@ class FlowDefinition(Base):
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating flow_definition resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
     
         operation_input_args = {
             'FlowDefinitionName': flow_definition_name,
@@ -2165,7 +2185,7 @@ class FlowDefinition(Base):
         operation_input_args = {
             'FlowDefinitionName': flow_definition_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
         response = client.describe_flow_definition(**operation_input_args)
     
         pprint(response)
@@ -2180,10 +2200,11 @@ class FlowDefinition(Base):
         operation_input_args = {
             'FlowDefinitionName': self.flow_definition_name,
         }
-        response = self.client.describe_flow_definition(**operation_input_args)
+        client = SageMakerClient().client
+        response = client.describe_flow_definition(**operation_input_args)
     
-        # deserialize the response
-    
+        # deserialize response and update self
+        transform(response, 'DescribeFlowDefinitionResponse', self)
         return self
     
     def delete(self) -> None:
@@ -2212,7 +2233,7 @@ class FlowDefinition(Base):
             # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
                 raise Exception("Timeout exceeded. Final resource state - " + current_status)
-    
+            print("-", end="")
             time.sleep(poll)
 
 
@@ -2241,7 +2262,7 @@ class Hub(Base):
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating hub resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
     
         operation_input_args = {
             'HubName': hub_name,
@@ -2272,7 +2293,7 @@ class Hub(Base):
         operation_input_args = {
             'HubName': hub_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
         response = client.describe_hub(**operation_input_args)
     
         pprint(response)
@@ -2287,10 +2308,11 @@ class Hub(Base):
         operation_input_args = {
             'HubName': self.hub_name,
         }
-        response = self.client.describe_hub(**operation_input_args)
+        client = SageMakerClient().client
+        response = client.describe_hub(**operation_input_args)
     
-        # deserialize the response
-    
+        # deserialize response and update self
+        transform(response, 'DescribeHubResponse', self)
         return self
     
     def delete(self) -> None:
@@ -2319,7 +2341,7 @@ class Hub(Base):
             # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
                 raise Exception("Timeout exceeded. Final resource state - " + current_status)
-    
+            print("-", end="")
             time.sleep(poll)
 
 
@@ -2357,7 +2379,7 @@ class HubContent(Base):
             'HubContentName': hub_content_name,
             'HubContentVersion': hub_content_version,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
         response = client.describe_hub_content(**operation_input_args)
     
         pprint(response)
@@ -2375,10 +2397,11 @@ class HubContent(Base):
             'HubContentName': self.hub_content_name,
             'HubContentVersion': self.hub_content_version,
         }
-        response = self.client.describe_hub_content(**operation_input_args)
+        client = SageMakerClient().client
+        response = client.describe_hub_content(**operation_input_args)
     
-        # deserialize the response
-    
+        # deserialize response and update self
+        transform(response, 'DescribeHubContentResponse', self)
         return self
     
     def delete(self) -> None:
@@ -2410,7 +2433,7 @@ class HubContent(Base):
             # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
                 raise Exception("Timeout exceeded. Final resource state - " + current_status)
-    
+            print("-", end="")
             time.sleep(poll)
 
 
@@ -2431,7 +2454,7 @@ class HumanTaskUi(Base):
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating human_task_ui resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
     
         operation_input_args = {
             'HumanTaskUiName': human_task_ui_name,
@@ -2459,7 +2482,7 @@ class HumanTaskUi(Base):
         operation_input_args = {
             'HumanTaskUiName': human_task_ui_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
         response = client.describe_human_task_ui(**operation_input_args)
     
         pprint(response)
@@ -2474,10 +2497,11 @@ class HumanTaskUi(Base):
         operation_input_args = {
             'HumanTaskUiName': self.human_task_ui_name,
         }
-        response = self.client.describe_human_task_ui(**operation_input_args)
+        client = SageMakerClient().client
+        response = client.describe_human_task_ui(**operation_input_args)
     
-        # deserialize the response
-    
+        # deserialize response and update self
+        transform(response, 'DescribeHumanTaskUiResponse', self)
         return self
     
     def delete(self) -> None:
@@ -2506,7 +2530,7 @@ class HumanTaskUi(Base):
             # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
                 raise Exception("Timeout exceeded. Final resource state - " + current_status)
-    
+            print("-", end="")
             time.sleep(poll)
 
 
@@ -2544,7 +2568,7 @@ class HyperParameterTuningJob(Base):
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating hyper_parameter_tuning_job resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
     
         operation_input_args = {
             'HyperParameterTuningJobName': hyper_parameter_tuning_job_name,
@@ -2576,7 +2600,7 @@ class HyperParameterTuningJob(Base):
         operation_input_args = {
             'HyperParameterTuningJobName': hyper_parameter_tuning_job_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
         response = client.describe_hyper_parameter_tuning_job(**operation_input_args)
     
         pprint(response)
@@ -2591,10 +2615,11 @@ class HyperParameterTuningJob(Base):
         operation_input_args = {
             'HyperParameterTuningJobName': self.hyper_parameter_tuning_job_name,
         }
-        response = self.client.describe_hyper_parameter_tuning_job(**operation_input_args)
+        client = SageMakerClient().client
+        response = client.describe_hyper_parameter_tuning_job(**operation_input_args)
     
-        # deserialize the response
-    
+        # deserialize response and update self
+        transform(response, 'DescribeHyperParameterTuningJobResponse', self)
         return self
     
     def delete(self) -> None:
@@ -2630,7 +2655,7 @@ class HyperParameterTuningJob(Base):
             # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
                 raise Exception("Timeout exceeded. Final resource state - " + current_status)
-    
+            print("-", end="")
             time.sleep(poll)
 
 
@@ -2657,7 +2682,7 @@ class Image(Base):
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating image resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
     
         operation_input_args = {
             'Description': description,
@@ -2687,7 +2712,7 @@ class Image(Base):
         operation_input_args = {
             'ImageName': image_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
         response = client.describe_image(**operation_input_args)
     
         pprint(response)
@@ -2702,10 +2727,11 @@ class Image(Base):
         operation_input_args = {
             'ImageName': self.image_name,
         }
-        response = self.client.describe_image(**operation_input_args)
+        client = SageMakerClient().client
+        response = client.describe_image(**operation_input_args)
     
-        # deserialize the response
-    
+        # deserialize response and update self
+        transform(response, 'DescribeImageResponse', self)
         return self
     
     def delete(self) -> None:
@@ -2734,7 +2760,7 @@ class Image(Base):
             # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
                 raise Exception("Timeout exceeded. Final resource state - " + current_status)
-    
+            print("-", end="")
             time.sleep(poll)
 
 
@@ -2774,7 +2800,7 @@ class ImageVersion(Base):
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating image_version resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
     
         operation_input_args = {
             'BaseImage': base_image,
@@ -2814,7 +2840,7 @@ class ImageVersion(Base):
             'Version': version,
             'Alias': alias,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
         response = client.describe_image_version(**operation_input_args)
     
         pprint(response)
@@ -2831,10 +2857,11 @@ class ImageVersion(Base):
             'Version': self.version,
             'Alias': self.alias,
         }
-        response = self.client.describe_image_version(**operation_input_args)
+        client = SageMakerClient().client
+        response = client.describe_image_version(**operation_input_args)
     
-        # deserialize the response
-    
+        # deserialize response and update self
+        transform(response, 'DescribeImageVersionResponse', self)
         return self
     
     def delete(self) -> None:
@@ -2865,7 +2892,7 @@ class ImageVersion(Base):
             # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
                 raise Exception("Timeout exceeded. Final resource state - " + current_status)
-    
+            print("-", end="")
             time.sleep(poll)
 
 
@@ -2895,7 +2922,7 @@ class InferenceComponent(Base):
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating inference_component resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
     
         operation_input_args = {
             'InferenceComponentName': inference_component_name,
@@ -2926,7 +2953,7 @@ class InferenceComponent(Base):
         operation_input_args = {
             'InferenceComponentName': inference_component_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
         response = client.describe_inference_component(**operation_input_args)
     
         pprint(response)
@@ -2941,10 +2968,11 @@ class InferenceComponent(Base):
         operation_input_args = {
             'InferenceComponentName': self.inference_component_name,
         }
-        response = self.client.describe_inference_component(**operation_input_args)
+        client = SageMakerClient().client
+        response = client.describe_inference_component(**operation_input_args)
     
-        # deserialize the response
-    
+        # deserialize response and update self
+        transform(response, 'DescribeInferenceComponentOutput', self)
         return self
     
     def delete(self) -> None:
@@ -2973,7 +3001,7 @@ class InferenceComponent(Base):
             # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
                 raise Exception("Timeout exceeded. Final resource state - " + current_status)
-    
+            print("-", end="")
             time.sleep(poll)
 
 
@@ -3013,7 +3041,7 @@ class InferenceExperiment(Base):
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating inference_experiment resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
     
         operation_input_args = {
             'Name': name,
@@ -3049,7 +3077,7 @@ class InferenceExperiment(Base):
         operation_input_args = {
             'Name': name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
         response = client.describe_inference_experiment(**operation_input_args)
     
         pprint(response)
@@ -3064,10 +3092,11 @@ class InferenceExperiment(Base):
         operation_input_args = {
             'Name': self.name,
         }
-        response = self.client.describe_inference_experiment(**operation_input_args)
+        client = SageMakerClient().client
+        response = client.describe_inference_experiment(**operation_input_args)
     
-        # deserialize the response
-    
+        # deserialize response and update self
+        transform(response, 'DescribeInferenceExperimentResponse', self)
         return self
     
     def delete(self) -> None:
@@ -3107,7 +3136,7 @@ class InferenceExperiment(Base):
             # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
                 raise Exception("Timeout exceeded. Final resource state - " + current_status)
-    
+            print("-", end="")
             time.sleep(poll)
 
 
@@ -3142,7 +3171,7 @@ class InferenceRecommendationsJob(Base):
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating inference_recommendations_job resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
     
         operation_input_args = {
             'JobName': job_name,
@@ -3175,7 +3204,7 @@ class InferenceRecommendationsJob(Base):
         operation_input_args = {
             'JobName': job_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
         response = client.describe_inference_recommendations_job(**operation_input_args)
     
         pprint(response)
@@ -3190,10 +3219,11 @@ class InferenceRecommendationsJob(Base):
         operation_input_args = {
             'JobName': self.job_name,
         }
-        response = self.client.describe_inference_recommendations_job(**operation_input_args)
+        client = SageMakerClient().client
+        response = client.describe_inference_recommendations_job(**operation_input_args)
     
-        # deserialize the response
-    
+        # deserialize response and update self
+        transform(response, 'DescribeInferenceRecommendationsJobResponse', self)
         return self
     
     def stop(self) -> None:
@@ -3222,7 +3252,7 @@ class InferenceRecommendationsJob(Base):
             # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
                 raise Exception("Timeout exceeded. Final resource state - " + current_status)
-    
+            print("-", end="")
             time.sleep(poll)
 
 
@@ -3263,7 +3293,7 @@ class LabelingJob(Base):
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating labeling_job resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
     
         operation_input_args = {
             'LabelingJobName': labeling_job_name,
@@ -3298,7 +3328,7 @@ class LabelingJob(Base):
         operation_input_args = {
             'LabelingJobName': labeling_job_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
         response = client.describe_labeling_job(**operation_input_args)
     
         pprint(response)
@@ -3313,10 +3343,11 @@ class LabelingJob(Base):
         operation_input_args = {
             'LabelingJobName': self.labeling_job_name,
         }
-        response = self.client.describe_labeling_job(**operation_input_args)
+        client = SageMakerClient().client
+        response = client.describe_labeling_job(**operation_input_args)
     
-        # deserialize the response
-    
+        # deserialize response and update self
+        transform(response, 'DescribeLabelingJobResponse', self)
         return self
     
     def stop(self) -> None:
@@ -3345,7 +3376,7 @@ class LabelingJob(Base):
             # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
                 raise Exception("Timeout exceeded. Final resource state - " + current_status)
-    
+            print("-", end="")
             time.sleep(poll)
 
 
@@ -3376,7 +3407,7 @@ class Model(Base):
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating model resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
     
         operation_input_args = {
             'ModelName': model_name,
@@ -3409,7 +3440,7 @@ class Model(Base):
         operation_input_args = {
             'ModelName': model_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
         response = client.describe_model(**operation_input_args)
     
         pprint(response)
@@ -3424,10 +3455,11 @@ class Model(Base):
         operation_input_args = {
             'ModelName': self.model_name,
         }
-        response = self.client.describe_model(**operation_input_args)
+        client = SageMakerClient().client
+        response = client.describe_model(**operation_input_args)
     
-        # deserialize the response
-    
+        # deserialize response and update self
+        transform(response, 'DescribeModelOutput', self)
         return self
     
     def delete(self) -> None:
@@ -3468,7 +3500,7 @@ class ModelBiasJobDefinition(Base):
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating model_bias_job_definition resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
     
         operation_input_args = {
             'JobDefinitionName': job_definition_name,
@@ -3503,7 +3535,7 @@ class ModelBiasJobDefinition(Base):
         operation_input_args = {
             'JobDefinitionName': job_definition_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
         response = client.describe_model_bias_job_definition(**operation_input_args)
     
         pprint(response)
@@ -3518,10 +3550,11 @@ class ModelBiasJobDefinition(Base):
         operation_input_args = {
             'JobDefinitionName': self.job_definition_name,
         }
-        response = self.client.describe_model_bias_job_definition(**operation_input_args)
+        client = SageMakerClient().client
+        response = client.describe_model_bias_job_definition(**operation_input_args)
     
-        # deserialize the response
-    
+        # deserialize response and update self
+        transform(response, 'DescribeModelBiasJobDefinitionResponse', self)
         return self
     
     def delete(self) -> None:
@@ -3557,7 +3590,7 @@ class ModelCard(Base):
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating model_card resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
     
         operation_input_args = {
             'ModelCardName': model_card_name,
@@ -3589,7 +3622,7 @@ class ModelCard(Base):
             'ModelCardName': model_card_name,
             'ModelCardVersion': model_card_version,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
         response = client.describe_model_card(**operation_input_args)
     
         pprint(response)
@@ -3605,10 +3638,11 @@ class ModelCard(Base):
             'ModelCardName': self.model_card_name,
             'ModelCardVersion': self.model_card_version,
         }
-        response = self.client.describe_model_card(**operation_input_args)
+        client = SageMakerClient().client
+        response = client.describe_model_card(**operation_input_args)
     
-        # deserialize the response
-    
+        # deserialize response and update self
+        transform(response, 'DescribeModelCardResponse', self)
         return self
     
     def delete(self) -> None:
@@ -3637,7 +3671,7 @@ class ModelCard(Base):
             # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
                 raise Exception("Timeout exceeded. Final resource state - " + current_status)
-    
+            print("-", end="")
             time.sleep(poll)
 
 
@@ -3664,7 +3698,7 @@ class ModelCardExportJob(Base):
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating model_card_export_job resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
     
         operation_input_args = {
             'ModelCardName': model_card_name,
@@ -3693,7 +3727,7 @@ class ModelCardExportJob(Base):
         operation_input_args = {
             'ModelCardExportJobArn': model_card_export_job_arn,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
         response = client.describe_model_card_export_job(**operation_input_args)
     
         pprint(response)
@@ -3708,10 +3742,11 @@ class ModelCardExportJob(Base):
         operation_input_args = {
             'ModelCardExportJobArn': self.model_card_export_job_arn,
         }
-        response = self.client.describe_model_card_export_job(**operation_input_args)
+        client = SageMakerClient().client
+        response = client.describe_model_card_export_job(**operation_input_args)
     
-        # deserialize the response
-    
+        # deserialize response and update self
+        transform(response, 'DescribeModelCardExportJobResponse', self)
         return self
     
     @validate_call
@@ -3733,7 +3768,7 @@ class ModelCardExportJob(Base):
             # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
                 raise Exception("Timeout exceeded. Final resource state - " + current_status)
-    
+            print("-", end="")
             time.sleep(poll)
 
 
@@ -3767,7 +3802,7 @@ class ModelExplainabilityJobDefinition(Base):
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating model_explainability_job_definition resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
     
         operation_input_args = {
             'JobDefinitionName': job_definition_name,
@@ -3802,7 +3837,7 @@ class ModelExplainabilityJobDefinition(Base):
         operation_input_args = {
             'JobDefinitionName': job_definition_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
         response = client.describe_model_explainability_job_definition(**operation_input_args)
     
         pprint(response)
@@ -3817,10 +3852,11 @@ class ModelExplainabilityJobDefinition(Base):
         operation_input_args = {
             'JobDefinitionName': self.job_definition_name,
         }
-        response = self.client.describe_model_explainability_job_definition(**operation_input_args)
+        client = SageMakerClient().client
+        response = client.describe_model_explainability_job_definition(**operation_input_args)
     
-        # deserialize the response
-    
+        # deserialize response and update self
+        transform(response, 'DescribeModelExplainabilityJobDefinitionResponse', self)
         return self
     
     def delete(self) -> None:
@@ -3887,7 +3923,7 @@ class ModelPackage(Base):
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating model_package resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
     
         operation_input_args = {
             'ModelPackageName': model_package_name,
@@ -3932,7 +3968,7 @@ class ModelPackage(Base):
         operation_input_args = {
             'ModelPackageName': model_package_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
         response = client.describe_model_package(**operation_input_args)
     
         pprint(response)
@@ -3947,10 +3983,11 @@ class ModelPackage(Base):
         operation_input_args = {
             'ModelPackageName': self.model_package_name,
         }
-        response = self.client.describe_model_package(**operation_input_args)
+        client = SageMakerClient().client
+        response = client.describe_model_package(**operation_input_args)
     
-        # deserialize the response
-    
+        # deserialize response and update self
+        transform(response, 'DescribeModelPackageOutput', self)
         return self
     
     def delete(self) -> None:
@@ -3979,7 +4016,7 @@ class ModelPackage(Base):
             # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
                 raise Exception("Timeout exceeded. Final resource state - " + current_status)
-    
+            print("-", end="")
             time.sleep(poll)
 
 
@@ -4001,7 +4038,7 @@ class ModelPackageGroup(Base):
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating model_package_group resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
     
         operation_input_args = {
             'ModelPackageGroupName': model_package_group_name,
@@ -4029,7 +4066,7 @@ class ModelPackageGroup(Base):
         operation_input_args = {
             'ModelPackageGroupName': model_package_group_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
         response = client.describe_model_package_group(**operation_input_args)
     
         pprint(response)
@@ -4044,10 +4081,11 @@ class ModelPackageGroup(Base):
         operation_input_args = {
             'ModelPackageGroupName': self.model_package_group_name,
         }
-        response = self.client.describe_model_package_group(**operation_input_args)
+        client = SageMakerClient().client
+        response = client.describe_model_package_group(**operation_input_args)
     
-        # deserialize the response
-    
+        # deserialize response and update self
+        transform(response, 'DescribeModelPackageGroupOutput', self)
         return self
     
     def delete(self) -> None:
@@ -4076,7 +4114,7 @@ class ModelPackageGroup(Base):
             # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
                 raise Exception("Timeout exceeded. Final resource state - " + current_status)
-    
+            print("-", end="")
             time.sleep(poll)
 
 
@@ -4110,7 +4148,7 @@ class ModelQualityJobDefinition(Base):
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating model_quality_job_definition resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
     
         operation_input_args = {
             'JobDefinitionName': job_definition_name,
@@ -4145,7 +4183,7 @@ class ModelQualityJobDefinition(Base):
         operation_input_args = {
             'JobDefinitionName': job_definition_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
         response = client.describe_model_quality_job_definition(**operation_input_args)
     
         pprint(response)
@@ -4160,10 +4198,11 @@ class ModelQualityJobDefinition(Base):
         operation_input_args = {
             'JobDefinitionName': self.job_definition_name,
         }
-        response = self.client.describe_model_quality_job_definition(**operation_input_args)
+        client = SageMakerClient().client
+        response = client.describe_model_quality_job_definition(**operation_input_args)
     
-        # deserialize the response
-    
+        # deserialize response and update self
+        transform(response, 'DescribeModelQualityJobDefinitionResponse', self)
         return self
     
     def delete(self) -> None:
@@ -4196,7 +4235,7 @@ class MonitoringSchedule(Base):
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating monitoring_schedule resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
     
         operation_input_args = {
             'MonitoringScheduleName': monitoring_schedule_name,
@@ -4224,7 +4263,7 @@ class MonitoringSchedule(Base):
         operation_input_args = {
             'MonitoringScheduleName': monitoring_schedule_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
         response = client.describe_monitoring_schedule(**operation_input_args)
     
         pprint(response)
@@ -4239,10 +4278,11 @@ class MonitoringSchedule(Base):
         operation_input_args = {
             'MonitoringScheduleName': self.monitoring_schedule_name,
         }
-        response = self.client.describe_monitoring_schedule(**operation_input_args)
+        client = SageMakerClient().client
+        response = client.describe_monitoring_schedule(**operation_input_args)
     
-        # deserialize the response
-    
+        # deserialize response and update self
+        transform(response, 'DescribeMonitoringScheduleResponse', self)
         return self
     
     def delete(self) -> None:
@@ -4278,7 +4318,7 @@ class MonitoringSchedule(Base):
             # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
                 raise Exception("Timeout exceeded. Final resource state - " + current_status)
-    
+            print("-", end="")
             time.sleep(poll)
 
 
@@ -4329,7 +4369,7 @@ class NotebookInstance(Base):
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating notebook_instance resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
     
         operation_input_args = {
             'NotebookInstanceName': notebook_instance_name,
@@ -4370,7 +4410,7 @@ class NotebookInstance(Base):
         operation_input_args = {
             'NotebookInstanceName': notebook_instance_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
         response = client.describe_notebook_instance(**operation_input_args)
     
         pprint(response)
@@ -4385,10 +4425,11 @@ class NotebookInstance(Base):
         operation_input_args = {
             'NotebookInstanceName': self.notebook_instance_name,
         }
-        response = self.client.describe_notebook_instance(**operation_input_args)
+        client = SageMakerClient().client
+        response = client.describe_notebook_instance(**operation_input_args)
     
-        # deserialize the response
-    
+        # deserialize response and update self
+        transform(response, 'DescribeNotebookInstanceOutput', self)
         return self
     
     def delete(self) -> None:
@@ -4424,7 +4465,7 @@ class NotebookInstance(Base):
             # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
                 raise Exception("Timeout exceeded. Final resource state - " + current_status)
-    
+            print("-", end="")
             time.sleep(poll)
 
 
@@ -4446,7 +4487,7 @@ class NotebookInstanceLifecycleConfig(Base):
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating notebook_instance_lifecycle_config resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
     
         operation_input_args = {
             'NotebookInstanceLifecycleConfigName': notebook_instance_lifecycle_config_name,
@@ -4474,7 +4515,7 @@ class NotebookInstanceLifecycleConfig(Base):
         operation_input_args = {
             'NotebookInstanceLifecycleConfigName': notebook_instance_lifecycle_config_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
         response = client.describe_notebook_instance_lifecycle_config(**operation_input_args)
     
         pprint(response)
@@ -4489,10 +4530,11 @@ class NotebookInstanceLifecycleConfig(Base):
         operation_input_args = {
             'NotebookInstanceLifecycleConfigName': self.notebook_instance_lifecycle_config_name,
         }
-        response = self.client.describe_notebook_instance_lifecycle_config(**operation_input_args)
+        client = SageMakerClient().client
+        response = client.describe_notebook_instance_lifecycle_config(**operation_input_args)
     
-        # deserialize the response
-    
+        # deserialize response and update self
+        transform(response, 'DescribeNotebookInstanceLifecycleConfigOutput', self)
         return self
     
     def delete(self) -> None:
@@ -4534,7 +4576,7 @@ class Pipeline(Base):
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating pipeline resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
     
         operation_input_args = {
             'PipelineName': pipeline_name,
@@ -4568,7 +4610,7 @@ class Pipeline(Base):
         operation_input_args = {
             'PipelineName': pipeline_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
         response = client.describe_pipeline(**operation_input_args)
     
         pprint(response)
@@ -4583,10 +4625,11 @@ class Pipeline(Base):
         operation_input_args = {
             'PipelineName': self.pipeline_name,
         }
-        response = self.client.describe_pipeline(**operation_input_args)
+        client = SageMakerClient().client
+        response = client.describe_pipeline(**operation_input_args)
     
-        # deserialize the response
-    
+        # deserialize response and update self
+        transform(response, 'DescribePipelineResponse', self)
         return self
     
     def delete(self) -> None:
@@ -4616,7 +4659,7 @@ class Pipeline(Base):
             # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
                 raise Exception("Timeout exceeded. Final resource state - " + current_status)
-    
+            print("-", end="")
             time.sleep(poll)
 
 
@@ -4645,7 +4688,7 @@ class PipelineExecution(Base):
         operation_input_args = {
             'PipelineExecutionArn': pipeline_execution_arn,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
         response = client.describe_pipeline_execution(**operation_input_args)
     
         pprint(response)
@@ -4660,10 +4703,11 @@ class PipelineExecution(Base):
         operation_input_args = {
             'PipelineExecutionArn': self.pipeline_execution_arn,
         }
-        response = self.client.describe_pipeline_execution(**operation_input_args)
+        client = SageMakerClient().client
+        response = client.describe_pipeline_execution(**operation_input_args)
     
-        # deserialize the response
-    
+        # deserialize response and update self
+        transform(response, 'DescribePipelineExecutionResponse', self)
         return self
     
     def stop(self) -> None:
@@ -4693,7 +4737,7 @@ class PipelineExecution(Base):
             # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
                 raise Exception("Timeout exceeded. Final resource state - " + current_status)
-    
+            print("-", end="")
             time.sleep(poll)
 
 
@@ -4738,7 +4782,7 @@ class ProcessingJob(Base):
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating processing_job resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
     
         operation_input_args = {
             'ProcessingInputs': processing_inputs,
@@ -4774,7 +4818,7 @@ class ProcessingJob(Base):
         operation_input_args = {
             'ProcessingJobName': processing_job_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
         response = client.describe_processing_job(**operation_input_args)
     
         pprint(response)
@@ -4789,10 +4833,11 @@ class ProcessingJob(Base):
         operation_input_args = {
             'ProcessingJobName': self.processing_job_name,
         }
-        response = self.client.describe_processing_job(**operation_input_args)
+        client = SageMakerClient().client
+        response = client.describe_processing_job(**operation_input_args)
     
-        # deserialize the response
-    
+        # deserialize response and update self
+        transform(response, 'DescribeProcessingJobResponse', self)
         return self
     
     def stop(self) -> None:
@@ -4821,7 +4866,7 @@ class ProcessingJob(Base):
             # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
                 raise Exception("Timeout exceeded. Final resource state - " + current_status)
-    
+            print("-", end="")
             time.sleep(poll)
 
 
@@ -4849,7 +4894,7 @@ class Project(Base):
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating project resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
     
         operation_input_args = {
             'ProjectName': project_name,
@@ -4878,7 +4923,7 @@ class Project(Base):
         operation_input_args = {
             'ProjectName': project_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
         response = client.describe_project(**operation_input_args)
     
         pprint(response)
@@ -4893,10 +4938,11 @@ class Project(Base):
         operation_input_args = {
             'ProjectName': self.project_name,
         }
-        response = self.client.describe_project(**operation_input_args)
+        client = SageMakerClient().client
+        response = client.describe_project(**operation_input_args)
     
-        # deserialize the response
-    
+        # deserialize response and update self
+        transform(response, 'DescribeProjectOutput', self)
         return self
     
     def delete(self) -> None:
@@ -4925,7 +4971,7 @@ class Project(Base):
             # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
                 raise Exception("Timeout exceeded. Final resource state - " + current_status)
-    
+            print("-", end="")
             time.sleep(poll)
 
 
@@ -4958,7 +5004,7 @@ class Space(Base):
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating space resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
     
         operation_input_args = {
             'DomainId': domain_id,
@@ -4992,7 +5038,7 @@ class Space(Base):
             'DomainId': domain_id,
             'SpaceName': space_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
         response = client.describe_space(**operation_input_args)
     
         pprint(response)
@@ -5008,10 +5054,11 @@ class Space(Base):
             'DomainId': self.domain_id,
             'SpaceName': self.space_name,
         }
-        response = self.client.describe_space(**operation_input_args)
+        client = SageMakerClient().client
+        response = client.describe_space(**operation_input_args)
     
-        # deserialize the response
-    
+        # deserialize response and update self
+        transform(response, 'DescribeSpaceResponse', self)
         return self
     
     def delete(self) -> None:
@@ -5041,7 +5088,7 @@ class Space(Base):
             # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
                 raise Exception("Timeout exceeded. Final resource state - " + current_status)
-    
+            print("-", end="")
             time.sleep(poll)
 
 
@@ -5064,7 +5111,7 @@ class StudioLifecycleConfig(Base):
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating studio_lifecycle_config resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
     
         operation_input_args = {
             'StudioLifecycleConfigName': studio_lifecycle_config_name,
@@ -5093,7 +5140,7 @@ class StudioLifecycleConfig(Base):
         operation_input_args = {
             'StudioLifecycleConfigName': studio_lifecycle_config_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
         response = client.describe_studio_lifecycle_config(**operation_input_args)
     
         pprint(response)
@@ -5108,10 +5155,11 @@ class StudioLifecycleConfig(Base):
         operation_input_args = {
             'StudioLifecycleConfigName': self.studio_lifecycle_config_name,
         }
-        response = self.client.describe_studio_lifecycle_config(**operation_input_args)
+        client = SageMakerClient().client
+        response = client.describe_studio_lifecycle_config(**operation_input_args)
     
-        # deserialize the response
-    
+        # deserialize response and update self
+        transform(response, 'DescribeStudioLifecycleConfigResponse', self)
         return self
     
     def delete(self) -> None:
@@ -5198,7 +5246,7 @@ class TrainingJob(Base):
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating training_job resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
     
         operation_input_args = {
             'TrainingJobName': training_job_name,
@@ -5247,7 +5295,7 @@ class TrainingJob(Base):
         operation_input_args = {
             'TrainingJobName': training_job_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
         response = client.describe_training_job(**operation_input_args)
     
         pprint(response)
@@ -5262,10 +5310,11 @@ class TrainingJob(Base):
         operation_input_args = {
             'TrainingJobName': self.training_job_name,
         }
-        response = self.client.describe_training_job(**operation_input_args)
+        client = SageMakerClient().client
+        response = client.describe_training_job(**operation_input_args)
     
-        # deserialize the response
-    
+        # deserialize response and update self
+        transform(response, 'DescribeTrainingJobResponse', self)
         return self
     
     def stop(self) -> None:
@@ -5294,7 +5343,7 @@ class TrainingJob(Base):
             # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
                 raise Exception("Timeout exceeded. Final resource state - " + current_status)
-    
+            print("-", end="")
             time.sleep(poll)
 
 
@@ -5342,7 +5391,7 @@ class TransformJob(Base):
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating transform_job resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
     
         operation_input_args = {
             'TransformJobName': transform_job_name,
@@ -5381,7 +5430,7 @@ class TransformJob(Base):
         operation_input_args = {
             'TransformJobName': transform_job_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
         response = client.describe_transform_job(**operation_input_args)
     
         pprint(response)
@@ -5396,10 +5445,11 @@ class TransformJob(Base):
         operation_input_args = {
             'TransformJobName': self.transform_job_name,
         }
-        response = self.client.describe_transform_job(**operation_input_args)
+        client = SageMakerClient().client
+        response = client.describe_transform_job(**operation_input_args)
     
-        # deserialize the response
-    
+        # deserialize response and update self
+        transform(response, 'DescribeTransformJobResponse', self)
         return self
     
     def stop(self) -> None:
@@ -5428,7 +5478,7 @@ class TransformJob(Base):
             # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
                 raise Exception("Timeout exceeded. Final resource state - " + current_status)
-    
+            print("-", end="")
             time.sleep(poll)
 
 
@@ -5456,7 +5506,7 @@ class Trial(Base):
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating trial resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
     
         operation_input_args = {
             'TrialName': trial_name,
@@ -5486,7 +5536,7 @@ class Trial(Base):
         operation_input_args = {
             'TrialName': trial_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
         response = client.describe_trial(**operation_input_args)
     
         pprint(response)
@@ -5501,10 +5551,11 @@ class Trial(Base):
         operation_input_args = {
             'TrialName': self.trial_name,
         }
-        response = self.client.describe_trial(**operation_input_args)
+        client = SageMakerClient().client
+        response = client.describe_trial(**operation_input_args)
     
-        # deserialize the response
-    
+        # deserialize response and update self
+        transform(response, 'DescribeTrialResponse', self)
         return self
     
     def delete(self) -> None:
@@ -5552,7 +5603,7 @@ class TrialComponent(Base):
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating trial_component resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
     
         operation_input_args = {
             'TrialComponentName': trial_component_name,
@@ -5587,7 +5638,7 @@ class TrialComponent(Base):
         operation_input_args = {
             'TrialComponentName': trial_component_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
         response = client.describe_trial_component(**operation_input_args)
     
         pprint(response)
@@ -5602,10 +5653,11 @@ class TrialComponent(Base):
         operation_input_args = {
             'TrialComponentName': self.trial_component_name,
         }
-        response = self.client.describe_trial_component(**operation_input_args)
+        client = SageMakerClient().client
+        response = client.describe_trial_component(**operation_input_args)
     
-        # deserialize the response
-    
+        # deserialize response and update self
+        transform(response, 'DescribeTrialComponentResponse', self)
         return self
     
     def delete(self) -> None:
@@ -5634,7 +5686,7 @@ class TrialComponent(Base):
             # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
                 raise Exception("Timeout exceeded. Final resource state - " + current_status)
-    
+            print("-", end="")
             time.sleep(poll)
 
 
@@ -5664,7 +5716,7 @@ class UserProfile(Base):
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating user_profile resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
     
         operation_input_args = {
             'DomainId': domain_id,
@@ -5697,7 +5749,7 @@ class UserProfile(Base):
             'DomainId': domain_id,
             'UserProfileName': user_profile_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
         response = client.describe_user_profile(**operation_input_args)
     
         pprint(response)
@@ -5713,10 +5765,11 @@ class UserProfile(Base):
             'DomainId': self.domain_id,
             'UserProfileName': self.user_profile_name,
         }
-        response = self.client.describe_user_profile(**operation_input_args)
+        client = SageMakerClient().client
+        response = client.describe_user_profile(**operation_input_args)
     
-        # deserialize the response
-    
+        # deserialize response and update self
+        transform(response, 'DescribeUserProfileResponse', self)
         return self
     
     def delete(self) -> None:
@@ -5746,7 +5799,7 @@ class UserProfile(Base):
             # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
                 raise Exception("Timeout exceeded. Final resource state - " + current_status)
-    
+            print("-", end="")
             time.sleep(poll)
 
 
@@ -5766,7 +5819,7 @@ class Workforce(Base):
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating workforce resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
     
         operation_input_args = {
             'CognitoConfig': cognito_config,
@@ -5797,7 +5850,7 @@ class Workforce(Base):
         operation_input_args = {
             'WorkforceName': workforce_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
         response = client.describe_workforce(**operation_input_args)
     
         pprint(response)
@@ -5812,10 +5865,11 @@ class Workforce(Base):
         operation_input_args = {
             'WorkforceName': self.workforce_name,
         }
-        response = self.client.describe_workforce(**operation_input_args)
+        client = SageMakerClient().client
+        response = client.describe_workforce(**operation_input_args)
     
-        # deserialize the response
-    
+        # deserialize response and update self
+        transform(response, 'DescribeWorkforceResponse', self)
         return self
     
     def delete(self) -> None:
@@ -5844,7 +5898,7 @@ class Workforce(Base):
             # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
                 raise Exception("Timeout exceeded. Final resource state - " + current_status)
-    
+            print("-", end="")
             time.sleep(poll)
 
 
@@ -5864,7 +5918,7 @@ class Workteam(Base):
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating workteam resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
     
         operation_input_args = {
             'WorkteamName': workteam_name,
@@ -5895,7 +5949,7 @@ class Workteam(Base):
         operation_input_args = {
             'WorkteamName': workteam_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
         response = client.describe_workteam(**operation_input_args)
     
         pprint(response)
@@ -5910,10 +5964,11 @@ class Workteam(Base):
         operation_input_args = {
             'WorkteamName': self.workteam_name,
         }
-        response = self.client.describe_workteam(**operation_input_args)
+        client = SageMakerClient().client
+        response = client.describe_workteam(**operation_input_args)
     
-        # deserialize the response
-    
+        # deserialize response and update self
+        transform(response, 'DescribeWorkteamResponse', self)
         return self
     
     def delete(self) -> None:

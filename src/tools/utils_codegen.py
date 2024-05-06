@@ -84,7 +84,7 @@ class UtilsCodeGen:
             """
             A singleton class for creating a SageMaker client.
             """
-            def __init__(self, session: Session, region_name: str, service_name='sagemaker'):
+            def __init__(self, session: Session = None, region_name: str = None, service_name='sagemaker'):
                 """
                 Initializes the SageMakerClient with a boto3 session, region name, and service name.
                 Creates a boto3 client using the provided session, region, and service.
@@ -95,7 +95,7 @@ class UtilsCodeGen:
 
                 if region_name is None:
                     logger.warning("No region provided. Using default region.")
-                    region = session.region_name
+                    region_name = session.region_name
 
                 self.session = session
                 self.region_name = region_name
