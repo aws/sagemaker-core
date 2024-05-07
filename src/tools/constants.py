@@ -31,6 +31,13 @@ BASIC_JSON_TYPES_TO_PYTHON_TYPES = {
 }
 
 SHAPE_DAG_FILE_PATH = os.getcwd() + '/src/code_injection/shape_dag.py'
+PYTHON_TYPES_TO_BASIC_JSON_TYPES = {
+    "str": "string",
+    "int": "integer",
+    "bool": "boolean",
+    "float": "double",
+    "datetime.datetime": "timestamp",
+}
 
 LICENCES_STRING = '''
 # Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
@@ -67,3 +74,5 @@ UTILS_CODEGEN_FILE_NAME = 'utils.py'
 RESOURCES_CODEGEN_FILE_NAME = 'resources.py'
 
 SHAPES_CODEGEN_FILE_NAME = 'shapes.py'
+
+CONFIG_SCHEMA_FILE_NAME = 'config_schema.py'

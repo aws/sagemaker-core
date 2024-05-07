@@ -14,18 +14,40 @@
 
 import logging
 
-import datetime
-import boto3
 import time
 from pprint import pprint
 from pydantic import BaseModel, validate_call
 from typing import List, Dict, Optional, Literal
+import pprint
+import json
+import jsonschema
+from functools import lru_cache
 from boto3.session import Session
 from .utils import SageMakerClient, Unassigned
-from .shapes import *
-
 from src.code_injection.codec import transform
+from .shapes import *
+from .config_schema import SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA
 
+
+@lru_cache(maxsize=None)
+def load_default_configs():
+    configs_file_path = '/Users/nargokul/workspace/sagemaker-code-gen/sample/sagemaker/2017-07-24/default-configs.json'
+    with open(configs_file_path, 'r') as file:
+        configs_data = json.load(file)
+    jsonschema.validate(configs_data, SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA)
+    return configs_data
+
+@lru_cache(maxsize=None)
+def load_default_configs_for_resource_name(resource_name: str):
+    configs_data = load_default_configs()
+    return configs_data["SageMaker"]["PythonSDK"]["Resources"].get(resource_name)
+
+def get_config_value(attribute, resource_defaults, global_defaults):
+   if attribute in resource_defaults:
+       return resource_defaults[attribute]
+   if attribute in global_defaults:
+       return global_defaults[attribute]
+   raise Exception("Configurable value not present in Configs")
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -34,7 +56,7 @@ logger = logging.getLogger(__name__)
 class Base(BaseModel):
     @classmethod
     def _serialize(cls, data: Dict) -> Dict:
-        result = {{}}
+        result = dict(dict())
         for attr, value in data.items():
             if isinstance(value, Unassigned):
                 continue
@@ -50,12 +72,12 @@ class Base(BaseModel):
         return result
     
     @classmethod
-    def _serialize_list(value: List):
+    def _serialize_list(cls, value: List):
         return [v.serialize() if hasattr(v, 'serialize') else v for v in value]
     
     @classmethod
-    def _serialize_dict(value: Dict):
-        return {{k: v.serialize() if hasattr(v, 'serialize') else v for k, v in value.items()}}
+    def _serialize_dict(cls, value: Dict):
+        return dict({k: v.serialize() if hasattr(v, 'serialize') else v for k, v in value.items()})
 
 class Action(Base):
     action_name: Optional[str] = Unassigned()
@@ -76,13 +98,13 @@ class Action(Base):
     def create(
         cls,
         action_name: str,
-        source: ActionSource,
-        action_type: str,
-        description: Optional[str] = Unassigned(),
-        status: Optional[str] = Unassigned(),
-        properties: Optional[Dict[str, str]] = Unassigned(),
-        metadata_properties: Optional[MetadataProperties] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
+        	source: ActionSource,
+        	action_type: str,
+        	description: Optional[str] = Unassigned(),
+        	status: Optional[str] = Unassigned(),
+        	properties: Optional[Dict[str, str]] = Unassigned(),
+        	metadata_properties: Optional[MetadataProperties] = Unassigned(),
+        	tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
@@ -161,25 +183,38 @@ class Algorithm(Base):
     validation_specification: Optional[AlgorithmValidationSpecification] = Unassigned()
     product_id: Optional[str] = Unassigned()
     certify_for_marketplace: Optional[bool] = Unassigned()
+
+    
+    def populate_inputs_decorator(create_func):
+        def wrapper(*args, **kwargs):
+            config_schema_for_resource = {'training_specification': {'additional_s3_data_source': {'s3_data_type': {'type': 'string'}, 's3_uri': {'type': 'string'}}}, 'validation_specification': {'validation_role': {'type': 'string'}}}
+            for configurable_attribute in config_schema_for_resource:
+                if kwargs.get(configurable_attribute) is None:
+                    resource_defaults=load_default_configs_for_resource_name(resource_name="Algorithm")
+                    global_defaults=load_default_configs_for_resource_name(resource_name="GlobalDefaults")
+                    kwargs[configurable_attribute] = get_config_value(configurable_attribute, resource_defaults, global_defaults)
+            create_func(*args, **kwargs)
+        return wrapper
     
     @classmethod
+    @populate_inputs_decorator
     def create(
         cls,
-        algorithm_name: str,
-        training_specification: TrainingSpecification,
-        algorithm_description: Optional[str] = Unassigned(),
-        inference_specification: Optional[InferenceSpecification] = Unassigned(),
-        validation_specification: Optional[AlgorithmValidationSpecification] = Unassigned(),
-        certify_for_marketplace: Optional[bool] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
+            algorithm_name: str,
+        	training_specification: TrainingSpecification,
+        	algorithm_description: Optional[str] = Unassigned(),
+        	inference_specification: Optional[InferenceSpecification] = Unassigned(),
+        	validation_specification: Optional[AlgorithmValidationSpecification] = Unassigned(),
+        	certify_for_marketplace: Optional[bool] = Unassigned(),
+        	tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating algorithm resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-    
+        
         operation_input_args = {
-            'AlgorithmName': algorithm_name,
+                    'AlgorithmName': algorithm_name,
             'AlgorithmDescription': algorithm_description,
             'TrainingSpecification': training_specification,
             'InferenceSpecification': inference_specification,
@@ -187,6 +222,7 @@ class Algorithm(Base):
             'CertifyForMarketplace': certify_for_marketplace,
             'Tags': tags,
         }
+            
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
@@ -277,12 +313,12 @@ class App(Base):
     def create(
         cls,
         domain_id: str,
-        app_type: str,
-        app_name: str,
-        user_profile_name: Optional[str] = Unassigned(),
-        space_name: Optional[str] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
-        resource_spec: Optional[ResourceSpec] = Unassigned(),
+        	app_type: str,
+        	app_name: str,
+        	user_profile_name: Optional[str] = Unassigned(),
+        	space_name: Optional[str] = Unassigned(),
+        	tags: Optional[List[Tag]] = Unassigned(),
+        	resource_spec: Optional[ResourceSpec] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
@@ -398,9 +434,9 @@ class AppImageConfig(Base):
     def create(
         cls,
         app_image_config_name: str,
-        tags: Optional[List[Tag]] = Unassigned(),
-        kernel_gateway_image_config: Optional[KernelGatewayImageConfig] = Unassigned(),
-        jupyter_lab_app_image_config: Optional[JupyterLabAppImageConfig] = Unassigned(),
+        	tags: Optional[List[Tag]] = Unassigned(),
+        	kernel_gateway_image_config: Optional[KernelGatewayImageConfig] = Unassigned(),
+        	jupyter_lab_app_image_config: Optional[JupyterLabAppImageConfig] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
@@ -480,11 +516,11 @@ class Artifact(Base):
     def create(
         cls,
         source: ArtifactSource,
-        artifact_type: str,
-        artifact_name: Optional[str] = Unassigned(),
-        properties: Optional[Dict[str, str]] = Unassigned(),
-        metadata_properties: Optional[MetadataProperties] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
+        	artifact_type: str,
+        	artifact_name: Optional[str] = Unassigned(),
+        	properties: Optional[Dict[str, str]] = Unassigned(),
+        	metadata_properties: Optional[MetadataProperties] = Unassigned(),
+        	tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
@@ -572,28 +608,41 @@ class AutoMLJob(Base):
     resolved_attributes: Optional[ResolvedAttributes] = Unassigned()
     model_deploy_config: Optional[ModelDeployConfig] = Unassigned()
     model_deploy_result: Optional[ModelDeployResult] = Unassigned()
+
+    
+    def populate_inputs_decorator(create_func):
+        def wrapper(*args, **kwargs):
+            config_schema_for_resource = {'output_data_config': {'s3_output_path': {'type': 'string'}, 'kms_key_id': {'type': 'string'}}, 'role_arn': {'type': 'string'}, 'auto_m_l_job_config': {'security_config': {'volume_kms_key_id': {'type': 'string'}, 'vpc_config': {'security_group_ids': {'type': 'array', 'items': {'type': 'string'}}, 'subnets': {'type': 'array', 'items': {'type': 'string'}}}}, 'candidate_generation_config': {'feature_specification_s3_uri': {'type': 'string'}}}}
+            for configurable_attribute in config_schema_for_resource:
+                if kwargs.get(configurable_attribute) is None:
+                    resource_defaults=load_default_configs_for_resource_name(resource_name="AutoMLJob")
+                    global_defaults=load_default_configs_for_resource_name(resource_name="GlobalDefaults")
+                    kwargs[configurable_attribute] = get_config_value(configurable_attribute, resource_defaults, global_defaults)
+            create_func(*args, **kwargs)
+        return wrapper
     
     @classmethod
+    @populate_inputs_decorator
     def create(
         cls,
-        auto_m_l_job_name: str,
-        input_data_config: List[AutoMLChannel],
-        output_data_config: AutoMLOutputDataConfig,
-        role_arn: str,
-        problem_type: Optional[str] = Unassigned(),
-        auto_m_l_job_objective: Optional[AutoMLJobObjective] = Unassigned(),
-        auto_m_l_job_config: Optional[AutoMLJobConfig] = Unassigned(),
-        generate_candidate_definitions_only: Optional[bool] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
-        model_deploy_config: Optional[ModelDeployConfig] = Unassigned(),
+            auto_m_l_job_name: str,
+        	input_data_config: List[AutoMLChannel],
+        	output_data_config: AutoMLOutputDataConfig,
+        	role_arn: str,
+        	problem_type: Optional[str] = Unassigned(),
+        	auto_m_l_job_objective: Optional[AutoMLJobObjective] = Unassigned(),
+        	auto_m_l_job_config: Optional[AutoMLJobConfig] = Unassigned(),
+        	generate_candidate_definitions_only: Optional[bool] = Unassigned(),
+        	tags: Optional[List[Tag]] = Unassigned(),
+        	model_deploy_config: Optional[ModelDeployConfig] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating auto_m_l_job resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-    
+        
         operation_input_args = {
-            'AutoMLJobName': auto_m_l_job_name,
+                    'AutoMLJobName': auto_m_l_job_name,
             'InputDataConfig': input_data_config,
             'OutputDataConfig': output_data_config,
             'ProblemType': problem_type,
@@ -604,6 +653,7 @@ class AutoMLJob(Base):
             'Tags': tags,
             'ModelDeployConfig': model_deploy_config,
         }
+            
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
@@ -699,28 +749,41 @@ class AutoMLJobV2(Base):
     model_deploy_result: Optional[ModelDeployResult] = Unassigned()
     data_split_config: Optional[AutoMLDataSplitConfig] = Unassigned()
     security_config: Optional[AutoMLSecurityConfig] = Unassigned()
+
+    
+    def populate_inputs_decorator(create_func):
+        def wrapper(*args, **kwargs):
+            config_schema_for_resource = {'output_data_config': {'s3_output_path': {'type': 'string'}, 'kms_key_id': {'type': 'string'}}, 'role_arn': {'type': 'string'}, 'auto_m_l_problem_type_config': {'time_series_forecasting_job_config': {'feature_specification_s3_uri': {'type': 'string'}}, 'tabular_job_config': {'feature_specification_s3_uri': {'type': 'string'}}}, 'security_config': {'volume_kms_key_id': {'type': 'string'}, 'vpc_config': {'security_group_ids': {'type': 'array', 'items': {'type': 'string'}}, 'subnets': {'type': 'array', 'items': {'type': 'string'}}}}}
+            for configurable_attribute in config_schema_for_resource:
+                if kwargs.get(configurable_attribute) is None:
+                    resource_defaults=load_default_configs_for_resource_name(resource_name="AutoMLJobV2")
+                    global_defaults=load_default_configs_for_resource_name(resource_name="GlobalDefaults")
+                    kwargs[configurable_attribute] = get_config_value(configurable_attribute, resource_defaults, global_defaults)
+            create_func(*args, **kwargs)
+        return wrapper
     
     @classmethod
+    @populate_inputs_decorator
     def create(
         cls,
-        auto_m_l_job_name: str,
-        auto_m_l_job_input_data_config: List[AutoMLJobChannel],
-        output_data_config: AutoMLOutputDataConfig,
-        auto_m_l_problem_type_config: AutoMLProblemTypeConfig,
-        role_arn: str,
-        tags: Optional[List[Tag]] = Unassigned(),
-        security_config: Optional[AutoMLSecurityConfig] = Unassigned(),
-        auto_m_l_job_objective: Optional[AutoMLJobObjective] = Unassigned(),
-        model_deploy_config: Optional[ModelDeployConfig] = Unassigned(),
-        data_split_config: Optional[AutoMLDataSplitConfig] = Unassigned(),
+            auto_m_l_job_name: str,
+        	auto_m_l_job_input_data_config: List[AutoMLJobChannel],
+        	output_data_config: AutoMLOutputDataConfig,
+        	auto_m_l_problem_type_config: AutoMLProblemTypeConfig,
+        	role_arn: str,
+        	tags: Optional[List[Tag]] = Unassigned(),
+        	security_config: Optional[AutoMLSecurityConfig] = Unassigned(),
+        	auto_m_l_job_objective: Optional[AutoMLJobObjective] = Unassigned(),
+        	model_deploy_config: Optional[ModelDeployConfig] = Unassigned(),
+        	data_split_config: Optional[AutoMLDataSplitConfig] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating auto_m_l_job_v2 resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-    
+        
         operation_input_args = {
-            'AutoMLJobName': auto_m_l_job_name,
+                    'AutoMLJobName': auto_m_l_job_name,
             'AutoMLJobInputDataConfig': auto_m_l_job_input_data_config,
             'OutputDataConfig': output_data_config,
             'AutoMLProblemTypeConfig': auto_m_l_problem_type_config,
@@ -731,6 +794,7 @@ class AutoMLJobV2(Base):
             'ModelDeployConfig': model_deploy_config,
             'DataSplitConfig': data_split_config,
         }
+            
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
@@ -804,26 +868,40 @@ class Cluster(Base):
     creation_time: Optional[datetime.datetime] = Unassigned()
     failure_message: Optional[str] = Unassigned()
     vpc_config: Optional[VpcConfig] = Unassigned()
+
+    
+    def populate_inputs_decorator(create_func):
+        def wrapper(*args, **kwargs):
+            config_schema_for_resource = {'vpc_config': {'security_group_ids': {'type': 'array', 'items': {'type': 'string'}}, 'subnets': {'type': 'array', 'items': {'type': 'string'}}}}
+            for configurable_attribute in config_schema_for_resource:
+                if kwargs.get(configurable_attribute) is None:
+                    resource_defaults=load_default_configs_for_resource_name(resource_name="Cluster")
+                    global_defaults=load_default_configs_for_resource_name(resource_name="GlobalDefaults")
+                    kwargs[configurable_attribute] = get_config_value(configurable_attribute, resource_defaults, global_defaults)
+            create_func(*args, **kwargs)
+        return wrapper
     
     @classmethod
+    @populate_inputs_decorator
     def create(
         cls,
-        cluster_name: str,
-        instance_groups: List[ClusterInstanceGroupSpecification],
-        vpc_config: Optional[VpcConfig] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
+            cluster_name: str,
+        	instance_groups: List[ClusterInstanceGroupSpecification],
+        	vpc_config: Optional[VpcConfig] = Unassigned(),
+        	tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating cluster resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-    
+        
         operation_input_args = {
-            'ClusterName': cluster_name,
+                    'ClusterName': cluster_name,
             'InstanceGroups': instance_groups,
             'VpcConfig': vpc_config,
             'Tags': tags,
         }
+            
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
@@ -907,8 +985,8 @@ class CodeRepository(Base):
     def create(
         cls,
         code_repository_name: str,
-        git_config: GitConfig,
-        tags: Optional[List[Tag]] = Unassigned(),
+        	git_config: GitConfig,
+        	tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
@@ -989,26 +1067,39 @@ class CompilationJob(Base):
     model_digests: Optional[ModelDigests] = Unassigned()
     vpc_config: Optional[NeoVpcConfig] = Unassigned()
     derived_information: Optional[DerivedInformation] = Unassigned()
+
+    
+    def populate_inputs_decorator(create_func):
+        def wrapper(*args, **kwargs):
+            config_schema_for_resource = {'model_artifacts': {'s3_model_artifacts': {'type': 'string'}}, 'role_arn': {'type': 'string'}, 'input_config': {'s3_uri': {'type': 'string'}}, 'output_config': {'s3_output_location': {'type': 'string'}, 'kms_key_id': {'type': 'string'}}, 'vpc_config': {'security_group_ids': {'type': 'array', 'items': {'type': 'string'}}, 'subnets': {'type': 'array', 'items': {'type': 'string'}}}}
+            for configurable_attribute in config_schema_for_resource:
+                if kwargs.get(configurable_attribute) is None:
+                    resource_defaults=load_default_configs_for_resource_name(resource_name="CompilationJob")
+                    global_defaults=load_default_configs_for_resource_name(resource_name="GlobalDefaults")
+                    kwargs[configurable_attribute] = get_config_value(configurable_attribute, resource_defaults, global_defaults)
+            create_func(*args, **kwargs)
+        return wrapper
     
     @classmethod
+    @populate_inputs_decorator
     def create(
         cls,
-        compilation_job_name: str,
-        role_arn: str,
-        output_config: OutputConfig,
-        stopping_condition: StoppingCondition,
-        model_package_version_arn: Optional[str] = Unassigned(),
-        input_config: Optional[InputConfig] = Unassigned(),
-        vpc_config: Optional[NeoVpcConfig] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
+            compilation_job_name: str,
+        	role_arn: str,
+        	output_config: OutputConfig,
+        	stopping_condition: StoppingCondition,
+        	model_package_version_arn: Optional[str] = Unassigned(),
+        	input_config: Optional[InputConfig] = Unassigned(),
+        	vpc_config: Optional[NeoVpcConfig] = Unassigned(),
+        	tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating compilation_job resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-    
+        
         operation_input_args = {
-            'CompilationJobName': compilation_job_name,
+                    'CompilationJobName': compilation_job_name,
             'RoleArn': role_arn,
             'ModelPackageVersionArn': model_package_version_arn,
             'InputConfig': input_config,
@@ -1017,6 +1108,7 @@ class CompilationJob(Base):
             'StoppingCondition': stopping_condition,
             'Tags': tags,
         }
+            
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
@@ -1113,11 +1205,11 @@ class Context(Base):
     def create(
         cls,
         context_name: str,
-        source: ContextSource,
-        context_type: str,
-        description: Optional[str] = Unassigned(),
-        properties: Optional[Dict[str, str]] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
+        	source: ContextSource,
+        	context_type: str,
+        	description: Optional[str] = Unassigned(),
+        	properties: Optional[Dict[str, str]] = Unassigned(),
+        	tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
@@ -1194,28 +1286,41 @@ class DataQualityJobDefinition(Base):
     data_quality_baseline_config: Optional[DataQualityBaselineConfig] = Unassigned()
     network_config: Optional[MonitoringNetworkConfig] = Unassigned()
     stopping_condition: Optional[MonitoringStoppingCondition] = Unassigned()
+
+    
+    def populate_inputs_decorator(create_func):
+        def wrapper(*args, **kwargs):
+            config_schema_for_resource = {'data_quality_job_input': {'endpoint_input': {'s3_input_mode': {'type': 'string'}, 's3_data_distribution_type': {'type': 'string'}}, 'batch_transform_input': {'data_captured_destination_s3_uri': {'type': 'string'}, 's3_input_mode': {'type': 'string'}, 's3_data_distribution_type': {'type': 'string'}}}, 'data_quality_job_output_config': {'kms_key_id': {'type': 'string'}}, 'job_resources': {'cluster_config': {'volume_kms_key_id': {'type': 'string'}}}, 'role_arn': {'type': 'string'}, 'data_quality_baseline_config': {'constraints_resource': {'s3_uri': {'type': 'string'}}, 'statistics_resource': {'s3_uri': {'type': 'string'}}}, 'network_config': {'vpc_config': {'security_group_ids': {'type': 'array', 'items': {'type': 'string'}}, 'subnets': {'type': 'array', 'items': {'type': 'string'}}}}}
+            for configurable_attribute in config_schema_for_resource:
+                if kwargs.get(configurable_attribute) is None:
+                    resource_defaults=load_default_configs_for_resource_name(resource_name="DataQualityJobDefinition")
+                    global_defaults=load_default_configs_for_resource_name(resource_name="GlobalDefaults")
+                    kwargs[configurable_attribute] = get_config_value(configurable_attribute, resource_defaults, global_defaults)
+            create_func(*args, **kwargs)
+        return wrapper
     
     @classmethod
+    @populate_inputs_decorator
     def create(
         cls,
-        job_definition_name: str,
-        data_quality_app_specification: DataQualityAppSpecification,
-        data_quality_job_input: DataQualityJobInput,
-        data_quality_job_output_config: MonitoringOutputConfig,
-        job_resources: MonitoringResources,
-        role_arn: str,
-        data_quality_baseline_config: Optional[DataQualityBaselineConfig] = Unassigned(),
-        network_config: Optional[MonitoringNetworkConfig] = Unassigned(),
-        stopping_condition: Optional[MonitoringStoppingCondition] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
+            job_definition_name: str,
+        	data_quality_app_specification: DataQualityAppSpecification,
+        	data_quality_job_input: DataQualityJobInput,
+        	data_quality_job_output_config: MonitoringOutputConfig,
+        	job_resources: MonitoringResources,
+        	role_arn: str,
+        	data_quality_baseline_config: Optional[DataQualityBaselineConfig] = Unassigned(),
+        	network_config: Optional[MonitoringNetworkConfig] = Unassigned(),
+        	stopping_condition: Optional[MonitoringStoppingCondition] = Unassigned(),
+        	tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating data_quality_job_definition resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-    
+        
         operation_input_args = {
-            'JobDefinitionName': job_definition_name,
+                    'JobDefinitionName': job_definition_name,
             'DataQualityBaselineConfig': data_quality_baseline_config,
             'DataQualityAppSpecification': data_quality_app_specification,
             'DataQualityJobInput': data_quality_job_input,
@@ -1226,6 +1331,7 @@ class DataQualityJobDefinition(Base):
             'StoppingCondition': stopping_condition,
             'Tags': tags,
         }
+            
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
@@ -1285,30 +1391,44 @@ class DeviceFleet(Base):
     description: Optional[str] = Unassigned()
     role_arn: Optional[str] = Unassigned()
     iot_role_alias: Optional[str] = Unassigned()
+
+    
+    def populate_inputs_decorator(create_func):
+        def wrapper(*args, **kwargs):
+            config_schema_for_resource = {'output_config': {'s3_output_location': {'type': 'string'}, 'kms_key_id': {'type': 'string'}}, 'role_arn': {'type': 'string'}, 'iot_role_alias': {'type': 'string'}}
+            for configurable_attribute in config_schema_for_resource:
+                if kwargs.get(configurable_attribute) is None:
+                    resource_defaults=load_default_configs_for_resource_name(resource_name="DeviceFleet")
+                    global_defaults=load_default_configs_for_resource_name(resource_name="GlobalDefaults")
+                    kwargs[configurable_attribute] = get_config_value(configurable_attribute, resource_defaults, global_defaults)
+            create_func(*args, **kwargs)
+        return wrapper
     
     @classmethod
+    @populate_inputs_decorator
     def create(
         cls,
-        device_fleet_name: str,
-        output_config: EdgeOutputConfig,
-        role_arn: Optional[str] = Unassigned(),
-        description: Optional[str] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
-        enable_iot_role_alias: Optional[bool] = Unassigned(),
+            device_fleet_name: str,
+        	output_config: EdgeOutputConfig,
+        	role_arn: Optional[str] = Unassigned(),
+        	description: Optional[str] = Unassigned(),
+        	tags: Optional[List[Tag]] = Unassigned(),
+        	enable_iot_role_alias: Optional[bool] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating device_fleet resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-    
+        
         operation_input_args = {
-            'DeviceFleetName': device_fleet_name,
+                    'DeviceFleetName': device_fleet_name,
             'RoleArn': role_arn,
             'Description': description,
             'OutputConfig': output_config,
             'Tags': tags,
             'EnableIotRoleAlias': enable_iot_role_alias,
         }
+            
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
@@ -1382,30 +1502,43 @@ class Domain(Base):
     kms_key_id: Optional[str] = Unassigned()
     app_security_group_management: Optional[str] = Unassigned()
     default_space_settings: Optional[DefaultSpaceSettings] = Unassigned()
+
+    
+    def populate_inputs_decorator(create_func):
+        def wrapper(*args, **kwargs):
+            config_schema_for_resource = {'security_group_id_for_domain_boundary': {'type': 'string'}, 'default_user_settings': {'execution_role': {'type': 'string'}, 'security_groups': {'type': 'array', 'items': {'type': 'string'}}, 'sharing_settings': {'s3_output_path': {'type': 'string'}, 's3_kms_key_id': {'type': 'string'}}, 'canvas_app_settings': {'time_series_forecasting_settings': {'amazon_forecast_role_arn': {'type': 'string'}}, 'model_register_settings': {'cross_account_model_register_role_arn': {'type': 'string'}}, 'workspace_settings': {'s3_artifact_path': {'type': 'string'}, 's3_kms_key_id': {'type': 'string'}}, 'generative_ai_settings': {'amazon_bedrock_role_arn': {'type': 'string'}}}}, 'domain_settings': {'security_group_ids': {'type': 'array', 'items': {'type': 'string'}}, 'r_studio_server_pro_domain_settings': {'domain_execution_role_arn': {'type': 'string'}}, 'execution_role_identity_config': {'type': 'string'}}, 'home_efs_file_system_kms_key_id': {'type': 'string'}, 'subnet_ids': {'type': 'array', 'items': {'type': 'string'}}, 'kms_key_id': {'type': 'string'}, 'app_security_group_management': {'type': 'string'}, 'default_space_settings': {'execution_role': {'type': 'string'}, 'security_groups': {'type': 'array', 'items': {'type': 'string'}}}}
+            for configurable_attribute in config_schema_for_resource:
+                if kwargs.get(configurable_attribute) is None:
+                    resource_defaults=load_default_configs_for_resource_name(resource_name="Domain")
+                    global_defaults=load_default_configs_for_resource_name(resource_name="GlobalDefaults")
+                    kwargs[configurable_attribute] = get_config_value(configurable_attribute, resource_defaults, global_defaults)
+            create_func(*args, **kwargs)
+        return wrapper
     
     @classmethod
+    @populate_inputs_decorator
     def create(
         cls,
-        domain_name: str,
-        auth_mode: str,
-        default_user_settings: UserSettings,
-        subnet_ids: List[str],
-        vpc_id: str,
-        domain_settings: Optional[DomainSettings] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
-        app_network_access_type: Optional[str] = Unassigned(),
-        home_efs_file_system_kms_key_id: Optional[str] = Unassigned(),
-        kms_key_id: Optional[str] = Unassigned(),
-        app_security_group_management: Optional[str] = Unassigned(),
-        default_space_settings: Optional[DefaultSpaceSettings] = Unassigned(),
+            domain_name: str,
+        	auth_mode: str,
+        	default_user_settings: UserSettings,
+        	subnet_ids: List[str],
+        	vpc_id: str,
+        	domain_settings: Optional[DomainSettings] = Unassigned(),
+        	tags: Optional[List[Tag]] = Unassigned(),
+        	app_network_access_type: Optional[str] = Unassigned(),
+        	home_efs_file_system_kms_key_id: Optional[str] = Unassigned(),
+        	kms_key_id: Optional[str] = Unassigned(),
+        	app_security_group_management: Optional[str] = Unassigned(),
+        	default_space_settings: Optional[DefaultSpaceSettings] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating domain resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-    
+        
         operation_input_args = {
-            'DomainName': domain_name,
+                    'DomainName': domain_name,
             'AuthMode': auth_mode,
             'DefaultUserSettings': default_user_settings,
             'DomainSettings': domain_settings,
@@ -1418,6 +1551,7 @@ class Domain(Base):
             'AppSecurityGroupManagement': app_security_group_management,
             'DefaultSpaceSettings': default_space_settings,
         }
+            
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
@@ -1508,10 +1642,10 @@ class EdgeDeploymentPlan(Base):
     def create(
         cls,
         edge_deployment_plan_name: str,
-        model_configs: List[EdgeDeploymentModelConfig],
-        device_fleet_name: str,
-        stages: Optional[List[DeploymentStage]] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
+        	model_configs: List[EdgeDeploymentModelConfig],
+        	device_fleet_name: str,
+        	stages: Optional[List[DeploymentStage]] = Unassigned(),
+        	tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
@@ -1597,26 +1731,39 @@ class EdgePackagingJob(Base):
     model_artifact: Optional[str] = Unassigned()
     model_signature: Optional[str] = Unassigned()
     preset_deployment_output: Optional[EdgePresetDeploymentOutput] = Unassigned()
+
+    
+    def populate_inputs_decorator(create_func):
+        def wrapper(*args, **kwargs):
+            config_schema_for_resource = {'role_arn': {'type': 'string'}, 'output_config': {'s3_output_location': {'type': 'string'}, 'kms_key_id': {'type': 'string'}}}
+            for configurable_attribute in config_schema_for_resource:
+                if kwargs.get(configurable_attribute) is None:
+                    resource_defaults=load_default_configs_for_resource_name(resource_name="EdgePackagingJob")
+                    global_defaults=load_default_configs_for_resource_name(resource_name="GlobalDefaults")
+                    kwargs[configurable_attribute] = get_config_value(configurable_attribute, resource_defaults, global_defaults)
+            create_func(*args, **kwargs)
+        return wrapper
     
     @classmethod
+    @populate_inputs_decorator
     def create(
         cls,
-        edge_packaging_job_name: str,
-        compilation_job_name: str,
-        model_name: str,
-        model_version: str,
-        role_arn: str,
-        output_config: EdgeOutputConfig,
-        resource_key: Optional[str] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
+            edge_packaging_job_name: str,
+        	compilation_job_name: str,
+        	model_name: str,
+        	model_version: str,
+        	role_arn: str,
+        	output_config: EdgeOutputConfig,
+        	resource_key: Optional[str] = Unassigned(),
+        	tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating edge_packaging_job resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-    
+        
         operation_input_args = {
-            'EdgePackagingJobName': edge_packaging_job_name,
+                    'EdgePackagingJobName': edge_packaging_job_name,
             'CompilationJobName': compilation_job_name,
             'ModelName': model_name,
             'ModelVersion': model_version,
@@ -1625,6 +1772,7 @@ class EdgePackagingJob(Base):
             'ResourceKey': resource_key,
             'Tags': tags,
         }
+            
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
@@ -1712,26 +1860,40 @@ class Endpoint(Base):
     pending_deployment_summary: Optional[PendingDeploymentSummary] = Unassigned()
     explainer_config: Optional[ExplainerConfig] = Unassigned()
     shadow_production_variants: Optional[List[ProductionVariantSummary]] = Unassigned()
+
+    
+    def populate_inputs_decorator(create_func):
+        def wrapper(*args, **kwargs):
+            config_schema_for_resource = {'data_capture_config': {'destination_s3_uri': {'type': 'string'}, 'kms_key_id': {'type': 'string'}}, 'async_inference_config': {'output_config': {'kms_key_id': {'type': 'string'}, 's3_output_path': {'type': 'string'}, 's3_failure_path': {'type': 'string'}}}}
+            for configurable_attribute in config_schema_for_resource:
+                if kwargs.get(configurable_attribute) is None:
+                    resource_defaults=load_default_configs_for_resource_name(resource_name="Endpoint")
+                    global_defaults=load_default_configs_for_resource_name(resource_name="GlobalDefaults")
+                    kwargs[configurable_attribute] = get_config_value(configurable_attribute, resource_defaults, global_defaults)
+            create_func(*args, **kwargs)
+        return wrapper
     
     @classmethod
+    @populate_inputs_decorator
     def create(
         cls,
-        endpoint_name: str,
-        endpoint_config_name: str,
-        deployment_config: Optional[DeploymentConfig] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
+            endpoint_name: str,
+        	endpoint_config_name: str,
+        	deployment_config: Optional[DeploymentConfig] = Unassigned(),
+        	tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating endpoint resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-    
+        
         operation_input_args = {
-            'EndpointName': endpoint_name,
+                    'EndpointName': endpoint_name,
             'EndpointConfigName': endpoint_config_name,
             'DeploymentConfig': deployment_config,
             'Tags': tags,
         }
+            
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
@@ -1817,29 +1979,42 @@ class EndpointConfig(Base):
     execution_role_arn: Optional[str] = Unassigned()
     vpc_config: Optional[VpcConfig] = Unassigned()
     enable_network_isolation: Optional[bool] = Unassigned()
+
+    
+    def populate_inputs_decorator(create_func):
+        def wrapper(*args, **kwargs):
+            config_schema_for_resource = {'data_capture_config': {'destination_s3_uri': {'type': 'string'}, 'kms_key_id': {'type': 'string'}}, 'kms_key_id': {'type': 'string'}, 'async_inference_config': {'output_config': {'kms_key_id': {'type': 'string'}, 's3_output_path': {'type': 'string'}, 's3_failure_path': {'type': 'string'}}}, 'execution_role_arn': {'type': 'string'}, 'vpc_config': {'security_group_ids': {'type': 'array', 'items': {'type': 'string'}}, 'subnets': {'type': 'array', 'items': {'type': 'string'}}}}
+            for configurable_attribute in config_schema_for_resource:
+                if kwargs.get(configurable_attribute) is None:
+                    resource_defaults=load_default_configs_for_resource_name(resource_name="EndpointConfig")
+                    global_defaults=load_default_configs_for_resource_name(resource_name="GlobalDefaults")
+                    kwargs[configurable_attribute] = get_config_value(configurable_attribute, resource_defaults, global_defaults)
+            create_func(*args, **kwargs)
+        return wrapper
     
     @classmethod
+    @populate_inputs_decorator
     def create(
         cls,
-        endpoint_config_name: str,
-        production_variants: List[ProductionVariant],
-        data_capture_config: Optional[DataCaptureConfig] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
-        kms_key_id: Optional[str] = Unassigned(),
-        async_inference_config: Optional[AsyncInferenceConfig] = Unassigned(),
-        explainer_config: Optional[ExplainerConfig] = Unassigned(),
-        shadow_production_variants: Optional[List[ProductionVariant]] = Unassigned(),
-        execution_role_arn: Optional[str] = Unassigned(),
-        vpc_config: Optional[VpcConfig] = Unassigned(),
-        enable_network_isolation: Optional[bool] = Unassigned(),
+            endpoint_config_name: str,
+        	production_variants: List[ProductionVariant],
+        	data_capture_config: Optional[DataCaptureConfig] = Unassigned(),
+        	tags: Optional[List[Tag]] = Unassigned(),
+        	kms_key_id: Optional[str] = Unassigned(),
+        	async_inference_config: Optional[AsyncInferenceConfig] = Unassigned(),
+        	explainer_config: Optional[ExplainerConfig] = Unassigned(),
+        	shadow_production_variants: Optional[List[ProductionVariant]] = Unassigned(),
+        	execution_role_arn: Optional[str] = Unassigned(),
+        	vpc_config: Optional[VpcConfig] = Unassigned(),
+        	enable_network_isolation: Optional[bool] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating endpoint_config resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-    
+        
         operation_input_args = {
-            'EndpointConfigName': endpoint_config_name,
+                    'EndpointConfigName': endpoint_config_name,
             'ProductionVariants': production_variants,
             'DataCaptureConfig': data_capture_config,
             'Tags': tags,
@@ -1851,6 +2026,7 @@ class EndpointConfig(Base):
             'VpcConfig': vpc_config,
             'EnableNetworkIsolation': enable_network_isolation,
         }
+            
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
@@ -1916,9 +2092,9 @@ class Experiment(Base):
     def create(
         cls,
         experiment_name: str,
-        display_name: Optional[str] = Unassigned(),
-        description: Optional[str] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
+        	display_name: Optional[str] = Unassigned(),
+        	description: Optional[str] = Unassigned(),
+        	tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
@@ -2000,28 +2176,41 @@ class FeatureGroup(Base):
     failure_reason: Optional[str] = Unassigned()
     description: Optional[str] = Unassigned()
     online_store_total_size_bytes: Optional[int] = Unassigned()
+
+    
+    def populate_inputs_decorator(create_func):
+        def wrapper(*args, **kwargs):
+            config_schema_for_resource = {'online_store_config': {'security_config': {'kms_key_id': {'type': 'string'}}}, 'offline_store_config': {'s3_storage_config': {'s3_uri': {'type': 'string'}, 'kms_key_id': {'type': 'string'}, 'resolved_output_s3_uri': {'type': 'string'}}}, 'role_arn': {'type': 'string'}}
+            for configurable_attribute in config_schema_for_resource:
+                if kwargs.get(configurable_attribute) is None:
+                    resource_defaults=load_default_configs_for_resource_name(resource_name="FeatureGroup")
+                    global_defaults=load_default_configs_for_resource_name(resource_name="GlobalDefaults")
+                    kwargs[configurable_attribute] = get_config_value(configurable_attribute, resource_defaults, global_defaults)
+            create_func(*args, **kwargs)
+        return wrapper
     
     @classmethod
+    @populate_inputs_decorator
     def create(
         cls,
-        feature_group_name: str,
-        record_identifier_feature_name: str,
-        event_time_feature_name: str,
-        feature_definitions: List[FeatureDefinition],
-        online_store_config: Optional[OnlineStoreConfig] = Unassigned(),
-        offline_store_config: Optional[OfflineStoreConfig] = Unassigned(),
-        throughput_config: Optional[ThroughputConfig] = Unassigned(),
-        role_arn: Optional[str] = Unassigned(),
-        description: Optional[str] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
+            feature_group_name: str,
+        	record_identifier_feature_name: str,
+        	event_time_feature_name: str,
+        	feature_definitions: List[FeatureDefinition],
+        	online_store_config: Optional[OnlineStoreConfig] = Unassigned(),
+        	offline_store_config: Optional[OfflineStoreConfig] = Unassigned(),
+        	throughput_config: Optional[ThroughputConfig] = Unassigned(),
+        	role_arn: Optional[str] = Unassigned(),
+        	description: Optional[str] = Unassigned(),
+        	tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating feature_group resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-    
+        
         operation_input_args = {
-            'FeatureGroupName': feature_group_name,
+                    'FeatureGroupName': feature_group_name,
             'RecordIdentifierFeatureName': record_identifier_feature_name,
             'EventTimeFeatureName': event_time_feature_name,
             'FeatureDefinitions': feature_definitions,
@@ -2032,6 +2221,7 @@ class FeatureGroup(Base):
             'Description': description,
             'Tags': tags,
         }
+            
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
@@ -2118,25 +2308,38 @@ class FlowDefinition(Base):
     human_loop_activation_config: Optional[HumanLoopActivationConfig] = Unassigned()
     human_loop_config: Optional[HumanLoopConfig] = Unassigned()
     failure_reason: Optional[str] = Unassigned()
+
+    
+    def populate_inputs_decorator(create_func):
+        def wrapper(*args, **kwargs):
+            config_schema_for_resource = {'output_config': {'s3_output_path': {'type': 'string'}, 'kms_key_id': {'type': 'string'}}, 'role_arn': {'type': 'string'}}
+            for configurable_attribute in config_schema_for_resource:
+                if kwargs.get(configurable_attribute) is None:
+                    resource_defaults=load_default_configs_for_resource_name(resource_name="FlowDefinition")
+                    global_defaults=load_default_configs_for_resource_name(resource_name="GlobalDefaults")
+                    kwargs[configurable_attribute] = get_config_value(configurable_attribute, resource_defaults, global_defaults)
+            create_func(*args, **kwargs)
+        return wrapper
     
     @classmethod
+    @populate_inputs_decorator
     def create(
         cls,
-        flow_definition_name: str,
-        output_config: FlowDefinitionOutputConfig,
-        role_arn: str,
-        human_loop_request_source: Optional[HumanLoopRequestSource] = Unassigned(),
-        human_loop_activation_config: Optional[HumanLoopActivationConfig] = Unassigned(),
-        human_loop_config: Optional[HumanLoopConfig] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
+            flow_definition_name: str,
+        	output_config: FlowDefinitionOutputConfig,
+        	role_arn: str,
+        	human_loop_request_source: Optional[HumanLoopRequestSource] = Unassigned(),
+        	human_loop_activation_config: Optional[HumanLoopActivationConfig] = Unassigned(),
+        	human_loop_config: Optional[HumanLoopConfig] = Unassigned(),
+        	tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating flow_definition resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-    
+        
         operation_input_args = {
-            'FlowDefinitionName': flow_definition_name,
+                    'FlowDefinitionName': flow_definition_name,
             'HumanLoopRequestSource': human_loop_request_source,
             'HumanLoopActivationConfig': human_loop_activation_config,
             'HumanLoopConfig': human_loop_config,
@@ -2144,6 +2347,7 @@ class FlowDefinition(Base):
             'RoleArn': role_arn,
             'Tags': tags,
         }
+            
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
@@ -2227,30 +2431,44 @@ class Hub(Base):
     hub_search_keywords: Optional[List[str]] = Unassigned()
     s3_storage_config: Optional[HubS3StorageConfig] = Unassigned()
     failure_reason: Optional[str] = Unassigned()
+
+    
+    def populate_inputs_decorator(create_func):
+        def wrapper(*args, **kwargs):
+            config_schema_for_resource = {'s3_storage_config': {'s3_output_path': {'type': 'string'}}}
+            for configurable_attribute in config_schema_for_resource:
+                if kwargs.get(configurable_attribute) is None:
+                    resource_defaults=load_default_configs_for_resource_name(resource_name="Hub")
+                    global_defaults=load_default_configs_for_resource_name(resource_name="GlobalDefaults")
+                    kwargs[configurable_attribute] = get_config_value(configurable_attribute, resource_defaults, global_defaults)
+            create_func(*args, **kwargs)
+        return wrapper
     
     @classmethod
+    @populate_inputs_decorator
     def create(
         cls,
-        hub_name: str,
-        hub_description: str,
-        hub_display_name: Optional[str] = Unassigned(),
-        hub_search_keywords: Optional[List[str]] = Unassigned(),
-        s3_storage_config: Optional[HubS3StorageConfig] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
+            hub_name: str,
+        	hub_description: str,
+        	hub_display_name: Optional[str] = Unassigned(),
+        	hub_search_keywords: Optional[List[str]] = Unassigned(),
+        	s3_storage_config: Optional[HubS3StorageConfig] = Unassigned(),
+        	tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating hub resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-    
+        
         operation_input_args = {
-            'HubName': hub_name,
+                    'HubName': hub_name,
             'HubDescription': hub_description,
             'HubDisplayName': hub_display_name,
             'HubSearchKeywords': hub_search_keywords,
             'S3StorageConfig': s3_storage_config,
             'Tags': tags,
         }
+            
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
@@ -2425,8 +2643,8 @@ class HumanTaskUi(Base):
     def create(
         cls,
         human_task_ui_name: str,
-        ui_template: UiTemplate,
-        tags: Optional[List[Tag]] = Unassigned(),
+        	ui_template: UiTemplate,
+        	tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
@@ -2529,25 +2747,38 @@ class HyperParameterTuningJob(Base):
     failure_reason: Optional[str] = Unassigned()
     tuning_job_completion_details: Optional[HyperParameterTuningJobCompletionDetails] = Unassigned()
     consumed_resources: Optional[HyperParameterTuningJobConsumedResources] = Unassigned()
+
+    
+    def populate_inputs_decorator(create_func):
+        def wrapper(*args, **kwargs):
+            config_schema_for_resource = {'training_job_definition': {'role_arn': {'type': 'string'}, 'output_data_config': {'s3_output_path': {'type': 'string'}, 'kms_key_id': {'type': 'string'}}, 'vpc_config': {'security_group_ids': {'type': 'array', 'items': {'type': 'string'}}, 'subnets': {'type': 'array', 'items': {'type': 'string'}}}, 'resource_config': {'volume_kms_key_id': {'type': 'string'}}, 'hyper_parameter_tuning_resource_config': {'volume_kms_key_id': {'type': 'string'}}, 'checkpoint_config': {'s3_uri': {'type': 'string'}}}}
+            for configurable_attribute in config_schema_for_resource:
+                if kwargs.get(configurable_attribute) is None:
+                    resource_defaults=load_default_configs_for_resource_name(resource_name="HyperParameterTuningJob")
+                    global_defaults=load_default_configs_for_resource_name(resource_name="GlobalDefaults")
+                    kwargs[configurable_attribute] = get_config_value(configurable_attribute, resource_defaults, global_defaults)
+            create_func(*args, **kwargs)
+        return wrapper
     
     @classmethod
+    @populate_inputs_decorator
     def create(
         cls,
-        hyper_parameter_tuning_job_name: str,
-        hyper_parameter_tuning_job_config: HyperParameterTuningJobConfig,
-        training_job_definition: Optional[HyperParameterTrainingJobDefinition] = Unassigned(),
-        training_job_definitions: Optional[List[HyperParameterTrainingJobDefinition]] = Unassigned(),
-        warm_start_config: Optional[HyperParameterTuningJobWarmStartConfig] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
-        autotune: Optional[Autotune] = Unassigned(),
+            hyper_parameter_tuning_job_name: str,
+        	hyper_parameter_tuning_job_config: HyperParameterTuningJobConfig,
+        	training_job_definition: Optional[HyperParameterTrainingJobDefinition] = Unassigned(),
+        	training_job_definitions: Optional[List[HyperParameterTrainingJobDefinition]] = Unassigned(),
+        	warm_start_config: Optional[HyperParameterTuningJobWarmStartConfig] = Unassigned(),
+        	tags: Optional[List[Tag]] = Unassigned(),
+        	autotune: Optional[Autotune] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating hyper_parameter_tuning_job resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-    
+        
         operation_input_args = {
-            'HyperParameterTuningJobName': hyper_parameter_tuning_job_name,
+                    'HyperParameterTuningJobName': hyper_parameter_tuning_job_name,
             'HyperParameterTuningJobConfig': hyper_parameter_tuning_job_config,
             'TrainingJobDefinition': training_job_definition,
             'TrainingJobDefinitions': training_job_definitions,
@@ -2555,6 +2786,7 @@ class HyperParameterTuningJob(Base):
             'Tags': tags,
             'Autotune': autotune,
         }
+            
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
@@ -2644,28 +2876,42 @@ class Image(Base):
     image_status: Optional[str] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
     role_arn: Optional[str] = Unassigned()
+
+    
+    def populate_inputs_decorator(create_func):
+        def wrapper(*args, **kwargs):
+            config_schema_for_resource = {'role_arn': {'type': 'string'}}
+            for configurable_attribute in config_schema_for_resource:
+                if kwargs.get(configurable_attribute) is None:
+                    resource_defaults=load_default_configs_for_resource_name(resource_name="Image")
+                    global_defaults=load_default_configs_for_resource_name(resource_name="GlobalDefaults")
+                    kwargs[configurable_attribute] = get_config_value(configurable_attribute, resource_defaults, global_defaults)
+            create_func(*args, **kwargs)
+        return wrapper
     
     @classmethod
+    @populate_inputs_decorator
     def create(
         cls,
-        image_name: str,
-        role_arn: str,
-        description: Optional[str] = Unassigned(),
-        display_name: Optional[str] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
+            image_name: str,
+        	role_arn: str,
+        	description: Optional[str] = Unassigned(),
+        	display_name: Optional[str] = Unassigned(),
+        	tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating image resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-    
+        
         operation_input_args = {
-            'Description': description,
+                    'Description': description,
             'DisplayName': display_name,
             'ImageName': image_name,
             'RoleArn': role_arn,
             'Tags': tags,
         }
+            
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
@@ -2760,16 +3006,16 @@ class ImageVersion(Base):
     def create(
         cls,
         base_image: str,
-        client_token: str,
-        image_name: str,
-        aliases: Optional[List[str]] = Unassigned(),
-        vendor_guidance: Optional[str] = Unassigned(),
-        job_type: Optional[str] = Unassigned(),
-        m_l_framework: Optional[str] = Unassigned(),
-        programming_lang: Optional[str] = Unassigned(),
-        processor: Optional[str] = Unassigned(),
-        horovod: Optional[bool] = Unassigned(),
-        release_notes: Optional[str] = Unassigned(),
+        	client_token: str,
+        	image_name: str,
+        	aliases: Optional[List[str]] = Unassigned(),
+        	vendor_guidance: Optional[str] = Unassigned(),
+        	job_type: Optional[str] = Unassigned(),
+        	m_l_framework: Optional[str] = Unassigned(),
+        	programming_lang: Optional[str] = Unassigned(),
+        	processor: Optional[str] = Unassigned(),
+        	horovod: Optional[bool] = Unassigned(),
+        	release_notes: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
@@ -2886,11 +3132,11 @@ class InferenceComponent(Base):
     def create(
         cls,
         inference_component_name: str,
-        endpoint_name: str,
-        variant_name: str,
-        specification: InferenceComponentSpecification,
-        runtime_config: InferenceComponentRuntimeConfig,
-        tags: Optional[List[Tag]] = Unassigned(),
+        	endpoint_name: str,
+        	variant_name: str,
+        	specification: InferenceComponentSpecification,
+        	runtime_config: InferenceComponentRuntimeConfig,
+        	tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
@@ -2994,29 +3240,42 @@ class InferenceExperiment(Base):
     data_storage_config: Optional[InferenceExperimentDataStorageConfig] = Unassigned()
     shadow_mode_config: Optional[ShadowModeConfig] = Unassigned()
     kms_key: Optional[str] = Unassigned()
+
+    
+    def populate_inputs_decorator(create_func):
+        def wrapper(*args, **kwargs):
+            config_schema_for_resource = {'role_arn': {'type': 'string'}, 'data_storage_config': {'kms_key': {'type': 'string'}}, 'kms_key': {'type': 'string'}}
+            for configurable_attribute in config_schema_for_resource:
+                if kwargs.get(configurable_attribute) is None:
+                    resource_defaults=load_default_configs_for_resource_name(resource_name="InferenceExperiment")
+                    global_defaults=load_default_configs_for_resource_name(resource_name="GlobalDefaults")
+                    kwargs[configurable_attribute] = get_config_value(configurable_attribute, resource_defaults, global_defaults)
+            create_func(*args, **kwargs)
+        return wrapper
     
     @classmethod
+    @populate_inputs_decorator
     def create(
         cls,
-        name: str,
-        type: str,
-        role_arn: str,
-        endpoint_name: str,
-        model_variants: List[ModelVariantConfig],
-        shadow_mode_config: ShadowModeConfig,
-        schedule: Optional[InferenceExperimentSchedule] = Unassigned(),
-        description: Optional[str] = Unassigned(),
-        data_storage_config: Optional[InferenceExperimentDataStorageConfig] = Unassigned(),
-        kms_key: Optional[str] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
+            name: str,
+        	type: str,
+        	role_arn: str,
+        	endpoint_name: str,
+        	model_variants: List[ModelVariantConfig],
+        	shadow_mode_config: ShadowModeConfig,
+        	schedule: Optional[InferenceExperimentSchedule] = Unassigned(),
+        	description: Optional[str] = Unassigned(),
+        	data_storage_config: Optional[InferenceExperimentDataStorageConfig] = Unassigned(),
+        	kms_key: Optional[str] = Unassigned(),
+        	tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating inference_experiment resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-    
+        
         operation_input_args = {
-            'Name': name,
+                    'Name': name,
             'Type': type,
             'Schedule': schedule,
             'Description': description,
@@ -3028,6 +3287,7 @@ class InferenceExperiment(Base):
             'KmsKey': kms_key,
             'Tags': tags,
         }
+            
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
@@ -3126,26 +3386,39 @@ class InferenceRecommendationsJob(Base):
     stopping_conditions: Optional[RecommendationJobStoppingConditions] = Unassigned()
     inference_recommendations: Optional[List[InferenceRecommendation]] = Unassigned()
     endpoint_performances: Optional[List[EndpointPerformance]] = Unassigned()
+
+    
+    def populate_inputs_decorator(create_func):
+        def wrapper(*args, **kwargs):
+            config_schema_for_resource = {'role_arn': {'type': 'string'}, 'input_config': {'volume_kms_key_id': {'type': 'string'}, 'vpc_config': {'security_group_ids': {'type': 'array', 'items': {'type': 'string'}}, 'subnets': {'type': 'array', 'items': {'type': 'string'}}}}}
+            for configurable_attribute in config_schema_for_resource:
+                if kwargs.get(configurable_attribute) is None:
+                    resource_defaults=load_default_configs_for_resource_name(resource_name="InferenceRecommendationsJob")
+                    global_defaults=load_default_configs_for_resource_name(resource_name="GlobalDefaults")
+                    kwargs[configurable_attribute] = get_config_value(configurable_attribute, resource_defaults, global_defaults)
+            create_func(*args, **kwargs)
+        return wrapper
     
     @classmethod
+    @populate_inputs_decorator
     def create(
         cls,
-        job_name: str,
-        job_type: str,
-        role_arn: str,
-        input_config: RecommendationJobInputConfig,
-        job_description: Optional[str] = Unassigned(),
-        stopping_conditions: Optional[RecommendationJobStoppingConditions] = Unassigned(),
-        output_config: Optional[RecommendationJobOutputConfig] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
+            job_name: str,
+        	job_type: str,
+        	role_arn: str,
+        	input_config: RecommendationJobInputConfig,
+        	job_description: Optional[str] = Unassigned(),
+        	stopping_conditions: Optional[RecommendationJobStoppingConditions] = Unassigned(),
+        	output_config: Optional[RecommendationJobOutputConfig] = Unassigned(),
+        	tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating inference_recommendations_job resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-    
+        
         operation_input_args = {
-            'JobName': job_name,
+                    'JobName': job_name,
             'JobType': job_type,
             'RoleArn': role_arn,
             'InputConfig': input_config,
@@ -3154,6 +3427,7 @@ class InferenceRecommendationsJob(Base):
             'OutputConfig': output_config,
             'Tags': tags,
         }
+            
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
@@ -3245,28 +3519,41 @@ class LabelingJob(Base):
     labeling_job_algorithms_config: Optional[LabelingJobAlgorithmsConfig] = Unassigned()
     tags: Optional[List[Tag]] = Unassigned()
     labeling_job_output: Optional[LabelingJobOutput] = Unassigned()
+
+    
+    def populate_inputs_decorator(create_func):
+        def wrapper(*args, **kwargs):
+            config_schema_for_resource = {'input_config': {'data_source': {'s3_data_source': {'manifest_s3_uri': {'type': 'string'}}}}, 'output_config': {'s3_output_path': {'type': 'string'}, 'kms_key_id': {'type': 'string'}}, 'role_arn': {'type': 'string'}, 'human_task_config': {'ui_config': {'ui_template_s3_uri': {'type': 'string'}}}, 'label_category_config_s3_uri': {'type': 'string'}, 'labeling_job_algorithms_config': {'labeling_job_resource_config': {'volume_kms_key_id': {'type': 'string'}, 'vpc_config': {'security_group_ids': {'type': 'array', 'items': {'type': 'string'}}, 'subnets': {'type': 'array', 'items': {'type': 'string'}}}}}, 'labeling_job_output': {'output_dataset_s3_uri': {'type': 'string'}}}
+            for configurable_attribute in config_schema_for_resource:
+                if kwargs.get(configurable_attribute) is None:
+                    resource_defaults=load_default_configs_for_resource_name(resource_name="LabelingJob")
+                    global_defaults=load_default_configs_for_resource_name(resource_name="GlobalDefaults")
+                    kwargs[configurable_attribute] = get_config_value(configurable_attribute, resource_defaults, global_defaults)
+            create_func(*args, **kwargs)
+        return wrapper
     
     @classmethod
+    @populate_inputs_decorator
     def create(
         cls,
-        labeling_job_name: str,
-        label_attribute_name: str,
-        input_config: LabelingJobInputConfig,
-        output_config: LabelingJobOutputConfig,
-        role_arn: str,
-        human_task_config: HumanTaskConfig,
-        label_category_config_s3_uri: Optional[str] = Unassigned(),
-        stopping_conditions: Optional[LabelingJobStoppingConditions] = Unassigned(),
-        labeling_job_algorithms_config: Optional[LabelingJobAlgorithmsConfig] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
+            labeling_job_name: str,
+        	label_attribute_name: str,
+        	input_config: LabelingJobInputConfig,
+        	output_config: LabelingJobOutputConfig,
+        	role_arn: str,
+        	human_task_config: HumanTaskConfig,
+        	label_category_config_s3_uri: Optional[str] = Unassigned(),
+        	stopping_conditions: Optional[LabelingJobStoppingConditions] = Unassigned(),
+        	labeling_job_algorithms_config: Optional[LabelingJobAlgorithmsConfig] = Unassigned(),
+        	tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating labeling_job resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-    
+        
         operation_input_args = {
-            'LabelingJobName': labeling_job_name,
+                    'LabelingJobName': labeling_job_name,
             'LabelAttributeName': label_attribute_name,
             'InputConfig': input_config,
             'OutputConfig': output_config,
@@ -3277,6 +3564,7 @@ class LabelingJob(Base):
             'HumanTaskConfig': human_task_config,
             'Tags': tags,
         }
+            
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
@@ -3360,26 +3648,39 @@ class Model(Base):
     vpc_config: Optional[VpcConfig] = Unassigned()
     enable_network_isolation: Optional[bool] = Unassigned()
     deployment_recommendation: Optional[DeploymentRecommendation] = Unassigned()
+
+    
+    def populate_inputs_decorator(create_func):
+        def wrapper(*args, **kwargs):
+            config_schema_for_resource = {'primary_container': {'model_data_source': {'s3_data_source': {'s3_uri': {'type': 'string'}, 's3_data_type': {'type': 'string'}}}}, 'execution_role_arn': {'type': 'string'}, 'vpc_config': {'security_group_ids': {'type': 'array', 'items': {'type': 'string'}}, 'subnets': {'type': 'array', 'items': {'type': 'string'}}}}
+            for configurable_attribute in config_schema_for_resource:
+                if kwargs.get(configurable_attribute) is None:
+                    resource_defaults=load_default_configs_for_resource_name(resource_name="Model")
+                    global_defaults=load_default_configs_for_resource_name(resource_name="GlobalDefaults")
+                    kwargs[configurable_attribute] = get_config_value(configurable_attribute, resource_defaults, global_defaults)
+            create_func(*args, **kwargs)
+        return wrapper
     
     @classmethod
+    @populate_inputs_decorator
     def create(
         cls,
-        model_name: str,
-        primary_container: Optional[ContainerDefinition] = Unassigned(),
-        containers: Optional[List[ContainerDefinition]] = Unassigned(),
-        inference_execution_config: Optional[InferenceExecutionConfig] = Unassigned(),
-        execution_role_arn: Optional[str] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
-        vpc_config: Optional[VpcConfig] = Unassigned(),
-        enable_network_isolation: Optional[bool] = Unassigned(),
+            model_name: str,
+        	primary_container: Optional[ContainerDefinition] = Unassigned(),
+        	containers: Optional[List[ContainerDefinition]] = Unassigned(),
+        	inference_execution_config: Optional[InferenceExecutionConfig] = Unassigned(),
+        	execution_role_arn: Optional[str] = Unassigned(),
+        	tags: Optional[List[Tag]] = Unassigned(),
+        	vpc_config: Optional[VpcConfig] = Unassigned(),
+        	enable_network_isolation: Optional[bool] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating model resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-    
+        
         operation_input_args = {
-            'ModelName': model_name,
+                    'ModelName': model_name,
             'PrimaryContainer': primary_container,
             'Containers': containers,
             'InferenceExecutionConfig': inference_execution_config,
@@ -3388,6 +3689,7 @@ class Model(Base):
             'VpcConfig': vpc_config,
             'EnableNetworkIsolation': enable_network_isolation,
         }
+            
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
@@ -3450,28 +3752,41 @@ class ModelBiasJobDefinition(Base):
     model_bias_baseline_config: Optional[ModelBiasBaselineConfig] = Unassigned()
     network_config: Optional[MonitoringNetworkConfig] = Unassigned()
     stopping_condition: Optional[MonitoringStoppingCondition] = Unassigned()
+
+    
+    def populate_inputs_decorator(create_func):
+        def wrapper(*args, **kwargs):
+            config_schema_for_resource = {'model_bias_job_input': {'ground_truth_s3_input': {'s3_uri': {'type': 'string'}}, 'endpoint_input': {'s3_input_mode': {'type': 'string'}, 's3_data_distribution_type': {'type': 'string'}}, 'batch_transform_input': {'data_captured_destination_s3_uri': {'type': 'string'}, 's3_input_mode': {'type': 'string'}, 's3_data_distribution_type': {'type': 'string'}}}, 'model_bias_job_output_config': {'kms_key_id': {'type': 'string'}}, 'job_resources': {'cluster_config': {'volume_kms_key_id': {'type': 'string'}}}, 'role_arn': {'type': 'string'}, 'model_bias_baseline_config': {'constraints_resource': {'s3_uri': {'type': 'string'}}}, 'network_config': {'vpc_config': {'security_group_ids': {'type': 'array', 'items': {'type': 'string'}}, 'subnets': {'type': 'array', 'items': {'type': 'string'}}}}}
+            for configurable_attribute in config_schema_for_resource:
+                if kwargs.get(configurable_attribute) is None:
+                    resource_defaults=load_default_configs_for_resource_name(resource_name="ModelBiasJobDefinition")
+                    global_defaults=load_default_configs_for_resource_name(resource_name="GlobalDefaults")
+                    kwargs[configurable_attribute] = get_config_value(configurable_attribute, resource_defaults, global_defaults)
+            create_func(*args, **kwargs)
+        return wrapper
     
     @classmethod
+    @populate_inputs_decorator
     def create(
         cls,
-        job_definition_name: str,
-        model_bias_app_specification: ModelBiasAppSpecification,
-        model_bias_job_input: ModelBiasJobInput,
-        model_bias_job_output_config: MonitoringOutputConfig,
-        job_resources: MonitoringResources,
-        role_arn: str,
-        model_bias_baseline_config: Optional[ModelBiasBaselineConfig] = Unassigned(),
-        network_config: Optional[MonitoringNetworkConfig] = Unassigned(),
-        stopping_condition: Optional[MonitoringStoppingCondition] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
+            job_definition_name: str,
+        	model_bias_app_specification: ModelBiasAppSpecification,
+        	model_bias_job_input: ModelBiasJobInput,
+        	model_bias_job_output_config: MonitoringOutputConfig,
+        	job_resources: MonitoringResources,
+        	role_arn: str,
+        	model_bias_baseline_config: Optional[ModelBiasBaselineConfig] = Unassigned(),
+        	network_config: Optional[MonitoringNetworkConfig] = Unassigned(),
+        	stopping_condition: Optional[MonitoringStoppingCondition] = Unassigned(),
+        	tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating model_bias_job_definition resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-    
+        
         operation_input_args = {
-            'JobDefinitionName': job_definition_name,
+                    'JobDefinitionName': job_definition_name,
             'ModelBiasBaselineConfig': model_bias_baseline_config,
             'ModelBiasAppSpecification': model_bias_app_specification,
             'ModelBiasJobInput': model_bias_job_input,
@@ -3482,6 +3797,7 @@ class ModelBiasJobDefinition(Base):
             'StoppingCondition': stopping_condition,
             'Tags': tags,
         }
+            
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
@@ -3544,28 +3860,42 @@ class ModelCard(Base):
     last_modified_time: Optional[datetime.datetime] = Unassigned()
     last_modified_by: Optional[UserContext] = Unassigned()
     model_card_processing_status: Optional[str] = Unassigned()
+
+    
+    def populate_inputs_decorator(create_func):
+        def wrapper(*args, **kwargs):
+            config_schema_for_resource = {'security_config': {'kms_key_id': {'type': 'string'}}}
+            for configurable_attribute in config_schema_for_resource:
+                if kwargs.get(configurable_attribute) is None:
+                    resource_defaults=load_default_configs_for_resource_name(resource_name="ModelCard")
+                    global_defaults=load_default_configs_for_resource_name(resource_name="GlobalDefaults")
+                    kwargs[configurable_attribute] = get_config_value(configurable_attribute, resource_defaults, global_defaults)
+            create_func(*args, **kwargs)
+        return wrapper
     
     @classmethod
+    @populate_inputs_decorator
     def create(
         cls,
-        model_card_name: str,
-        content: str,
-        model_card_status: str,
-        security_config: Optional[ModelCardSecurityConfig] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
+            model_card_name: str,
+        	content: str,
+        	model_card_status: str,
+        	security_config: Optional[ModelCardSecurityConfig] = Unassigned(),
+        	tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating model_card resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-    
+        
         operation_input_args = {
-            'ModelCardName': model_card_name,
+                    'ModelCardName': model_card_name,
             'SecurityConfig': security_config,
             'Content': content,
             'ModelCardStatus': model_card_status,
             'Tags': tags,
         }
+            
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
@@ -3652,26 +3982,40 @@ class ModelCardExportJob(Base):
     last_modified_at: datetime.datetime
     failure_reason: Optional[str] = Unassigned()
     export_artifacts: Optional[ModelCardExportArtifacts] = Unassigned()
+
+    
+    def populate_inputs_decorator(create_func):
+        def wrapper(*args, **kwargs):
+            config_schema_for_resource = {'output_config': {'s3_output_path': {'type': 'string'}}, 'export_artifacts': {'s3_export_artifacts': {'type': 'string'}}}
+            for configurable_attribute in config_schema_for_resource:
+                if kwargs.get(configurable_attribute) is None:
+                    resource_defaults=load_default_configs_for_resource_name(resource_name="ModelCardExportJob")
+                    global_defaults=load_default_configs_for_resource_name(resource_name="GlobalDefaults")
+                    kwargs[configurable_attribute] = get_config_value(configurable_attribute, resource_defaults, global_defaults)
+            create_func(*args, **kwargs)
+        return wrapper
     
     @classmethod
+    @populate_inputs_decorator
     def create(
         cls,
-        model_card_name: str,
-        model_card_export_job_name: str,
-        output_config: ModelCardExportOutputConfig,
-        model_card_version: Optional[int] = Unassigned(),
+            model_card_name: str,
+        	model_card_export_job_name: str,
+        	output_config: ModelCardExportOutputConfig,
+        	model_card_version: Optional[int] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating model_card_export_job resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-    
+        
         operation_input_args = {
-            'ModelCardName': model_card_name,
+                    'ModelCardName': model_card_name,
             'ModelCardVersion': model_card_version,
             'ModelCardExportJobName': model_card_export_job_name,
             'OutputConfig': output_config,
         }
+            
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
@@ -3749,28 +4093,41 @@ class ModelExplainabilityJobDefinition(Base):
     model_explainability_baseline_config: Optional[ModelExplainabilityBaselineConfig] = Unassigned()
     network_config: Optional[MonitoringNetworkConfig] = Unassigned()
     stopping_condition: Optional[MonitoringStoppingCondition] = Unassigned()
+
+    
+    def populate_inputs_decorator(create_func):
+        def wrapper(*args, **kwargs):
+            config_schema_for_resource = {'model_explainability_job_input': {'endpoint_input': {'s3_input_mode': {'type': 'string'}, 's3_data_distribution_type': {'type': 'string'}}, 'batch_transform_input': {'data_captured_destination_s3_uri': {'type': 'string'}, 's3_input_mode': {'type': 'string'}, 's3_data_distribution_type': {'type': 'string'}}}, 'model_explainability_job_output_config': {'kms_key_id': {'type': 'string'}}, 'job_resources': {'cluster_config': {'volume_kms_key_id': {'type': 'string'}}}, 'role_arn': {'type': 'string'}, 'model_explainability_baseline_config': {'constraints_resource': {'s3_uri': {'type': 'string'}}}, 'network_config': {'vpc_config': {'security_group_ids': {'type': 'array', 'items': {'type': 'string'}}, 'subnets': {'type': 'array', 'items': {'type': 'string'}}}}}
+            for configurable_attribute in config_schema_for_resource:
+                if kwargs.get(configurable_attribute) is None:
+                    resource_defaults=load_default_configs_for_resource_name(resource_name="ModelExplainabilityJobDefinition")
+                    global_defaults=load_default_configs_for_resource_name(resource_name="GlobalDefaults")
+                    kwargs[configurable_attribute] = get_config_value(configurable_attribute, resource_defaults, global_defaults)
+            create_func(*args, **kwargs)
+        return wrapper
     
     @classmethod
+    @populate_inputs_decorator
     def create(
         cls,
-        job_definition_name: str,
-        model_explainability_app_specification: ModelExplainabilityAppSpecification,
-        model_explainability_job_input: ModelExplainabilityJobInput,
-        model_explainability_job_output_config: MonitoringOutputConfig,
-        job_resources: MonitoringResources,
-        role_arn: str,
-        model_explainability_baseline_config: Optional[ModelExplainabilityBaselineConfig] = Unassigned(),
-        network_config: Optional[MonitoringNetworkConfig] = Unassigned(),
-        stopping_condition: Optional[MonitoringStoppingCondition] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
+            job_definition_name: str,
+        	model_explainability_app_specification: ModelExplainabilityAppSpecification,
+        	model_explainability_job_input: ModelExplainabilityJobInput,
+        	model_explainability_job_output_config: MonitoringOutputConfig,
+        	job_resources: MonitoringResources,
+        	role_arn: str,
+        	model_explainability_baseline_config: Optional[ModelExplainabilityBaselineConfig] = Unassigned(),
+        	network_config: Optional[MonitoringNetworkConfig] = Unassigned(),
+        	stopping_condition: Optional[MonitoringStoppingCondition] = Unassigned(),
+        	tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating model_explainability_job_definition resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-    
+        
         operation_input_args = {
-            'JobDefinitionName': job_definition_name,
+                    'JobDefinitionName': job_definition_name,
             'ModelExplainabilityBaselineConfig': model_explainability_baseline_config,
             'ModelExplainabilityAppSpecification': model_explainability_app_specification,
             'ModelExplainabilityJobInput': model_explainability_job_input,
@@ -3781,6 +4138,7 @@ class ModelExplainabilityJobDefinition(Base):
             'StoppingCondition': stopping_condition,
             'Tags': tags,
         }
+            
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
@@ -3859,38 +4217,51 @@ class ModelPackage(Base):
     additional_inference_specifications: Optional[List[AdditionalInferenceSpecificationDefinition]] = Unassigned()
     skip_model_validation: Optional[str] = Unassigned()
     source_uri: Optional[str] = Unassigned()
+
+    
+    def populate_inputs_decorator(create_func):
+        def wrapper(*args, **kwargs):
+            config_schema_for_resource = {'validation_specification': {'validation_role': {'type': 'string'}}, 'model_metrics': {'model_quality': {'statistics': {'s3_uri': {'type': 'string'}}, 'constraints': {'s3_uri': {'type': 'string'}}}, 'model_data_quality': {'statistics': {'s3_uri': {'type': 'string'}}, 'constraints': {'s3_uri': {'type': 'string'}}}, 'bias': {'report': {'s3_uri': {'type': 'string'}}, 'pre_training_report': {'s3_uri': {'type': 'string'}}, 'post_training_report': {'s3_uri': {'type': 'string'}}}, 'explainability': {'report': {'s3_uri': {'type': 'string'}}}}, 'drift_check_baselines': {'bias': {'config_file': {'s3_uri': {'type': 'string'}}, 'pre_training_constraints': {'s3_uri': {'type': 'string'}}, 'post_training_constraints': {'s3_uri': {'type': 'string'}}}, 'explainability': {'constraints': {'s3_uri': {'type': 'string'}}, 'config_file': {'s3_uri': {'type': 'string'}}}, 'model_quality': {'statistics': {'s3_uri': {'type': 'string'}}, 'constraints': {'s3_uri': {'type': 'string'}}}, 'model_data_quality': {'statistics': {'s3_uri': {'type': 'string'}}, 'constraints': {'s3_uri': {'type': 'string'}}}}}
+            for configurable_attribute in config_schema_for_resource:
+                if kwargs.get(configurable_attribute) is None:
+                    resource_defaults=load_default_configs_for_resource_name(resource_name="ModelPackage")
+                    global_defaults=load_default_configs_for_resource_name(resource_name="GlobalDefaults")
+                    kwargs[configurable_attribute] = get_config_value(configurable_attribute, resource_defaults, global_defaults)
+            create_func(*args, **kwargs)
+        return wrapper
     
     @classmethod
+    @populate_inputs_decorator
     def create(
         cls,
-        model_package_name: Optional[str] = Unassigned(),
-        model_package_group_name: Optional[str] = Unassigned(),
-        model_package_description: Optional[str] = Unassigned(),
-        inference_specification: Optional[InferenceSpecification] = Unassigned(),
-        validation_specification: Optional[ModelPackageValidationSpecification] = Unassigned(),
-        source_algorithm_specification: Optional[SourceAlgorithmSpecification] = Unassigned(),
-        certify_for_marketplace: Optional[bool] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
-        model_approval_status: Optional[str] = Unassigned(),
-        metadata_properties: Optional[MetadataProperties] = Unassigned(),
-        model_metrics: Optional[ModelMetrics] = Unassigned(),
-        client_token: Optional[str] = Unassigned(),
-        domain: Optional[str] = Unassigned(),
-        task: Optional[str] = Unassigned(),
-        sample_payload_url: Optional[str] = Unassigned(),
-        customer_metadata_properties: Optional[Dict[str, str]] = Unassigned(),
-        drift_check_baselines: Optional[DriftCheckBaselines] = Unassigned(),
-        additional_inference_specifications: Optional[List[AdditionalInferenceSpecificationDefinition]] = Unassigned(),
-        skip_model_validation: Optional[str] = Unassigned(),
-        source_uri: Optional[str] = Unassigned(),
+            model_package_name: Optional[str] = Unassigned(),
+        	model_package_group_name: Optional[str] = Unassigned(),
+        	model_package_description: Optional[str] = Unassigned(),
+        	inference_specification: Optional[InferenceSpecification] = Unassigned(),
+        	validation_specification: Optional[ModelPackageValidationSpecification] = Unassigned(),
+        	source_algorithm_specification: Optional[SourceAlgorithmSpecification] = Unassigned(),
+        	certify_for_marketplace: Optional[bool] = Unassigned(),
+        	tags: Optional[List[Tag]] = Unassigned(),
+        	model_approval_status: Optional[str] = Unassigned(),
+        	metadata_properties: Optional[MetadataProperties] = Unassigned(),
+        	model_metrics: Optional[ModelMetrics] = Unassigned(),
+        	client_token: Optional[str] = Unassigned(),
+        	domain: Optional[str] = Unassigned(),
+        	task: Optional[str] = Unassigned(),
+        	sample_payload_url: Optional[str] = Unassigned(),
+        	customer_metadata_properties: Optional[Dict[str, str]] = Unassigned(),
+        	drift_check_baselines: Optional[DriftCheckBaselines] = Unassigned(),
+        	additional_inference_specifications: Optional[List[AdditionalInferenceSpecificationDefinition]] = Unassigned(),
+        	skip_model_validation: Optional[str] = Unassigned(),
+        	source_uri: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating model_package resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-    
+        
         operation_input_args = {
-            'ModelPackageName': model_package_name,
+                    'ModelPackageName': model_package_name,
             'ModelPackageGroupName': model_package_group_name,
             'ModelPackageDescription': model_package_description,
             'InferenceSpecification': inference_specification,
@@ -3911,6 +4282,7 @@ class ModelPackage(Base):
             'SkipModelValidation': skip_model_validation,
             'SourceUri': source_uri,
         }
+            
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
@@ -3995,8 +4367,8 @@ class ModelPackageGroup(Base):
     def create(
         cls,
         model_package_group_name: str,
-        model_package_group_description: Optional[str] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
+        	model_package_group_description: Optional[str] = Unassigned(),
+        	tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
@@ -4092,28 +4464,41 @@ class ModelQualityJobDefinition(Base):
     model_quality_baseline_config: Optional[ModelQualityBaselineConfig] = Unassigned()
     network_config: Optional[MonitoringNetworkConfig] = Unassigned()
     stopping_condition: Optional[MonitoringStoppingCondition] = Unassigned()
+
+    
+    def populate_inputs_decorator(create_func):
+        def wrapper(*args, **kwargs):
+            config_schema_for_resource = {'model_quality_job_input': {'ground_truth_s3_input': {'s3_uri': {'type': 'string'}}, 'endpoint_input': {'s3_input_mode': {'type': 'string'}, 's3_data_distribution_type': {'type': 'string'}}, 'batch_transform_input': {'data_captured_destination_s3_uri': {'type': 'string'}, 's3_input_mode': {'type': 'string'}, 's3_data_distribution_type': {'type': 'string'}}}, 'model_quality_job_output_config': {'kms_key_id': {'type': 'string'}}, 'job_resources': {'cluster_config': {'volume_kms_key_id': {'type': 'string'}}}, 'role_arn': {'type': 'string'}, 'model_quality_baseline_config': {'constraints_resource': {'s3_uri': {'type': 'string'}}}, 'network_config': {'vpc_config': {'security_group_ids': {'type': 'array', 'items': {'type': 'string'}}, 'subnets': {'type': 'array', 'items': {'type': 'string'}}}}}
+            for configurable_attribute in config_schema_for_resource:
+                if kwargs.get(configurable_attribute) is None:
+                    resource_defaults=load_default_configs_for_resource_name(resource_name="ModelQualityJobDefinition")
+                    global_defaults=load_default_configs_for_resource_name(resource_name="GlobalDefaults")
+                    kwargs[configurable_attribute] = get_config_value(configurable_attribute, resource_defaults, global_defaults)
+            create_func(*args, **kwargs)
+        return wrapper
     
     @classmethod
+    @populate_inputs_decorator
     def create(
         cls,
-        job_definition_name: str,
-        model_quality_app_specification: ModelQualityAppSpecification,
-        model_quality_job_input: ModelQualityJobInput,
-        model_quality_job_output_config: MonitoringOutputConfig,
-        job_resources: MonitoringResources,
-        role_arn: str,
-        model_quality_baseline_config: Optional[ModelQualityBaselineConfig] = Unassigned(),
-        network_config: Optional[MonitoringNetworkConfig] = Unassigned(),
-        stopping_condition: Optional[MonitoringStoppingCondition] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
+            job_definition_name: str,
+        	model_quality_app_specification: ModelQualityAppSpecification,
+        	model_quality_job_input: ModelQualityJobInput,
+        	model_quality_job_output_config: MonitoringOutputConfig,
+        	job_resources: MonitoringResources,
+        	role_arn: str,
+        	model_quality_baseline_config: Optional[ModelQualityBaselineConfig] = Unassigned(),
+        	network_config: Optional[MonitoringNetworkConfig] = Unassigned(),
+        	stopping_condition: Optional[MonitoringStoppingCondition] = Unassigned(),
+        	tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating model_quality_job_definition resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-    
+        
         operation_input_args = {
-            'JobDefinitionName': job_definition_name,
+                    'JobDefinitionName': job_definition_name,
             'ModelQualityBaselineConfig': model_quality_baseline_config,
             'ModelQualityAppSpecification': model_quality_app_specification,
             'ModelQualityJobInput': model_quality_job_input,
@@ -4124,6 +4509,7 @@ class ModelQualityJobDefinition(Base):
             'StoppingCondition': stopping_condition,
             'Tags': tags,
         }
+            
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
@@ -4185,24 +4571,38 @@ class MonitoringSchedule(Base):
     failure_reason: Optional[str] = Unassigned()
     endpoint_name: Optional[str] = Unassigned()
     last_monitoring_execution_summary: Optional[MonitoringExecutionSummary] = Unassigned()
+
+    
+    def populate_inputs_decorator(create_func):
+        def wrapper(*args, **kwargs):
+            config_schema_for_resource = {'monitoring_schedule_config': {'monitoring_job_definition': {'monitoring_output_config': {'kms_key_id': {'type': 'string'}}, 'monitoring_resources': {'cluster_config': {'volume_kms_key_id': {'type': 'string'}}}, 'role_arn': {'type': 'string'}, 'baseline_config': {'constraints_resource': {'s3_uri': {'type': 'string'}}, 'statistics_resource': {'s3_uri': {'type': 'string'}}}, 'network_config': {'vpc_config': {'security_group_ids': {'type': 'array', 'items': {'type': 'string'}}, 'subnets': {'type': 'array', 'items': {'type': 'string'}}}}}}}
+            for configurable_attribute in config_schema_for_resource:
+                if kwargs.get(configurable_attribute) is None:
+                    resource_defaults=load_default_configs_for_resource_name(resource_name="MonitoringSchedule")
+                    global_defaults=load_default_configs_for_resource_name(resource_name="GlobalDefaults")
+                    kwargs[configurable_attribute] = get_config_value(configurable_attribute, resource_defaults, global_defaults)
+            create_func(*args, **kwargs)
+        return wrapper
     
     @classmethod
+    @populate_inputs_decorator
     def create(
         cls,
-        monitoring_schedule_name: str,
-        monitoring_schedule_config: MonitoringScheduleConfig,
-        tags: Optional[List[Tag]] = Unassigned(),
+            monitoring_schedule_name: str,
+        	monitoring_schedule_config: MonitoringScheduleConfig,
+        	tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating monitoring_schedule resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-    
+        
         operation_input_args = {
-            'MonitoringScheduleName': monitoring_schedule_name,
+                    'MonitoringScheduleName': monitoring_schedule_name,
             'MonitoringScheduleConfig': monitoring_schedule_config,
             'Tags': tags,
         }
+            
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
@@ -4305,34 +4705,47 @@ class NotebookInstance(Base):
     root_access: Optional[str] = Unassigned()
     platform_identifier: Optional[str] = Unassigned()
     instance_metadata_service_configuration: Optional[InstanceMetadataServiceConfiguration] = Unassigned()
+
+    
+    def populate_inputs_decorator(create_func):
+        def wrapper(*args, **kwargs):
+            config_schema_for_resource = {'subnet_id': {'type': 'string'}, 'security_groups': {'type': 'array', 'items': {'type': 'string'}}, 'role_arn': {'type': 'string'}, 'kms_key_id': {'type': 'string'}}
+            for configurable_attribute in config_schema_for_resource:
+                if kwargs.get(configurable_attribute) is None:
+                    resource_defaults=load_default_configs_for_resource_name(resource_name="NotebookInstance")
+                    global_defaults=load_default_configs_for_resource_name(resource_name="GlobalDefaults")
+                    kwargs[configurable_attribute] = get_config_value(configurable_attribute, resource_defaults, global_defaults)
+            create_func(*args, **kwargs)
+        return wrapper
     
     @classmethod
+    @populate_inputs_decorator
     def create(
         cls,
-        notebook_instance_name: str,
-        instance_type: str,
-        role_arn: str,
-        subnet_id: Optional[str] = Unassigned(),
-        security_group_ids: Optional[List[str]] = Unassigned(),
-        kms_key_id: Optional[str] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
-        lifecycle_config_name: Optional[str] = Unassigned(),
-        direct_internet_access: Optional[str] = Unassigned(),
-        volume_size_in_g_b: Optional[int] = Unassigned(),
-        accelerator_types: Optional[List[str]] = Unassigned(),
-        default_code_repository: Optional[str] = Unassigned(),
-        additional_code_repositories: Optional[List[str]] = Unassigned(),
-        root_access: Optional[str] = Unassigned(),
-        platform_identifier: Optional[str] = Unassigned(),
-        instance_metadata_service_configuration: Optional[InstanceMetadataServiceConfiguration] = Unassigned(),
+            notebook_instance_name: str,
+        	instance_type: str,
+        	role_arn: str,
+        	subnet_id: Optional[str] = Unassigned(),
+        	security_group_ids: Optional[List[str]] = Unassigned(),
+        	kms_key_id: Optional[str] = Unassigned(),
+        	tags: Optional[List[Tag]] = Unassigned(),
+        	lifecycle_config_name: Optional[str] = Unassigned(),
+        	direct_internet_access: Optional[str] = Unassigned(),
+        	volume_size_in_g_b: Optional[int] = Unassigned(),
+        	accelerator_types: Optional[List[str]] = Unassigned(),
+        	default_code_repository: Optional[str] = Unassigned(),
+        	additional_code_repositories: Optional[List[str]] = Unassigned(),
+        	root_access: Optional[str] = Unassigned(),
+        	platform_identifier: Optional[str] = Unassigned(),
+        	instance_metadata_service_configuration: Optional[InstanceMetadataServiceConfiguration] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating notebook_instance resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-    
+        
         operation_input_args = {
-            'NotebookInstanceName': notebook_instance_name,
+                    'NotebookInstanceName': notebook_instance_name,
             'InstanceType': instance_type,
             'SubnetId': subnet_id,
             'SecurityGroupIds': security_group_ids,
@@ -4349,6 +4762,7 @@ class NotebookInstance(Base):
             'PlatformIdentifier': platform_identifier,
             'InstanceMetadataServiceConfiguration': instance_metadata_service_configuration,
         }
+            
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
@@ -4440,8 +4854,8 @@ class NotebookInstanceLifecycleConfig(Base):
     def create(
         cls,
         notebook_instance_lifecycle_config_name: str,
-        on_create: Optional[List[NotebookInstanceLifecycleHook]] = Unassigned(),
-        on_start: Optional[List[NotebookInstanceLifecycleHook]] = Unassigned(),
+        	on_create: Optional[List[NotebookInstanceLifecycleHook]] = Unassigned(),
+        	on_start: Optional[List[NotebookInstanceLifecycleHook]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
@@ -4517,27 +4931,40 @@ class Pipeline(Base):
     created_by: Optional[UserContext] = Unassigned()
     last_modified_by: Optional[UserContext] = Unassigned()
     parallelism_configuration: Optional[ParallelismConfiguration] = Unassigned()
+
+    
+    def populate_inputs_decorator(create_func):
+        def wrapper(*args, **kwargs):
+            config_schema_for_resource = {'role_arn': {'type': 'string'}}
+            for configurable_attribute in config_schema_for_resource:
+                if kwargs.get(configurable_attribute) is None:
+                    resource_defaults=load_default_configs_for_resource_name(resource_name="Pipeline")
+                    global_defaults=load_default_configs_for_resource_name(resource_name="GlobalDefaults")
+                    kwargs[configurable_attribute] = get_config_value(configurable_attribute, resource_defaults, global_defaults)
+            create_func(*args, **kwargs)
+        return wrapper
     
     @classmethod
+    @populate_inputs_decorator
     def create(
         cls,
-        pipeline_name: str,
-        client_request_token: str,
-        role_arn: str,
-        pipeline_display_name: Optional[str] = Unassigned(),
-        pipeline_definition: Optional[str] = Unassigned(),
-        pipeline_definition_s3_location: Optional[PipelineDefinitionS3Location] = Unassigned(),
-        pipeline_description: Optional[str] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
-        parallelism_configuration: Optional[ParallelismConfiguration] = Unassigned(),
+            pipeline_name: str,
+        	client_request_token: str,
+        	role_arn: str,
+        	pipeline_display_name: Optional[str] = Unassigned(),
+        	pipeline_definition: Optional[str] = Unassigned(),
+        	pipeline_definition_s3_location: Optional[PipelineDefinitionS3Location] = Unassigned(),
+        	pipeline_description: Optional[str] = Unassigned(),
+        	tags: Optional[List[Tag]] = Unassigned(),
+        	parallelism_configuration: Optional[ParallelismConfiguration] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating pipeline resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-    
+        
         operation_input_args = {
-            'PipelineName': pipeline_name,
+                    'PipelineName': pipeline_name,
             'PipelineDisplayName': pipeline_display_name,
             'PipelineDefinition': pipeline_definition,
             'PipelineDefinitionS3Location': pipeline_definition_s3_location,
@@ -4547,6 +4974,7 @@ class Pipeline(Base):
             'Tags': tags,
             'ParallelismConfiguration': parallelism_configuration,
         }
+            
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
@@ -4719,29 +5147,42 @@ class ProcessingJob(Base):
     monitoring_schedule_arn: Optional[str] = Unassigned()
     auto_m_l_job_arn: Optional[str] = Unassigned()
     training_job_arn: Optional[str] = Unassigned()
+
+    
+    def populate_inputs_decorator(create_func):
+        def wrapper(*args, **kwargs):
+            config_schema_for_resource = {'processing_resources': {'cluster_config': {'volume_kms_key_id': {'type': 'string'}}}, 'processing_output_config': {'kms_key_id': {'type': 'string'}}, 'network_config': {'vpc_config': {'security_group_ids': {'type': 'array', 'items': {'type': 'string'}}, 'subnets': {'type': 'array', 'items': {'type': 'string'}}}}, 'role_arn': {'type': 'string'}}
+            for configurable_attribute in config_schema_for_resource:
+                if kwargs.get(configurable_attribute) is None:
+                    resource_defaults=load_default_configs_for_resource_name(resource_name="ProcessingJob")
+                    global_defaults=load_default_configs_for_resource_name(resource_name="GlobalDefaults")
+                    kwargs[configurable_attribute] = get_config_value(configurable_attribute, resource_defaults, global_defaults)
+            create_func(*args, **kwargs)
+        return wrapper
     
     @classmethod
+    @populate_inputs_decorator
     def create(
         cls,
-        processing_job_name: str,
-        processing_resources: ProcessingResources,
-        app_specification: AppSpecification,
-        role_arn: str,
-        processing_inputs: Optional[List[ProcessingInput]] = Unassigned(),
-        processing_output_config: Optional[ProcessingOutputConfig] = Unassigned(),
-        stopping_condition: Optional[ProcessingStoppingCondition] = Unassigned(),
-        environment: Optional[Dict[str, str]] = Unassigned(),
-        network_config: Optional[NetworkConfig] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
-        experiment_config: Optional[ExperimentConfig] = Unassigned(),
+            processing_job_name: str,
+        	processing_resources: ProcessingResources,
+        	app_specification: AppSpecification,
+        	role_arn: str,
+        	processing_inputs: Optional[List[ProcessingInput]] = Unassigned(),
+        	processing_output_config: Optional[ProcessingOutputConfig] = Unassigned(),
+        	stopping_condition: Optional[ProcessingStoppingCondition] = Unassigned(),
+        	environment: Optional[Dict[str, str]] = Unassigned(),
+        	network_config: Optional[NetworkConfig] = Unassigned(),
+        	tags: Optional[List[Tag]] = Unassigned(),
+        	experiment_config: Optional[ExperimentConfig] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating processing_job resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-    
+        
         operation_input_args = {
-            'ProcessingInputs': processing_inputs,
+                    'ProcessingInputs': processing_inputs,
             'ProcessingOutputConfig': processing_output_config,
             'ProcessingJobName': processing_job_name,
             'ProcessingResources': processing_resources,
@@ -4753,6 +5194,7 @@ class ProcessingJob(Base):
             'Tags': tags,
             'ExperimentConfig': experiment_config,
         }
+            
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
@@ -4842,9 +5284,9 @@ class Project(Base):
     def create(
         cls,
         project_name: str,
-        service_catalog_provisioning_details: ServiceCatalogProvisioningDetails,
-        project_description: Optional[str] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
+        	service_catalog_provisioning_details: ServiceCatalogProvisioningDetails,
+        	project_description: Optional[str] = Unassigned(),
+        	tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
@@ -4948,12 +5390,12 @@ class Space(Base):
     def create(
         cls,
         domain_id: str,
-        space_name: str,
-        tags: Optional[List[Tag]] = Unassigned(),
-        space_settings: Optional[SpaceSettings] = Unassigned(),
-        ownership_settings: Optional[OwnershipSettings] = Unassigned(),
-        space_sharing_settings: Optional[SpaceSharingSettings] = Unassigned(),
-        space_display_name: Optional[str] = Unassigned(),
+        	space_name: str,
+        	tags: Optional[List[Tag]] = Unassigned(),
+        	space_settings: Optional[SpaceSettings] = Unassigned(),
+        	ownership_settings: Optional[OwnershipSettings] = Unassigned(),
+        	space_sharing_settings: Optional[SpaceSharingSettings] = Unassigned(),
+        	space_display_name: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
@@ -5057,9 +5499,9 @@ class StudioLifecycleConfig(Base):
     def create(
         cls,
         studio_lifecycle_config_name: str,
-        studio_lifecycle_config_content: str,
-        studio_lifecycle_config_app_type: str,
-        tags: Optional[List[Tag]] = Unassigned(),
+        	studio_lifecycle_config_content: str,
+        	studio_lifecycle_config_app_type: str,
+        	tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
@@ -5166,42 +5608,55 @@ class TrainingJob(Base):
     retry_strategy: Optional[RetryStrategy] = Unassigned()
     remote_debug_config: Optional[RemoteDebugConfig] = Unassigned()
     infra_check_config: Optional[InfraCheckConfig] = Unassigned()
+
+    
+    def populate_inputs_decorator(create_func):
+        def wrapper(*args, **kwargs):
+            config_schema_for_resource = {'model_artifacts': {'s3_model_artifacts': {'type': 'string'}}, 'resource_config': {'volume_kms_key_id': {'type': 'string'}}, 'role_arn': {'type': 'string'}, 'output_data_config': {'s3_output_path': {'type': 'string'}, 'kms_key_id': {'type': 'string'}}, 'vpc_config': {'security_group_ids': {'type': 'array', 'items': {'type': 'string'}}, 'subnets': {'type': 'array', 'items': {'type': 'string'}}}, 'checkpoint_config': {'s3_uri': {'type': 'string'}}, 'debug_hook_config': {'s3_output_path': {'type': 'string'}}, 'tensor_board_output_config': {'s3_output_path': {'type': 'string'}}, 'profiler_config': {'s3_output_path': {'type': 'string'}}}
+            for configurable_attribute in config_schema_for_resource:
+                if kwargs.get(configurable_attribute) is None:
+                    resource_defaults=load_default_configs_for_resource_name(resource_name="TrainingJob")
+                    global_defaults=load_default_configs_for_resource_name(resource_name="GlobalDefaults")
+                    kwargs[configurable_attribute] = get_config_value(configurable_attribute, resource_defaults, global_defaults)
+            create_func(*args, **kwargs)
+        return wrapper
     
     @classmethod
+    @populate_inputs_decorator
     def create(
         cls,
-        training_job_name: str,
-        algorithm_specification: AlgorithmSpecification,
-        role_arn: str,
-        output_data_config: OutputDataConfig,
-        resource_config: ResourceConfig,
-        stopping_condition: StoppingCondition,
-        hyper_parameters: Optional[Dict[str, str]] = Unassigned(),
-        input_data_config: Optional[List[Channel]] = Unassigned(),
-        vpc_config: Optional[VpcConfig] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
-        enable_network_isolation: Optional[bool] = Unassigned(),
-        enable_inter_container_traffic_encryption: Optional[bool] = Unassigned(),
-        enable_managed_spot_training: Optional[bool] = Unassigned(),
-        checkpoint_config: Optional[CheckpointConfig] = Unassigned(),
-        debug_hook_config: Optional[DebugHookConfig] = Unassigned(),
-        debug_rule_configurations: Optional[List[DebugRuleConfiguration]] = Unassigned(),
-        tensor_board_output_config: Optional[TensorBoardOutputConfig] = Unassigned(),
-        experiment_config: Optional[ExperimentConfig] = Unassigned(),
-        profiler_config: Optional[ProfilerConfig] = Unassigned(),
-        profiler_rule_configurations: Optional[List[ProfilerRuleConfiguration]] = Unassigned(),
-        environment: Optional[Dict[str, str]] = Unassigned(),
-        retry_strategy: Optional[RetryStrategy] = Unassigned(),
-        remote_debug_config: Optional[RemoteDebugConfig] = Unassigned(),
-        infra_check_config: Optional[InfraCheckConfig] = Unassigned(),
+            training_job_name: str,
+        	algorithm_specification: AlgorithmSpecification,
+        	role_arn: str,
+        	output_data_config: OutputDataConfig,
+        	resource_config: ResourceConfig,
+        	stopping_condition: StoppingCondition,
+        	hyper_parameters: Optional[Dict[str, str]] = Unassigned(),
+        	input_data_config: Optional[List[Channel]] = Unassigned(),
+        	vpc_config: Optional[VpcConfig] = Unassigned(),
+        	tags: Optional[List[Tag]] = Unassigned(),
+        	enable_network_isolation: Optional[bool] = Unassigned(),
+        	enable_inter_container_traffic_encryption: Optional[bool] = Unassigned(),
+        	enable_managed_spot_training: Optional[bool] = Unassigned(),
+        	checkpoint_config: Optional[CheckpointConfig] = Unassigned(),
+        	debug_hook_config: Optional[DebugHookConfig] = Unassigned(),
+        	debug_rule_configurations: Optional[List[DebugRuleConfiguration]] = Unassigned(),
+        	tensor_board_output_config: Optional[TensorBoardOutputConfig] = Unassigned(),
+        	experiment_config: Optional[ExperimentConfig] = Unassigned(),
+        	profiler_config: Optional[ProfilerConfig] = Unassigned(),
+        	profiler_rule_configurations: Optional[List[ProfilerRuleConfiguration]] = Unassigned(),
+        	environment: Optional[Dict[str, str]] = Unassigned(),
+        	retry_strategy: Optional[RetryStrategy] = Unassigned(),
+        	remote_debug_config: Optional[RemoteDebugConfig] = Unassigned(),
+        	infra_check_config: Optional[InfraCheckConfig] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating training_job resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-    
+        
         operation_input_args = {
-            'TrainingJobName': training_job_name,
+                    'TrainingJobName': training_job_name,
             'HyperParameters': hyper_parameters,
             'AlgorithmSpecification': algorithm_specification,
             'RoleArn': role_arn,
@@ -5226,6 +5681,7 @@ class TrainingJob(Base):
             'RemoteDebugConfig': remote_debug_config,
             'InfraCheckConfig': infra_check_config,
         }
+            
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
@@ -5320,32 +5776,45 @@ class TransformJob(Base):
     auto_m_l_job_arn: Optional[str] = Unassigned()
     data_processing: Optional[DataProcessing] = Unassigned()
     experiment_config: Optional[ExperimentConfig] = Unassigned()
+
+    
+    def populate_inputs_decorator(create_func):
+        def wrapper(*args, **kwargs):
+            config_schema_for_resource = {'transform_input': {'data_source': {'s3_data_source': {'s3_data_type': {'type': 'string'}, 's3_uri': {'type': 'string'}}}}, 'transform_resources': {'volume_kms_key_id': {'type': 'string'}}, 'transform_output': {'s3_output_path': {'type': 'string'}, 'kms_key_id': {'type': 'string'}}, 'data_capture_config': {'destination_s3_uri': {'type': 'string'}, 'kms_key_id': {'type': 'string'}}}
+            for configurable_attribute in config_schema_for_resource:
+                if kwargs.get(configurable_attribute) is None:
+                    resource_defaults=load_default_configs_for_resource_name(resource_name="TransformJob")
+                    global_defaults=load_default_configs_for_resource_name(resource_name="GlobalDefaults")
+                    kwargs[configurable_attribute] = get_config_value(configurable_attribute, resource_defaults, global_defaults)
+            create_func(*args, **kwargs)
+        return wrapper
     
     @classmethod
+    @populate_inputs_decorator
     def create(
         cls,
-        transform_job_name: str,
-        model_name: str,
-        transform_input: TransformInput,
-        transform_output: TransformOutput,
-        transform_resources: TransformResources,
-        max_concurrent_transforms: Optional[int] = Unassigned(),
-        model_client_config: Optional[ModelClientConfig] = Unassigned(),
-        max_payload_in_m_b: Optional[int] = Unassigned(),
-        batch_strategy: Optional[str] = Unassigned(),
-        environment: Optional[Dict[str, str]] = Unassigned(),
-        data_capture_config: Optional[BatchDataCaptureConfig] = Unassigned(),
-        data_processing: Optional[DataProcessing] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
-        experiment_config: Optional[ExperimentConfig] = Unassigned(),
+            transform_job_name: str,
+        	model_name: str,
+        	transform_input: TransformInput,
+        	transform_output: TransformOutput,
+        	transform_resources: TransformResources,
+        	max_concurrent_transforms: Optional[int] = Unassigned(),
+        	model_client_config: Optional[ModelClientConfig] = Unassigned(),
+        	max_payload_in_m_b: Optional[int] = Unassigned(),
+        	batch_strategy: Optional[str] = Unassigned(),
+        	environment: Optional[Dict[str, str]] = Unassigned(),
+        	data_capture_config: Optional[BatchDataCaptureConfig] = Unassigned(),
+        	data_processing: Optional[DataProcessing] = Unassigned(),
+        	tags: Optional[List[Tag]] = Unassigned(),
+        	experiment_config: Optional[ExperimentConfig] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating transform_job resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-    
+        
         operation_input_args = {
-            'TransformJobName': transform_job_name,
+                    'TransformJobName': transform_job_name,
             'ModelName': model_name,
             'MaxConcurrentTransforms': max_concurrent_transforms,
             'ModelClientConfig': model_client_config,
@@ -5360,6 +5829,7 @@ class TransformJob(Base):
             'Tags': tags,
             'ExperimentConfig': experiment_config,
         }
+            
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
@@ -5448,10 +5918,10 @@ class Trial(Base):
     def create(
         cls,
         trial_name: str,
-        experiment_name: str,
-        display_name: Optional[str] = Unassigned(),
-        metadata_properties: Optional[MetadataProperties] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
+        	experiment_name: str,
+        	display_name: Optional[str] = Unassigned(),
+        	metadata_properties: Optional[MetadataProperties] = Unassigned(),
+        	tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
@@ -5539,15 +6009,15 @@ class TrialComponent(Base):
     def create(
         cls,
         trial_component_name: str,
-        display_name: Optional[str] = Unassigned(),
-        status: Optional[TrialComponentStatus] = Unassigned(),
-        start_time: Optional[datetime.datetime] = Unassigned(),
-        end_time: Optional[datetime.datetime] = Unassigned(),
-        parameters: Optional[Dict[str, TrialComponentParameterValue]] = Unassigned(),
-        input_artifacts: Optional[Dict[str, TrialComponentArtifact]] = Unassigned(),
-        output_artifacts: Optional[Dict[str, TrialComponentArtifact]] = Unassigned(),
-        metadata_properties: Optional[MetadataProperties] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
+        	display_name: Optional[str] = Unassigned(),
+        	status: Optional[TrialComponentStatus] = Unassigned(),
+        	start_time: Optional[datetime.datetime] = Unassigned(),
+        	end_time: Optional[datetime.datetime] = Unassigned(),
+        	parameters: Optional[Dict[str, TrialComponentParameterValue]] = Unassigned(),
+        	input_artifacts: Optional[Dict[str, TrialComponentArtifact]] = Unassigned(),
+        	output_artifacts: Optional[Dict[str, TrialComponentArtifact]] = Unassigned(),
+        	metadata_properties: Optional[MetadataProperties] = Unassigned(),
+        	tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
@@ -5650,30 +6120,44 @@ class UserProfile(Base):
     single_sign_on_user_identifier: Optional[str] = Unassigned()
     single_sign_on_user_value: Optional[str] = Unassigned()
     user_settings: Optional[UserSettings] = Unassigned()
+
+    
+    def populate_inputs_decorator(create_func):
+        def wrapper(*args, **kwargs):
+            config_schema_for_resource = {'user_settings': {'execution_role': {'type': 'string'}, 'security_groups': {'type': 'array', 'items': {'type': 'string'}}, 'sharing_settings': {'s3_output_path': {'type': 'string'}, 's3_kms_key_id': {'type': 'string'}}, 'canvas_app_settings': {'time_series_forecasting_settings': {'amazon_forecast_role_arn': {'type': 'string'}}, 'model_register_settings': {'cross_account_model_register_role_arn': {'type': 'string'}}, 'workspace_settings': {'s3_artifact_path': {'type': 'string'}, 's3_kms_key_id': {'type': 'string'}}, 'generative_ai_settings': {'amazon_bedrock_role_arn': {'type': 'string'}}}}}
+            for configurable_attribute in config_schema_for_resource:
+                if kwargs.get(configurable_attribute) is None:
+                    resource_defaults=load_default_configs_for_resource_name(resource_name="UserProfile")
+                    global_defaults=load_default_configs_for_resource_name(resource_name="GlobalDefaults")
+                    kwargs[configurable_attribute] = get_config_value(configurable_attribute, resource_defaults, global_defaults)
+            create_func(*args, **kwargs)
+        return wrapper
     
     @classmethod
+    @populate_inputs_decorator
     def create(
         cls,
-        domain_id: str,
-        user_profile_name: str,
-        single_sign_on_user_identifier: Optional[str] = Unassigned(),
-        single_sign_on_user_value: Optional[str] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
-        user_settings: Optional[UserSettings] = Unassigned(),
+            domain_id: str,
+        	user_profile_name: str,
+        	single_sign_on_user_identifier: Optional[str] = Unassigned(),
+        	single_sign_on_user_value: Optional[str] = Unassigned(),
+        	tags: Optional[List[Tag]] = Unassigned(),
+        	user_settings: Optional[UserSettings] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating user_profile resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-    
+        
         operation_input_args = {
-            'DomainId': domain_id,
+                    'DomainId': domain_id,
             'UserProfileName': user_profile_name,
             'SingleSignOnUserIdentifier': single_sign_on_user_identifier,
             'SingleSignOnUserValue': single_sign_on_user_value,
             'Tags': tags,
             'UserSettings': user_settings,
         }
+            
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
@@ -5752,30 +6236,44 @@ class UserProfile(Base):
 
 class Workforce(Base):
     workforce: Workforce
+
+    
+    def populate_inputs_decorator(create_func):
+        def wrapper(*args, **kwargs):
+            config_schema_for_resource = {'workforce': {'workforce_vpc_config': {'security_group_ids': {'type': 'array', 'items': {'type': 'string'}}, 'subnets': {'type': 'array', 'items': {'type': 'string'}}}}}
+            for configurable_attribute in config_schema_for_resource:
+                if kwargs.get(configurable_attribute) is None:
+                    resource_defaults=load_default_configs_for_resource_name(resource_name="Workforce")
+                    global_defaults=load_default_configs_for_resource_name(resource_name="GlobalDefaults")
+                    kwargs[configurable_attribute] = get_config_value(configurable_attribute, resource_defaults, global_defaults)
+            create_func(*args, **kwargs)
+        return wrapper
     
     @classmethod
+    @populate_inputs_decorator
     def create(
         cls,
-        workforce_name: str,
-        cognito_config: Optional[CognitoConfig] = Unassigned(),
-        oidc_config: Optional[OidcConfig] = Unassigned(),
-        source_ip_config: Optional[SourceIpConfig] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
-        workforce_vpc_config: Optional[WorkforceVpcConfigRequest] = Unassigned(),
+            workforce_name: str,
+        	cognito_config: Optional[CognitoConfig] = Unassigned(),
+        	oidc_config: Optional[OidcConfig] = Unassigned(),
+        	source_ip_config: Optional[SourceIpConfig] = Unassigned(),
+        	tags: Optional[List[Tag]] = Unassigned(),
+        	workforce_vpc_config: Optional[WorkforceVpcConfigRequest] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
         logger.debug(f"Creating workforce resource.")
         client = SageMakerClient(session=session, region_name=region, service_name='sagemaker')
-    
+        
         operation_input_args = {
-            'CognitoConfig': cognito_config,
+                    'CognitoConfig': cognito_config,
             'OidcConfig': oidc_config,
             'SourceIpConfig': source_ip_config,
             'WorkforceName': workforce_name,
             'Tags': tags,
             'WorkforceVpcConfig': workforce_vpc_config,
         }
+            
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
@@ -5855,11 +6353,11 @@ class Workteam(Base):
     def create(
         cls,
         workteam_name: str,
-        member_definitions: List[MemberDefinition],
-        description: str,
-        workforce_name: Optional[str] = Unassigned(),
-        notification_configuration: Optional[NotificationConfiguration] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
+        	member_definitions: List[MemberDefinition],
+        	description: str,
+        	workforce_name: Optional[str] = Unassigned(),
+        	notification_configuration: Optional[NotificationConfiguration] = Unassigned(),
+        	tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:

@@ -129,7 +129,7 @@ class ShapesCodeGen:
         :return: The generated data class as a string.
         """
         class_name = shape
-        init_data = self.shapes_extractor.generate_data_shape_members(shape)
+        init_data = self.shapes_extractor.generate_data_shape_members(shape)[1]
         try:
             data_class_members = add_indent(init_data, 4)
         except Exception:

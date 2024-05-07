@@ -13,6 +13,7 @@
 """Extracts the shapes to DAG structure."""
 import textwrap
 import pprint
+from functools import lru_cache
 
 from src.tools.constants import BASIC_JSON_TYPES_TO_PYTHON_TYPES, SHAPE_DAG_FILE_PATH
 from src.util.util import reformat_file_with_black, convert_to_snake_case
@@ -157,8 +158,9 @@ class ShapesExtractor:
                 init_data_body += f"# {attr}: {value}\n"
             else:
                 init_data_body += f"{attr}: {value}\n"
-        return init_data_body
+        return shape_members, init_data_body
 
+    @lru_cache
     def generate_shape_members(self, shape):
         shape_dict = self.service_json['shapes'][shape]
         members = shape_dict["members"]
