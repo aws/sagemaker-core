@@ -140,7 +140,6 @@ class ResourcesCodeGen:
             "from pprint import pprint",
             "from pydantic import BaseModel, validate_call",
             "from typing import List, Dict, Optional, Literal",
-            "import pprint",
             "import json",
             "import jsonschema",
             "from functools import lru_cache",
