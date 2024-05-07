@@ -43,6 +43,8 @@ from src.tools.templates import (CREATE_METHOD_TEMPLATE, \
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
 
+CONFIGURABLE_ATTRIBUTE_SUBSTRINGS = ['kms', 's3', 'subnet', 'tags', 'role', 'security_group']
+
 TYPE = "type"
 OBJECT = "object"
 PROPERTIES = "properties"
@@ -138,11 +140,12 @@ class ResourcesCodeGen:
             "from pprint import pprint",
             "from pydantic import BaseModel, validate_call",
             "from typing import List, Dict, Optional, Literal",
+            "import pprint",
             "import json",
             "import jsonschema",
             "from functools import lru_cache",
             "from boto3.session import Session",
-            "from .utils import SageMakerClient, Unassigned, snake_to_pascal, pascal_to_snake",
+            "from .utils import SageMakerClient, Unassigned",
             "from src.code_injection.codec import transform",
             "from .shapes import *",
             "from .config_schema import SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA"
@@ -426,6 +429,7 @@ class ResourcesCodeGen:
         return get_args
 
     def generate_create_method(self, resource_name: str, **kwargs) -> str:
+    def generate_create_method(self, resource_name, **kwargs) -> str:
         """
         Auto-generate the CREATE method for a resource.
 

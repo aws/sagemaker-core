@@ -3,12 +3,12 @@
     "PythonSDK": {
       "Resources": {
         "GlobalDefaults": {
-          "vpc_config": {
+          "VpcConfig": {
             "security_group_ids": [
               "group-1",
               "group-2"
             ],
-            "subnets": [
+            "subnet_ids": [
               "subnet-1",
               "subnet-2"
             ]
@@ -19,7 +19,7 @@
             "security_group_ids": [
               "group-4"
             ],
-            "subnets": [
+            "subnet_ids": [
               "subnet-4"
             ]
           }
