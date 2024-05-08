@@ -43,7 +43,6 @@ from src.tools.templates import (CREATE_METHOD_TEMPLATE, \
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
 
-
 TYPE = "type"
 OBJECT = "object"
 PROPERTIES = "properties"

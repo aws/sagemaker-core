@@ -125,7 +125,7 @@ def populate_inputs_decorator(create_func):
     return wrapper
 '''
 
-CREATE_METHOD_TEMPLATE_WITHOUT_DECORATOR = '''
+CREATE_METHOD_TEMPLATE_WITHOUT_DEFAULTS = '''
 @classmethod
 def create(
     cls,
@@ -163,7 +163,8 @@ def get_config_value(attribute, resource_defaults, global_defaults):
 POPULATE_DEFAULTS_DECORATOR_TEMPLATE = '''
 def populate_inputs_decorator(create_func):
     def wrapper(*args, **kwargs):
-        config_schema_for_resource = {config_schema_for_resource}
+        config_schema_for_resource = \\
+{config_schema_for_resource}
         create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, **kwargs))
     return wrapper
 '''
