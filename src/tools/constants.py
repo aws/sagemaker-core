@@ -18,6 +18,8 @@ OBJECT_METHODS = set(['refresh', 'delete', 'update', 'stop', 'deregister', 'wait
 
 TERMINAL_STATES = set(["Completed", "Stopped", "Deleted", "Failed", "Succeeded", "Cancelled"])
 
+CONFIGURABLE_ATTRIBUTE_SUBSTRINGS = ['kms', 's3', 'subnet', 'tags', 'role', 'security_group']
+
 BASIC_JSON_TYPES_TO_PYTHON_TYPES = {
     "string": "str",
     "integer": "int",
@@ -31,6 +33,13 @@ BASIC_JSON_TYPES_TO_PYTHON_TYPES = {
 }
 
 SHAPE_DAG_FILE_PATH = os.getcwd() + '/src/code_injection/shape_dag.py'
+PYTHON_TYPES_TO_BASIC_JSON_TYPES = {
+    "str": "string",
+    "int": "integer",
+    "bool": "boolean",
+    "float": "double",
+    "datetime.datetime": "timestamp",
+}
 
 LICENCES_STRING = '''
 # Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
@@ -58,12 +67,18 @@ logger = logging.getLogger(__name__)
 '''
 
 # TODO: The file name should be injected, we should update it to be more generic
-SERVICE_JSON_FILE_PATH = os.getcwd() + '/sample/sagemaker/2017-07-24/service-2.json'
+SERVICE_JSON_FILE_PATH = '/Users/nargokul/workspace/sagemaker-code-gen/sample/sagemaker/2017-07-24/service-2.json'
 
-GENERATED_CLASSES_LOCATION = os.getcwd() + '/src/generated'
+GENERATED_CLASSES_LOCATION = '/Users/nargokul/workspace/sagemaker-code-gen/src/generated'
 
 UTILS_CODEGEN_FILE_NAME = 'utils.py'
 
 RESOURCES_CODEGEN_FILE_NAME = 'resources.py'
 
 SHAPES_CODEGEN_FILE_NAME = 'shapes.py'
+
+CONFIG_SCHEMA_FILE_NAME = 'config_schema.py'
+
+SHAPE_DAG_FILE_PATH = '/Users/nargokul/workspace/sagemaker-code-gen/src/code_injection/shape_dag.py'
+SERVICE_JSON_FILE_PATH = '/Users/nargokul/workspace/sagemaker-code-gen/sample/sagemaker/2017-07-24/service-2.json'
+GENERATED_CLASSES_LOCATION = '/Users/nargokul/workspace/sagemaker-code-gen/src/generated'

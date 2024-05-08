@@ -20,6 +20,36 @@ from boto3.session import Session
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
+def snake_to_pascal(snake_str):
+    """
+    Convert a snake_case string to PascalCase.
+
+    Args:
+        snake_str (str): The snake_case string to be converted.
+
+    Returns:
+        str: The PascalCase string.
+
+    """
+    components = snake_str.split('_')
+    return ''.join(x.capitalize() for x in components)
+
+
+
+def pascal_to_snake(pascal_str):
+    """
+    Converts a PascalCase string to snake_case.
+
+    Args:
+        pascal_str (str): The PascalCase string to be converted.
+
+    Returns:
+        str: The converted snake_case string.
+    """
+    return ''.join(['_' + i.lower() if i.isupper() else i for i in pascal_str]).lstrip('_')
+
+
 class Unassigned:
     """A custom type used to signify an undefined optional argument."""
     _instance = None

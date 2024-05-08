@@ -15,6 +15,8 @@ import textwrap
 
 from src.tools.constants import BASIC_IMPORTS_STRING, GENERATED_CLASSES_LOCATION, \
     UTILS_CODEGEN_FILE_NAME, LICENCES_STRING, LOGGER_STRING
+from src.tools.templates import SNAKE_TO_PASCAL_FUNCTION, PASCAL_TO_SNAKE_FUNCTION
+
 
 class UtilsCodeGen:
 
@@ -33,6 +35,9 @@ class UtilsCodeGen:
             file.write(imports)
             logger = self.generate_logging()
             file.write(logger)
+
+            file.write(self.generate_util_functions())
+            file.write("\n\n")
             # add Unassigned class
             class_definition_string = '''\
             class Unassigned:
@@ -139,3 +144,13 @@ class UtilsCodeGen:
 
         """
         return LOGGER_STRING
+
+    def generate_util_functions(self) -> str:
+        """
+        Generate util functions
+
+        Returns:
+            str: Util Functions
+        """
+
+        return SNAKE_TO_PASCAL_FUNCTION + "\n\n" + PASCAL_TO_SNAKE_FUNCTION
