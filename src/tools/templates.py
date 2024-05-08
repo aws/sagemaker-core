@@ -164,12 +164,7 @@ POPULATE_DEFAULTS_DECORATOR_TEMPLATE = '''
 def populate_inputs_decorator(create_func):
     def wrapper(*args, **kwargs):
         config_schema_for_resource = {config_schema_for_resource}
-        for configurable_attribute in config_schema_for_resource:
-            if kwargs.get(configurable_attribute) is None:
-                resource_defaults=load_default_configs_for_resource_name(resource_name="{resource_name}")
-                global_defaults=load_default_configs_for_resource_name(resource_name="GlobalDefaults")
-                kwargs[configurable_attribute] = get_config_value(configurable_attribute, resource_defaults, global_defaults)
-        create_func(*args, **kwargs)
+        create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, **kwargs))
     return wrapper
 '''
 

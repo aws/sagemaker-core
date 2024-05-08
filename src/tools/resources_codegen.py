@@ -43,7 +43,6 @@ from src.tools.templates import (CREATE_METHOD_TEMPLATE, \
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
 
-CONFIGURABLE_ATTRIBUTE_SUBSTRINGS = ['kms', 's3', 'subnet', 'tags', 'role', 'security_group']
 
 TYPE = "type"
 OBJECT = "object"
@@ -144,7 +143,7 @@ class ResourcesCodeGen:
             "import jsonschema",
             "from functools import lru_cache",
             "from boto3.session import Session",
-            "from .utils import SageMakerClient, Unassigned",
+            "from .utils import SageMakerClient, Unassigned, snake_to_pascal, pascal_to_snake",
             "from src.code_injection.codec import transform",
             "from .shapes import *",
             "from .config_schema import SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA"
@@ -518,7 +517,7 @@ class ResourcesCodeGen:
 
         # Return the formatted method
         return formatted_method
-    
+
     def generate_get_method(self, resource_name: str) -> str:
         """
         Auto-generate the GET method (describe API) for a resource.
