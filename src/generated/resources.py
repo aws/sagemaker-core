@@ -180,6 +180,29 @@ class Action(Base):
         transform(response, 'DescribeActionResponse', self)
         return self
     
+    def update(self) -> Optional[object]:
+        logger.debug(f"Creating action resource.")
+        client = SageMakerClient().client
+    
+        operation_input_args = {
+            'ActionName': self.action_name,
+            'Description': self.description,
+            'Status': self.status,
+            'Properties': self.properties,
+            'PropertiesToRemove': self.properties_to_remove,
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = Action._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+    
+        # create the resource
+        response = client.update_action(**operation_input_args)
+        logger.debug(f"Response: {response}")
+        self.refresh()
+    
+        return self
+    
     def delete(self) -> None:
     
         operation_input_args = {
@@ -523,6 +546,27 @@ class AppImageConfig(Base):
         transform(response, 'DescribeAppImageConfigResponse', self)
         return self
     
+    def update(self) -> Optional[object]:
+        logger.debug(f"Creating app_image_config resource.")
+        client = SageMakerClient().client
+    
+        operation_input_args = {
+            'AppImageConfigName': self.app_image_config_name,
+            'KernelGatewayImageConfig': self.kernel_gateway_image_config,
+            'JupyterLabAppImageConfig': self.jupyter_lab_app_image_config,
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = AppImageConfig._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+    
+        # create the resource
+        response = client.update_app_image_config(**operation_input_args)
+        logger.debug(f"Response: {response}")
+        self.refresh()
+    
+        return self
+    
     def delete(self) -> None:
     
         operation_input_args = {
@@ -608,6 +652,28 @@ class Artifact(Base):
     
         # deserialize response and update self
         transform(response, 'DescribeArtifactResponse', self)
+        return self
+    
+    def update(self) -> Optional[object]:
+        logger.debug(f"Creating artifact resource.")
+        client = SageMakerClient().client
+    
+        operation_input_args = {
+            'ArtifactArn': self.artifact_arn,
+            'ArtifactName': self.artifact_name,
+            'Properties': self.properties,
+            'PropertiesToRemove': self.properties_to_remove,
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = Artifact._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+    
+        # create the resource
+        response = client.update_artifact(**operation_input_args)
+        logger.debug(f"Response: {response}")
+        self.refresh()
+    
         return self
     
     def delete(self) -> None:
@@ -1064,6 +1130,26 @@ class Cluster(Base):
         transform(response, 'DescribeClusterResponse', self)
         return self
     
+    def update(self) -> Optional[object]:
+        logger.debug(f"Creating cluster resource.")
+        client = SageMakerClient().client
+    
+        operation_input_args = {
+            'ClusterName': self.cluster_name,
+            'InstanceGroups': self.instance_groups,
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = Cluster._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+    
+        # create the resource
+        response = client.update_cluster(**operation_input_args)
+        logger.debug(f"Response: {response}")
+        self.refresh()
+    
+        return self
+    
     def delete(self) -> None:
     
         operation_input_args = {
@@ -1159,6 +1245,26 @@ class CodeRepository(Base):
     
         # deserialize response and update self
         transform(response, 'DescribeCodeRepositoryOutput', self)
+        return self
+    
+    def update(self) -> Optional[object]:
+        logger.debug(f"Creating code_repository resource.")
+        client = SageMakerClient().client
+    
+        operation_input_args = {
+            'CodeRepositoryName': self.code_repository_name,
+            'GitConfig': self.git_config,
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = CodeRepository._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+    
+        # create the resource
+        response = client.update_code_repository(**operation_input_args)
+        logger.debug(f"Response: {response}")
+        self.refresh()
+    
         return self
     
     def delete(self) -> None:
@@ -1419,6 +1525,28 @@ class Context(Base):
     
         # deserialize response and update self
         transform(response, 'DescribeContextResponse', self)
+        return self
+    
+    def update(self) -> Optional[object]:
+        logger.debug(f"Creating context resource.")
+        client = SageMakerClient().client
+    
+        operation_input_args = {
+            'ContextName': self.context_name,
+            'Description': self.description,
+            'Properties': self.properties,
+            'PropertiesToRemove': self.properties_to_remove,
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = Context._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+    
+        # create the resource
+        response = client.update_context(**operation_input_args)
+        logger.debug(f"Response: {response}")
+        self.refresh()
+    
         return self
     
     def delete(self) -> None:
@@ -1700,6 +1828,29 @@ class DeviceFleet(Base):
         transform(response, 'DescribeDeviceFleetResponse', self)
         return self
     
+    def update(self) -> Optional[object]:
+        logger.debug(f"Creating device_fleet resource.")
+        client = SageMakerClient().client
+    
+        operation_input_args = {
+            'DeviceFleetName': self.device_fleet_name,
+            'RoleArn': self.role_arn,
+            'Description': self.description,
+            'OutputConfig': self.output_config,
+            'EnableIotRoleAlias': self.enable_iot_role_alias,
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = DeviceFleet._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+    
+        # create the resource
+        response = client.update_device_fleet(**operation_input_args)
+        logger.debug(f"Response: {response}")
+        self.refresh()
+    
+        return self
+    
     def delete(self) -> None:
     
         operation_input_args = {
@@ -1908,6 +2059,31 @@ class Domain(Base):
     
         # deserialize response and update self
         transform(response, 'DescribeDomainResponse', self)
+        return self
+    
+    def update(self) -> Optional[object]:
+        logger.debug(f"Creating domain resource.")
+        client = SageMakerClient().client
+    
+        operation_input_args = {
+            'DomainId': self.domain_id,
+            'DefaultUserSettings': self.default_user_settings,
+            'DomainSettingsForUpdate': self.domain_settings_for_update,
+            'AppSecurityGroupManagement': self.app_security_group_management,
+            'DefaultSpaceSettings': self.default_space_settings,
+            'SubnetIds': self.subnet_ids,
+            'AppNetworkAccessType': self.app_network_access_type,
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = Domain._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+    
+        # create the resource
+        response = client.update_domain(**operation_input_args)
+        logger.debug(f"Response: {response}")
+        self.refresh()
+    
         return self
     
     def delete(self) -> None:
@@ -2281,6 +2457,30 @@ class Endpoint(Base):
         transform(response, 'DescribeEndpointOutput', self)
         return self
     
+    def update(self) -> Optional[object]:
+        logger.debug(f"Creating endpoint resource.")
+        client = SageMakerClient().client
+    
+        operation_input_args = {
+            'EndpointName': self.endpoint_name,
+            'EndpointConfigName': self.endpoint_config_name,
+            'RetainAllVariantProperties': self.retain_all_variant_properties,
+            'ExcludeRetainedVariantProperties': self.exclude_retained_variant_properties,
+            'DeploymentConfig': self.deployment_config,
+            'RetainDeploymentConfig': self.retain_deployment_config,
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = Endpoint._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+    
+        # create the resource
+        response = client.update_endpoint(**operation_input_args)
+        logger.debug(f"Response: {response}")
+        self.refresh()
+    
+        return self
+    
     def delete(self) -> None:
     
         operation_input_args = {
@@ -2534,6 +2734,27 @@ class Experiment(Base):
         transform(response, 'DescribeExperimentResponse', self)
         return self
     
+    def update(self) -> Optional[object]:
+        logger.debug(f"Creating experiment resource.")
+        client = SageMakerClient().client
+    
+        operation_input_args = {
+            'ExperimentName': self.experiment_name,
+            'DisplayName': self.display_name,
+            'Description': self.description,
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = Experiment._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+    
+        # create the resource
+        response = client.update_experiment(**operation_input_args)
+        logger.debug(f"Response: {response}")
+        self.refresh()
+    
+        return self
+    
     def delete(self) -> None:
     
         operation_input_args = {
@@ -2671,6 +2892,28 @@ class FeatureGroup(Base):
     
         # deserialize response and update self
         transform(response, 'DescribeFeatureGroupResponse', self)
+        return self
+    
+    def update(self) -> Optional[object]:
+        logger.debug(f"Creating feature_group resource.")
+        client = SageMakerClient().client
+    
+        operation_input_args = {
+            'FeatureGroupName': self.feature_group_name,
+            'FeatureAdditions': self.feature_additions,
+            'OnlineStoreConfig': self.online_store_config,
+            'ThroughputConfig': self.throughput_config,
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = FeatureGroup._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+    
+        # create the resource
+        response = client.update_feature_group(**operation_input_args)
+        logger.debug(f"Response: {response}")
+        self.refresh()
+    
         return self
     
     def delete(self) -> None:
@@ -2927,6 +3170,28 @@ class Hub(Base):
     
         # deserialize response and update self
         transform(response, 'DescribeHubResponse', self)
+        return self
+    
+    def update(self) -> Optional[object]:
+        logger.debug(f"Creating hub resource.")
+        client = SageMakerClient().client
+    
+        operation_input_args = {
+            'HubName': self.hub_name,
+            'HubDescription': self.hub_description,
+            'HubDisplayName': self.hub_display_name,
+            'HubSearchKeywords': self.hub_search_keywords,
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = Hub._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+    
+        # create the resource
+        response = client.update_hub(**operation_input_args)
+        logger.debug(f"Response: {response}")
+        self.refresh()
+    
         return self
     
     def delete(self) -> None:
@@ -3415,6 +3680,29 @@ class Image(Base):
         transform(response, 'DescribeImageResponse', self)
         return self
     
+    def update(self) -> Optional[object]:
+        logger.debug(f"Creating image resource.")
+        client = SageMakerClient().client
+    
+        operation_input_args = {
+            'DeleteProperties': self.delete_properties,
+            'Description': self.description,
+            'DisplayName': self.display_name,
+            'ImageName': self.image_name,
+            'RoleArn': self.role_arn,
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = Image._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+    
+        # create the resource
+        response = client.update_image(**operation_input_args)
+        logger.debug(f"Response: {response}")
+        self.refresh()
+    
+        return self
+    
     def delete(self) -> None:
     
         operation_input_args = {
@@ -3545,6 +3833,36 @@ class ImageVersion(Base):
         transform(response, 'DescribeImageVersionResponse', self)
         return self
     
+    def update(self) -> Optional[object]:
+        logger.debug(f"Creating image_version resource.")
+        client = SageMakerClient().client
+    
+        operation_input_args = {
+            'ImageName': self.image_name,
+            'Alias': self.alias,
+            'Version': self.version,
+            'AliasesToAdd': self.aliases_to_add,
+            'AliasesToDelete': self.aliases_to_delete,
+            'VendorGuidance': self.vendor_guidance,
+            'JobType': self.job_type,
+            'MLFramework': self.m_l_framework,
+            'ProgrammingLang': self.programming_lang,
+            'Processor': self.processor,
+            'Horovod': self.horovod,
+            'ReleaseNotes': self.release_notes,
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = ImageVersion._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+    
+        # create the resource
+        response = client.update_image_version(**operation_input_args)
+        logger.debug(f"Response: {response}")
+        self.refresh()
+    
+        return self
+    
     def delete(self) -> None:
     
         operation_input_args = {
@@ -3654,6 +3972,27 @@ class InferenceComponent(Base):
     
         # deserialize response and update self
         transform(response, 'DescribeInferenceComponentOutput', self)
+        return self
+    
+    def update(self) -> Optional[object]:
+        logger.debug(f"Creating inference_component resource.")
+        client = SageMakerClient().client
+    
+        operation_input_args = {
+            'InferenceComponentName': self.inference_component_name,
+            'Specification': self.specification,
+            'RuntimeConfig': self.runtime_config,
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = InferenceComponent._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+    
+        # create the resource
+        response = client.update_inference_component(**operation_input_args)
+        logger.debug(f"Response: {response}")
+        self.refresh()
+    
         return self
     
     def delete(self) -> None:
@@ -3800,6 +4139,30 @@ class InferenceExperiment(Base):
     
         # deserialize response and update self
         transform(response, 'DescribeInferenceExperimentResponse', self)
+        return self
+    
+    def update(self) -> Optional[object]:
+        logger.debug(f"Creating inference_experiment resource.")
+        client = SageMakerClient().client
+    
+        operation_input_args = {
+            'Name': self.name,
+            'Schedule': self.schedule,
+            'Description': self.description,
+            'ModelVariants': self.model_variants,
+            'DataStorageConfig': self.data_storage_config,
+            'ShadowModeConfig': self.shadow_mode_config,
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = InferenceExperiment._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+    
+        # create the resource
+        response = client.update_inference_experiment(**operation_input_args)
+        logger.debug(f"Response: {response}")
+        self.refresh()
+    
         return self
     
     def delete(self) -> None:
@@ -4579,6 +4942,27 @@ class ModelCard(Base):
         transform(response, 'DescribeModelCardResponse', self)
         return self
     
+    def update(self) -> Optional[object]:
+        logger.debug(f"Creating model_card resource.")
+        client = SageMakerClient().client
+    
+        operation_input_args = {
+            'ModelCardName': self.model_card_name,
+            'Content': self.content,
+            'ModelCardStatus': self.model_card_status,
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = ModelCard._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+    
+        # create the resource
+        response = client.update_model_card(**operation_input_args)
+        logger.debug(f"Response: {response}")
+        self.refresh()
+    
+        return self
+    
     def delete(self) -> None:
     
         operation_input_args = {
@@ -5136,6 +5520,32 @@ class ModelPackage(Base):
         transform(response, 'DescribeModelPackageOutput', self)
         return self
     
+    def update(self) -> Optional[object]:
+        logger.debug(f"Creating model_package resource.")
+        client = SageMakerClient().client
+    
+        operation_input_args = {
+            'ModelPackageArn': self.model_package_arn,
+            'ModelApprovalStatus': self.model_approval_status,
+            'ApprovalDescription': self.approval_description,
+            'CustomerMetadataProperties': self.customer_metadata_properties,
+            'CustomerMetadataPropertiesToRemove': self.customer_metadata_properties_to_remove,
+            'AdditionalInferenceSpecificationsToAdd': self.additional_inference_specifications_to_add,
+            'InferenceSpecification': self.inference_specification,
+            'SourceUri': self.source_uri,
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = ModelPackage._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+    
+        # create the resource
+        response = client.update_model_package(**operation_input_args)
+        logger.debug(f"Response: {response}")
+        self.refresh()
+    
+        return self
+    
     def delete(self) -> None:
     
         operation_input_args = {
@@ -5564,6 +5974,26 @@ class MonitoringSchedule(Base):
         transform(response, 'DescribeMonitoringScheduleResponse', self)
         return self
     
+    def update(self) -> Optional[object]:
+        logger.debug(f"Creating monitoring_schedule resource.")
+        client = SageMakerClient().client
+    
+        operation_input_args = {
+            'MonitoringScheduleName': self.monitoring_schedule_name,
+            'MonitoringScheduleConfig': self.monitoring_schedule_config,
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = MonitoringSchedule._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+    
+        # create the resource
+        response = client.update_monitoring_schedule(**operation_input_args)
+        logger.debug(f"Response: {response}")
+        self.refresh()
+    
+        return self
+    
     def delete(self) -> None:
     
         operation_input_args = {
@@ -5737,6 +6167,38 @@ class NotebookInstance(Base):
         transform(response, 'DescribeNotebookInstanceOutput', self)
         return self
     
+    def update(self) -> Optional[object]:
+        logger.debug(f"Creating notebook_instance resource.")
+        client = SageMakerClient().client
+    
+        operation_input_args = {
+            'NotebookInstanceName': self.notebook_instance_name,
+            'InstanceType': self.instance_type,
+            'RoleArn': self.role_arn,
+            'LifecycleConfigName': self.lifecycle_config_name,
+            'DisassociateLifecycleConfig': self.disassociate_lifecycle_config,
+            'VolumeSizeInGB': self.volume_size_in_g_b,
+            'DefaultCodeRepository': self.default_code_repository,
+            'AdditionalCodeRepositories': self.additional_code_repositories,
+            'AcceleratorTypes': self.accelerator_types,
+            'DisassociateAcceleratorTypes': self.disassociate_accelerator_types,
+            'DisassociateDefaultCodeRepository': self.disassociate_default_code_repository,
+            'DisassociateAdditionalCodeRepositories': self.disassociate_additional_code_repositories,
+            'RootAccess': self.root_access,
+            'InstanceMetadataServiceConfiguration': self.instance_metadata_service_configuration,
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = NotebookInstance._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+    
+        # create the resource
+        response = client.update_notebook_instance(**operation_input_args)
+        logger.debug(f"Response: {response}")
+        self.refresh()
+    
+        return self
+    
     def delete(self) -> None:
     
         operation_input_args = {
@@ -5840,6 +6302,27 @@ class NotebookInstanceLifecycleConfig(Base):
     
         # deserialize response and update self
         transform(response, 'DescribeNotebookInstanceLifecycleConfigOutput', self)
+        return self
+    
+    def update(self) -> Optional[object]:
+        logger.debug(f"Creating notebook_instance_lifecycle_config resource.")
+        client = SageMakerClient().client
+    
+        operation_input_args = {
+            'NotebookInstanceLifecycleConfigName': self.notebook_instance_lifecycle_config_name,
+            'OnCreate': self.on_create,
+            'OnStart': self.on_start,
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = NotebookInstanceLifecycleConfig._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+    
+        # create the resource
+        response = client.update_notebook_instance_lifecycle_config(**operation_input_args)
+        logger.debug(f"Response: {response}")
+        self.refresh()
+    
         return self
     
     def delete(self) -> None:
@@ -5951,6 +6434,31 @@ class Pipeline(Base):
         transform(response, 'DescribePipelineResponse', self)
         return self
     
+    def update(self) -> Optional[object]:
+        logger.debug(f"Creating pipeline resource.")
+        client = SageMakerClient().client
+    
+        operation_input_args = {
+            'PipelineName': self.pipeline_name,
+            'PipelineDisplayName': self.pipeline_display_name,
+            'PipelineDefinition': self.pipeline_definition,
+            'PipelineDefinitionS3Location': self.pipeline_definition_s3_location,
+            'PipelineDescription': self.pipeline_description,
+            'RoleArn': self.role_arn,
+            'ParallelismConfiguration': self.parallelism_configuration,
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = Pipeline._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+    
+        # create the resource
+        response = client.update_pipeline(**operation_input_args)
+        logger.debug(f"Response: {response}")
+        self.refresh()
+    
+        return self
+    
     def delete(self) -> None:
     
         operation_input_args = {
@@ -6027,6 +6535,28 @@ class PipelineExecution(Base):
     
         # deserialize response and update self
         transform(response, 'DescribePipelineExecutionResponse', self)
+        return self
+    
+    def update(self) -> Optional[object]:
+        logger.debug(f"Creating pipeline_execution resource.")
+        client = SageMakerClient().client
+    
+        operation_input_args = {
+            'PipelineExecutionArn': self.pipeline_execution_arn,
+            'PipelineExecutionDescription': self.pipeline_execution_description,
+            'PipelineExecutionDisplayName': self.pipeline_execution_display_name,
+            'ParallelismConfiguration': self.parallelism_configuration,
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = PipelineExecution._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+    
+        # create the resource
+        response = client.update_pipeline_execution(**operation_input_args)
+        logger.debug(f"Response: {response}")
+        self.refresh()
+    
         return self
     
     def stop(self) -> None:
@@ -6306,6 +6836,28 @@ class Project(Base):
         transform(response, 'DescribeProjectOutput', self)
         return self
     
+    def update(self) -> Optional[object]:
+        logger.debug(f"Creating project resource.")
+        client = SageMakerClient().client
+    
+        operation_input_args = {
+            'ProjectName': self.project_name,
+            'ProjectDescription': self.project_description,
+            'ServiceCatalogProvisioningUpdateDetails': self.service_catalog_provisioning_update_details,
+            'Tags': self.tags,
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = Project._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+    
+        # create the resource
+        response = client.update_project(**operation_input_args)
+        logger.debug(f"Response: {response}")
+        self.refresh()
+    
+        return self
+    
     def delete(self) -> None:
     
         operation_input_args = {
@@ -6420,6 +6972,28 @@ class Space(Base):
     
         # deserialize response and update self
         transform(response, 'DescribeSpaceResponse', self)
+        return self
+    
+    def update(self) -> Optional[object]:
+        logger.debug(f"Creating space resource.")
+        client = SageMakerClient().client
+    
+        operation_input_args = {
+            'DomainId': self.domain_id,
+            'SpaceName': self.space_name,
+            'SpaceSettings': self.space_settings,
+            'SpaceDisplayName': self.space_display_name,
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = Space._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+    
+        # create the resource
+        response = client.update_space(**operation_input_args)
+        logger.debug(f"Response: {response}")
+        self.refresh()
+    
         return self
     
     def delete(self) -> None:
@@ -6744,6 +7318,29 @@ class TrainingJob(Base):
         transform(response, 'DescribeTrainingJobResponse', self)
         return self
     
+    def update(self) -> Optional[object]:
+        logger.debug(f"Creating training_job resource.")
+        client = SageMakerClient().client
+    
+        operation_input_args = {
+            'TrainingJobName': self.training_job_name,
+            'ProfilerConfig': self.profiler_config,
+            'ProfilerRuleConfigurations': self.profiler_rule_configurations,
+            'ResourceConfig': self.resource_config,
+            'RemoteDebugConfig': self.remote_debug_config,
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = TrainingJob._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+    
+        # create the resource
+        response = client.update_training_job(**operation_input_args)
+        logger.debug(f"Response: {response}")
+        self.refresh()
+    
+        return self
+    
     def stop(self) -> None:
     
         operation_input_args = {
@@ -7029,6 +7626,26 @@ class Trial(Base):
         transform(response, 'DescribeTrialResponse', self)
         return self
     
+    def update(self) -> Optional[object]:
+        logger.debug(f"Creating trial resource.")
+        client = SageMakerClient().client
+    
+        operation_input_args = {
+            'TrialName': self.trial_name,
+            'DisplayName': self.display_name,
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = Trial._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+    
+        # create the resource
+        response = client.update_trial(**operation_input_args)
+        logger.debug(f"Response: {response}")
+        self.refresh()
+    
+        return self
+    
     def delete(self) -> None:
     
         operation_input_args = {
@@ -7129,6 +7746,35 @@ class TrialComponent(Base):
     
         # deserialize response and update self
         transform(response, 'DescribeTrialComponentResponse', self)
+        return self
+    
+    def update(self) -> Optional[object]:
+        logger.debug(f"Creating trial_component resource.")
+        client = SageMakerClient().client
+    
+        operation_input_args = {
+            'TrialComponentName': self.trial_component_name,
+            'DisplayName': self.display_name,
+            'Status': self.status,
+            'StartTime': self.start_time,
+            'EndTime': self.end_time,
+            'Parameters': self.parameters,
+            'ParametersToRemove': self.parameters_to_remove,
+            'InputArtifacts': self.input_artifacts,
+            'InputArtifactsToRemove': self.input_artifacts_to_remove,
+            'OutputArtifacts': self.output_artifacts,
+            'OutputArtifactsToRemove': self.output_artifacts_to_remove,
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = TrialComponent._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+    
+        # create the resource
+        response = client.update_trial_component(**operation_input_args)
+        logger.debug(f"Response: {response}")
+        self.refresh()
+    
         return self
     
     def delete(self) -> None:
@@ -7298,6 +7944,27 @@ class UserProfile(Base):
         transform(response, 'DescribeUserProfileResponse', self)
         return self
     
+    def update(self) -> Optional[object]:
+        logger.debug(f"Creating user_profile resource.")
+        client = SageMakerClient().client
+    
+        operation_input_args = {
+            'DomainId': self.domain_id,
+            'UserProfileName': self.user_profile_name,
+            'UserSettings': self.user_settings,
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = UserProfile._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+    
+        # create the resource
+        response = client.update_user_profile(**operation_input_args)
+        logger.debug(f"Response: {response}")
+        self.refresh()
+    
+        return self
+    
     def delete(self) -> None:
     
         operation_input_args = {
@@ -7425,6 +8092,28 @@ class Workforce(Base):
         transform(response, 'DescribeWorkforceResponse', self)
         return self
     
+    def update(self) -> Optional[object]:
+        logger.debug(f"Creating workforce resource.")
+        client = SageMakerClient().client
+    
+        operation_input_args = {
+            'WorkforceName': self.workforce_name,
+            'SourceIpConfig': self.source_ip_config,
+            'OidcConfig': self.oidc_config,
+            'WorkforceVpcConfig': self.workforce_vpc_config,
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = Workforce._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+    
+        # create the resource
+        response = client.update_workforce(**operation_input_args)
+        logger.debug(f"Response: {response}")
+        self.refresh()
+    
+        return self
+    
     def delete(self) -> None:
     
         operation_input_args = {
@@ -7522,6 +8211,28 @@ class Workteam(Base):
     
         # deserialize response and update self
         transform(response, 'DescribeWorkteamResponse', self)
+        return self
+    
+    def update(self) -> Optional[object]:
+        logger.debug(f"Creating workteam resource.")
+        client = SageMakerClient().client
+    
+        operation_input_args = {
+            'WorkteamName': self.workteam_name,
+            'MemberDefinitions': self.member_definitions,
+            'Description': self.description,
+            'NotificationConfiguration': self.notification_configuration,
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = Workteam._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+    
+        # create the resource
+        response = client.update_workteam(**operation_input_args)
+        logger.debug(f"Response: {response}")
+        self.refresh()
+    
         return self
     
     def delete(self) -> None:

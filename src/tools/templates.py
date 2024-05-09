@@ -56,7 +56,7 @@ def create(
     response = client.{operation}(**operation_input_args)
     logger.debug(f"Response: {{response}}")
 
-    return cls.get({resource_identifier}, session=session, region=region)
+    return cls.get({get_args}, session=session, region=region)
 '''
 
 CREATE_METHOD_TEMPLATE_WITHOUT_DEFAULTS = '''
@@ -82,7 +82,28 @@ def create(
     response = client.{operation}(**operation_input_args)
     logger.debug(f"Response: {{response}}")
 
-    return cls.get({resource_identifier}, session=session, region=region)
+    return cls.get({get_args}, session=session, region=region)
+'''
+
+UPDATE_METHOD_TEMPLATE = '''
+def update(self) -> Optional[object]:
+    logger.debug(f"Creating {resource_lower} resource.")
+    client = SageMakerClient().client
+
+    operation_input_args = {{
+{operation_input_args}
+    }}
+    logger.debug(f"Input request: {{operation_input_args}}")
+    # serialize the input request
+    operation_input_args = {resource_name}._serialize(operation_input_args)
+    logger.debug(f"Serialized input request: {{operation_input_args}}")
+
+    # create the resource
+    response = client.{operation}(**operation_input_args)
+    logger.debug(f"Response: {{response}}")
+    self.refresh()
+
+    return self
 '''
 
 GET_CONFIG_VALUE_TEMPLATE = '''
