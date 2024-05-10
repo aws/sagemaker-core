@@ -27,15 +27,144 @@ from .utils import SageMakerClient, Unassigned, snake_to_pascal, pascal_to_snake
 from src.code_injection.codec import transform
 from .shapes import *
 from .config_schema import SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA
+from platformdirs import site_config_dir, user_config_dir
+from botocore.utils import merge_dicts
+import boto3
+from six.moves.urllib.parse import urlparse
+import yaml
+import pathlib
 
+
+logger = logging.getLogger("sagemaker.config")
+_APP_NAME = "sagemaker"
+# The default name of the config file.
+_CONFIG_FILE_NAME = "config.yaml"
+# The default config file location of the Administrator provided config file. This path can be
+# overridden with `SAGEMAKER_ADMIN_CONFIG_OVERRIDE` environment variable.
+_DEFAULT_ADMIN_CONFIG_FILE_PATH = os.path.join(site_config_dir(_APP_NAME), _CONFIG_FILE_NAME)
+# The default config file location of the user provided config file. This path can be
+# overridden with `SAGEMAKER_USER_CONFIG_OVERRIDE` environment variable.
+_DEFAULT_USER_CONFIG_FILE_PATH = os.path.join(user_config_dir(_APP_NAME), _CONFIG_FILE_NAME)
+# The default config file location of the local mode.
+_DEFAULT_LOCAL_MODE_CONFIG_FILE_PATH = os.path.join(
+    os.path.expanduser("~"), ".sagemaker", _CONFIG_FILE_NAME
+)
+ENV_VARIABLE_ADMIN_CONFIG_OVERRIDE = "SAGEMAKER_ADMIN_CONFIG_OVERRIDE"
+ENV_VARIABLE_USER_CONFIG_OVERRIDE = "SAGEMAKER_USER_CONFIG_OVERRIDE"
+
+S3_PREFIX = "s3://"
 
 @lru_cache(maxsize=None)
-def load_default_configs():
-    configs_file_path = os.getcwd() + '/sample/sagemaker/2017-07-24/default-configs.json'
-    with open(configs_file_path, 'r') as file:
-        configs_data = json.load(file)
-    jsonschema.validate(configs_data, SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA)
-    return configs_data
+def load_default_configs(additional_config_paths: List[str] = None, s3_resource=None):
+    default_config_path = os.getenv(
+        ENV_VARIABLE_ADMIN_CONFIG_OVERRIDE, _DEFAULT_ADMIN_CONFIG_FILE_PATH
+    )
+    user_config_path = os.getenv(ENV_VARIABLE_USER_CONFIG_OVERRIDE, _DEFAULT_USER_CONFIG_FILE_PATH)
+    
+    config_paths = [default_config_path, user_config_path]
+    if additional_config_paths:
+        config_paths += additional_config_paths
+    config_paths = list(filter(lambda item: item is not None, config_paths))
+    merged_config = {}
+    for file_path in config_paths:
+        config_from_file = {}
+        if file_path.startswith(S3_PREFIX):
+            config_from_file = _load_config_from_s3(file_path, s3_resource)
+        else:
+            try:
+                config_from_file = _load_config_from_file(file_path)
+            except ValueError as error:
+                if file_path not in (
+                    _DEFAULT_ADMIN_CONFIG_FILE_PATH,
+                    _DEFAULT_USER_CONFIG_FILE_PATH,
+                ):
+                    # Throw exception only when User provided file path is invalid.
+                    # If there are no files in the Default config file locations, don't throw
+                    # Exceptions.
+                    raise
+
+                logger.debug(error)
+        if config_from_file:
+            validate_sagemaker_config(config_from_file)
+            merge_dicts(merged_config, config_from_file)
+            print("Fetched defaults config from location: %s", file_path)
+        else:
+            print("Not applying SDK defaults from location: %s", file_path)
+
+    return merged_config
+    
+def validate_sagemaker_config(sagemaker_config: dict = None):
+    """Validates whether a given dictionary adheres to the schema.
+
+    Args:
+        sagemaker_config: A dictionary containing default values for the
+                SageMaker Python SDK. (default: None).
+    """
+    jsonschema.validate(sagemaker_config, SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA)
+    
+
+def _load_config_from_s3(s3_uri, s3_resource_for_config) -> dict:
+    """Placeholder docstring"""
+    if not s3_resource_for_config:
+        # Constructing a default Boto3 S3 Resource from a default Boto3 session.
+        boto_session = boto3.DEFAULT_SESSION or boto3.Session()
+        boto_region_name = boto_session.region_name
+        if boto_region_name is None:
+            raise ValueError(
+                "Must setup local AWS configuration with a region supported by SageMaker."
+            )
+        s3_resource_for_config = boto_session.resource("s3", region_name=boto_region_name)
+
+    logger.debug("Fetching defaults config from location: %s", s3_uri)
+    inferred_s3_uri = _get_inferred_s3_uri(s3_uri, s3_resource_for_config)
+    parsed_url = urlparse(inferred_s3_uri)
+    bucket, key_prefix = parsed_url.netloc, parsed_url.path.lstrip("/")
+    s3_object = s3_resource_for_config.Object(bucket, key_prefix)
+    s3_file_content = s3_object.get()["Body"].read()
+    return yaml.safe_load(s3_file_content.decode("utf-8"))
+    
+    
+def _get_inferred_s3_uri(s3_uri, s3_resource_for_config):
+    """Placeholder docstring"""
+    parsed_url = urlparse(s3_uri)
+    bucket, key_prefix = parsed_url.netloc, parsed_url.path.lstrip("/")
+    s3_bucket = s3_resource_for_config.Bucket(name=bucket)
+    s3_objects = s3_bucket.objects.filter(Prefix=key_prefix).all()
+    s3_files_with_same_prefix = [
+        "{}{}/{}".format(S3_PREFIX, bucket, s3_object.key) for s3_object in s3_objects
+    ]
+    if len(s3_files_with_same_prefix) == 0:
+        # Customer provided us with an incorrect s3 path.
+        raise ValueError("Provide a valid S3 path instead of {}".format(s3_uri))
+    if len(s3_files_with_same_prefix) > 1:
+        # Customer has provided us with a S3 URI which points to a directory
+        # search for s3://<bucket>/directory-key-prefix/config.yaml
+        inferred_s3_uri = str(pathlib.PurePosixPath(s3_uri, _CONFIG_FILE_NAME)).replace(
+            "s3:/", "s3://"
+        )
+        if inferred_s3_uri not in s3_files_with_same_prefix:
+            # We don't know which file we should be operating with.
+            raise ValueError(
+                f"Provide an S3 URI of a directory that has a {_CONFIG_FILE_NAME} file."
+            )
+        # Customer has a config.yaml present in the directory that was provided as the S3 URI
+        return inferred_s3_uri
+    return s3_uri
+
+def _load_config_from_file(file_path: str) -> dict:
+    """Placeholder docstring"""
+    inferred_file_path = file_path
+    if os.path.isdir(file_path):
+        inferred_file_path = os.path.join(file_path, _CONFIG_FILE_NAME)
+    if not os.path.exists(inferred_file_path):
+        raise ValueError(
+            f"Unable to load the config file from the location: {file_path}"
+            f"Provide a valid file path"
+        )
+    logger.debug("Fetching defaults config from location: %s", file_path)
+    with open(inferred_file_path, "r") as f:
+        content = yaml.safe_load(f)
+    return content
 
 @lru_cache(maxsize=None)
 def load_default_configs_for_resource_name(resource_name: str):
@@ -43,11 +172,11 @@ def load_default_configs_for_resource_name(resource_name: str):
     return configs_data["SageMaker"]["PythonSDK"]["Resources"].get(resource_name)
 
 def get_config_value(attribute, resource_defaults, global_defaults):
-   if attribute in resource_defaults:
+   if resource_defaults and attribute in resource_defaults:
        return resource_defaults[attribute]
-   if attribute in global_defaults:
+   if global_defaults and attribute in global_defaults:
        return global_defaults[attribute]
-   raise Exception("Configurable value not present in Configs")
+   return None
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -84,15 +213,16 @@ class Base(BaseModel):
         return s[:1].upper() + s[1:]
             
     @staticmethod
-    def get_updated_kwargs_with_configured_attributes(config_schema_for_resource: dict, **kwargs):
+    def get_updated_kwargs_with_configured_attributes(config_schema_for_resource: dict, resource_name: str, **kwargs):
         for configurable_attribute in config_schema_for_resource:
             if kwargs.get(configurable_attribute) is None:
-                resource_defaults = load_default_configs_for_resource_name(resource_name="Cluster")
+                resource_defaults = load_default_configs_for_resource_name(resource_name=resource_name)
                 global_defaults = load_default_configs_for_resource_name(resource_name="GlobalDefaults")
                 formatted_attribute = pascal_to_snake(configurable_attribute)
-                kwargs[formatted_attribute] = get_config_value(formatted_attribute,
+                if config_value := get_config_value(formatted_attribute,
                  resource_defaults,
-                 global_defaults)
+                 global_defaults):
+                    kwargs[formatted_attribute] = config_value
         return kwargs
         
 class Action(Base):
@@ -245,7 +375,7 @@ class Algorithm(Base):
             }
           }
         }
-            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, **kwargs))
+            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "Algorithm", **kwargs))
         return wrapper
     
     @classmethod
@@ -751,7 +881,7 @@ class AutoMLJob(Base):
             }
           }
         }
-            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, **kwargs))
+            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "AutoMLJob", **kwargs))
         return wrapper
     
     @classmethod
@@ -932,7 +1062,7 @@ class AutoMLJobV2(Base):
             }
           }
         }
-            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, **kwargs))
+            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "AutoMLJobV2", **kwargs))
         return wrapper
     
     @classmethod
@@ -1063,7 +1193,7 @@ class Cluster(Base):
             }
           }
         }
-            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, **kwargs))
+            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "Cluster", **kwargs))
         return wrapper
     
     @classmethod
@@ -1336,7 +1466,7 @@ class CompilationJob(Base):
             }
           }
         }
-            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, **kwargs))
+            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "CompilationJob", **kwargs))
         return wrapper
     
     @classmethod
@@ -1640,7 +1770,7 @@ class DataQualityJobDefinition(Base):
             }
           }
         }
-            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, **kwargs))
+            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "DataQualityJobDefinition", **kwargs))
         return wrapper
     
     @classmethod
@@ -1757,7 +1887,7 @@ class DeviceFleet(Base):
             "type": "string"
           }
         }
-            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, **kwargs))
+            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "DeviceFleet", **kwargs))
         return wrapper
     
     @classmethod
@@ -1978,7 +2108,7 @@ class Domain(Base):
             }
           }
         }
-            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, **kwargs))
+            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "Domain", **kwargs))
         return wrapper
     
     @classmethod
@@ -2242,7 +2372,7 @@ class EdgePackagingJob(Base):
             }
           }
         }
-            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, **kwargs))
+            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "EdgePackagingJob", **kwargs))
         return wrapper
     
     @classmethod
@@ -2390,7 +2520,7 @@ class Endpoint(Base):
             }
           }
         }
-            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, **kwargs))
+            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "Endpoint", **kwargs))
         return wrapper
     
     @classmethod
@@ -2572,7 +2702,7 @@ class EndpointConfig(Base):
             }
           }
         }
-            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, **kwargs))
+            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "EndpointConfig", **kwargs))
         return wrapper
     
     @classmethod
@@ -2812,7 +2942,7 @@ class FeatureGroup(Base):
             "type": "string"
           }
         }
-            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, **kwargs))
+            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "FeatureGroup", **kwargs))
         return wrapper
     
     @classmethod
@@ -2975,7 +3105,7 @@ class FlowDefinition(Base):
             "type": "string"
           }
         }
-            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, **kwargs))
+            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "FlowDefinition", **kwargs))
         return wrapper
     
     @classmethod
@@ -3101,7 +3231,7 @@ class Hub(Base):
             }
           }
         }
-            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, **kwargs))
+            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "Hub", **kwargs))
         return wrapper
     
     @classmethod
@@ -3481,7 +3611,7 @@ class HyperParameterTuningJob(Base):
             }
           }
         }
-            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, **kwargs))
+            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "HyperParameterTuningJob", **kwargs))
         return wrapper
     
     @classmethod
@@ -3611,7 +3741,7 @@ class Image(Base):
             "type": "string"
           }
         }
-            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, **kwargs))
+            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "Image", **kwargs))
         return wrapper
     
     @classmethod
@@ -4060,7 +4190,7 @@ class InferenceExperiment(Base):
             "type": "string"
           }
         }
-            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, **kwargs))
+            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "InferenceExperiment", **kwargs))
         return wrapper
     
     @classmethod
@@ -4250,7 +4380,7 @@ class InferenceRecommendationsJob(Base):
             }
           }
         }
-            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, **kwargs))
+            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "InferenceRecommendationsJob", **kwargs))
         return wrapper
     
     @classmethod
@@ -4437,7 +4567,7 @@ class LabelingJob(Base):
             }
           }
         }
-            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, **kwargs))
+            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "LabelingJob", **kwargs))
         return wrapper
     
     @classmethod
@@ -4593,7 +4723,7 @@ class Model(Base):
             }
           }
         }
-            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, **kwargs))
+            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "Model", **kwargs))
         return wrapper
     
     @classmethod
@@ -4759,7 +4889,7 @@ class ModelBiasJobDefinition(Base):
             }
           }
         }
-            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, **kwargs))
+            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "ModelBiasJobDefinition", **kwargs))
         return wrapper
     
     @classmethod
@@ -4870,7 +5000,7 @@ class ModelCard(Base):
             }
           }
         }
-            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, **kwargs))
+            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "ModelCard", **kwargs))
         return wrapper
     
     @classmethod
@@ -5021,7 +5151,7 @@ class ModelCardExportJob(Base):
             }
           }
         }
-            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, **kwargs))
+            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "ModelCardExportJob", **kwargs))
         return wrapper
     
     @classmethod
@@ -5189,7 +5319,7 @@ class ModelExplainabilityJobDefinition(Base):
             }
           }
         }
-            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, **kwargs))
+            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "ModelExplainabilityJobDefinition", **kwargs))
         return wrapper
     
     @classmethod
@@ -5421,7 +5551,7 @@ class ModelPackage(Base):
             }
           }
         }
-            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, **kwargs))
+            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "ModelPackage", **kwargs))
         return wrapper
     
     @classmethod
@@ -5757,7 +5887,7 @@ class ModelQualityJobDefinition(Base):
             }
           }
         }
-            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, **kwargs))
+            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "ModelQualityJobDefinition", **kwargs))
         return wrapper
     
     @classmethod
@@ -5909,7 +6039,7 @@ class MonitoringSchedule(Base):
             }
           }
         }
-            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, **kwargs))
+            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "MonitoringSchedule", **kwargs))
         return wrapper
     
     @classmethod
@@ -6076,7 +6206,7 @@ class NotebookInstance(Base):
             "type": "string"
           }
         }
-            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, **kwargs))
+            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "NotebookInstance", **kwargs))
         return wrapper
     
     @classmethod
@@ -6357,7 +6487,7 @@ class Pipeline(Base):
             "type": "string"
           }
         }
-            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, **kwargs))
+            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "Pipeline", **kwargs))
         return wrapper
     
     @classmethod
@@ -6650,7 +6780,7 @@ class ProcessingJob(Base):
             "type": "string"
           }
         }
-            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, **kwargs))
+            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "ProcessingJob", **kwargs))
         return wrapper
     
     @classmethod
@@ -7211,7 +7341,7 @@ class TrainingJob(Base):
             }
           }
         }
-            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, **kwargs))
+            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "TrainingJob", **kwargs))
         return wrapper
     
     @classmethod
@@ -7433,7 +7563,7 @@ class TransformJob(Base):
             }
           }
         }
-            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, **kwargs))
+            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "TransformJob", **kwargs))
         return wrapper
     
     @classmethod
@@ -7870,7 +8000,7 @@ class UserProfile(Base):
             }
           }
         }
-            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, **kwargs))
+            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "UserProfile", **kwargs))
         return wrapper
     
     @classmethod
@@ -8021,7 +8151,7 @@ class Workforce(Base):
             }
           }
         }
-            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, **kwargs))
+            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "Workforce", **kwargs))
         return wrapper
     
     @classmethod

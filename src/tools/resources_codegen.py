@@ -38,7 +38,7 @@ from src.tools.templates import (CREATE_METHOD_TEMPLATE, \
                                  UPDATE_METHOD_TEMPLATE, POPULATE_DEFAULTS_DECORATOR_TEMPLATE, \
                                  GET_CONFIG_VALUE_TEMPLATE, CREATE_METHOD_TEMPLATE_WITHOUT_DEFAULTS,
                                  LOAD_CONFIG_VALUES_FOR_RESOURCE_TEMPLATE, \
-                                 LOAD_DEFAULT_CONFIGS_TEMPLATE)
+                                 LOAD_DEFAULT_CONFIGS_AND_HELPERS_TEMPLATE)
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
@@ -145,7 +145,13 @@ class ResourcesCodeGen:
             "from .utils import SageMakerClient, Unassigned, snake_to_pascal, pascal_to_snake",
             "from src.code_injection.codec import transform",
             "from .shapes import *",
-            "from .config_schema import SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA"
+            "from .config_schema import SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA",
+            "from platformdirs import site_config_dir, user_config_dir",
+            "from botocore.utils import merge_dicts",
+            "import boto3",
+            "from six.moves.urllib.parse import urlparse",
+            "import yaml",
+            "import pathlib"
         ]
 
         formated_imports = "\n".join(imports)
@@ -186,7 +192,7 @@ class ResourcesCodeGen:
 
     @staticmethod
     def generate_configs_loading_helper_functions(output_file):
-        output_file.write(LOAD_DEFAULT_CONFIGS_TEMPLATE)
+        output_file.write(LOAD_DEFAULT_CONFIGS_AND_HELPERS_TEMPLATE)
         output_file.write(LOAD_CONFIG_VALUES_FOR_RESOURCE_TEMPLATE)
         output_file.write(GET_CONFIG_VALUE_TEMPLATE)
 
