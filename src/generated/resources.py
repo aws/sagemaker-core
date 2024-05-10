@@ -35,7 +35,6 @@ import yaml
 import pathlib
 
 
-logger = logging.getLogger("sagemaker.config")
 _APP_NAME = "sagemaker"
 # The default name of the config file.
 _CONFIG_FILE_NAME = "config.yaml"
@@ -176,6 +175,7 @@ def get_config_value(attribute, resource_defaults, global_defaults):
        return resource_defaults[attribute]
    if global_defaults and attribute in global_defaults:
        return global_defaults[attribute]
+   logger.warn("Configurable value not entered in parameters or present in the Config")
    return None
 
 logging.basicConfig(level=logging.INFO)
@@ -267,6 +267,7 @@ class Action(Base):
             'MetadataProperties': metadata_properties,
             'Tags': tags,
         }
+            
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
@@ -517,6 +518,7 @@ class App(Base):
             'Tags': tags,
             'ResourceSpec': resource_spec,
         }
+            
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
@@ -633,6 +635,7 @@ class AppImageConfig(Base):
             'KernelGatewayImageConfig': kernel_gateway_image_config,
             'JupyterLabAppImageConfig': jupyter_lab_app_image_config,
         }
+            
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
@@ -741,6 +744,7 @@ class Artifact(Base):
             'MetadataProperties': metadata_properties,
             'Tags': tags,
         }
+            
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
@@ -1334,6 +1338,7 @@ class CodeRepository(Base):
             'GitConfig': git_config,
             'Tags': tags,
         }
+            
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
@@ -1614,6 +1619,7 @@ class Context(Base):
             'Properties': properties,
             'Tags': tags,
         }
+            
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
@@ -2281,6 +2287,7 @@ class EdgeDeploymentPlan(Base):
             'Stages': stages,
             'Tags': tags,
         }
+            
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
@@ -2821,6 +2828,7 @@ class Experiment(Base):
             'Description': description,
             'Tags': tags,
         }
+            
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
@@ -3470,6 +3478,7 @@ class HumanTaskUi(Base):
             'UiTemplate': ui_template,
             'Tags': tags,
         }
+            
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
@@ -3914,6 +3923,7 @@ class ImageVersion(Base):
             'Horovod': horovod,
             'ReleaseNotes': release_notes,
         }
+            
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
@@ -4061,6 +4071,7 @@ class InferenceComponent(Base):
             'RuntimeConfig': runtime_config,
             'Tags': tags,
         }
+            
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
@@ -5731,6 +5742,7 @@ class ModelPackageGroup(Base):
             'ModelPackageGroupDescription': model_package_group_description,
             'Tags': tags,
         }
+            
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
@@ -6391,6 +6403,7 @@ class NotebookInstanceLifecycleConfig(Base):
             'OnCreate': on_create,
             'OnStart': on_start,
         }
+            
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
@@ -6923,6 +6936,7 @@ class Project(Base):
             'ServiceCatalogProvisioningDetails': service_catalog_provisioning_details,
             'Tags': tags,
         }
+            
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
@@ -7058,6 +7072,7 @@ class Space(Base):
             'SpaceSharingSettings': space_sharing_settings,
             'SpaceDisplayName': space_display_name,
         }
+            
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
@@ -7184,6 +7199,7 @@ class StudioLifecycleConfig(Base):
             'StudioLifecycleConfigAppType': studio_lifecycle_config_app_type,
             'Tags': tags,
         }
+            
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
@@ -7713,6 +7729,7 @@ class Trial(Base):
             'MetadataProperties': metadata_properties,
             'Tags': tags,
         }
+            
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
@@ -7835,6 +7852,7 @@ class TrialComponent(Base):
             'MetadataProperties': metadata_properties,
             'Tags': tags,
         }
+            
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
@@ -8300,6 +8318,7 @@ class Workteam(Base):
             'NotificationConfiguration': notification_configuration,
             'Tags': tags,
         }
+            
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)

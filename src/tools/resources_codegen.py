@@ -432,7 +432,6 @@ class ResourcesCodeGen:
         return get_args
 
     def generate_create_method(self, resource_name: str, **kwargs) -> str:
-    def generate_create_method(self, resource_name, **kwargs) -> str:
         """
         Auto-generate the CREATE method for a resource.
 
