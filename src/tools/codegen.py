@@ -17,12 +17,18 @@ from src.tools.utils_codegen import UtilsCodeGen
 from src.tools.shapes_codegen import ShapesCodeGen
 from src.tools.resources_codegen import ResourcesCodeGen
 
-def generate_code() -> None:
+def generate_code(utils_code_gen=None, shapes_code_gen=None, resources_code_gen=None) -> None:
     """
-    Generates the code for the given code generators.
+    Generates the code for the given code generators. If any code generator is not 
+    provided when calling this function, the function will initiate the generator.
 
     Note ordering is important, generate the utils and lower level classes first
     then generate the higher level classes.
+
+    Args:
+        utils_code_gen (UtilsCodeGen, optional): The code generator for utility classes.
+        shapes_code_gen (ShapesCodeGen, optional): The code generator for shape classes.
+        resources_code_gen (ResourcesCodeGen, optional): The code generator for resource classes.
 
     Returns:
         None
@@ -32,9 +38,12 @@ def generate_code() -> None:
     with open(SERVICE_JSON_FILE_PATH, 'r') as file:
         service_json = json.load(file)
     
-    utils_code_gen = UtilsCodeGen()
-    shapes_code_gen = ShapesCodeGen(service_json=service_json)
-    resources_code_gen = ResourcesCodeGen(service_json=service_json)
+    if utils_code_gen is None:
+        utils_code_gen = UtilsCodeGen()
+    if shapes_code_gen is None:
+        shapes_code_gen = ShapesCodeGen(service_json=service_json)
+    if resources_code_gen is None:
+        resources_code_gen = ResourcesCodeGen(service_json=service_json)
 
     utils_code_gen.generate_utils()
     shapes_code_gen.generate_shapes()
