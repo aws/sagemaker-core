@@ -41,12 +41,9 @@ def generate_code(utils_code_gen: Optional[UtilsCodeGen]=None,
     with open(SERVICE_JSON_FILE_PATH, 'r') as file:
         service_json = json.load(file)
     
-    if utils_code_gen is None:
-        utils_code_gen = UtilsCodeGen()
-    if shapes_code_gen is None:
-        shapes_code_gen = ShapesCodeGen(service_json=service_json)
-    if resources_code_gen is None:
-        resources_code_gen = ResourcesCodeGen(service_json=service_json)
+    utils_code_gen = utils_code_gen or UtilsCodeGen()
+    shapes_code_gen = shapes_code_gen or ShapesCodeGen(service_json=service_json)
+    resources_code_gen = resources_code_gen or ResourcesCodeGen(service_json=service_json)
 
     utils_code_gen.generate_utils()
     shapes_code_gen.generate_shapes()
