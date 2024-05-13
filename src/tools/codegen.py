@@ -16,8 +16,11 @@ from src.tools.constants import SERVICE_JSON_FILE_PATH
 from src.tools.utils_codegen import UtilsCodeGen
 from src.tools.shapes_codegen import ShapesCodeGen
 from src.tools.resources_codegen import ResourcesCodeGen
+from typing import Optional
 
-def generate_code(utils_code_gen=None, shapes_code_gen=None, resources_code_gen=None) -> None:
+def generate_code(utils_code_gen: Optional[UtilsCodeGen]=None, 
+                  shapes_code_gen: Optional[ShapesCodeGen]=None, 
+                  resources_code_gen: Optional[ResourcesCodeGen]=None) -> None:
     """
     Generates the code for the given code generators. If any code generator is not 
     provided when calling this function, the function will initiate the generator.
