@@ -1,0 +1,8 @@
+name: Daily sync with Botocore
+
+on:
+  schedule:
+    # Everyday at 10:00 UTC
+    - cron: 00 10 * * *
+  workflow_dispatch: {}
+  
