@@ -14,9 +14,12 @@
 import json
 import os
 import logging
+from typing import Optional
+
 import pandas as pd
 
 from src.tools.constants import CLASS_METHODS, OBJECT_METHODS
+from src.tools.data_extractor import load_combined_operations_data, load_combined_shapes_data
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
@@ -55,17 +58,16 @@ class ResourcesExtractor:
     RESOURCE_TO_ADDITIONAL_METHODS = {
         'Cluster': ['DescribeClusterNode', 'ListClusterNodes'],
     }
-    
-    def __init__(self, service_json: dict):
+
+    def __init__(self, combined_shapes: Optional[dict] = None, combined_operations: Optional[dict] = None):
         """
         Initializes a ResourceExtractor object.
 
         Args:
             service_json (dict): The service JSON containing operations and shapes.
         """
-        self.service_json = service_json
-        self.operations = self.service_json['operations']
-        self.shapes = self.service_json['shapes']
+        self.operations = combined_operations or load_combined_operations_data()
+        self.shapes = combined_shapes or load_combined_shapes_data()
         self.resource_actions = {}
         self.actions_under_resource = set()
 
@@ -82,7 +84,9 @@ class ResourcesExtractor:
             None
         """
         for resource in sorted(resources, key=len, reverse=True):
-            filtered_actions = set([a for a in self.actions if a.endswith(resource) or (a.startswith('List') and a.endswith(resource +'s'))])
+            filtered_actions = set([a for a in self.actions if a.endswith(resource)
+                                    or (a.startswith('List') and a.endswith(resource +'s'))
+                                    or a.startswith('Invoke'+resource)])
             self.actions_under_resource.update(filtered_actions)
             self.resource_actions[resource] = filtered_actions
 
@@ -226,11 +230,14 @@ class ResourcesExtractor:
 
                             if chain_resource_name != resource and chain_resource_name in self.resources:
                                 chain_resource_names.add(chain_resource_name)
-
-                if action_low.split(resource_low)[0] in CLASS_METHODS:
-                    class_methods.add(action_low.split(resource_low)[0])
-                elif action_low.split(resource_low)[0] in OBJECT_METHODS:
-                    object_methods.add(action_low.split(resource_low)[0])
+                action_split = action_low.split(resource_low)
+                if action_split[0] == 'invoke':
+                    invoke_method = "_".join(action_split) if action_split[1] else 'invoke'
+                    class_methods.add(invoke_method)
+                elif action_split[0] in CLASS_METHODS:
+                    class_methods.add(action_split[0])
+                elif action_split[0] in OBJECT_METHODS:
+                    object_methods.add(action_split[0])
                 else:
                     additional_methods.add(action)
 
@@ -263,8 +270,4 @@ class ResourcesExtractor:
         return self.df
     
 
-
-file_path = os.getcwd() + '/sample/sagemaker/2017-07-24/service-2.json'
-with open(file_path, 'r') as file:
-    data = json.load(file)
-resource_extractor = ResourcesExtractor(data)
+resource_extractor = ResourcesExtractor()

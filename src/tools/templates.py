@@ -107,6 +107,76 @@ def update(self) -> Optional[object]:
     return self
 '''
 
+INVOKE_METHOD_TEMPLATE = '''
+@classmethod
+def invoke(cls, 
+{create_args}
+) -> Optional[object]:
+    logger.debug(f"Invoking {resource_lower} resource.")
+    client = SageMakerClient(service_name="{service_name}").client
+
+    operation_input_args = {{
+{operation_input_args}
+    }}
+    logger.debug(f"Input request: {{operation_input_args}}")
+    # serialize the input request
+    operation_input_args = {resource_name}._serialize(operation_input_args)
+    logger.debug(f"Serialized input request: {{operation_input_args}}")
+
+    # create the resource
+    response = client.{operation}(**operation_input_args)
+    logger.debug(f"Response: {{response}}")
+
+    return response
+'''
+
+INVOKE_ASYNC_METHOD_TEMPLATE = '''
+@classmethod
+def invoke_async(cls, 
+{create_args}
+) -> Optional[object]:
+    logger.debug(f"Invoking {resource_lower} resource Async.")
+    client = SageMakerClient(service_name="{service_name}").client
+
+    operation_input_args = {{
+{operation_input_args}
+    }}
+    logger.debug(f"Input request: {{operation_input_args}}")
+    # serialize the input request
+    operation_input_args = {resource_name}._serialize(operation_input_args)
+    logger.debug(f"Serialized input request: {{operation_input_args}}")
+
+    # create the resource
+    response = client.{operation}(**operation_input_args)
+    logger.debug(f"Response: {{response}}")
+
+    return response
+'''
+
+INVOKE_WITH_RESPONSE_STREAM_METHOD_TEMPLATE = '''
+@classmethod
+def invoke_with_response_stream(cls, 
+{create_args}
+) -> Optional[object]:
+    logger.debug(f"Invoking {resource_lower} resource with Response Stream.")
+    client = SageMakerClient(service_name="{service_name}").client
+
+    operation_input_args = {{
+{operation_input_args}
+    }}
+    logger.debug(f"Input request: {{operation_input_args}}")
+    # serialize the input request
+    operation_input_args = {resource_name}._serialize(operation_input_args)
+    logger.debug(f"Serialized input request: {{operation_input_args}}")
+
+    # create the resource
+    response = client.{operation}(**operation_input_args)
+    logger.debug(f"Response: {{response}}")
+
+    return response
+'''
+
+
 GET_CONFIG_VALUE_TEMPLATE = '''
 def get_config_value(attribute, resource_defaults, global_defaults):
    if attribute in resource_defaults:

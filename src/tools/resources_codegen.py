@@ -30,15 +30,16 @@ from src.tools.constants import GENERATED_CLASSES_LOCATION, \
 from src.util.util import add_indent, convert_to_snake_case, snake_to_pascal
 from src.tools.resources_extractor import ResourcesExtractor
 from src.tools.shapes_extractor import ShapesExtractor
-from src.tools.templates import (CREATE_METHOD_TEMPLATE, \
-                                 GET_METHOD_TEMPLATE, REFRESH_METHOD_TEMPLATE, \
-                                 RESOURCE_BASE_CLASS_TEMPLATE, \
-                                 STOP_METHOD_TEMPLATE, DELETE_METHOD_TEMPLATE, \
+from src.tools.templates import (CREATE_METHOD_TEMPLATE,
+                                 GET_METHOD_TEMPLATE, REFRESH_METHOD_TEMPLATE,
+                                 RESOURCE_BASE_CLASS_TEMPLATE,
+                                 STOP_METHOD_TEMPLATE, DELETE_METHOD_TEMPLATE,
                                  WAIT_METHOD_TEMPLATE, WAIT_FOR_STATUS_METHOD_TEMPLATE,
-                                 UPDATE_METHOD_TEMPLATE, POPULATE_DEFAULTS_DECORATOR_TEMPLATE, \
-                                 GET_CONFIG_VALUE_TEMPLATE, CREATE_METHOD_TEMPLATE_WITHOUT_DEFAULTS,
-                                 LOAD_CONFIG_VALUES_FOR_RESOURCE_TEMPLATE, \
-                                 LOAD_DEFAULT_CONFIGS_AND_HELPERS_TEMPLATE)
+                                 UPDATE_METHOD_TEMPLATE, POPULATE_DEFAULTS_DECORATOR_TEMPLATE,
+                                 CREATE_METHOD_TEMPLATE_WITHOUT_DEFAULTS,
+                                 INVOKE_METHOD_TEMPLATE,
+                                 INVOKE_ASYNC_METHOD_TEMPLATE, INVOKE_WITH_RESPONSE_STREAM_METHOD_TEMPLATE)
+from src.tools.data_extractor import load_combined_shapes_data, load_combined_operations_data
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
@@ -97,12 +98,12 @@ class ResourcesCodeGen:
             raise Exception(f"Protocol {self.protocol} not supported in this resource generator")
 
         # Extract the operations and shapes
-        self.operations = self.service_json['operations']
-        self.shapes = self.service_json['shapes']
+        self.operations = load_combined_operations_data()
+        self.shapes = load_combined_shapes_data()
 
         # Initialize the resources and shapes extractors
-        self.resources_extractor = ResourcesExtractor(service_json=service_json)
-        self.shapes_extractor = ShapesExtractor(service_json=service_json)
+        self.resources_extractor = ResourcesExtractor()
+        self.shapes_extractor = ShapesExtractor()
 
         # Extract the resources plan and shapes DAG
         self.resources_plan = self.resources_extractor.get_resource_plan()
@@ -182,8 +183,8 @@ class ResourcesCodeGen:
 
 
     def generate_resources(self,
-                           output_folder: str=GENERATED_CLASSES_LOCATION,
-                           file_name: str=RESOURCES_CODEGEN_FILE_NAME) -> None:
+                           output_folder: str = GENERATED_CLASSES_LOCATION,
+                           file_name: str = RESOURCES_CODEGEN_FILE_NAME) -> None:
         """
         Generate the resources file.
 
@@ -333,6 +334,15 @@ class ResourcesCodeGen:
 
             if wait_for_status_method := self._evaluate_method(resource_name, "wait_for_status", object_methods):
                 resource_class += add_indent(wait_for_status_method, 4)
+
+            if invoke_method := self._evaluate_method(resource_name, "invoke", class_methods):
+                resource_class += add_indent(invoke_method, 4)
+
+            if invoke_async_method := self._evaluate_method(resource_name, "invoke_async", class_methods):
+                resource_class += add_indent(invoke_async_method, 4)
+
+            if invoke_with_response_stream_method := self._evaluate_method(resource_name, "invoke_withresponsestream", class_methods):
+                resource_class += add_indent(invoke_with_response_stream_method, 4)
         else:
             # If there's no 'get' method, log a message
             # TODO: Handle the resources without 'get' differently
@@ -367,7 +377,7 @@ class ResourcesCodeGen:
 
         return operation_input_args
 
-    def _generate_method_args(self, operation_input_shape_name: str)-> str:
+    def _generate_method_args(self, operation_input_shape_name: str) -> str:
         """Generates the arguments for a method.
 
         Args:
@@ -383,7 +393,7 @@ class ResourcesCodeGen:
         method_args = add_indent(method_args)
         return method_args
 
-    def _generate_get_args(self, resource_name: str, operation_input_shape_name: str)-> str:
+    def _generate_get_args(self, resource_name: str, operation_input_shape_name: str) -> str:
         """
         Generates a resource identifier based on the required members for the Describe and Create operations.
 
@@ -501,6 +511,130 @@ class ResourcesCodeGen:
             resource_lower=resource_lower,
             operation_input_args=operation_input_args,
             operation=operation,
+        )
+
+        # Return the formatted method
+        return formatted_method
+
+    def generate_invoke_method(self, resource_name: str) -> str:
+        """
+        Auto-generate the INVOKE ASYNC method for a resource.
+
+        Args:
+            resource_name (str): The resource name.
+
+        Returns:
+            str: The formatted Update Method template.
+
+        """
+        # Get the operation and shape for the 'create' method
+        operation_name = "Invoke" + resource_name
+        operation_metadata = self.operations[operation_name]
+        operation_input_shape_name = operation_metadata["input"]["shape"]
+
+        # Generate the arguments for the 'create' method
+        create_args = self._generate_method_args(operation_input_shape_name)
+
+        operation_input_args = self._generate_operation_input_args(
+            operation_metadata, is_class_method=True
+        )
+
+        # Convert the resource name to snake case
+        resource_lower = convert_to_snake_case(resource_name)
+
+        # Convert the operation name to snake case
+        operation = convert_to_snake_case(operation_name)
+
+        # Format the method using the CREATE_METHOD_TEMPLATE
+        formatted_method = INVOKE_METHOD_TEMPLATE.format(
+            service_name='sagemaker-runtime',
+            create_args=create_args,
+            resource_name=resource_name,
+            resource_lower=resource_lower,
+            operation_input_args=operation_input_args,
+            operation=operation,
+        )
+
+        # Return the formatted method
+        return formatted_method
+
+    def generate_invoke_async_method(self, resource_name: str) -> str:
+        """
+        Auto-generate the INVOKE method for a resource.
+
+        Args:
+            resource_name (str): The resource name.
+
+        Returns:
+            str: The formatted Update Method template.
+
+        """
+        # Get the operation and shape for the 'create' method
+        operation_name = "Invoke" + resource_name + "Async"
+        operation_metadata = self.operations[operation_name]
+        operation_input_shape_name = operation_metadata["input"]["shape"]
+
+        # Generate the arguments for the 'create' method
+        create_args = self._generate_method_args(operation_input_shape_name)
+
+        operation_input_args = self._generate_operation_input_args(
+            operation_metadata, is_class_method=True
+        )
+
+        # Convert the resource name to snake case
+        resource_lower = convert_to_snake_case(resource_name)
+
+        # Convert the operation name to snake case
+        operation = convert_to_snake_case(operation_name)
+
+        # Format the method using the CREATE_METHOD_TEMPLATE
+        formatted_method = INVOKE_ASYNC_METHOD_TEMPLATE.format(
+            service_name='sagemaker-runtime',
+            create_args=create_args,
+            resource_name=resource_name,
+            resource_lower=resource_lower,
+            operation_input_args=operation_input_args,
+            operation=operation,
+        )
+
+        # Return the formatted method
+        return formatted_method
+
+
+    def generate_invoke_withresponsestream_method(self, resource_name: str) -> str:
+        """
+        Auto-generate the INVOKE with response stream method for a resource.
+
+        Args:
+            resource_name (str): The resource name.
+
+        Returns:
+            str: The formatted Update Method template.
+
+        """
+        # Get the operation and shape for the 'create' method
+        operation_name = "Invoke" + resource_name + "WithResponseStream"
+        operation_metadata = self.operations[operation_name]
+        operation_input_shape_name = operation_metadata["input"]["shape"]
+
+        # Generate the arguments for the 'create' method
+        create_args = self._generate_method_args(operation_input_shape_name)
+
+        operation_input_args = self._generate_operation_input_args(
+            operation_metadata, is_class_method=True
+        )
+
+        # Convert the resource name to snake case
+        resource_lower = convert_to_snake_case(resource_name)
+
+        # Format the method using the CREATE_METHOD_TEMPLATE
+        formatted_method = INVOKE_WITH_RESPONSE_STREAM_METHOD_TEMPLATE.format(
+            service_name='sagemaker-runtime',
+            create_args=create_args,
+            resource_name=resource_name,
+            resource_lower=resource_lower,
+            operation_input_args=operation_input_args,
+            operation='invoke_endpoint_with_response_stream',
         )
 
         # Return the formatted method
@@ -677,7 +811,7 @@ class ResourcesCodeGen:
         Input for generating the Schema is the service JSON that is already loaded in the class
 
         """
-        self.resources_extractor = ResourcesExtractor(self.service_json)
+        self.resources_extractor = ResourcesExtractor()
         self.resources_plan = self.resources_extractor.get_resource_plan()
 
         resource_properties = {}

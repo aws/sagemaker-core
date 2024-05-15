@@ -2493,6 +2493,119 @@ class Endpoint(Base):
                 raise Exception("Timeout exceeded. Final resource state - " + current_status)
             print("-", end="")
             time.sleep(poll)
+    
+    @classmethod
+    def invoke(cls, 
+        endpoint_name: str,
+        body: b'bytes',
+        content_type: Optional[str] = Unassigned(),
+        accept: Optional[str] = Unassigned(),
+        custom_attributes: Optional[str] = Unassigned(),
+        target_model: Optional[str] = Unassigned(),
+        target_variant: Optional[str] = Unassigned(),
+        target_container_hostname: Optional[str] = Unassigned(),
+        inference_id: Optional[str] = Unassigned(),
+        enable_explanations: Optional[str] = Unassigned(),
+        inference_component_name: Optional[str] = Unassigned(),
+    ) -> Optional[object]:
+        logger.debug(f"Invoking endpoint resource.")
+        client = SageMakerClient(service_name="sagemaker-runtime").client
+    
+        operation_input_args = {
+            'EndpointName': endpoint_name,
+            'Body': body,
+            'ContentType': content_type,
+            'Accept': accept,
+            'CustomAttributes': custom_attributes,
+            'TargetModel': target_model,
+            'TargetVariant': target_variant,
+            'TargetContainerHostname': target_container_hostname,
+            'InferenceId': inference_id,
+            'EnableExplanations': enable_explanations,
+            'InferenceComponentName': inference_component_name,
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = Endpoint._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+    
+        # create the resource
+        response = client.invoke_endpoint(**operation_input_args)
+        logger.debug(f"Response: {response}")
+    
+        return response
+    
+    @classmethod
+    def invoke_async(cls, 
+        endpoint_name: str,
+        input_location: str,
+        content_type: Optional[str] = Unassigned(),
+        accept: Optional[str] = Unassigned(),
+        custom_attributes: Optional[str] = Unassigned(),
+        inference_id: Optional[str] = Unassigned(),
+        request_t_t_l_seconds: Optional[int] = Unassigned(),
+        invocation_timeout_seconds: Optional[int] = Unassigned(),
+    ) -> Optional[object]:
+        logger.debug(f"Invoking endpoint resource Async.")
+        client = SageMakerClient(service_name="sagemaker-runtime").client
+    
+        operation_input_args = {
+            'EndpointName': endpoint_name,
+            'ContentType': content_type,
+            'Accept': accept,
+            'CustomAttributes': custom_attributes,
+            'InferenceId': inference_id,
+            'InputLocation': input_location,
+            'RequestTTLSeconds': request_t_t_l_seconds,
+            'InvocationTimeoutSeconds': invocation_timeout_seconds,
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = Endpoint._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+    
+        # create the resource
+        response = client.invoke_endpoint_async(**operation_input_args)
+        logger.debug(f"Response: {response}")
+    
+        return response
+    
+    @classmethod
+    def invoke_with_response_stream(cls, 
+        endpoint_name: str,
+        body: b'bytes',
+        content_type: Optional[str] = Unassigned(),
+        accept: Optional[str] = Unassigned(),
+        custom_attributes: Optional[str] = Unassigned(),
+        target_variant: Optional[str] = Unassigned(),
+        target_container_hostname: Optional[str] = Unassigned(),
+        inference_id: Optional[str] = Unassigned(),
+        inference_component_name: Optional[str] = Unassigned(),
+    ) -> Optional[object]:
+        logger.debug(f"Invoking endpoint resource with Response Stream.")
+        client = SageMakerClient(service_name="sagemaker-runtime").client
+    
+        operation_input_args = {
+            'EndpointName': endpoint_name,
+            'Body': body,
+            'ContentType': content_type,
+            'Accept': accept,
+            'CustomAttributes': custom_attributes,
+            'TargetVariant': target_variant,
+            'TargetContainerHostname': target_container_hostname,
+            'InferenceId': inference_id,
+            'InferenceComponentName': inference_component_name,
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = Endpoint._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+    
+        # create the resource
+        response = client.invoke_endpoint_with_response_stream(**operation_input_args)
+        logger.debug(f"Response: {response}")
+    
+        return response
 
 
 class EndpointConfig(Base):

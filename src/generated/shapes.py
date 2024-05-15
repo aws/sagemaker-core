@@ -10344,3 +10344,135 @@ class VariantProperty(Base):
     """
     variant_property_type: str
 
+
+class InternalDependencyException(Base):
+    """
+     InternalDependencyException
+ 	  <p>Your request caused an exception with an internal dependency. Contact customer support. </p>
+
+ 	 Attributes
+	----------------------
+ 	message
+    """
+    message: Optional[str] = Unassigned()
+
+
+class InternalFailure(Base):
+    """
+     InternalFailure
+ 	  <p> An internal failure occurred. </p>
+
+ 	 Attributes
+	----------------------
+ 	message
+    """
+    message: Optional[str] = Unassigned()
+
+
+class InternalStreamFailure(Base):
+    """
+     InternalStreamFailure
+ 	  <p>The stream processing failed because of an unknown error, exception or failure. Try your request again.</p>
+
+ 	 Attributes
+	----------------------
+ 	message
+    """
+    message: Optional[str] = Unassigned()
+
+
+class PayloadPart(Base):
+    """
+     PayloadPart
+ 	  <p>A wrapper for pieces of the payload that's returned in response to a streaming inference request. A streaming inference response consists of one or more payload parts. </p>
+
+ 	 Attributes
+	----------------------
+ 	bytes: 	 <p>A blob that contains part of the response for your streaming inference request.</p>
+    """
+    bytes: Optional[b'bytes'] = Unassigned()
+
+
+class ModelStreamError(Base):
+    """
+     ModelStreamError
+ 	  <p> An error occurred while streaming the response body. This error can have the following error codes:</p> <dl> <dt>ModelInvocationTimeExceeded</dt> <dd> <p>The model failed to finish sending the response within the timeout period allowed by Amazon SageMaker.</p> </dd> <dt>StreamBroken</dt> <dd> <p>The Transmission Control Protocol (TCP) connection between the client and the model was reset or closed.</p> </dd> </dl>
+
+ 	 Attributes
+	----------------------
+ 	message
+ 	error_code: 	 <p>This error can have the following error codes:</p> <dl> <dt>ModelInvocationTimeExceeded</dt> <dd> <p>The model failed to finish sending the response within the timeout period allowed by Amazon SageMaker.</p> </dd> <dt>StreamBroken</dt> <dd> <p>The Transmission Control Protocol (TCP) connection between the client and the model was reset or closed.</p> </dd> </dl>
+    """
+    message: Optional[str] = Unassigned()
+    error_code: Optional[str] = Unassigned()
+
+
+class ResponseStream(Base):
+    """
+     ResponseStream
+ 	  <p>A stream of payload parts. Each part contains a portion of the response for a streaming inference request.</p>
+
+ 	 Attributes
+	----------------------
+ 	payload_part: 	 <p>A wrapper for pieces of the payload that's returned in response to a streaming inference request. A streaming inference response consists of one or more payload parts. </p>
+ 	model_stream_error: 	 <p> An error occurred while streaming the response body. This error can have the following error codes:</p> <dl> <dt>ModelInvocationTimeExceeded</dt> <dd> <p>The model failed to finish sending the response within the timeout period allowed by Amazon SageMaker.</p> </dd> <dt>StreamBroken</dt> <dd> <p>The Transmission Control Protocol (TCP) connection between the client and the model was reset or closed.</p> </dd> </dl>
+ 	internal_stream_failure: 	 <p>The stream processing failed because of an unknown error, exception or failure. Try your request again.</p>
+    """
+    payload_part: Optional[PayloadPart] = Unassigned()
+    model_stream_error: Optional[ModelStreamError] = Unassigned()
+    internal_stream_failure: Optional[InternalStreamFailure] = Unassigned()
+
+
+class ModelError(Base):
+    """
+     ModelError
+ 	  <p> Model (owned by the customer in the container) returned 4xx or 5xx error code. </p>
+
+ 	 Attributes
+	----------------------
+ 	message
+ 	original_status_code: 	 <p> Original status code. </p>
+ 	original_message: 	 <p> Original message. </p>
+ 	log_stream_arn: 	 <p> The Amazon Resource Name (ARN) of the log stream. </p>
+    """
+    message: Optional[str] = Unassigned()
+    original_status_code: Optional[int] = Unassigned()
+    original_message: Optional[str] = Unassigned()
+    log_stream_arn: Optional[str] = Unassigned()
+
+
+class ModelNotReadyException(Base):
+    """
+     ModelNotReadyException
+ 	  <p>Either a serverless endpoint variant's resources are still being provisioned, or a multi-model endpoint is still downloading or loading the target model. Wait and try your request again.</p>
+
+ 	 Attributes
+	----------------------
+ 	message
+    """
+    message: Optional[str] = Unassigned()
+
+
+class ServiceUnavailable(Base):
+    """
+     ServiceUnavailable
+ 	  <p> The service is unavailable. Try your call again. </p>
+
+ 	 Attributes
+	----------------------
+ 	message
+    """
+    message: Optional[str] = Unassigned()
+
+
+class ValidationError(Base):
+    """
+     ValidationError
+ 	  <p> Inspect your request and try again. </p>
+
+ 	 Attributes
+	----------------------
+ 	message
+    """
+    message: Optional[str] = Unassigned()
+

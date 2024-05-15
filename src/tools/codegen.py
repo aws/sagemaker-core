@@ -11,14 +11,13 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 """Generates the code for the service model."""
-import json
-from src.tools.constants import SERVICE_JSON_FILE_PATH
 from src.tools.utils_codegen import UtilsCodeGen
 from src.tools.shapes_codegen import ShapesCodeGen
 from src.tools.resources_codegen import ResourcesCodeGen
 from typing import Optional
 
 from src.tools.intelligent_defaults_helper_codegen import IntelligentDefaultsHelperCodeGen
+from src.tools.data_extractor import ServiceJsonData, load_service_jsons
 
 
 def generate_code(utils_code_gen: Optional[UtilsCodeGen]=None,
@@ -40,14 +39,12 @@ def generate_code(utils_code_gen: Optional[UtilsCodeGen]=None,
     Returns:
         None
     """
-    
-    # TODO: Inject service JSON file path & run through with all the sagemaker service JSON files
-    with open(SERVICE_JSON_FILE_PATH, 'r') as file:
-        service_json = json.load(file)
+
+    service_json_data: ServiceJsonData = load_service_jsons()
     
     utils_code_gen = utils_code_gen or UtilsCodeGen()
-    shapes_code_gen = shapes_code_gen or ShapesCodeGen(service_json=service_json)
-    resources_code_gen = resources_code_gen or ResourcesCodeGen(service_json=service_json)
+    shapes_code_gen = shapes_code_gen or ShapesCodeGen()
+    resources_code_gen = resources_code_gen or ResourcesCodeGen(service_json=service_json_data.sagemaker)
     intelligent_defaults_helper_code_gen = intelligent_defaults_helper_code_gen or IntelligentDefaultsHelperCodeGen()
 
     utils_code_gen.generate_utils()
