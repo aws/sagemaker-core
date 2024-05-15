@@ -42,6 +42,7 @@ def create(
         'StoppingCondition': stopping_condition,
         'Tags': tags,
     }
+        
     logger.debug(f"Input request: {operation_input_args}")
     # serialize the input request
     operation_input_args = cls._serialize(operation_input_args)

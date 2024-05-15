@@ -71,6 +71,7 @@ SERVICE_JSON_FILE_PATH = os.getcwd() + '/sample/sagemaker/2017-07-24/service-2.j
 
 GENERATED_CLASSES_LOCATION = os.getcwd() + '/src/generated'
 UTILS_CODEGEN_FILE_NAME = 'utils.py'
+INTELLIGENT_DEFAULTS_HELPER_CODEGEN_FILE_NAME = 'intelligent_defaults_helper.py'
 
 RESOURCES_CODEGEN_FILE_NAME = 'resources.py'
 

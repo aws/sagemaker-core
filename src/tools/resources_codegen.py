@@ -38,7 +38,7 @@ from src.tools.templates import (CREATE_METHOD_TEMPLATE, \
                                  UPDATE_METHOD_TEMPLATE, POPULATE_DEFAULTS_DECORATOR_TEMPLATE, \
                                  GET_CONFIG_VALUE_TEMPLATE, CREATE_METHOD_TEMPLATE_WITHOUT_DEFAULTS,
                                  LOAD_CONFIG_VALUES_FOR_RESOURCE_TEMPLATE, \
-                                 LOAD_DEFAULT_CONFIGS_TEMPLATE)
+                                 LOAD_DEFAULT_CONFIGS_AND_HELPERS_TEMPLATE)
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
@@ -134,18 +134,14 @@ class ResourcesCodeGen:
         imports = [
             BASIC_IMPORTS_STRING,
             "import time",
-            "import os",
             "from pprint import pprint",
-            "from pydantic import BaseModel, validate_call",
-            "from typing import List, Dict, Optional, Literal",
-            "import json",
-            "import jsonschema",
-            "from functools import lru_cache",
+            "from pydantic import validate_call",
+            "from typing import Literal",
             "from boto3.session import Session",
             "from .utils import SageMakerClient, Unassigned, snake_to_pascal, pascal_to_snake",
+            "from .intelligent_defaults_helper import load_default_configs_for_resource_name, get_config_value",
             "from src.code_injection.codec import transform",
-            "from .shapes import *",
-            "from .config_schema import SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA"
+            "from .shapes import *"
         ]
 
         formated_imports = "\n".join(imports)
@@ -184,11 +180,6 @@ class ResourcesCodeGen:
             configurable_attributes=CONFIGURABLE_ATTRIBUTE_SUBSTRINGS,
             class_attributes=class_attributes)
 
-    @staticmethod
-    def generate_configs_loading_helper_functions(output_file):
-        output_file.write(LOAD_DEFAULT_CONFIGS_TEMPLATE)
-        output_file.write(LOAD_CONFIG_VALUES_FOR_RESOURCE_TEMPLATE)
-        output_file.write(GET_CONFIG_VALUE_TEMPLATE)
 
     def generate_resources(self,
                            output_folder: str=GENERATED_CLASSES_LOCATION,
@@ -213,7 +204,6 @@ class ResourcesCodeGen:
 
             # Generate and write the imports to the file
             file.write(self.generate_imports())
-            self.generate_configs_loading_helper_functions(file)
 
             # Generate and write the logging statements to the file
             file.write(self.generate_logging())
@@ -515,7 +505,7 @@ class ResourcesCodeGen:
 
         # Return the formatted method
         return formatted_method
-    
+
     def generate_get_method(self, resource_name: str) -> str:
         """
         Auto-generate the GET method (describe API) for a resource.
