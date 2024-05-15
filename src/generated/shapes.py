@@ -10390,7 +10390,7 @@ class PayloadPart(Base):
 	----------------------
  	bytes: 	 <p>A blob that contains part of the response for your streaming inference request.</p>
     """
-    bytes: Optional[b'bytes'] = Unassigned()
+    bytes: Optional[str] = Unassigned()
 
 
 class ModelStreamError(Base):

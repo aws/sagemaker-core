@@ -2497,7 +2497,7 @@ class Endpoint(Base):
     @classmethod
     def invoke(cls, 
         endpoint_name: str,
-        body: b'bytes',
+        body: str,
         content_type: Optional[str] = Unassigned(),
         accept: Optional[str] = Unassigned(),
         custom_attributes: Optional[str] = Unassigned(),
@@ -2573,7 +2573,7 @@ class Endpoint(Base):
     @classmethod
     def invoke_with_response_stream(cls, 
         endpoint_name: str,
-        body: b'bytes',
+        body: str,
         content_type: Optional[str] = Unassigned(),
         accept: Optional[str] = Unassigned(),
         custom_attributes: Optional[str] = Unassigned(),

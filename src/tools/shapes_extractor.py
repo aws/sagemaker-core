@@ -18,7 +18,7 @@ from typing import Optional
 
 from src.tools.constants import BASIC_JSON_TYPES_TO_PYTHON_TYPES, SHAPE_DAG_FILE_PATH
 from src.util.util import reformat_file_with_black, convert_to_snake_case
-from tools.data_extractor import load_combined_shapes_data
+from src.tools.data_extractor import load_combined_shapes_data
 
 
 class ShapesExtractor:

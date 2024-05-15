@@ -3,7 +3,7 @@ from functools import lru_cache
 
 from pydantic import BaseModel
 
-from tools.constants import SERVICE_JSON_FILE_PATH, RUNTIME_SERVICE_JSON_FILE_PATH
+from src.tools.constants import SERVICE_JSON_FILE_PATH, RUNTIME_SERVICE_JSON_FILE_PATH
 
 
 class ServiceJsonData(BaseModel):

@@ -30,7 +30,7 @@ BASIC_JSON_TYPES_TO_PYTHON_TYPES = {
     "double": "float",
     "list": "list",
     "timestamp": "datetime.datetime",
-    "blob": "b'bytes'"
+    "blob": "str"
 }
 
 SHAPE_DAG_FILE_PATH = os.getcwd() + '/src/code_injection/shape_dag.py'
