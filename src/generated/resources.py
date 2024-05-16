@@ -15,39 +15,15 @@
 import logging
 
 import time
-import os
 from pprint import pprint
-from pydantic import BaseModel, validate_call
-from typing import List, Dict, Optional, Literal
-import json
-import jsonschema
-from functools import lru_cache
+from pydantic import validate_call
+from typing import Literal
 from boto3.session import Session
 from .utils import SageMakerClient, Unassigned, snake_to_pascal, pascal_to_snake
+from .intelligent_defaults_helper import load_default_configs_for_resource_name, get_config_value
 from src.code_injection.codec import transform
 from .shapes import *
-from .config_schema import SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA
 
-
-@lru_cache(maxsize=None)
-def load_default_configs():
-    configs_file_path = os.getcwd() + '/sample/sagemaker/2017-07-24/default-configs.json'
-    with open(configs_file_path, 'r') as file:
-        configs_data = json.load(file)
-    jsonschema.validate(configs_data, SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA)
-    return configs_data
-
-@lru_cache(maxsize=None)
-def load_default_configs_for_resource_name(resource_name: str):
-    configs_data = load_default_configs()
-    return configs_data["SageMaker"]["PythonSDK"]["Resources"].get(resource_name)
-
-def get_config_value(attribute, resource_defaults, global_defaults):
-   if attribute in resource_defaults:
-       return resource_defaults[attribute]
-   if attribute in global_defaults:
-       return global_defaults[attribute]
-   raise Exception("Configurable value not present in Configs")
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -84,15 +60,16 @@ class Base(BaseModel):
         return s[:1].upper() + s[1:]
             
     @staticmethod
-    def get_updated_kwargs_with_configured_attributes(config_schema_for_resource: dict, **kwargs):
+    def get_updated_kwargs_with_configured_attributes(config_schema_for_resource: dict, resource_name: str, **kwargs):
         for configurable_attribute in config_schema_for_resource:
             if kwargs.get(configurable_attribute) is None:
-                resource_defaults = load_default_configs_for_resource_name(resource_name="Cluster")
+                resource_defaults = load_default_configs_for_resource_name(resource_name=resource_name)
                 global_defaults = load_default_configs_for_resource_name(resource_name="GlobalDefaults")
                 formatted_attribute = pascal_to_snake(configurable_attribute)
-                kwargs[formatted_attribute] = get_config_value(formatted_attribute,
+                if config_value := get_config_value(formatted_attribute,
                  resource_defaults,
-                 global_defaults)
+                 global_defaults):
+                    kwargs[formatted_attribute] = config_value
         return kwargs
         
 class Action(Base):
@@ -137,6 +114,7 @@ class Action(Base):
             'MetadataProperties': metadata_properties,
             'Tags': tags,
         }
+            
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
@@ -245,7 +223,7 @@ class Algorithm(Base):
             }
           }
         }
-            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, **kwargs))
+            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "Algorithm", **kwargs))
         return wrapper
     
     @classmethod
@@ -387,6 +365,7 @@ class App(Base):
             'Tags': tags,
             'ResourceSpec': resource_spec,
         }
+            
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
@@ -503,6 +482,7 @@ class AppImageConfig(Base):
             'KernelGatewayImageConfig': kernel_gateway_image_config,
             'JupyterLabAppImageConfig': jupyter_lab_app_image_config,
         }
+            
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
@@ -611,6 +591,7 @@ class Artifact(Base):
             'MetadataProperties': metadata_properties,
             'Tags': tags,
         }
+            
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
@@ -751,7 +732,7 @@ class AutoMLJob(Base):
             }
           }
         }
-            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, **kwargs))
+            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "AutoMLJob", **kwargs))
         return wrapper
     
     @classmethod
@@ -932,7 +913,7 @@ class AutoMLJobV2(Base):
             }
           }
         }
-            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, **kwargs))
+            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "AutoMLJobV2", **kwargs))
         return wrapper
     
     @classmethod
@@ -1063,7 +1044,7 @@ class Cluster(Base):
             }
           }
         }
-            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, **kwargs))
+            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "Cluster", **kwargs))
         return wrapper
     
     @classmethod
@@ -1204,6 +1185,7 @@ class CodeRepository(Base):
             'GitConfig': git_config,
             'Tags': tags,
         }
+            
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
@@ -1336,7 +1318,7 @@ class CompilationJob(Base):
             }
           }
         }
-            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, **kwargs))
+            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "CompilationJob", **kwargs))
         return wrapper
     
     @classmethod
@@ -1484,6 +1466,7 @@ class Context(Base):
             'Properties': properties,
             'Tags': tags,
         }
+            
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
@@ -1640,7 +1623,7 @@ class DataQualityJobDefinition(Base):
             }
           }
         }
-            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, **kwargs))
+            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "DataQualityJobDefinition", **kwargs))
         return wrapper
     
     @classmethod
@@ -1757,7 +1740,7 @@ class DeviceFleet(Base):
             "type": "string"
           }
         }
-            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, **kwargs))
+            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "DeviceFleet", **kwargs))
         return wrapper
     
     @classmethod
@@ -1978,7 +1961,7 @@ class Domain(Base):
             }
           }
         }
-            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, **kwargs))
+            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "Domain", **kwargs))
         return wrapper
     
     @classmethod
@@ -2151,6 +2134,7 @@ class EdgeDeploymentPlan(Base):
             'Stages': stages,
             'Tags': tags,
         }
+            
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
@@ -2242,7 +2226,7 @@ class EdgePackagingJob(Base):
             }
           }
         }
-            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, **kwargs))
+            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "EdgePackagingJob", **kwargs))
         return wrapper
     
     @classmethod
@@ -2390,7 +2374,7 @@ class Endpoint(Base):
             }
           }
         }
-            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, **kwargs))
+            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "Endpoint", **kwargs))
         return wrapper
     
     @classmethod
@@ -2572,7 +2556,7 @@ class EndpointConfig(Base):
             }
           }
         }
-            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, **kwargs))
+            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "EndpointConfig", **kwargs))
         return wrapper
     
     @classmethod
@@ -2691,6 +2675,7 @@ class Experiment(Base):
             'Description': description,
             'Tags': tags,
         }
+            
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
@@ -2812,7 +2797,7 @@ class FeatureGroup(Base):
             "type": "string"
           }
         }
-            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, **kwargs))
+            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "FeatureGroup", **kwargs))
         return wrapper
     
     @classmethod
@@ -2975,7 +2960,7 @@ class FlowDefinition(Base):
             "type": "string"
           }
         }
-            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, **kwargs))
+            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "FlowDefinition", **kwargs))
         return wrapper
     
     @classmethod
@@ -3101,7 +3086,7 @@ class Hub(Base):
             }
           }
         }
-            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, **kwargs))
+            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "Hub", **kwargs))
         return wrapper
     
     @classmethod
@@ -3340,6 +3325,7 @@ class HumanTaskUi(Base):
             'UiTemplate': ui_template,
             'Tags': tags,
         }
+            
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
@@ -3481,7 +3467,7 @@ class HyperParameterTuningJob(Base):
             }
           }
         }
-            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, **kwargs))
+            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "HyperParameterTuningJob", **kwargs))
         return wrapper
     
     @classmethod
@@ -3611,7 +3597,7 @@ class Image(Base):
             "type": "string"
           }
         }
-            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, **kwargs))
+            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "Image", **kwargs))
         return wrapper
     
     @classmethod
@@ -3784,6 +3770,7 @@ class ImageVersion(Base):
             'Horovod': horovod,
             'ReleaseNotes': release_notes,
         }
+            
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
@@ -3931,6 +3918,7 @@ class InferenceComponent(Base):
             'RuntimeConfig': runtime_config,
             'Tags': tags,
         }
+            
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
@@ -4060,7 +4048,7 @@ class InferenceExperiment(Base):
             "type": "string"
           }
         }
-            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, **kwargs))
+            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "InferenceExperiment", **kwargs))
         return wrapper
     
     @classmethod
@@ -4250,7 +4238,7 @@ class InferenceRecommendationsJob(Base):
             }
           }
         }
-            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, **kwargs))
+            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "InferenceRecommendationsJob", **kwargs))
         return wrapper
     
     @classmethod
@@ -4437,7 +4425,7 @@ class LabelingJob(Base):
             }
           }
         }
-            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, **kwargs))
+            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "LabelingJob", **kwargs))
         return wrapper
     
     @classmethod
@@ -4593,7 +4581,7 @@ class Model(Base):
             }
           }
         }
-            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, **kwargs))
+            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "Model", **kwargs))
         return wrapper
     
     @classmethod
@@ -4759,7 +4747,7 @@ class ModelBiasJobDefinition(Base):
             }
           }
         }
-            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, **kwargs))
+            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "ModelBiasJobDefinition", **kwargs))
         return wrapper
     
     @classmethod
@@ -4870,7 +4858,7 @@ class ModelCard(Base):
             }
           }
         }
-            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, **kwargs))
+            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "ModelCard", **kwargs))
         return wrapper
     
     @classmethod
@@ -5021,7 +5009,7 @@ class ModelCardExportJob(Base):
             }
           }
         }
-            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, **kwargs))
+            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "ModelCardExportJob", **kwargs))
         return wrapper
     
     @classmethod
@@ -5189,7 +5177,7 @@ class ModelExplainabilityJobDefinition(Base):
             }
           }
         }
-            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, **kwargs))
+            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "ModelExplainabilityJobDefinition", **kwargs))
         return wrapper
     
     @classmethod
@@ -5421,7 +5409,7 @@ class ModelPackage(Base):
             }
           }
         }
-            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, **kwargs))
+            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "ModelPackage", **kwargs))
         return wrapper
     
     @classmethod
@@ -5601,6 +5589,7 @@ class ModelPackageGroup(Base):
             'ModelPackageGroupDescription': model_package_group_description,
             'Tags': tags,
         }
+            
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
@@ -5757,7 +5746,7 @@ class ModelQualityJobDefinition(Base):
             }
           }
         }
-            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, **kwargs))
+            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "ModelQualityJobDefinition", **kwargs))
         return wrapper
     
     @classmethod
@@ -5909,7 +5898,7 @@ class MonitoringSchedule(Base):
             }
           }
         }
-            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, **kwargs))
+            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "MonitoringSchedule", **kwargs))
         return wrapper
     
     @classmethod
@@ -6076,7 +6065,7 @@ class NotebookInstance(Base):
             "type": "string"
           }
         }
-            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, **kwargs))
+            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "NotebookInstance", **kwargs))
         return wrapper
     
     @classmethod
@@ -6261,6 +6250,7 @@ class NotebookInstanceLifecycleConfig(Base):
             'OnCreate': on_create,
             'OnStart': on_start,
         }
+            
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
@@ -6357,7 +6347,7 @@ class Pipeline(Base):
             "type": "string"
           }
         }
-            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, **kwargs))
+            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "Pipeline", **kwargs))
         return wrapper
     
     @classmethod
@@ -6650,7 +6640,7 @@ class ProcessingJob(Base):
             "type": "string"
           }
         }
-            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, **kwargs))
+            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "ProcessingJob", **kwargs))
         return wrapper
     
     @classmethod
@@ -6793,6 +6783,7 @@ class Project(Base):
             'ServiceCatalogProvisioningDetails': service_catalog_provisioning_details,
             'Tags': tags,
         }
+            
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
@@ -6928,6 +6919,7 @@ class Space(Base):
             'SpaceSharingSettings': space_sharing_settings,
             'SpaceDisplayName': space_display_name,
         }
+            
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
@@ -7054,6 +7046,7 @@ class StudioLifecycleConfig(Base):
             'StudioLifecycleConfigAppType': studio_lifecycle_config_app_type,
             'Tags': tags,
         }
+            
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
@@ -7211,7 +7204,7 @@ class TrainingJob(Base):
             }
           }
         }
-            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, **kwargs))
+            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "TrainingJob", **kwargs))
         return wrapper
     
     @classmethod
@@ -7433,7 +7426,7 @@ class TransformJob(Base):
             }
           }
         }
-            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, **kwargs))
+            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "TransformJob", **kwargs))
         return wrapper
     
     @classmethod
@@ -7583,6 +7576,7 @@ class Trial(Base):
             'MetadataProperties': metadata_properties,
             'Tags': tags,
         }
+            
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
@@ -7705,6 +7699,7 @@ class TrialComponent(Base):
             'MetadataProperties': metadata_properties,
             'Tags': tags,
         }
+            
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
@@ -7870,7 +7865,7 @@ class UserProfile(Base):
             }
           }
         }
-            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, **kwargs))
+            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "UserProfile", **kwargs))
         return wrapper
     
     @classmethod
@@ -8021,7 +8016,7 @@ class Workforce(Base):
             }
           }
         }
-            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, **kwargs))
+            create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "Workforce", **kwargs))
         return wrapper
     
     @classmethod
@@ -8170,6 +8165,7 @@ class Workteam(Base):
             'NotificationConfiguration': notification_configuration,
             'Tags': tags,
         }
+            
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
