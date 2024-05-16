@@ -216,9 +216,7 @@ def wait_for_status(
 
     def test_generate_invoke_method(self):
         expected_output = '''
-@classmethod
-def invoke(cls, 
-    endpoint_name: str,
+def invoke(self, 
     body: str,
     content_type: Optional[str] = Unassigned(),
     accept: Optional[str] = Unassigned(),
@@ -234,7 +232,7 @@ def invoke(cls,
     client = SageMakerClient(service_name="sagemaker-runtime").client
 
     operation_input_args = {
-        'EndpointName': endpoint_name,
+        'EndpointName': self.endpoint_name,
         'Body': body,
         'ContentType': content_type,
         'Accept': accept,
@@ -257,14 +255,12 @@ def invoke(cls,
 
     return response
 '''
-        assert self.resource_generator.generate_invoke_method("Endpoint") == expected_output
+        assert self.resource_generator.generate_invoke_method("Endpoint", resource_attributes=['endpoint_name']) == expected_output
 
 
     def test_generate_invoke_async_method(self):
         expected_output = '''
-@classmethod
-def invoke_async(cls, 
-    endpoint_name: str,
+def invoke_async(self, 
     input_location: str,
     content_type: Optional[str] = Unassigned(),
     accept: Optional[str] = Unassigned(),
@@ -277,7 +273,7 @@ def invoke_async(cls,
     client = SageMakerClient(service_name="sagemaker-runtime").client
 
     operation_input_args = {
-        'EndpointName': endpoint_name,
+        'EndpointName': self.endpoint_name,
         'ContentType': content_type,
         'Accept': accept,
         'CustomAttributes': custom_attributes,
@@ -297,13 +293,11 @@ def invoke_async(cls,
 
     return response
 '''
-        assert self.resource_generator.generate_invoke_async_method("Endpoint") == expected_output
+        assert self.resource_generator.generate_invoke_async_method("Endpoint", resource_attributes=['endpoint_name']) == expected_output
 
     def test_generate_invoke_with_response_stream_method(self):
         expected_output = '''
-@classmethod
-def invoke_with_response_stream(cls, 
-    endpoint_name: str,
+def invoke_with_response_stream(self, 
     body: str,
     content_type: Optional[str] = Unassigned(),
     accept: Optional[str] = Unassigned(),
@@ -317,7 +311,7 @@ def invoke_with_response_stream(cls,
     client = SageMakerClient(service_name="sagemaker-runtime").client
 
     operation_input_args = {
-        'EndpointName': endpoint_name,
+        'EndpointName': self.endpoint_name,
         'Body': body,
         'ContentType': content_type,
         'Accept': accept,
@@ -338,4 +332,4 @@ def invoke_with_response_stream(cls,
 
     return response
 '''
-        assert self.resource_generator.generate_invoke_withresponsestream_method("Endpoint") == expected_output
+        assert self.resource_generator.generate_invoke_with_response_stream_method("Endpoint", resource_attributes=['endpoint_name']) == expected_output

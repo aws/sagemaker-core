@@ -2494,9 +2494,7 @@ class Endpoint(Base):
             print("-", end="")
             time.sleep(poll)
     
-    @classmethod
-    def invoke(cls, 
-        endpoint_name: str,
+    def invoke(self, 
         body: str,
         content_type: Optional[str] = Unassigned(),
         accept: Optional[str] = Unassigned(),
@@ -2512,7 +2510,7 @@ class Endpoint(Base):
         client = SageMakerClient(service_name="sagemaker-runtime").client
     
         operation_input_args = {
-            'EndpointName': endpoint_name,
+            'EndpointName': self.endpoint_name,
             'Body': body,
             'ContentType': content_type,
             'Accept': accept,
@@ -2535,9 +2533,7 @@ class Endpoint(Base):
     
         return response
     
-    @classmethod
-    def invoke_async(cls, 
-        endpoint_name: str,
+    def invoke_async(self, 
         input_location: str,
         content_type: Optional[str] = Unassigned(),
         accept: Optional[str] = Unassigned(),
@@ -2550,7 +2546,7 @@ class Endpoint(Base):
         client = SageMakerClient(service_name="sagemaker-runtime").client
     
         operation_input_args = {
-            'EndpointName': endpoint_name,
+            'EndpointName': self.endpoint_name,
             'ContentType': content_type,
             'Accept': accept,
             'CustomAttributes': custom_attributes,
@@ -2570,9 +2566,7 @@ class Endpoint(Base):
     
         return response
     
-    @classmethod
-    def invoke_with_response_stream(cls, 
-        endpoint_name: str,
+    def invoke_with_response_stream(self, 
         body: str,
         content_type: Optional[str] = Unassigned(),
         accept: Optional[str] = Unassigned(),
@@ -2586,7 +2580,7 @@ class Endpoint(Base):
         client = SageMakerClient(service_name="sagemaker-runtime").client
     
         operation_input_args = {
-            'EndpointName': endpoint_name,
+            'EndpointName': self.endpoint_name,
             'Body': body,
             'ContentType': content_type,
             'Accept': accept,

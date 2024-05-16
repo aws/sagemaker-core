@@ -108,8 +108,7 @@ def update(self) -> Optional[object]:
 '''
 
 INVOKE_METHOD_TEMPLATE = '''
-@classmethod
-def invoke(cls, 
+def invoke(self, 
 {create_args}
 ) -> Optional[object]:
     logger.debug(f"Invoking {resource_lower} resource.")
@@ -131,8 +130,7 @@ def invoke(cls,
 '''
 
 INVOKE_ASYNC_METHOD_TEMPLATE = '''
-@classmethod
-def invoke_async(cls, 
+def invoke_async(self, 
 {create_args}
 ) -> Optional[object]:
     logger.debug(f"Invoking {resource_lower} resource Async.")
@@ -154,8 +152,7 @@ def invoke_async(cls,
 '''
 
 INVOKE_WITH_RESPONSE_STREAM_METHOD_TEMPLATE = '''
-@classmethod
-def invoke_with_response_stream(cls, 
+def invoke_with_response_stream(self, 
 {create_args}
 ) -> Optional[object]:
     logger.debug(f"Invoking {resource_lower} resource with Response Stream.")

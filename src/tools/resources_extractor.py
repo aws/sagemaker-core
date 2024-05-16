@@ -232,8 +232,13 @@ class ResourcesExtractor:
                                 chain_resource_names.add(chain_resource_name)
                 action_split = action_low.split(resource_low)
                 if action_split[0] == 'invoke':
-                    invoke_method = "_".join(action_split) if action_split[1] else 'invoke'
-                    class_methods.add(invoke_method)
+                    if not action_split[1]:
+                        invoke_method = 'invoke'
+                    elif action_split[1] == 'async':
+                        invoke_method = 'invoke_async'
+                    else:
+                        invoke_method = 'invoke_with_response_stream'
+                    object_methods.add(invoke_method)
                 elif action_split[0] in CLASS_METHODS:
                     class_methods.add(action_split[0])
                 elif action_split[0] in OBJECT_METHODS:
