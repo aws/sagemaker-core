@@ -44,6 +44,8 @@ from src.tools.data_extractor import load_combined_shapes_data, load_combined_op
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
 
+CONFIGURABLE_ATTRIBUTE_SUBSTRINGS = ['kms', 's3', 'subnet', 'tags', 'role', 'security_group']
+
 TYPE = "type"
 OBJECT = "object"
 PROPERTIES = "properties"
@@ -135,6 +137,7 @@ class ResourcesCodeGen:
         imports = [
             BASIC_IMPORTS_STRING,
             "import time",
+            "import os",
             "from pprint import pprint",
             "from pydantic import validate_call",
             "from typing import Literal",
@@ -205,6 +208,7 @@ class ResourcesCodeGen:
 
             # Generate and write the imports to the file
             file.write(self.generate_imports())
+            self.generate_configs_loading_helper_functions(file)
 
             # Generate and write the logging statements to the file
             file.write(self.generate_logging())
@@ -231,7 +235,7 @@ class ResourcesCodeGen:
                                                               raw_actions,
                                                               resource_status_chain,
                                                               resource_states)
-
+                
                 # If the resource class was successfully generated, write it to the file
                 if resource_class:
                     file.write(f"{resource_class}\n\n")
@@ -768,7 +772,8 @@ class ResourcesCodeGen:
         formatted_method = REFRESH_METHOD_TEMPLATE.format(
             operation_input_args=operation_input_args,
             operation=operation,
-            describe_operation_output_shape=resource_operation_output_shape_name,
+            # ToDo Refresh method instance update logic is yet to be strategised
+            # describe_operation_output_shape=resource_operation_output_shape_name,
         )
         return formatted_method
 

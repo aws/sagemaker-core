@@ -211,6 +211,54 @@ def populate_inputs_decorator(create_func):
     return wrapper
 '''
 
+CREATE_METHOD_TEMPLATE_WITHOUT_DECORATOR = '''
+@classmethod
+def create(
+    cls,
+{create_args}
+    session: Optional[Session] = None,
+    region: Optional[str] = None,
+) -> Optional[object]:
+    logger.debug(f"Creating {resource_lower} resource.")
+    client = SageMakerClient(session=session, region_name=region, service_name='{service_name}')
+
+    operation_input_args = {{
+{operation_input_args}
+    }}
+    logger.debug(f"Input request: {{operation_input_args}}")
+    # serialize the input request
+    operation_input_args = cls._serialize(operation_input_args)
+    logger.debug(f"Serialized input request: {{operation_input_args}}")
+
+    # create the resource
+    response = client.{operation}(**operation_input_args)
+    logger.debug(f"Response: {{response}}")
+
+    return cls.get({resource_identifier}, session=session, region=region)
+'''
+
+GET_CONFIG_VALUE_TEMPLATE = '''
+def get_config_value(attribute, resource_defaults, global_defaults):
+   if attribute in resource_defaults:
+       return resource_defaults[attribute]
+   if attribute in global_defaults:
+       return global_defaults[attribute]
+   raise Exception("Configurable value not present in Configs")
+'''
+
+POPULATE_DEFAULTS_DECORATOR_TEMPLATE = '''
+def populate_inputs_decorator(create_func):
+    def wrapper(*args, **kwargs):
+        config_schema_for_resource = {config_schema_for_resource}
+        for configurable_attribute in config_schema_for_resource:
+            if kwargs.get(configurable_attribute) is None:
+                resource_defaults=load_default_configs_for_resource_name(resource_name="{resource_name}")
+                global_defaults=load_default_configs_for_resource_name(resource_name="GlobalDefaults")
+                kwargs[configurable_attribute] = get_config_value(configurable_attribute, resource_defaults, global_defaults)
+        create_func(*args, **kwargs)
+    return wrapper
+'''
+
 GET_METHOD_TEMPLATE = '''
 @classmethod
 def get(
@@ -321,29 +369,25 @@ class Base(BaseModel):
         for attr, value in data.items():
             if isinstance(value, Unassigned):
                 continue
-            formatted_attribute = snake_to_pascal(attr) if '_' in attr else cls._capfirst(attr)
-            serialized_value = cls._serialize(value)
-            result[formatted_attribute] = serialized_value
+            
+            if isinstance(value, List):
+                result[attr] = cls._serialize_list(value)
+            elif isinstance(value, Dict):
+                result[attr] = cls._serialize_dict(value)
+            elif hasattr(value, 'serialize'):
+                result[attr] = value.serialize()
+            else:
+                result[attr] = value
         return result
     
     @classmethod
-    def _serialize_list(cls, value: List):
-        return [cls._serialize(v) for v in value]
-
+    def _serialize_list(value: List):
+        return [v.serialize() if hasattr(v, 'serialize') else v for v in value]
+    
     @classmethod
-    def _serialize(cls, value: any):
-        if isinstance(value, List):
-            return cls._serialize_list(value)
-        if isinstance(value, Dict):
-            return cls._serialize_dict(value)
-        if hasattr(value, 'serialize'):
-            return value.serialize()
-        return value
-
-    @staticmethod
-    def _capfirst(s: str):
-        return s[:1].upper() + s[1:]
-            
+    def _serialize_dict(value: Dict):
+        return {{k: v.serialize() if hasattr(v, 'serialize') else v for k, v in value.items()}}
+    
     @staticmethod
     def get_updated_kwargs_with_configured_attributes(config_schema_for_resource: dict, resource_name: str, **kwargs):
         for configurable_attribute in config_schema_for_resource:
@@ -356,139 +400,16 @@ class Base(BaseModel):
                  global_defaults):
                     kwargs[formatted_attribute] = config_value
         return kwargs
-        
 '''
 
-LOAD_DEFAULT_CONFIGS_AND_HELPERS_TEMPLATE = '''
-_APP_NAME = "sagemaker"
-# The default name of the config file.
-_CONFIG_FILE_NAME = "config.yaml"
-# The default config file location of the Administrator provided config file. This path can be
-# overridden with `SAGEMAKER_ADMIN_CONFIG_OVERRIDE` environment variable.
-_DEFAULT_ADMIN_CONFIG_FILE_PATH = os.path.join(site_config_dir(_APP_NAME), _CONFIG_FILE_NAME)
-# The default config file location of the user provided config file. This path can be
-# overridden with `SAGEMAKER_USER_CONFIG_OVERRIDE` environment variable.
-_DEFAULT_USER_CONFIG_FILE_PATH = os.path.join(user_config_dir(_APP_NAME), _CONFIG_FILE_NAME)
-# The default config file location of the local mode.
-_DEFAULT_LOCAL_MODE_CONFIG_FILE_PATH = os.path.join(
-    os.path.expanduser("~"), ".sagemaker", _CONFIG_FILE_NAME
-)
-ENV_VARIABLE_ADMIN_CONFIG_OVERRIDE = "SAGEMAKER_ADMIN_CONFIG_OVERRIDE"
-ENV_VARIABLE_USER_CONFIG_OVERRIDE = "SAGEMAKER_USER_CONFIG_OVERRIDE"
-
-S3_PREFIX = "s3://"
-
+LOAD_DEFAULT_CONFIGS_TEMPLATE = '''
 @lru_cache(maxsize=None)
-def load_default_configs(additional_config_paths: List[str] = None, s3_resource=None):
-    default_config_path = os.getenv(
-        ENV_VARIABLE_ADMIN_CONFIG_OVERRIDE, _DEFAULT_ADMIN_CONFIG_FILE_PATH
-    )
-    user_config_path = os.getenv(ENV_VARIABLE_USER_CONFIG_OVERRIDE, _DEFAULT_USER_CONFIG_FILE_PATH)
-    
-    config_paths = [default_config_path, user_config_path]
-    if additional_config_paths:
-        config_paths += additional_config_paths
-    config_paths = list(filter(lambda item: item is not None, config_paths))
-    merged_config = {}
-    for file_path in config_paths:
-        config_from_file = {}
-        if file_path.startswith(S3_PREFIX):
-            config_from_file = _load_config_from_s3(file_path, s3_resource)
-        else:
-            try:
-                config_from_file = _load_config_from_file(file_path)
-            except ValueError as error:
-                if file_path not in (
-                    _DEFAULT_ADMIN_CONFIG_FILE_PATH,
-                    _DEFAULT_USER_CONFIG_FILE_PATH,
-                ):
-                    # Throw exception only when User provided file path is invalid.
-                    # If there are no files in the Default config file locations, don't throw
-                    # Exceptions.
-                    raise
-
-                logger.debug(error)
-        if config_from_file:
-            validate_sagemaker_config(config_from_file)
-            merge_dicts(merged_config, config_from_file)
-            print("Fetched defaults config from location: %s", file_path)
-        else:
-            print("Not applying SDK defaults from location: %s", file_path)
-
-    return merged_config
-    
-def validate_sagemaker_config(sagemaker_config: dict = None):
-    """Validates whether a given dictionary adheres to the schema.
-
-    Args:
-        sagemaker_config: A dictionary containing default values for the
-                SageMaker Python SDK. (default: None).
-    """
-    jsonschema.validate(sagemaker_config, SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA)
-    
-
-def _load_config_from_s3(s3_uri, s3_resource_for_config) -> dict:
-    """Placeholder docstring"""
-    if not s3_resource_for_config:
-        # Constructing a default Boto3 S3 Resource from a default Boto3 session.
-        boto_session = boto3.DEFAULT_SESSION or boto3.Session()
-        boto_region_name = boto_session.region_name
-        if boto_region_name is None:
-            raise ValueError(
-                "Must setup local AWS configuration with a region supported by SageMaker."
-            )
-        s3_resource_for_config = boto_session.resource("s3", region_name=boto_region_name)
-
-    logger.debug("Fetching defaults config from location: %s", s3_uri)
-    inferred_s3_uri = _get_inferred_s3_uri(s3_uri, s3_resource_for_config)
-    parsed_url = urlparse(inferred_s3_uri)
-    bucket, key_prefix = parsed_url.netloc, parsed_url.path.lstrip("/")
-    s3_object = s3_resource_for_config.Object(bucket, key_prefix)
-    s3_file_content = s3_object.get()["Body"].read()
-    return yaml.safe_load(s3_file_content.decode("utf-8"))
-    
-    
-def _get_inferred_s3_uri(s3_uri, s3_resource_for_config):
-    """Placeholder docstring"""
-    parsed_url = urlparse(s3_uri)
-    bucket, key_prefix = parsed_url.netloc, parsed_url.path.lstrip("/")
-    s3_bucket = s3_resource_for_config.Bucket(name=bucket)
-    s3_objects = s3_bucket.objects.filter(Prefix=key_prefix).all()
-    s3_files_with_same_prefix = [
-        "{}{}/{}".format(S3_PREFIX, bucket, s3_object.key) for s3_object in s3_objects
-    ]
-    if len(s3_files_with_same_prefix) == 0:
-        # Customer provided us with an incorrect s3 path.
-        raise ValueError("Provide a valid S3 path instead of {}".format(s3_uri))
-    if len(s3_files_with_same_prefix) > 1:
-        # Customer has provided us with a S3 URI which points to a directory
-        # search for s3://<bucket>/directory-key-prefix/config.yaml
-        inferred_s3_uri = str(pathlib.PurePosixPath(s3_uri, _CONFIG_FILE_NAME)).replace(
-            "s3:/", "s3://"
-        )
-        if inferred_s3_uri not in s3_files_with_same_prefix:
-            # We don't know which file we should be operating with.
-            raise ValueError(
-                f"Provide an S3 URI of a directory that has a {_CONFIG_FILE_NAME} file."
-            )
-        # Customer has a config.yaml present in the directory that was provided as the S3 URI
-        return inferred_s3_uri
-    return s3_uri
-
-def _load_config_from_file(file_path: str) -> dict:
-    """Placeholder docstring"""
-    inferred_file_path = file_path
-    if os.path.isdir(file_path):
-        inferred_file_path = os.path.join(file_path, _CONFIG_FILE_NAME)
-    if not os.path.exists(inferred_file_path):
-        raise ValueError(
-            f"Unable to load the config file from the location: {file_path}"
-            f"Provide a valid file path"
-        )
-    logger.debug("Fetching defaults config from location: %s", file_path)
-    with open(inferred_file_path, "r") as f:
-        content = yaml.safe_load(f)
-    return content
+def load_default_configs():
+    configs_file_path = os.getcwd() + '/sample/sagemaker/2017-07-24/default-configs.json'
+    with open(configs_file_path, 'r') as file:
+        configs_data = json.load(file)
+    jsonschema.validate(configs_data, SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA)
+    return configs_data
 '''
 
 LOAD_CONFIG_VALUES_FOR_RESOURCE_TEMPLATE = '''
