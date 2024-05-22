@@ -12,12 +12,17 @@ setup(
         # Add your dependencies here (Include lower and upper bounds as applicable)
         'boto3>=1.34.0,<2.0.0',
         'pydantic>=2.7.0,<3.0.0',
-        'PyYAML>=6.0, <7.0'
+        'PyYAML>=6.0, <7.0',
         'jsonschema<5.0.0',
         'platformdirs>=4.0.0, <5.0.0'
     ],
     extras_require={
-        "codegen": ['pandas>=2.2.0, <=2.2.2', 'pytest>=8.0.0,<9.0.0']
+        "codegen": [
+            'black>=24.3.0, <25.0.0',
+            'pandas>=2.2.0, <=2.2.2', 
+            'pytest>=8.0.0, <9.0.0',
+            'pylint>=3.0.0, <4.0.0'
+        ]
     },
     classifiers=[
         'Development Status :: 3 - Alpha',
