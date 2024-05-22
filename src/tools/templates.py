@@ -86,6 +86,33 @@ def create(
     return cls.get({get_args}, session=session, region=region)
 '''
 
+IMPORT_METHOD_TEMPLATE = '''
+@classmethod
+def load(
+    cls,
+{import_args}
+    session: Optional[Session] = None,
+    region: Optional[str] = None,
+) -> Optional[object]:
+    logger.debug(f"Importing {resource_lower} resource.")
+    client = SageMakerClient(session=session, region_name=region, service_name='{service_name}').client
+
+    operation_input_args = {{
+{operation_input_args}
+    }}
+
+    logger.debug(f"Input request: {{operation_input_args}}")
+    # serialize the input request
+    operation_input_args = cls._serialize(operation_input_args)
+    logger.debug(f"Serialized input request: {{operation_input_args}}")
+
+    # import the resource
+    response = client.{operation}(**operation_input_args)
+    logger.debug(f"Response: {{response}}")
+
+    return cls.get({get_args}, session=session, region=region)
+'''
+
 UPDATE_METHOD_TEMPLATE = '''
 def update(self) -> Optional[object]:
     logger.debug(f"Creating {resource_lower} resource.")

@@ -13,47 +13,41 @@
 """Generates the code for the service model."""
 import json
 from src.tools.constants import SERVICE_JSON_FILE_PATH
-from src.tools.utils_codegen import UtilsCodeGen
 from src.tools.shapes_codegen import ShapesCodeGen
 from src.tools.resources_codegen import ResourcesCodeGen
 from typing import Optional
 
 from src.tools.intelligent_defaults_helper_codegen import IntelligentDefaultsHelperCodeGen
 
-
-def generate_code(utils_code_gen: Optional[UtilsCodeGen]=None,
-                  shapes_code_gen: Optional[ShapesCodeGen]=None, 
-                  resources_code_gen: Optional[ResourcesCodeGen]=None,
+def generate_code(shapes_code_gen: Optional[ShapesCodeGen]=None,
+                  resources_code_gen: Optional[ShapesCodeGen]=None,
                   intelligent_defaults_helper_code_gen: Optional[IntelligentDefaultsHelperCodeGen] = None) -> None:
     """
-    Generates the code for the given code generators. If any code generator is not 
+    Generates the code for the given code generators. If any code generator is not
     provided when calling this function, the function will initiate the generator.
 
     Note ordering is important, generate the utils and lower level classes first
     then generate the higher level classes.
 
     Args:
-        utils_code_gen (UtilsCodeGen, optional): The code generator for utility classes.
-        shapes_code_gen (ShapesCodeGen, optional): The code generator for shape classes.
-        resources_code_gen (ResourcesCodeGen, optional): The code generator for resource classes.
+        shapes_code_gen (ShapesCodeGen): The code generator for shape classes.
+        resources_code_gen (ResourcesCodeGen): The code generator for resource classes.
 
     Returns:
         None
     """
-    
     # TODO: Inject service JSON file path & run through with all the sagemaker service JSON files
     with open(SERVICE_JSON_FILE_PATH, 'r') as file:
         service_json = json.load(file)
-    
-    utils_code_gen = utils_code_gen or UtilsCodeGen()
+
     shapes_code_gen = shapes_code_gen or ShapesCodeGen(service_json=service_json)
     resources_code_gen = resources_code_gen or ResourcesCodeGen(service_json=service_json)
     intelligent_defaults_helper_code_gen = intelligent_defaults_helper_code_gen or IntelligentDefaultsHelperCodeGen()
 
-    utils_code_gen.generate_utils()
     shapes_code_gen.generate_shapes()
     resources_code_gen.generate_resources()
     intelligent_defaults_helper_code_gen.generate_helper_functions()
+
 
 ''' 
 Initializes all the code generator classes and triggers generator.

@@ -36,9 +36,8 @@ from src.tools.templates import (CREATE_METHOD_TEMPLATE, \
                                  STOP_METHOD_TEMPLATE, DELETE_METHOD_TEMPLATE, \
                                  WAIT_METHOD_TEMPLATE, WAIT_FOR_STATUS_METHOD_TEMPLATE,
                                  UPDATE_METHOD_TEMPLATE, POPULATE_DEFAULTS_DECORATOR_TEMPLATE, \
-                                 GET_CONFIG_VALUE_TEMPLATE, CREATE_METHOD_TEMPLATE_WITHOUT_DEFAULTS,
-                                 LOAD_CONFIG_VALUES_FOR_RESOURCE_TEMPLATE, \
-                                 LOAD_DEFAULT_CONFIGS_AND_HELPERS_TEMPLATE)
+                                 CREATE_METHOD_TEMPLATE_WITHOUT_DEFAULTS,
+                                 IMPORT_METHOD_TEMPLATE)
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
@@ -333,6 +332,9 @@ class ResourcesCodeGen:
 
             if wait_for_status_method := self._evaluate_method(resource_name, "wait_for_status", object_methods):
                 resource_class += add_indent(wait_for_status_method, 4)
+
+            if import_method := self._evaluate_method(resource_name, "import", class_methods):
+                resource_class += add_indent(import_method, 4)
         else:
             # If there's no 'get' method, log a message
             # TODO: Handle the resources without 'get' differently
@@ -465,6 +467,50 @@ class ResourcesCodeGen:
                 operation=operation,
                 get_args=get_args
             )
+
+        # Return the formatted method
+        return formatted_method
+
+    def generate_import_method(self, resource_name: str) -> str:
+        """
+        Auto-generate the CREATE method for a resource.
+
+        Args:
+            resource_name (str): The resource name.
+
+        Returns:
+            str: The formatted Create Method template.
+
+        """
+        # Get the operation and shape for the 'create' method
+        operation_name = "Import" + resource_name
+        operation_metadata = self.operations[operation_name]
+        operation_input_shape_name = operation_metadata["input"]["shape"]
+
+        # Generate the arguments for the 'create' method
+        import_args = self._generate_method_args(operation_input_shape_name)
+
+        operation_input_args = self._generate_operation_input_args(
+            operation_metadata, is_class_method=True
+        )
+
+        # Convert the resource name to snake case
+        resource_lower = convert_to_snake_case(resource_name)
+
+        # Convert the operation name to snake case
+        operation = convert_to_snake_case(operation_name)
+
+        get_args = self._generate_get_args(resource_name, operation_input_shape_name)
+
+        # Format the method using the CREATE_METHOD_TEMPLATE
+        formatted_method = IMPORT_METHOD_TEMPLATE.format(
+            import_args=import_args,
+            resource_lower=resource_lower,
+            service_name='sagemaker',  # TODO: change service name based on the service - runtime, sagemaker, etc.
+            operation_input_args=operation_input_args,
+            operation=operation,
+            get_args=get_args,
+        )
 
         # Return the formatted method
         return formatted_method

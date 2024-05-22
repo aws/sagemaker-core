@@ -56,6 +56,55 @@ def create(
 '''
         assert self.resource_generator.generate_create_method("CompilationJob", needs_defaults_decorator=False) == expected_output
 
+    def test_generate_import_method(self):
+        expected_output = '''
+@classmethod
+def load(
+    cls,
+    hub_content_name: str,
+    hub_content_type: str,
+    document_schema_version: str,
+    hub_name: str,
+    hub_content_document: str,
+    hub_content_version: Optional[str] = Unassigned(),
+    hub_content_display_name: Optional[str] = Unassigned(),
+    hub_content_description: Optional[str] = Unassigned(),
+    hub_content_markdown: Optional[str] = Unassigned(),
+    hub_content_search_keywords: Optional[List[str]] = Unassigned(),
+    tags: Optional[List[Tag]] = Unassigned(),
+    session: Optional[Session] = None,
+    region: Optional[str] = None,
+) -> Optional[object]:
+    logger.debug(f"Importing hub_content resource.")
+    client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+
+    operation_input_args = {
+        'HubContentName': hub_content_name,
+        'HubContentVersion': hub_content_version,
+        'HubContentType': hub_content_type,
+        'DocumentSchemaVersion': document_schema_version,
+        'HubName': hub_name,
+        'HubContentDisplayName': hub_content_display_name,
+        'HubContentDescription': hub_content_description,
+        'HubContentMarkdown': hub_content_markdown,
+        'HubContentDocument': hub_content_document,
+        'HubContentSearchKeywords': hub_content_search_keywords,
+        'Tags': tags,
+    }
+
+    logger.debug(f"Input request: {operation_input_args}")
+    # serialize the input request
+    operation_input_args = cls._serialize(operation_input_args)
+    logger.debug(f"Serialized input request: {operation_input_args}")
+
+    # import the resource
+    response = client.import_hub_content(**operation_input_args)
+    logger.debug(f"Response: {response}")
+
+    return cls.get(hub_name=hub_name, hub_content_type=hub_content_type, hub_content_name=hub_content_name, session=session, region=region)
+'''
+        assert self.resource_generator.generate_import_method("HubContent") == expected_output
+
     def test_generate_update_method(self):
         expected_output = '''
 def update(self) -> Optional[object]:
