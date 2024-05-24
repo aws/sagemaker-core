@@ -164,8 +164,8 @@ class ShapesExtractor:
             )
         return member_type
 
-    def generate_data_shape_members_and_string_body(self, shape):
-        shape_members = self.generate_shape_members(shape)
+    def generate_data_shape_members_and_string_body(self, shape, required_override = ()):
+        shape_members = self.generate_shape_members(shape, required_override)
         init_data_body = ""
         for attr, value in shape_members.items():
             if attr == "lambda":
@@ -174,17 +174,17 @@ class ShapesExtractor:
                 init_data_body += f"{attr}: {value}\n"
         return shape_members, init_data_body
 
-    def generate_data_shape_string_body(self, shape):
-        return self.generate_data_shape_members_and_string_body(shape)[1]
+    def generate_data_shape_string_body(self, shape, required_override = ()):
+        return self.generate_data_shape_members_and_string_body(shape, required_override)[1]
 
-    def generate_data_shape_members(self, shape):
-        return self.generate_data_shape_members_and_string_body(shape)[0]
+    def generate_data_shape_members(self, shape, required_override = ()):
+        return self.generate_data_shape_members_and_string_body(shape, required_override)[0]
 
     @lru_cache
-    def generate_shape_members(self, shape):
+    def generate_shape_members(self, shape, required_override = ()):
         shape_dict = self.combined_shapes[shape]
         members = shape_dict["members"]
-        required_args = shape_dict.get("required", [])
+        required_args = list(required_override) or shape_dict.get("required", [])
         init_data_body = {}
         # bring the required members in front
         ordered_members = {key: members[key] for key in required_args if key in members}

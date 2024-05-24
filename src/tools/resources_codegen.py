@@ -319,12 +319,17 @@ class ResourcesCodeGen:
             # Get the operation and shape for the 'get' method
             get_operation = self.operations["Describe" + resource_name]
             get_operation_shape = get_operation["output"]["shape"]
-
+            
+            # Use 'get' operation input as the required class attributes
+            get_operation_input_shape = get_operation["input"]["shape"] 
+            required_attributes = self.shapes[get_operation_input_shape].get("required", [])
+            
             # Generate the class attributes based on the shape
             class_attributes = (
                 self.shapes_extractor.generate_data_shape_members_and_string_body(
-                    get_operation_shape
-                )
+                    get_operation_shape, 
+                    tuple(required_attributes)
+                    )
             )
             class_attributes_string = class_attributes[1]
             resource_attributes = list(class_attributes[0].keys())
@@ -432,7 +437,7 @@ class ResourcesCodeGen:
         return resource_class
 
     def _generate_operation_input_args(
-        self, resource_operation: dict, is_class_method: bool
+        self, resource_operation: dict, is_class_method: bool, exclude_list: list = []
     ) -> str:
         """Generate the operation input arguments string.
 
@@ -449,12 +454,12 @@ class ResourcesCodeGen:
         if is_class_method:
             args = (
                 f"'{member}': {convert_to_snake_case(member)}"
-                for member in input_shape_members
-            )
+                for member in input_shape_members if convert_to_snake_case(member) not in exclude_list
+                )
         else:
             args = (
                 f"'{member}': self.{convert_to_snake_case(member)}"
-                for member in input_shape_members
+                for member in input_shape_members if convert_to_snake_case(member) not in exclude_list
             )
 
         operation_input_args = ",\n".join(args)
@@ -492,7 +497,7 @@ class ResourcesCodeGen:
 
         return operation_input_args
 
-    def _generate_method_args(self, operation_input_shape_name: str) -> str:
+    def _generate_method_args(self, operation_input_shape_name: str, exclude_list: list = [])-> str:
         """Generates the arguments for a method.
 
         Args:
@@ -502,11 +507,13 @@ class ResourcesCodeGen:
             str: The generated arguments string.
         """
         typed_shape_members = self.shapes_extractor.generate_shape_members(
-            operation_input_shape_name
+            operation_input_shape_name)
+        
+        args = (
+            f"{attr}: {attr_type}" 
+            for attr, attr_type in typed_shape_members.items() if attr not in exclude_list
         )
-        method_args = ",\n".join(
-            f"{attr}: {attr_type}" for attr, attr_type in typed_shape_members.items()
-        )
+        method_args = ",\n".join(args)
         method_args += ","
         method_args = add_indent(method_args)
         return method_args
