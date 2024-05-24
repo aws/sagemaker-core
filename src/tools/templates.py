@@ -142,7 +142,6 @@ def invoke(self,
 ) -> Optional[object]:
     logger.debug(f"Invoking {resource_lower} resource.")
     client = SageMakerRuntimeClient(service_name="{service_name}").client
-    body = serialise_func(body)
     operation_input_args = {{
 {operation_input_args}
     }}
@@ -155,7 +154,7 @@ def invoke(self,
     response = client.{operation}(**operation_input_args)
     logger.debug(f"Response: {{response}}")
 
-    return de_serialise_func(response)
+    return response
 '''
 
 INVOKE_ASYNC_METHOD_TEMPLATE = '''
@@ -187,8 +186,6 @@ def invoke_with_response_stream(self,
     logger.debug(f"Invoking {resource_lower} resource with Response Stream.")
     client = SageMakerRuntimeClient(service_name="{service_name}").client
 
-    body = serialise_func(body)
-
     operation_input_args = {{
 {operation_input_args}
     }}
@@ -201,7 +198,7 @@ def invoke_with_response_stream(self,
     response = client.{operation}(**operation_input_args)
     logger.debug(f"Response: {{response}}")
 
-    return de_serialise_func(response)
+    return response
 '''
 
 
@@ -248,15 +245,6 @@ def create(
     logger.debug(f"Response: {{response}}")
 
     return cls.get({resource_identifier}, session=session, region=region)
-'''
-
-GET_CONFIG_VALUE_TEMPLATE = '''
-def get_config_value(attribute, resource_defaults, global_defaults):
-   if attribute in resource_defaults:
-       return resource_defaults[attribute]
-   if attribute in global_defaults:
-       return global_defaults[attribute]
-   raise Exception("Configurable value not present in Configs")
 '''
 
 GET_METHOD_TEMPLATE = '''

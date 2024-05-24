@@ -38,7 +38,8 @@ from src.tools.templates import (CREATE_METHOD_TEMPLATE,
                                  UPDATE_METHOD_TEMPLATE, POPULATE_DEFAULTS_DECORATOR_TEMPLATE,
                                  CREATE_METHOD_TEMPLATE_WITHOUT_DEFAULTS,
                                  INVOKE_METHOD_TEMPLATE,
-                                 INVOKE_ASYNC_METHOD_TEMPLATE, INVOKE_WITH_RESPONSE_STREAM_METHOD_TEMPLATE)
+                                 INVOKE_ASYNC_METHOD_TEMPLATE, INVOKE_WITH_RESPONSE_STREAM_METHOD_TEMPLATE,
+                                 IMPORT_METHOD_TEMPLATE)
 from src.tools.data_extractor import load_combined_shapes_data, load_combined_operations_data
 
 logging.basicConfig(level=logging.INFO)
@@ -442,8 +443,7 @@ class ResourcesCodeGen:
 
     def _generate_method_args_excluding_resource_class_attributes(self,
                                                                   operation_input_shape_name: str,
-                                                                  resource_attributes: list,
-                                                                  include_serialiser_functions: bool = False) -> str:
+                                                                  resource_attributes: list) -> str:
         """Generates the arguments for a method.
         This will  exclude the resource class attributes from the arguments,
          because they need not be specificed by the user explicitly once they have initiated the class already.
@@ -458,11 +458,6 @@ class ResourcesCodeGen:
         typed_shape_members = self.shapes_extractor.generate_shape_members(
             operation_input_shape_name)
         method_args = ""
-
-        if include_serialiser_functions:
-            method_args += "serialise_func,"
-            method_args += "\nde_serialise_func,"
-            method_args += "\n"
 
         method_args += ",\n".join(
             f"{attr}: {attr_type}"
@@ -622,8 +617,7 @@ class ResourcesCodeGen:
 
         # Generate the arguments for the 'create' method
         update_args = self._generate_method_args_excluding_resource_class_attributes(operation_input_shape_name,
-                                                                                     kwargs['resource_attributes'],
-                                                                                     False)
+                                                                                     kwargs['resource_attributes'])
 
         operation_input_args = self._generate_operation_input_necessary_args(
             operation_metadata, kwargs['resource_attributes']
@@ -666,8 +660,7 @@ class ResourcesCodeGen:
 
         # Generate the arguments for the 'create' method
         invoke_args = self._generate_method_args_excluding_resource_class_attributes(operation_input_shape_name,
-                                                                                     kwargs['resource_attributes'],
-                                                                                     True)
+                                                                                     kwargs['resource_attributes'])
 
         operation_input_args = self._generate_operation_input_necessary_args(
             operation_metadata, kwargs['resource_attributes']
@@ -710,8 +703,7 @@ class ResourcesCodeGen:
 
         # Generate the arguments for the 'create' method
         invoke_args = self._generate_method_args_excluding_resource_class_attributes(operation_input_shape_name,
-                                                                                     kwargs['resource_attributes'],
-                                                                                     True)
+                                                                                     kwargs['resource_attributes'])
 
         operation_input_args = self._generate_operation_input_necessary_args(
             operation_metadata, kwargs['resource_attributes']
@@ -755,8 +747,7 @@ class ResourcesCodeGen:
 
         # Generate the arguments for the 'create' method
         invoke_args = self._generate_method_args_excluding_resource_class_attributes(operation_input_shape_name,
-                                                                                     kwargs['resource_attributes'],
-                                                                                     True)
+                                                                                     kwargs['resource_attributes'])
 
         operation_input_args = self._generate_operation_input_necessary_args(
             operation_metadata,

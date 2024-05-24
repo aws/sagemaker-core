@@ -15,6 +15,7 @@
 import logging
 
 import time
+import os
 from pprint import pprint
 from pydantic import validate_call
 from typing import Literal
@@ -2511,8 +2512,6 @@ class Endpoint(Base):
             time.sleep(poll)
     
     def invoke(self, 
-        serialise_func,
-        de_serialise_func,
         body: Any,
         content_type: Optional[str] = Unassigned(),
         accept: Optional[str] = Unassigned(),
@@ -2526,7 +2525,6 @@ class Endpoint(Base):
     ) -> Optional[object]:
         logger.debug(f"Invoking endpoint resource.")
         client = SageMakerRuntimeClient(service_name="sagemaker-runtime").client
-        body = serialise_func(body)
         operation_input_args = {
             'EndpointName': self.endpoint_name,
             'Body': body,
@@ -2549,11 +2547,9 @@ class Endpoint(Base):
         response = client.invoke_endpoint(**operation_input_args)
         logger.debug(f"Response: {response}")
     
-        return de_serialise_func(response)
+        return response
     
     def invoke_async(self, 
-        serialise_func,
-        de_serialise_func,
         input_location: str,
         content_type: Optional[str] = Unassigned(),
         accept: Optional[str] = Unassigned(),
@@ -2587,8 +2583,6 @@ class Endpoint(Base):
         return response
     
     def invoke_with_response_stream(self, 
-        serialise_func,
-        de_serialise_func,
         body: Any,
         content_type: Optional[str] = Unassigned(),
         accept: Optional[str] = Unassigned(),
@@ -2600,8 +2594,6 @@ class Endpoint(Base):
     ) -> Optional[object]:
         logger.debug(f"Invoking endpoint resource with Response Stream.")
         client = SageMakerRuntimeClient(service_name="sagemaker-runtime").client
-    
-        body = serialise_func(body)
     
         operation_input_args = {
             'EndpointName': self.endpoint_name,
@@ -2623,7 +2615,7 @@ class Endpoint(Base):
         response = client.invoke_endpoint_with_response_stream(**operation_input_args)
         logger.debug(f"Response: {response}")
     
-        return de_serialise_func(response)
+        return response
 
 
 class EndpointConfig(Base):
