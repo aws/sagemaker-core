@@ -211,35 +211,30 @@ def transform(data, shape, object_instance=None) -> dict:
         _member_name = member["name"]
         _member_shape = member["shape"]
         _member_type = member["type"]
-        logging.debug(f"Evaluating member: {member}")
         if data.get(_member_name) is None:
-            logging.debug(f"Member {member} not set, continuing...")
+            # skip members that are not in the response
             continue
         # 1. set snake case attribute name
         attribute_name = pascal_to_snake(_member_name)
+        # 2. assign response value
         if _member_type in BASIC_TYPES:
-            logging.debug(f"Basic type encountered, evaluating member: {member}")
-            # 2. assign response value
             evaluated_value = data[_member_name]
         elif _member_type == STRUCTURE_TYPE:
-            logging.debug(f"Structure type encountered, evaluating member: {member}")
-            # 2. assign response value
             evaluated_value = transform(data[_member_name], _member_shape)
         elif _member_type == LIST_TYPE:
-            logging.debug(f"List type encountered, evaluating member: {member}")
             _list_type_shape = SHAPE_DAG[_member_shape]
             # 2. assign response value
-            evaluated_value = _evaluate_list_type(data[_member_name], _list_type_shape)
+            evaluated_value = _evaluate_list_type(data[_member_name],
+                                                   _list_type_shape)
         elif _member_type == MAP_TYPE:
-            logging.debug(f"Map type encountered, evaluating member: {member}")
             _map_type_shape = SHAPE_DAG[_member_shape]
-            # 2. assign response value
             evaluated_value = _evaluate_map_type(data[_member_name], _map_type_shape)
         else:
             raise ValueError(f"Unexpected member type encountered: {_member_type}")
 
         result[attribute_name] = evaluated_value
         if object_instance:
+            # 3. set attribute value
             setattr(object_instance, attribute_name, evaluated_value)
 
     return result
