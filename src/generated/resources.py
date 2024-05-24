@@ -19,7 +19,7 @@ from pprint import pprint
 from pydantic import validate_call
 from typing import Literal
 from boto3.session import Session
-from .utils import SageMakerClient, Unassigned, snake_to_pascal, pascal_to_snake
+from .utils import SageMakerClient, SageMakerRuntimeClient, Unassigned, snake_to_pascal, pascal_to_snake
 from .intelligent_defaults_helper import load_default_configs_for_resource_name, get_config_value
 from src.code_injection.codec import transform
 from .shapes import *
@@ -31,34 +31,30 @@ logger = logging.getLogger(__name__)
 
 class Base(BaseModel):
     @classmethod
-    def _serialize_dict(cls, data: Dict) -> Dict:
+    def _serialize(cls, data: Dict) -> Dict:
         result = {}
         for attr, value in data.items():
             if isinstance(value, Unassigned):
                 continue
-            formatted_attribute = snake_to_pascal(attr) if '_' in attr else cls._capfirst(attr)
-            serialized_value = cls._serialize(value)
-            result[formatted_attribute] = serialized_value
+            
+            if isinstance(value, List):
+                result[attr] = cls._serialize_list(value)
+            elif isinstance(value, Dict):
+                result[attr] = cls._serialize_dict(value)
+            elif hasattr(value, 'serialize'):
+                result[attr] = value.serialize()
+            else:
+                result[attr] = value
         return result
     
     @classmethod
     def _serialize_list(cls, value: List):
-        return [cls._serialize(v) for v in value]
-
+        return [v.serialize() if hasattr(v, 'serialize') else v for v in value]
+    
     @classmethod
-    def _serialize(cls, value: any):
-        if isinstance(value, List):
-            return cls._serialize_list(value)
-        if isinstance(value, Dict):
-            return cls._serialize_dict(value)
-        if hasattr(value, 'serialize'):
-            return value.serialize()
-        return value
-
-    @staticmethod
-    def _capfirst(s: str):
-        return s[:1].upper() + s[1:]
-            
+    def _serialize_dict(cls, value: Dict):
+        return {{k: v.serialize() if hasattr(v, 'serialize') else v for k, v in value.items()}}
+    
     @staticmethod
     def get_updated_kwargs_with_configured_attributes(config_schema_for_resource: dict, resource_name: str, **kwargs):
         for configurable_attribute in config_schema_for_resource:
@@ -71,7 +67,6 @@ class Base(BaseModel):
                  global_defaults):
                     kwargs[formatted_attribute] = config_value
         return kwargs
-        
 class Action(Base):
     action_name: Optional[str] = Unassigned()
     action_arn: Optional[str] = Unassigned()
@@ -158,7 +153,9 @@ class Action(Base):
         transform(response, 'DescribeActionResponse', self)
         return self
     
-    def update(self) -> Optional[object]:
+    def update(self,
+         properties_to_remove: Optional[List[str]] = Unassigned(),
+     ) -> Optional[object]:
         logger.debug(f"Creating action resource.")
         client = SageMakerClient().client
     
@@ -167,7 +164,7 @@ class Action(Base):
             'Description': self.description,
             'Status': self.status,
             'Properties': self.properties,
-            'PropertiesToRemove': self.properties_to_remove,
+            'PropertiesToRemove': properties_to_remove,
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -526,7 +523,9 @@ class AppImageConfig(Base):
         transform(response, 'DescribeAppImageConfigResponse', self)
         return self
     
-    def update(self) -> Optional[object]:
+    def update(self,
+     
+     ) -> Optional[object]:
         logger.debug(f"Creating app_image_config resource.")
         client = SageMakerClient().client
     
@@ -635,7 +634,9 @@ class Artifact(Base):
         transform(response, 'DescribeArtifactResponse', self)
         return self
     
-    def update(self) -> Optional[object]:
+    def update(self,
+         properties_to_remove: Optional[List[str]] = Unassigned(),
+     ) -> Optional[object]:
         logger.debug(f"Creating artifact resource.")
         client = SageMakerClient().client
     
@@ -643,7 +644,7 @@ class Artifact(Base):
             'ArtifactArn': self.artifact_arn,
             'ArtifactName': self.artifact_name,
             'Properties': self.properties,
-            'PropertiesToRemove': self.properties_to_remove,
+            'PropertiesToRemove': properties_to_remove,
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -1111,7 +1112,9 @@ class Cluster(Base):
         transform(response, 'DescribeClusterResponse', self)
         return self
     
-    def update(self) -> Optional[object]:
+    def update(self,
+     
+     ) -> Optional[object]:
         logger.debug(f"Creating cluster resource.")
         client = SageMakerClient().client
     
@@ -1229,7 +1232,9 @@ class CodeRepository(Base):
         transform(response, 'DescribeCodeRepositoryOutput', self)
         return self
     
-    def update(self) -> Optional[object]:
+    def update(self,
+     
+     ) -> Optional[object]:
         logger.debug(f"Creating code_repository resource.")
         client = SageMakerClient().client
     
@@ -1510,7 +1515,9 @@ class Context(Base):
         transform(response, 'DescribeContextResponse', self)
         return self
     
-    def update(self) -> Optional[object]:
+    def update(self,
+         properties_to_remove: Optional[List[str]] = Unassigned(),
+     ) -> Optional[object]:
         logger.debug(f"Creating context resource.")
         client = SageMakerClient().client
     
@@ -1518,7 +1525,7 @@ class Context(Base):
             'ContextName': self.context_name,
             'Description': self.description,
             'Properties': self.properties,
-            'PropertiesToRemove': self.properties_to_remove,
+            'PropertiesToRemove': properties_to_remove,
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -1811,7 +1818,9 @@ class DeviceFleet(Base):
         transform(response, 'DescribeDeviceFleetResponse', self)
         return self
     
-    def update(self) -> Optional[object]:
+    def update(self,
+         enable_iot_role_alias: Optional[bool] = Unassigned(),
+     ) -> Optional[object]:
         logger.debug(f"Creating device_fleet resource.")
         client = SageMakerClient().client
     
@@ -1820,7 +1829,7 @@ class DeviceFleet(Base):
             'RoleArn': self.role_arn,
             'Description': self.description,
             'OutputConfig': self.output_config,
-            'EnableIotRoleAlias': self.enable_iot_role_alias,
+            'EnableIotRoleAlias': enable_iot_role_alias,
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -2044,14 +2053,16 @@ class Domain(Base):
         transform(response, 'DescribeDomainResponse', self)
         return self
     
-    def update(self) -> Optional[object]:
+    def update(self,
+         domain_settings_for_update: Optional[DomainSettingsForUpdate] = Unassigned(),
+     ) -> Optional[object]:
         logger.debug(f"Creating domain resource.")
         client = SageMakerClient().client
     
         operation_input_args = {
             'DomainId': self.domain_id,
             'DefaultUserSettings': self.default_user_settings,
-            'DomainSettingsForUpdate': self.domain_settings_for_update,
+            'DomainSettingsForUpdate': domain_settings_for_update,
             'AppSecurityGroupManagement': self.app_security_group_management,
             'DefaultSpaceSettings': self.default_space_settings,
             'SubnetIds': self.subnet_ids,
@@ -2441,17 +2452,22 @@ class Endpoint(Base):
         transform(response, 'DescribeEndpointOutput', self)
         return self
     
-    def update(self) -> Optional[object]:
+    def update(self,
+         retain_all_variant_properties: Optional[bool] = Unassigned(),
+        exclude_retained_variant_properties: Optional[List[VariantProperty]] = Unassigned(),
+        deployment_config: Optional[DeploymentConfig] = Unassigned(),
+        retain_deployment_config: Optional[bool] = Unassigned(),
+     ) -> Optional[object]:
         logger.debug(f"Creating endpoint resource.")
         client = SageMakerClient().client
     
         operation_input_args = {
             'EndpointName': self.endpoint_name,
             'EndpointConfigName': self.endpoint_config_name,
-            'RetainAllVariantProperties': self.retain_all_variant_properties,
-            'ExcludeRetainedVariantProperties': self.exclude_retained_variant_properties,
-            'DeploymentConfig': self.deployment_config,
-            'RetainDeploymentConfig': self.retain_deployment_config,
+            'RetainAllVariantProperties': retain_all_variant_properties,
+            'ExcludeRetainedVariantProperties': exclude_retained_variant_properties,
+            'DeploymentConfig': deployment_config,
+            'RetainDeploymentConfig': retain_deployment_config,
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -2495,7 +2511,9 @@ class Endpoint(Base):
             time.sleep(poll)
     
     def invoke(self, 
-        body: str,
+        serialise_func,
+        de_serialise_func,
+        body: Any,
         content_type: Optional[str] = Unassigned(),
         accept: Optional[str] = Unassigned(),
         custom_attributes: Optional[str] = Unassigned(),
@@ -2507,8 +2525,8 @@ class Endpoint(Base):
         inference_component_name: Optional[str] = Unassigned(),
     ) -> Optional[object]:
         logger.debug(f"Invoking endpoint resource.")
-        client = SageMakerClient(service_name="sagemaker-runtime").client
-    
+        client = SageMakerRuntimeClient(service_name="sagemaker-runtime").client
+        body = serialise_func(body)
         operation_input_args = {
             'EndpointName': self.endpoint_name,
             'Body': body,
@@ -2531,9 +2549,11 @@ class Endpoint(Base):
         response = client.invoke_endpoint(**operation_input_args)
         logger.debug(f"Response: {response}")
     
-        return response
+        return de_serialise_func(response)
     
     def invoke_async(self, 
+        serialise_func,
+        de_serialise_func,
         input_location: str,
         content_type: Optional[str] = Unassigned(),
         accept: Optional[str] = Unassigned(),
@@ -2543,8 +2563,8 @@ class Endpoint(Base):
         invocation_timeout_seconds: Optional[int] = Unassigned(),
     ) -> Optional[object]:
         logger.debug(f"Invoking endpoint resource Async.")
-        client = SageMakerClient(service_name="sagemaker-runtime").client
-    
+        client = SageMakerRuntimeClient(service_name="sagemaker-runtime").client
+        
         operation_input_args = {
             'EndpointName': self.endpoint_name,
             'ContentType': content_type,
@@ -2567,7 +2587,9 @@ class Endpoint(Base):
         return response
     
     def invoke_with_response_stream(self, 
-        body: str,
+        serialise_func,
+        de_serialise_func,
+        body: Any,
         content_type: Optional[str] = Unassigned(),
         accept: Optional[str] = Unassigned(),
         custom_attributes: Optional[str] = Unassigned(),
@@ -2577,7 +2599,9 @@ class Endpoint(Base):
         inference_component_name: Optional[str] = Unassigned(),
     ) -> Optional[object]:
         logger.debug(f"Invoking endpoint resource with Response Stream.")
-        client = SageMakerClient(service_name="sagemaker-runtime").client
+        client = SageMakerRuntimeClient(service_name="sagemaker-runtime").client
+    
+        body = serialise_func(body)
     
         operation_input_args = {
             'EndpointName': self.endpoint_name,
@@ -2599,7 +2623,7 @@ class Endpoint(Base):
         response = client.invoke_endpoint_with_response_stream(**operation_input_args)
         logger.debug(f"Response: {response}")
     
-        return response
+        return de_serialise_func(response)
 
 
 class EndpointConfig(Base):
@@ -2826,7 +2850,9 @@ class Experiment(Base):
         transform(response, 'DescribeExperimentResponse', self)
         return self
     
-    def update(self) -> Optional[object]:
+    def update(self,
+     
+     ) -> Optional[object]:
         logger.debug(f"Creating experiment resource.")
         client = SageMakerClient().client
     
@@ -2986,13 +3012,15 @@ class FeatureGroup(Base):
         transform(response, 'DescribeFeatureGroupResponse', self)
         return self
     
-    def update(self) -> Optional[object]:
+    def update(self,
+         feature_additions: Optional[List[FeatureDefinition]] = Unassigned(),
+     ) -> Optional[object]:
         logger.debug(f"Creating feature_group resource.")
         client = SageMakerClient().client
     
         operation_input_args = {
             'FeatureGroupName': self.feature_group_name,
-            'FeatureAdditions': self.feature_additions,
+            'FeatureAdditions': feature_additions,
             'OnlineStoreConfig': self.online_store_config,
             'ThroughputConfig': self.throughput_config,
         }
@@ -3264,7 +3292,9 @@ class Hub(Base):
         transform(response, 'DescribeHubResponse', self)
         return self
     
-    def update(self) -> Optional[object]:
+    def update(self,
+     
+     ) -> Optional[object]:
         logger.debug(f"Creating hub resource.")
         client = SageMakerClient().client
     
@@ -3773,12 +3803,14 @@ class Image(Base):
         transform(response, 'DescribeImageResponse', self)
         return self
     
-    def update(self) -> Optional[object]:
+    def update(self,
+         delete_properties: Optional[List[str]] = Unassigned(),
+     ) -> Optional[object]:
         logger.debug(f"Creating image resource.")
         client = SageMakerClient().client
     
         operation_input_args = {
-            'DeleteProperties': self.delete_properties,
+            'DeleteProperties': delete_properties,
             'Description': self.description,
             'DisplayName': self.display_name,
             'ImageName': self.image_name,
@@ -3927,16 +3959,21 @@ class ImageVersion(Base):
         transform(response, 'DescribeImageVersionResponse', self)
         return self
     
-    def update(self) -> Optional[object]:
+    def update(self,
+         image_name: str,
+        alias: Optional[str] = Unassigned(),
+        aliases_to_add: Optional[List[str]] = Unassigned(),
+        aliases_to_delete: Optional[List[str]] = Unassigned(),
+     ) -> Optional[object]:
         logger.debug(f"Creating image_version resource.")
         client = SageMakerClient().client
     
         operation_input_args = {
-            'ImageName': self.image_name,
-            'Alias': self.alias,
+            'ImageName': image_name,
+            'Alias': alias,
             'Version': self.version,
-            'AliasesToAdd': self.aliases_to_add,
-            'AliasesToDelete': self.aliases_to_delete,
+            'AliasesToAdd': aliases_to_add,
+            'AliasesToDelete': aliases_to_delete,
             'VendorGuidance': self.vendor_guidance,
             'JobType': self.job_type,
             'MLFramework': self.m_l_framework,
@@ -4069,7 +4106,9 @@ class InferenceComponent(Base):
         transform(response, 'DescribeInferenceComponentOutput', self)
         return self
     
-    def update(self) -> Optional[object]:
+    def update(self,
+     
+     ) -> Optional[object]:
         logger.debug(f"Creating inference_component resource.")
         client = SageMakerClient().client
     
@@ -4236,7 +4275,9 @@ class InferenceExperiment(Base):
         transform(response, 'DescribeInferenceExperimentResponse', self)
         return self
     
-    def update(self) -> Optional[object]:
+    def update(self,
+     
+     ) -> Optional[object]:
         logger.debug(f"Creating inference_experiment resource.")
         client = SageMakerClient().client
     
@@ -5037,7 +5078,9 @@ class ModelCard(Base):
         transform(response, 'DescribeModelCardResponse', self)
         return self
     
-    def update(self) -> Optional[object]:
+    def update(self,
+     
+     ) -> Optional[object]:
         logger.debug(f"Creating model_card resource.")
         client = SageMakerClient().client
     
@@ -5615,7 +5658,10 @@ class ModelPackage(Base):
         transform(response, 'DescribeModelPackageOutput', self)
         return self
     
-    def update(self) -> Optional[object]:
+    def update(self,
+         customer_metadata_properties_to_remove: Optional[List[str]] = Unassigned(),
+        additional_inference_specifications_to_add: Optional[List[AdditionalInferenceSpecificationDefinition]] = Unassigned(),
+     ) -> Optional[object]:
         logger.debug(f"Creating model_package resource.")
         client = SageMakerClient().client
     
@@ -5624,8 +5670,8 @@ class ModelPackage(Base):
             'ModelApprovalStatus': self.model_approval_status,
             'ApprovalDescription': self.approval_description,
             'CustomerMetadataProperties': self.customer_metadata_properties,
-            'CustomerMetadataPropertiesToRemove': self.customer_metadata_properties_to_remove,
-            'AdditionalInferenceSpecificationsToAdd': self.additional_inference_specifications_to_add,
+            'CustomerMetadataPropertiesToRemove': customer_metadata_properties_to_remove,
+            'AdditionalInferenceSpecificationsToAdd': additional_inference_specifications_to_add,
             'InferenceSpecification': self.inference_specification,
             'SourceUri': self.source_uri,
         }
@@ -6070,7 +6116,9 @@ class MonitoringSchedule(Base):
         transform(response, 'DescribeMonitoringScheduleResponse', self)
         return self
     
-    def update(self) -> Optional[object]:
+    def update(self,
+     
+     ) -> Optional[object]:
         logger.debug(f"Creating monitoring_schedule resource.")
         client = SageMakerClient().client
     
@@ -6263,7 +6311,13 @@ class NotebookInstance(Base):
         transform(response, 'DescribeNotebookInstanceOutput', self)
         return self
     
-    def update(self) -> Optional[object]:
+    def update(self,
+         lifecycle_config_name: Optional[str] = Unassigned(),
+        disassociate_lifecycle_config: Optional[bool] = Unassigned(),
+        disassociate_accelerator_types: Optional[bool] = Unassigned(),
+        disassociate_default_code_repository: Optional[bool] = Unassigned(),
+        disassociate_additional_code_repositories: Optional[bool] = Unassigned(),
+     ) -> Optional[object]:
         logger.debug(f"Creating notebook_instance resource.")
         client = SageMakerClient().client
     
@@ -6271,15 +6325,15 @@ class NotebookInstance(Base):
             'NotebookInstanceName': self.notebook_instance_name,
             'InstanceType': self.instance_type,
             'RoleArn': self.role_arn,
-            'LifecycleConfigName': self.lifecycle_config_name,
-            'DisassociateLifecycleConfig': self.disassociate_lifecycle_config,
+            'LifecycleConfigName': lifecycle_config_name,
+            'DisassociateLifecycleConfig': disassociate_lifecycle_config,
             'VolumeSizeInGB': self.volume_size_in_g_b,
             'DefaultCodeRepository': self.default_code_repository,
             'AdditionalCodeRepositories': self.additional_code_repositories,
             'AcceleratorTypes': self.accelerator_types,
-            'DisassociateAcceleratorTypes': self.disassociate_accelerator_types,
-            'DisassociateDefaultCodeRepository': self.disassociate_default_code_repository,
-            'DisassociateAdditionalCodeRepositories': self.disassociate_additional_code_repositories,
+            'DisassociateAcceleratorTypes': disassociate_accelerator_types,
+            'DisassociateDefaultCodeRepository': disassociate_default_code_repository,
+            'DisassociateAdditionalCodeRepositories': disassociate_additional_code_repositories,
             'RootAccess': self.root_access,
             'InstanceMetadataServiceConfiguration': self.instance_metadata_service_configuration,
         }
@@ -6401,7 +6455,9 @@ class NotebookInstanceLifecycleConfig(Base):
         transform(response, 'DescribeNotebookInstanceLifecycleConfigOutput', self)
         return self
     
-    def update(self) -> Optional[object]:
+    def update(self,
+     
+     ) -> Optional[object]:
         logger.debug(f"Creating notebook_instance_lifecycle_config resource.")
         client = SageMakerClient().client
     
@@ -6531,7 +6587,9 @@ class Pipeline(Base):
         transform(response, 'DescribePipelineResponse', self)
         return self
     
-    def update(self) -> Optional[object]:
+    def update(self,
+         pipeline_definition_s3_location: Optional[PipelineDefinitionS3Location] = Unassigned(),
+     ) -> Optional[object]:
         logger.debug(f"Creating pipeline resource.")
         client = SageMakerClient().client
     
@@ -6539,7 +6597,7 @@ class Pipeline(Base):
             'PipelineName': self.pipeline_name,
             'PipelineDisplayName': self.pipeline_display_name,
             'PipelineDefinition': self.pipeline_definition,
-            'PipelineDefinitionS3Location': self.pipeline_definition_s3_location,
+            'PipelineDefinitionS3Location': pipeline_definition_s3_location,
             'PipelineDescription': self.pipeline_description,
             'RoleArn': self.role_arn,
             'ParallelismConfiguration': self.parallelism_configuration,
@@ -6634,7 +6692,9 @@ class PipelineExecution(Base):
         transform(response, 'DescribePipelineExecutionResponse', self)
         return self
     
-    def update(self) -> Optional[object]:
+    def update(self,
+     
+     ) -> Optional[object]:
         logger.debug(f"Creating pipeline_execution resource.")
         client = SageMakerClient().client
     
@@ -6934,15 +6994,18 @@ class Project(Base):
         transform(response, 'DescribeProjectOutput', self)
         return self
     
-    def update(self) -> Optional[object]:
+    def update(self,
+         service_catalog_provisioning_update_details: Optional[ServiceCatalogProvisioningUpdateDetails] = Unassigned(),
+        tags: Optional[List[Tag]] = Unassigned(),
+     ) -> Optional[object]:
         logger.debug(f"Creating project resource.")
         client = SageMakerClient().client
     
         operation_input_args = {
             'ProjectName': self.project_name,
             'ProjectDescription': self.project_description,
-            'ServiceCatalogProvisioningUpdateDetails': self.service_catalog_provisioning_update_details,
-            'Tags': self.tags,
+            'ServiceCatalogProvisioningUpdateDetails': service_catalog_provisioning_update_details,
+            'Tags': tags,
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -7073,7 +7136,9 @@ class Space(Base):
         transform(response, 'DescribeSpaceResponse', self)
         return self
     
-    def update(self) -> Optional[object]:
+    def update(self,
+     
+     ) -> Optional[object]:
         logger.debug(f"Creating space resource.")
         client = SageMakerClient().client
     
@@ -7418,7 +7483,9 @@ class TrainingJob(Base):
         transform(response, 'DescribeTrainingJobResponse', self)
         return self
     
-    def update(self) -> Optional[object]:
+    def update(self,
+     
+     ) -> Optional[object]:
         logger.debug(f"Creating training_job resource.")
         client = SageMakerClient().client
     
@@ -7727,7 +7794,9 @@ class Trial(Base):
         transform(response, 'DescribeTrialResponse', self)
         return self
     
-    def update(self) -> Optional[object]:
+    def update(self,
+     
+     ) -> Optional[object]:
         logger.debug(f"Creating trial resource.")
         client = SageMakerClient().client
     
@@ -7850,7 +7919,11 @@ class TrialComponent(Base):
         transform(response, 'DescribeTrialComponentResponse', self)
         return self
     
-    def update(self) -> Optional[object]:
+    def update(self,
+         parameters_to_remove: Optional[List[str]] = Unassigned(),
+        input_artifacts_to_remove: Optional[List[str]] = Unassigned(),
+        output_artifacts_to_remove: Optional[List[str]] = Unassigned(),
+     ) -> Optional[object]:
         logger.debug(f"Creating trial_component resource.")
         client = SageMakerClient().client
     
@@ -7861,11 +7934,11 @@ class TrialComponent(Base):
             'StartTime': self.start_time,
             'EndTime': self.end_time,
             'Parameters': self.parameters,
-            'ParametersToRemove': self.parameters_to_remove,
+            'ParametersToRemove': parameters_to_remove,
             'InputArtifacts': self.input_artifacts,
-            'InputArtifactsToRemove': self.input_artifacts_to_remove,
+            'InputArtifactsToRemove': input_artifacts_to_remove,
             'OutputArtifacts': self.output_artifacts,
-            'OutputArtifactsToRemove': self.output_artifacts_to_remove,
+            'OutputArtifactsToRemove': output_artifacts_to_remove,
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -8046,7 +8119,9 @@ class UserProfile(Base):
         transform(response, 'DescribeUserProfileResponse', self)
         return self
     
-    def update(self) -> Optional[object]:
+    def update(self,
+     
+     ) -> Optional[object]:
         logger.debug(f"Creating user_profile resource.")
         client = SageMakerClient().client
     
@@ -8194,15 +8269,20 @@ class Workforce(Base):
         transform(response, 'DescribeWorkforceResponse', self)
         return self
     
-    def update(self) -> Optional[object]:
+    def update(self,
+         workforce_name: str,
+        source_ip_config: Optional[SourceIpConfig] = Unassigned(),
+        oidc_config: Optional[OidcConfig] = Unassigned(),
+        workforce_vpc_config: Optional[WorkforceVpcConfigRequest] = Unassigned(),
+     ) -> Optional[object]:
         logger.debug(f"Creating workforce resource.")
         client = SageMakerClient().client
     
         operation_input_args = {
-            'WorkforceName': self.workforce_name,
-            'SourceIpConfig': self.source_ip_config,
-            'OidcConfig': self.oidc_config,
-            'WorkforceVpcConfig': self.workforce_vpc_config,
+            'WorkforceName': workforce_name,
+            'SourceIpConfig': source_ip_config,
+            'OidcConfig': oidc_config,
+            'WorkforceVpcConfig': workforce_vpc_config,
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -8316,15 +8396,20 @@ class Workteam(Base):
         transform(response, 'DescribeWorkteamResponse', self)
         return self
     
-    def update(self) -> Optional[object]:
+    def update(self,
+         workteam_name: str,
+        member_definitions: Optional[List[MemberDefinition]] = Unassigned(),
+        description: Optional[str] = Unassigned(),
+        notification_configuration: Optional[NotificationConfiguration] = Unassigned(),
+     ) -> Optional[object]:
         logger.debug(f"Creating workteam resource.")
         client = SageMakerClient().client
     
         operation_input_args = {
-            'WorkteamName': self.workteam_name,
-            'MemberDefinitions': self.member_definitions,
-            'Description': self.description,
-            'NotificationConfiguration': self.notification_configuration,
+            'WorkteamName': workteam_name,
+            'MemberDefinitions': member_definitions,
+            'Description': description,
+            'NotificationConfiguration': notification_configuration,
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request

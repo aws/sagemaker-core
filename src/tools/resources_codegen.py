@@ -142,7 +142,7 @@ class ResourcesCodeGen:
             "from pydantic import validate_call",
             "from typing import Literal",
             "from boto3.session import Session",
-            "from .utils import SageMakerClient, Unassigned, snake_to_pascal, pascal_to_snake",
+            "from .utils import SageMakerClient, SageMakerRuntimeClient, Unassigned, snake_to_pascal, pascal_to_snake",
             "from .intelligent_defaults_helper import load_default_configs_for_resource_name, get_config_value",
             "from src.code_injection.codec import transform",
             "from .shapes import *"
@@ -208,7 +208,6 @@ class ResourcesCodeGen:
 
             # Generate and write the imports to the file
             file.write(self.generate_imports())
-            self.generate_configs_loading_helper_functions(file)
 
             # Generate and write the logging statements to the file
             file.write(self.generate_logging())
@@ -329,7 +328,9 @@ class ResourcesCodeGen:
             if refresh_method := self._evaluate_method(resource_name, "refresh", object_methods):
                 resource_class += add_indent(refresh_method, 4)
 
-            if update_method := self._evaluate_method(resource_name, "update", object_methods):
+            if update_method := self._evaluate_method(resource_name, "update",
+                                                      object_methods,
+                                                      resource_attributes=resource_attributes):
                 resource_class += add_indent(update_method, 4)
 
             if delete_method := self._evaluate_method(resource_name, "delete", object_methods):
@@ -440,26 +441,36 @@ class ResourcesCodeGen:
 
     def _generate_method_args_excluding_resource_class_attributes(self,
                                                                   operation_input_shape_name: str,
-                                                                  resource_attributes: list) -> str:
+                                                                  resource_attributes: list,
+                                                                  include_serialiser_functions: bool = False) -> str:
         """Generates the arguments for a method.
         This will  exclude the resource class attributes from the arguments,
          because they need not be specificed by the user explicitly once they have initiated the class already.
 
         Args:
             operation_input_shape_name (str): The name of the input shape for the operation.
-
+            resource_attributes (list): The list of resource class attributes.
+            include_serialiser_functions (bool): Indicates whether to include serialiser functions in the arguments.
         Returns:
             str: The generated arguments string.
         """
         typed_shape_members = self.shapes_extractor.generate_shape_members(
             operation_input_shape_name)
-        method_args = ",\n".join(
+        method_args = ""
+
+        if include_serialiser_functions:
+            method_args += "serialise_func,"
+            method_args += "\nde_serialise_func,"
+            method_args += "\n"
+
+        method_args += ",\n".join(
             f"{attr}: {attr_type}"
             for attr, attr_type in typed_shape_members.items()
             if attr not in resource_attributes
         )
-        method_args += ","
-        method_args = add_indent(method_args)
+        if method_args:
+            method_args += ","
+            method_args = add_indent(method_args)
         return method_args
 
     def _generate_get_args(self, resource_name: str, operation_input_shape_name: str) -> str:
@@ -548,7 +559,7 @@ class ResourcesCodeGen:
         # Return the formatted method
         return formatted_method
 
-    def generate_update_method(self, resource_name: str) -> str:
+    def generate_update_method(self, resource_name: str, **kwargs) -> str:
         """
         Auto-generate the UPDATE method for a resource.
 
@@ -562,9 +573,15 @@ class ResourcesCodeGen:
         # Get the operation and shape for the 'create' method
         operation_name = "Update" + resource_name
         operation_metadata = self.operations[operation_name]
+        operation_input_shape_name = operation_metadata["input"]["shape"]
 
-        operation_input_args = self._generate_operation_input_args(
-            operation_metadata, is_class_method=False
+        # Generate the arguments for the 'create' method
+        update_args = self._generate_method_args_excluding_resource_class_attributes(operation_input_shape_name,
+                                                                                     kwargs['resource_attributes'],
+                                                                                     False)
+
+        operation_input_args = self._generate_operation_input_necessary_args(
+            operation_metadata, kwargs['resource_attributes']
         )
 
         # Convert the resource name to snake case
@@ -578,6 +595,7 @@ class ResourcesCodeGen:
             service_name='sagemaker', # TODO: change service name based on the service - runtime, sagemaker, etc.
             resource_name=resource_name,
             resource_lower=resource_lower,
+            update_args=update_args,
             operation_input_args=operation_input_args,
             operation=operation,
         )
@@ -602,7 +620,9 @@ class ResourcesCodeGen:
         operation_input_shape_name = operation_metadata["input"]["shape"]
 
         # Generate the arguments for the 'create' method
-        create_args = self._generate_method_args_excluding_resource_class_attributes(operation_input_shape_name, kwargs['resource_attributes'])
+        invoke_args = self._generate_method_args_excluding_resource_class_attributes(operation_input_shape_name,
+                                                                                     kwargs['resource_attributes'],
+                                                                                     True)
 
         operation_input_args = self._generate_operation_input_necessary_args(
             operation_metadata, kwargs['resource_attributes']
@@ -617,7 +637,7 @@ class ResourcesCodeGen:
         # Format the method using the CREATE_METHOD_TEMPLATE
         formatted_method = INVOKE_METHOD_TEMPLATE.format(
             service_name='sagemaker-runtime',
-            create_args=create_args,
+            invoke_args=invoke_args,
             resource_name=resource_name,
             resource_lower=resource_lower,
             operation_input_args=operation_input_args,
@@ -644,7 +664,9 @@ class ResourcesCodeGen:
         operation_input_shape_name = operation_metadata["input"]["shape"]
 
         # Generate the arguments for the 'create' method
-        create_args = self._generate_method_args_excluding_resource_class_attributes(operation_input_shape_name, kwargs['resource_attributes'])
+        invoke_args = self._generate_method_args_excluding_resource_class_attributes(operation_input_shape_name,
+                                                                                     kwargs['resource_attributes'],
+                                                                                     True)
 
         operation_input_args = self._generate_operation_input_necessary_args(
             operation_metadata, kwargs['resource_attributes']
@@ -659,7 +681,7 @@ class ResourcesCodeGen:
         # Format the method using the CREATE_METHOD_TEMPLATE
         formatted_method = INVOKE_ASYNC_METHOD_TEMPLATE.format(
             service_name='sagemaker-runtime',
-            create_args=create_args,
+            create_args=invoke_args,
             resource_name=resource_name,
             resource_lower=resource_lower,
             operation_input_args=operation_input_args,
@@ -687,7 +709,9 @@ class ResourcesCodeGen:
         operation_input_shape_name = operation_metadata["input"]["shape"]
 
         # Generate the arguments for the 'create' method
-        create_args = self._generate_method_args_excluding_resource_class_attributes(operation_input_shape_name, kwargs['resource_attributes'])
+        invoke_args = self._generate_method_args_excluding_resource_class_attributes(operation_input_shape_name,
+                                                                                     kwargs['resource_attributes'],
+                                                                                     True)
 
         operation_input_args = self._generate_operation_input_necessary_args(
             operation_metadata,
@@ -703,7 +727,7 @@ class ResourcesCodeGen:
         # Format the method using the CREATE_METHOD_TEMPLATE
         formatted_method = INVOKE_WITH_RESPONSE_STREAM_METHOD_TEMPLATE.format(
             service_name='sagemaker-runtime',
-            create_args=create_args,
+            create_args=invoke_args,
             resource_name=resource_name,
             resource_lower=resource_lower,
             operation_input_args=operation_input_args,
@@ -772,8 +796,7 @@ class ResourcesCodeGen:
         formatted_method = REFRESH_METHOD_TEMPLATE.format(
             operation_input_args=operation_input_args,
             operation=operation,
-            # ToDo Refresh method instance update logic is yet to be strategised
-            # describe_operation_output_shape=resource_operation_output_shape_name,
+            describe_operation_output_shape=resource_operation_output_shape_name,
         )
         return formatted_method
 
@@ -912,6 +935,7 @@ class ResourcesCodeGen:
             "$schema": "https://json-schema.org/draft/2020-12/schema",
             TYPE: OBJECT,
             PROPERTIES: {
+                "SchemaVersion": "1.0",
                 SAGEMAKER: {
                     TYPE: OBJECT,
                     PROPERTIES: {

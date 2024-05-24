@@ -14,7 +14,7 @@
 import datetime
 
 from pydantic import BaseModel
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Any
 
 
 class Base(BaseModel):
@@ -10390,7 +10390,7 @@ class PayloadPart(Base):
 	----------------------
  	bytes: 	 <p>A blob that contains part of the response for your streaming inference request.</p>
     """
-    bytes: Optional[str] = Unassigned()
+    bytes: Optional[Any] = Unassigned()
 
 
 class ModelStreamError(Base):
