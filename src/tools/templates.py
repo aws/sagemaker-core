@@ -389,7 +389,7 @@ class Base(BaseModel):
                      global_defaults):
                         kwargs[formatted_attribute] = config_value
         except BaseException as e:
-            logger.exception("Failed to fetch default configs", e) 
+            logger.info("Could not load Default Configs. Continuing.", exc_info=True)
             # Continue with existing kwargs if no default configs found
         return kwargs
 '''
