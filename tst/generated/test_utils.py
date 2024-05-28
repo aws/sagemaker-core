@@ -260,21 +260,20 @@ def test_next_with_custom_key_mapping(resource_iterator_with_custom_key_mapping)
         assert mock_refresh.call_count == 2
         assert client.list_data_quality_job_definitions.call_args_list == [call()]
 
-
-def test_reset_logger_with_default_log_level(monkeypatch):
+def test_configure_logging_with_default_log_level(monkeypatch):
     monkeypatch.delenv("LOG_LEVEL", raising=False)
-    reset_logger()
+    configure_logging()
     assert logging.getLogger().level == logging.INFO
 
-def test_reset_logger_with_debug_log_level(monkeypatch):
+def test_configure_logging_with_debug_log_level(monkeypatch):
     monkeypatch.setenv("LOG_LEVEL", "DEBUG")
-    reset_logger()
+    configure_logging()
     assert logging.getLogger().level == logging.DEBUG
 
-def test_reset_logger_with_invalid_log_level():
+def test_configure_logging_with_invalid_log_level():
     with pytest.raises(AttributeError):
-        reset_logger("INVALID_LOG_LEVEL")
+        configure_logging("INVALID_LOG_LEVEL")
 
-def test_reset_logger_with_explicit_log_level():
-    reset_logger("WARNING")
+def test_configure_logging_with_explicit_log_level():
+    configure_logging("WARNING")
     assert logging.getLogger().level == logging.WARNING

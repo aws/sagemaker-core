@@ -26,21 +26,24 @@ logger = logging.getLogger(__name__)
 
 T = TypeVar("T")
 
-def reset_logger(log_level=None):
-    """Reset the logging configuration based on log level.
+def configure_logging(log_level=None):
+    """Configure the logging configuration based on log level.
 
     Usage:
         Set Environment Variable LOG_LEVEL to DEBUG to see debug logs
-        reset_logger()
-        reset_logger("DEBUG")
+        configure_logging()
+        configure_logging("DEBUG")
 
     Args:
         log_level (str): The log level to set.
             Accepted values are: "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL".
+            Defaults to the value of the LOG_LEVEL environment variable.
+            If argument/environment variable is not set, defaults to "INFO".
 
     Raises:
         AttributeError: If the log level is invalid.
     """
+
     if not log_level:
         log_level = os.environ.get("LOG_LEVEL", "INFO").upper()
     _logger = logging.getLogger()
