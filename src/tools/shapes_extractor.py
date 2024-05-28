@@ -14,21 +14,23 @@
 import textwrap
 import pprint
 from functools import lru_cache
+from typing import Optional
 
 from src.tools.constants import BASIC_JSON_TYPES_TO_PYTHON_TYPES, SHAPE_DAG_FILE_PATH
 from src.util.util import reformat_file_with_black, convert_to_snake_case
+from src.tools.data_extractor import load_combined_shapes_data
 
 
 class ShapesExtractor:
     """Extracts the shapes to DAG structure."""
 
-    def __init__(self, service_json: dict):
+    def __init__(self, combined_shapes: Optional[dict] = None):
         """
         Initializes a new instance of the ShapesExtractor class.
 
-        :param service_json: The Botocore Service Json in python dict format.
+        :param combined_shapes: All the shapes put together from all Sagemaker Service JSONs
         """
-        self.service_json = service_json
+        self.combined_shapes = combined_shapes or load_combined_shapes_data()
          
         self.shape_dag = self.get_shapes_dag()
         with open(SHAPE_DAG_FILE_PATH, 'w') as f:
@@ -84,9 +86,11 @@ class ShapesExtractor:
         :rtype: dict
         """
         _dag = {}
-        _all_shapes = self.service_json["shapes"]
+        _all_shapes = self.combined_shapes
         for shape, shape_attrs in _all_shapes.items():
             shape_data = _all_shapes[shape]
+            if "type" not in shape_data:
+                continue
             if shape_data["type"] == "structure":
                 _dag[shape] = {"type": "structure", "members": []}
                 for member, member_attrs in shape_data["members"].items():
@@ -111,7 +115,7 @@ class ShapesExtractor:
 
     def _evaluate_list_type(self, member_shape):
         list_shape_name = member_shape["member"]["shape"]
-        list_shape_type = self.service_json["shapes"][list_shape_name]["type"]
+        list_shape_type = self.combined_shapes[list_shape_name]["type"]
         if list_shape_type in ["list", "map"]:
             raise Exception(
                 "Unhandled list shape key type encountered, needs extra logic to handle this")
@@ -128,8 +132,8 @@ class ShapesExtractor:
     def _evaluate_map_type(self, member_shape):
         map_key_shape_name = member_shape["key"]["shape"]
         map_value_shape_name = member_shape["value"]["shape"]
-        map_key_shape = self.service_json["shapes"][map_key_shape_name]
-        map_value_shape = self.service_json["shapes"][map_value_shape_name]
+        map_key_shape = self.combined_shapes[map_key_shape_name]
+        map_value_shape = self.combined_shapes[map_value_shape_name]
         map_key_shape_type = map_key_shape["type"]
         map_value_shape_type = map_value_shape["type"]
         # Map keys are always expected to be "string" type
@@ -168,7 +172,7 @@ class ShapesExtractor:
 
     @lru_cache
     def generate_shape_members(self, shape):
-        shape_dict = self.service_json['shapes'][shape]
+        shape_dict = self.combined_shapes[shape]
         members = shape_dict["members"]
         required_args = shape_dict.get("required", [])
         init_data_body = {}
@@ -177,8 +181,8 @@ class ShapesExtractor:
         ordered_members.update(members)
         for member_name, member_attrs in ordered_members.items():
             member_shape_name = member_attrs["shape"]
-            if self.service_json["shapes"][member_shape_name]:
-                member_shape = self.service_json["shapes"][member_shape_name]
+            if self.combined_shapes[member_shape_name]:
+                member_shape = self.combined_shapes[member_shape_name]
                 member_shape_type = member_shape["type"]
                 if member_shape_type == "structure":
                     member_type = member_shape_name
@@ -199,7 +203,7 @@ class ShapesExtractor:
         return init_data_body
     
     def get_required_members(self, shape):
-        shape_dict = self.service_json['shapes'][shape]
+        shape_dict = self.combined_shapes[shape]
         required_args = shape_dict.get("required", [])
 
         return [convert_to_snake_case(arg) for arg in required_args]

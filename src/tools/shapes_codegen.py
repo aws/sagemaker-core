@@ -22,6 +22,8 @@ from src.tools.constants import LICENCES_STRING, GENERATED_CLASSES_LOCATION, SHA
 from src.tools.shapes_extractor import ShapesExtractor
 from src.util.util import add_indent, convert_to_snake_case
 from src.tools.templates import SHAPE_CLASS_TEMPLATE, SHAPE_BASE_CLASS_TEMPLATE
+from src.tools.data_extractor import load_combined_shapes_data, load_combined_operations_data
+
 
 class ShapesCodeGen:
     """
@@ -46,9 +48,10 @@ class ShapesCodeGen:
         generate_shapes(output_folder): Generates the shape classes and writes them to the specified output folder.
     """
 
-    def __init__(self, service_json: dict):
-        self.service_json = service_json
-        self.shapes_extractor = ShapesExtractor(service_json=service_json)
+    def __init__(self):
+        self.combined_shapes = load_combined_shapes_data()
+        self.combined_operations = load_combined_operations_data()
+        self.shapes_extractor = ShapesExtractor()
         self.shape_dag = self.shapes_extractor.get_shapes_dag()
 
     def build_graph(self):
@@ -73,17 +76,16 @@ class ShapesCodeGen:
                 'DeleteExperimentResponse': ['ExperimentArn']}
         """
         graph = {}
-        shapes_dict = self.service_json["shapes"]
 
-        for node, attributes in shapes_dict.items():
+        for node, attributes in self.combined_shapes.items():
             if "members" in attributes:
                 for member, member_attributes in attributes["members"].items():
                     # add shapes and not shape attribute
                     # i.e. ExperimentEntityName taken over ExperimentName
-                    if member_attributes["shape"] in shapes_dict.keys():
+                    if member_attributes["shape"] in self.combined_shapes.keys():
                         node_deps = graph.get(node, [])
                         # evaluate the member shape and then append to node deps
-                        member_shape = shapes_dict[member_attributes["shape"]]
+                        member_shape = self.combined_shapes[member_attributes["shape"]]
                         if member_shape["type"] == "list":
                             node_deps.append(member_shape["member"]["shape"])
                         elif member_shape["type"] == "map":
@@ -148,7 +150,7 @@ class ShapesCodeGen:
         :param shape: The name of the shape.
         :return: The generated docstring as a string.
         """
-        shape_dict = self.service_json["shapes"][shape]
+        shape_dict = self.combined_shapes[shape]
 
         docstring = f" {shape}"
         if "documentation" in shape_dict:
@@ -183,7 +185,7 @@ class ShapesCodeGen:
         imports = "import datetime\n"
         imports += "\n"
         imports += "from pydantic import BaseModel\n"
-        imports += "from typing import List, Dict, Optional\n"
+        imports += "from typing import List, Dict, Optional, Any\n"
         imports += "\n"
         return imports
 
@@ -206,7 +208,7 @@ class ShapesCodeGen:
         :return: True if the shape should be generated, False otherwise.
         """
         operation_input_output_shapes = []
-        for operation, attrs in self.service_json["operations"].items():
+        for operation, attrs in self.combined_operations.items():
             if attrs.get("input"):
                 operation_input_output_shapes.append(attrs["input"]["shape"])
             if attrs.get("output"):
@@ -267,7 +269,7 @@ class ShapesCodeGen:
                 
                 # Extract the necessary data for the shape
                 if self._filter_input_output_shapes(shape):
-                    shape_dict = self.service_json['shapes'][shape]
+                    shape_dict = self.combined_shapes[shape]
                     shape_type = shape_dict["type"]
                     if shape_type == "structure":
                         

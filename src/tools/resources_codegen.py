@@ -30,14 +30,17 @@ from src.tools.constants import GENERATED_CLASSES_LOCATION, \
 from src.util.util import add_indent, convert_to_snake_case, snake_to_pascal
 from src.tools.resources_extractor import ResourcesExtractor
 from src.tools.shapes_extractor import ShapesExtractor
-from src.tools.templates import (CREATE_METHOD_TEMPLATE, \
-                                 GET_METHOD_TEMPLATE, REFRESH_METHOD_TEMPLATE, \
-                                 RESOURCE_BASE_CLASS_TEMPLATE, \
-                                 STOP_METHOD_TEMPLATE, DELETE_METHOD_TEMPLATE, \
+from src.tools.templates import (CREATE_METHOD_TEMPLATE,
+                                 GET_METHOD_TEMPLATE, REFRESH_METHOD_TEMPLATE,
+                                 RESOURCE_BASE_CLASS_TEMPLATE,
+                                 STOP_METHOD_TEMPLATE, DELETE_METHOD_TEMPLATE,
                                  WAIT_METHOD_TEMPLATE, WAIT_FOR_STATUS_METHOD_TEMPLATE,
-                                 UPDATE_METHOD_TEMPLATE, POPULATE_DEFAULTS_DECORATOR_TEMPLATE, \
+                                 UPDATE_METHOD_TEMPLATE, POPULATE_DEFAULTS_DECORATOR_TEMPLATE,
                                  CREATE_METHOD_TEMPLATE_WITHOUT_DEFAULTS,
+                                 INVOKE_METHOD_TEMPLATE,
+                                 INVOKE_ASYNC_METHOD_TEMPLATE, INVOKE_WITH_RESPONSE_STREAM_METHOD_TEMPLATE,
                                  IMPORT_METHOD_TEMPLATE)
+from src.tools.data_extractor import load_combined_shapes_data, load_combined_operations_data
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
@@ -96,12 +99,12 @@ class ResourcesCodeGen:
             raise Exception(f"Protocol {self.protocol} not supported in this resource generator")
 
         # Extract the operations and shapes
-        self.operations = self.service_json['operations']
-        self.shapes = self.service_json['shapes']
+        self.operations = load_combined_operations_data()
+        self.shapes = load_combined_shapes_data()
 
         # Initialize the resources and shapes extractors
-        self.resources_extractor = ResourcesExtractor(service_json=service_json)
-        self.shapes_extractor = ShapesExtractor(service_json=service_json)
+        self.resources_extractor = ResourcesExtractor()
+        self.shapes_extractor = ShapesExtractor()
 
         # Extract the resources plan and shapes DAG
         self.resources_plan = self.resources_extractor.get_resource_plan()
@@ -133,11 +136,12 @@ class ResourcesCodeGen:
         imports = [
             BASIC_IMPORTS_STRING,
             "import time",
+            "import os",
             "from pprint import pprint",
             "from pydantic import validate_call",
             "from typing import Literal",
             "from boto3.session import Session",
-            "from .utils import SageMakerClient, Unassigned, snake_to_pascal, pascal_to_snake",
+            "from .utils import SageMakerClient, SageMakerRuntimeClient, Unassigned, snake_to_pascal, pascal_to_snake",
             "from .intelligent_defaults_helper import load_default_configs_for_resource_name, get_config_value",
             "from src.code_injection.codec import transform",
             "from .shapes import *"
@@ -181,8 +185,8 @@ class ResourcesCodeGen:
 
 
     def generate_resources(self,
-                           output_folder: str=GENERATED_CLASSES_LOCATION,
-                           file_name: str=RESOURCES_CODEGEN_FILE_NAME) -> None:
+                           output_folder: str = GENERATED_CLASSES_LOCATION,
+                           file_name: str = RESOURCES_CODEGEN_FILE_NAME) -> None:
         """
         Generate the resources file.
 
@@ -234,7 +238,11 @@ class ResourcesCodeGen:
                 if resource_class:
                     file.write(f"{resource_class}\n\n")
 
-    def _evaluate_method(self, resource_name: str, method_name: str, methods: list, **kwargs)-> str:
+    def _evaluate_method(self,
+                         resource_name: str,
+                         method_name: str,
+                         methods: list,
+                         **kwargs) -> str:
         """Evaluate the specified method for a resource.
 
         Args:
@@ -288,6 +296,7 @@ class ResourcesCodeGen:
             # Generate the class attributes based on the shape
             class_attributes = self.shapes_extractor.generate_data_shape_members_and_string_body(get_operation_shape)
             class_attributes_string = class_attributes[1]
+            resource_attributes = list(class_attributes[0].keys())
 
             defaults_decorator_method = ""
             # Check if 'create' is in the class methods
@@ -318,7 +327,9 @@ class ResourcesCodeGen:
             if refresh_method := self._evaluate_method(resource_name, "refresh", object_methods):
                 resource_class += add_indent(refresh_method, 4)
 
-            if update_method := self._evaluate_method(resource_name, "update", object_methods):
+            if update_method := self._evaluate_method(resource_name, "update",
+                                                      object_methods,
+                                                      resource_attributes=resource_attributes):
                 resource_class += add_indent(update_method, 4)
 
             if delete_method := self._evaluate_method(resource_name, "delete", object_methods):
@@ -332,6 +343,21 @@ class ResourcesCodeGen:
 
             if wait_for_status_method := self._evaluate_method(resource_name, "wait_for_status", object_methods):
                 resource_class += add_indent(wait_for_status_method, 4)
+
+            if invoke_method := self._evaluate_method(resource_name, "invoke",
+                                                      object_methods,
+                                                      resource_attributes=resource_attributes):
+                resource_class += add_indent(invoke_method, 4)
+
+            if invoke_async_method := self._evaluate_method(resource_name, "invoke_async",
+                                                            object_methods,
+                                                            resource_attributes=resource_attributes):
+                resource_class += add_indent(invoke_async_method, 4)
+
+            if invoke_with_response_stream_method := self._evaluate_method(resource_name, "invoke_with_response_stream",
+                                                                           object_methods,
+                                                                           resource_attributes=resource_attributes):
+                resource_class += add_indent(invoke_with_response_stream_method, 4)
 
             if import_method := self._evaluate_method(resource_name, "import", class_methods):
                 resource_class += add_indent(import_method, 4)
@@ -369,7 +395,37 @@ class ResourcesCodeGen:
 
         return operation_input_args
 
-    def _generate_method_args(self, operation_input_shape_name: str)-> str:
+    def _generate_operation_input_necessary_args(self,
+                                                 resource_operation: dict,
+                                                 resource_attributes: list) -> str:
+        """
+        Generate the operation input arguments string.
+        This will try to re-use args from the object attributes if present and it not presebt will use te ones provided in the parameter.
+        Args:
+            resource_operation (dict): The resource operation dictionary.
+            is_class_method (bool): Indicates method is class method, else object method.
+
+        Returns:
+            str: The formatted operation input arguments string.
+        """
+        input_shape_name = resource_operation["input"]["shape"]
+        input_shape_members = list(self.shapes[input_shape_name]["members"].keys())
+
+        args = list()
+        for member in input_shape_members:
+            if convert_to_snake_case(member) in resource_attributes:
+                args.append(f"'{member}': self.{convert_to_snake_case(member)}")
+            else:
+                args.append(f"'{member}': {convert_to_snake_case(member)}")
+
+        operation_input_args = ",\n".join(args)
+        operation_input_args += ","
+        operation_input_args = add_indent(operation_input_args, 8)
+
+        return operation_input_args
+
+
+    def _generate_method_args(self, operation_input_shape_name: str) -> str:
         """Generates the arguments for a method.
 
         Args:
@@ -385,7 +441,35 @@ class ResourcesCodeGen:
         method_args = add_indent(method_args)
         return method_args
 
-    def _generate_get_args(self, resource_name: str, operation_input_shape_name: str)-> str:
+    def _generate_method_args_excluding_resource_class_attributes(self,
+                                                                  operation_input_shape_name: str,
+                                                                  resource_attributes: list) -> str:
+        """Generates the arguments for a method.
+        This will  exclude the resource class attributes from the arguments,
+         because they need not be specificed by the user explicitly once they have initiated the class already.
+
+        Args:
+            operation_input_shape_name (str): The name of the input shape for the operation.
+            resource_attributes (list): The list of resource class attributes.
+            include_serialiser_functions (bool): Indicates whether to include serialiser functions in the arguments.
+        Returns:
+            str: The generated arguments string.
+        """
+        typed_shape_members = self.shapes_extractor.generate_shape_members(
+            operation_input_shape_name)
+        method_args = ""
+
+        method_args += ",\n".join(
+            f"{attr}: {attr_type}"
+            for attr, attr_type in typed_shape_members.items()
+            if attr not in resource_attributes
+        )
+        if method_args:
+            method_args += ","
+            method_args = add_indent(method_args)
+        return method_args
+
+    def _generate_get_args(self, resource_name: str, operation_input_shape_name: str) -> str:
         """
         Generates a resource identifier based on the required members for the Describe and Create operations.
 
@@ -515,7 +599,7 @@ class ResourcesCodeGen:
         # Return the formatted method
         return formatted_method
 
-    def generate_update_method(self, resource_name: str) -> str:
+    def generate_update_method(self, resource_name: str, **kwargs) -> str:
         """
         Auto-generate the UPDATE method for a resource.
 
@@ -529,9 +613,14 @@ class ResourcesCodeGen:
         # Get the operation and shape for the 'create' method
         operation_name = "Update" + resource_name
         operation_metadata = self.operations[operation_name]
+        operation_input_shape_name = operation_metadata["input"]["shape"]
 
-        operation_input_args = self._generate_operation_input_args(
-            operation_metadata, is_class_method=False
+        # Generate the arguments for the 'create' method
+        update_args = self._generate_method_args_excluding_resource_class_attributes(operation_input_shape_name,
+                                                                                     kwargs['resource_attributes'])
+
+        operation_input_args = self._generate_operation_input_necessary_args(
+            operation_metadata, kwargs['resource_attributes']
         )
 
         # Convert the resource name to snake case
@@ -543,6 +632,138 @@ class ResourcesCodeGen:
         # Format the method using the CREATE_METHOD_TEMPLATE
         formatted_method = UPDATE_METHOD_TEMPLATE.format(
             service_name='sagemaker', # TODO: change service name based on the service - runtime, sagemaker, etc.
+            resource_name=resource_name,
+            resource_lower=resource_lower,
+            update_args=update_args,
+            operation_input_args=operation_input_args,
+            operation=operation,
+        )
+
+        # Return the formatted method
+        return formatted_method
+
+    def generate_invoke_method(self, resource_name: str, **kwargs) -> str:
+        """
+        Auto-generate the INVOKE ASYNC method for a resource.
+
+        Args:
+            resource_name (str): The resource name.
+
+        Returns:
+            str: The formatted Update Method template.
+
+        """
+        # Get the operation and shape for the 'create' method
+        operation_name = "Invoke" + resource_name
+        operation_metadata = self.operations[operation_name]
+        operation_input_shape_name = operation_metadata["input"]["shape"]
+
+        # Generate the arguments for the 'create' method
+        invoke_args = self._generate_method_args_excluding_resource_class_attributes(operation_input_shape_name,
+                                                                                     kwargs['resource_attributes'])
+
+        operation_input_args = self._generate_operation_input_necessary_args(
+            operation_metadata, kwargs['resource_attributes']
+        )
+
+        # Convert the resource name to snake case
+        resource_lower = convert_to_snake_case(resource_name)
+
+        # Convert the operation name to snake case
+        operation = convert_to_snake_case(operation_name)
+
+        # Format the method using the CREATE_METHOD_TEMPLATE
+        formatted_method = INVOKE_METHOD_TEMPLATE.format(
+            service_name='sagemaker-runtime',
+            invoke_args=invoke_args,
+            resource_name=resource_name,
+            resource_lower=resource_lower,
+            operation_input_args=operation_input_args,
+            operation=operation,
+        )
+
+        # Return the formatted method
+        return formatted_method
+
+    def generate_invoke_async_method(self, resource_name: str, **kwargs) -> str:
+        """
+        Auto-generate the INVOKE method for a resource.
+
+        Args:
+            resource_name (str): The resource name.
+
+        Returns:
+            str: The formatted Update Method template.
+
+        """
+        # Get the operation and shape for the 'create' method
+        operation_name = "Invoke" + resource_name + "Async"
+        operation_metadata = self.operations[operation_name]
+        operation_input_shape_name = operation_metadata["input"]["shape"]
+
+        # Generate the arguments for the 'create' method
+        invoke_args = self._generate_method_args_excluding_resource_class_attributes(operation_input_shape_name,
+                                                                                     kwargs['resource_attributes'])
+
+        operation_input_args = self._generate_operation_input_necessary_args(
+            operation_metadata, kwargs['resource_attributes']
+        )
+
+        # Convert the resource name to snake case
+        resource_lower = convert_to_snake_case(resource_name)
+
+        # Convert the operation name to snake case
+        operation = convert_to_snake_case(operation_name)
+
+        # Format the method using the CREATE_METHOD_TEMPLATE
+        formatted_method = INVOKE_ASYNC_METHOD_TEMPLATE.format(
+            service_name='sagemaker-runtime',
+            create_args=invoke_args,
+            resource_name=resource_name,
+            resource_lower=resource_lower,
+            operation_input_args=operation_input_args,
+            operation=operation,
+        )
+
+        # Return the formatted method
+        return formatted_method
+
+
+    def generate_invoke_with_response_stream_method(self, resource_name: str, **kwargs) -> str:
+        """
+        Auto-generate the INVOKE with response stream method for a resource.
+
+        Args:
+            resource_name (str): The resource name.
+
+        Returns:
+            str: The formatted Update Method template.
+
+        """
+        # Get the operation and shape for the 'create' method
+        operation_name = "Invoke" + resource_name + "WithResponseStream"
+        operation_metadata = self.operations[operation_name]
+        operation_input_shape_name = operation_metadata["input"]["shape"]
+
+        # Generate the arguments for the 'create' method
+        invoke_args = self._generate_method_args_excluding_resource_class_attributes(operation_input_shape_name,
+                                                                                     kwargs['resource_attributes'])
+
+        operation_input_args = self._generate_operation_input_necessary_args(
+            operation_metadata,
+            kwargs['resource_attributes']
+        )
+
+        # Convert the resource name to snake case
+        resource_lower = convert_to_snake_case(resource_name)
+
+        # Convert the operation name to snake case
+        operation = convert_to_snake_case(operation_name)
+
+        # Format the method using the CREATE_METHOD_TEMPLATE
+        formatted_method = INVOKE_WITH_RESPONSE_STREAM_METHOD_TEMPLATE.format(
+            service_name='sagemaker-runtime',
+            create_args=invoke_args,
             resource_name=resource_name,
             resource_lower=resource_lower,
             operation_input_args=operation_input_args,
@@ -662,7 +883,7 @@ class ResourcesCodeGen:
             operation=operation,
         )
         return formatted_method
-    
+
     def generate_wait_method(self, resource_name: str) -> str:
         """Auto-Generate WAIT Method for a waitable resource.
 
@@ -723,7 +944,7 @@ class ResourcesCodeGen:
         Input for generating the Schema is the service JSON that is already loaded in the class
 
         """
-        self.resources_extractor = ResourcesExtractor(self.service_json)
+        self.resources_extractor = ResourcesExtractor()
         self.resources_plan = self.resources_extractor.get_resource_plan()
 
         resource_properties = {}
@@ -750,6 +971,7 @@ class ResourcesCodeGen:
             "$schema": "https://json-schema.org/draft/2020-12/schema",
             TYPE: OBJECT,
             PROPERTIES: {
+                "SchemaVersion": "1.0",
                 SAGEMAKER: {
                     TYPE: OBJECT,
                     PROPERTIES: {
