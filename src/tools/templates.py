@@ -374,7 +374,7 @@ class Base(BaseModel):
     
     @classmethod
     def _serialize_dict(cls, value: Dict):
-        return {{k: v.serialize() if hasattr(v, 'serialize') else v for k, v in value.items()}}
+        return {k: v.serialize() if hasattr(v, 'serialize') else v for k, v in value.items()}
     
     @staticmethod
     def get_updated_kwargs_with_configured_attributes(config_schema_for_resource: dict, resource_name: str, **kwargs):
@@ -409,7 +409,6 @@ ENV_VARIABLE_USER_CONFIG_OVERRIDE = "SAGEMAKER_USER_CONFIG_OVERRIDE"
 
 S3_PREFIX = "s3://"
 
-@lru_cache(maxsize=None)
 def load_default_configs(additional_config_paths: List[str] = None, s3_resource=None):
     default_config_path = os.getenv(
         ENV_VARIABLE_ADMIN_CONFIG_OVERRIDE, _DEFAULT_ADMIN_CONFIG_FILE_PATH

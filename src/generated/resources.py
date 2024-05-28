@@ -54,7 +54,7 @@ class Base(BaseModel):
     
     @classmethod
     def _serialize_dict(cls, value: Dict):
-        return {{k: v.serialize() if hasattr(v, 'serialize') else v for k, v in value.items()}}
+        return {k: v.serialize() if hasattr(v, 'serialize') else v for k, v in value.items()}
     
     @staticmethod
     def get_updated_kwargs_with_configured_attributes(config_schema_for_resource: dict, resource_name: str, **kwargs):
@@ -7310,7 +7310,7 @@ class StudioLifecycleConfig(Base):
 class TrainingJob(Base):
     training_job_name: str
     training_job_arn: str
-    model_artifacts: ModelArtifacts
+    model_artifacts: Optional[ModelArtifacts] = None
     training_job_status: str
     secondary_status: str
     algorithm_specification: AlgorithmSpecification
