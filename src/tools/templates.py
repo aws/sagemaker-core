@@ -217,7 +217,7 @@ def populate_inputs_decorator(create_func):
     def wrapper(*args, **kwargs):
         config_schema_for_resource = \\
 {config_schema_for_resource}
-        create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "{resource_name}", **kwargs))
+        return create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "{resource_name}", **kwargs))
     return wrapper
 """
 
@@ -529,6 +529,9 @@ LOAD_CONFIG_VALUES_FOR_RESOURCE_TEMPLATE = """
 @lru_cache(maxsize=None)
 def load_default_configs_for_resource_name(resource_name: str):
     configs_data = load_default_configs()
+    if not configs_data:
+        logger.debug("No default configurations found for resource: %s", resource_name)
+        return {}
     return configs_data["SageMaker"]["PythonSDK"]["Resources"].get(resource_name)
 """
 

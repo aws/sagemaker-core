@@ -92,7 +92,7 @@ class Base(BaseModel):
 
 
 class Action(Base):
-    action_name: Optional[str] = Unassigned()
+    action_name: str
     action_arn: Optional[str] = Unassigned()
     source: Optional[ActionSource] = Unassigned()
     action_type: Optional[str] = Unassigned()
@@ -217,14 +217,14 @@ class Action(Base):
 
 class Algorithm(Base):
     algorithm_name: str
-    algorithm_arn: str
-    creation_time: datetime.datetime
-    training_specification: TrainingSpecification
-    algorithm_status: str
-    algorithm_status_details: AlgorithmStatusDetails
+    algorithm_arn: Optional[str] = Unassigned()
     algorithm_description: Optional[str] = Unassigned()
+    creation_time: Optional[datetime.datetime] = Unassigned()
+    training_specification: Optional[TrainingSpecification] = Unassigned()
     inference_specification: Optional[InferenceSpecification] = Unassigned()
     validation_specification: Optional[AlgorithmValidationSpecification] = Unassigned()
+    algorithm_status: Optional[str] = Unassigned()
+    algorithm_status_details: Optional[AlgorithmStatusDetails] = Unassigned()
     product_id: Optional[str] = Unassigned()
     certify_for_marketplace: Optional[bool] = Unassigned()
 
@@ -239,7 +239,7 @@ class Algorithm(Base):
                 },
                 "validation_specification": {"validation_role": {"type": "string"}},
             }
-            create_func(
+            return create_func(
                 *args,
                 **Base.get_updated_kwargs_with_configured_attributes(
                     config_schema_for_resource, "Algorithm", **kwargs
@@ -357,10 +357,10 @@ class Algorithm(Base):
 
 
 class App(Base):
+    domain_id: str
+    app_type: str
+    app_name: str
     app_arn: Optional[str] = Unassigned()
-    app_type: Optional[str] = Unassigned()
-    app_name: Optional[str] = Unassigned()
-    domain_id: Optional[str] = Unassigned()
     user_profile_name: Optional[str] = Unassigned()
     space_name: Optional[str] = Unassigned()
     status: Optional[str] = Unassigned()
@@ -498,8 +498,8 @@ class App(Base):
 
 
 class AppImageConfig(Base):
+    app_image_config_name: str
     app_image_config_arn: Optional[str] = Unassigned()
-    app_image_config_name: Optional[str] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
     kernel_gateway_image_config: Optional[KernelGatewayImageConfig] = Unassigned()
@@ -606,8 +606,8 @@ class AppImageConfig(Base):
 
 
 class Artifact(Base):
+    artifact_arn: str
     artifact_name: Optional[str] = Unassigned()
-    artifact_arn: Optional[str] = Unassigned()
     source: Optional[ArtifactSource] = Unassigned()
     artifact_type: Optional[str] = Unassigned()
     properties: Optional[Dict[str, str]] = Unassigned()
@@ -727,21 +727,21 @@ class Artifact(Base):
 
 class AutoMLJob(Base):
     auto_m_l_job_name: str
-    auto_m_l_job_arn: str
-    input_data_config: List[AutoMLChannel]
-    output_data_config: AutoMLOutputDataConfig
-    role_arn: str
-    creation_time: datetime.datetime
-    last_modified_time: datetime.datetime
-    auto_m_l_job_status: str
-    auto_m_l_job_secondary_status: str
+    auto_m_l_job_arn: Optional[str] = Unassigned()
+    input_data_config: Optional[List[AutoMLChannel]] = Unassigned()
+    output_data_config: Optional[AutoMLOutputDataConfig] = Unassigned()
+    role_arn: Optional[str] = Unassigned()
     auto_m_l_job_objective: Optional[AutoMLJobObjective] = Unassigned()
     problem_type: Optional[str] = Unassigned()
     auto_m_l_job_config: Optional[AutoMLJobConfig] = Unassigned()
+    creation_time: Optional[datetime.datetime] = Unassigned()
     end_time: Optional[datetime.datetime] = Unassigned()
+    last_modified_time: Optional[datetime.datetime] = Unassigned()
     failure_reason: Optional[str] = Unassigned()
     partial_failure_reasons: Optional[List[AutoMLPartialFailureReason]] = Unassigned()
     best_candidate: Optional[AutoMLCandidate] = Unassigned()
+    auto_m_l_job_status: Optional[str] = Unassigned()
+    auto_m_l_job_secondary_status: Optional[str] = Unassigned()
     generate_candidate_definitions_only: Optional[bool] = Unassigned()
     auto_m_l_job_artifacts: Optional[AutoMLJobArtifacts] = Unassigned()
     resolved_attributes: Optional[ResolvedAttributes] = Unassigned()
@@ -772,7 +772,7 @@ class AutoMLJob(Base):
                     },
                 },
             }
-            create_func(
+            return create_func(
                 *args,
                 **Base.get_updated_kwargs_with_configured_attributes(
                     config_schema_for_resource, "AutoMLJob", **kwargs
@@ -893,21 +893,21 @@ class AutoMLJob(Base):
 
 class AutoMLJobV2(Base):
     auto_m_l_job_name: str
-    auto_m_l_job_arn: str
-    auto_m_l_job_input_data_config: List[AutoMLJobChannel]
-    output_data_config: AutoMLOutputDataConfig
-    role_arn: str
-    creation_time: datetime.datetime
-    last_modified_time: datetime.datetime
-    auto_m_l_job_status: str
-    auto_m_l_job_secondary_status: str
+    auto_m_l_job_arn: Optional[str] = Unassigned()
+    auto_m_l_job_input_data_config: Optional[List[AutoMLJobChannel]] = Unassigned()
+    output_data_config: Optional[AutoMLOutputDataConfig] = Unassigned()
+    role_arn: Optional[str] = Unassigned()
     auto_m_l_job_objective: Optional[AutoMLJobObjective] = Unassigned()
     auto_m_l_problem_type_config: Optional[AutoMLProblemTypeConfig] = Unassigned()
     auto_m_l_problem_type_config_name: Optional[str] = Unassigned()
+    creation_time: Optional[datetime.datetime] = Unassigned()
     end_time: Optional[datetime.datetime] = Unassigned()
+    last_modified_time: Optional[datetime.datetime] = Unassigned()
     failure_reason: Optional[str] = Unassigned()
     partial_failure_reasons: Optional[List[AutoMLPartialFailureReason]] = Unassigned()
     best_candidate: Optional[AutoMLCandidate] = Unassigned()
+    auto_m_l_job_status: Optional[str] = Unassigned()
+    auto_m_l_job_secondary_status: Optional[str] = Unassigned()
     auto_m_l_job_artifacts: Optional[AutoMLJobArtifacts] = Unassigned()
     resolved_attributes: Optional[AutoMLResolvedAttributes] = Unassigned()
     model_deploy_config: Optional[ModelDeployConfig] = Unassigned()
@@ -942,7 +942,7 @@ class AutoMLJobV2(Base):
                     },
                 },
             }
-            create_func(
+            return create_func(
                 *args,
                 **Base.get_updated_kwargs_with_configured_attributes(
                     config_schema_for_resource, "AutoMLJobV2", **kwargs
@@ -1055,12 +1055,12 @@ class AutoMLJobV2(Base):
 
 
 class Cluster(Base):
-    cluster_arn: str
-    cluster_status: str
-    instance_groups: List[ClusterInstanceGroupDetails]
-    cluster_name: Optional[str] = Unassigned()
+    cluster_name: str
+    cluster_arn: Optional[str] = Unassigned()
+    cluster_status: Optional[str] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
     failure_message: Optional[str] = Unassigned()
+    instance_groups: Optional[List[ClusterInstanceGroupDetails]] = Unassigned()
     vpc_config: Optional[VpcConfig] = Unassigned()
 
     def populate_inputs_decorator(create_func):
@@ -1074,7 +1074,7 @@ class Cluster(Base):
                     "subnets": {"type": "array", "items": {"type": "string"}},
                 }
             }
-            create_func(
+            return create_func(
                 *args,
                 **Base.get_updated_kwargs_with_configured_attributes(
                     config_schema_for_resource, "Cluster", **kwargs
@@ -1215,9 +1215,9 @@ class Cluster(Base):
 
 class CodeRepository(Base):
     code_repository_name: str
-    code_repository_arn: str
-    creation_time: datetime.datetime
-    last_modified_time: datetime.datetime
+    code_repository_arn: Optional[str] = Unassigned()
+    creation_time: Optional[datetime.datetime] = Unassigned()
+    last_modified_time: Optional[datetime.datetime] = Unassigned()
     git_config: Optional[GitConfig] = Unassigned()
 
     @classmethod
@@ -1319,21 +1319,21 @@ class CodeRepository(Base):
 
 class CompilationJob(Base):
     compilation_job_name: str
-    compilation_job_arn: str
-    compilation_job_status: str
-    stopping_condition: StoppingCondition
-    creation_time: datetime.datetime
-    last_modified_time: datetime.datetime
-    failure_reason: str
-    model_artifacts: ModelArtifacts
-    role_arn: str
-    input_config: InputConfig
-    output_config: OutputConfig
+    compilation_job_arn: Optional[str] = Unassigned()
+    compilation_job_status: Optional[str] = Unassigned()
     compilation_start_time: Optional[datetime.datetime] = Unassigned()
     compilation_end_time: Optional[datetime.datetime] = Unassigned()
+    stopping_condition: Optional[StoppingCondition] = Unassigned()
     inference_image: Optional[str] = Unassigned()
     model_package_version_arn: Optional[str] = Unassigned()
+    creation_time: Optional[datetime.datetime] = Unassigned()
+    last_modified_time: Optional[datetime.datetime] = Unassigned()
+    failure_reason: Optional[str] = Unassigned()
+    model_artifacts: Optional[ModelArtifacts] = Unassigned()
     model_digests: Optional[ModelDigests] = Unassigned()
+    role_arn: Optional[str] = Unassigned()
+    input_config: Optional[InputConfig] = Unassigned()
+    output_config: Optional[OutputConfig] = Unassigned()
     vpc_config: Optional[NeoVpcConfig] = Unassigned()
     derived_information: Optional[DerivedInformation] = Unassigned()
 
@@ -1355,7 +1355,7 @@ class CompilationJob(Base):
                     "subnets": {"type": "array", "items": {"type": "string"}},
                 },
             }
-            create_func(
+            return create_func(
                 *args,
                 **Base.get_updated_kwargs_with_configured_attributes(
                     config_schema_for_resource, "CompilationJob", **kwargs
@@ -1478,7 +1478,7 @@ class CompilationJob(Base):
 
 
 class Context(Base):
-    context_name: Optional[str] = Unassigned()
+    context_name: str
     context_arn: Optional[str] = Unassigned()
     source: Optional[ContextSource] = Unassigned()
     context_type: Optional[str] = Unassigned()
@@ -1595,16 +1595,16 @@ class Context(Base):
 
 
 class DataQualityJobDefinition(Base):
-    job_definition_arn: str
     job_definition_name: str
-    creation_time: datetime.datetime
-    data_quality_app_specification: DataQualityAppSpecification
-    data_quality_job_input: DataQualityJobInput
-    data_quality_job_output_config: MonitoringOutputConfig
-    job_resources: MonitoringResources
-    role_arn: str
+    job_definition_arn: Optional[str] = Unassigned()
+    creation_time: Optional[datetime.datetime] = Unassigned()
     data_quality_baseline_config: Optional[DataQualityBaselineConfig] = Unassigned()
+    data_quality_app_specification: Optional[DataQualityAppSpecification] = Unassigned()
+    data_quality_job_input: Optional[DataQualityJobInput] = Unassigned()
+    data_quality_job_output_config: Optional[MonitoringOutputConfig] = Unassigned()
+    job_resources: Optional[MonitoringResources] = Unassigned()
     network_config: Optional[MonitoringNetworkConfig] = Unassigned()
+    role_arn: Optional[str] = Unassigned()
     stopping_condition: Optional[MonitoringStoppingCondition] = Unassigned()
 
     def populate_inputs_decorator(create_func):
@@ -1640,7 +1640,7 @@ class DataQualityJobDefinition(Base):
                     }
                 },
             }
-            create_func(
+            return create_func(
                 *args,
                 **Base.get_updated_kwargs_with_configured_attributes(
                     config_schema_for_resource, "DataQualityJobDefinition", **kwargs
@@ -1745,11 +1745,11 @@ class DataQualityJobDefinition(Base):
 
 class DeviceFleet(Base):
     device_fleet_name: str
-    device_fleet_arn: str
-    output_config: EdgeOutputConfig
-    creation_time: datetime.datetime
-    last_modified_time: datetime.datetime
+    device_fleet_arn: Optional[str] = Unassigned()
+    output_config: Optional[EdgeOutputConfig] = Unassigned()
     description: Optional[str] = Unassigned()
+    creation_time: Optional[datetime.datetime] = Unassigned()
+    last_modified_time: Optional[datetime.datetime] = Unassigned()
     role_arn: Optional[str] = Unassigned()
     iot_role_alias: Optional[str] = Unassigned()
 
@@ -1763,7 +1763,7 @@ class DeviceFleet(Base):
                 "role_arn": {"type": "string"},
                 "iot_role_alias": {"type": "string"},
             }
-            create_func(
+            return create_func(
                 *args,
                 **Base.get_updated_kwargs_with_configured_attributes(
                     config_schema_for_resource, "DeviceFleet", **kwargs
@@ -1881,8 +1881,8 @@ class DeviceFleet(Base):
 
 
 class Domain(Base):
+    domain_id: str
     domain_arn: Optional[str] = Unassigned()
-    domain_id: Optional[str] = Unassigned()
     domain_name: Optional[str] = Unassigned()
     home_efs_file_system_id: Optional[str] = Unassigned()
     single_sign_on_managed_application_instance_id: Optional[str] = Unassigned()
@@ -1950,7 +1950,7 @@ class Domain(Base):
                     "security_groups": {"type": "array", "items": {"type": "string"}},
                 },
             }
-            create_func(
+            return create_func(
                 *args,
                 **Base.get_updated_kwargs_with_configured_attributes(
                     config_schema_for_resource, "Domain", **kwargs
@@ -2113,14 +2113,14 @@ class Domain(Base):
 
 
 class EdgeDeploymentPlan(Base):
-    edge_deployment_plan_arn: str
     edge_deployment_plan_name: str
-    model_configs: List[EdgeDeploymentModelConfig]
-    device_fleet_name: str
-    stages: List[DeploymentStageStatusSummary]
+    edge_deployment_plan_arn: Optional[str] = Unassigned()
+    model_configs: Optional[List[EdgeDeploymentModelConfig]] = Unassigned()
+    device_fleet_name: Optional[str] = Unassigned()
     edge_deployment_success: Optional[int] = Unassigned()
     edge_deployment_pending: Optional[int] = Unassigned()
     edge_deployment_failed: Optional[int] = Unassigned()
+    stages: Optional[List[DeploymentStageStatusSummary]] = Unassigned()
     next_token: Optional[str] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
@@ -2213,15 +2213,15 @@ class EdgeDeploymentPlan(Base):
 
 
 class EdgePackagingJob(Base):
-    edge_packaging_job_arn: str
     edge_packaging_job_name: str
-    edge_packaging_job_status: str
+    edge_packaging_job_arn: Optional[str] = Unassigned()
     compilation_job_name: Optional[str] = Unassigned()
     model_name: Optional[str] = Unassigned()
     model_version: Optional[str] = Unassigned()
     role_arn: Optional[str] = Unassigned()
     output_config: Optional[EdgeOutputConfig] = Unassigned()
     resource_key: Optional[str] = Unassigned()
+    edge_packaging_job_status: Optional[str] = Unassigned()
     edge_packaging_job_status_message: Optional[str] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
@@ -2238,7 +2238,7 @@ class EdgePackagingJob(Base):
                     "kms_key_id": {"type": "string"},
                 },
             }
-            create_func(
+            return create_func(
                 *args,
                 **Base.get_updated_kwargs_with_configured_attributes(
                     config_schema_for_resource, "EdgePackagingJob", **kwargs
@@ -2357,14 +2357,14 @@ class EdgePackagingJob(Base):
 
 class Endpoint(Base):
     endpoint_name: str
-    endpoint_arn: str
-    endpoint_status: str
-    creation_time: datetime.datetime
-    last_modified_time: datetime.datetime
+    endpoint_arn: Optional[str] = Unassigned()
     endpoint_config_name: Optional[str] = Unassigned()
     production_variants: Optional[List[ProductionVariantSummary]] = Unassigned()
     data_capture_config: Optional[DataCaptureConfigSummary] = Unassigned()
+    endpoint_status: Optional[str] = Unassigned()
     failure_reason: Optional[str] = Unassigned()
+    creation_time: Optional[datetime.datetime] = Unassigned()
+    last_modified_time: Optional[datetime.datetime] = Unassigned()
     last_deployment_config: Optional[DeploymentConfig] = Unassigned()
     async_inference_config: Optional[AsyncInferenceConfig] = Unassigned()
     pending_deployment_summary: Optional[PendingDeploymentSummary] = Unassigned()
@@ -2386,7 +2386,7 @@ class Endpoint(Base):
                     }
                 },
             }
-            create_func(
+            return create_func(
                 *args,
                 **Base.get_updated_kwargs_with_configured_attributes(
                     config_schema_for_resource, "Endpoint", **kwargs
@@ -2648,11 +2648,11 @@ class Endpoint(Base):
 
 class EndpointConfig(Base):
     endpoint_config_name: str
-    endpoint_config_arn: str
-    production_variants: List[ProductionVariant]
-    creation_time: datetime.datetime
+    endpoint_config_arn: Optional[str] = Unassigned()
+    production_variants: Optional[List[ProductionVariant]] = Unassigned()
     data_capture_config: Optional[DataCaptureConfig] = Unassigned()
     kms_key_id: Optional[str] = Unassigned()
+    creation_time: Optional[datetime.datetime] = Unassigned()
     async_inference_config: Optional[AsyncInferenceConfig] = Unassigned()
     explainer_config: Optional[ExplainerConfig] = Unassigned()
     shadow_production_variants: Optional[List[ProductionVariant]] = Unassigned()
@@ -2684,7 +2684,7 @@ class EndpointConfig(Base):
                     "subnets": {"type": "array", "items": {"type": "string"}},
                 },
             }
-            create_func(
+            return create_func(
                 *args,
                 **Base.get_updated_kwargs_with_configured_attributes(
                     config_schema_for_resource, "EndpointConfig", **kwargs
@@ -2786,7 +2786,7 @@ class EndpointConfig(Base):
 
 
 class Experiment(Base):
-    experiment_name: Optional[str] = Unassigned()
+    experiment_name: str
     experiment_arn: Optional[str] = Unassigned()
     display_name: Optional[str] = Unassigned()
     source: Optional[ExperimentSource] = Unassigned()
@@ -2895,13 +2895,12 @@ class Experiment(Base):
 
 
 class FeatureGroup(Base):
-    feature_group_arn: str
     feature_group_name: str
-    record_identifier_feature_name: str
-    event_time_feature_name: str
-    feature_definitions: List[FeatureDefinition]
-    creation_time: datetime.datetime
-    next_token: str
+    feature_group_arn: Optional[str] = Unassigned()
+    record_identifier_feature_name: Optional[str] = Unassigned()
+    event_time_feature_name: Optional[str] = Unassigned()
+    feature_definitions: Optional[List[FeatureDefinition]] = Unassigned()
+    creation_time: Optional[datetime.datetime] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
     online_store_config: Optional[OnlineStoreConfig] = Unassigned()
     offline_store_config: Optional[OfflineStoreConfig] = Unassigned()
@@ -2912,6 +2911,7 @@ class FeatureGroup(Base):
     last_update_status: Optional[LastUpdateStatus] = Unassigned()
     failure_reason: Optional[str] = Unassigned()
     description: Optional[str] = Unassigned()
+    next_token: Optional[str] = Unassigned()
     online_store_total_size_bytes: Optional[int] = Unassigned()
 
     def populate_inputs_decorator(create_func):
@@ -2929,7 +2929,7 @@ class FeatureGroup(Base):
                 },
                 "role_arn": {"type": "string"},
             }
-            create_func(
+            return create_func(
                 *args,
                 **Base.get_updated_kwargs_with_configured_attributes(
                     config_schema_for_resource, "FeatureGroup", **kwargs
@@ -3083,15 +3083,15 @@ class FeatureGroup(Base):
 
 
 class FlowDefinition(Base):
-    flow_definition_arn: str
     flow_definition_name: str
-    flow_definition_status: str
-    creation_time: datetime.datetime
-    output_config: FlowDefinitionOutputConfig
-    role_arn: str
+    flow_definition_arn: Optional[str] = Unassigned()
+    flow_definition_status: Optional[str] = Unassigned()
+    creation_time: Optional[datetime.datetime] = Unassigned()
     human_loop_request_source: Optional[HumanLoopRequestSource] = Unassigned()
     human_loop_activation_config: Optional[HumanLoopActivationConfig] = Unassigned()
     human_loop_config: Optional[HumanLoopConfig] = Unassigned()
+    output_config: Optional[FlowDefinitionOutputConfig] = Unassigned()
+    role_arn: Optional[str] = Unassigned()
     failure_reason: Optional[str] = Unassigned()
 
     def populate_inputs_decorator(create_func):
@@ -3103,7 +3103,7 @@ class FlowDefinition(Base):
                 },
                 "role_arn": {"type": "string"},
             }
-            create_func(
+            return create_func(
                 *args,
                 **Base.get_updated_kwargs_with_configured_attributes(
                     config_schema_for_resource, "FlowDefinition", **kwargs
@@ -3224,22 +3224,22 @@ class FlowDefinition(Base):
 
 class Hub(Base):
     hub_name: str
-    hub_arn: str
-    hub_status: str
-    creation_time: datetime.datetime
-    last_modified_time: datetime.datetime
+    hub_arn: Optional[str] = Unassigned()
     hub_display_name: Optional[str] = Unassigned()
     hub_description: Optional[str] = Unassigned()
     hub_search_keywords: Optional[List[str]] = Unassigned()
     s3_storage_config: Optional[HubS3StorageConfig] = Unassigned()
+    hub_status: Optional[str] = Unassigned()
     failure_reason: Optional[str] = Unassigned()
+    creation_time: Optional[datetime.datetime] = Unassigned()
+    last_modified_time: Optional[datetime.datetime] = Unassigned()
 
     def populate_inputs_decorator(create_func):
         def wrapper(*args, **kwargs):
             config_schema_for_resource = {
                 "s3_storage_config": {"s3_output_path": {"type": "string"}}
             }
-            create_func(
+            return create_func(
                 *args,
                 **Base.get_updated_kwargs_with_configured_attributes(
                     config_schema_for_resource, "Hub", **kwargs
@@ -3385,22 +3385,22 @@ class Hub(Base):
 
 
 class HubContent(Base):
-    hub_content_name: str
-    hub_content_arn: str
-    hub_content_version: str
-    hub_content_type: str
-    document_schema_version: str
     hub_name: str
-    hub_arn: str
-    hub_content_document: str
-    hub_content_status: str
-    creation_time: datetime.datetime
+    hub_content_type: str
+    hub_content_name: str
+    hub_content_arn: Optional[str] = Unassigned()
+    hub_content_version: Optional[str] = Unassigned()
+    document_schema_version: Optional[str] = Unassigned()
+    hub_arn: Optional[str] = Unassigned()
     hub_content_display_name: Optional[str] = Unassigned()
     hub_content_description: Optional[str] = Unassigned()
     hub_content_markdown: Optional[str] = Unassigned()
+    hub_content_document: Optional[str] = Unassigned()
     hub_content_search_keywords: Optional[List[str]] = Unassigned()
     hub_content_dependencies: Optional[List[HubContentDependency]] = Unassigned()
+    hub_content_status: Optional[str] = Unassigned()
     failure_reason: Optional[str] = Unassigned()
+    creation_time: Optional[datetime.datetime] = Unassigned()
 
     @classmethod
     def get(
@@ -3536,11 +3536,11 @@ class HubContent(Base):
 
 
 class HumanTaskUi(Base):
-    human_task_ui_arn: str
     human_task_ui_name: str
-    creation_time: datetime.datetime
-    ui_template: UiTemplateInfo
+    human_task_ui_arn: Optional[str] = Unassigned()
     human_task_ui_status: Optional[str] = Unassigned()
+    creation_time: Optional[datetime.datetime] = Unassigned()
+    ui_template: Optional[UiTemplateInfo] = Unassigned()
 
     @classmethod
     def create(
@@ -3643,20 +3643,22 @@ class HumanTaskUi(Base):
 
 class HyperParameterTuningJob(Base):
     hyper_parameter_tuning_job_name: str
-    hyper_parameter_tuning_job_arn: str
-    hyper_parameter_tuning_job_config: HyperParameterTuningJobConfig
-    hyper_parameter_tuning_job_status: str
-    creation_time: datetime.datetime
-    training_job_status_counters: TrainingJobStatusCounters
-    objective_status_counters: ObjectiveStatusCounters
+    hyper_parameter_tuning_job_arn: Optional[str] = Unassigned()
+    hyper_parameter_tuning_job_config: Optional[HyperParameterTuningJobConfig] = (
+        Unassigned()
+    )
     training_job_definition: Optional[HyperParameterTrainingJobDefinition] = (
         Unassigned()
     )
     training_job_definitions: Optional[List[HyperParameterTrainingJobDefinition]] = (
         Unassigned()
     )
+    hyper_parameter_tuning_job_status: Optional[str] = Unassigned()
+    creation_time: Optional[datetime.datetime] = Unassigned()
     hyper_parameter_tuning_end_time: Optional[datetime.datetime] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
+    training_job_status_counters: Optional[TrainingJobStatusCounters] = Unassigned()
+    objective_status_counters: Optional[ObjectiveStatusCounters] = Unassigned()
     best_training_job: Optional[HyperParameterTrainingJobSummary] = Unassigned()
     overall_best_training_job: Optional[HyperParameterTrainingJobSummary] = Unassigned()
     warm_start_config: Optional[HyperParameterTuningJobWarmStartConfig] = Unassigned()
@@ -3692,7 +3694,7 @@ class HyperParameterTuningJob(Base):
                     "checkpoint_config": {"s3_uri": {"type": "string"}},
                 }
             }
-            create_func(
+            return create_func(
                 *args,
                 **Base.get_updated_kwargs_with_configured_attributes(
                     config_schema_for_resource, "HyperParameterTuningJob", **kwargs
@@ -3823,12 +3825,12 @@ class HyperParameterTuningJob(Base):
 
 
 class Image(Base):
+    image_name: str
     creation_time: Optional[datetime.datetime] = Unassigned()
     description: Optional[str] = Unassigned()
     display_name: Optional[str] = Unassigned()
     failure_reason: Optional[str] = Unassigned()
     image_arn: Optional[str] = Unassigned()
-    image_name: Optional[str] = Unassigned()
     image_status: Optional[str] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
     role_arn: Optional[str] = Unassigned()
@@ -3836,7 +3838,7 @@ class Image(Base):
     def populate_inputs_decorator(create_func):
         def wrapper(*args, **kwargs):
             config_schema_for_resource = {"role_arn": {"type": "string"}}
-            create_func(
+            return create_func(
                 *args,
                 **Base.get_updated_kwargs_with_configured_attributes(
                     config_schema_for_resource, "Image", **kwargs
@@ -4160,15 +4162,15 @@ class ImageVersion(Base):
 
 class InferenceComponent(Base):
     inference_component_name: str
-    inference_component_arn: str
-    endpoint_name: str
-    endpoint_arn: str
-    creation_time: datetime.datetime
-    last_modified_time: datetime.datetime
+    inference_component_arn: Optional[str] = Unassigned()
+    endpoint_name: Optional[str] = Unassigned()
+    endpoint_arn: Optional[str] = Unassigned()
     variant_name: Optional[str] = Unassigned()
     failure_reason: Optional[str] = Unassigned()
     specification: Optional[InferenceComponentSpecificationSummary] = Unassigned()
     runtime_config: Optional[InferenceComponentRuntimeConfigSummary] = Unassigned()
+    creation_time: Optional[datetime.datetime] = Unassigned()
+    last_modified_time: Optional[datetime.datetime] = Unassigned()
     inference_component_status: Optional[str] = Unassigned()
 
     @classmethod
@@ -4302,19 +4304,19 @@ class InferenceComponent(Base):
 
 
 class InferenceExperiment(Base):
-    arn: str
     name: str
-    type: str
-    status: str
-    endpoint_metadata: EndpointMetadata
-    model_variants: List[ModelVariantConfigSummary]
+    arn: Optional[str] = Unassigned()
+    type: Optional[str] = Unassigned()
     schedule: Optional[InferenceExperimentSchedule] = Unassigned()
+    status: Optional[str] = Unassigned()
     status_reason: Optional[str] = Unassigned()
     description: Optional[str] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
     completion_time: Optional[datetime.datetime] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
     role_arn: Optional[str] = Unassigned()
+    endpoint_metadata: Optional[EndpointMetadata] = Unassigned()
+    model_variants: Optional[List[ModelVariantConfigSummary]] = Unassigned()
     data_storage_config: Optional[InferenceExperimentDataStorageConfig] = Unassigned()
     shadow_mode_config: Optional[ShadowModeConfig] = Unassigned()
     kms_key: Optional[str] = Unassigned()
@@ -4326,7 +4328,7 @@ class InferenceExperiment(Base):
                 "data_storage_config": {"kms_key": {"type": "string"}},
                 "kms_key": {"type": "string"},
             }
-            create_func(
+            return create_func(
                 *args,
                 **Base.get_updated_kwargs_with_configured_attributes(
                     config_schema_for_resource, "InferenceExperiment", **kwargs
@@ -4501,16 +4503,16 @@ class InferenceExperiment(Base):
 
 class InferenceRecommendationsJob(Base):
     job_name: str
-    job_type: str
-    job_arn: str
-    role_arn: str
-    status: str
-    creation_time: datetime.datetime
-    last_modified_time: datetime.datetime
-    input_config: RecommendationJobInputConfig
     job_description: Optional[str] = Unassigned()
+    job_type: Optional[str] = Unassigned()
+    job_arn: Optional[str] = Unassigned()
+    role_arn: Optional[str] = Unassigned()
+    status: Optional[str] = Unassigned()
+    creation_time: Optional[datetime.datetime] = Unassigned()
     completion_time: Optional[datetime.datetime] = Unassigned()
+    last_modified_time: Optional[datetime.datetime] = Unassigned()
     failure_reason: Optional[str] = Unassigned()
+    input_config: Optional[RecommendationJobInputConfig] = Unassigned()
     stopping_conditions: Optional[RecommendationJobStoppingConditions] = Unassigned()
     inference_recommendations: Optional[List[InferenceRecommendation]] = Unassigned()
     endpoint_performances: Optional[List[EndpointPerformance]] = Unassigned()
@@ -4530,7 +4532,7 @@ class InferenceRecommendationsJob(Base):
                     },
                 },
             }
-            create_func(
+            return create_func(
                 *args,
                 **Base.get_updated_kwargs_with_configured_attributes(
                     config_schema_for_resource, "InferenceRecommendationsJob", **kwargs
@@ -4648,22 +4650,22 @@ class InferenceRecommendationsJob(Base):
 
 
 class LabelingJob(Base):
-    labeling_job_status: str
-    label_counters: LabelCounters
-    creation_time: datetime.datetime
-    last_modified_time: datetime.datetime
-    job_reference_code: str
     labeling_job_name: str
-    labeling_job_arn: str
-    input_config: LabelingJobInputConfig
-    output_config: LabelingJobOutputConfig
-    role_arn: str
-    human_task_config: HumanTaskConfig
+    labeling_job_status: Optional[str] = Unassigned()
+    label_counters: Optional[LabelCounters] = Unassigned()
     failure_reason: Optional[str] = Unassigned()
+    creation_time: Optional[datetime.datetime] = Unassigned()
+    last_modified_time: Optional[datetime.datetime] = Unassigned()
+    job_reference_code: Optional[str] = Unassigned()
+    labeling_job_arn: Optional[str] = Unassigned()
     label_attribute_name: Optional[str] = Unassigned()
+    input_config: Optional[LabelingJobInputConfig] = Unassigned()
+    output_config: Optional[LabelingJobOutputConfig] = Unassigned()
+    role_arn: Optional[str] = Unassigned()
     label_category_config_s3_uri: Optional[str] = Unassigned()
     stopping_conditions: Optional[LabelingJobStoppingConditions] = Unassigned()
     labeling_job_algorithms_config: Optional[LabelingJobAlgorithmsConfig] = Unassigned()
+    human_task_config: Optional[HumanTaskConfig] = Unassigned()
     tags: Optional[List[Tag]] = Unassigned()
     labeling_job_output: Optional[LabelingJobOutput] = Unassigned()
 
@@ -4698,7 +4700,7 @@ class LabelingJob(Base):
                 },
                 "labeling_job_output": {"output_dataset_s3_uri": {"type": "string"}},
             }
-            create_func(
+            return create_func(
                 *args,
                 **Base.get_updated_kwargs_with_configured_attributes(
                     config_schema_for_resource, "LabelingJob", **kwargs
@@ -4821,13 +4823,13 @@ class LabelingJob(Base):
 
 class Model(Base):
     model_name: str
-    creation_time: datetime.datetime
-    model_arn: str
     primary_container: Optional[ContainerDefinition] = Unassigned()
     containers: Optional[List[ContainerDefinition]] = Unassigned()
     inference_execution_config: Optional[InferenceExecutionConfig] = Unassigned()
     execution_role_arn: Optional[str] = Unassigned()
     vpc_config: Optional[VpcConfig] = Unassigned()
+    creation_time: Optional[datetime.datetime] = Unassigned()
+    model_arn: Optional[str] = Unassigned()
     enable_network_isolation: Optional[bool] = Unassigned()
     deployment_recommendation: Optional[DeploymentRecommendation] = Unassigned()
 
@@ -4851,7 +4853,7 @@ class Model(Base):
                     "subnets": {"type": "array", "items": {"type": "string"}},
                 },
             }
-            create_func(
+            return create_func(
                 *args,
                 **Base.get_updated_kwargs_with_configured_attributes(
                     config_schema_for_resource, "Model", **kwargs
@@ -4945,16 +4947,16 @@ class Model(Base):
 
 
 class ModelBiasJobDefinition(Base):
-    job_definition_arn: str
     job_definition_name: str
-    creation_time: datetime.datetime
-    model_bias_app_specification: ModelBiasAppSpecification
-    model_bias_job_input: ModelBiasJobInput
-    model_bias_job_output_config: MonitoringOutputConfig
-    job_resources: MonitoringResources
-    role_arn: str
+    job_definition_arn: Optional[str] = Unassigned()
+    creation_time: Optional[datetime.datetime] = Unassigned()
     model_bias_baseline_config: Optional[ModelBiasBaselineConfig] = Unassigned()
+    model_bias_app_specification: Optional[ModelBiasAppSpecification] = Unassigned()
+    model_bias_job_input: Optional[ModelBiasJobInput] = Unassigned()
+    model_bias_job_output_config: Optional[MonitoringOutputConfig] = Unassigned()
+    job_resources: Optional[MonitoringResources] = Unassigned()
     network_config: Optional[MonitoringNetworkConfig] = Unassigned()
+    role_arn: Optional[str] = Unassigned()
     stopping_condition: Optional[MonitoringStoppingCondition] = Unassigned()
 
     def populate_inputs_decorator(create_func):
@@ -4990,7 +4992,7 @@ class ModelBiasJobDefinition(Base):
                     }
                 },
             }
-            create_func(
+            return create_func(
                 *args,
                 **Base.get_updated_kwargs_with_configured_attributes(
                     config_schema_for_resource, "ModelBiasJobDefinition", **kwargs
@@ -5092,14 +5094,14 @@ class ModelBiasJobDefinition(Base):
 
 
 class ModelCard(Base):
-    model_card_arn: str
     model_card_name: str
-    model_card_version: int
-    content: str
-    model_card_status: str
-    creation_time: datetime.datetime
-    created_by: UserContext
+    model_card_arn: Optional[str] = Unassigned()
+    model_card_version: Optional[int] = Unassigned()
+    content: Optional[str] = Unassigned()
+    model_card_status: Optional[str] = Unassigned()
     security_config: Optional[ModelCardSecurityConfig] = Unassigned()
+    creation_time: Optional[datetime.datetime] = Unassigned()
+    created_by: Optional[UserContext] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
     last_modified_by: Optional[UserContext] = Unassigned()
     model_card_processing_status: Optional[str] = Unassigned()
@@ -5109,7 +5111,7 @@ class ModelCard(Base):
             config_schema_for_resource = {
                 "security_config": {"kms_key_id": {"type": "string"}}
             }
-            create_func(
+            return create_func(
                 *args,
                 **Base.get_updated_kwargs_with_configured_attributes(
                     config_schema_for_resource, "ModelCard", **kwargs
@@ -5247,14 +5249,14 @@ class ModelCard(Base):
 
 
 class ModelCardExportJob(Base):
-    model_card_export_job_name: str
     model_card_export_job_arn: str
-    status: str
-    model_card_name: str
-    model_card_version: int
-    output_config: ModelCardExportOutputConfig
-    created_at: datetime.datetime
-    last_modified_at: datetime.datetime
+    model_card_export_job_name: Optional[str] = Unassigned()
+    status: Optional[str] = Unassigned()
+    model_card_name: Optional[str] = Unassigned()
+    model_card_version: Optional[int] = Unassigned()
+    output_config: Optional[ModelCardExportOutputConfig] = Unassigned()
+    created_at: Optional[datetime.datetime] = Unassigned()
+    last_modified_at: Optional[datetime.datetime] = Unassigned()
     failure_reason: Optional[str] = Unassigned()
     export_artifacts: Optional[ModelCardExportArtifacts] = Unassigned()
 
@@ -5264,7 +5266,7 @@ class ModelCardExportJob(Base):
                 "output_config": {"s3_output_path": {"type": "string"}},
                 "export_artifacts": {"s3_export_artifacts": {"type": "string"}},
             }
-            create_func(
+            return create_func(
                 *args,
                 **Base.get_updated_kwargs_with_configured_attributes(
                     config_schema_for_resource, "ModelCardExportJob", **kwargs
@@ -5367,18 +5369,22 @@ class ModelCardExportJob(Base):
 
 
 class ModelExplainabilityJobDefinition(Base):
-    job_definition_arn: str
     job_definition_name: str
-    creation_time: datetime.datetime
-    model_explainability_app_specification: ModelExplainabilityAppSpecification
-    model_explainability_job_input: ModelExplainabilityJobInput
-    model_explainability_job_output_config: MonitoringOutputConfig
-    job_resources: MonitoringResources
-    role_arn: str
+    job_definition_arn: Optional[str] = Unassigned()
+    creation_time: Optional[datetime.datetime] = Unassigned()
     model_explainability_baseline_config: Optional[
         ModelExplainabilityBaselineConfig
     ] = Unassigned()
+    model_explainability_app_specification: Optional[
+        ModelExplainabilityAppSpecification
+    ] = Unassigned()
+    model_explainability_job_input: Optional[ModelExplainabilityJobInput] = Unassigned()
+    model_explainability_job_output_config: Optional[MonitoringOutputConfig] = (
+        Unassigned()
+    )
+    job_resources: Optional[MonitoringResources] = Unassigned()
     network_config: Optional[MonitoringNetworkConfig] = Unassigned()
+    role_arn: Optional[str] = Unassigned()
     stopping_condition: Optional[MonitoringStoppingCondition] = Unassigned()
 
     def populate_inputs_decorator(create_func):
@@ -5415,7 +5421,7 @@ class ModelExplainabilityJobDefinition(Base):
                     }
                 },
             }
-            create_func(
+            return create_func(
                 *args,
                 **Base.get_updated_kwargs_with_configured_attributes(
                     config_schema_for_resource,
@@ -5528,13 +5534,11 @@ class ModelExplainabilityJobDefinition(Base):
 
 class ModelPackage(Base):
     model_package_name: str
-    model_package_arn: str
-    creation_time: datetime.datetime
-    model_package_status: str
-    model_package_status_details: ModelPackageStatusDetails
     model_package_group_name: Optional[str] = Unassigned()
     model_package_version: Optional[int] = Unassigned()
+    model_package_arn: Optional[str] = Unassigned()
     model_package_description: Optional[str] = Unassigned()
+    creation_time: Optional[datetime.datetime] = Unassigned()
     inference_specification: Optional[InferenceSpecification] = Unassigned()
     source_algorithm_specification: Optional[SourceAlgorithmSpecification] = (
         Unassigned()
@@ -5542,6 +5546,8 @@ class ModelPackage(Base):
     validation_specification: Optional[ModelPackageValidationSpecification] = (
         Unassigned()
     )
+    model_package_status: Optional[str] = Unassigned()
+    model_package_status_details: Optional[ModelPackageStatusDetails] = Unassigned()
     certify_for_marketplace: Optional[bool] = Unassigned()
     model_approval_status: Optional[str] = Unassigned()
     created_by: Optional[UserContext] = Unassigned()
@@ -5601,7 +5607,7 @@ class ModelPackage(Base):
                     },
                 },
             }
-            create_func(
+            return create_func(
                 *args,
                 **Base.get_updated_kwargs_with_configured_attributes(
                     config_schema_for_resource, "ModelPackage", **kwargs
@@ -5786,11 +5792,11 @@ class ModelPackage(Base):
 
 class ModelPackageGroup(Base):
     model_package_group_name: str
-    model_package_group_arn: str
-    creation_time: datetime.datetime
-    created_by: UserContext
-    model_package_group_status: str
+    model_package_group_arn: Optional[str] = Unassigned()
     model_package_group_description: Optional[str] = Unassigned()
+    creation_time: Optional[datetime.datetime] = Unassigned()
+    created_by: Optional[UserContext] = Unassigned()
+    model_package_group_status: Optional[str] = Unassigned()
 
     @classmethod
     def create(
@@ -5896,16 +5902,18 @@ class ModelPackageGroup(Base):
 
 
 class ModelQualityJobDefinition(Base):
-    job_definition_arn: str
     job_definition_name: str
-    creation_time: datetime.datetime
-    model_quality_app_specification: ModelQualityAppSpecification
-    model_quality_job_input: ModelQualityJobInput
-    model_quality_job_output_config: MonitoringOutputConfig
-    job_resources: MonitoringResources
-    role_arn: str
+    job_definition_arn: Optional[str] = Unassigned()
+    creation_time: Optional[datetime.datetime] = Unassigned()
     model_quality_baseline_config: Optional[ModelQualityBaselineConfig] = Unassigned()
+    model_quality_app_specification: Optional[ModelQualityAppSpecification] = (
+        Unassigned()
+    )
+    model_quality_job_input: Optional[ModelQualityJobInput] = Unassigned()
+    model_quality_job_output_config: Optional[MonitoringOutputConfig] = Unassigned()
+    job_resources: Optional[MonitoringResources] = Unassigned()
     network_config: Optional[MonitoringNetworkConfig] = Unassigned()
+    role_arn: Optional[str] = Unassigned()
     stopping_condition: Optional[MonitoringStoppingCondition] = Unassigned()
 
     def populate_inputs_decorator(create_func):
@@ -5941,7 +5949,7 @@ class ModelQualityJobDefinition(Base):
                     }
                 },
             }
-            create_func(
+            return create_func(
                 *args,
                 **Base.get_updated_kwargs_with_configured_attributes(
                     config_schema_for_resource, "ModelQualityJobDefinition", **kwargs
@@ -6045,14 +6053,14 @@ class ModelQualityJobDefinition(Base):
 
 
 class MonitoringSchedule(Base):
-    monitoring_schedule_arn: str
     monitoring_schedule_name: str
-    monitoring_schedule_status: str
-    creation_time: datetime.datetime
-    last_modified_time: datetime.datetime
-    monitoring_schedule_config: MonitoringScheduleConfig
+    monitoring_schedule_arn: Optional[str] = Unassigned()
+    monitoring_schedule_status: Optional[str] = Unassigned()
     monitoring_type: Optional[str] = Unassigned()
     failure_reason: Optional[str] = Unassigned()
+    creation_time: Optional[datetime.datetime] = Unassigned()
+    last_modified_time: Optional[datetime.datetime] = Unassigned()
+    monitoring_schedule_config: Optional[MonitoringScheduleConfig] = Unassigned()
     endpoint_name: Optional[str] = Unassigned()
     last_monitoring_execution_summary: Optional[MonitoringExecutionSummary] = (
         Unassigned()
@@ -6087,7 +6095,7 @@ class MonitoringSchedule(Base):
                     }
                 }
             }
-            create_func(
+            return create_func(
                 *args,
                 **Base.get_updated_kwargs_with_configured_attributes(
                     config_schema_for_resource, "MonitoringSchedule", **kwargs
@@ -6228,8 +6236,8 @@ class MonitoringSchedule(Base):
 
 
 class NotebookInstance(Base):
+    notebook_instance_name: str
     notebook_instance_arn: Optional[str] = Unassigned()
-    notebook_instance_name: Optional[str] = Unassigned()
     notebook_instance_status: Optional[str] = Unassigned()
     failure_reason: Optional[str] = Unassigned()
     url: Optional[str] = Unassigned()
@@ -6261,7 +6269,7 @@ class NotebookInstance(Base):
                 "role_arn": {"type": "string"},
                 "kms_key_id": {"type": "string"},
             }
-            create_func(
+            return create_func(
                 *args,
                 **Base.get_updated_kwargs_with_configured_attributes(
                     config_schema_for_resource, "NotebookInstance", **kwargs
@@ -6455,8 +6463,8 @@ class NotebookInstance(Base):
 
 
 class NotebookInstanceLifecycleConfig(Base):
+    notebook_instance_lifecycle_config_name: str
     notebook_instance_lifecycle_config_arn: Optional[str] = Unassigned()
-    notebook_instance_lifecycle_config_name: Optional[str] = Unassigned()
     on_create: Optional[List[NotebookInstanceLifecycleHook]] = Unassigned()
     on_start: Optional[List[NotebookInstanceLifecycleHook]] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
@@ -6575,8 +6583,8 @@ class NotebookInstanceLifecycleConfig(Base):
 
 
 class Pipeline(Base):
+    pipeline_name: str
     pipeline_arn: Optional[str] = Unassigned()
-    pipeline_name: Optional[str] = Unassigned()
     pipeline_display_name: Optional[str] = Unassigned()
     pipeline_definition: Optional[str] = Unassigned()
     pipeline_description: Optional[str] = Unassigned()
@@ -6592,7 +6600,7 @@ class Pipeline(Base):
     def populate_inputs_decorator(create_func):
         def wrapper(*args, **kwargs):
             config_schema_for_resource = {"role_arn": {"type": "string"}}
-            create_func(
+            return create_func(
                 *args,
                 **Base.get_updated_kwargs_with_configured_attributes(
                     config_schema_for_resource, "Pipeline", **kwargs
@@ -6745,8 +6753,8 @@ class Pipeline(Base):
 
 
 class PipelineExecution(Base):
+    pipeline_execution_arn: str
     pipeline_arn: Optional[str] = Unassigned()
-    pipeline_execution_arn: Optional[str] = Unassigned()
     pipeline_execution_display_name: Optional[str] = Unassigned()
     pipeline_execution_status: Optional[str] = Unassigned()
     pipeline_execution_description: Optional[str] = Unassigned()
@@ -6852,23 +6860,23 @@ class PipelineExecution(Base):
 
 class ProcessingJob(Base):
     processing_job_name: str
-    processing_resources: ProcessingResources
-    app_specification: AppSpecification
-    processing_job_arn: str
-    processing_job_status: str
-    creation_time: datetime.datetime
     processing_inputs: Optional[List[ProcessingInput]] = Unassigned()
     processing_output_config: Optional[ProcessingOutputConfig] = Unassigned()
+    processing_resources: Optional[ProcessingResources] = Unassigned()
     stopping_condition: Optional[ProcessingStoppingCondition] = Unassigned()
+    app_specification: Optional[AppSpecification] = Unassigned()
     environment: Optional[Dict[str, str]] = Unassigned()
     network_config: Optional[NetworkConfig] = Unassigned()
     role_arn: Optional[str] = Unassigned()
     experiment_config: Optional[ExperimentConfig] = Unassigned()
+    processing_job_arn: Optional[str] = Unassigned()
+    processing_job_status: Optional[str] = Unassigned()
     exit_message: Optional[str] = Unassigned()
     failure_reason: Optional[str] = Unassigned()
     processing_end_time: Optional[datetime.datetime] = Unassigned()
     processing_start_time: Optional[datetime.datetime] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
+    creation_time: Optional[datetime.datetime] = Unassigned()
     monitoring_schedule_arn: Optional[str] = Unassigned()
     auto_m_l_job_arn: Optional[str] = Unassigned()
     training_job_arn: Optional[str] = Unassigned()
@@ -6891,7 +6899,7 @@ class ProcessingJob(Base):
                 },
                 "role_arn": {"type": "string"},
             }
-            create_func(
+            return create_func(
                 *args,
                 **Base.get_updated_kwargs_with_configured_attributes(
                     config_schema_for_resource, "ProcessingJob", **kwargs
@@ -7013,17 +7021,19 @@ class ProcessingJob(Base):
 
 
 class Project(Base):
-    project_arn: str
     project_name: str
-    project_id: str
-    service_catalog_provisioning_details: ServiceCatalogProvisioningDetails
-    project_status: str
-    creation_time: datetime.datetime
+    project_arn: Optional[str] = Unassigned()
+    project_id: Optional[str] = Unassigned()
     project_description: Optional[str] = Unassigned()
+    service_catalog_provisioning_details: Optional[
+        ServiceCatalogProvisioningDetails
+    ] = Unassigned()
     service_catalog_provisioned_product_details: Optional[
         ServiceCatalogProvisionedProductDetails
     ] = Unassigned()
+    project_status: Optional[str] = Unassigned()
     created_by: Optional[UserContext] = Unassigned()
+    creation_time: Optional[datetime.datetime] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
     last_modified_by: Optional[UserContext] = Unassigned()
 
@@ -7166,9 +7176,9 @@ class Project(Base):
 
 
 class Space(Base):
-    domain_id: Optional[str] = Unassigned()
+    domain_id: str
+    space_name: str
     space_arn: Optional[str] = Unassigned()
-    space_name: Optional[str] = Unassigned()
     home_efs_file_system_uid: Optional[str] = Unassigned()
     status: Optional[str] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
@@ -7324,8 +7334,8 @@ class Space(Base):
 
 
 class StudioLifecycleConfig(Base):
+    studio_lifecycle_config_name: str
     studio_lifecycle_config_arn: Optional[str] = Unassigned()
-    studio_lifecycle_config_name: Optional[str] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
     studio_lifecycle_config_content: Optional[str] = Unassigned()
@@ -7414,24 +7424,24 @@ class StudioLifecycleConfig(Base):
 
 class TrainingJob(Base):
     training_job_name: str
-    training_job_arn: str
-    model_artifacts: ModelArtifacts
-    training_job_status: str
-    secondary_status: str
-    algorithm_specification: AlgorithmSpecification
-    resource_config: ResourceConfig
-    stopping_condition: StoppingCondition
-    creation_time: datetime.datetime
+    training_job_arn: Optional[str] = Unassigned()
     tuning_job_arn: Optional[str] = Unassigned()
     labeling_job_arn: Optional[str] = Unassigned()
     auto_m_l_job_arn: Optional[str] = Unassigned()
+    model_artifacts: Optional[ModelArtifacts] = Unassigned()
+    training_job_status: Optional[str] = Unassigned()
+    secondary_status: Optional[str] = Unassigned()
     failure_reason: Optional[str] = Unassigned()
     hyper_parameters: Optional[Dict[str, str]] = Unassigned()
+    algorithm_specification: Optional[AlgorithmSpecification] = Unassigned()
     role_arn: Optional[str] = Unassigned()
     input_data_config: Optional[List[Channel]] = Unassigned()
     output_data_config: Optional[OutputDataConfig] = Unassigned()
+    resource_config: Optional[ResourceConfig] = Unassigned()
     warm_pool_status: Optional[WarmPoolStatus] = Unassigned()
     vpc_config: Optional[VpcConfig] = Unassigned()
+    stopping_condition: Optional[StoppingCondition] = Unassigned()
+    creation_time: Optional[datetime.datetime] = Unassigned()
     training_start_time: Optional[datetime.datetime] = Unassigned()
     training_end_time: Optional[datetime.datetime] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
@@ -7487,7 +7497,7 @@ class TrainingJob(Base):
                 "tensor_board_output_config": {"s3_output_path": {"type": "string"}},
                 "profiler_config": {"s3_output_path": {"type": "string"}},
             }
-            create_func(
+            return create_func(
                 *args,
                 **Base.get_updated_kwargs_with_configured_attributes(
                     config_schema_for_resource, "TrainingJob", **kwargs
@@ -7665,20 +7675,20 @@ class TrainingJob(Base):
 
 class TransformJob(Base):
     transform_job_name: str
-    transform_job_arn: str
-    transform_job_status: str
-    model_name: str
-    transform_input: TransformInput
-    transform_resources: TransformResources
-    creation_time: datetime.datetime
+    transform_job_arn: Optional[str] = Unassigned()
+    transform_job_status: Optional[str] = Unassigned()
     failure_reason: Optional[str] = Unassigned()
+    model_name: Optional[str] = Unassigned()
     max_concurrent_transforms: Optional[int] = Unassigned()
     model_client_config: Optional[ModelClientConfig] = Unassigned()
     max_payload_in_m_b: Optional[int] = Unassigned()
     batch_strategy: Optional[str] = Unassigned()
     environment: Optional[Dict[str, str]] = Unassigned()
+    transform_input: Optional[TransformInput] = Unassigned()
     transform_output: Optional[TransformOutput] = Unassigned()
     data_capture_config: Optional[BatchDataCaptureConfig] = Unassigned()
+    transform_resources: Optional[TransformResources] = Unassigned()
+    creation_time: Optional[datetime.datetime] = Unassigned()
     transform_start_time: Optional[datetime.datetime] = Unassigned()
     transform_end_time: Optional[datetime.datetime] = Unassigned()
     labeling_job_arn: Optional[str] = Unassigned()
@@ -7707,7 +7717,7 @@ class TransformJob(Base):
                     "kms_key_id": {"type": "string"},
                 },
             }
-            create_func(
+            return create_func(
                 *args,
                 **Base.get_updated_kwargs_with_configured_attributes(
                     config_schema_for_resource, "TransformJob", **kwargs
@@ -7835,7 +7845,7 @@ class TransformJob(Base):
 
 
 class Trial(Base):
-    trial_name: Optional[str] = Unassigned()
+    trial_name: str
     trial_arn: Optional[str] = Unassigned()
     display_name: Optional[str] = Unassigned()
     experiment_name: Optional[str] = Unassigned()
@@ -7946,7 +7956,7 @@ class Trial(Base):
 
 
 class TrialComponent(Base):
-    trial_component_name: Optional[str] = Unassigned()
+    trial_component_name: str
     trial_component_arn: Optional[str] = Unassigned()
     display_name: Optional[str] = Unassigned()
     source: Optional[TrialComponentSource] = Unassigned()
@@ -8113,9 +8123,9 @@ class TrialComponent(Base):
 
 
 class UserProfile(Base):
-    domain_id: Optional[str] = Unassigned()
+    domain_id: str
+    user_profile_name: str
     user_profile_arn: Optional[str] = Unassigned()
-    user_profile_name: Optional[str] = Unassigned()
     home_efs_file_system_uid: Optional[str] = Unassigned()
     status: Optional[str] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
@@ -8152,7 +8162,7 @@ class UserProfile(Base):
                     },
                 }
             }
-            create_func(
+            return create_func(
                 *args,
                 **Base.get_updated_kwargs_with_configured_attributes(
                     config_schema_for_resource, "UserProfile", **kwargs
@@ -8306,7 +8316,7 @@ class UserProfile(Base):
 
 
 class Workforce(Base):
-    workforce: Workforce
+    workforce: Optional[Workforce] = Unassigned()
 
     def populate_inputs_decorator(create_func):
         def wrapper(*args, **kwargs):
@@ -8321,7 +8331,7 @@ class Workforce(Base):
                     }
                 }
             }
-            create_func(
+            return create_func(
                 *args,
                 **Base.get_updated_kwargs_with_configured_attributes(
                     config_schema_for_resource, "Workforce", **kwargs
@@ -8463,7 +8473,7 @@ class Workforce(Base):
 
 
 class Workteam(Base):
-    workteam: Workteam
+    workteam: Optional[Workteam] = Unassigned()
 
     @classmethod
     def create(

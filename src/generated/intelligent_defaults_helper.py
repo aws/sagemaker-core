@@ -175,6 +175,9 @@ def _load_config_from_file(file_path: str) -> dict:
 @lru_cache(maxsize=None)
 def load_default_configs_for_resource_name(resource_name: str):
     configs_data = load_default_configs()
+    if not configs_data:
+        logger.debug("No default configurations found for resource: %s", resource_name)
+        return {}
     return configs_data["SageMaker"]["PythonSDK"]["Resources"].get(resource_name)
 
 
