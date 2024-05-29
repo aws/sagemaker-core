@@ -1,4 +1,3 @@
-
 # Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"). You
@@ -32,9 +31,8 @@ def snake_to_pascal(snake_str):
         str: The PascalCase string.
 
     """
-    components = snake_str.split('_')
-    return ''.join(x.title() for x in components[0:])
-
+    components = snake_str.split("_")
+    return "".join(x.title() for x in components[0:])
 
 
 def pascal_to_snake(pascal_str):
@@ -47,11 +45,14 @@ def pascal_to_snake(pascal_str):
     Returns:
         str: The converted snake_case string.
     """
-    return ''.join(['_' + i.lower() if i.isupper() else i for i in pascal_str]).lstrip('_')
+    return "".join(["_" + i.lower() if i.isupper() else i for i in pascal_str]).lstrip(
+        "_"
+    )
 
 
 class Unassigned:
     """A custom type used to signify an undefined optional argument."""
+
     _instance = None
 
     def __new__(cls):
@@ -64,6 +65,7 @@ class SingletonMeta(type):
     """
     Singleton metaclass. Ensures that a single instance of a class using this metaclass is created.
     """
+
     _instances = {}
 
     def __call__(cls, *args, **kwargs):
@@ -81,7 +83,10 @@ class SageMakerClient(metaclass=SingletonMeta):
     """
     A singleton class for creating a SageMaker client.
     """
-    def __init__(self, session: Session = None, region_name: str = None, service_name='sagemaker'):
+
+    def __init__(
+        self, session: Session = None, region_name: str = None, service_name="sagemaker"
+    ):
         """
         Initializes the SageMakerClient with a boto3 session, region name, and service name.
         Creates a boto3 client using the provided session, region, and service.
@@ -98,12 +103,19 @@ class SageMakerClient(metaclass=SingletonMeta):
         self.region_name = region_name
         self.service_name = service_name
         self.client = session.client(service_name, region_name)
+
 
 class SageMakerRuntimeClient(metaclass=SingletonMeta):
     """
     A singleton class for creating a SageMaker client.
     """
-    def __init__(self, session: Session = None, region_name: str = None, service_name='sagemaker-runtime'):
+
+    def __init__(
+        self,
+        session: Session = None,
+        region_name: str = None,
+        service_name="sagemaker-runtime",
+    ):
         """
         Initializes the SageMakerClient with a boto3 session, region name, and service name.
         Creates a boto3 client using the provided session, region, and service.
@@ -120,5 +132,3 @@ class SageMakerRuntimeClient(metaclass=SingletonMeta):
         self.region_name = region_name
         self.service_name = service_name
         self.client = session.client(service_name, region_name)
-
-

@@ -1,4 +1,3 @@
-
 # Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"). You
@@ -23,6 +22,7 @@ from .config_schema import SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA
 from botocore.utils import merge_dicts
 import boto3
 from six.moves.urllib.parse import urlparse
+from typing import List
 import yaml
 import pathlib
 
@@ -36,10 +36,14 @@ _APP_NAME = "sagemaker"
 _CONFIG_FILE_NAME = "config.yaml"
 # The default config file location of the Administrator provided config file. This path can be
 # overridden with `SAGEMAKER_ADMIN_CONFIG_OVERRIDE` environment variable.
-_DEFAULT_ADMIN_CONFIG_FILE_PATH = os.path.join(site_config_dir(_APP_NAME), _CONFIG_FILE_NAME)
+_DEFAULT_ADMIN_CONFIG_FILE_PATH = os.path.join(
+    site_config_dir(_APP_NAME), _CONFIG_FILE_NAME
+)
 # The default config file location of the user provided config file. This path can be
 # overridden with `SAGEMAKER_USER_CONFIG_OVERRIDE` environment variable.
-_DEFAULT_USER_CONFIG_FILE_PATH = os.path.join(user_config_dir(_APP_NAME), _CONFIG_FILE_NAME)
+_DEFAULT_USER_CONFIG_FILE_PATH = os.path.join(
+    user_config_dir(_APP_NAME), _CONFIG_FILE_NAME
+)
 # The default config file location of the local mode.
 _DEFAULT_LOCAL_MODE_CONFIG_FILE_PATH = os.path.join(
     os.path.expanduser("~"), ".sagemaker", _CONFIG_FILE_NAME
@@ -49,12 +53,15 @@ ENV_VARIABLE_USER_CONFIG_OVERRIDE = "SAGEMAKER_USER_CONFIG_OVERRIDE"
 
 S3_PREFIX = "s3://"
 
+
 def load_default_configs(additional_config_paths: List[str] = None, s3_resource=None):
     default_config_path = os.getenv(
         ENV_VARIABLE_ADMIN_CONFIG_OVERRIDE, _DEFAULT_ADMIN_CONFIG_FILE_PATH
     )
-    user_config_path = os.getenv(ENV_VARIABLE_USER_CONFIG_OVERRIDE, _DEFAULT_USER_CONFIG_FILE_PATH)
-    
+    user_config_path = os.getenv(
+        ENV_VARIABLE_USER_CONFIG_OVERRIDE, _DEFAULT_USER_CONFIG_FILE_PATH
+    )
+
     config_paths = [default_config_path, user_config_path]
     if additional_config_paths:
         config_paths += additional_config_paths
@@ -86,7 +93,8 @@ def load_default_configs(additional_config_paths: List[str] = None, s3_resource=
             print("Not applying SDK defaults from location: %s", file_path)
 
     return merged_config
-    
+
+
 def validate_sagemaker_config(sagemaker_config: dict = None):
     """Validates whether a given dictionary adheres to the schema.
 
@@ -95,7 +103,7 @@ def validate_sagemaker_config(sagemaker_config: dict = None):
                 SageMaker Python SDK. (default: None).
     """
     jsonschema.validate(sagemaker_config, SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA)
-    
+
 
 def _load_config_from_s3(s3_uri, s3_resource_for_config) -> dict:
     """Placeholder docstring"""
@@ -107,7 +115,9 @@ def _load_config_from_s3(s3_uri, s3_resource_for_config) -> dict:
             raise ValueError(
                 "Must setup local AWS configuration with a region supported by SageMaker."
             )
-        s3_resource_for_config = boto_session.resource("s3", region_name=boto_region_name)
+        s3_resource_for_config = boto_session.resource(
+            "s3", region_name=boto_region_name
+        )
 
     logger.debug("Fetching defaults config from location: %s", s3_uri)
     inferred_s3_uri = _get_inferred_s3_uri(s3_uri, s3_resource_for_config)
@@ -116,8 +126,8 @@ def _load_config_from_s3(s3_uri, s3_resource_for_config) -> dict:
     s3_object = s3_resource_for_config.Object(bucket, key_prefix)
     s3_file_content = s3_object.get()["Body"].read()
     return yaml.safe_load(s3_file_content.decode("utf-8"))
-    
-    
+
+
 def _get_inferred_s3_uri(s3_uri, s3_resource_for_config):
     """Placeholder docstring"""
     parsed_url = urlparse(s3_uri)
@@ -145,6 +155,7 @@ def _get_inferred_s3_uri(s3_uri, s3_resource_for_config):
         return inferred_s3_uri
     return s3_uri
 
+
 def _load_config_from_file(file_path: str) -> dict:
     """Placeholder docstring"""
     inferred_file_path = file_path
@@ -161,20 +172,16 @@ def _load_config_from_file(file_path: str) -> dict:
     return content
 
 
-
 @lru_cache(maxsize=None)
 def load_default_configs_for_resource_name(resource_name: str):
     configs_data = load_default_configs()
     return configs_data["SageMaker"]["PythonSDK"]["Resources"].get(resource_name)
 
 
-
 def get_config_value(attribute, resource_defaults, global_defaults):
-   if resource_defaults and attribute in resource_defaults:
-       return resource_defaults[attribute]
-   if global_defaults and attribute in global_defaults:
-       return global_defaults[attribute]
-   logger.warn("Configurable value not entered in parameters or present in the Config")
-   return None
-
-
+    if resource_defaults and attribute in resource_defaults:
+        return resource_defaults[attribute]
+    if global_defaults and attribute in global_defaults:
+        return global_defaults[attribute]
+    logger.warn("Configurable value not entered in parameters or present in the Config")
+    return None

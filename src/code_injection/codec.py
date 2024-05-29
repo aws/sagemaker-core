@@ -15,7 +15,12 @@ import logging
 from dataclasses import asdict
 
 from src.code_injection.shape_dag import SHAPE_DAG
-from src.code_injection.constants import BASIC_TYPES, STRUCTURE_TYPE, LIST_TYPE, MAP_TYPE
+from src.code_injection.constants import (
+    BASIC_TYPES,
+    STRUCTURE_TYPE,
+    LIST_TYPE,
+    MAP_TYPE,
+)
 
 
 def pascal_to_snake(pascal_str):
@@ -28,7 +33,9 @@ def pascal_to_snake(pascal_str):
     Returns:
         str: The converted snake_case string.
     """
-    return ''.join(['_' + i.lower() if i.isupper() else i for i in pascal_str]).lstrip('_')
+    return "".join(["_" + i.lower() if i.isupper() else i for i in pascal_str]).lstrip(
+        "_"
+    )
 
 
 def deserialize(data, cls) -> object:
@@ -68,8 +75,8 @@ def snake_to_pascal(snake_str):
         str: The PascalCase string.
 
     """
-    components = snake_str.split('_')
-    return ''.join(x.title() for x in components[0:])
+    components = snake_str.split("_")
+    return "".join(x.title() for x in components[0:])
 
 
 def serialize(data) -> object:
@@ -119,10 +126,13 @@ def _evaluate_list_type(raw_list, shape) -> list:
             _evaluated_item = transform(item, _shape_member_shape)
             _evaluated_list.append(_evaluated_item)
     else:
-        raise ValueError(f"Unhandled List member type "
-                         f"[{_shape_member_type}] encountered. "
-                         "Needs additional logic for support")
+        raise ValueError(
+            f"Unhandled List member type "
+            f"[{_shape_member_type}] encountered. "
+            "Needs additional logic for support"
+        )
     return _evaluated_list
+
 
 def _evaluate_map_type(raw_map, shape) -> dict:
     """
@@ -142,9 +152,11 @@ def _evaluate_map_type(raw_map, shape) -> dict:
     _shape_value_type = shape["value_type"]
     _shape_value_shape = shape["value_shape"]
     if _shape_key_type != "string":
-        raise ValueError(f"Unhandled Map key type "
-                         f"[{_shape_key_type}] encountered. "
-                         "Needs additional logic for support")
+        raise ValueError(
+            f"Unhandled Map key type "
+            f"[{_shape_key_type}] encountered. "
+            "Needs additional logic for support"
+        )
 
     _evaluated_map = {}
     if _shape_value_type in BASIC_TYPES:
@@ -167,9 +179,11 @@ def _evaluate_map_type(raw_map, shape) -> dict:
             evaluated_values = _evaluate_map_type(v, _map_type_shape)
             _evaluated_map[k] = evaluated_values
     else:
-        raise ValueError(f"Unhandled List member type "
-                         f"[{_shape_value_type}] encountered. "
-                         "Needs additional logic for support")
+        raise ValueError(
+            f"Unhandled List member type "
+            f"[{_shape_value_type}] encountered. "
+            "Needs additional logic for support"
+        )
 
     return _evaluated_map
 
@@ -217,8 +231,7 @@ def transform(data, shape, object_instance=None) -> dict:
             logging.debug(f"List type encountered, evaluating member: {member}")
             _list_type_shape = SHAPE_DAG[_member_shape]
             # 2. assign response value
-            evaluated_value = _evaluate_list_type(data[_member_name],
-                                                   _list_type_shape)
+            evaluated_value = _evaluate_list_type(data[_member_name], _list_type_shape)
         elif _member_type == MAP_TYPE:
             logging.debug(f"Map type encountered, evaluating member: {member}")
             _map_type_shape = SHAPE_DAG[_member_shape]

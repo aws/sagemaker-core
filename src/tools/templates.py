@@ -12,15 +12,15 @@
 # language governing permissions and limitations under the License.
 """Templates for generating resources."""
 
-RESOURCE_CLASS_TEMPLATE ='''
+RESOURCE_CLASS_TEMPLATE = """
 class {class_name}:
 {data_class_members}
 {init_method}
 {class_methods}
 {object_methods}
-'''
+"""
 
-INIT_METHOD_TEMPLATE = '''
+INIT_METHOD_TEMPLATE = """
 def __init__(self, 
     session: Optional[Session] = None, 
     region: Optional[str] = None
@@ -29,9 +29,9 @@ def __init__(self,
     self.region = region
     {init_assignments}
 
-'''
+"""
 
-CREATE_METHOD_TEMPLATE = '''
+CREATE_METHOD_TEMPLATE = """
 @classmethod
 @populate_inputs_decorator
 def create(
@@ -40,7 +40,7 @@ def create(
     session: Optional[Session] = None,
     region: Optional[str] = None,
 ) -> Optional[object]:
-    logger.debug(f"Creating {resource_lower} resource.")
+    logger.debug("Creating {resource_lower} resource.")
     client = SageMakerClient(session=session, region_name=region, service_name='{service_name}').client
 
     operation_input_args = {{
@@ -57,9 +57,9 @@ def create(
     logger.debug(f"Response: {{response}}")
 
     return cls.get({get_args}, session=session, region=region)
-'''
+"""
 
-CREATE_METHOD_TEMPLATE_WITHOUT_DEFAULTS = '''
+CREATE_METHOD_TEMPLATE_WITHOUT_DEFAULTS = """
 @classmethod
 def create(
     cls,
@@ -67,7 +67,7 @@ def create(
     session: Optional[Session] = None,
     region: Optional[str] = None,
 ) -> Optional[object]:
-    logger.debug(f"Creating {resource_lower} resource.")
+    logger.debug("Creating {resource_lower} resource.")
     client = SageMakerClient(session=session, region_name=region, service_name='{service_name}').client
 
     operation_input_args = {{
@@ -84,9 +84,9 @@ def create(
     logger.debug(f"Response: {{response}}")
 
     return cls.get({get_args}, session=session, region=region)
-'''
+"""
 
-IMPORT_METHOD_TEMPLATE = '''
+IMPORT_METHOD_TEMPLATE = """
 @classmethod
 def load(
     cls,
@@ -111,13 +111,13 @@ def load(
     logger.debug(f"Response: {{response}}")
 
     return cls.get({get_args}, session=session, region=region)
-'''
+"""
 
-UPDATE_METHOD_TEMPLATE = '''
+UPDATE_METHOD_TEMPLATE = """
 def update(self,
  {update_args}
  ) -> Optional[object]:
-    logger.debug(f"Creating {resource_lower} resource.")
+    logger.debug("Creating {resource_lower} resource.")
     client = SageMakerClient().client
 
     operation_input_args = {{
@@ -134,9 +134,9 @@ def update(self,
     self.refresh()
 
     return self
-'''
+"""
 
-INVOKE_METHOD_TEMPLATE = '''
+INVOKE_METHOD_TEMPLATE = """
 def invoke(self, 
 {invoke_args}
 ) -> Optional[object]:
@@ -155,9 +155,9 @@ def invoke(self,
     logger.debug(f"Response: {{response}}")
 
     return response
-'''
+"""
 
-INVOKE_ASYNC_METHOD_TEMPLATE = '''
+INVOKE_ASYNC_METHOD_TEMPLATE = """
 def invoke_async(self, 
 {create_args}
 ) -> Optional[object]:
@@ -177,9 +177,9 @@ def invoke_async(self,
     logger.debug(f"Response: {{response}}")
 
     return response
-'''
+"""
 
-INVOKE_WITH_RESPONSE_STREAM_METHOD_TEMPLATE = '''
+INVOKE_WITH_RESPONSE_STREAM_METHOD_TEMPLATE = """
 def invoke_with_response_stream(self, 
 {create_args}
 ) -> Optional[object]:
@@ -199,10 +199,10 @@ def invoke_with_response_stream(self,
     logger.debug(f"Response: {{response}}")
 
     return response
-'''
+"""
 
 
-GET_CONFIG_VALUE_TEMPLATE = '''
+GET_CONFIG_VALUE_TEMPLATE = """
 def get_config_value(attribute, resource_defaults, global_defaults):
    if resource_defaults and attribute in resource_defaults:
        return resource_defaults[attribute]
@@ -210,18 +210,18 @@ def get_config_value(attribute, resource_defaults, global_defaults):
        return global_defaults[attribute]
    logger.warn("Configurable value not entered in parameters or present in the Config")
    return None
-'''
+"""
 
-POPULATE_DEFAULTS_DECORATOR_TEMPLATE = '''
+POPULATE_DEFAULTS_DECORATOR_TEMPLATE = """
 def populate_inputs_decorator(create_func):
     def wrapper(*args, **kwargs):
         config_schema_for_resource = \\
 {config_schema_for_resource}
         create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "{resource_name}", **kwargs))
     return wrapper
-'''
+"""
 
-CREATE_METHOD_TEMPLATE_WITHOUT_DECORATOR = '''
+CREATE_METHOD_TEMPLATE_WITHOUT_DECORATOR = """
 @classmethod
 def create(
     cls,
@@ -229,7 +229,7 @@ def create(
     session: Optional[Session] = None,
     region: Optional[str] = None,
 ) -> Optional[object]:
-    logger.debug(f"Creating {resource_lower} resource.")
+    logger.debug("Creating {resource_lower} resource.")
     client = SageMakerClient(session=session, region_name=region, service_name='{service_name}')
 
     operation_input_args = {{
@@ -245,9 +245,9 @@ def create(
     logger.debug(f"Response: {{response}}")
 
     return cls.get({resource_identifier}, session=session, region=region)
-'''
+"""
 
-GET_METHOD_TEMPLATE = '''
+GET_METHOD_TEMPLATE = """
 @classmethod
 def get(
     cls,
@@ -267,9 +267,9 @@ def get(
     transformed_response = transform(response, '{describe_operation_output_shape}')
     {resource_lower} = cls(**transformed_response)
     return {resource_lower}
-'''
+"""
 
-REFRESH_METHOD_TEMPLATE = '''
+REFRESH_METHOD_TEMPLATE = """
 def refresh(self) -> Optional[object]:
 
     operation_input_args = {{
@@ -281,9 +281,9 @@ def refresh(self) -> Optional[object]:
     # deserialize response and update self
     transform(response, '{describe_operation_output_shape}', self)
     return self
-'''
+"""
 
-WAIT_METHOD_TEMPLATE = '''
+WAIT_METHOD_TEMPLATE = """
 @validate_call
 def wait(
     self,
@@ -305,9 +305,9 @@ def wait(
             raise Exception("Timeout exceeded. Final resource state - " + current_status)
         print("-", end="")
         time.sleep(poll)
-'''
+"""
 
-WAIT_FOR_STATUS_METHOD_TEMPLATE = '''
+WAIT_FOR_STATUS_METHOD_TEMPLATE = """
 @validate_call
 def wait_for_status(
     self,
@@ -329,27 +329,27 @@ def wait_for_status(
             raise Exception("Timeout exceeded. Final resource state - " + current_status)
         print("-", end="")
         time.sleep(poll)
-'''
+"""
 
-DELETE_METHOD_TEMPLATE = '''
+DELETE_METHOD_TEMPLATE = """
 def delete(self) -> None:
 
     operation_input_args = {{
 {operation_input_args}
     }}
     self.client.{operation}(**operation_input_args)
-'''
+"""
 
-STOP_METHOD_TEMPLATE = '''
+STOP_METHOD_TEMPLATE = """
 def stop(self) -> None:
 
     operation_input_args = {{
 {operation_input_args}
     }}
     self.client.{operation}(**operation_input_args)
-'''
+"""
 
-RESOURCE_BASE_CLASS_TEMPLATE ='''
+RESOURCE_BASE_CLASS_TEMPLATE = """
 class Base(BaseModel):
     @classmethod
     def _serialize(cls, data: Dict) -> Dict:
@@ -392,7 +392,7 @@ class Base(BaseModel):
             logger.info("Could not load Default Configs. Continuing.", exc_info=True)
             # Continue with existing kwargs if no default configs found
         return kwargs
-'''
+"""
 
 LOAD_DEFAULT_CONFIGS_AND_HELPERS_TEMPLATE = '''
 _APP_NAME = "sagemaker"
@@ -525,14 +525,14 @@ def _load_config_from_file(file_path: str) -> dict:
     return content
 '''
 
-LOAD_CONFIG_VALUES_FOR_RESOURCE_TEMPLATE = '''
+LOAD_CONFIG_VALUES_FOR_RESOURCE_TEMPLATE = """
 @lru_cache(maxsize=None)
 def load_default_configs_for_resource_name(resource_name: str):
     configs_data = load_default_configs()
     return configs_data["SageMaker"]["PythonSDK"]["Resources"].get(resource_name)
-'''
+"""
 
-SHAPE_BASE_CLASS_TEMPLATE ='''
+SHAPE_BASE_CLASS_TEMPLATE = """
 class {class_name}:
     def serialize(self):
         result = {{}}
@@ -557,9 +557,9 @@ class {class_name}:
     
     def _serialize_dict(self, value: Dict):
         return {{k: v.serialize() if hasattr(v, 'serialize') else v for k, v in value.items()}}
-'''
+"""
 
-SHAPE_CLASS_TEMPLATE ='''
+SHAPE_CLASS_TEMPLATE = '''
 class {class_name}:
     """
     {docstring}
@@ -582,7 +582,6 @@ def snake_to_pascal(snake_str):
     components = snake_str.split('_')
     return ''.join(x.title() for x in components[0:])
 '''
-
 
 
 PASCAL_TO_SNAKE_FUNCTION = '''

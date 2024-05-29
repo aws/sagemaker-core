@@ -26,15 +26,15 @@ def add_indent(text, num_spaces=4):
     Returns:
         str: The text with added indent spaces.
     """
-    indent = ' ' * num_spaces
-    lines = text.split('\n')
-    indented_text = '\n'.join(indent + line for line in lines)
-    return indented_text.rstrip(' ')
+    indent = " " * num_spaces
+    lines = text.split("\n")
+    indented_text = "\n".join(indent + line for line in lines)
+    return indented_text.rstrip(" ")
 
 
 def clean_documentaion(documentation):
-    documentation = re.sub(r'<\/?p>', '', documentation)
-    documentation = re.sub(r'<\/?code>', "'", documentation)
+    documentation = re.sub(r"<\/?p>", "", documentation)
+    documentation = re.sub(r"<\/?code>", "'", documentation)
     return documentation
 
 
@@ -48,7 +48,7 @@ def convert_to_snake_case(entity_name):
     Returns:
         str: The converted string in snake_case.
     """
-    snake_case_string = re.sub(r'(?<!^)(?=[A-Z])', '_', entity_name).lower()
+    snake_case_string = re.sub(r"(?<!^)(?=[A-Z])", "_", entity_name).lower()
     return snake_case_string
 
 
@@ -63,8 +63,8 @@ def snake_to_pascal(snake_str):
         str: The PascalCase string.
 
     """
-    components = snake_str.split('_')
-    return ''.join(x.title() for x in components[0:])
+    components = snake_str.split("_")
+    return "".join(x.title() for x in components[0:])
 
 
 def reformat_file_with_black(filename):

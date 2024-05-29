@@ -43,6 +43,6 @@ pytest tst
 ```
 * Use Pylint to detect errors and improve code quality. For code style errors use `black` to format the files.
 ```
-python_files=$(find . -name '*.py')
-pylint $python_files --persistent=y
+black .
+pylint **/*.py
 ```
