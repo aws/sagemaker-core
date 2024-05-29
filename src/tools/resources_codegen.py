@@ -320,7 +320,8 @@ class ResourcesCodeGen:
             get_operation = self.operations["Describe" + resource_name]
             get_operation_shape = get_operation["output"]["shape"]
             
-            # Use 'get' operation input as the required class attributes
+            # Use 'get' operation input as the required class attributes.
+            # These are the mimumum identifing attributes for a resource object (ie, required for refresh())
             get_operation_input_shape = get_operation["input"]["shape"] 
             required_attributes = self.shapes[get_operation_input_shape].get("required", [])
             
