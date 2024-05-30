@@ -60,10 +60,6 @@ class ResourcesExtractor:
         get_resource_plan(): Returns the resource plan DataFrame.
     """
 
-    RESOURCE_TO_ADDITIONAL_METHODS = {
-        "Cluster": ["DescribeClusterNode", "ListClusterNodes"],
-    }
-
     def __init__(
         self,
         combined_shapes: Optional[dict] = None,
@@ -98,10 +94,18 @@ class ResourcesExtractor:
                     a
                     for a in self.actions
                     if a.endswith(resource)
-                    or (a.startswith("List") and a.endswith(resource + "s"))
+                    or (a.startswith("Describe") and resource in a)
+                    or (a.startswith("List") and resource in a)
                     or a.startswith("Invoke" + resource)
                 ]
             )
+            if resource == "LabelingJob":
+                # This action belongs to Workteam
+                filtered_actions.remove("ListLabelingJobsForWorkteam")
+            if resource == "PipelineExecution":
+                filtered_actions.update(
+                    set(a for a in self.actions if "ForExecution" in a)
+                )
             self.actions_under_resource.update(filtered_actions)
             self.resource_actions[resource] = filtered_actions
 
@@ -120,17 +124,14 @@ class ResourcesExtractor:
         self.create_resources = set(
             [key[len("Create") :] for key in self.actions if key.startswith("Create")]
         )
-        self._filter_actions_for_resources(self.create_resources)
 
         self.add_resources = set(
             [key[len("Add") :] for key in self.actions if key.startswith("Add")]
         )
-        self._filter_actions_for_resources(self.add_resources)
 
         self.start_resources = set(
             [key[len("Start") :] for key in self.actions if key.startswith("Start")]
         )
-        self._filter_actions_for_resources(self.start_resources)
 
         self.register_resources = set(
             [
@@ -139,12 +140,10 @@ class ResourcesExtractor:
                 if key.startswith("Register")
             ]
         )
-        self._filter_actions_for_resources(self.register_resources)
 
         self.import_resources = set(
             [key[len("Import") :] for key in self.actions if key.startswith("Import")]
         )
-        self._filter_actions_for_resources(self.import_resources)
 
         self.resources = (
             self.create_resources
@@ -153,6 +152,8 @@ class ResourcesExtractor:
             | self.register_resources
             | self.import_resources
         )
+        self._filter_actions_for_resources(self.resources)
+
         log.info(f"Total resource - {len(self.resources)}")
 
         log.info(f"Total actions_under_resource - {len(self.actions_under_resource)}")
@@ -260,25 +261,31 @@ class ResourcesExtractor:
                 action_low = action.lower()
                 resource_low = resource.lower()
 
-                if action_low.split(resource_low)[0] == "describe":
-                    class_methods.add("get")
-                    object_methods.add("refresh")
+                action_split = action_low.split(resource_low)
+                if action_split[0] == "describe":
+                    if action_split[1]:
+                        object_methods.add("get_" + action_split[1])
+                    else:
+                        class_methods.add("get")
+                        object_methods.add("refresh")
 
-                    output_shape_name = self.operations[action]["output"]["shape"]
-                    output_members_data = self.shapes[output_shape_name]["members"]
+                        output_shape_name = self.operations[action]["output"]["shape"]
+                        output_members_data = self.shapes[output_shape_name]["members"]
 
-                    resource_status_chain, resource_states = (
-                        self.get_status_chain_and_states(resource)
-                    )
+                        resource_status_chain, resource_states = (
+                            self.get_status_chain_and_states(resource)
+                        )
 
-                    if resource_low.endswith("job") or resource_low.endswith("jobv2"):
-                        object_methods.add("wait")
-                    elif resource_states and resource_low != "action":
-                        object_methods.add("wait_for_status")
+                        if resource_low.endswith("job") or resource_low.endswith(
+                            "jobv2"
+                        ):
+                            object_methods.add("wait")
+                        elif resource_states and resource_low != "action":
+                            object_methods.add("wait_for_status")
 
                     continue
 
-                if action_low.split(resource_low)[0] == "create":
+                if action_split[0] == "create":
                     shape_name = self.operations[action]["input"]["shape"]
                     input = self.shapes[shape_name]
                     for member in input["members"]:
@@ -290,7 +297,14 @@ class ResourcesExtractor:
                                 and chain_resource_name in self.resources
                             ):
                                 chain_resource_names.add(chain_resource_name)
-                action_split = action_low.split(resource_low)
+
+                if action_split[0] == "list":
+                    if not action_split[1] or action_split[1] == "s":
+                        class_methods.add("list")
+                    else:
+                        additional_methods.add(action)
+                    continue
+
                 if action_split[0] == "invoke":
                     if not action_split[1]:
                         invoke_method = "invoke"
@@ -305,9 +319,6 @@ class ResourcesExtractor:
                     object_methods.add(action_split[0])
                 else:
                     additional_methods.add(action)
-
-            if resource in self.RESOURCE_TO_ADDITIONAL_METHODS:
-                additional_methods.update(self.RESOURCE_TO_ADDITIONAL_METHODS[resource])
 
             new_row = pd.DataFrame(
                 {

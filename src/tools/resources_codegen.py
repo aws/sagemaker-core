@@ -35,6 +35,7 @@ from src.tools.shapes_extractor import ShapesExtractor
 from src.tools.templates import (
     CREATE_METHOD_TEMPLATE,
     GET_METHOD_TEMPLATE,
+    GET_NODE_METHOD_TEMPLATE,
     REFRESH_METHOD_TEMPLATE,
     RESOURCE_BASE_CLASS_TEMPLATE,
     STOP_METHOD_TEMPLATE,
@@ -430,6 +431,11 @@ class ResourcesCodeGen:
                 resource_name, "import", class_methods
             ):
                 resource_class += add_indent(import_method, 4)
+
+            if get_node_method := self._evaluate_method(
+                resource_name, "get_node", object_methods
+            ):
+                resource_class += add_indent(get_node_method, 4)
         else:
             # If there's no 'get' method, log a message
             # TODO: Handle the resources without 'get' differently
@@ -900,6 +906,28 @@ class ResourcesCodeGen:
             operation=operation,
             describe_operation_output_shape=resource_operation_output_shape_name,
         )
+        return formatted_method
+
+    def generate_get_node_method(self, resource_name: str) -> str:
+        """Auto-Generate 'get_node' object Method for a resource.
+
+        Args:
+            resource_name (str): The resource name.
+
+        Returns:
+            str: The formatted get_node Method template.
+        """
+        operation_name = "Describe" + resource_name + "Node"
+        operation_metadata = self.operations[operation_name]
+        resource_operation_output_shape_name = operation_metadata["output"]["shape"]
+
+        operation = convert_to_snake_case(operation_name)
+
+        formatted_method = GET_NODE_METHOD_TEMPLATE.format(
+            operation=operation,
+            describe_operation_output_shape=resource_operation_output_shape_name,
+        )
+
         return formatted_method
 
     def generate_refresh_method(self, resource_name: str) -> str:

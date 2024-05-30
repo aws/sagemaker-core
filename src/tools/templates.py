@@ -269,6 +269,21 @@ def get(
     return {resource_lower}
 """
 
+GET_NODE_METHOD_TEMPLATE = """
+def get_node(self, node_id) -> Optional[object]:
+
+    operation_input_args = {{
+        "ClusterName": self.cluster_name,
+        "NodeId": node_id,
+    }}
+    client = SageMakerClient().client
+    response = client.{operation}(**operation_input_args)
+
+    # deserialize response
+    transformed_response = transform(response, '{describe_operation_output_shape}')
+    return ClusterNodeDetails(**transformed_response)
+"""
+
 REFRESH_METHOD_TEMPLATE = """
 def refresh(self) -> Optional[object]:
 

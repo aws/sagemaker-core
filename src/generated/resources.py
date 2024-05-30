@@ -1212,6 +1212,19 @@ class Cluster(Base):
             print("-", end="")
             time.sleep(poll)
 
+    def get_node(self, node_id) -> Optional[object]:
+
+        operation_input_args = {
+            "ClusterName": self.cluster_name,
+            "NodeId": node_id,
+        }
+        client = SageMakerClient().client
+        response = client.describe_cluster_node(**operation_input_args)
+
+        # deserialize response
+        transformed_response = transform(response, "DescribeClusterNodeResponse")
+        return ClusterNodeDetails(**transformed_response)
+
 
 class CodeRepository(Base):
     code_repository_name: str
