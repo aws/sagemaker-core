@@ -27,10 +27,7 @@ from .utils import (
     snake_to_pascal,
     pascal_to_snake,
 )
-from .intelligent_defaults_helper import (
-    load_default_configs_for_resource_name,
-    get_config_value,
-)
+from .intelligent_defaults_helper import load_default_configs_for_resource_name, get_config_value
 from src.code_injection.codec import transform
 from .shapes import *
 
@@ -63,9 +60,7 @@ class Base(BaseModel):
 
     @classmethod
     def _serialize_dict(cls, value: Dict):
-        return {
-            k: v.serialize() if hasattr(v, "serialize") else v for k, v in value.items()
-        }
+        return {k: v.serialize() if hasattr(v, "serialize") else v for k, v in value.items()}
 
     @staticmethod
     def get_updated_kwargs_with_configured_attributes(
@@ -256,9 +251,7 @@ class Algorithm(Base):
         training_specification: TrainingSpecification,
         algorithm_description: Optional[str] = Unassigned(),
         inference_specification: Optional[InferenceSpecification] = Unassigned(),
-        validation_specification: Optional[
-            AlgorithmValidationSpecification
-        ] = Unassigned(),
+        validation_specification: Optional[AlgorithmValidationSpecification] = Unassigned(),
         certify_for_marketplace: Optional[bool] = Unassigned(),
         tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
@@ -349,9 +342,7 @@ class Algorithm(Base):
 
             # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
-                raise Exception(
-                    "Timeout exceeded. Final resource state - " + current_status
-                )
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
             print("-", end="")
             time.sleep(poll)
 
@@ -490,9 +481,7 @@ class App(Base):
 
             # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
-                raise Exception(
-                    "Timeout exceeded. Final resource state - " + current_status
-                )
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
             print("-", end="")
             time.sleep(poll)
 
@@ -536,9 +525,7 @@ class AppImageConfig(Base):
         response = client.create_app_image_config(**operation_input_args)
         logger.debug(f"Response: {response}")
 
-        return cls.get(
-            app_image_config_name=app_image_config_name, session=session, region=region
-        )
+        return cls.get(app_image_config_name=app_image_config_name, session=session, region=region)
 
     @classmethod
     def get(
@@ -653,9 +640,7 @@ class Artifact(Base):
         response = client.create_artifact(**operation_input_args)
         logger.debug(f"Response: {response}")
 
-        return cls.get(
-            artifact_arn=response["ArtifactArn"], session=session, region=region
-        )
+        return cls.get(artifact_arn=response["ArtifactArn"], session=session, region=region)
 
     @classmethod
     def get(
@@ -760,10 +745,7 @@ class AutoMLJob(Base):
                     "security_config": {
                         "volume_kms_key_id": {"type": "string"},
                         "vpc_config": {
-                            "security_group_ids": {
-                                "type": "array",
-                                "items": {"type": "string"},
-                            },
+                            "security_group_ids": {"type": "array", "items": {"type": "string"}},
                             "subnets": {"type": "array", "items": {"type": "string"}},
                         },
                     },
@@ -825,9 +807,7 @@ class AutoMLJob(Base):
         response = client.create_auto_m_l_job(**operation_input_args)
         logger.debug(f"Response: {response}")
 
-        return cls.get(
-            auto_m_l_job_name=auto_m_l_job_name, session=session, region=region
-        )
+        return cls.get(auto_m_l_job_name=auto_m_l_job_name, session=session, region=region)
 
     @classmethod
     def get(
@@ -884,9 +864,7 @@ class AutoMLJob(Base):
 
             # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
-                raise Exception(
-                    "Timeout exceeded. Final resource state - " + current_status
-                )
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
             print("-", end="")
             time.sleep(poll)
 
@@ -927,17 +905,12 @@ class AutoMLJobV2(Base):
                     "time_series_forecasting_job_config": {
                         "feature_specification_s3_uri": {"type": "string"}
                     },
-                    "tabular_job_config": {
-                        "feature_specification_s3_uri": {"type": "string"}
-                    },
+                    "tabular_job_config": {"feature_specification_s3_uri": {"type": "string"}},
                 },
                 "security_config": {
                     "volume_kms_key_id": {"type": "string"},
                     "vpc_config": {
-                        "security_group_ids": {
-                            "type": "array",
-                            "items": {"type": "string"},
-                        },
+                        "security_group_ids": {"type": "array", "items": {"type": "string"}},
                         "subnets": {"type": "array", "items": {"type": "string"}},
                     },
                 },
@@ -995,9 +968,7 @@ class AutoMLJobV2(Base):
         response = client.create_auto_m_l_job_v2(**operation_input_args)
         logger.debug(f"Response: {response}")
 
-        return cls.get(
-            auto_m_l_job_name=auto_m_l_job_name, session=session, region=region
-        )
+        return cls.get(auto_m_l_job_name=auto_m_l_job_name, session=session, region=region)
 
     @classmethod
     def get(
@@ -1047,9 +1018,7 @@ class AutoMLJobV2(Base):
 
             # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
-                raise Exception(
-                    "Timeout exceeded. Final resource state - " + current_status
-                )
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
             print("-", end="")
             time.sleep(poll)
 
@@ -1067,10 +1036,7 @@ class Cluster(Base):
         def wrapper(*args, **kwargs):
             config_schema_for_resource = {
                 "vpc_config": {
-                    "security_group_ids": {
-                        "type": "array",
-                        "items": {"type": "string"},
-                    },
+                    "security_group_ids": {"type": "array", "items": {"type": "string"}},
                     "subnets": {"type": "array", "items": {"type": "string"}},
                 }
             }
@@ -1206,9 +1172,7 @@ class Cluster(Base):
 
             # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
-                raise Exception(
-                    "Timeout exceeded. Final resource state - " + current_status
-                )
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
             print("-", end="")
             time.sleep(poll)
 
@@ -1249,9 +1213,7 @@ class CodeRepository(Base):
         response = client.create_code_repository(**operation_input_args)
         logger.debug(f"Response: {response}")
 
-        return cls.get(
-            code_repository_name=code_repository_name, session=session, region=region
-        )
+        return cls.get(code_repository_name=code_repository_name, session=session, region=region)
 
     @classmethod
     def get(
@@ -1348,10 +1310,7 @@ class CompilationJob(Base):
                     "kms_key_id": {"type": "string"},
                 },
                 "vpc_config": {
-                    "security_group_ids": {
-                        "type": "array",
-                        "items": {"type": "string"},
-                    },
+                    "security_group_ids": {"type": "array", "items": {"type": "string"}},
                     "subnets": {"type": "array", "items": {"type": "string"}},
                 },
             }
@@ -1404,9 +1363,7 @@ class CompilationJob(Base):
         response = client.create_compilation_job(**operation_input_args)
         logger.debug(f"Response: {response}")
 
-        return cls.get(
-            compilation_job_name=compilation_job_name, session=session, region=region
-        )
+        return cls.get(compilation_job_name=compilation_job_name, session=session, region=region)
 
     @classmethod
     def get(
@@ -1470,9 +1427,7 @@ class CompilationJob(Base):
 
             # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
-                raise Exception(
-                    "Timeout exceeded. Final resource state - " + current_status
-                )
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
             print("-", end="")
             time.sleep(poll)
 
@@ -1622,9 +1577,7 @@ class DataQualityJobDefinition(Base):
                     },
                 },
                 "data_quality_job_output_config": {"kms_key_id": {"type": "string"}},
-                "job_resources": {
-                    "cluster_config": {"volume_kms_key_id": {"type": "string"}}
-                },
+                "job_resources": {"cluster_config": {"volume_kms_key_id": {"type": "string"}}},
                 "role_arn": {"type": "string"},
                 "data_quality_baseline_config": {
                     "constraints_resource": {"s3_uri": {"type": "string"}},
@@ -1632,10 +1585,7 @@ class DataQualityJobDefinition(Base):
                 },
                 "network_config": {
                     "vpc_config": {
-                        "security_group_ids": {
-                            "type": "array",
-                            "items": {"type": "string"},
-                        },
+                        "security_group_ids": {"type": "array", "items": {"type": "string"}},
                         "subnets": {"type": "array", "items": {"type": "string"}},
                     }
                 },
@@ -1659,9 +1609,7 @@ class DataQualityJobDefinition(Base):
         data_quality_job_output_config: MonitoringOutputConfig,
         job_resources: MonitoringResources,
         role_arn: str,
-        data_quality_baseline_config: Optional[
-            DataQualityBaselineConfig
-        ] = Unassigned(),
+        data_quality_baseline_config: Optional[DataQualityBaselineConfig] = Unassigned(),
         network_config: Optional[MonitoringNetworkConfig] = Unassigned(),
         stopping_condition: Optional[MonitoringStoppingCondition] = Unassigned(),
         tags: Optional[List[Tag]] = Unassigned(),
@@ -1695,9 +1643,7 @@ class DataQualityJobDefinition(Base):
         response = client.create_data_quality_job_definition(**operation_input_args)
         logger.debug(f"Response: {response}")
 
-        return cls.get(
-            job_definition_name=job_definition_name, session=session, region=region
-        )
+        return cls.get(job_definition_name=job_definition_name, session=session, region=region)
 
     @classmethod
     def get(
@@ -1717,9 +1663,7 @@ class DataQualityJobDefinition(Base):
         pprint(response)
 
         # deserialize the response
-        transformed_response = transform(
-            response, "DescribeDataQualityJobDefinitionResponse"
-        )
+        transformed_response = transform(response, "DescribeDataQualityJobDefinitionResponse")
         data_quality_job_definition = cls(**transformed_response)
         return data_quality_job_definition
 
@@ -1808,9 +1752,7 @@ class DeviceFleet(Base):
         response = client.create_device_fleet(**operation_input_args)
         logger.debug(f"Response: {response}")
 
-        return cls.get(
-            device_fleet_name=device_fleet_name, session=session, region=region
-        )
+        return cls.get(device_fleet_name=device_fleet_name, session=session, region=region)
 
     @classmethod
     def get(
@@ -1926,16 +1868,11 @@ class Domain(Base):
                             "s3_artifact_path": {"type": "string"},
                             "s3_kms_key_id": {"type": "string"},
                         },
-                        "generative_ai_settings": {
-                            "amazon_bedrock_role_arn": {"type": "string"}
-                        },
+                        "generative_ai_settings": {"amazon_bedrock_role_arn": {"type": "string"}},
                     },
                 },
                 "domain_settings": {
-                    "security_group_ids": {
-                        "type": "array",
-                        "items": {"type": "string"},
-                    },
+                    "security_group_ids": {"type": "array", "items": {"type": "string"}},
                     "r_studio_server_pro_domain_settings": {
                         "domain_execution_role_arn": {"type": "string"}
                     },
@@ -2105,9 +2042,7 @@ class Domain(Base):
 
             # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
-                raise Exception(
-                    "Timeout exceeded. Final resource state - " + current_status
-                )
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
             print("-", end="")
             time.sleep(poll)
 
@@ -2159,9 +2094,7 @@ class EdgeDeploymentPlan(Base):
         logger.debug(f"Response: {response}")
 
         return cls.get(
-            edge_deployment_plan_name=edge_deployment_plan_name,
-            session=session,
-            region=region,
+            edge_deployment_plan_name=edge_deployment_plan_name, session=session, region=region
         )
 
     @classmethod
@@ -2288,9 +2221,7 @@ class EdgePackagingJob(Base):
         logger.debug(f"Response: {response}")
 
         return cls.get(
-            edge_packaging_job_name=edge_packaging_job_name,
-            session=session,
-            region=region,
+            edge_packaging_job_name=edge_packaging_job_name, session=session, region=region
         )
 
     @classmethod
@@ -2348,9 +2279,7 @@ class EdgePackagingJob(Base):
 
             # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
-                raise Exception(
-                    "Timeout exceeded. Final resource state - " + current_status
-                )
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
             print("-", end="")
             time.sleep(poll)
 
@@ -2466,9 +2395,7 @@ class Endpoint(Base):
     def update(
         self,
         retain_all_variant_properties: Optional[bool] = Unassigned(),
-        exclude_retained_variant_properties: Optional[
-            List[VariantProperty]
-        ] = Unassigned(),
+        exclude_retained_variant_properties: Optional[List[VariantProperty]] = Unassigned(),
         deployment_config: Optional[DeploymentConfig] = Unassigned(),
         retain_deployment_config: Optional[bool] = Unassigned(),
     ) -> Optional[object]:
@@ -2530,9 +2457,7 @@ class Endpoint(Base):
 
             # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
-                raise Exception(
-                    "Timeout exceeded. Final resource state - " + current_status
-                )
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
             print("-", end="")
             time.sleep(poll)
 
@@ -2677,10 +2602,7 @@ class EndpointConfig(Base):
                 },
                 "execution_role_arn": {"type": "string"},
                 "vpc_config": {
-                    "security_group_ids": {
-                        "type": "array",
-                        "items": {"type": "string"},
-                    },
+                    "security_group_ids": {"type": "array", "items": {"type": "string"}},
                     "subnets": {"type": "array", "items": {"type": "string"}},
                 },
             }
@@ -2739,9 +2661,7 @@ class EndpointConfig(Base):
         response = client.create_endpoint_config(**operation_input_args)
         logger.debug(f"Response: {response}")
 
-        return cls.get(
-            endpoint_config_name=endpoint_config_name, session=session, region=region
-        )
+        return cls.get(endpoint_config_name=endpoint_config_name, session=session, region=region)
 
     @classmethod
     def get(
@@ -2917,9 +2837,7 @@ class FeatureGroup(Base):
     def populate_inputs_decorator(create_func):
         def wrapper(*args, **kwargs):
             config_schema_for_resource = {
-                "online_store_config": {
-                    "security_config": {"kms_key_id": {"type": "string"}}
-                },
+                "online_store_config": {"security_config": {"kms_key_id": {"type": "string"}}},
                 "offline_store_config": {
                     "s3_storage_config": {
                         "s3_uri": {"type": "string"},
@@ -2982,9 +2900,7 @@ class FeatureGroup(Base):
         response = client.create_feature_group(**operation_input_args)
         logger.debug(f"Response: {response}")
 
-        return cls.get(
-            feature_group_name=feature_group_name, session=session, region=region
-        )
+        return cls.get(feature_group_name=feature_group_name, session=session, region=region)
 
     @classmethod
     def get(
@@ -3058,9 +2974,7 @@ class FeatureGroup(Base):
     @validate_call
     def wait_for_status(
         self,
-        status: Literal[
-            "Creating", "Created", "CreateFailed", "Deleting", "DeleteFailed"
-        ],
+        status: Literal["Creating", "Created", "CreateFailed", "Deleting", "DeleteFailed"],
         poll: int = 5,
         timeout: Optional[int] = None,
     ) -> Optional[object]:
@@ -3075,9 +2989,7 @@ class FeatureGroup(Base):
 
             # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
-                raise Exception(
-                    "Timeout exceeded. Final resource state - " + current_status
-                )
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
             print("-", end="")
             time.sleep(poll)
 
@@ -3120,9 +3032,7 @@ class FlowDefinition(Base):
         output_config: FlowDefinitionOutputConfig,
         role_arn: str,
         human_loop_request_source: Optional[HumanLoopRequestSource] = Unassigned(),
-        human_loop_activation_config: Optional[
-            HumanLoopActivationConfig
-        ] = Unassigned(),
+        human_loop_activation_config: Optional[HumanLoopActivationConfig] = Unassigned(),
         human_loop_config: Optional[HumanLoopConfig] = Unassigned(),
         tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
@@ -3152,9 +3062,7 @@ class FlowDefinition(Base):
         response = client.create_flow_definition(**operation_input_args)
         logger.debug(f"Response: {response}")
 
-        return cls.get(
-            flow_definition_name=flow_definition_name, session=session, region=region
-        )
+        return cls.get(flow_definition_name=flow_definition_name, session=session, region=region)
 
     @classmethod
     def get(
@@ -3215,9 +3123,7 @@ class FlowDefinition(Base):
 
             # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
-                raise Exception(
-                    "Timeout exceeded. Final resource state - " + current_status
-                )
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
             print("-", end="")
             time.sleep(poll)
 
@@ -3377,9 +3283,7 @@ class Hub(Base):
 
             # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
-                raise Exception(
-                    "Timeout exceeded. Final resource state - " + current_status
-                )
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
             print("-", end="")
             time.sleep(poll)
 
@@ -3458,9 +3362,7 @@ class HubContent(Base):
     @validate_call
     def wait_for_status(
         self,
-        status: Literal[
-            "Available", "Importing", "Deleting", "ImportFailed", "DeleteFailed"
-        ],
+        status: Literal["Available", "Importing", "Deleting", "ImportFailed", "DeleteFailed"],
         poll: int = 5,
         timeout: Optional[int] = None,
     ) -> Optional[object]:
@@ -3475,9 +3377,7 @@ class HubContent(Base):
 
             # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
-                raise Exception(
-                    "Timeout exceeded. Final resource state - " + current_status
-                )
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
             print("-", end="")
             time.sleep(poll)
 
@@ -3571,9 +3471,7 @@ class HumanTaskUi(Base):
         response = client.create_human_task_ui(**operation_input_args)
         logger.debug(f"Response: {response}")
 
-        return cls.get(
-            human_task_ui_name=human_task_ui_name, session=session, region=region
-        )
+        return cls.get(human_task_ui_name=human_task_ui_name, session=session, region=region)
 
     @classmethod
     def get(
@@ -3618,10 +3516,7 @@ class HumanTaskUi(Base):
 
     @validate_call
     def wait_for_status(
-        self,
-        status: Literal["Active", "Deleting"],
-        poll: int = 5,
-        timeout: Optional[int] = None,
+        self, status: Literal["Active", "Deleting"], poll: int = 5, timeout: Optional[int] = None
     ) -> Optional[object]:
         start_time = time.time()
 
@@ -3634,9 +3529,7 @@ class HumanTaskUi(Base):
 
             # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
-                raise Exception(
-                    "Timeout exceeded. Final resource state - " + current_status
-                )
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
             print("-", end="")
             time.sleep(poll)
 
@@ -3644,15 +3537,9 @@ class HumanTaskUi(Base):
 class HyperParameterTuningJob(Base):
     hyper_parameter_tuning_job_name: str
     hyper_parameter_tuning_job_arn: Optional[str] = Unassigned()
-    hyper_parameter_tuning_job_config: Optional[HyperParameterTuningJobConfig] = (
-        Unassigned()
-    )
-    training_job_definition: Optional[HyperParameterTrainingJobDefinition] = (
-        Unassigned()
-    )
-    training_job_definitions: Optional[List[HyperParameterTrainingJobDefinition]] = (
-        Unassigned()
-    )
+    hyper_parameter_tuning_job_config: Optional[HyperParameterTuningJobConfig] = Unassigned()
+    training_job_definition: Optional[HyperParameterTrainingJobDefinition] = Unassigned()
+    training_job_definitions: Optional[List[HyperParameterTrainingJobDefinition]] = Unassigned()
     hyper_parameter_tuning_job_status: Optional[str] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
     hyper_parameter_tuning_end_time: Optional[datetime.datetime] = Unassigned()
@@ -3664,12 +3551,8 @@ class HyperParameterTuningJob(Base):
     warm_start_config: Optional[HyperParameterTuningJobWarmStartConfig] = Unassigned()
     autotune: Optional[Autotune] = Unassigned()
     failure_reason: Optional[str] = Unassigned()
-    tuning_job_completion_details: Optional[
-        HyperParameterTuningJobCompletionDetails
-    ] = Unassigned()
-    consumed_resources: Optional[HyperParameterTuningJobConsumedResources] = (
-        Unassigned()
-    )
+    tuning_job_completion_details: Optional[HyperParameterTuningJobCompletionDetails] = Unassigned()
+    consumed_resources: Optional[HyperParameterTuningJobConsumedResources] = Unassigned()
 
     def populate_inputs_decorator(create_func):
         def wrapper(*args, **kwargs):
@@ -3681,10 +3564,7 @@ class HyperParameterTuningJob(Base):
                         "kms_key_id": {"type": "string"},
                     },
                     "vpc_config": {
-                        "security_group_ids": {
-                            "type": "array",
-                            "items": {"type": "string"},
-                        },
+                        "security_group_ids": {"type": "array", "items": {"type": "string"}},
                         "subnets": {"type": "array", "items": {"type": "string"}},
                     },
                     "resource_config": {"volume_kms_key_id": {"type": "string"}},
@@ -3709,15 +3589,11 @@ class HyperParameterTuningJob(Base):
         cls,
         hyper_parameter_tuning_job_name: str,
         hyper_parameter_tuning_job_config: HyperParameterTuningJobConfig,
-        training_job_definition: Optional[
-            HyperParameterTrainingJobDefinition
-        ] = Unassigned(),
+        training_job_definition: Optional[HyperParameterTrainingJobDefinition] = Unassigned(),
         training_job_definitions: Optional[
             List[HyperParameterTrainingJobDefinition]
         ] = Unassigned(),
-        warm_start_config: Optional[
-            HyperParameterTuningJobWarmStartConfig
-        ] = Unassigned(),
+        warm_start_config: Optional[HyperParameterTuningJobWarmStartConfig] = Unassigned(),
         tags: Optional[List[Tag]] = Unassigned(),
         autotune: Optional[Autotune] = Unassigned(),
         session: Optional[Session] = None,
@@ -3771,9 +3647,7 @@ class HyperParameterTuningJob(Base):
         pprint(response)
 
         # deserialize the response
-        transformed_response = transform(
-            response, "DescribeHyperParameterTuningJobResponse"
-        )
+        transformed_response = transform(response, "DescribeHyperParameterTuningJobResponse")
         hyper_parameter_tuning_job = cls(**transformed_response)
         return hyper_parameter_tuning_job
 
@@ -3817,9 +3691,7 @@ class HyperParameterTuningJob(Base):
 
             # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
-                raise Exception(
-                    "Timeout exceeded. Final resource state - " + current_status
-                )
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
             print("-", end="")
             time.sleep(poll)
 
@@ -3976,9 +3848,7 @@ class Image(Base):
 
             # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
-                raise Exception(
-                    "Timeout exceeded. Final resource state - " + current_status
-                )
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
             print("-", end="")
             time.sleep(poll)
 
@@ -4136,9 +4006,7 @@ class ImageVersion(Base):
     @validate_call
     def wait_for_status(
         self,
-        status: Literal[
-            "CREATING", "CREATED", "CREATE_FAILED", "DELETING", "DELETE_FAILED"
-        ],
+        status: Literal["CREATING", "CREATED", "CREATE_FAILED", "DELETING", "DELETE_FAILED"],
         poll: int = 5,
         timeout: Optional[int] = None,
     ) -> Optional[object]:
@@ -4153,9 +4021,7 @@ class ImageVersion(Base):
 
             # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
-                raise Exception(
-                    "Timeout exceeded. Final resource state - " + current_status
-                )
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
             print("-", end="")
             time.sleep(poll)
 
@@ -4209,9 +4075,7 @@ class InferenceComponent(Base):
         logger.debug(f"Response: {response}")
 
         return cls.get(
-            inference_component_name=inference_component_name,
-            session=session,
-            region=region,
+            inference_component_name=inference_component_name, session=session, region=region
         )
 
     @classmethod
@@ -4296,9 +4160,7 @@ class InferenceComponent(Base):
 
             # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
-                raise Exception(
-                    "Timeout exceeded. Final resource state - " + current_status
-                )
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
             print("-", end="")
             time.sleep(poll)
 
@@ -4349,9 +4211,7 @@ class InferenceExperiment(Base):
         shadow_mode_config: ShadowModeConfig,
         schedule: Optional[InferenceExperimentSchedule] = Unassigned(),
         description: Optional[str] = Unassigned(),
-        data_storage_config: Optional[
-            InferenceExperimentDataStorageConfig
-        ] = Unassigned(),
+        data_storage_config: Optional[InferenceExperimentDataStorageConfig] = Unassigned(),
         kms_key: Optional[str] = Unassigned(),
         tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
@@ -4405,9 +4265,7 @@ class InferenceExperiment(Base):
         pprint(response)
 
         # deserialize the response
-        transformed_response = transform(
-            response, "DescribeInferenceExperimentResponse"
-        )
+        transformed_response = transform(response, "DescribeInferenceExperimentResponse")
         inference_experiment = cls(**transformed_response)
         return inference_experiment
 
@@ -4494,9 +4352,7 @@ class InferenceExperiment(Base):
 
             # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
-                raise Exception(
-                    "Timeout exceeded. Final resource state - " + current_status
-                )
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
             print("-", end="")
             time.sleep(poll)
 
@@ -4524,10 +4380,7 @@ class InferenceRecommendationsJob(Base):
                 "input_config": {
                     "volume_kms_key_id": {"type": "string"},
                     "vpc_config": {
-                        "security_group_ids": {
-                            "type": "array",
-                            "items": {"type": "string"},
-                        },
+                        "security_group_ids": {"type": "array", "items": {"type": "string"}},
                         "subnets": {"type": "array", "items": {"type": "string"}},
                     },
                 },
@@ -4550,9 +4403,7 @@ class InferenceRecommendationsJob(Base):
         role_arn: str,
         input_config: RecommendationJobInputConfig,
         job_description: Optional[str] = Unassigned(),
-        stopping_conditions: Optional[
-            RecommendationJobStoppingConditions
-        ] = Unassigned(),
+        stopping_conditions: Optional[RecommendationJobStoppingConditions] = Unassigned(),
         output_config: Optional[RecommendationJobOutputConfig] = Unassigned(),
         tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
@@ -4603,9 +4454,7 @@ class InferenceRecommendationsJob(Base):
         pprint(response)
 
         # deserialize the response
-        transformed_response = transform(
-            response, "DescribeInferenceRecommendationsJobResponse"
-        )
+        transformed_response = transform(response, "DescribeInferenceRecommendationsJobResponse")
         inference_recommendations_job = cls(**transformed_response)
         return inference_recommendations_job
 
@@ -4642,9 +4491,7 @@ class InferenceRecommendationsJob(Base):
 
             # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
-                raise Exception(
-                    "Timeout exceeded. Final resource state - " + current_status
-                )
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
             print("-", end="")
             time.sleep(poll)
 
@@ -4673,27 +4520,20 @@ class LabelingJob(Base):
         def wrapper(*args, **kwargs):
             config_schema_for_resource = {
                 "input_config": {
-                    "data_source": {
-                        "s3_data_source": {"manifest_s3_uri": {"type": "string"}}
-                    }
+                    "data_source": {"s3_data_source": {"manifest_s3_uri": {"type": "string"}}}
                 },
                 "output_config": {
                     "s3_output_path": {"type": "string"},
                     "kms_key_id": {"type": "string"},
                 },
                 "role_arn": {"type": "string"},
-                "human_task_config": {
-                    "ui_config": {"ui_template_s3_uri": {"type": "string"}}
-                },
+                "human_task_config": {"ui_config": {"ui_template_s3_uri": {"type": "string"}}},
                 "label_category_config_s3_uri": {"type": "string"},
                 "labeling_job_algorithms_config": {
                     "labeling_job_resource_config": {
                         "volume_kms_key_id": {"type": "string"},
                         "vpc_config": {
-                            "security_group_ids": {
-                                "type": "array",
-                                "items": {"type": "string"},
-                            },
+                            "security_group_ids": {"type": "array", "items": {"type": "string"}},
                             "subnets": {"type": "array", "items": {"type": "string"}},
                         },
                     }
@@ -4721,9 +4561,7 @@ class LabelingJob(Base):
         human_task_config: HumanTaskConfig,
         label_category_config_s3_uri: Optional[str] = Unassigned(),
         stopping_conditions: Optional[LabelingJobStoppingConditions] = Unassigned(),
-        labeling_job_algorithms_config: Optional[
-            LabelingJobAlgorithmsConfig
-        ] = Unassigned(),
+        labeling_job_algorithms_config: Optional[LabelingJobAlgorithmsConfig] = Unassigned(),
         tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
@@ -4755,9 +4593,7 @@ class LabelingJob(Base):
         response = client.create_labeling_job(**operation_input_args)
         logger.debug(f"Response: {response}")
 
-        return cls.get(
-            labeling_job_name=labeling_job_name, session=session, region=region
-        )
+        return cls.get(labeling_job_name=labeling_job_name, session=session, region=region)
 
     @classmethod
     def get(
@@ -4814,9 +4650,7 @@ class LabelingJob(Base):
 
             # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
-                raise Exception(
-                    "Timeout exceeded. Final resource state - " + current_status
-                )
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
             print("-", end="")
             time.sleep(poll)
 
@@ -4846,10 +4680,7 @@ class Model(Base):
                 },
                 "execution_role_arn": {"type": "string"},
                 "vpc_config": {
-                    "security_group_ids": {
-                        "type": "array",
-                        "items": {"type": "string"},
-                    },
+                    "security_group_ids": {"type": "array", "items": {"type": "string"}},
                     "subnets": {"type": "array", "items": {"type": "string"}},
                 },
             }
@@ -4975,19 +4806,14 @@ class ModelBiasJobDefinition(Base):
                     },
                 },
                 "model_bias_job_output_config": {"kms_key_id": {"type": "string"}},
-                "job_resources": {
-                    "cluster_config": {"volume_kms_key_id": {"type": "string"}}
-                },
+                "job_resources": {"cluster_config": {"volume_kms_key_id": {"type": "string"}}},
                 "role_arn": {"type": "string"},
                 "model_bias_baseline_config": {
                     "constraints_resource": {"s3_uri": {"type": "string"}}
                 },
                 "network_config": {
                     "vpc_config": {
-                        "security_group_ids": {
-                            "type": "array",
-                            "items": {"type": "string"},
-                        },
+                        "security_group_ids": {"type": "array", "items": {"type": "string"}},
                         "subnets": {"type": "array", "items": {"type": "string"}},
                     }
                 },
@@ -5045,9 +4871,7 @@ class ModelBiasJobDefinition(Base):
         response = client.create_model_bias_job_definition(**operation_input_args)
         logger.debug(f"Response: {response}")
 
-        return cls.get(
-            job_definition_name=job_definition_name, session=session, region=region
-        )
+        return cls.get(job_definition_name=job_definition_name, session=session, region=region)
 
     @classmethod
     def get(
@@ -5067,9 +4891,7 @@ class ModelBiasJobDefinition(Base):
         pprint(response)
 
         # deserialize the response
-        transformed_response = transform(
-            response, "DescribeModelBiasJobDefinitionResponse"
-        )
+        transformed_response = transform(response, "DescribeModelBiasJobDefinitionResponse")
         model_bias_job_definition = cls(**transformed_response)
         return model_bias_job_definition
 
@@ -5108,9 +4930,7 @@ class ModelCard(Base):
 
     def populate_inputs_decorator(create_func):
         def wrapper(*args, **kwargs):
-            config_schema_for_resource = {
-                "security_config": {"kms_key_id": {"type": "string"}}
-            }
+            config_schema_for_resource = {"security_config": {"kms_key_id": {"type": "string"}}}
             return create_func(
                 *args,
                 **Base.get_updated_kwargs_with_configured_attributes(
@@ -5241,9 +5061,7 @@ class ModelCard(Base):
 
             # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
-                raise Exception(
-                    "Timeout exceeded. Final resource state - " + current_status
-                )
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
             print("-", end="")
             time.sleep(poll)
 
@@ -5361,9 +5179,7 @@ class ModelCardExportJob(Base):
 
             # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
-                raise Exception(
-                    "Timeout exceeded. Final resource state - " + current_status
-                )
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
             print("-", end="")
             time.sleep(poll)
 
@@ -5372,16 +5188,12 @@ class ModelExplainabilityJobDefinition(Base):
     job_definition_name: str
     job_definition_arn: Optional[str] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
-    model_explainability_baseline_config: Optional[
-        ModelExplainabilityBaselineConfig
-    ] = Unassigned()
-    model_explainability_app_specification: Optional[
-        ModelExplainabilityAppSpecification
-    ] = Unassigned()
-    model_explainability_job_input: Optional[ModelExplainabilityJobInput] = Unassigned()
-    model_explainability_job_output_config: Optional[MonitoringOutputConfig] = (
+    model_explainability_baseline_config: Optional[ModelExplainabilityBaselineConfig] = Unassigned()
+    model_explainability_app_specification: Optional[ModelExplainabilityAppSpecification] = (
         Unassigned()
     )
+    model_explainability_job_input: Optional[ModelExplainabilityJobInput] = Unassigned()
+    model_explainability_job_output_config: Optional[MonitoringOutputConfig] = Unassigned()
     job_resources: Optional[MonitoringResources] = Unassigned()
     network_config: Optional[MonitoringNetworkConfig] = Unassigned()
     role_arn: Optional[str] = Unassigned()
@@ -5401,22 +5213,15 @@ class ModelExplainabilityJobDefinition(Base):
                         "s3_data_distribution_type": {"type": "string"},
                     },
                 },
-                "model_explainability_job_output_config": {
-                    "kms_key_id": {"type": "string"}
-                },
-                "job_resources": {
-                    "cluster_config": {"volume_kms_key_id": {"type": "string"}}
-                },
+                "model_explainability_job_output_config": {"kms_key_id": {"type": "string"}},
+                "job_resources": {"cluster_config": {"volume_kms_key_id": {"type": "string"}}},
                 "role_arn": {"type": "string"},
                 "model_explainability_baseline_config": {
                     "constraints_resource": {"s3_uri": {"type": "string"}}
                 },
                 "network_config": {
                     "vpc_config": {
-                        "security_group_ids": {
-                            "type": "array",
-                            "items": {"type": "string"},
-                        },
+                        "security_group_ids": {"type": "array", "items": {"type": "string"}},
                         "subnets": {"type": "array", "items": {"type": "string"}},
                     }
                 },
@@ -5424,9 +5229,7 @@ class ModelExplainabilityJobDefinition(Base):
             return create_func(
                 *args,
                 **Base.get_updated_kwargs_with_configured_attributes(
-                    config_schema_for_resource,
-                    "ModelExplainabilityJobDefinition",
-                    **kwargs,
+                    config_schema_for_resource, "ModelExplainabilityJobDefinition", **kwargs
                 ),
             )
 
@@ -5475,14 +5278,10 @@ class ModelExplainabilityJobDefinition(Base):
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
-        response = client.create_model_explainability_job_definition(
-            **operation_input_args
-        )
+        response = client.create_model_explainability_job_definition(**operation_input_args)
         logger.debug(f"Response: {response}")
 
-        return cls.get(
-            job_definition_name=job_definition_name, session=session, region=region
-        )
+        return cls.get(job_definition_name=job_definition_name, session=session, region=region)
 
     @classmethod
     def get(
@@ -5497,9 +5296,7 @@ class ModelExplainabilityJobDefinition(Base):
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
-        response = client.describe_model_explainability_job_definition(
-            **operation_input_args
-        )
+        response = client.describe_model_explainability_job_definition(**operation_input_args)
 
         pprint(response)
 
@@ -5516,9 +5313,7 @@ class ModelExplainabilityJobDefinition(Base):
             "JobDefinitionName": self.job_definition_name,
         }
         client = SageMakerClient().client
-        response = client.describe_model_explainability_job_definition(
-            **operation_input_args
-        )
+        response = client.describe_model_explainability_job_definition(**operation_input_args)
 
         # deserialize response and update self
         transform(response, "DescribeModelExplainabilityJobDefinitionResponse", self)
@@ -5540,12 +5335,8 @@ class ModelPackage(Base):
     model_package_description: Optional[str] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
     inference_specification: Optional[InferenceSpecification] = Unassigned()
-    source_algorithm_specification: Optional[SourceAlgorithmSpecification] = (
-        Unassigned()
-    )
-    validation_specification: Optional[ModelPackageValidationSpecification] = (
-        Unassigned()
-    )
+    source_algorithm_specification: Optional[SourceAlgorithmSpecification] = Unassigned()
+    validation_specification: Optional[ModelPackageValidationSpecification] = Unassigned()
     model_package_status: Optional[str] = Unassigned()
     model_package_status_details: Optional[ModelPackageStatusDetails] = Unassigned()
     certify_for_marketplace: Optional[bool] = Unassigned()
@@ -5624,12 +5415,8 @@ class ModelPackage(Base):
         model_package_group_name: Optional[str] = Unassigned(),
         model_package_description: Optional[str] = Unassigned(),
         inference_specification: Optional[InferenceSpecification] = Unassigned(),
-        validation_specification: Optional[
-            ModelPackageValidationSpecification
-        ] = Unassigned(),
-        source_algorithm_specification: Optional[
-            SourceAlgorithmSpecification
-        ] = Unassigned(),
+        validation_specification: Optional[ModelPackageValidationSpecification] = Unassigned(),
+        source_algorithm_specification: Optional[SourceAlgorithmSpecification] = Unassigned(),
         certify_for_marketplace: Optional[bool] = Unassigned(),
         tags: Optional[List[Tag]] = Unassigned(),
         model_approval_status: Optional[str] = Unassigned(),
@@ -5687,9 +5474,7 @@ class ModelPackage(Base):
         logger.debug(f"Response: {response}")
 
         return cls.get(
-            model_package_name=response["ModelPackageName"],
-            session=session,
-            region=region,
+            model_package_name=response["ModelPackageName"], session=session, region=region
         )
 
     @classmethod
@@ -5783,9 +5568,7 @@ class ModelPackage(Base):
 
             # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
-                raise Exception(
-                    "Timeout exceeded. Final resource state - " + current_status
-                )
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
             print("-", end="")
             time.sleep(poll)
 
@@ -5828,9 +5611,7 @@ class ModelPackageGroup(Base):
         logger.debug(f"Response: {response}")
 
         return cls.get(
-            model_package_group_name=model_package_group_name,
-            session=session,
-            region=region,
+            model_package_group_name=model_package_group_name, session=session, region=region
         )
 
     @classmethod
@@ -5877,9 +5658,7 @@ class ModelPackageGroup(Base):
     @validate_call
     def wait_for_status(
         self,
-        status: Literal[
-            "Pending", "InProgress", "Completed", "Failed", "Deleting", "DeleteFailed"
-        ],
+        status: Literal["Pending", "InProgress", "Completed", "Failed", "Deleting", "DeleteFailed"],
         poll: int = 5,
         timeout: Optional[int] = None,
     ) -> Optional[object]:
@@ -5894,9 +5673,7 @@ class ModelPackageGroup(Base):
 
             # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
-                raise Exception(
-                    "Timeout exceeded. Final resource state - " + current_status
-                )
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
             print("-", end="")
             time.sleep(poll)
 
@@ -5906,9 +5683,7 @@ class ModelQualityJobDefinition(Base):
     job_definition_arn: Optional[str] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
     model_quality_baseline_config: Optional[ModelQualityBaselineConfig] = Unassigned()
-    model_quality_app_specification: Optional[ModelQualityAppSpecification] = (
-        Unassigned()
-    )
+    model_quality_app_specification: Optional[ModelQualityAppSpecification] = Unassigned()
     model_quality_job_input: Optional[ModelQualityJobInput] = Unassigned()
     model_quality_job_output_config: Optional[MonitoringOutputConfig] = Unassigned()
     job_resources: Optional[MonitoringResources] = Unassigned()
@@ -5932,19 +5707,14 @@ class ModelQualityJobDefinition(Base):
                     },
                 },
                 "model_quality_job_output_config": {"kms_key_id": {"type": "string"}},
-                "job_resources": {
-                    "cluster_config": {"volume_kms_key_id": {"type": "string"}}
-                },
+                "job_resources": {"cluster_config": {"volume_kms_key_id": {"type": "string"}}},
                 "role_arn": {"type": "string"},
                 "model_quality_baseline_config": {
                     "constraints_resource": {"s3_uri": {"type": "string"}}
                 },
                 "network_config": {
                     "vpc_config": {
-                        "security_group_ids": {
-                            "type": "array",
-                            "items": {"type": "string"},
-                        },
+                        "security_group_ids": {"type": "array", "items": {"type": "string"}},
                         "subnets": {"type": "array", "items": {"type": "string"}},
                     }
                 },
@@ -5968,9 +5738,7 @@ class ModelQualityJobDefinition(Base):
         model_quality_job_output_config: MonitoringOutputConfig,
         job_resources: MonitoringResources,
         role_arn: str,
-        model_quality_baseline_config: Optional[
-            ModelQualityBaselineConfig
-        ] = Unassigned(),
+        model_quality_baseline_config: Optional[ModelQualityBaselineConfig] = Unassigned(),
         network_config: Optional[MonitoringNetworkConfig] = Unassigned(),
         stopping_condition: Optional[MonitoringStoppingCondition] = Unassigned(),
         tags: Optional[List[Tag]] = Unassigned(),
@@ -6004,9 +5772,7 @@ class ModelQualityJobDefinition(Base):
         response = client.create_model_quality_job_definition(**operation_input_args)
         logger.debug(f"Response: {response}")
 
-        return cls.get(
-            job_definition_name=job_definition_name, session=session, region=region
-        )
+        return cls.get(job_definition_name=job_definition_name, session=session, region=region)
 
     @classmethod
     def get(
@@ -6026,9 +5792,7 @@ class ModelQualityJobDefinition(Base):
         pprint(response)
 
         # deserialize the response
-        transformed_response = transform(
-            response, "DescribeModelQualityJobDefinitionResponse"
-        )
+        transformed_response = transform(response, "DescribeModelQualityJobDefinitionResponse")
         model_quality_job_definition = cls(**transformed_response)
         return model_quality_job_definition
 
@@ -6062,9 +5826,7 @@ class MonitoringSchedule(Base):
     last_modified_time: Optional[datetime.datetime] = Unassigned()
     monitoring_schedule_config: Optional[MonitoringScheduleConfig] = Unassigned()
     endpoint_name: Optional[str] = Unassigned()
-    last_monitoring_execution_summary: Optional[MonitoringExecutionSummary] = (
-        Unassigned()
-    )
+    last_monitoring_execution_summary: Optional[MonitoringExecutionSummary] = Unassigned()
 
     def populate_inputs_decorator(create_func):
         def wrapper(*args, **kwargs):
@@ -6086,10 +5848,7 @@ class MonitoringSchedule(Base):
                                     "type": "array",
                                     "items": {"type": "string"},
                                 },
-                                "subnets": {
-                                    "type": "array",
-                                    "items": {"type": "string"},
-                                },
+                                "subnets": {"type": "array", "items": {"type": "string"}},
                             }
                         },
                     }
@@ -6135,9 +5894,7 @@ class MonitoringSchedule(Base):
         logger.debug(f"Response: {response}")
 
         return cls.get(
-            monitoring_schedule_name=monitoring_schedule_name,
-            session=session,
-            region=region,
+            monitoring_schedule_name=monitoring_schedule_name, session=session, region=region
         )
 
     @classmethod
@@ -6228,9 +5985,7 @@ class MonitoringSchedule(Base):
 
             # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
-                raise Exception(
-                    "Timeout exceeded. Final resource state - " + current_status
-                )
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
             print("-", end="")
             time.sleep(poll)
 
@@ -6257,9 +6012,9 @@ class NotebookInstance(Base):
     additional_code_repositories: Optional[List[str]] = Unassigned()
     root_access: Optional[str] = Unassigned()
     platform_identifier: Optional[str] = Unassigned()
-    instance_metadata_service_configuration: Optional[
-        InstanceMetadataServiceConfiguration
-    ] = Unassigned()
+    instance_metadata_service_configuration: Optional[InstanceMetadataServiceConfiguration] = (
+        Unassigned()
+    )
 
     def populate_inputs_decorator(create_func):
         def wrapper(*args, **kwargs):
@@ -6337,9 +6092,7 @@ class NotebookInstance(Base):
         logger.debug(f"Response: {response}")
 
         return cls.get(
-            notebook_instance_name=notebook_instance_name,
-            session=session,
-            region=region,
+            notebook_instance_name=notebook_instance_name, session=session, region=region
         )
 
     @classmethod
@@ -6433,13 +6186,7 @@ class NotebookInstance(Base):
     def wait_for_status(
         self,
         status: Literal[
-            "Pending",
-            "InService",
-            "Stopping",
-            "Stopped",
-            "Failed",
-            "Deleting",
-            "Updating",
+            "Pending", "InService", "Stopping", "Stopped", "Failed", "Deleting", "Updating"
         ],
         poll: int = 5,
         timeout: Optional[int] = None,
@@ -6455,9 +6202,7 @@ class NotebookInstance(Base):
 
             # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
-                raise Exception(
-                    "Timeout exceeded. Final resource state - " + current_status
-                )
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
             print("-", end="")
             time.sleep(poll)
 
@@ -6496,9 +6241,7 @@ class NotebookInstanceLifecycleConfig(Base):
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
-        response = client.create_notebook_instance_lifecycle_config(
-            **operation_input_args
-        )
+        response = client.create_notebook_instance_lifecycle_config(**operation_input_args)
         logger.debug(f"Response: {response}")
 
         return cls.get(
@@ -6520,16 +6263,12 @@ class NotebookInstanceLifecycleConfig(Base):
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
-        response = client.describe_notebook_instance_lifecycle_config(
-            **operation_input_args
-        )
+        response = client.describe_notebook_instance_lifecycle_config(**operation_input_args)
 
         pprint(response)
 
         # deserialize the response
-        transformed_response = transform(
-            response, "DescribeNotebookInstanceLifecycleConfigOutput"
-        )
+        transformed_response = transform(response, "DescribeNotebookInstanceLifecycleConfigOutput")
         notebook_instance_lifecycle_config = cls(**transformed_response)
         return notebook_instance_lifecycle_config
 
@@ -6539,9 +6278,7 @@ class NotebookInstanceLifecycleConfig(Base):
             "NotebookInstanceLifecycleConfigName": self.notebook_instance_lifecycle_config_name,
         }
         client = SageMakerClient().client
-        response = client.describe_notebook_instance_lifecycle_config(
-            **operation_input_args
-        )
+        response = client.describe_notebook_instance_lifecycle_config(**operation_input_args)
 
         # deserialize response and update self
         transform(response, "DescribeNotebookInstanceLifecycleConfigOutput", self)
@@ -6560,15 +6297,11 @@ class NotebookInstanceLifecycleConfig(Base):
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = NotebookInstanceLifecycleConfig._serialize(
-            operation_input_args
-        )
+        operation_input_args = NotebookInstanceLifecycleConfig._serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
-        response = client.update_notebook_instance_lifecycle_config(
-            **operation_input_args
-        )
+        response = client.update_notebook_instance_lifecycle_config(**operation_input_args)
         logger.debug(f"Response: {response}")
         self.refresh()
 
@@ -6618,9 +6351,7 @@ class Pipeline(Base):
         role_arn: str,
         pipeline_display_name: Optional[str] = Unassigned(),
         pipeline_definition: Optional[str] = Unassigned(),
-        pipeline_definition_s3_location: Optional[
-            PipelineDefinitionS3Location
-        ] = Unassigned(),
+        pipeline_definition_s3_location: Optional[PipelineDefinitionS3Location] = Unassigned(),
         pipeline_description: Optional[str] = Unassigned(),
         tags: Optional[List[Tag]] = Unassigned(),
         parallelism_configuration: Optional[ParallelismConfiguration] = Unassigned(),
@@ -6691,9 +6422,7 @@ class Pipeline(Base):
 
     def update(
         self,
-        pipeline_definition_s3_location: Optional[
-            PipelineDefinitionS3Location
-        ] = Unassigned(),
+        pipeline_definition_s3_location: Optional[PipelineDefinitionS3Location] = Unassigned(),
     ) -> Optional[object]:
         logger.debug("Creating pipeline resource.")
         client = SageMakerClient().client
@@ -6729,10 +6458,7 @@ class Pipeline(Base):
 
     @validate_call
     def wait_for_status(
-        self,
-        status: Literal["Active", "Deleting"],
-        poll: int = 5,
-        timeout: Optional[int] = None,
+        self, status: Literal["Active", "Deleting"], poll: int = 5, timeout: Optional[int] = None
     ) -> Optional[object]:
         start_time = time.time()
 
@@ -6745,9 +6471,7 @@ class Pipeline(Base):
 
             # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
-                raise Exception(
-                    "Timeout exceeded. Final resource state - " + current_status
-                )
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
             print("-", end="")
             time.sleep(poll)
 
@@ -6851,9 +6575,7 @@ class PipelineExecution(Base):
 
             # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
-                raise Exception(
-                    "Timeout exceeded. Final resource state - " + current_status
-                )
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
             print("-", end="")
             time.sleep(poll)
 
@@ -6890,10 +6612,7 @@ class ProcessingJob(Base):
                 "processing_output_config": {"kms_key_id": {"type": "string"}},
                 "network_config": {
                     "vpc_config": {
-                        "security_group_ids": {
-                            "type": "array",
-                            "items": {"type": "string"},
-                        },
+                        "security_group_ids": {"type": "array", "items": {"type": "string"}},
                         "subnets": {"type": "array", "items": {"type": "string"}},
                     }
                 },
@@ -6954,9 +6673,7 @@ class ProcessingJob(Base):
         response = client.create_processing_job(**operation_input_args)
         logger.debug(f"Response: {response}")
 
-        return cls.get(
-            processing_job_name=processing_job_name, session=session, region=region
-        )
+        return cls.get(processing_job_name=processing_job_name, session=session, region=region)
 
     @classmethod
     def get(
@@ -7013,9 +6730,7 @@ class ProcessingJob(Base):
 
             # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
-                raise Exception(
-                    "Timeout exceeded. Final resource state - " + current_status
-                )
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
             print("-", end="")
             time.sleep(poll)
 
@@ -7025,9 +6740,7 @@ class Project(Base):
     project_arn: Optional[str] = Unassigned()
     project_id: Optional[str] = Unassigned()
     project_description: Optional[str] = Unassigned()
-    service_catalog_provisioning_details: Optional[
-        ServiceCatalogProvisioningDetails
-    ] = Unassigned()
+    service_catalog_provisioning_details: Optional[ServiceCatalogProvisioningDetails] = Unassigned()
     service_catalog_provisioned_product_details: Optional[
         ServiceCatalogProvisionedProductDetails
     ] = Unassigned()
@@ -7168,9 +6881,7 @@ class Project(Base):
 
             # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
-                raise Exception(
-                    "Timeout exceeded. Final resource state - " + current_status
-                )
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
             print("-", end="")
             time.sleep(poll)
 
@@ -7227,9 +6938,7 @@ class Space(Base):
         response = client.create_space(**operation_input_args)
         logger.debug(f"Response: {response}")
 
-        return cls.get(
-            domain_id=domain_id, space_name=space_name, session=session, region=region
-        )
+        return cls.get(domain_id=domain_id, space_name=space_name, session=session, region=region)
 
     @classmethod
     def get(
@@ -7326,9 +7035,7 @@ class Space(Base):
 
             # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
-                raise Exception(
-                    "Timeout exceeded. Final resource state - " + current_status
-                )
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
             print("-", end="")
             time.sleep(poll)
 
@@ -7396,9 +7103,7 @@ class StudioLifecycleConfig(Base):
         pprint(response)
 
         # deserialize the response
-        transformed_response = transform(
-            response, "DescribeStudioLifecycleConfigResponse"
-        )
+        transformed_response = transform(response, "DescribeStudioLifecycleConfigResponse")
         studio_lifecycle_config = cls(**transformed_response)
         return studio_lifecycle_config
 
@@ -7445,9 +7150,7 @@ class TrainingJob(Base):
     training_start_time: Optional[datetime.datetime] = Unassigned()
     training_end_time: Optional[datetime.datetime] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
-    secondary_status_transitions: Optional[List[SecondaryStatusTransition]] = (
-        Unassigned()
-    )
+    secondary_status_transitions: Optional[List[SecondaryStatusTransition]] = Unassigned()
     final_metric_data_list: Optional[List[MetricData]] = Unassigned()
     enable_network_isolation: Optional[bool] = Unassigned()
     enable_inter_container_traffic_encryption: Optional[bool] = Unassigned()
@@ -7459,16 +7162,10 @@ class TrainingJob(Base):
     experiment_config: Optional[ExperimentConfig] = Unassigned()
     debug_rule_configurations: Optional[List[DebugRuleConfiguration]] = Unassigned()
     tensor_board_output_config: Optional[TensorBoardOutputConfig] = Unassigned()
-    debug_rule_evaluation_statuses: Optional[List[DebugRuleEvaluationStatus]] = (
-        Unassigned()
-    )
+    debug_rule_evaluation_statuses: Optional[List[DebugRuleEvaluationStatus]] = Unassigned()
     profiler_config: Optional[ProfilerConfig] = Unassigned()
-    profiler_rule_configurations: Optional[List[ProfilerRuleConfiguration]] = (
-        Unassigned()
-    )
-    profiler_rule_evaluation_statuses: Optional[List[ProfilerRuleEvaluationStatus]] = (
-        Unassigned()
-    )
+    profiler_rule_configurations: Optional[List[ProfilerRuleConfiguration]] = Unassigned()
+    profiler_rule_evaluation_statuses: Optional[List[ProfilerRuleEvaluationStatus]] = Unassigned()
     profiling_status: Optional[str] = Unassigned()
     environment: Optional[Dict[str, str]] = Unassigned()
     retry_strategy: Optional[RetryStrategy] = Unassigned()
@@ -7486,10 +7183,7 @@ class TrainingJob(Base):
                     "kms_key_id": {"type": "string"},
                 },
                 "vpc_config": {
-                    "security_group_ids": {
-                        "type": "array",
-                        "items": {"type": "string"},
-                    },
+                    "security_group_ids": {"type": "array", "items": {"type": "string"}},
                     "subnets": {"type": "array", "items": {"type": "string"}},
                 },
                 "checkpoint_config": {"s3_uri": {"type": "string"}},
@@ -7525,15 +7219,11 @@ class TrainingJob(Base):
         enable_managed_spot_training: Optional[bool] = Unassigned(),
         checkpoint_config: Optional[CheckpointConfig] = Unassigned(),
         debug_hook_config: Optional[DebugHookConfig] = Unassigned(),
-        debug_rule_configurations: Optional[
-            List[DebugRuleConfiguration]
-        ] = Unassigned(),
+        debug_rule_configurations: Optional[List[DebugRuleConfiguration]] = Unassigned(),
         tensor_board_output_config: Optional[TensorBoardOutputConfig] = Unassigned(),
         experiment_config: Optional[ExperimentConfig] = Unassigned(),
         profiler_config: Optional[ProfilerConfig] = Unassigned(),
-        profiler_rule_configurations: Optional[
-            List[ProfilerRuleConfiguration]
-        ] = Unassigned(),
+        profiler_rule_configurations: Optional[List[ProfilerRuleConfiguration]] = Unassigned(),
         environment: Optional[Dict[str, str]] = Unassigned(),
         retry_strategy: Optional[RetryStrategy] = Unassigned(),
         remote_debug_config: Optional[RemoteDebugConfig] = Unassigned(),
@@ -7582,9 +7272,7 @@ class TrainingJob(Base):
         response = client.create_training_job(**operation_input_args)
         logger.debug(f"Response: {response}")
 
-        return cls.get(
-            training_job_name=training_job_name, session=session, region=region
-        )
+        return cls.get(training_job_name=training_job_name, session=session, region=region)
 
     @classmethod
     def get(
@@ -7666,9 +7354,7 @@ class TrainingJob(Base):
 
             # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
-                raise Exception(
-                    "Timeout exceeded. Final resource state - " + current_status
-                )
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
             print("-", end="")
             time.sleep(poll)
 
@@ -7778,9 +7464,7 @@ class TransformJob(Base):
         response = client.create_transform_job(**operation_input_args)
         logger.debug(f"Response: {response}")
 
-        return cls.get(
-            transform_job_name=transform_job_name, session=session, region=region
-        )
+        return cls.get(transform_job_name=transform_job_name, session=session, region=region)
 
     @classmethod
     def get(
@@ -7837,9 +7521,7 @@ class TransformJob(Base):
 
             # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
-                raise Exception(
-                    "Timeout exceeded. Final resource state - " + current_status
-                )
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
             print("-", end="")
             time.sleep(poll)
 
@@ -8018,9 +7700,7 @@ class TrialComponent(Base):
         response = client.create_trial_component(**operation_input_args)
         logger.debug(f"Response: {response}")
 
-        return cls.get(
-            trial_component_name=trial_component_name, session=session, region=region
-        )
+        return cls.get(trial_component_name=trial_component_name, session=session, region=region)
 
     @classmethod
     def get(
@@ -8115,9 +7795,7 @@ class TrialComponent(Base):
 
             # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
-                raise Exception(
-                    "Timeout exceeded. Final resource state - " + current_status
-                )
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
             print("-", end="")
             time.sleep(poll)
 
@@ -8156,9 +7834,7 @@ class UserProfile(Base):
                             "s3_artifact_path": {"type": "string"},
                             "s3_kms_key_id": {"type": "string"},
                         },
-                        "generative_ai_settings": {
-                            "amazon_bedrock_role_arn": {"type": "string"}
-                        },
+                        "generative_ai_settings": {"amazon_bedrock_role_arn": {"type": "string"}},
                     },
                 }
             }
@@ -8208,10 +7884,7 @@ class UserProfile(Base):
         logger.debug(f"Response: {response}")
 
         return cls.get(
-            domain_id=domain_id,
-            user_profile_name=user_profile_name,
-            session=session,
-            region=region,
+            domain_id=domain_id, user_profile_name=user_profile_name, session=session, region=region
         )
 
     @classmethod
@@ -8308,9 +7981,7 @@ class UserProfile(Base):
 
             # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
-                raise Exception(
-                    "Timeout exceeded. Final resource state - " + current_status
-                )
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
             print("-", end="")
             time.sleep(poll)
 
@@ -8323,10 +7994,7 @@ class Workforce(Base):
             config_schema_for_resource = {
                 "workforce": {
                     "workforce_vpc_config": {
-                        "security_group_ids": {
-                            "type": "array",
-                            "items": {"type": "string"},
-                        },
+                        "security_group_ids": {"type": "array", "items": {"type": "string"}},
                         "subnets": {"type": "array", "items": {"type": "string"}},
                     }
                 }
@@ -8465,9 +8133,7 @@ class Workforce(Base):
 
             # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
-                raise Exception(
-                    "Timeout exceeded. Final resource state - " + current_status
-                )
+                raise Exception("Timeout exceeded. Final resource state - " + current_status)
             print("-", end="")
             time.sleep(poll)
 

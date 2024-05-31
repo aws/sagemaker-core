@@ -39,9 +39,7 @@ class Base(BaseModel):
         return [v.serialize() if hasattr(v, "serialize") else v for v in value]
 
     def _serialize_dict(self, value: Dict):
-        return {
-            k: v.serialize() if hasattr(v, "serialize") else v for k, v in value.items()
-        }
+        return {k: v.serialize() if hasattr(v, "serialize") else v for k, v in value.items()}
 
 
 class Unassigned:
@@ -315,9 +313,7 @@ class TrainingImageConfig(Base):
     """
 
     training_repository_access_mode: str
-    training_repository_auth_config: Optional[TrainingRepositoryAuthConfig] = (
-        Unassigned()
-    )
+    training_repository_auth_config: Optional[TrainingRepositoryAuthConfig] = Unassigned()
 
 
 class AlgorithmSpecification(Base):
@@ -1263,16 +1259,14 @@ class AutoMLCandidate(Base):
     candidate_status: str
     creation_time: datetime.datetime
     last_modified_time: datetime.datetime
-    final_auto_m_l_job_objective_metric: Optional[FinalAutoMLJobObjectiveMetric] = (
-        Unassigned()
-    )
+    final_auto_m_l_job_objective_metric: Optional[FinalAutoMLJobObjectiveMetric] = Unassigned()
     inference_containers: Optional[List[AutoMLContainerDefinition]] = Unassigned()
     end_time: Optional[datetime.datetime] = Unassigned()
     failure_reason: Optional[str] = Unassigned()
     candidate_properties: Optional[CandidateProperties] = Unassigned()
-    inference_container_definitions: Optional[
-        Dict[str, List[AutoMLContainerDefinition]]
-    ] = Unassigned()
+    inference_container_definitions: Optional[Dict[str, List[AutoMLContainerDefinition]]] = (
+        Unassigned()
+    )
 
 
 class AutoMLCandidateGenerationConfig(Base):
@@ -1453,9 +1447,7 @@ class AutoMLJobConfig(Base):
 
     completion_criteria: Optional[AutoMLJobCompletionCriteria] = Unassigned()
     security_config: Optional[AutoMLSecurityConfig] = Unassigned()
-    candidate_generation_config: Optional[AutoMLCandidateGenerationConfig] = (
-        Unassigned()
-    )
+    candidate_generation_config: Optional[AutoMLCandidateGenerationConfig] = Unassigned()
     data_split_config: Optional[AutoMLDataSplitConfig] = Unassigned()
     mode: Optional[str] = Unassigned()
 
@@ -1720,13 +1712,9 @@ class AutoMLProblemTypeConfig(Base):
        text_generation_job_config: 	 <p>Settings used to configure an AutoML job V2 for the text generation (LLMs fine-tuning) problem type.</p> <note> <p>The text generation models that support fine-tuning in Autopilot are currently accessible exclusively in regions supported by Canvas. Refer to the documentation of Canvas for the <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/canvas.html">full list of its supported Regions</a>.</p> </note>
     """
 
-    image_classification_job_config: Optional[ImageClassificationJobConfig] = (
-        Unassigned()
-    )
+    image_classification_job_config: Optional[ImageClassificationJobConfig] = Unassigned()
     text_classification_job_config: Optional[TextClassificationJobConfig] = Unassigned()
-    time_series_forecasting_job_config: Optional[TimeSeriesForecastingJobConfig] = (
-        Unassigned()
-    )
+    time_series_forecasting_job_config: Optional[TimeSeriesForecastingJobConfig] = Unassigned()
     tabular_job_config: Optional[TabularJobConfig] = Unassigned()
     text_generation_job_config: Optional[TextGenerationJobConfig] = Unassigned()
 
@@ -1769,9 +1757,7 @@ class AutoMLProblemTypeResolvedAttributes(Base):
     """
 
     tabular_resolved_attributes: Optional[TabularResolvedAttributes] = Unassigned()
-    text_generation_resolved_attributes: Optional[TextGenerationResolvedAttributes] = (
-        Unassigned()
-    )
+    text_generation_resolved_attributes: Optional[TextGenerationResolvedAttributes] = Unassigned()
 
 
 class AutoMLResolvedAttributes(Base):
@@ -1788,9 +1774,9 @@ class AutoMLResolvedAttributes(Base):
 
     auto_m_l_job_objective: Optional[AutoMLJobObjective] = Unassigned()
     completion_criteria: Optional[AutoMLJobCompletionCriteria] = Unassigned()
-    auto_m_l_problem_type_resolved_attributes: Optional[
-        AutoMLProblemTypeResolvedAttributes
-    ] = Unassigned()
+    auto_m_l_problem_type_resolved_attributes: Optional[AutoMLProblemTypeResolvedAttributes] = (
+        Unassigned()
+    )
 
 
 class AutoParameter(Base):
@@ -2262,14 +2248,10 @@ class CanvasAppSettings(Base):
        generative_ai_settings: 	 <p>The generative AI settings for the SageMaker Canvas application.</p>
     """
 
-    time_series_forecasting_settings: Optional[TimeSeriesForecastingSettings] = (
-        Unassigned()
-    )
+    time_series_forecasting_settings: Optional[TimeSeriesForecastingSettings] = Unassigned()
     model_register_settings: Optional[ModelRegisterSettings] = Unassigned()
     workspace_settings: Optional[WorkspaceSettings] = Unassigned()
-    identity_provider_o_auth_settings: Optional[List[IdentityProviderOAuthSetting]] = (
-        Unassigned()
-    )
+    identity_provider_o_auth_settings: Optional[List[IdentityProviderOAuthSetting]] = Unassigned()
     direct_deploy_settings: Optional[DirectDeploySettings] = Unassigned()
     kendra_settings: Optional[KendraSettings] = Unassigned()
     generative_ai_settings: Optional[GenerativeAiSettings] = Unassigned()
@@ -3060,15 +3042,15 @@ class ParameterRange(Base):
        categorical_parameter_range_specification: 	 <p>A <code>CategoricalParameterRangeSpecification</code> object that defines the possible values for a categorical hyperparameter.</p>
     """
 
-    integer_parameter_range_specification: Optional[
-        IntegerParameterRangeSpecification
-    ] = Unassigned()
-    continuous_parameter_range_specification: Optional[
-        ContinuousParameterRangeSpecification
-    ] = Unassigned()
-    categorical_parameter_range_specification: Optional[
-        CategoricalParameterRangeSpecification
-    ] = Unassigned()
+    integer_parameter_range_specification: Optional[IntegerParameterRangeSpecification] = (
+        Unassigned()
+    )
+    continuous_parameter_range_specification: Optional[ContinuousParameterRangeSpecification] = (
+        Unassigned()
+    )
+    categorical_parameter_range_specification: Optional[CategoricalParameterRangeSpecification] = (
+        Unassigned()
+    )
 
 
 class HyperParameterSpecification(Base):
@@ -3133,14 +3115,12 @@ class TrainingSpecification(Base):
     supported_training_instance_types: List[str]
     training_channels: List[ChannelSpecification]
     training_image_digest: Optional[str] = Unassigned()
-    supported_hyper_parameters: Optional[List[HyperParameterSpecification]] = (
-        Unassigned()
-    )
+    supported_hyper_parameters: Optional[List[HyperParameterSpecification]] = Unassigned()
     supports_distributed_training: Optional[bool] = Unassigned()
     metric_definitions: Optional[List[MetricDefinition]] = Unassigned()
-    supported_tuning_job_objective_metrics: Optional[
-        List[HyperParameterTuningJobObjective]
-    ] = Unassigned()
+    supported_tuning_job_objective_metrics: Optional[List[HyperParameterTuningJobObjective]] = (
+        Unassigned()
+    )
     additional_s3_data_source: Optional[AdditionalS3DataSource] = Unassigned()
 
 
@@ -3703,9 +3683,7 @@ class UserSettings(Base):
     jupyter_server_app_settings: Optional[JupyterServerAppSettings] = Unassigned()
     kernel_gateway_app_settings: Optional[KernelGatewayAppSettings] = Unassigned()
     tensor_board_app_settings: Optional[TensorBoardAppSettings] = Unassigned()
-    r_studio_server_pro_app_settings: Optional[RStudioServerProAppSettings] = (
-        Unassigned()
-    )
+    r_studio_server_pro_app_settings: Optional[RStudioServerProAppSettings] = Unassigned()
     r_session_app_settings: Optional[RSessionAppSettings] = Unassigned()
     canvas_app_settings: Optional[CanvasAppSettings] = Unassigned()
     code_editor_app_settings: Optional[CodeEditorAppSettings] = Unassigned()
@@ -3765,9 +3743,7 @@ class DomainSettings(Base):
     """
 
     security_group_ids: Optional[List[str]] = Unassigned()
-    r_studio_server_pro_domain_settings: Optional[RStudioServerProDomainSettings] = (
-        Unassigned()
-    )
+    r_studio_server_pro_domain_settings: Optional[RStudioServerProDomainSettings] = Unassigned()
     execution_role_identity_config: Optional[str] = Unassigned()
     docker_settings: Optional[DockerSettings] = Unassigned()
 
@@ -3952,9 +3928,7 @@ class ProductionVariant(Base):
     model_data_download_timeout_in_seconds: Optional[int] = Unassigned()
     container_startup_health_check_timeout_in_seconds: Optional[int] = Unassigned()
     enable_s_s_m_access: Optional[bool] = Unassigned()
-    managed_instance_scaling: Optional[ProductionVariantManagedInstanceScaling] = (
-        Unassigned()
-    )
+    managed_instance_scaling: Optional[ProductionVariantManagedInstanceScaling] = Unassigned()
     routing_config: Optional[ProductionVariantRoutingConfig] = Unassigned()
 
 
@@ -4384,9 +4358,7 @@ class ParameterRanges(Base):
 
     integer_parameter_ranges: Optional[List[IntegerParameterRange]] = Unassigned()
     continuous_parameter_ranges: Optional[List[ContinuousParameterRange]] = Unassigned()
-    categorical_parameter_ranges: Optional[List[CategoricalParameterRange]] = (
-        Unassigned()
-    )
+    categorical_parameter_ranges: Optional[List[CategoricalParameterRange]] = Unassigned()
     auto_parameters: Optional[List[AutoParameter]] = Unassigned()
 
 
@@ -4427,9 +4399,7 @@ class HyperParameterTuningJobConfig(Base):
     strategy: str
     resource_limits: ResourceLimits
     strategy_config: Optional[HyperParameterTuningJobStrategyConfig] = Unassigned()
-    hyper_parameter_tuning_job_objective: Optional[HyperParameterTuningJobObjective] = (
-        Unassigned()
-    )
+    hyper_parameter_tuning_job_objective: Optional[HyperParameterTuningJobObjective] = Unassigned()
     parameter_ranges: Optional[ParameterRanges] = Unassigned()
     training_job_early_stopping_type: Optional[str] = Unassigned()
     tuning_job_completion_criteria: Optional[TuningJobCompletionCriteria] = Unassigned()
@@ -4546,9 +4516,9 @@ class HyperParameterTrainingJobDefinition(Base):
     input_data_config: Optional[List[Channel]] = Unassigned()
     vpc_config: Optional[VpcConfig] = Unassigned()
     resource_config: Optional[ResourceConfig] = Unassigned()
-    hyper_parameter_tuning_resource_config: Optional[
-        HyperParameterTuningResourceConfig
-    ] = Unassigned()
+    hyper_parameter_tuning_resource_config: Optional[HyperParameterTuningResourceConfig] = (
+        Unassigned()
+    )
     enable_network_isolation: Optional[bool] = Unassigned()
     enable_inter_container_traffic_encryption: Optional[bool] = Unassigned()
     enable_managed_spot_training: Optional[bool] = Unassigned()
@@ -5037,9 +5007,7 @@ class RecommendationJobOutputConfig(Base):
     """
 
     kms_key_id: Optional[str] = Unassigned()
-    compiled_output_config: Optional[RecommendationJobCompiledOutputConfig] = (
-        Unassigned()
-    )
+    compiled_output_config: Optional[RecommendationJobCompiledOutputConfig] = Unassigned()
 
 
 class LabelingJobS3DataSource(Base):
@@ -6648,9 +6616,9 @@ class DeploymentRecommendation(Base):
     """
 
     recommendation_status: str
-    real_time_inference_recommendations: Optional[
-        List[RealTimeInferenceRecommendation]
-    ] = Unassigned()
+    real_time_inference_recommendations: Optional[List[RealTimeInferenceRecommendation]] = (
+        Unassigned()
+    )
 
 
 class EdgeDeploymentStatus(Base):
@@ -6846,15 +6814,9 @@ class ProductionVariantSummary(Base):
     current_instance_count: Optional[int] = Unassigned()
     desired_instance_count: Optional[int] = Unassigned()
     variant_status: Optional[List[ProductionVariantStatus]] = Unassigned()
-    current_serverless_config: Optional[ProductionVariantServerlessConfig] = (
-        Unassigned()
-    )
-    desired_serverless_config: Optional[ProductionVariantServerlessConfig] = (
-        Unassigned()
-    )
-    managed_instance_scaling: Optional[ProductionVariantManagedInstanceScaling] = (
-        Unassigned()
-    )
+    current_serverless_config: Optional[ProductionVariantServerlessConfig] = Unassigned()
+    desired_serverless_config: Optional[ProductionVariantServerlessConfig] = Unassigned()
+    managed_instance_scaling: Optional[ProductionVariantManagedInstanceScaling] = Unassigned()
     routing_config: Optional[ProductionVariantRoutingConfig] = Unassigned()
 
 
@@ -6889,15 +6851,9 @@ class PendingProductionVariantSummary(Base):
     instance_type: Optional[str] = Unassigned()
     accelerator_type: Optional[str] = Unassigned()
     variant_status: Optional[List[ProductionVariantStatus]] = Unassigned()
-    current_serverless_config: Optional[ProductionVariantServerlessConfig] = (
-        Unassigned()
-    )
-    desired_serverless_config: Optional[ProductionVariantServerlessConfig] = (
-        Unassigned()
-    )
-    managed_instance_scaling: Optional[ProductionVariantManagedInstanceScaling] = (
-        Unassigned()
-    )
+    current_serverless_config: Optional[ProductionVariantServerlessConfig] = Unassigned()
+    desired_serverless_config: Optional[ProductionVariantServerlessConfig] = Unassigned()
+    managed_instance_scaling: Optional[ProductionVariantManagedInstanceScaling] = Unassigned()
     routing_config: Optional[ProductionVariantRoutingConfig] = Unassigned()
 
 
@@ -6917,9 +6873,7 @@ class PendingDeploymentSummary(Base):
     endpoint_config_name: str
     production_variants: Optional[List[PendingProductionVariantSummary]] = Unassigned()
     start_time: Optional[datetime.datetime] = Unassigned()
-    shadow_production_variants: Optional[List[PendingProductionVariantSummary]] = (
-        Unassigned()
-    )
+    shadow_production_variants: Optional[List[PendingProductionVariantSummary]] = Unassigned()
 
 
 class ExperimentSource(Base):
@@ -7182,9 +7136,9 @@ class InferenceComponentSpecificationSummary(Base):
     model_name: Optional[str] = Unassigned()
     container: Optional[InferenceComponentContainerSpecificationSummary] = Unassigned()
     startup_parameters: Optional[InferenceComponentStartupParameters] = Unassigned()
-    compute_resource_requirements: Optional[
-        InferenceComponentComputeResourceRequirements
-    ] = Unassigned()
+    compute_resource_requirements: Optional[InferenceComponentComputeResourceRequirements] = (
+        Unassigned()
+    )
 
 
 class InferenceComponentRuntimeConfigSummary(Base):
@@ -7836,9 +7790,7 @@ class DesiredWeightAndCapacity(Base):
     variant_name: str
     desired_weight: Optional[float] = Unassigned()
     desired_instance_count: Optional[int] = Unassigned()
-    serverless_update_config: Optional[ProductionVariantServerlessUpdateConfig] = (
-        Unassigned()
-    )
+    serverless_update_config: Optional[ProductionVariantServerlessUpdateConfig] = Unassigned()
 
 
 class Device(Base):
@@ -8253,9 +8205,7 @@ class MonitoringSchedule(Base):
     last_modified_time: Optional[datetime.datetime] = Unassigned()
     monitoring_schedule_config: Optional[MonitoringScheduleConfig] = Unassigned()
     endpoint_name: Optional[str] = Unassigned()
-    last_monitoring_execution_summary: Optional[MonitoringExecutionSummary] = (
-        Unassigned()
-    )
+    last_monitoring_execution_summary: Optional[MonitoringExecutionSummary] = Unassigned()
     tags: Optional[List[Tag]] = Unassigned()
 
 
@@ -8714,15 +8664,9 @@ class HyperParameterTuningJobSearchEntity(Base):
 
     hyper_parameter_tuning_job_name: Optional[str] = Unassigned()
     hyper_parameter_tuning_job_arn: Optional[str] = Unassigned()
-    hyper_parameter_tuning_job_config: Optional[HyperParameterTuningJobConfig] = (
-        Unassigned()
-    )
-    training_job_definition: Optional[HyperParameterTrainingJobDefinition] = (
-        Unassigned()
-    )
-    training_job_definitions: Optional[List[HyperParameterTrainingJobDefinition]] = (
-        Unassigned()
-    )
+    hyper_parameter_tuning_job_config: Optional[HyperParameterTuningJobConfig] = Unassigned()
+    training_job_definition: Optional[HyperParameterTrainingJobDefinition] = Unassigned()
+    training_job_definitions: Optional[List[HyperParameterTrainingJobDefinition]] = Unassigned()
     hyper_parameter_tuning_job_status: Optional[str] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
     hyper_parameter_tuning_end_time: Optional[datetime.datetime] = Unassigned()
@@ -8733,12 +8677,8 @@ class HyperParameterTuningJobSearchEntity(Base):
     overall_best_training_job: Optional[HyperParameterTrainingJobSummary] = Unassigned()
     warm_start_config: Optional[HyperParameterTuningJobWarmStartConfig] = Unassigned()
     failure_reason: Optional[str] = Unassigned()
-    tuning_job_completion_details: Optional[
-        HyperParameterTuningJobCompletionDetails
-    ] = Unassigned()
-    consumed_resources: Optional[HyperParameterTuningJobConsumedResources] = (
-        Unassigned()
-    )
+    tuning_job_completion_details: Optional[HyperParameterTuningJobCompletionDetails] = Unassigned()
+    consumed_resources: Optional[HyperParameterTuningJobConsumedResources] = Unassigned()
     tags: Optional[List[Tag]] = Unassigned()
 
 
@@ -10149,9 +10089,7 @@ class ModelDashboardMonitoringSchedule(Base):
     monitoring_schedule_config: Optional[MonitoringScheduleConfig] = Unassigned()
     endpoint_name: Optional[str] = Unassigned()
     monitoring_alert_summaries: Optional[List[MonitoringAlertSummary]] = Unassigned()
-    last_monitoring_execution_summary: Optional[MonitoringExecutionSummary] = (
-        Unassigned()
-    )
+    last_monitoring_execution_summary: Optional[MonitoringExecutionSummary] = Unassigned()
     batch_transform_input: Optional[BatchTransformInput] = Unassigned()
 
 
@@ -10207,9 +10145,7 @@ class ModelDashboardModel(Base):
     model: Optional[Model] = Unassigned()
     endpoints: Optional[List[ModelDashboardEndpoint]] = Unassigned()
     last_batch_transform_job: Optional[TransformJob] = Unassigned()
-    monitoring_schedules: Optional[List[ModelDashboardMonitoringSchedule]] = (
-        Unassigned()
-    )
+    monitoring_schedules: Optional[List[ModelDashboardMonitoringSchedule]] = Unassigned()
     model_card: Optional[ModelDashboardModelCard] = Unassigned()
 
 
@@ -10257,12 +10193,8 @@ class ModelPackage(Base):
     model_package_description: Optional[str] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
     inference_specification: Optional[InferenceSpecification] = Unassigned()
-    source_algorithm_specification: Optional[SourceAlgorithmSpecification] = (
-        Unassigned()
-    )
-    validation_specification: Optional[ModelPackageValidationSpecification] = (
-        Unassigned()
-    )
+    source_algorithm_specification: Optional[SourceAlgorithmSpecification] = Unassigned()
+    validation_specification: Optional[ModelPackageValidationSpecification] = Unassigned()
     model_package_status: Optional[str] = Unassigned()
     model_package_status_details: Optional[ModelPackageStatusDetails] = Unassigned()
     certify_for_marketplace: Optional[bool] = Unassigned()
@@ -10529,9 +10461,7 @@ class Project(Base):
     project_name: Optional[str] = Unassigned()
     project_id: Optional[str] = Unassigned()
     project_description: Optional[str] = Unassigned()
-    service_catalog_provisioning_details: Optional[
-        ServiceCatalogProvisioningDetails
-    ] = Unassigned()
+    service_catalog_provisioning_details: Optional[ServiceCatalogProvisioningDetails] = Unassigned()
     service_catalog_provisioned_product_details: Optional[
         ServiceCatalogProvisionedProductDetails
     ] = Unassigned()
@@ -10765,9 +10695,7 @@ class TrainingJob(Base):
     training_start_time: Optional[datetime.datetime] = Unassigned()
     training_end_time: Optional[datetime.datetime] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
-    secondary_status_transitions: Optional[List[SecondaryStatusTransition]] = (
-        Unassigned()
-    )
+    secondary_status_transitions: Optional[List[SecondaryStatusTransition]] = Unassigned()
     final_metric_data_list: Optional[List[MetricData]] = Unassigned()
     enable_network_isolation: Optional[bool] = Unassigned()
     enable_inter_container_traffic_encryption: Optional[bool] = Unassigned()
@@ -10779,9 +10707,7 @@ class TrainingJob(Base):
     experiment_config: Optional[ExperimentConfig] = Unassigned()
     debug_rule_configurations: Optional[List[DebugRuleConfiguration]] = Unassigned()
     tensor_board_output_config: Optional[TensorBoardOutputConfig] = Unassigned()
-    debug_rule_evaluation_statuses: Optional[List[DebugRuleEvaluationStatus]] = (
-        Unassigned()
-    )
+    debug_rule_evaluation_statuses: Optional[List[DebugRuleEvaluationStatus]] = Unassigned()
     profiler_config: Optional[ProfilerConfig] = Unassigned()
     environment: Optional[Dict[str, str]] = Unassigned()
     retry_strategy: Optional[RetryStrategy] = Unassigned()
@@ -10841,9 +10767,7 @@ class Trial(Base):
     last_modified_by: Optional[UserContext] = Unassigned()
     metadata_properties: Optional[MetadataProperties] = Unassigned()
     tags: Optional[List[Tag]] = Unassigned()
-    trial_component_summaries: Optional[List[TrialComponentSimpleSummary]] = (
-        Unassigned()
-    )
+    trial_component_summaries: Optional[List[TrialComponentSimpleSummary]] = Unassigned()
 
 
 class TrialComponentSourceDetail(Base):
@@ -10954,9 +10878,7 @@ class SearchRecord(Base):
     feature_group: Optional[FeatureGroup] = Unassigned()
     feature_metadata: Optional[FeatureMetadata] = Unassigned()
     project: Optional[Project] = Unassigned()
-    hyper_parameter_tuning_job: Optional[HyperParameterTuningJobSearchEntity] = (
-        Unassigned()
-    )
+    hyper_parameter_tuning_job: Optional[HyperParameterTuningJobSearchEntity] = Unassigned()
     model_card: Optional[ModelCard] = Unassigned()
     model: Optional[ModelDashboardModel] = Unassigned()
 

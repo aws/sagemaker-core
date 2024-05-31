@@ -11,8 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 """Generates the code for the service model."""
-import json
-from src.tools.constants import SERVICE_JSON_FILE_PATH
+from src.tools.constants import GENERATED_CLASSES_LOCATION
 from src.tools.shapes_codegen import ShapesCodeGen
 from src.tools.resources_codegen import ResourcesCodeGen
 from typing import Optional
@@ -21,6 +20,7 @@ from src.tools.intelligent_defaults_helper_codegen import (
     IntelligentDefaultsHelperCodeGen,
 )
 from src.tools.data_extractor import ServiceJsonData, load_service_jsons
+from src.util.util import reformat_file_with_black
 
 
 def generate_code(
@@ -57,6 +57,7 @@ def generate_code(
     shapes_code_gen.generate_shapes()
     resources_code_gen.generate_resources()
     intelligent_defaults_helper_code_gen.generate_helper_functions()
+    reformat_file_with_black(GENERATED_CLASSES_LOCATION)
 
 
 """
