@@ -16,6 +16,7 @@ import logging
 import botocore
 import time
 from boto3.session import Session
+from botocore.config import Config
 from typing import TypeVar, Generic, Type
 from src.code_injection.codec import transform
 
@@ -87,7 +88,13 @@ class SageMakerClient(metaclass=SingletonMeta):
     A singleton class for creating a SageMaker client.
     """
 
-    def __init__(self, session: Session = None, region_name: str = None, service_name="sagemaker"):
+    def __init__(
+        self,
+        session: Session = None,
+        region_name: str = None,
+        service_name="sagemaker",
+        config: Config = None,
+    ):
         """
         Initializes the SageMakerClient with a boto3 session, region name, and service name.
         Creates a boto3 client using the provided session, region, and service.
@@ -100,10 +107,14 @@ class SageMakerClient(metaclass=SingletonMeta):
             logger.warning("No region provided. Using default region.")
             region_name = session.region_name
 
+        if config is None:
+            logger.warning("No config provided. Using default config.")
+            config = Config(retries={"max_attempts": 10, "mode": "standard"})
+
         self.session = session
         self.region_name = region_name
         self.service_name = service_name
-        self.client = session.client(service_name, region_name)
+        self.client = session.client(service_name, region_name, config=config)
 
 
 class ResourceIterator(Generic[T]):
@@ -124,66 +135,55 @@ class ResourceIterator(Generic[T]):
 
         self.resource_cls = resource_cls
         self.index = 0
-        self.items = []
+        self.summary_list = []
         self.next_token = None
 
     def __iter__(self):
         return self
 
-    def __next__(self, sleep=1, retry=0) -> T:
-        if len(self.items) > 0 and self.index < len(self.items):
-            item = self.items[self.index]
+    def __next__(self) -> T:
+
+        # If there are summaries in the summary_list, return the next summary
+        if len(self.summary_list) > 0 and self.index < len(self.summary_list):
+            # Get the next summary from the resource summary_list
+            summary = self.summary_list[self.index]
             self.index += 1
-            init_data = transform(item, self.summary_key)
+
+            # Transform the resource summary into format to initialize object
+            init_data = transform(summary, self.summary_key)
+
+            # Initialize the resource object
             resource_object = self.resource_cls(**init_data)
-            try:
-                resource_object.refresh()
-            except botocore.exceptions.ClientError as error:
-                if (
-                    error.response["Error"]["Code"] == "ThrottlingException"
-                    and retry < 5
-                ):
-                    time.sleep(sleep)
-                    sleep *= 2
-                    retry += 1
-                    logger.debug(
-                        f"ThrottlingException encountered. Retrying in {sleep} seconds."
-                    )
-                    return self.__next__(sleep=sleep, retry=retry)
-                raise error
+
+            # Refresh the resource object and return it
+            resource_object.refresh()
             return resource_object
+
+        # If index reached the end of summary_list, and there is no next token, raise StopIteration
         elif (
-            len(self.items) > 0
-            and self.index >= len(self.items)
+            len(self.summary_list) > 0
+            and self.index >= len(self.summary_list)
             and self.next_token is None
         ):
             raise StopIteration
+
+        # Otherwise, get the next page of summaries by calling the list method with the next token if available
         else:
-            try:
-                if self.next_token is not None:
-                    response = getattr(self.client, self.list_method)(
-                        NextToken=self.next_token, **self.list_method_kwargs
-                    )
-                else:
-                    response = getattr(self.client, self.list_method)(
-                        **self.list_method_kwargs
-                    )
-            except botocore.exceptions.ClientError as error:
-                if (
-                    error.response["Error"]["Code"] == "ThrottlingException"
-                    and retry < 5
-                ):
-                    time.sleep(sleep)
-                    sleep *= 2
-                    retry += 1
-                    logger.debug(
-                        f"ThrottlingException encountered. Retrying in {sleep} seconds."
-                    )
-                    return self.__next__(sleep=sleep, retry=retry)
-                raise error
-            self.items = response.get(self.summaries_key, [])
+            if self.next_token is not None:
+                response = getattr(self.client, self.list_method)(
+                    NextToken=self.next_token, **self.list_method_kwargs
+                )
+            else:
+                response = getattr(self.client, self.list_method)(
+                    **self.list_method_kwargs
+                )
+                
+            self.summary_list = response.get(self.summaries_key, [])
             self.next_token = response.get("NextToken", None)
             self.index = 0
-            if len(self.items) == 0:
+            
+            # If list_method returned an empty list, raise StopIteration
+            if len(self.summary_list) == 0:
                 raise StopIteration
+            
             return self.__next__()
