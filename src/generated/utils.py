@@ -13,11 +13,16 @@
 
 import logging
 
+import botocore
+import time
 from boto3.session import Session
-
+from typing import TypeVar, Generic, Type
+from src.code_injection.codec import transform
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+T = TypeVar("T")
 
 
 def snake_to_pascal(snake_str):
@@ -101,30 +106,84 @@ class SageMakerClient(metaclass=SingletonMeta):
         self.client = session.client(service_name, region_name)
 
 
-class SageMakerRuntimeClient(metaclass=SingletonMeta):
-    """
-    A singleton class for creating a SageMaker client.
-    """
-
+class ResourceIterator(Generic[T]):
     def __init__(
         self,
-        session: Session = None,
-        region_name: str = None,
-        service_name="sagemaker-runtime",
+        client: SageMakerClient,
+        summaries_key: str,
+        summary_key: str,
+        resource_cls: Type[T],
+        list_method: str,
+        list_method_kwargs: dict = {},
     ):
-        """
-        Initializes the SageMakerClient with a boto3 session, region name, and service name.
-        Creates a boto3 client using the provided session, region, and service.
-        """
-        if session is None:
-            logger.warning("No boto3 session provided. Creating a new session.")
-            session = Session()
+        self.summaries_key = summaries_key
+        self.summary_key = summary_key
+        self.client = client
+        self.list_method = list_method
+        self.list_method_kwargs = list_method_kwargs
 
-        if region_name is None:
-            logger.warning("No region provided. Using default region.")
-            region_name = session.region_name
+        self.resource_cls = resource_cls
+        self.index = 0
+        self.items = []
+        self.next_token = None
 
-        self.session = session
-        self.region_name = region_name
-        self.service_name = service_name
-        self.client = session.client(service_name, region_name)
+    def __iter__(self):
+        return self
+
+    def __next__(self, sleep=1, retry=0) -> T:
+        if len(self.items) > 0 and self.index < len(self.items):
+            item = self.items[self.index]
+            self.index += 1
+            init_data = transform(item, self.summary_key)
+            resource_object = self.resource_cls(**init_data)
+            try:
+                resource_object.refresh()
+            except botocore.exceptions.ClientError as error:
+                if (
+                    error.response["Error"]["Code"] == "ThrottlingException"
+                    and retry < 5
+                ):
+                    time.sleep(sleep)
+                    sleep *= 2
+                    retry += 1
+                    logger.debug(
+                        f"ThrottlingException encountered. Retrying in {sleep} seconds."
+                    )
+                    return self.__next__(sleep=sleep, retry=retry)
+                raise error
+            return resource_object
+        elif (
+            len(self.items) > 0
+            and self.index >= len(self.items)
+            and self.next_token is None
+        ):
+            raise StopIteration
+        else:
+            try:
+                if self.next_token is not None:
+                    response = getattr(self.client, self.list_method)(
+                        NextToken=self.next_token, **self.list_method_kwargs
+                    )
+                else:
+                    response = getattr(self.client, self.list_method)(
+                        **self.list_method_kwargs
+                    )
+            except botocore.exceptions.ClientError as error:
+                if (
+                    error.response["Error"]["Code"] == "ThrottlingException"
+                    and retry < 5
+                ):
+                    time.sleep(sleep)
+                    sleep *= 2
+                    retry += 1
+                    logger.debug(
+                        f"ThrottlingException encountered. Retrying in {sleep} seconds."
+                    )
+                    return self.__next__(sleep=sleep, retry=retry)
+                raise error
+            self.items = response.get(self.summaries_key, [])
+            self.next_token = response.get("NextToken", None)
+            self.index = 0
+            if len(self.items) == 0:
+                raise StopIteration
+            return self.__next__()
