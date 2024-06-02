@@ -118,6 +118,8 @@ class SageMakerClient(metaclass=SingletonMeta):
 
 
 class ResourceIterator(Generic[T]):
+    """ResourceIterator class to iterate over a list of resources."""
+
     def __init__(
         self,
         client: SageMakerClient,
@@ -126,12 +128,25 @@ class ResourceIterator(Generic[T]):
         resource_cls: Type[T],
         list_method: str,
         list_method_kwargs: dict = {},
+        custom_key_mapping: dict = None,
     ):
+        """Initialize a ResourceIterator object
+
+        Args:
+            client (SageMakerClient): The sagemaker client object used to make list method calls.
+            summaries_key (str): The summaries key string used to access the list of summaries in the response.
+            summary_key (str): The summary key string used to access the individual summary data in each summary object.
+            resource_cls (Type[T]): The resource class to be instantiated for each resource object.
+            list_method (str): The list method string used to make list calls to the client.
+            list_method_kwargs (dict, optional): The kwargs used to make list method calls. Defaults to {}.
+            custom_key_mapping (dict, optional): The custom key mapping used to map keys from summary object to those expected from resource object during initialization. Defaults to None.
+        """
         self.summaries_key = summaries_key
         self.summary_key = summary_key
         self.client = client
         self.list_method = list_method
         self.list_method_kwargs = list_method_kwargs
+        self.custom_key_mapping = custom_key_mapping
 
         self.resource_cls = resource_cls
         self.index = 0
@@ -151,6 +166,11 @@ class ResourceIterator(Generic[T]):
 
             # Transform the resource summary into format to initialize object
             init_data = transform(summary, self.summary_key)
+
+            if self.custom_key_mapping:
+                init_data = {
+                    self.custom_key_mapping.get(k, k): v for k, v in init_data.items()
+                }
 
             # Initialize the resource object
             resource_object = self.resource_cls(**init_data)
@@ -177,13 +197,13 @@ class ResourceIterator(Generic[T]):
                 response = getattr(self.client, self.list_method)(
                     **self.list_method_kwargs
                 )
-                
+
             self.summary_list = response.get(self.summaries_key, [])
             self.next_token = response.get("NextToken", None)
             self.index = 0
-            
+
             # If list_method returned an empty list, raise StopIteration
             if len(self.summary_list) == 0:
                 raise StopIteration
-            
+
             return self.__next__()

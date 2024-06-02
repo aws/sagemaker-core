@@ -1093,19 +1093,48 @@ class ResourcesCodeGen:
         summaries_key = get_summaries_shape[next(iter(get_summaries_shape))]["shape"]
         summary_key = self.shapes[summaries_key]["member"]["shape"]
 
-        exclude_list = ["next_token", "max_results"]
+        custom_key_mapping_str = ""
+        if resource_name not in summary_key:
+            if "MonitoringJobDefinitionSummary" == summary_key:
+                custom_key_mapping = {
+                    "monitoring_job_name": "job_definition_name",
+                    "monitoring_job_arn": "job_definition_arn",
+                }
+                custom_key_mapping_str = (
+                    f"custom_key_mapping = {json.dumps(custom_key_mapping)}"
+                )
+                custom_key_mapping_str = add_indent(custom_key_mapping_str, 4)
+            else:
+                raise ValueError(
+                    f"Resource {resource_name} does not have a summary key ({summary_key}) with matching name. May require custom key mapping."
+                )
 
+        resource_iterator_args_list = [
+            "client=client",
+            f"list_method='{operation}'",
+            f"summaries_key='{summaries_key}'",
+            f"summary_key='{summary_key}'",
+            f"resource_cls={resource_name}",
+        ]
+
+        if custom_key_mapping_str:
+            resource_iterator_args_list.append(f"custom_key_mapping=custom_key_mapping")
+
+        exclude_list = ["next_token", "max_results"]
         get_all_args = self._generate_method_args(
             operation_input_shape_name, exclude_list
         )
 
         if not get_all_args.strip().strip(","):
+            resource_iterator_args = ",\n".join(resource_iterator_args_list)
+            resource_iterator_args = add_indent(resource_iterator_args, 8)
+
             formatted_method = GET_ALL_METHOD_NO_ARGS_TEMPLATE.format(
                 service_name="sagemaker",
                 resource=resource_name,
                 operation=operation,
-                summaries_key=summaries_key,
-                summary_key=summary_key,
+                custom_key_mapping=custom_key_mapping_str,
+                resource_iterator_args=resource_iterator_args,
             )
             return formatted_method
 
@@ -1113,14 +1142,17 @@ class ResourcesCodeGen:
             operation_metadata, is_class_method=True, exclude_list=exclude_list
         )
 
+        resource_iterator_args_list.append("list_method_kwargs=operation_input_args")
+        resource_iterator_args = ",\n".join(resource_iterator_args_list)
+        resource_iterator_args = add_indent(resource_iterator_args, 8)
+
         formatted_method = GET_ALL_METHOD_WITH_ARGS_TEMPLATE.format(
             service_name="sagemaker",
             resource=resource_name,
-            operation=operation,
             get_all_args=get_all_args,
             operation_input_args=operation_input_args,
-            summaries_key=summaries_key,
-            summary_key=summary_key,
+            custom_key_mapping=custom_key_mapping_str,
+            resource_iterator_args=resource_iterator_args,
         )
         return formatted_method
 

@@ -366,17 +366,13 @@ def get_all(
         
     operation_input_args = {{
 {operation_input_args}
-}}
-    
+    }}
+{custom_key_mapping}
+
     operation_input_args = {{k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}}
     
     return ResourceIterator(
-        client=client,
-        list_method="{operation}",
-        list_method_kwargs=operation_input_args,
-        summaries_key="{summaries_key}",
-        summary_key="{summary_key}",
-        resource_cls={resource}
+{resource_iterator_args}
     )
 """
 
@@ -388,13 +384,9 @@ def get_all(
     region: Optional[str] = None,
 ) -> "ResourceIterator[{resource}]":
     client = SageMakerClient(session=session, region_name=region, service_name="{service_name}").client
-    
+{custom_key_mapping}
     return ResourceIterator(
-        client=client,
-        list_method="{operation}",
-        summaries_key="{summaries_key}",
-        summary_key="{summary_key}",
-        resource_cls={resource}
+{resource_iterator_args}
     )
 """
 
