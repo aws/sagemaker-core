@@ -1090,15 +1090,17 @@ class ResourcesCodeGen:
             for key, value in list_operation_output_members.items()
             if key != "NextToken"
         )
-        summaries_key = get_summaries_shape[next(iter(get_summaries_shape))]["shape"]
-        summary_key = self.shapes[summaries_key]["member"]["shape"]
+
+        summaries_key = next(iter(get_summaries_shape))
+        summaries_shape_name = get_summaries_shape[summaries_key]["shape"]
+        summary_name = self.shapes[summaries_shape_name]["member"]["shape"]
 
         custom_key_mapping_str = ""
-        if resource_name not in summary_key:
-            if "MonitoringJobDefinitionSummary" == summary_key:
+        if resource_name not in summary_name:
+            if "MonitoringJobDefinitionSummary" == summary_name:
                 custom_key_mapping = {
-                    "monitoring_job_name": "job_definition_name",
-                    "monitoring_job_arn": "job_definition_arn",
+                    "monitoring_job_definition_name": "job_definition_name",
+                    "monitoring_job_definition_arn": "job_definition_arn",
                 }
                 custom_key_mapping_str = (
                     f"custom_key_mapping = {json.dumps(custom_key_mapping)}"
@@ -1106,14 +1108,14 @@ class ResourcesCodeGen:
                 custom_key_mapping_str = add_indent(custom_key_mapping_str, 4)
             else:
                 raise ValueError(
-                    f"Resource {resource_name} does not have a summary key ({summary_key}) with matching name. May require custom key mapping."
+                    f"Resource {resource_name} does not have a summary shape ({summary_name}) with matching name. May require custom key mapping."
                 )
 
         resource_iterator_args_list = [
             "client=client",
             f"list_method='{operation}'",
             f"summaries_key='{summaries_key}'",
-            f"summary_key='{summary_key}'",
+            f"summary_name='{summary_name}'",
             f"resource_cls={resource_name}",
         ]
 

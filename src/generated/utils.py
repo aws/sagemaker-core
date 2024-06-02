@@ -124,7 +124,7 @@ class ResourceIterator(Generic[T]):
         self,
         client: SageMakerClient,
         summaries_key: str,
-        summary_key: str,
+        summary_name: str,
         resource_cls: Type[T],
         list_method: str,
         list_method_kwargs: dict = {},
@@ -135,14 +135,14 @@ class ResourceIterator(Generic[T]):
         Args:
             client (SageMakerClient): The sagemaker client object used to make list method calls.
             summaries_key (str): The summaries key string used to access the list of summaries in the response.
-            summary_key (str): The summary key string used to access the individual summary data in each summary object.
+            summary_name (str): The summary name used to transform list response data.
             resource_cls (Type[T]): The resource class to be instantiated for each resource object.
             list_method (str): The list method string used to make list calls to the client.
             list_method_kwargs (dict, optional): The kwargs used to make list method calls. Defaults to {}.
             custom_key_mapping (dict, optional): The custom key mapping used to map keys from summary object to those expected from resource object during initialization. Defaults to None.
         """
         self.summaries_key = summaries_key
-        self.summary_key = summary_key
+        self.summary_name = summary_name
         self.client = client
         self.list_method = list_method
         self.list_method_kwargs = list_method_kwargs
@@ -165,13 +165,14 @@ class ResourceIterator(Generic[T]):
             self.index += 1
 
             # Transform the resource summary into format to initialize object
-            init_data = transform(summary, self.summary_key)
+            init_data = transform(summary, self.summary_name)
 
             if self.custom_key_mapping:
                 init_data = {
                     self.custom_key_mapping.get(k, k): v for k, v in init_data.items()
                 }
 
+            print(init_data)
             # Initialize the resource object
             resource_object = self.resource_cls(**init_data)
 

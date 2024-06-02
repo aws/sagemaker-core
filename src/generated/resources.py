@@ -249,7 +249,7 @@ class Action(Base):
             client=client,
             list_method="list_actions",
             summaries_key="ActionSummaries",
-            summary_key="ActionSummary",
+            summary_name="ActionSummary",
             resource_cls=Action,
             list_method_kwargs=operation_input_args,
         )
@@ -428,7 +428,7 @@ class Algorithm(Base):
             client=client,
             list_method="list_algorithms",
             summaries_key="AlgorithmSummaryList",
-            summary_key="AlgorithmSummary",
+            summary_name="AlgorithmSummary",
             resource_cls=Algorithm,
             list_method_kwargs=operation_input_args,
         )
@@ -608,8 +608,8 @@ class App(Base):
         return ResourceIterator(
             client=client,
             list_method="list_apps",
-            summaries_key="AppList",
-            summary_key="AppDetails",
+            summaries_key="Apps",
+            summary_name="AppDetails",
             resource_cls=App,
             list_method_kwargs=operation_input_args,
         )
@@ -756,8 +756,8 @@ class AppImageConfig(Base):
         return ResourceIterator(
             client=client,
             list_method="list_app_image_configs",
-            summaries_key="AppImageConfigList",
-            summary_key="AppImageConfigDetails",
+            summaries_key="AppImageConfigs",
+            summary_name="AppImageConfigDetails",
             resource_cls=AppImageConfig,
             list_method_kwargs=operation_input_args,
         )
@@ -915,7 +915,7 @@ class Artifact(Base):
             client=client,
             list_method="list_artifacts",
             summaries_key="ArtifactSummaries",
-            summary_key="ArtifactSummary",
+            summary_name="ArtifactSummary",
             resource_cls=Artifact,
             list_method_kwargs=operation_input_args,
         )
@@ -1123,7 +1123,7 @@ class AutoMLJob(Base):
             client=client,
             list_method="list_auto_m_l_jobs",
             summaries_key="AutoMLJobSummaries",
-            summary_key="AutoMLJobSummary",
+            summary_name="AutoMLJobSummary",
             resource_cls=AutoMLJob,
             list_method_kwargs=operation_input_args,
         )
@@ -1480,7 +1480,7 @@ class Cluster(Base):
             client=client,
             list_method="list_clusters",
             summaries_key="ClusterSummaries",
-            summary_key="ClusterSummary",
+            summary_name="ClusterSummary",
             resource_cls=Cluster,
             list_method_kwargs=operation_input_args,
         )
@@ -1786,7 +1786,7 @@ class CompilationJob(Base):
             client=client,
             list_method="list_compilation_jobs",
             summaries_key="CompilationJobSummaries",
-            summary_key="CompilationJobSummary",
+            summary_name="CompilationJobSummary",
             resource_cls=CompilationJob,
             list_method_kwargs=operation_input_args,
         )
@@ -1943,7 +1943,7 @@ class Context(Base):
             client=client,
             list_method="list_contexts",
             summaries_key="ContextSummaries",
-            summary_key="ContextSummary",
+            summary_name="ContextSummary",
             resource_cls=Context,
             list_method_kwargs=operation_input_args,
         )
@@ -2111,8 +2111,8 @@ class DataQualityJobDefinition(Base):
             "CreationTimeAfter": creation_time_after,
         }
         custom_key_mapping = {
-            "monitoring_job_name": "job_definition_name",
-            "monitoring_job_arn": "job_definition_arn",
+            "monitoring_job_definition_name": "job_definition_name",
+            "monitoring_job_definition_arn": "job_definition_arn",
         }
 
         operation_input_args = {
@@ -2124,8 +2124,8 @@ class DataQualityJobDefinition(Base):
         return ResourceIterator(
             client=client,
             list_method="list_data_quality_job_definitions",
-            summaries_key="MonitoringJobDefinitionSummaryList",
-            summary_key="MonitoringJobDefinitionSummary",
+            summaries_key="JobDefinitionSummaries",
+            summary_name="MonitoringJobDefinitionSummary",
             resource_cls=DataQualityJobDefinition,
             custom_key_mapping=custom_key_mapping,
             list_method_kwargs=operation_input_args,
@@ -2303,7 +2303,7 @@ class DeviceFleet(Base):
             client=client,
             list_method="list_device_fleets",
             summaries_key="DeviceFleetSummaries",
-            summary_key="DeviceFleetSummary",
+            summary_name="DeviceFleetSummary",
             resource_cls=DeviceFleet,
             list_method_kwargs=operation_input_args,
         )
@@ -2550,8 +2550,8 @@ class Domain(Base):
         return ResourceIterator(
             client=client,
             list_method="list_domains",
-            summaries_key="DomainList",
-            summary_key="DomainDetails",
+            summaries_key="Domains",
+            summary_name="DomainDetails",
             resource_cls=Domain,
         )
 
@@ -2692,7 +2692,7 @@ class EdgeDeploymentPlan(Base):
             client=client,
             list_method="list_edge_deployment_plans",
             summaries_key="EdgeDeploymentPlanSummaries",
-            summary_key="EdgeDeploymentPlanSummary",
+            summary_name="EdgeDeploymentPlanSummary",
             resource_cls=EdgeDeploymentPlan,
             list_method_kwargs=operation_input_args,
         )
@@ -2884,7 +2884,7 @@ class EdgePackagingJob(Base):
             client=client,
             list_method="list_edge_packaging_jobs",
             summaries_key="EdgePackagingJobSummaries",
-            summary_key="EdgePackagingJobSummary",
+            summary_name="EdgePackagingJobSummary",
             resource_cls=EdgePackagingJob,
             list_method_kwargs=operation_input_args,
         )
@@ -3218,8 +3218,8 @@ class Endpoint(Base):
         return ResourceIterator(
             client=client,
             list_method="list_endpoints",
-            summaries_key="EndpointSummaryList",
-            summary_key="EndpointSummary",
+            summaries_key="Endpoints",
+            summary_name="EndpointSummary",
             resource_cls=Endpoint,
             list_method_kwargs=operation_input_args,
         )
@@ -3390,8 +3390,8 @@ class EndpointConfig(Base):
         return ResourceIterator(
             client=client,
             list_method="list_endpoint_configs",
-            summaries_key="EndpointConfigSummaryList",
-            summary_key="EndpointConfigSummary",
+            summaries_key="EndpointConfigs",
+            summary_name="EndpointConfigSummary",
             resource_cls=EndpointConfig,
             list_method_kwargs=operation_input_args,
         )
@@ -3536,7 +3536,7 @@ class Experiment(Base):
             client=client,
             list_method="list_experiments",
             summaries_key="ExperimentSummaries",
-            summary_key="ExperimentSummary",
+            summary_name="ExperimentSummary",
             resource_cls=Experiment,
             list_method_kwargs=operation_input_args,
         )
@@ -3762,7 +3762,7 @@ class FeatureGroup(Base):
             client=client,
             list_method="list_feature_groups",
             summaries_key="FeatureGroupSummaries",
-            summary_key="FeatureGroupSummary",
+            summary_name="FeatureGroupSummary",
             resource_cls=FeatureGroup,
             list_method_kwargs=operation_input_args,
         )
@@ -3936,7 +3936,7 @@ class FlowDefinition(Base):
             client=client,
             list_method="list_flow_definitions",
             summaries_key="FlowDefinitionSummaries",
-            summary_key="FlowDefinitionSummary",
+            summary_name="FlowDefinitionSummary",
             resource_cls=FlowDefinition,
             list_method_kwargs=operation_input_args,
         )
@@ -4141,8 +4141,8 @@ class Hub(Base):
         return ResourceIterator(
             client=client,
             list_method="list_hubs",
-            summaries_key="HubInfoList",
-            summary_key="HubInfo",
+            summaries_key="HubSummaries",
+            summary_name="HubInfo",
             resource_cls=Hub,
             list_method_kwargs=operation_input_args,
         )
@@ -4336,8 +4336,8 @@ class HubContent(Base):
         return ResourceIterator(
             client=client,
             list_method="list_hub_contents",
-            summaries_key="HubContentInfoList",
-            summary_key="HubContentInfo",
+            summaries_key="HubContentSummaries",
+            summary_name="HubContentInfo",
             resource_cls=HubContent,
             list_method_kwargs=operation_input_args,
         )
@@ -4469,7 +4469,7 @@ class HumanTaskUi(Base):
             client=client,
             list_method="list_human_task_uis",
             summaries_key="HumanTaskUiSummaries",
-            summary_key="HumanTaskUiSummary",
+            summary_name="HumanTaskUiSummary",
             resource_cls=HumanTaskUi,
             list_method_kwargs=operation_input_args,
         )
@@ -4684,7 +4684,7 @@ class HyperParameterTuningJob(Base):
             client=client,
             list_method="list_hyper_parameter_tuning_jobs",
             summaries_key="HyperParameterTuningJobSummaries",
-            summary_key="HyperParameterTuningJobSummary",
+            summary_name="HyperParameterTuningJobSummary",
             resource_cls=HyperParameterTuningJob,
             list_method_kwargs=operation_input_args,
         )
@@ -4887,7 +4887,7 @@ class Image(Base):
             client=client,
             list_method="list_images",
             summaries_key="Images",
-            summary_key="Image",
+            summary_name="Image",
             resource_cls=Image,
             list_method_kwargs=operation_input_args,
         )
@@ -5106,7 +5106,7 @@ class ImageVersion(Base):
             client=client,
             list_method="list_image_versions",
             summaries_key="ImageVersions",
-            summary_key="ImageVersion",
+            summary_name="ImageVersion",
             resource_cls=ImageVersion,
             list_method_kwargs=operation_input_args,
         )
@@ -5298,8 +5298,8 @@ class InferenceComponent(Base):
         return ResourceIterator(
             client=client,
             list_method="list_inference_components",
-            summaries_key="InferenceComponentSummaryList",
-            summary_key="InferenceComponentSummary",
+            summaries_key="InferenceComponents",
+            summary_name="InferenceComponentSummary",
             resource_cls=InferenceComponent,
             list_method_kwargs=operation_input_args,
         )
@@ -5537,8 +5537,8 @@ class InferenceExperiment(Base):
         return ResourceIterator(
             client=client,
             list_method="list_inference_experiments",
-            summaries_key="InferenceExperimentList",
-            summary_key="InferenceExperimentSummary",
+            summaries_key="InferenceExperiments",
+            summary_name="InferenceExperimentSummary",
             resource_cls=InferenceExperiment,
             list_method_kwargs=operation_input_args,
         )
@@ -5734,7 +5734,7 @@ class InferenceRecommendationsJob(Base):
             client=client,
             list_method="list_inference_recommendations_jobs",
             summaries_key="InferenceRecommendationsJobs",
-            summary_key="InferenceRecommendationsJob",
+            summary_name="InferenceRecommendationsJob",
             resource_cls=InferenceRecommendationsJob,
             list_method_kwargs=operation_input_args,
         )
@@ -5944,7 +5944,7 @@ class LabelingJob(Base):
             client=client,
             list_method="list_labeling_jobs",
             summaries_key="LabelingJobSummaryList",
-            summary_key="LabelingJobSummary",
+            summary_name="LabelingJobSummary",
             resource_cls=LabelingJob,
             list_method_kwargs=operation_input_args,
         )
@@ -6103,8 +6103,8 @@ class Model(Base):
         return ResourceIterator(
             client=client,
             list_method="list_models",
-            summaries_key="ModelSummaryList",
-            summary_key="ModelSummary",
+            summaries_key="Models",
+            summary_name="ModelSummary",
             resource_cls=Model,
             list_method_kwargs=operation_input_args,
         )
@@ -6272,8 +6272,8 @@ class ModelBiasJobDefinition(Base):
             "CreationTimeAfter": creation_time_after,
         }
         custom_key_mapping = {
-            "monitoring_job_name": "job_definition_name",
-            "monitoring_job_arn": "job_definition_arn",
+            "monitoring_job_definition_name": "job_definition_name",
+            "monitoring_job_definition_arn": "job_definition_arn",
         }
 
         operation_input_args = {
@@ -6285,8 +6285,8 @@ class ModelBiasJobDefinition(Base):
         return ResourceIterator(
             client=client,
             list_method="list_model_bias_job_definitions",
-            summaries_key="MonitoringJobDefinitionSummaryList",
-            summary_key="MonitoringJobDefinitionSummary",
+            summaries_key="JobDefinitionSummaries",
+            summary_name="MonitoringJobDefinitionSummary",
             resource_cls=ModelBiasJobDefinition,
             custom_key_mapping=custom_key_mapping,
             list_method_kwargs=operation_input_args,
@@ -6476,8 +6476,8 @@ class ModelCard(Base):
         return ResourceIterator(
             client=client,
             list_method="list_model_cards",
-            summaries_key="ModelCardSummaryList",
-            summary_key="ModelCardSummary",
+            summaries_key="ModelCardSummaries",
+            summary_name="ModelCardSummary",
             resource_cls=ModelCard,
             list_method_kwargs=operation_input_args,
         )
@@ -6645,8 +6645,8 @@ class ModelCardExportJob(Base):
         return ResourceIterator(
             client=client,
             list_method="list_model_card_export_jobs",
-            summaries_key="ModelCardExportJobSummaryList",
-            summary_key="ModelCardExportJobSummary",
+            summaries_key="ModelCardExportJobSummaries",
+            summary_name="ModelCardExportJobSummary",
             resource_cls=ModelCardExportJob,
             list_method_kwargs=operation_input_args,
         )
@@ -6819,8 +6819,8 @@ class ModelExplainabilityJobDefinition(Base):
             "CreationTimeAfter": creation_time_after,
         }
         custom_key_mapping = {
-            "monitoring_job_name": "job_definition_name",
-            "monitoring_job_arn": "job_definition_arn",
+            "monitoring_job_definition_name": "job_definition_name",
+            "monitoring_job_definition_arn": "job_definition_arn",
         }
 
         operation_input_args = {
@@ -6832,8 +6832,8 @@ class ModelExplainabilityJobDefinition(Base):
         return ResourceIterator(
             client=client,
             list_method="list_model_explainability_job_definitions",
-            summaries_key="MonitoringJobDefinitionSummaryList",
-            summary_key="MonitoringJobDefinitionSummary",
+            summaries_key="JobDefinitionSummaries",
+            summary_name="MonitoringJobDefinitionSummary",
             resource_cls=ModelExplainabilityJobDefinition,
             custom_key_mapping=custom_key_mapping,
             list_method_kwargs=operation_input_args,
@@ -7128,7 +7128,7 @@ class ModelPackage(Base):
             client=client,
             list_method="list_model_packages",
             summaries_key="ModelPackageSummaryList",
-            summary_key="ModelPackageSummary",
+            summary_name="ModelPackageSummary",
             resource_cls=ModelPackage,
             list_method_kwargs=operation_input_args,
         )
@@ -7275,7 +7275,7 @@ class ModelPackageGroup(Base):
             client=client,
             list_method="list_model_package_groups",
             summaries_key="ModelPackageGroupSummaryList",
-            summary_key="ModelPackageGroupSummary",
+            summary_name="ModelPackageGroupSummary",
             resource_cls=ModelPackageGroup,
             list_method_kwargs=operation_input_args,
         )
@@ -7443,8 +7443,8 @@ class ModelQualityJobDefinition(Base):
             "CreationTimeAfter": creation_time_after,
         }
         custom_key_mapping = {
-            "monitoring_job_name": "job_definition_name",
-            "monitoring_job_arn": "job_definition_arn",
+            "monitoring_job_definition_name": "job_definition_name",
+            "monitoring_job_definition_arn": "job_definition_arn",
         }
 
         operation_input_args = {
@@ -7456,8 +7456,8 @@ class ModelQualityJobDefinition(Base):
         return ResourceIterator(
             client=client,
             list_method="list_model_quality_job_definitions",
-            summaries_key="MonitoringJobDefinitionSummaryList",
-            summary_key="MonitoringJobDefinitionSummary",
+            summaries_key="JobDefinitionSummaries",
+            summary_name="MonitoringJobDefinitionSummary",
             resource_cls=ModelQualityJobDefinition,
             custom_key_mapping=custom_key_mapping,
             list_method_kwargs=operation_input_args,
@@ -7687,8 +7687,8 @@ class MonitoringSchedule(Base):
         return ResourceIterator(
             client=client,
             list_method="list_monitoring_schedules",
-            summaries_key="MonitoringScheduleSummaryList",
-            summary_key="MonitoringScheduleSummary",
+            summaries_key="MonitoringScheduleSummaries",
+            summary_name="MonitoringScheduleSummary",
             resource_cls=MonitoringSchedule,
             list_method_kwargs=operation_input_args,
         )
@@ -7960,8 +7960,8 @@ class NotebookInstance(Base):
         return ResourceIterator(
             client=client,
             list_method="list_notebook_instances",
-            summaries_key="NotebookInstanceSummaryList",
-            summary_key="NotebookInstanceSummary",
+            summaries_key="NotebookInstances",
+            summary_name="NotebookInstanceSummary",
             resource_cls=NotebookInstance,
             list_method_kwargs=operation_input_args,
         )
@@ -8110,8 +8110,8 @@ class NotebookInstanceLifecycleConfig(Base):
         return ResourceIterator(
             client=client,
             list_method="list_notebook_instance_lifecycle_configs",
-            summaries_key="NotebookInstanceLifecycleConfigSummaryList",
-            summary_key="NotebookInstanceLifecycleConfigSummary",
+            summaries_key="NotebookInstanceLifecycleConfigs",
+            summary_name="NotebookInstanceLifecycleConfigSummary",
             resource_cls=NotebookInstanceLifecycleConfig,
             list_method_kwargs=operation_input_args,
         )
@@ -8308,8 +8308,8 @@ class Pipeline(Base):
         return ResourceIterator(
             client=client,
             list_method="list_pipelines",
-            summaries_key="PipelineSummaryList",
-            summary_key="PipelineSummary",
+            summaries_key="PipelineSummaries",
+            summary_name="PipelineSummary",
             resource_cls=Pipeline,
             list_method_kwargs=operation_input_args,
         )
@@ -8456,8 +8456,8 @@ class PipelineExecution(Base):
         return ResourceIterator(
             client=client,
             list_method="list_pipeline_executions",
-            summaries_key="PipelineExecutionSummaryList",
-            summary_key="PipelineExecutionSummary",
+            summaries_key="PipelineExecutionSummaries",
+            summary_name="PipelineExecutionSummary",
             resource_cls=PipelineExecution,
             list_method_kwargs=operation_input_args,
         )
@@ -8663,7 +8663,7 @@ class ProcessingJob(Base):
             client=client,
             list_method="list_processing_jobs",
             summaries_key="ProcessingJobSummaries",
-            summary_key="ProcessingJobSummary",
+            summary_name="ProcessingJobSummary",
             resource_cls=ProcessingJob,
             list_method_kwargs=operation_input_args,
         )
@@ -8856,7 +8856,7 @@ class Project(Base):
             client=client,
             list_method="list_projects",
             summaries_key="ProjectSummaryList",
-            summary_key="ProjectSummary",
+            summary_name="ProjectSummary",
             resource_cls=Project,
             list_method_kwargs=operation_input_args,
         )
@@ -9049,8 +9049,8 @@ class Space(Base):
         return ResourceIterator(
             client=client,
             list_method="list_spaces",
-            summaries_key="SpaceList",
-            summary_key="SpaceDetails",
+            summaries_key="Spaces",
+            summary_name="SpaceDetails",
             resource_cls=Space,
             list_method_kwargs=operation_input_args,
         )
@@ -9180,8 +9180,8 @@ class StudioLifecycleConfig(Base):
         return ResourceIterator(
             client=client,
             list_method="list_studio_lifecycle_configs",
-            summaries_key="StudioLifecycleConfigsList",
-            summary_key="StudioLifecycleConfigDetails",
+            summaries_key="StudioLifecycleConfigs",
+            summary_name="StudioLifecycleConfigDetails",
             resource_cls=StudioLifecycleConfig,
             list_method_kwargs=operation_input_args,
         )
@@ -9466,7 +9466,7 @@ class TrainingJob(Base):
             client=client,
             list_method="list_training_jobs",
             summaries_key="TrainingJobSummaries",
-            summary_key="TrainingJobSummary",
+            summary_name="TrainingJobSummary",
             resource_cls=TrainingJob,
             list_method_kwargs=operation_input_args,
         )
@@ -9684,7 +9684,7 @@ class TransformJob(Base):
             client=client,
             list_method="list_transform_jobs",
             summaries_key="TransformJobSummaries",
-            summary_key="TransformJobSummary",
+            summary_name="TransformJobSummary",
             resource_cls=TransformJob,
             list_method_kwargs=operation_input_args,
         )
@@ -9835,7 +9835,7 @@ class Trial(Base):
             client=client,
             list_method="list_trials",
             summaries_key="TrialSummaries",
-            summary_key="TrialSummary",
+            summary_name="TrialSummary",
             resource_cls=Trial,
             list_method_kwargs=operation_input_args,
         )
@@ -10044,7 +10044,7 @@ class TrialComponent(Base):
             client=client,
             list_method="list_trial_components",
             summaries_key="TrialComponentSummaries",
-            summary_key="TrialComponentSummary",
+            summary_name="TrialComponentSummary",
             resource_cls=TrialComponent,
             list_method_kwargs=operation_input_args,
         )
@@ -10269,8 +10269,8 @@ class UserProfile(Base):
         return ResourceIterator(
             client=client,
             list_method="list_user_profiles",
-            summaries_key="UserProfileList",
-            summary_key="UserProfileDetails",
+            summaries_key="UserProfiles",
+            summary_name="UserProfileDetails",
             resource_cls=UserProfile,
             list_method_kwargs=operation_input_args,
         )
@@ -10460,7 +10460,7 @@ class Workforce(Base):
             client=client,
             list_method="list_workforces",
             summaries_key="Workforces",
-            summary_key="Workforce",
+            summary_name="Workforce",
             resource_cls=Workforce,
             list_method_kwargs=operation_input_args,
         )
@@ -10604,7 +10604,7 @@ class Workteam(Base):
             client=client,
             list_method="list_workteams",
             summaries_key="Workteams",
-            summary_key="Workteam",
+            summary_name="Workteam",
             resource_cls=Workteam,
             list_method_kwargs=operation_input_args,
         )
