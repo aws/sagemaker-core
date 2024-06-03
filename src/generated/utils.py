@@ -197,9 +197,7 @@ class ResourceIterator(Generic[T]):
             init_data = transform(summary, self.summary_name)
 
             if self.custom_key_mapping:
-                init_data = {
-                    self.custom_key_mapping.get(k, k): v for k, v in init_data.items()
-                }
+                init_data = {self.custom_key_mapping.get(k, k): v for k, v in init_data.items()}
 
             # Initialize the resource object
             resource_object = self.resource_cls(**init_data)
@@ -223,9 +221,7 @@ class ResourceIterator(Generic[T]):
                     NextToken=self.next_token, **self.list_method_kwargs
                 )
             else:
-                response = getattr(self.client, self.list_method)(
-                    **self.list_method_kwargs
-                )
+                response = getattr(self.client, self.list_method)(**self.list_method_kwargs)
 
             self.summary_list = response.get(self.summaries_key, [])
             self.next_token = response.get("NextToken", None)

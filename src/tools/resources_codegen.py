@@ -401,9 +401,7 @@ class ResourcesCodeGen:
             if import_method := self._evaluate_method(resource_name, "import", class_methods):
                 resource_class += add_indent(import_method, 4)
 
-            if list_method := self._evaluate_method(
-                resource_name, "get_all", class_methods
-            ):
+            if list_method := self._evaluate_method(resource_name, "get_all", class_methods):
                 resource_class += add_indent(list_method, 4)
 
         else:
@@ -1078,12 +1076,8 @@ class ResourcesCodeGen:
 
         operation = convert_to_snake_case(operation_name)
 
-        get_list_operation_output_shape = self.operations[operation_name]["output"][
-            "shape"
-        ]
-        list_operation_output_members = self.shapes[get_list_operation_output_shape][
-            "members"
-        ]
+        get_list_operation_output_shape = self.operations[operation_name]["output"]["shape"]
+        list_operation_output_members = self.shapes[get_list_operation_output_shape]["members"]
 
         filtered_list_operation_output_members = next(
             {key: value}
@@ -1092,31 +1086,23 @@ class ResourcesCodeGen:
         )
 
         summaries_key = next(iter(filtered_list_operation_output_members))
-        summaries_shape_name = filtered_list_operation_output_members[summaries_key][
-            "shape"
-        ]
+        summaries_shape_name = filtered_list_operation_output_members[summaries_key]["shape"]
 
         summary_name = self.shapes[summaries_shape_name]["member"]["shape"]
         summary_members = self.shapes[summary_name]["members"].keys()
 
         get_operation = self.operations["Describe" + resource_name]
         get_operation_input_shape = get_operation["input"]["shape"]
-        get_operation_required_input = self.shapes[get_operation_input_shape].get(
-            "required", []
-        )
+        get_operation_required_input = self.shapes[get_operation_input_shape].get("required", [])
 
         custom_key_mapping_str = ""
-        if all(
-            member not in summary_members for member in get_operation_required_input
-        ):
+        if all(member not in summary_members for member in get_operation_required_input):
             if "MonitoringJobDefinitionSummary" == summary_name:
                 custom_key_mapping = {
                     "monitoring_job_definition_name": "job_definition_name",
                     "monitoring_job_definition_arn": "job_definition_arn",
                 }
-                custom_key_mapping_str = (
-                    f"custom_key_mapping = {json.dumps(custom_key_mapping)}"
-                )
+                custom_key_mapping_str = f"custom_key_mapping = {json.dumps(custom_key_mapping)}"
                 custom_key_mapping_str = add_indent(custom_key_mapping_str, 4)
             else:
                 log.warn(
@@ -1137,9 +1123,7 @@ class ResourcesCodeGen:
             resource_iterator_args_list.append(f"custom_key_mapping=custom_key_mapping")
 
         exclude_list = ["next_token", "max_results"]
-        get_all_args = self._generate_method_args(
-            operation_input_shape_name, exclude_list
-        )
+        get_all_args = self._generate_method_args(operation_input_shape_name, exclude_list)
 
         if not get_all_args.strip().strip(","):
             resource_iterator_args = ",\n".join(resource_iterator_args_list)

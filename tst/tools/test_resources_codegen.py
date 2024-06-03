@@ -502,9 +502,7 @@ def get_all(
         resource_cls=Domain
     )
 """
-        assert (
-            self.resource_generator.generate_get_all_method("Domain") == expected_output
-        )
+        assert self.resource_generator.generate_get_all_method("Domain") == expected_output
 
     def test_get_all_method_with_custom_key_mapping(self):
         expected_output = """
