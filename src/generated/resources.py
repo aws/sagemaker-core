@@ -20,19 +20,20 @@ from pprint import pprint
 from pydantic import validate_call
 from typing import Dict, List, Literal, Optional
 from boto3.session import Session
-from .utils import (
+from src.code_injection.codec import transform
+from src.generated.utils import (
     SageMakerClient,
     SageMakerRuntimeClient,
     Unassigned,
     snake_to_pascal,
     pascal_to_snake,
 )
-from .intelligent_defaults_helper import (
+from src.generated.intelligent_defaults_helper import (
     load_default_configs_for_resource_name,
     get_config_value,
 )
-from src.code_injection.codec import transform
-from .shapes import *
+from src.generated.shapes import *
+from src.generated.exceptions import *
 
 
 logging.basicConfig(level=logging.INFO)
@@ -347,10 +348,14 @@ class Algorithm(Base):
             if status == current_status:
                 return
 
-            # TODO: Raise some generated TimeOutError
+            if "failed" in current_status.lower():
+                raise FailedStatusError(
+                    resource_type="Algorithm", status=current_status, reason="(Unknown)"
+                )
+
             if timeout is not None and time.time() - start_time >= timeout:
-                raise Exception(
-                    "Timeout exceeded. Final resource state - " + current_status
+                raise TimeoutExceededError(
+                    resouce_type="Algorithm", status=current_status
                 )
             print("-", end="")
             time.sleep(poll)
@@ -488,11 +493,15 @@ class App(Base):
             if status == current_status:
                 return
 
-            # TODO: Raise some generated TimeOutError
-            if timeout is not None and time.time() - start_time >= timeout:
-                raise Exception(
-                    "Timeout exceeded. Final resource state - " + current_status
+            if "failed" in current_status.lower():
+                raise FailedStatusError(
+                    resource_type="App",
+                    status=current_status,
+                    reason=self.failure_reason,
                 )
+
+            if timeout is not None and time.time() - start_time >= timeout:
+                raise TimeoutExceededError(resouce_type="App", status=current_status)
             print("-", end="")
             time.sleep(poll)
 
@@ -880,12 +889,19 @@ class AutoMLJob(Base):
             current_status = self.auto_m_l_job_status
 
             if current_status in terminal_states:
+
+                if "failed" in current_status.lower():
+                    raise FailedStatusError(
+                        resource_type="AutoMLJob",
+                        status=current_status,
+                        reason=self.failure_reason,
+                    )
+
                 return
 
-            # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
-                raise Exception(
-                    "Timeout exceeded. Final resource state - " + current_status
+                raise TimeoutExceededError(
+                    resouce_type="AutoMLJob", status=current_status
                 )
             print("-", end="")
             time.sleep(poll)
@@ -1043,12 +1059,19 @@ class AutoMLJobV2(Base):
             current_status = self.auto_m_l_job_status
 
             if current_status in terminal_states:
+
+                if "failed" in current_status.lower():
+                    raise FailedStatusError(
+                        resource_type="AutoMLJobV2",
+                        status=current_status,
+                        reason=self.failure_reason,
+                    )
+
                 return
 
-            # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
-                raise Exception(
-                    "Timeout exceeded. Final resource state - " + current_status
+                raise TimeoutExceededError(
+                    resouce_type="AutoMLJobV2", status=current_status
                 )
             print("-", end="")
             time.sleep(poll)
@@ -1204,10 +1227,14 @@ class Cluster(Base):
             if status == current_status:
                 return
 
-            # TODO: Raise some generated TimeOutError
+            if "failed" in current_status.lower():
+                raise FailedStatusError(
+                    resource_type="Cluster", status=current_status, reason="(Unknown)"
+                )
+
             if timeout is not None and time.time() - start_time >= timeout:
-                raise Exception(
-                    "Timeout exceeded. Final resource state - " + current_status
+                raise TimeoutExceededError(
+                    resouce_type="Cluster", status=current_status
                 )
             print("-", end="")
             time.sleep(poll)
@@ -1466,12 +1493,19 @@ class CompilationJob(Base):
             current_status = self.compilation_job_status
 
             if current_status in terminal_states:
+
+                if "failed" in current_status.lower():
+                    raise FailedStatusError(
+                        resource_type="CompilationJob",
+                        status=current_status,
+                        reason=self.failure_reason,
+                    )
+
                 return
 
-            # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
-                raise Exception(
-                    "Timeout exceeded. Final resource state - " + current_status
+                raise TimeoutExceededError(
+                    resouce_type="CompilationJob", status=current_status
                 )
             print("-", end="")
             time.sleep(poll)
@@ -2103,11 +2137,15 @@ class Domain(Base):
             if status == current_status:
                 return
 
-            # TODO: Raise some generated TimeOutError
-            if timeout is not None and time.time() - start_time >= timeout:
-                raise Exception(
-                    "Timeout exceeded. Final resource state - " + current_status
+            if "failed" in current_status.lower():
+                raise FailedStatusError(
+                    resource_type="Domain",
+                    status=current_status,
+                    reason=self.failure_reason,
                 )
+
+            if timeout is not None and time.time() - start_time >= timeout:
+                raise TimeoutExceededError(resouce_type="Domain", status=current_status)
             print("-", end="")
             time.sleep(poll)
 
@@ -2344,12 +2382,19 @@ class EdgePackagingJob(Base):
             current_status = self.edge_packaging_job_status
 
             if current_status in terminal_states:
+
+                if "failed" in current_status.lower():
+                    raise FailedStatusError(
+                        resource_type="EdgePackagingJob",
+                        status=current_status,
+                        reason=self.edge_packaging_job_status_message,
+                    )
+
                 return
 
-            # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
-                raise Exception(
-                    "Timeout exceeded. Final resource state - " + current_status
+                raise TimeoutExceededError(
+                    resouce_type="EdgePackagingJob", status=current_status
                 )
             print("-", end="")
             time.sleep(poll)
@@ -2528,10 +2573,16 @@ class Endpoint(Base):
             if status == current_status:
                 return
 
-            # TODO: Raise some generated TimeOutError
+            if "failed" in current_status.lower():
+                raise FailedStatusError(
+                    resource_type="Endpoint",
+                    status=current_status,
+                    reason=self.failure_reason,
+                )
+
             if timeout is not None and time.time() - start_time >= timeout:
-                raise Exception(
-                    "Timeout exceeded. Final resource state - " + current_status
+                raise TimeoutExceededError(
+                    resouce_type="Endpoint", status=current_status
                 )
             print("-", end="")
             time.sleep(poll)
@@ -3073,10 +3124,16 @@ class FeatureGroup(Base):
             if status == current_status:
                 return
 
-            # TODO: Raise some generated TimeOutError
+            if "failed" in current_status.lower():
+                raise FailedStatusError(
+                    resource_type="FeatureGroup",
+                    status=current_status,
+                    reason=self.failure_reason,
+                )
+
             if timeout is not None and time.time() - start_time >= timeout:
-                raise Exception(
-                    "Timeout exceeded. Final resource state - " + current_status
+                raise TimeoutExceededError(
+                    resouce_type="FeatureGroup", status=current_status
                 )
             print("-", end="")
             time.sleep(poll)
@@ -3213,10 +3270,16 @@ class FlowDefinition(Base):
             if status == current_status:
                 return
 
-            # TODO: Raise some generated TimeOutError
+            if "failed" in current_status.lower():
+                raise FailedStatusError(
+                    resource_type="FlowDefinition",
+                    status=current_status,
+                    reason=self.failure_reason,
+                )
+
             if timeout is not None and time.time() - start_time >= timeout:
-                raise Exception(
-                    "Timeout exceeded. Final resource state - " + current_status
+                raise TimeoutExceededError(
+                    resouce_type="FlowDefinition", status=current_status
                 )
             print("-", end="")
             time.sleep(poll)
@@ -3375,11 +3438,15 @@ class Hub(Base):
             if status == current_status:
                 return
 
-            # TODO: Raise some generated TimeOutError
-            if timeout is not None and time.time() - start_time >= timeout:
-                raise Exception(
-                    "Timeout exceeded. Final resource state - " + current_status
+            if "failed" in current_status.lower():
+                raise FailedStatusError(
+                    resource_type="Hub",
+                    status=current_status,
+                    reason=self.failure_reason,
                 )
+
+            if timeout is not None and time.time() - start_time >= timeout:
+                raise TimeoutExceededError(resouce_type="Hub", status=current_status)
             print("-", end="")
             time.sleep(poll)
 
@@ -3473,10 +3540,16 @@ class HubContent(Base):
             if status == current_status:
                 return
 
-            # TODO: Raise some generated TimeOutError
+            if "failed" in current_status.lower():
+                raise FailedStatusError(
+                    resource_type="HubContent",
+                    status=current_status,
+                    reason=self.failure_reason,
+                )
+
             if timeout is not None and time.time() - start_time >= timeout:
-                raise Exception(
-                    "Timeout exceeded. Final resource state - " + current_status
+                raise TimeoutExceededError(
+                    resouce_type="HubContent", status=current_status
                 )
             print("-", end="")
             time.sleep(poll)
@@ -3632,10 +3705,9 @@ class HumanTaskUi(Base):
             if status == current_status:
                 return
 
-            # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
-                raise Exception(
-                    "Timeout exceeded. Final resource state - " + current_status
+                raise TimeoutExceededError(
+                    resouce_type="HumanTaskUi", status=current_status
                 )
             print("-", end="")
             time.sleep(poll)
@@ -3813,12 +3885,19 @@ class HyperParameterTuningJob(Base):
             current_status = self.hyper_parameter_tuning_job_status
 
             if current_status in terminal_states:
+
+                if "failed" in current_status.lower():
+                    raise FailedStatusError(
+                        resource_type="HyperParameterTuningJob",
+                        status=current_status,
+                        reason=self.failure_reason,
+                    )
+
                 return
 
-            # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
-                raise Exception(
-                    "Timeout exceeded. Final resource state - " + current_status
+                raise TimeoutExceededError(
+                    resouce_type="HyperParameterTuningJob", status=current_status
                 )
             print("-", end="")
             time.sleep(poll)
@@ -3974,11 +4053,15 @@ class Image(Base):
             if status == current_status:
                 return
 
-            # TODO: Raise some generated TimeOutError
-            if timeout is not None and time.time() - start_time >= timeout:
-                raise Exception(
-                    "Timeout exceeded. Final resource state - " + current_status
+            if "failed" in current_status.lower():
+                raise FailedStatusError(
+                    resource_type="Image",
+                    status=current_status,
+                    reason=self.failure_reason,
                 )
+
+            if timeout is not None and time.time() - start_time >= timeout:
+                raise TimeoutExceededError(resouce_type="Image", status=current_status)
             print("-", end="")
             time.sleep(poll)
 
@@ -4151,10 +4234,16 @@ class ImageVersion(Base):
             if status == current_status:
                 return
 
-            # TODO: Raise some generated TimeOutError
+            if "failed" in current_status.lower():
+                raise FailedStatusError(
+                    resource_type="ImageVersion",
+                    status=current_status,
+                    reason=self.failure_reason,
+                )
+
             if timeout is not None and time.time() - start_time >= timeout:
-                raise Exception(
-                    "Timeout exceeded. Final resource state - " + current_status
+                raise TimeoutExceededError(
+                    resouce_type="ImageVersion", status=current_status
                 )
             print("-", end="")
             time.sleep(poll)
@@ -4294,10 +4383,16 @@ class InferenceComponent(Base):
             if status == current_status:
                 return
 
-            # TODO: Raise some generated TimeOutError
+            if "failed" in current_status.lower():
+                raise FailedStatusError(
+                    resource_type="InferenceComponent",
+                    status=current_status,
+                    reason=self.failure_reason,
+                )
+
             if timeout is not None and time.time() - start_time >= timeout:
-                raise Exception(
-                    "Timeout exceeded. Final resource state - " + current_status
+                raise TimeoutExceededError(
+                    resouce_type="InferenceComponent", status=current_status
                 )
             print("-", end="")
             time.sleep(poll)
@@ -4492,10 +4587,9 @@ class InferenceExperiment(Base):
             if status == current_status:
                 return
 
-            # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
-                raise Exception(
-                    "Timeout exceeded. Final resource state - " + current_status
+                raise TimeoutExceededError(
+                    resouce_type="InferenceExperiment", status=current_status
                 )
             print("-", end="")
             time.sleep(poll)
@@ -4638,12 +4732,19 @@ class InferenceRecommendationsJob(Base):
             current_status = self.status
 
             if current_status in terminal_states:
+
+                if "failed" in current_status.lower():
+                    raise FailedStatusError(
+                        resource_type="InferenceRecommendationsJob",
+                        status=current_status,
+                        reason=self.failure_reason,
+                    )
+
                 return
 
-            # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
-                raise Exception(
-                    "Timeout exceeded. Final resource state - " + current_status
+                raise TimeoutExceededError(
+                    resouce_type="InferenceRecommendationsJob", status=current_status
                 )
             print("-", end="")
             time.sleep(poll)
@@ -4810,12 +4911,19 @@ class LabelingJob(Base):
             current_status = self.labeling_job_status
 
             if current_status in terminal_states:
+
+                if "failed" in current_status.lower():
+                    raise FailedStatusError(
+                        resource_type="LabelingJob",
+                        status=current_status,
+                        reason=self.failure_reason,
+                    )
+
                 return
 
-            # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
-                raise Exception(
-                    "Timeout exceeded. Final resource state - " + current_status
+                raise TimeoutExceededError(
+                    resouce_type="LabelingJob", status=current_status
                 )
             print("-", end="")
             time.sleep(poll)
@@ -5239,10 +5347,9 @@ class ModelCard(Base):
             if status == current_status:
                 return
 
-            # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
-                raise Exception(
-                    "Timeout exceeded. Final resource state - " + current_status
+                raise TimeoutExceededError(
+                    resouce_type="ModelCard", status=current_status
                 )
             print("-", end="")
             time.sleep(poll)
@@ -5357,12 +5464,19 @@ class ModelCardExportJob(Base):
             current_status = self.status
 
             if current_status in terminal_states:
+
+                if "failed" in current_status.lower():
+                    raise FailedStatusError(
+                        resource_type="ModelCardExportJob",
+                        status=current_status,
+                        reason=self.failure_reason,
+                    )
+
                 return
 
-            # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
-                raise Exception(
-                    "Timeout exceeded. Final resource state - " + current_status
+                raise TimeoutExceededError(
+                    resouce_type="ModelCardExportJob", status=current_status
                 )
             print("-", end="")
             time.sleep(poll)
@@ -5781,10 +5895,16 @@ class ModelPackage(Base):
             if status == current_status:
                 return
 
-            # TODO: Raise some generated TimeOutError
+            if "failed" in current_status.lower():
+                raise FailedStatusError(
+                    resource_type="ModelPackage",
+                    status=current_status,
+                    reason="(Unknown)",
+                )
+
             if timeout is not None and time.time() - start_time >= timeout:
-                raise Exception(
-                    "Timeout exceeded. Final resource state - " + current_status
+                raise TimeoutExceededError(
+                    resouce_type="ModelPackage", status=current_status
                 )
             print("-", end="")
             time.sleep(poll)
@@ -5892,10 +6012,16 @@ class ModelPackageGroup(Base):
             if status == current_status:
                 return
 
-            # TODO: Raise some generated TimeOutError
+            if "failed" in current_status.lower():
+                raise FailedStatusError(
+                    resource_type="ModelPackageGroup",
+                    status=current_status,
+                    reason="(Unknown)",
+                )
+
             if timeout is not None and time.time() - start_time >= timeout:
-                raise Exception(
-                    "Timeout exceeded. Final resource state - " + current_status
+                raise TimeoutExceededError(
+                    resouce_type="ModelPackageGroup", status=current_status
                 )
             print("-", end="")
             time.sleep(poll)
@@ -6226,10 +6352,16 @@ class MonitoringSchedule(Base):
             if status == current_status:
                 return
 
-            # TODO: Raise some generated TimeOutError
+            if "failed" in current_status.lower():
+                raise FailedStatusError(
+                    resource_type="MonitoringSchedule",
+                    status=current_status,
+                    reason=self.failure_reason,
+                )
+
             if timeout is not None and time.time() - start_time >= timeout:
-                raise Exception(
-                    "Timeout exceeded. Final resource state - " + current_status
+                raise TimeoutExceededError(
+                    resouce_type="MonitoringSchedule", status=current_status
                 )
             print("-", end="")
             time.sleep(poll)
@@ -6453,10 +6585,16 @@ class NotebookInstance(Base):
             if status == current_status:
                 return
 
-            # TODO: Raise some generated TimeOutError
+            if "failed" in current_status.lower():
+                raise FailedStatusError(
+                    resource_type="NotebookInstance",
+                    status=current_status,
+                    reason=self.failure_reason,
+                )
+
             if timeout is not None and time.time() - start_time >= timeout:
-                raise Exception(
-                    "Timeout exceeded. Final resource state - " + current_status
+                raise TimeoutExceededError(
+                    resouce_type="NotebookInstance", status=current_status
                 )
             print("-", end="")
             time.sleep(poll)
@@ -6743,10 +6881,9 @@ class Pipeline(Base):
             if status == current_status:
                 return
 
-            # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
-                raise Exception(
-                    "Timeout exceeded. Final resource state - " + current_status
+                raise TimeoutExceededError(
+                    resouce_type="Pipeline", status=current_status
                 )
             print("-", end="")
             time.sleep(poll)
@@ -6849,10 +6986,16 @@ class PipelineExecution(Base):
             if status == current_status:
                 return
 
-            # TODO: Raise some generated TimeOutError
+            if "failed" in current_status.lower():
+                raise FailedStatusError(
+                    resource_type="PipelineExecution",
+                    status=current_status,
+                    reason=self.failure_reason,
+                )
+
             if timeout is not None and time.time() - start_time >= timeout:
-                raise Exception(
-                    "Timeout exceeded. Final resource state - " + current_status
+                raise TimeoutExceededError(
+                    resouce_type="PipelineExecution", status=current_status
                 )
             print("-", end="")
             time.sleep(poll)
@@ -7009,12 +7152,19 @@ class ProcessingJob(Base):
             current_status = self.processing_job_status
 
             if current_status in terminal_states:
+
+                if "failed" in current_status.lower():
+                    raise FailedStatusError(
+                        resource_type="ProcessingJob",
+                        status=current_status,
+                        reason=self.failure_reason,
+                    )
+
                 return
 
-            # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
-                raise Exception(
-                    "Timeout exceeded. Final resource state - " + current_status
+                raise TimeoutExceededError(
+                    resouce_type="ProcessingJob", status=current_status
                 )
             print("-", end="")
             time.sleep(poll)
@@ -7166,10 +7316,14 @@ class Project(Base):
             if status == current_status:
                 return
 
-            # TODO: Raise some generated TimeOutError
+            if "failed" in current_status.lower():
+                raise FailedStatusError(
+                    resource_type="Project", status=current_status, reason="(Unknown)"
+                )
+
             if timeout is not None and time.time() - start_time >= timeout:
-                raise Exception(
-                    "Timeout exceeded. Final resource state - " + current_status
+                raise TimeoutExceededError(
+                    resouce_type="Project", status=current_status
                 )
             print("-", end="")
             time.sleep(poll)
@@ -7324,11 +7478,15 @@ class Space(Base):
             if status == current_status:
                 return
 
-            # TODO: Raise some generated TimeOutError
-            if timeout is not None and time.time() - start_time >= timeout:
-                raise Exception(
-                    "Timeout exceeded. Final resource state - " + current_status
+            if "failed" in current_status.lower():
+                raise FailedStatusError(
+                    resource_type="Space",
+                    status=current_status,
+                    reason=self.failure_reason,
                 )
+
+            if timeout is not None and time.time() - start_time >= timeout:
+                raise TimeoutExceededError(resouce_type="Space", status=current_status)
             print("-", end="")
             time.sleep(poll)
 
@@ -7662,12 +7820,19 @@ class TrainingJob(Base):
             current_status = self.training_job_status
 
             if current_status in terminal_states:
+
+                if "failed" in current_status.lower():
+                    raise FailedStatusError(
+                        resource_type="TrainingJob",
+                        status=current_status,
+                        reason=self.failure_reason,
+                    )
+
                 return
 
-            # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
-                raise Exception(
-                    "Timeout exceeded. Final resource state - " + current_status
+                raise TimeoutExceededError(
+                    resouce_type="TrainingJob", status=current_status
                 )
             print("-", end="")
             time.sleep(poll)
@@ -7833,12 +7998,19 @@ class TransformJob(Base):
             current_status = self.transform_job_status
 
             if current_status in terminal_states:
+
+                if "failed" in current_status.lower():
+                    raise FailedStatusError(
+                        resource_type="TransformJob",
+                        status=current_status,
+                        reason=self.failure_reason,
+                    )
+
                 return
 
-            # TODO: Raise some generated TimeOutError
             if timeout is not None and time.time() - start_time >= timeout:
-                raise Exception(
-                    "Timeout exceeded. Final resource state - " + current_status
+                raise TimeoutExceededError(
+                    resouce_type="TransformJob", status=current_status
                 )
             print("-", end="")
             time.sleep(poll)
@@ -8113,10 +8285,16 @@ class TrialComponent(Base):
             if status == current_status:
                 return
 
-            # TODO: Raise some generated TimeOutError
+            if "failed" in current_status.lower():
+                raise FailedStatusError(
+                    resource_type="TrialComponent",
+                    status=current_status,
+                    reason="(Unknown)",
+                )
+
             if timeout is not None and time.time() - start_time >= timeout:
-                raise Exception(
-                    "Timeout exceeded. Final resource state - " + current_status
+                raise TimeoutExceededError(
+                    resouce_type="TrialComponent", status=current_status
                 )
             print("-", end="")
             time.sleep(poll)
@@ -8306,10 +8484,16 @@ class UserProfile(Base):
             if status == current_status:
                 return
 
-            # TODO: Raise some generated TimeOutError
+            if "failed" in current_status.lower():
+                raise FailedStatusError(
+                    resource_type="UserProfile",
+                    status=current_status,
+                    reason=self.failure_reason,
+                )
+
             if timeout is not None and time.time() - start_time >= timeout:
-                raise Exception(
-                    "Timeout exceeded. Final resource state - " + current_status
+                raise TimeoutExceededError(
+                    resouce_type="UserProfile", status=current_status
                 )
             print("-", end="")
             time.sleep(poll)
@@ -8463,10 +8647,14 @@ class Workforce(Base):
             if status == current_status:
                 return
 
-            # TODO: Raise some generated TimeOutError
+            if "failed" in current_status.lower():
+                raise FailedStatusError(
+                    resource_type="Workforce", status=current_status, reason="(Unknown)"
+                )
+
             if timeout is not None and time.time() - start_time >= timeout:
-                raise Exception(
-                    "Timeout exceeded. Final resource state - " + current_status
+                raise TimeoutExceededError(
+                    resouce_type="Workforce", status=current_status
                 )
             print("-", end="")
             time.sleep(poll)
