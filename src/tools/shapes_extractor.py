@@ -175,14 +175,10 @@ class ShapesExtractor:
         return shape_members, init_data_body
 
     def generate_data_shape_string_body(self, shape, required_override=()):
-        return self.generate_data_shape_members_and_string_body(
-            shape, required_override
-        )[1]
+        return self.generate_data_shape_members_and_string_body(shape, required_override)[1]
 
     def generate_data_shape_members(self, shape, required_override=()):
-        return self.generate_data_shape_members_and_string_body(
-            shape, required_override
-        )[0]
+        return self.generate_data_shape_members_and_string_body(shape, required_override)[0]
 
     @lru_cache
     def generate_shape_members(self, shape, required_override=()):
@@ -208,9 +204,7 @@ class ShapesExtractor:
                     # Shape is a simple type like string
                     member_type = BASIC_JSON_TYPES_TO_PYTHON_TYPES[member_shape_type]
             else:
-                raise Exception(
-                    "The Shape definition mush exist. The Json Data might be corrupt"
-                )
+                raise Exception("The Shape definition mush exist. The Json Data might be corrupt")
             member_name_snake_case = convert_to_snake_case(member_name)
             if member_name in required_args:
                 init_data_body[f"{member_name_snake_case}"] = f"{member_type}"

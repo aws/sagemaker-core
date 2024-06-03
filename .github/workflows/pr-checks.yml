@@ -20,3 +20,24 @@ jobs:
         uses: aws-actions/aws-codebuild-run-build@v1
         with:
           project-name: unit_tests
+          source-version: ${{ github.event.pull_request.head.sha }}
+          report-type: TEST
+          
+  pylint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+    - name: Install dependencies
+      run: |
+        export PYTHONPATH="$PYTHONPATH:$PWD"
+        echo $PYTHONPATH
+        python -m pip install --upgrade pip
+        pip install -e ".[codegen]"
+    - name: Run Pylint
+      run: |
+        python_files=$(find . -name '*.py')
+        pylint $python_files --persistent=y
