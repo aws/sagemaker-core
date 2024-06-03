@@ -114,9 +114,10 @@ def load(
 """
 
 UPDATE_METHOD_TEMPLATE = """
-def update(self,
- {update_args}
- ) -> Optional[object]:
+def update(
+    self,
+{update_args}
+) -> Optional[object]:
     logger.debug("Creating {resource_lower} resource.")
     client = SageMakerClient().client
 

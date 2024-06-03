@@ -316,23 +316,7 @@ class ResourcesCodeGen:
             # Start defining the class
             resource_class = f"class {resource_name}(Base):\n"
 
-            # Get the operation and shape for the 'get' method
-            get_operation = self.operations["Describe" + resource_name]
-            get_operation_shape = get_operation["output"]["shape"]
-
-            # Use 'get' operation input as the required class attributes.
-            # These are the mimumum identifing attributes for a resource object (ie, required for refresh())
-            get_operation_input_shape = get_operation["input"]["shape"]
-            required_attributes = self.shapes[get_operation_input_shape].get(
-                "required", []
-            )
-
-            # Generate the class attributes based on the shape
-            class_attributes = (
-                self.shapes_extractor.generate_data_shape_members_and_string_body(
-                    get_operation_shape, tuple(required_attributes)
-                )
-            )
+            class_attributes = self._get_class_attributes(resource_name)
             class_attributes_string = class_attributes[1]
             resource_attributes = list(class_attributes[0].keys())
 
@@ -437,6 +421,33 @@ class ResourcesCodeGen:
 
         # Return the class definition
         return resource_class
+
+    def _get_class_attributes(self, resource_name: str) -> tuple[dict, str]:
+        """Get the class attributes for a resource.
+
+        Args:
+            resource_name (str): The name of the resource.
+
+        Returns:
+            tuple[dict, str]: The class attributes and the formatted class attributes string.
+        """
+
+        # Get the operation and shape for the 'get' method
+        get_operation = self.operations["Describe" + resource_name]
+        get_operation_shape = get_operation["output"]["shape"]
+
+        # Use 'get' operation input as the required class attributes.
+        # These are the mimumum identifing attributes for a resource object (ie, required for refresh())
+        get_operation_input_shape = get_operation["input"]["shape"]
+        required_attributes = self.shapes[get_operation_input_shape].get("required", [])
+
+        # Generate the class attributes based on the shape
+        class_attributes = (
+            self.shapes_extractor.generate_data_shape_members_and_string_body(
+                get_operation_shape, tuple(required_attributes)
+            )
+        )
+        return class_attributes
 
     def _generate_operation_input_args(
         self, resource_operation: dict, is_class_method: bool, exclude_list: list = []

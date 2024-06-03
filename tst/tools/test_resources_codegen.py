@@ -116,17 +116,23 @@ def load(
 
     def test_generate_update_method(self):
         expected_output = """
-def update(self) -> Optional[object]:
+def update(
+    self,
+    retain_all_variant_properties: Optional[bool] = Unassigned(),
+    exclude_retained_variant_properties: Optional[List[VariantProperty]] = Unassigned(),
+    deployment_config: Optional[DeploymentConfig] = Unassigned(),
+    retain_deployment_config: Optional[bool] = Unassigned(),
+) -> Optional[object]:
     logger.debug("Creating endpoint resource.")
     client = SageMakerClient().client
 
     operation_input_args = {
         'EndpointName': self.endpoint_name,
         'EndpointConfigName': self.endpoint_config_name,
-        'RetainAllVariantProperties': self.retain_all_variant_properties,
-        'ExcludeRetainedVariantProperties': self.exclude_retained_variant_properties,
-        'DeploymentConfig': self.deployment_config,
-        'RetainDeploymentConfig': self.retain_deployment_config,
+        'RetainAllVariantProperties': retain_all_variant_properties,
+        'ExcludeRetainedVariantProperties': exclude_retained_variant_properties,
+        'DeploymentConfig': deployment_config,
+        'RetainDeploymentConfig': retain_deployment_config,
     }
     logger.debug(f"Input request: {operation_input_args}")
     # serialize the input request
@@ -140,8 +146,12 @@ def update(self) -> Optional[object]:
 
     return self
 """
+        class_attributes = self.resource_generator._get_class_attributes("Endpoint")
+        resource_attributes = list(class_attributes[0].keys())
         assert (
-            self.resource_generator.generate_update_method("Endpoint")
+            self.resource_generator.generate_update_method(
+                "Endpoint", resource_attributes=resource_attributes
+            )
             == expected_output
         )
 
@@ -289,7 +299,7 @@ def wait_for_status(
     def test_generate_invoke_method(self):
         expected_output = """
 def invoke(self, 
-    body: str,
+    body: Any,
     content_type: Optional[str] = Unassigned(),
     accept: Optional[str] = Unassigned(),
     custom_attributes: Optional[str] = Unassigned(),
@@ -301,8 +311,7 @@ def invoke(self,
     inference_component_name: Optional[str] = Unassigned(),
 ) -> Optional[object]:
     logger.debug(f"Invoking endpoint resource.")
-    client = SageMakerClient(service_name="sagemaker-runtime").client
-
+    client = SageMakerRuntimeClient(service_name="sagemaker-runtime").client
     operation_input_args = {
         'EndpointName': self.endpoint_name,
         'Body': body,
@@ -346,8 +355,8 @@ def invoke_async(self,
     invocation_timeout_seconds: Optional[int] = Unassigned(),
 ) -> Optional[object]:
     logger.debug(f"Invoking endpoint resource Async.")
-    client = SageMakerClient(service_name="sagemaker-runtime").client
-
+    client = SageMakerRuntimeClient(service_name="sagemaker-runtime").client
+    
     operation_input_args = {
         'EndpointName': self.endpoint_name,
         'ContentType': content_type,
@@ -379,7 +388,7 @@ def invoke_async(self,
     def test_generate_invoke_with_response_stream_method(self):
         expected_output = """
 def invoke_with_response_stream(self, 
-    body: str,
+    body: Any,
     content_type: Optional[str] = Unassigned(),
     accept: Optional[str] = Unassigned(),
     custom_attributes: Optional[str] = Unassigned(),
@@ -389,7 +398,7 @@ def invoke_with_response_stream(self,
     inference_component_name: Optional[str] = Unassigned(),
 ) -> Optional[object]:
     logger.debug(f"Invoking endpoint resource with Response Stream.")
-    client = SageMakerClient(service_name="sagemaker-runtime").client
+    client = SageMakerRuntimeClient(service_name="sagemaker-runtime").client
 
     operation_input_args = {
         'EndpointName': self.endpoint_name,
