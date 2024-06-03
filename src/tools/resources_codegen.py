@@ -33,6 +33,7 @@ from src.util.util import add_indent, convert_to_snake_case, snake_to_pascal
 from src.tools.resources_extractor import ResourcesExtractor
 from src.tools.shapes_extractor import ShapesExtractor
 from src.tools.templates import (
+    BATCH_GET_METHOD_TEMPLATE,
     CREATE_METHOD_TEMPLATE,
     GET_METHOD_TEMPLATE,
     GET_NODE_METHOD_TEMPLATE,
@@ -436,6 +437,11 @@ class ResourcesCodeGen:
                 resource_name, "get_node", object_methods
             ):
                 resource_class += add_indent(get_node_method, 4)
+
+            if batch_get_method := self._evaluate_method(
+                resource_name, "batch_get", class_methods
+            ):
+                resource_class += add_indent(batch_get_method, 4)
         else:
             # If there's no 'get' method, log a message
             # TODO: Handle the resources without 'get' differently
@@ -928,6 +934,41 @@ class ResourcesCodeGen:
             describe_operation_output_shape=resource_operation_output_shape_name,
         )
 
+        return formatted_method
+
+    def generate_batch_get_method(self, resource_name: str) -> str:
+        """Auto-Generate 'batch_get' object Method for a resource.
+
+        Args:
+            resource_name (str): The resource name.
+
+        Returns:
+            str: The formatted batch_get Method template.
+        """
+        operation_name = "BatchDescribe" + resource_name
+        operation_metadata = self.operations[operation_name]
+        resource_operation_input_shape_name = operation_metadata["input"]["shape"]
+        resource_operation_output_shape_name = operation_metadata["output"]["shape"]
+
+        operation_input_args = self._generate_operation_input_args(
+            operation_metadata, is_class_method=True
+        )
+
+        # Generate the arguments for the 'update' method
+        describe_args = self._generate_method_args(resource_operation_input_shape_name)
+
+        resource_lower = convert_to_snake_case(resource_name)
+
+        operation = convert_to_snake_case(operation_name)
+
+        formatted_method = BATCH_GET_METHOD_TEMPLATE.format(
+            service_name="sagemaker",  # TODO: change service name based on the service - runtime, sagemaker, etc.
+            describe_args=describe_args,
+            operation_input_args=operation_input_args,
+            operation=operation,
+            describe_operation_output_shape=resource_operation_output_shape_name,
+            output_type="dict",
+        )
         return formatted_method
 
     def generate_refresh_method(self, resource_name: str) -> str:

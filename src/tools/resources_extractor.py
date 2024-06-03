@@ -313,6 +313,8 @@ class ResourcesExtractor:
                     else:
                         invoke_method = "invoke_with_response_stream"
                     object_methods.add(invoke_method)
+                elif action_split[0] == "batchdescribe":
+                    class_methods.add("batch_get")
                 elif action_split[0] in CLASS_METHODS:
                     class_methods.add(action_split[0])
                 elif action_split[0] in OBJECT_METHODS:

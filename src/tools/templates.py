@@ -284,6 +284,27 @@ def get_node(self, node_id) -> Optional[object]:
     return ClusterNodeDetails(**transformed_response)
 """
 
+BATCH_GET_METHOD_TEMPLATE = """
+@classmethod
+def batch_get(
+    cls,
+{describe_args}
+    session: Optional[Session] = None,
+    region: Optional[str] = None,
+) -> Optional[object]:
+    operation_input_args = {{
+{operation_input_args}
+    }}
+    client = SageMakerClient(session=session, region_name=region, service_name='{service_name}').client
+    response = client.{operation}(**operation_input_args)
+
+    pprint(response)
+
+    # deserialize the response
+    transformed_response = transform(response, '{describe_operation_output_shape}')
+    return {output_type}(**transformed_response["model_package_summaries"])
+"""
+
 REFRESH_METHOD_TEMPLATE = """
 def refresh(self) -> Optional[object]:
 

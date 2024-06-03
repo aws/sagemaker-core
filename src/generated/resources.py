@@ -5802,6 +5802,27 @@ class ModelPackage(Base):
             print("-", end="")
             time.sleep(poll)
 
+    @classmethod
+    def batch_get(
+        cls,
+        model_package_arn_list: List[str],
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional[object]:
+        operation_input_args = {
+            "ModelPackageArnList": model_package_arn_list,
+        }
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+        response = client.batch_describe_model_package(**operation_input_args)
+
+        pprint(response)
+
+        # deserialize the response
+        transformed_response = transform(response, "BatchDescribeModelPackageOutput")
+        return dict(**transformed_response["model_package_summaries"])
+
 
 class ModelPackageGroup(Base):
     model_package_group_name: str
