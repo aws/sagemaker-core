@@ -368,7 +368,6 @@ def get_all(
 {operation_input_args}
     }}
 {custom_key_mapping}
-
     operation_input_args = {{k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}}
     
     return ResourceIterator(

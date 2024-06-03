@@ -447,3 +447,103 @@ def invoke_with_response_stream(self,
             )
             == expected_output
         )
+
+    def test_get_all_method(self):
+        expected_output = """
+@classmethod
+def get_all(
+    cls,
+    sort_order: Optional[str] = Unassigned(),
+    sort_by: Optional[str] = Unassigned(),
+    domain_id_equals: Optional[str] = Unassigned(),
+    user_profile_name_equals: Optional[str] = Unassigned(),
+    space_name_equals: Optional[str] = Unassigned(),
+    session: Optional[Session] = None,
+    region: Optional[str] = None,
+) -> "ResourceIterator[App]":
+    client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
+        
+    operation_input_args = {
+        'SortOrder': sort_order,
+        'SortBy': sort_by,
+        'DomainIdEquals': domain_id_equals,
+        'UserProfileNameEquals': user_profile_name_equals,
+        'SpaceNameEquals': space_name_equals,
+    }
+
+    operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
+    
+    return ResourceIterator(
+        client=client,
+        list_method='list_apps',
+        summaries_key='Apps',
+        summary_name='AppDetails',
+        resource_cls=App,
+        list_method_kwargs=operation_input_args
+    )
+"""
+        assert self.resource_generator.generate_get_all_method("App") == expected_output
+
+    def test_get_all_method_with_no_args(self):
+        expected_output = """
+@classmethod
+def get_all(
+    cls,
+    session: Optional[Session] = None,
+    region: Optional[str] = None,
+) -> "ResourceIterator[Domain]":
+    client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
+
+    return ResourceIterator(
+        client=client,
+        list_method='list_domains',
+        summaries_key='Domains',
+        summary_name='DomainDetails',
+        resource_cls=Domain
+    )
+"""
+        assert (
+            self.resource_generator.generate_get_all_method("Domain") == expected_output
+        )
+
+    def test_get_all_method_with_custom_key_mapping(self):
+        expected_output = """
+@classmethod
+def get_all(
+    cls,
+    endpoint_name: Optional[str] = Unassigned(),
+    sort_by: Optional[str] = Unassigned(),
+    sort_order: Optional[str] = Unassigned(),
+    name_contains: Optional[str] = Unassigned(),
+    creation_time_before: Optional[datetime.datetime] = Unassigned(),
+    creation_time_after: Optional[datetime.datetime] = Unassigned(),
+    session: Optional[Session] = None,
+    region: Optional[str] = None,
+) -> "ResourceIterator[DataQualityJobDefinition]":
+    client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
+        
+    operation_input_args = {
+        'EndpointName': endpoint_name,
+        'SortBy': sort_by,
+        'SortOrder': sort_order,
+        'NameContains': name_contains,
+        'CreationTimeBefore': creation_time_before,
+        'CreationTimeAfter': creation_time_after,
+    }
+    custom_key_mapping = {"monitoring_job_definition_name": "job_definition_name", "monitoring_job_definition_arn": "job_definition_arn"}
+    operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
+    
+    return ResourceIterator(
+        client=client,
+        list_method='list_data_quality_job_definitions',
+        summaries_key='JobDefinitionSummaries',
+        summary_name='MonitoringJobDefinitionSummary',
+        resource_cls=DataQualityJobDefinition,
+        custom_key_mapping=custom_key_mapping,
+        list_method_kwargs=operation_input_args
+    )
+"""
+        assert (
+            self.resource_generator.generate_get_all_method("DataQualityJobDefinition")
+            == expected_output
+        )

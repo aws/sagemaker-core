@@ -1085,18 +1085,30 @@ class ResourcesCodeGen:
             "members"
         ]
 
-        get_summaries_shape = next(
+        filtered_list_operation_output_members = next(
             {key: value}
             for key, value in list_operation_output_members.items()
             if key != "NextToken"
         )
 
-        summaries_key = next(iter(get_summaries_shape))
-        summaries_shape_name = get_summaries_shape[summaries_key]["shape"]
+        summaries_key = next(iter(filtered_list_operation_output_members))
+        summaries_shape_name = filtered_list_operation_output_members[summaries_key][
+            "shape"
+        ]
+
         summary_name = self.shapes[summaries_shape_name]["member"]["shape"]
+        summary_members = self.shapes[summary_name]["members"].keys()
+
+        get_operation = self.operations["Describe" + resource_name]
+        get_operation_input_shape = get_operation["input"]["shape"]
+        get_operation_required_input = self.shapes[get_operation_input_shape].get(
+            "required", []
+        )
 
         custom_key_mapping_str = ""
-        if resource_name not in summary_name:
+        if all(
+            member not in summary_members for member in get_operation_required_input
+        ):
             if "MonitoringJobDefinitionSummary" == summary_name:
                 custom_key_mapping = {
                     "monitoring_job_definition_name": "job_definition_name",
@@ -1107,9 +1119,11 @@ class ResourcesCodeGen:
                 )
                 custom_key_mapping_str = add_indent(custom_key_mapping_str, 4)
             else:
-                raise ValueError(
-                    f"Resource {resource_name} does not have a summary shape ({summary_name}) with matching name. May require custom key mapping."
+                log.warn(
+                    f"Resource {resource_name} summaries do not have required members to create object instance. Resource may require custom key mapping for get_all().\n"
+                    f"List {summary_name} Members: {summary_members}, Object Required Members: {get_operation_required_input}"
                 )
+                return ""
 
         resource_iterator_args_list = [
             "client=client",

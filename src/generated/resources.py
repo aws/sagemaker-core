@@ -2114,7 +2114,6 @@ class DataQualityJobDefinition(Base):
             "monitoring_job_definition_name": "job_definition_name",
             "monitoring_job_definition_arn": "job_definition_arn",
         }
-
         operation_input_args = {
             k: v
             for k, v in operation_input_args.items()
@@ -5069,48 +5068,6 @@ class ImageVersion(Base):
             print("-", end="")
             time.sleep(poll)
 
-    @classmethod
-    def get_all(
-        cls,
-        image_name: str,
-        creation_time_after: Optional[datetime.datetime] = Unassigned(),
-        creation_time_before: Optional[datetime.datetime] = Unassigned(),
-        last_modified_time_after: Optional[datetime.datetime] = Unassigned(),
-        last_modified_time_before: Optional[datetime.datetime] = Unassigned(),
-        sort_by: Optional[str] = Unassigned(),
-        sort_order: Optional[str] = Unassigned(),
-        session: Optional[Session] = None,
-        region: Optional[str] = None,
-    ) -> "ResourceIterator[ImageVersion]":
-        client = SageMakerClient(
-            session=session, region_name=region, service_name="sagemaker"
-        ).client
-
-        operation_input_args = {
-            "CreationTimeAfter": creation_time_after,
-            "CreationTimeBefore": creation_time_before,
-            "ImageName": image_name,
-            "LastModifiedTimeAfter": last_modified_time_after,
-            "LastModifiedTimeBefore": last_modified_time_before,
-            "SortBy": sort_by,
-            "SortOrder": sort_order,
-        }
-
-        operation_input_args = {
-            k: v
-            for k, v in operation_input_args.items()
-            if v is not None and not isinstance(v, Unassigned)
-        }
-
-        return ResourceIterator(
-            client=client,
-            list_method="list_image_versions",
-            summaries_key="ImageVersions",
-            summary_name="ImageVersion",
-            resource_cls=ImageVersion,
-            list_method_kwargs=operation_input_args,
-        )
-
 
 class InferenceComponent(Base):
     inference_component_name: str
@@ -6275,7 +6232,6 @@ class ModelBiasJobDefinition(Base):
             "monitoring_job_definition_name": "job_definition_name",
             "monitoring_job_definition_arn": "job_definition_arn",
         }
-
         operation_input_args = {
             k: v
             for k, v in operation_input_args.items()
@@ -6822,7 +6778,6 @@ class ModelExplainabilityJobDefinition(Base):
             "monitoring_job_definition_name": "job_definition_name",
             "monitoring_job_definition_arn": "job_definition_arn",
         }
-
         operation_input_args = {
             k: v
             for k, v in operation_input_args.items()
@@ -7446,7 +7401,6 @@ class ModelQualityJobDefinition(Base):
             "monitoring_job_definition_name": "job_definition_name",
             "monitoring_job_definition_arn": "job_definition_arn",
         }
-
         operation_input_args = {
             k: v
             for k, v in operation_input_args.items()

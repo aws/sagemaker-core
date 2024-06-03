@@ -172,7 +172,6 @@ class ResourceIterator(Generic[T]):
                     self.custom_key_mapping.get(k, k): v for k, v in init_data.items()
                 }
 
-            print(init_data)
             # Initialize the resource object
             resource_object = self.resource_cls(**init_data)
 
