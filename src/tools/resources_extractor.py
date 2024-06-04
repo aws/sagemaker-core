@@ -270,7 +270,6 @@ class ResourcesExtractor:
                             object_methods.add("wait")
                         elif resource_states and resource_low != "action":
                             object_methods.add("wait_for_status")
-
                     continue
 
                 if action_split[0] == "create":
