@@ -45,9 +45,7 @@ def pascal_to_snake(pascal_str):
     Returns:
         str: The converted snake_case string.
     """
-    return "".join(["_" + i.lower() if i.isupper() else i for i in pascal_str]).lstrip(
-        "_"
-    )
+    return "".join(["_" + i.lower() if i.isupper() else i for i in pascal_str]).lstrip("_")
 
 
 class Unassigned:
@@ -84,9 +82,7 @@ class SageMakerClient(metaclass=SingletonMeta):
     A singleton class for creating a SageMaker client.
     """
 
-    def __init__(
-        self, session: Session = None, region_name: str = None, service_name="sagemaker"
-    ):
+    def __init__(self, session: Session = None, region_name: str = None, service_name="sagemaker"):
         """
         Initializes the SageMakerClient with a boto3 session, region name, and service name.
         Creates a boto3 client using the provided session, region, and service.

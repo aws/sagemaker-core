@@ -109,24 +109,27 @@ def load(
 
     return cls.get(hub_name=hub_name, hub_content_type=hub_content_type, hub_content_name=hub_content_name, session=session, region=region)
 """
-        assert (
-            self.resource_generator.generate_import_method("HubContent")
-            == expected_output
-        )
+        assert self.resource_generator.generate_import_method("HubContent") == expected_output
 
     def test_generate_update_method(self):
         expected_output = """
-def update(self) -> Optional[object]:
+def update(
+    self,
+    retain_all_variant_properties: Optional[bool] = Unassigned(),
+    exclude_retained_variant_properties: Optional[List[VariantProperty]] = Unassigned(),
+    deployment_config: Optional[DeploymentConfig] = Unassigned(),
+    retain_deployment_config: Optional[bool] = Unassigned(),
+) -> Optional[object]:
     logger.debug("Creating endpoint resource.")
     client = SageMakerClient().client
 
     operation_input_args = {
         'EndpointName': self.endpoint_name,
         'EndpointConfigName': self.endpoint_config_name,
-        'RetainAllVariantProperties': self.retain_all_variant_properties,
-        'ExcludeRetainedVariantProperties': self.exclude_retained_variant_properties,
-        'DeploymentConfig': self.deployment_config,
-        'RetainDeploymentConfig': self.retain_deployment_config,
+        'RetainAllVariantProperties': retain_all_variant_properties,
+        'ExcludeRetainedVariantProperties': exclude_retained_variant_properties,
+        'DeploymentConfig': deployment_config,
+        'RetainDeploymentConfig': retain_deployment_config,
     }
     logger.debug(f"Input request: {operation_input_args}")
     # serialize the input request
@@ -140,8 +143,12 @@ def update(self) -> Optional[object]:
 
     return self
 """
+        class_attributes = self.resource_generator._get_class_attributes("Endpoint")
+        resource_attributes = list(class_attributes[0].keys())
         assert (
-            self.resource_generator.generate_update_method("Endpoint")
+            self.resource_generator.generate_update_method(
+                "Endpoint", resource_attributes=resource_attributes
+            )
             == expected_output
         )
 
@@ -206,10 +213,7 @@ def delete(self) -> None:
     }
     self.client.delete_compilation_job(**operation_input_args)
 """
-        assert (
-            self.resource_generator.generate_delete_method("CompilationJob")
-            == expected_output
-        )
+        assert self.resource_generator.generate_delete_method("CompilationJob") == expected_output
 
     # create a unit test for generate_stop_method
     def test_generate_stop_method(self):
@@ -221,10 +225,7 @@ def stop(self) -> None:
     }
     self.client.stop_compilation_job(**operation_input_args)
 """
-        assert (
-            self.resource_generator.generate_stop_method("CompilationJob")
-            == expected_output
-        )
+        assert self.resource_generator.generate_stop_method("CompilationJob") == expected_output
 
     def test_generate_wait_method(self):
         expected_output = """
@@ -242,18 +243,18 @@ def wait(
         current_status = self.training_job_status
 
         if current_status in terminal_states:
+            
+            if "failed" in current_status.lower():
+                raise FailedStatusError(resource_type="TrainingJob", status=current_status, reason=self.failure_reason)
+
             return
 
-        # TODO: Raise some generated TimeOutError
         if timeout is not None and time.time() - start_time >= timeout:
-            raise Exception("Timeout exceeded. Final resource state - " + current_status)
+            raise TimeoutExceededError(resouce_type="TrainingJob", status=current_status)
         print("-", end="")
         time.sleep(poll)
 """
-        assert (
-            self.resource_generator.generate_wait_method("TrainingJob")
-            == expected_output
-        )
+        assert self.resource_generator.generate_wait_method("TrainingJob") == expected_output
 
     def test_generate_wait_for_status_method(self):
         expected_output = """
@@ -272,24 +273,52 @@ def wait_for_status(
 
         if status == current_status:
             return
+        
+        if "failed" in current_status.lower():
+            raise FailedStatusError(resource_type="InferenceComponent", status=current_status, reason=self.failure_reason)
 
-        # TODO: Raise some generated TimeOutError
         if timeout is not None and time.time() - start_time >= timeout:
-            raise Exception("Timeout exceeded. Final resource state - " + current_status)
+            raise TimeoutExceededError(resouce_type="InferenceComponent", status=current_status)
         print("-", end="")
         time.sleep(poll)
 """
         assert (
-            self.resource_generator.generate_wait_for_status_method(
-                "InferenceComponent"
-            )
+            self.resource_generator.generate_wait_for_status_method("InferenceComponent")
+            == expected_output
+        )
+
+    def test_generate_wait_for_status_method_without_failed_state(self):
+        expected_output = """
+@validate_call
+def wait_for_status(
+    self,
+    status: Literal['Creating', 'Created', 'Updating', 'Running', 'Starting', 'Stopping', 'Completed', 'Cancelled'],
+    poll: int = 5,
+    timeout: Optional[int] = None
+) -> Optional[object]:
+    start_time = time.time()
+
+    while True:
+        self.refresh()
+        current_status = self.status
+
+        if status == current_status:
+            return
+
+        if timeout is not None and time.time() - start_time >= timeout:
+            raise TimeoutExceededError(resouce_type="InferenceExperiment", status=current_status)
+        print("-", end="")
+        time.sleep(poll)
+"""
+        assert (
+            self.resource_generator.generate_wait_for_status_method("InferenceExperiment")
             == expected_output
         )
 
     def test_generate_invoke_method(self):
         expected_output = """
 def invoke(self, 
-    body: str,
+    body: Any,
     content_type: Optional[str] = Unassigned(),
     accept: Optional[str] = Unassigned(),
     custom_attributes: Optional[str] = Unassigned(),
@@ -301,8 +330,7 @@ def invoke(self,
     inference_component_name: Optional[str] = Unassigned(),
 ) -> Optional[object]:
     logger.debug(f"Invoking endpoint resource.")
-    client = SageMakerClient(service_name="sagemaker-runtime").client
-
+    client = SageMakerRuntimeClient(service_name="sagemaker-runtime").client
     operation_input_args = {
         'EndpointName': self.endpoint_name,
         'Body': body,
@@ -346,8 +374,8 @@ def invoke_async(self,
     invocation_timeout_seconds: Optional[int] = Unassigned(),
 ) -> Optional[object]:
     logger.debug(f"Invoking endpoint resource Async.")
-    client = SageMakerClient(service_name="sagemaker-runtime").client
-
+    client = SageMakerRuntimeClient(service_name="sagemaker-runtime").client
+    
     operation_input_args = {
         'EndpointName': self.endpoint_name,
         'ContentType': content_type,
@@ -379,7 +407,7 @@ def invoke_async(self,
     def test_generate_invoke_with_response_stream_method(self):
         expected_output = """
 def invoke_with_response_stream(self, 
-    body: str,
+    body: Any,
     content_type: Optional[str] = Unassigned(),
     accept: Optional[str] = Unassigned(),
     custom_attributes: Optional[str] = Unassigned(),
@@ -389,7 +417,7 @@ def invoke_with_response_stream(self,
     inference_component_name: Optional[str] = Unassigned(),
 ) -> Optional[object]:
     logger.debug(f"Invoking endpoint resource with Response Stream.")
-    client = SageMakerClient(service_name="sagemaker-runtime").client
+    client = SageMakerRuntimeClient(service_name="sagemaker-runtime").client
 
     operation_input_args = {
         'EndpointName': self.endpoint_name,

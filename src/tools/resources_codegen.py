@@ -50,6 +50,7 @@ from src.tools.templates import (
     INVOKE_ASYNC_METHOD_TEMPLATE,
     INVOKE_WITH_RESPONSE_STREAM_METHOD_TEMPLATE,
     IMPORT_METHOD_TEMPLATE,
+    FAILED_STATUS_ERROR_TEMPLATE,
 )
 from src.tools.data_extractor import (
     load_combined_shapes_data,
@@ -108,13 +109,9 @@ class ResourcesCodeGen:
 
         # Check if the service ID and protocol are supported
         if self.service_id != "SageMaker":
-            raise Exception(
-                f"ServiceId {self.service_id} not supported in this resource generator"
-            )
+            raise Exception(f"ServiceId {self.service_id} not supported in this resource generator")
         if self.protocol != "json":
-            raise Exception(
-                f"Protocol {self.protocol} not supported in this resource generator"
-            )
+            raise Exception(f"Protocol {self.protocol} not supported in this resource generator")
 
         # Extract the operations and shapes
         self.operations = load_combined_operations_data()
@@ -160,10 +157,11 @@ class ResourcesCodeGen:
             "from pydantic import validate_call",
             "from typing import Dict, List, Literal, Optional\n"
             "from boto3.session import Session",
-            "from .utils import SageMakerClient, SageMakerRuntimeClient, Unassigned, snake_to_pascal, pascal_to_snake",
-            "from .intelligent_defaults_helper import load_default_configs_for_resource_name, get_config_value",
             "from src.code_injection.codec import transform",
-            "from .shapes import *",
+            "from src.generated.utils import SageMakerClient, SageMakerRuntimeClient, Unassigned, snake_to_pascal, pascal_to_snake",
+            "from src.generated.intelligent_defaults_helper import load_default_configs_for_resource_name, get_config_value",
+            "from src.generated.shapes import *",
+            "from src.generated.exceptions import *",
         ]
 
         formated_imports = "\n".join(imports)
@@ -277,13 +275,9 @@ class ResourcesCodeGen:
             str: Formatted method if needed for a resource, else returns an empty string.
         """
         if method_name in methods:
-            return getattr(self, f"generate_{method_name}_method")(
-                resource_name, **kwargs
-            )
+            return getattr(self, f"generate_{method_name}_method")(resource_name, **kwargs)
         else:
-            log.warning(
-                f"Resource {resource_name} does not have a {method_name.upper()} method"
-            )
+            log.warning(f"Resource {resource_name} does not have a {method_name.upper()} method")
             return ""
 
     def generate_resource_class(
@@ -318,23 +312,7 @@ class ResourcesCodeGen:
             # Start defining the class
             resource_class = f"class {resource_name}(Base):\n"
 
-            # Get the operation and shape for the 'get' method
-            get_operation = self.operations["Describe" + resource_name]
-            get_operation_shape = get_operation["output"]["shape"]
-
-            # Use 'get' operation input as the required class attributes.
-            # These are the mimumum identifing attributes for a resource object (ie, required for refresh())
-            get_operation_input_shape = get_operation["input"]["shape"]
-            required_attributes = self.shapes[get_operation_input_shape].get(
-                "required", []
-            )
-
-            # Generate the class attributes based on the shape
-            class_attributes = (
-                self.shapes_extractor.generate_data_shape_members_and_string_body(
-                    get_operation_shape, tuple(required_attributes)
-                )
-            )
+            class_attributes = self._get_class_attributes(resource_name)
             class_attributes_string = class_attributes[1]
             resource_attributes = list(class_attributes[0].keys())
 
@@ -371,9 +349,7 @@ class ResourcesCodeGen:
 
             resource_class += add_indent(get_method, 4)
 
-            if refresh_method := self._evaluate_method(
-                resource_name, "refresh", object_methods
-            ):
+            if refresh_method := self._evaluate_method(resource_name, "refresh", object_methods):
                 resource_class += add_indent(refresh_method, 4)
 
             if update_method := self._evaluate_method(
@@ -384,19 +360,13 @@ class ResourcesCodeGen:
             ):
                 resource_class += add_indent(update_method, 4)
 
-            if delete_method := self._evaluate_method(
-                resource_name, "delete", object_methods
-            ):
+            if delete_method := self._evaluate_method(resource_name, "delete", object_methods):
                 resource_class += add_indent(delete_method, 4)
 
-            if stop_method := self._evaluate_method(
-                resource_name, "stop", object_methods
-            ):
+            if stop_method := self._evaluate_method(resource_name, "stop", object_methods):
                 resource_class += add_indent(stop_method, 4)
 
-            if wait_method := self._evaluate_method(
-                resource_name, "wait", object_methods
-            ):
+            if wait_method := self._evaluate_method(resource_name, "wait", object_methods):
                 resource_class += add_indent(wait_method, 4)
 
             if wait_for_status_method := self._evaluate_method(
@@ -428,19 +398,13 @@ class ResourcesCodeGen:
             ):
                 resource_class += add_indent(invoke_with_response_stream_method, 4)
 
-            if import_method := self._evaluate_method(
-                resource_name, "import", class_methods
-            ):
+            if import_method := self._evaluate_method(resource_name, "import", class_methods):
                 resource_class += add_indent(import_method, 4)
 
-            if get_node_method := self._evaluate_method(
-                resource_name, "get_node", object_methods
-            ):
+            if get_node_method := self._evaluate_method(resource_name, "get_node", object_methods):
                 resource_class += add_indent(get_node_method, 4)
 
-            if batch_get_method := self._evaluate_method(
-                resource_name, "batch_get", class_methods
-            ):
+            if batch_get_method := self._evaluate_method(resource_name, "batch_get", class_methods):
                 resource_class += add_indent(batch_get_method, 4)
         else:
             # If there's no 'get' method, log a message
@@ -449,6 +413,31 @@ class ResourcesCodeGen:
 
         # Return the class definition
         return resource_class
+
+    def _get_class_attributes(self, resource_name: str) -> tuple[dict, str]:
+        """Get the class attributes for a resource.
+
+        Args:
+            resource_name (str): The name of the resource.
+
+        Returns:
+            tuple[dict, str]: The class attributes and the formatted class attributes string.
+        """
+
+        # Get the operation and shape for the 'get' method
+        get_operation = self.operations["Describe" + resource_name]
+        get_operation_shape = get_operation["output"]["shape"]
+
+        # Use 'get' operation input as the required class attributes.
+        # These are the mimumum identifing attributes for a resource object (ie, required for refresh())
+        get_operation_input_shape = get_operation["input"]["shape"]
+        required_attributes = self.shapes[get_operation_input_shape].get("required", [])
+
+        # Generate the class attributes based on the shape
+        class_attributes = self.shapes_extractor.generate_data_shape_members_and_string_body(
+            get_operation_shape, tuple(required_attributes)
+        )
+        return class_attributes
 
     def _generate_operation_input_args(
         self, resource_operation: dict, is_class_method: bool, exclude_list: list = []
@@ -567,9 +556,7 @@ class ResourcesCodeGen:
             method_args = add_indent(method_args)
         return method_args
 
-    def _generate_get_args(
-        self, resource_name: str, operation_input_shape_name: str
-    ) -> str:
+    def _generate_get_args(self, resource_name: str, operation_input_shape_name: str) -> str:
         """
         Generates a resource identifier based on the required members for the Describe and Create operations.
 
@@ -831,9 +818,7 @@ class ResourcesCodeGen:
         # Return the formatted method
         return formatted_method
 
-    def generate_invoke_with_response_stream_method(
-        self, resource_name: str, **kwargs
-    ) -> str:
+    def generate_invoke_with_response_stream_method(self, resource_name: str, **kwargs) -> str:
         """
         Auto-generate the INVOKE with response stream method for a resource.
 
@@ -1045,6 +1030,22 @@ class ResourcesCodeGen:
         )
         return formatted_method
 
+    def _get_failure_reason_ref(self, resource_name: str) -> str:
+        """Get the failure reason reference for a resource object.
+        Args:
+            resource_name (str): The resource name.
+        Returns:
+            str: The failure reason reference for resource object
+        """
+        describe_output = self.operations["Describe" + resource_name]["output"]["shape"]
+        shape_members = self.shapes[describe_output]
+
+        for member in shape_members["members"]:
+            if "FailureReason" in member or "StatusMessage" in member:
+                return f"self.{convert_to_snake_case(member)}"
+
+        return "'(Unknown)'"
+
     def generate_wait_method(self, resource_name: str) -> str:
         """Auto-Generate WAIT Method for a waitable resource.
 
@@ -1063,10 +1064,7 @@ class ResourcesCodeGen:
         for state in resource_states:
             # Handles when a resource has terminal states like UpdateCompleted, CreateFailed, etc.
             # Checking lower because case is not consistent accross resources (ie, COMPLETED vs Completed)
-            if any(
-                terminal_state.lower() in state.lower()
-                for terminal_state in TERMINAL_STATES
-            ):
+            if any(terminal_state.lower() in state.lower() for terminal_state in TERMINAL_STATES):
                 terminal_resource_states.append(state)
 
         # Get resource status key path
@@ -1074,9 +1072,17 @@ class ResourcesCodeGen:
         for member in resource_status_chain:
             status_key_path += f'.{convert_to_snake_case(member["name"])}'
 
+        failure_reason = self._get_failure_reason_ref(resource_name)
+        formatted_failed_block = FAILED_STATUS_ERROR_TEMPLATE.format(
+            resource_name=resource_name, reason=failure_reason
+        )
+        formatted_failed_block = add_indent(formatted_failed_block, 12)
+
         formatted_method = WAIT_METHOD_TEMPLATE.format(
             terminal_resource_states=terminal_resource_states,
             status_key_path=status_key_path,
+            failed_error_block=formatted_failed_block,
+            resource_name=resource_name,
         )
         return formatted_method
 
@@ -1098,8 +1104,19 @@ class ResourcesCodeGen:
         for member in resource_status_chain:
             status_key_path += f'.{convert_to_snake_case(member["name"])}'
 
+        formatted_failed_block = ""
+        if any("failed" in state.lower() for state in resource_states):
+            failure_reason = self._get_failure_reason_ref(resource_name)
+            formatted_failed_block = FAILED_STATUS_ERROR_TEMPLATE.format(
+                resource_name=resource_name, reason=failure_reason
+            )
+            formatted_failed_block = add_indent(formatted_failed_block, 8)
+
         formatted_method = WAIT_FOR_STATUS_METHOD_TEMPLATE.format(
-            resource_states=resource_states, status_key_path=status_key_path
+            resource_states=resource_states,
+            status_key_path=status_key_path,
+            failed_error_block=formatted_failed_block,
+            resource_name=resource_name,
         )
         return formatted_method
 
@@ -1124,12 +1141,8 @@ class ResourcesCodeGen:
                 get_operation_shape = get_operation["output"]["shape"]
 
                 # Generate the class attributes based on the shape
-                class_attributes = self.shapes_extractor.generate_shape_members(
-                    get_operation_shape
-                )
-                cleaned_class_attributes = self._cleanup_class_attributes_types(
-                    class_attributes
-                )
+                class_attributes = self.shapes_extractor.generate_shape_members(get_operation_shape)
+                cleaned_class_attributes = self._cleanup_class_attributes_types(class_attributes)
                 resource_name = row["resource_name"]
 
                 if default_attributes := self._get_dict_with_default_configurable_attributes(
@@ -1191,9 +1204,7 @@ class ResourcesCodeGen:
             cleaned_class_attributes[key] = new_val
         return cleaned_class_attributes
 
-    def _get_dict_with_default_configurable_attributes(
-        self, class_attributes: dict
-    ) -> dict:
+    def _get_dict_with_default_configurable_attributes(self, class_attributes: dict) -> dict:
         """
         Creates default attributes dict for a particular resource.
         Iterates through all class attributes and filters by attributes that have particular substrings in their name
@@ -1216,26 +1227,19 @@ class ResourcesCodeGen:
                                 default_attributes[key] = {
                                     TYPE: "array",
                                     "items": {
-                                        TYPE: self._get_json_schema_type_from_python_type(
-                                            element
-                                        )
+                                        TYPE: self._get_json_schema_type_from_python_type(element)
                                     },
                                 }
                         else:
                             default_attributes[key] = {
-                                TYPE: self._get_json_schema_type_from_python_type(value)
-                                or value
+                                TYPE: self._get_json_schema_type_from_python_type(value) or value
                             }
             elif value.startswith("List") or value.startswith("Dict"):
-                log.info(
-                    "Script does not currently support list of objects as configurable"
-                )
+                log.info("Script does not currently support list of objects as configurable")
                 continue
             else:
                 class_attributes = self.shapes_extractor.generate_shape_members(value)
-                cleaned_class_attributes = self._cleanup_class_attributes_types(
-                    class_attributes
-                )
+                cleaned_class_attributes = self._cleanup_class_attributes_types(class_attributes)
                 if nested_default_attributes := self._get_dict_with_default_configurable_attributes(
                     cleaned_class_attributes
                 ):
@@ -1275,6 +1279,6 @@ class ResourcesCodeGen:
         """
         Fetches Schema JSON for all resources from generated file
         """
-        return SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA[PROPERTIES][SAGEMAKER][PROPERTIES][
-            PYTHON_SDK
-        ][PROPERTIES][RESOURCES][PROPERTIES]
+        return SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA[PROPERTIES][SAGEMAKER][PROPERTIES][PYTHON_SDK][
+            PROPERTIES
+        ][RESOURCES][PROPERTIES]
