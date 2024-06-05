@@ -460,7 +460,7 @@ def get_all(
     space_name_equals: Optional[str] = Unassigned(),
     session: Optional[Session] = None,
     region: Optional[str] = None,
-) -> "ResourceIterator[App]":
+) -> ResourceIterator["App"]:
     client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
         
     operation_input_args = {
@@ -491,7 +491,7 @@ def get_all(
     cls,
     session: Optional[Session] = None,
     region: Optional[str] = None,
-) -> "ResourceIterator[Domain]":
+) -> ResourceIterator["Domain"]:
     client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
 
     return ResourceIterator(
@@ -517,7 +517,7 @@ def get_all(
     creation_time_after: Optional[datetime.datetime] = Unassigned(),
     session: Optional[Session] = None,
     region: Optional[str] = None,
-) -> "ResourceIterator[DataQualityJobDefinition]":
+) -> ResourceIterator["DataQualityJobDefinition"]:
     client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
         
     operation_input_args = {

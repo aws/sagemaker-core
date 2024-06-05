@@ -225,7 +225,7 @@ class Action(Base):
         sort_order: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> "ResourceIterator[Action]":
+    ) -> ResourceIterator["Action"]:
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
@@ -405,7 +405,7 @@ class Algorithm(Base):
         sort_order: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> "ResourceIterator[Algorithm]":
+    ) -> ResourceIterator["Algorithm"]:
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
@@ -586,7 +586,7 @@ class App(Base):
         space_name_equals: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> "ResourceIterator[App]":
+    ) -> ResourceIterator["App"]:
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
@@ -732,7 +732,7 @@ class AppImageConfig(Base):
         sort_order: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> "ResourceIterator[AppImageConfig]":
+    ) -> ResourceIterator["AppImageConfig"]:
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
@@ -891,7 +891,7 @@ class Artifact(Base):
         sort_order: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> "ResourceIterator[Artifact]":
+    ) -> ResourceIterator["Artifact"]:
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
@@ -1097,7 +1097,7 @@ class AutoMLJob(Base):
         sort_by: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> "ResourceIterator[AutoMLJob]":
+    ) -> ResourceIterator["AutoMLJob"]:
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
@@ -1457,7 +1457,7 @@ class Cluster(Base):
         sort_order: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> "ResourceIterator[Cluster]":
+    ) -> ResourceIterator["Cluster"]:
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
@@ -1760,7 +1760,7 @@ class CompilationJob(Base):
         sort_order: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> "ResourceIterator[CompilationJob]":
+    ) -> ResourceIterator["CompilationJob"]:
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
@@ -1919,7 +1919,7 @@ class Context(Base):
         sort_order: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> "ResourceIterator[Context]":
+    ) -> ResourceIterator["Context"]:
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
@@ -2097,7 +2097,7 @@ class DataQualityJobDefinition(Base):
         creation_time_after: Optional[datetime.datetime] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> "ResourceIterator[DataQualityJobDefinition]":
+    ) -> ResourceIterator["DataQualityJobDefinition"]:
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
@@ -2277,7 +2277,7 @@ class DeviceFleet(Base):
         sort_order: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> "ResourceIterator[DeviceFleet]":
+    ) -> ResourceIterator["DeviceFleet"]:
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
@@ -2541,7 +2541,7 @@ class Domain(Base):
         cls,
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> "ResourceIterator[Domain]":
+    ) -> ResourceIterator["Domain"]:
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
@@ -2665,7 +2665,7 @@ class EdgeDeploymentPlan(Base):
         sort_order: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> "ResourceIterator[EdgeDeploymentPlan]":
+    ) -> ResourceIterator["EdgeDeploymentPlan"]:
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
@@ -2856,7 +2856,7 @@ class EdgePackagingJob(Base):
         sort_order: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> "ResourceIterator[EdgePackagingJob]":
+    ) -> ResourceIterator["EdgePackagingJob"]:
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
@@ -3192,7 +3192,7 @@ class Endpoint(Base):
         status_equals: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> "ResourceIterator[Endpoint]":
+    ) -> ResourceIterator["Endpoint"]:
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
@@ -3367,7 +3367,7 @@ class EndpointConfig(Base):
         creation_time_after: Optional[datetime.datetime] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> "ResourceIterator[EndpointConfig]":
+    ) -> ResourceIterator["EndpointConfig"]:
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
@@ -3513,7 +3513,7 @@ class Experiment(Base):
         sort_order: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> "ResourceIterator[Experiment]":
+    ) -> ResourceIterator["Experiment"]:
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
@@ -3736,7 +3736,7 @@ class FeatureGroup(Base):
         sort_by: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> "ResourceIterator[FeatureGroup]":
+    ) -> ResourceIterator["FeatureGroup"]:
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
@@ -3914,7 +3914,7 @@ class FlowDefinition(Base):
         sort_order: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> "ResourceIterator[FlowDefinition]":
+    ) -> ResourceIterator["FlowDefinition"]:
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
@@ -4116,7 +4116,7 @@ class Hub(Base):
         sort_order: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> "ResourceIterator[Hub]":
+    ) -> ResourceIterator["Hub"]:
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
@@ -4310,7 +4310,7 @@ class HubContent(Base):
         sort_order: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> "ResourceIterator[HubContent]":
+    ) -> ResourceIterator["HubContent"]:
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
@@ -4447,7 +4447,7 @@ class HumanTaskUi(Base):
         sort_order: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> "ResourceIterator[HumanTaskUi]":
+    ) -> ResourceIterator["HumanTaskUi"]:
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
@@ -4657,7 +4657,7 @@ class HyperParameterTuningJob(Base):
         status_equals: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> "ResourceIterator[HyperParameterTuningJob]":
+    ) -> ResourceIterator["HyperParameterTuningJob"]:
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
@@ -4861,7 +4861,7 @@ class Image(Base):
         sort_order: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> "ResourceIterator[Image]":
+    ) -> ResourceIterator["Image"]:
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
@@ -5228,7 +5228,7 @@ class InferenceComponent(Base):
         variant_name_equals: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> "ResourceIterator[InferenceComponent]":
+    ) -> ResourceIterator["InferenceComponent"]:
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
@@ -5468,7 +5468,7 @@ class InferenceExperiment(Base):
         sort_order: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> "ResourceIterator[InferenceExperiment]":
+    ) -> ResourceIterator["InferenceExperiment"]:
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
@@ -5663,7 +5663,7 @@ class InferenceRecommendationsJob(Base):
         model_package_version_arn_equals: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> "ResourceIterator[InferenceRecommendationsJob]":
+    ) -> ResourceIterator["InferenceRecommendationsJob"]:
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
@@ -5875,7 +5875,7 @@ class LabelingJob(Base):
         status_equals: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> "ResourceIterator[LabelingJob]":
+    ) -> ResourceIterator["LabelingJob"]:
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
@@ -6038,7 +6038,7 @@ class Model(Base):
         creation_time_after: Optional[datetime.datetime] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> "ResourceIterator[Model]":
+    ) -> ResourceIterator["Model"]:
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
@@ -6215,7 +6215,7 @@ class ModelBiasJobDefinition(Base):
         creation_time_after: Optional[datetime.datetime] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> "ResourceIterator[ModelBiasJobDefinition]":
+    ) -> ResourceIterator["ModelBiasJobDefinition"]:
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
@@ -6409,7 +6409,7 @@ class ModelCard(Base):
         sort_order: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> "ResourceIterator[ModelCard]":
+    ) -> ResourceIterator["ModelCard"]:
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
@@ -6576,7 +6576,7 @@ class ModelCardExportJob(Base):
         sort_order: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> "ResourceIterator[ModelCardExportJob]":
+    ) -> ResourceIterator["ModelCardExportJob"]:
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
@@ -6761,7 +6761,7 @@ class ModelExplainabilityJobDefinition(Base):
         creation_time_after: Optional[datetime.datetime] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> "ResourceIterator[ModelExplainabilityJobDefinition]":
+    ) -> ResourceIterator["ModelExplainabilityJobDefinition"]:
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
@@ -7057,7 +7057,7 @@ class ModelPackage(Base):
         sort_order: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> "ResourceIterator[ModelPackage]":
+    ) -> ResourceIterator["ModelPackage"]:
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
@@ -7207,7 +7207,7 @@ class ModelPackageGroup(Base):
         sort_order: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> "ResourceIterator[ModelPackageGroup]":
+    ) -> ResourceIterator["ModelPackageGroup"]:
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
@@ -7384,7 +7384,7 @@ class ModelQualityJobDefinition(Base):
         creation_time_after: Optional[datetime.datetime] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> "ResourceIterator[ModelQualityJobDefinition]":
+    ) -> ResourceIterator["ModelQualityJobDefinition"]:
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
@@ -7613,7 +7613,7 @@ class MonitoringSchedule(Base):
         monitoring_type_equals: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> "ResourceIterator[MonitoringSchedule]":
+    ) -> ResourceIterator["MonitoringSchedule"]:
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
@@ -7886,7 +7886,7 @@ class NotebookInstance(Base):
         additional_code_repository_equals: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> "ResourceIterator[NotebookInstance]":
+    ) -> ResourceIterator["NotebookInstance"]:
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
@@ -8040,7 +8040,7 @@ class NotebookInstanceLifecycleConfig(Base):
         last_modified_time_after: Optional[datetime.datetime] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> "ResourceIterator[NotebookInstanceLifecycleConfig]":
+    ) -> ResourceIterator["NotebookInstanceLifecycleConfig"]:
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
@@ -8240,7 +8240,7 @@ class Pipeline(Base):
         sort_order: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> "ResourceIterator[Pipeline]":
+    ) -> ResourceIterator["Pipeline"]:
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
@@ -8388,7 +8388,7 @@ class PipelineExecution(Base):
         sort_order: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> "ResourceIterator[PipelineExecution]":
+    ) -> ResourceIterator["PipelineExecution"]:
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
@@ -8591,7 +8591,7 @@ class ProcessingJob(Base):
         sort_order: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> "ResourceIterator[ProcessingJob]":
+    ) -> ResourceIterator["ProcessingJob"]:
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
@@ -8787,7 +8787,7 @@ class Project(Base):
         sort_order: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> "ResourceIterator[Project]":
+    ) -> ResourceIterator["Project"]:
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
@@ -8982,7 +8982,7 @@ class Space(Base):
         space_name_contains: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> "ResourceIterator[Space]":
+    ) -> ResourceIterator["Space"]:
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
@@ -9109,7 +9109,7 @@ class StudioLifecycleConfig(Base):
         sort_order: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> "ResourceIterator[StudioLifecycleConfig]":
+    ) -> ResourceIterator["StudioLifecycleConfig"]:
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
@@ -9393,7 +9393,7 @@ class TrainingJob(Base):
         warm_pool_status_equals: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> "ResourceIterator[TrainingJob]":
+    ) -> ResourceIterator["TrainingJob"]:
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
@@ -9612,7 +9612,7 @@ class TransformJob(Base):
         sort_order: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> "ResourceIterator[TransformJob]":
+    ) -> ResourceIterator["TransformJob"]:
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
@@ -9765,7 +9765,7 @@ class Trial(Base):
         sort_order: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> "ResourceIterator[Trial]":
+    ) -> ResourceIterator["Trial"]:
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
@@ -9973,7 +9973,7 @@ class TrialComponent(Base):
         sort_order: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> "ResourceIterator[TrialComponent]":
+    ) -> ResourceIterator["TrialComponent"]:
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
@@ -10202,7 +10202,7 @@ class UserProfile(Base):
         user_profile_name_contains: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> "ResourceIterator[UserProfile]":
+    ) -> ResourceIterator["UserProfile"]:
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
@@ -10393,7 +10393,7 @@ class Workforce(Base):
         name_contains: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> "ResourceIterator[Workforce]":
+    ) -> ResourceIterator["Workforce"]:
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
@@ -10537,7 +10537,7 @@ class Workteam(Base):
         name_contains: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> "ResourceIterator[Workteam]":
+    ) -> ResourceIterator["Workteam"]:
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
