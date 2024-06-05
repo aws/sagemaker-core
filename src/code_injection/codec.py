@@ -224,8 +224,7 @@ def transform(data, shape, object_instance=None) -> dict:
         elif _member_type == LIST_TYPE:
             _list_type_shape = SHAPE_DAG[_member_shape]
             # 2. assign response value
-            evaluated_value = _evaluate_list_type(data[_member_name],
-                                                   _list_type_shape)
+            evaluated_value = _evaluate_list_type(data[_member_name], _list_type_shape)
         elif _member_type == MAP_TYPE:
             _map_type_shape = SHAPE_DAG[_member_shape]
             evaluated_value = _evaluate_map_type(data[_member_name], _map_type_shape)
