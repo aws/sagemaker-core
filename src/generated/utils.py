@@ -140,10 +140,14 @@ class SageMakerRuntimeClient(metaclass=SingletonMeta):
             logger.warning("No region provided. Using default region.")
             region_name = session.region_name
 
+        if config is None:
+            logger.warning("No config provided. Using default config.")
+            config = Config(retries={"max_attempts": 10, "mode": "standard"})
+
         self.session = session
         self.region_name = region_name
         self.service_name = service_name
-        self.client = session.client(service_name, region_name)
+        self.client = session.client(service_name, region_name, config=config)
 
 
 class ResourceIterator(Generic[T]):
