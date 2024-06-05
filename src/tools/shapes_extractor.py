@@ -224,9 +224,7 @@ class ShapesExtractor:
                     # Shape is a simple type like string
                     member_type = BASIC_JSON_TYPES_TO_PYTHON_TYPES[member_shape_type]
             else:
-                raise Exception(
-                    "The Shape definition mush exist. The Json Data might be corrupt"
-                )
+                raise Exception("The Shape definition mush exist. The Json Data might be corrupt")
             member_name_snake_case = convert_to_snake_case(member_name)
             if member_name in required_args:
                 init_data_body[f"{member_name_snake_case}"] = f"{member_type}"

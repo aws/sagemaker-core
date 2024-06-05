@@ -133,11 +133,7 @@ class ResourcesExtractor:
         self._filter_actions_for_resources(self.start_resources)
 
         self.register_resources = set(
-            [
-                key[len("Register") :]
-                for key in self.actions
-                if key.startswith("Register")
-            ]
+            [key[len("Register") :] for key in self.actions if key.startswith("Register")]
         )
         self._filter_actions_for_resources(self.register_resources)
 
@@ -172,9 +168,7 @@ class ResourcesExtractor:
         """
         resource_operation = self.operations["Describe" + resource_name]
         resource_operation_output_shape_name = resource_operation["output"]["shape"]
-        output_members_data = self.shapes[resource_operation_output_shape_name][
-            "members"
-        ]
+        output_members_data = self.shapes[resource_operation_output_shape_name]["members"]
         if len(output_members_data) == 1:
             single_member_name = next(iter(output_members_data))
             single_member_shape_name = output_members_data[single_member_name]["shape"]
@@ -208,9 +202,7 @@ class ResourcesExtractor:
             status_chain = []
 
         member_data = self.shapes[shape_name]["members"]
-        status_name = next(
-            (member for member in member_data if "status" in member.lower()), None
-        )
+        status_name = next((member for member in member_data if "status" in member.lower()), None)
         if status_name is None:
             return [], []
 
@@ -267,8 +259,8 @@ class ResourcesExtractor:
                     output_shape_name = self.operations[action]["output"]["shape"]
                     output_members_data = self.shapes[output_shape_name]["members"]
 
-                    resource_status_chain, resource_states = (
-                        self.get_status_chain_and_states(resource)
+                    resource_status_chain, resource_states = self.get_status_chain_and_states(
+                        resource
                     )
 
                     if resource_low.endswith("job") or resource_low.endswith("jobv2"):

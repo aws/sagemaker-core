@@ -11,13 +11,12 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 """Generates the code for the service model."""
-import json
-from src.tools.constants import SERVICE_JSON_FILE_PATH
 from src.tools.shapes_codegen import ShapesCodeGen
 from src.tools.resources_codegen import ResourcesCodeGen
 from typing import Optional
 
 from src.tools.data_extractor import ServiceJsonData, load_service_jsons
+from src.util.util import reformat_file_with_black
 
 
 def generate_code(
@@ -47,6 +46,7 @@ def generate_code(
 
     shapes_code_gen.generate_shapes()
     resources_code_gen.generate_resources()
+    reformat_file_with_black(".")
 
 
 """
