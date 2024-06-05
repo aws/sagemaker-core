@@ -36,6 +36,7 @@ disable=
     too-many-nested-blocks,
     unidiomatic-typecheck,
     unspecified-encoding,
+    unused-wildcard-import,
     wrong-import-order,
 
 [REPORTS]

@@ -8,20 +8,25 @@ on:
 jobs:
   unit-tests:
     runs-on: ubuntu-latest
-    steps:
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-west-2
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.8", "3.9", "3.10"]
 
-      - name: Run CodeBuild
-        uses: aws-actions/aws-codebuild-run-build@v1
-        with:
-          project-name: unit_tests
-          source-version: ${{ github.event.pull_request.head.sha }}
-          report-type: TEST
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        export PYTHONPATH="$PYTHONPATH:$PWD"
+        python -m pip install --upgrade pip
+        pip install -e ".[codegen]"
+    - name: Run Unit Tests
+      run: |
+        pytest tst
           
   pylint:
     runs-on: ubuntu-latest
@@ -34,10 +39,9 @@ jobs:
     - name: Install dependencies
       run: |
         export PYTHONPATH="$PYTHONPATH:$PWD"
-        echo $PYTHONPATH
         python -m pip install --upgrade pip
         pip install -e ".[codegen]"
     - name: Run Pylint
       run: |
         python_files=$(find . -name '*.py')
-        pylint $python_files --persistent=y
+        pylint $python_files --persistent=y --fail-under=8
