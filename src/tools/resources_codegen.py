@@ -50,7 +50,7 @@ from src.tools.templates import (
     INVOKE_WITH_RESPONSE_STREAM_METHOD_TEMPLATE,
     IMPORT_METHOD_TEMPLATE,
     FAILED_STATUS_ERROR_TEMPLATE,
-    GET_NAME_METHOD_TEMPLATE
+    GET_NAME_METHOD_TEMPLATE,
 )
 from src.tools.data_extractor import (
     load_combined_shapes_data,
@@ -432,16 +432,14 @@ class ResourcesCodeGen:
         required_attributes = self.shapes[get_operation_input_shape].get("required", [])
 
         # Generate the class attributes based on the shape
-        class_attributes = (
-            self.shapes_extractor.generate_data_shape_members_and_string_body(
-                shape=get_operation_shape, required_override=tuple(required_attributes)
-            )
+        class_attributes = self.shapes_extractor.generate_data_shape_members_and_string_body(
+            shape=get_operation_shape, required_override=tuple(required_attributes)
         )
         return class_attributes
 
-    def _generate_create_method_args(self,
-                                     operation_input_shape_name: str,
-                                     resource_name: str) -> str:
+    def _generate_create_method_args(
+        self, operation_input_shape_name: str, resource_name: str
+    ) -> str:
         """Generates the arguments for a method.
         Args:
             operation_input_shape_name (str): The name of the input shape for the operation.
@@ -449,13 +447,18 @@ class ResourcesCodeGen:
             str: The generated arguments string.
         """
         typed_shape_members = self.shapes_extractor.generate_shape_members(
-            operation_input_shape_name)
+            operation_input_shape_name
+        )
         resource_name_in_snake_case = pascal_to_snake(resource_name)
         method_args = ""
         for attr, attr_type in typed_shape_members.items():
             method_parameter_type = attr_type
-            if attr.endswith('name') and attr[:-len('_name')] != resource_name_in_snake_case and attr != 'name':
-                if attr_type.startswith('Optional'):
+            if (
+                attr.endswith("name")
+                and attr[: -len("_name")] != resource_name_in_snake_case
+                and attr != "name"
+            ):
+                if attr_type.startswith("Optional"):
                     method_args += f"{attr}: Optional[Union[str, object]] = Unassigned()"
                 else:
                     method_args += f"{attr}: Union[str, object]"
@@ -464,7 +467,6 @@ class ResourcesCodeGen:
             method_args += ",\n"
         method_args = add_indent(method_args)
         return method_args
-
 
     def _generate_operation_input_args(
         self, resource_operation: dict, is_class_method: bool, exclude_list: list = []
@@ -723,9 +725,7 @@ class ResourcesCodeGen:
         Returns:
             str: Formatted Get Name Method
         """
-        return GET_NAME_METHOD_TEMPLATE.format(
-            resource_lower=resource_lower
-        )
+        return GET_NAME_METHOD_TEMPLATE.format(resource_lower=resource_lower)
 
     def generate_update_method(self, resource_name: str, **kwargs) -> str:
         """

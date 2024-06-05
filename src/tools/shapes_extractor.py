@@ -164,19 +164,23 @@ class ShapesExtractor:
             )
         return member_type
 
-    def generate_data_shape_members_and_string_body(self, shape, resource_plan: Optional[Any]= None, required_override=()):
+    def generate_data_shape_members_and_string_body(
+        self, shape, resource_plan: Optional[Any] = None, required_override=()
+    ):
         shape_members = self.generate_shape_members(shape, required_override)
         resource_names = None
         if resource_plan is not None:
-            resource_names = [
-                row['resource_name']
-                for _, row in resource_plan.iterrows()
-            ]
+            resource_names = [row["resource_name"] for _, row in resource_plan.iterrows()]
         init_data_body = ""
         for attr, value in shape_members.items():
-            if (resource_names and attr.endswith('name') and attr[:-len('_name')] != shape and attr != 'name'
-                    and snake_to_pascal(attr[:-len('_name')]) in resource_names):
-                if value.startswith('Optional'):
+            if (
+                resource_names
+                and attr.endswith("name")
+                and attr[: -len("_name")] != shape
+                and attr != "name"
+                and snake_to_pascal(attr[: -len("_name")]) in resource_names
+            ):
+                if value.startswith("Optional"):
                     init_data_body += f"{attr}: Optional[Union[str, object]] = Unassigned()\n"
                 else:
                     init_data_body += f"{attr}: Union[str, object]\n"
@@ -188,16 +192,12 @@ class ShapesExtractor:
 
     def generate_data_shape_string_body(self, shape, resource_plan, required_override=()):
         return self.generate_data_shape_members_and_string_body(
-            shape,
-            resource_plan,
-            required_override
+            shape, resource_plan, required_override
         )[1]
 
     def generate_data_shape_members(self, shape, resource_plan, required_override=()):
         return self.generate_data_shape_members_and_string_body(
-            shape,
-            resource_plan,
-            required_override
+            shape, resource_plan, required_override
         )[0]
 
     @lru_cache

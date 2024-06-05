@@ -142,7 +142,9 @@ class ShapesCodeGen:
         :return: The generated data class as a string.
         """
         class_name = shape
-        init_data = self.shapes_extractor.generate_data_shape_string_body(shape, self.resources_plan)
+        init_data = self.shapes_extractor.generate_data_shape_string_body(
+            shape, self.resources_plan
+        )
         try:
             data_class_members = add_indent(init_data, 4)
         except Exception:
@@ -152,7 +154,7 @@ class ShapesCodeGen:
             class_name=class_name + "(Base)",
             data_class_members=data_class_members,
             docstring=self._generate_doc_string_for_shape(shape),
-            class_name_snake=pascal_to_snake(class_name)
+            class_name_snake=pascal_to_snake(class_name),
         )
 
     def _generate_doc_string_for_shape(self, shape):

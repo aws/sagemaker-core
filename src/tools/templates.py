@@ -117,14 +117,14 @@ def load(
     return cls.get({get_args}, session=session, region=region)
 """
 
-GET_NAME_METHOD_TEMPLATE = '''
+GET_NAME_METHOD_TEMPLATE = """
 def get_name(self) -> str:
     attributes = vars(self)
     for attribute, value in attributes.items():
         if attribute == 'name' or attribute == '{resource_lower}_name':
             return value
     raise Exception("Name attribute not found for object")
-'''
+"""
 
 
 UPDATE_METHOD_TEMPLATE = """
