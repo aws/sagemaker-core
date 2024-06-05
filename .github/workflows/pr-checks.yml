@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  install-dependencies:
+  unit-tests:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
@@ -19,20 +19,23 @@ jobs:
         export PYTHONPATH="$PYTHONPATH:$PWD"
         python -m pip install --upgrade pip
         pip install -e ".[codegen]"
-
-  unit-tests:
-    needs: install-dependencies
-    runs-on: ubuntu-latest
-    steps:
     - name: Run Unit Tests
       run: |
-        git log -n 100
         pytest tst
-  
+          
   pylint:
-    needs: install-dependencies
     runs-on: ubuntu-latest
     steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+    - name: Install dependencies
+      run: |
+        export PYTHONPATH="$PYTHONPATH:$PWD"
+        python -m pip install --upgrade pip
+        pip install -e ".[codegen]"
     - name: Run Pylint
       run: |
         python_files=$(find . -name '*.py')
