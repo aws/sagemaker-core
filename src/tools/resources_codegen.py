@@ -406,7 +406,7 @@ class ResourcesCodeGen:
         # Return the class definition
         return resource_class
 
-    def _get_class_attributes(self, resource_name: str) -> tuple[dict, str]:
+    def _get_class_attributes(self, resource_name: str) -> tuple:
         """Get the class attributes for a resource.
 
         Args:
