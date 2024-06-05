@@ -14,10 +14,10 @@
 import textwrap
 import pprint
 from functools import lru_cache
-from typing import Optional
+from typing import Optional, Any
 
 from src.tools.constants import BASIC_JSON_TYPES_TO_PYTHON_TYPES, SHAPE_DAG_FILE_PATH
-from src.util.util import reformat_file_with_black, convert_to_snake_case
+from src.util.util import reformat_file_with_black, convert_to_snake_case, snake_to_pascal
 from src.tools.data_extractor import load_combined_shapes_data
 
 
@@ -164,24 +164,40 @@ class ShapesExtractor:
             )
         return member_type
 
-    def generate_data_shape_members_and_string_body(self, shape, required_override=()):
+    def generate_data_shape_members_and_string_body(self, shape, resource_plan: Optional[Any]= None, required_override=()):
         shape_members = self.generate_shape_members(shape, required_override)
+        resource_names = None
+        if resource_plan is not None:
+            resource_names = [
+                row['resource_name']
+                for _, row in resource_plan.iterrows()
+            ]
         init_data_body = ""
         for attr, value in shape_members.items():
-            if attr == "lambda":
+            if (resource_names and attr.endswith('name') and attr[:-len('_name')] != shape and attr != 'name'
+                    and snake_to_pascal(attr[:-len('_name')]) in resource_names):
+                if value.startswith('Optional'):
+                    init_data_body += f"{attr}: Optional[Union[str, object]] = Unassigned()\n"
+                else:
+                    init_data_body += f"{attr}: Union[str, object]\n"
+            elif attr == "lambda":
                 init_data_body += f"# {attr}: {value}\n"
             else:
                 init_data_body += f"{attr}: {value}\n"
         return shape_members, init_data_body
 
-    def generate_data_shape_string_body(self, shape, required_override=()):
+    def generate_data_shape_string_body(self, shape, resource_plan, required_override=()):
         return self.generate_data_shape_members_and_string_body(
-            shape, required_override
+            shape,
+            resource_plan,
+            required_override
         )[1]
 
-    def generate_data_shape_members(self, shape, required_override=()):
+    def generate_data_shape_members(self, shape, resource_plan, required_override=()):
         return self.generate_data_shape_members_and_string_body(
-            shape, required_override
+            shape,
+            resource_plan,
+            required_override
         )[0]
 
     @lru_cache

@@ -18,6 +18,7 @@ export PYTHONPATH=<sagemaker-code-gen repo directory>:$PYTHONPATH
 import os
 import textwrap
 
+from code_injection.codec import pascal_to_snake
 from src.tools.constants import (
     LICENCES_STRING,
     GENERATED_CLASSES_LOCATION,
@@ -30,6 +31,7 @@ from src.tools.data_extractor import (
     load_combined_shapes_data,
     load_combined_operations_data,
 )
+from .resources_extractor import ResourcesExtractor
 
 
 class ShapesCodeGen:
@@ -60,6 +62,8 @@ class ShapesCodeGen:
         self.combined_operations = load_combined_operations_data()
         self.shapes_extractor = ShapesExtractor()
         self.shape_dag = self.shapes_extractor.get_shapes_dag()
+        self.resources_extractor = ResourcesExtractor()
+        self.resources_plan = self.resources_extractor.get_resource_plan()
 
     def build_graph(self):
         """
@@ -138,7 +142,7 @@ class ShapesCodeGen:
         :return: The generated data class as a string.
         """
         class_name = shape
-        init_data = self.shapes_extractor.generate_data_shape_string_body(shape)
+        init_data = self.shapes_extractor.generate_data_shape_string_body(shape, self.resources_plan)
         try:
             data_class_members = add_indent(init_data, 4)
         except Exception:
@@ -148,6 +152,7 @@ class ShapesCodeGen:
             class_name=class_name + "(Base)",
             data_class_members=data_class_members,
             docstring=self._generate_doc_string_for_shape(shape),
+            class_name_snake=pascal_to_snake(class_name)
         )
 
     def _generate_doc_string_for_shape(self, shape):
@@ -192,7 +197,7 @@ class ShapesCodeGen:
         imports = "import datetime\n"
         imports += "\n"
         imports += "from pydantic import BaseModel\n"
-        imports += "from typing import List, Dict, Optional, Any\n"
+        imports += "from typing import List, Dict, Optional, Any, Union\n"
         imports += "\n"
         return imports
 

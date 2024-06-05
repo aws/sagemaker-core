@@ -46,6 +46,8 @@ def create(
     operation_input_args = {{
 {operation_input_args}
     }}
+    
+    operation_input_args = Base.populate_chained_attributes(resource_name='{resource_name}', operation_input_args=operation_input_args)
         
     logger.debug(f"Input request: {{operation_input_args}}")
     # serialize the input request
@@ -73,6 +75,8 @@ def create(
     operation_input_args = {{
 {operation_input_args}
     }}
+    
+    operation_input_args = Base.populate_chained_attributes(resource_name='{resource_name}', operation_input_args=operation_input_args)
         
     logger.debug(f"Input request: {{operation_input_args}}")
     # serialize the input request
@@ -112,6 +116,16 @@ def load(
 
     return cls.get({get_args}, session=session, region=region)
 """
+
+GET_NAME_METHOD_TEMPLATE = '''
+def get_name(self) -> str:
+    attributes = vars(self)
+    for attribute, value in attributes.items():
+        if attribute == 'name' or attribute == '{resource_lower}_name':
+            return value
+    raise Exception("Name attribute not found for object")
+'''
+
 
 UPDATE_METHOD_TEMPLATE = """
 def update(
@@ -396,7 +410,31 @@ class Base(BaseModel):
         except BaseException as e:
             logger.info("Could not load Default Configs. Continuing.", exc_info=True)
             # Continue with existing kwargs if no default configs found
-        return kwargs
+        return kwargs 
+        
+    
+    @staticmethod
+    def populate_chained_attributes(resource_name: str, operation_input_args: dict) -> dict:
+        resource_name_in_snake_case = pascal_to_snake(resource_name)
+        updated_args = operation_input_args
+        for arg, value in operation_input_args.items():
+            arg_snake = pascal_to_snake(arg)
+            if arg_snake.endswith('name') and arg_snake[
+                                              :-len('_name')] != resource_name_in_snake_case and arg_snake != 'name':
+                if value and value != Unassigned() and type(value) != str:
+                    updated_args[arg] = value.get_name()
+            elif isinstance(value, list):
+                updated_args[arg] = [
+                    Base.populate_chained_attributes(resource_name=type(value).__name__,
+                                                     operation_input_args={snake_to_pascal(k): v for k, v in list_item.__dict__.items()})
+                    for list_item in value
+                ]
+            elif is_not_primitive(value):
+                obj_dict = {snake_to_pascal(k): v for k, v in value.__dict__.items()}
+                updated_args[arg] = Base.populate_chained_attributes(resource_name=type(value).__name__, operation_input_args=obj_dict)
+        return updated_args
+
+        
 """
 
 SHAPE_BASE_CLASS_TEMPLATE = """
@@ -432,4 +470,11 @@ class {class_name}:
     {docstring}
     """
 {data_class_members}
+
+    def get_name(self) -> Optional[str]:
+        attributes = vars(self)
+        for attribute, value in attributes.items():
+            if attribute == 'name' or attribute == '{class_name_snake}_name':
+                return value
+        return None
 '''

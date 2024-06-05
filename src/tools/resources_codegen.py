@@ -17,6 +17,7 @@ from functools import lru_cache
 import os
 import json
 
+from code_injection.codec import pascal_to_snake
 from src.generated.config_schema import SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA
 from src.tools.constants import (
     GENERATED_CLASSES_LOCATION,
@@ -49,6 +50,7 @@ from src.tools.templates import (
     INVOKE_WITH_RESPONSE_STREAM_METHOD_TEMPLATE,
     IMPORT_METHOD_TEMPLATE,
     FAILED_STATUS_ERROR_TEMPLATE,
+    GET_NAME_METHOD_TEMPLATE
 )
 from src.tools.data_extractor import (
     load_combined_shapes_data,
@@ -157,10 +159,10 @@ class ResourcesCodeGen:
             "import os",
             "from pprint import pprint",
             "from pydantic import validate_call",
-            "from typing import Dict, List, Literal, Optional\n"
+            "from typing import Dict, List, Literal, Optional, Union\n"
             "from boto3.session import Session",
             "from src.code_injection.codec import transform",
-            "from src.generated.utils import SageMakerClient, SageMakerRuntimeClient, Unassigned, snake_to_pascal, pascal_to_snake",
+            "from src.generated.utils import SageMakerClient, SageMakerRuntimeClient, Unassigned, snake_to_pascal, pascal_to_snake, is_not_primitive",
             "from src.generated.intelligent_defaults_helper import load_default_configs_for_resource_name, get_config_value",
             "from src.generated.shapes import *",
             "from src.generated.exceptions import *",
@@ -341,6 +343,10 @@ class ResourcesCodeGen:
             # Add the class attributes and methods to the class definition
             resource_class += add_indent(class_attributes_string, 4)
 
+            resource_lower = convert_to_snake_case(resource_name)
+            get_name_method = self.generate_get_name_method(resource_lower=resource_lower)
+            resource_class += add_indent(get_name_method, 4)
+
             if defaults_decorator_method:
                 resource_class += "\n"
                 resource_class += add_indent(defaults_decorator_method, 4)
@@ -446,10 +452,37 @@ class ResourcesCodeGen:
         # Generate the class attributes based on the shape
         class_attributes = (
             self.shapes_extractor.generate_data_shape_members_and_string_body(
-                get_operation_shape, tuple(required_attributes)
+                shape=get_operation_shape, required_override=tuple(required_attributes)
             )
         )
         return class_attributes
+
+    def _generate_create_method_args(self,
+                                     operation_input_shape_name: str,
+                                     resource_name: str) -> str:
+        """Generates the arguments for a method.
+        Args:
+            operation_input_shape_name (str): The name of the input shape for the operation.
+        Returns:
+            str: The generated arguments string.
+        """
+        typed_shape_members = self.shapes_extractor.generate_shape_members(
+            operation_input_shape_name)
+        resource_name_in_snake_case = pascal_to_snake(resource_name)
+        method_args = ""
+        for attr, attr_type in typed_shape_members.items():
+            method_parameter_type = attr_type
+            if attr.endswith('name') and attr[:-len('_name')] != resource_name_in_snake_case and attr != 'name':
+                if attr_type.startswith('Optional'):
+                    method_args += f"{attr}: Optional[Union[str, object]] = Unassigned()"
+                else:
+                    method_args += f"{attr}: Union[str, object]"
+            else:
+                method_args += f"{attr}: {method_parameter_type}"
+            method_args += ",\n"
+        method_args = add_indent(method_args)
+        return method_args
+
 
     def _generate_operation_input_args(
         self, resource_operation: dict, is_class_method: bool, exclude_list: list = []
@@ -619,7 +652,7 @@ class ResourcesCodeGen:
         operation_input_shape_name = operation_metadata["input"]["shape"]
 
         # Generate the arguments for the 'create' method
-        create_args = self._generate_method_args(operation_input_shape_name)
+        create_args = self._generate_create_method_args(operation_input_shape_name, resource_name)
 
         operation_input_args = self._generate_operation_input_args(
             operation_metadata, is_class_method=True
@@ -638,6 +671,7 @@ class ResourcesCodeGen:
             formatted_method = CREATE_METHOD_TEMPLATE.format(
                 create_args=create_args,
                 resource_lower=resource_lower,
+                resource_name=resource_name,
                 service_name="sagemaker",  # TODO: change service name based on the service - runtime, sagemaker, etc.
                 operation_input_args=operation_input_args,
                 operation=operation,
@@ -647,6 +681,7 @@ class ResourcesCodeGen:
             formatted_method = CREATE_METHOD_TEMPLATE_WITHOUT_DEFAULTS.format(
                 create_args=create_args,
                 resource_lower=resource_lower,
+                resource_name=resource_name,
                 service_name="sagemaker",  # TODO: change service name based on the service - runtime, sagemaker, etc.
                 operation_input_args=operation_input_args,
                 operation=operation,
@@ -699,6 +734,18 @@ class ResourcesCodeGen:
 
         # Return the formatted method
         return formatted_method
+
+    def generate_get_name_method(self, resource_lower: str) -> str:
+        """
+        Autogenerate the method that would return the identifier of the object
+        Args:
+            resource_name: Name of Resource
+        Returns:
+            str: Formatted Get Name Method
+        """
+        return GET_NAME_METHOD_TEMPLATE.format(
+            resource_lower=resource_lower
+        )
 
     def generate_update_method(self, resource_name: str, **kwargs) -> str:
         """
