@@ -13,11 +13,13 @@
 # language governing permissions and limitations under the License.
 import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import List, Dict, Optional, Any, Union
 from generated.utils import Unassigned
 
 class Base(BaseModel):
+    model_config = ConfigDict(protected_namespaces=())
+
     def serialize(self):
         result = {}
         for attr, value in self.__dict__.items():

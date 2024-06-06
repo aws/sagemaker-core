@@ -198,7 +198,7 @@ class ShapesCodeGen:
         """
         imports = "import datetime\n"
         imports += "\n"
-        imports += "from pydantic import BaseModel\n"
+        imports += "from pydantic import BaseModel, ConfigDict\n"
         imports += "from typing import List, Dict, Optional, Any, Union\n"
         imports += "from generated.utils import Unassigned"
         imports += "\n"
