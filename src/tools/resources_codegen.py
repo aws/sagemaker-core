@@ -17,7 +17,7 @@ from functools import lru_cache
 import os
 import json
 
-from code_injection.codec import pascal_to_snake
+from src.code_injection.codec import pascal_to_snake
 from src.generated.config_schema import SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA
 from src.tools.constants import (
     GENERATED_CLASSES_LOCATION,
