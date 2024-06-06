@@ -16,9 +16,8 @@ To run the script be sure to set the PYTHONPATH
 export PYTHONPATH=<sagemaker-code-gen repo directory>:$PYTHONPATH
 """
 import os
-import textwrap
 
-from code_injection.codec import pascal_to_snake
+from src.code_injection.codec import pascal_to_snake
 from src.tools.constants import (
     LICENCES_STRING,
     GENERATED_CLASSES_LOCATION,
@@ -200,7 +199,7 @@ class ShapesCodeGen:
         imports += "\n"
         imports += "from pydantic import BaseModel, ConfigDict\n"
         imports += "from typing import List, Dict, Optional, Any, Union\n"
-        imports += "from generated.utils import Unassigned"
+        imports += "from src.generated.utils import Unassigned"
         imports += "\n"
         return imports
 

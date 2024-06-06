@@ -410,12 +410,10 @@ class Base(BaseModel):
     @classmethod
     def _serialize(cls, data: Dict) -> Dict:
         result = {}
-
         for attr, value in data.items():
             if isinstance(value, Unassigned):
                 continue
-            
-            if isinstance(value, List):
+            elif isinstance(value, List):
                 result[attr] = cls._serialize_list(value)
             elif isinstance(value, Dict):
                 result[attr] = cls._serialize_dict(value)

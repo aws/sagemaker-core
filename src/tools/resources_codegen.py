@@ -52,7 +52,7 @@ from src.tools.templates import (
     FAILED_STATUS_ERROR_TEMPLATE,
     GET_NAME_METHOD_TEMPLATE,
     GET_ALL_METHOD_NO_ARGS_TEMPLATE,
-    GET_ALL_METHOD_WITH_ARGS_TEMPLATE
+    GET_ALL_METHOD_WITH_ARGS_TEMPLATE,
 )
 from src.tools.data_extractor import (
     load_combined_shapes_data,
