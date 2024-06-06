@@ -493,6 +493,8 @@ class ResourcesCodeGen:
         method_args = add_indent(method_args)
         return method_args
     
+
+    # TODO: use this method to replace _generate_operation_input_args
     def _generate_operation_input_args_updated(
         self,
         resource_operation: dict,
@@ -520,8 +522,6 @@ class ResourcesCodeGen:
             )
         else:
             args = []
-            print(resource_attributes)
-            print(input_shape_members)
             for member in input_shape_members:
                 if convert_to_snake_case(member) not in exclude_list:
                     if convert_to_snake_case(member) in resource_attributes:
@@ -1111,14 +1111,14 @@ class ResourcesCodeGen:
         method_args += add_indent("region: Optional[str] = None,\n", 4)
 
         if method.return_type == "None":
-            return_type = ""
+            return_type = "None"
             deserialize_response = ""
         else:
             if method.return_type == "cls":
-                return_type = f' -> Optional["{method.resource_name}"]'
+                return_type = f'Optional["{method.resource_name}"]'
                 return_type_conversion = "cls"
             else:
-                return_type = f" -> Optional[{method.return_type}]"
+                return_type = f"Optional[{method.return_type}]"
                 return_type_conversion = method.return_type
             operation_output_shape = operation_metadata["output"]["shape"]
             deserialize_response = DESERIALIZE_RESPONSE_TEMPLATE.format(

@@ -440,7 +440,7 @@ GENERIC_METHOD_TEMPLATE = """
 {decorator}
 def {method_name}(
 {method_args}
-){return_type}:
+) -> {return_type}:
 {serialize_operation_input}
 {initialize_client}
 {call_operation_api}
