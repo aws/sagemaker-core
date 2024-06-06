@@ -260,6 +260,7 @@ def test_next_with_custom_key_mapping(resource_iterator_with_custom_key_mapping)
         assert mock_refresh.call_count == 2
         assert client.list_data_quality_job_definitions.call_args_list == [call()]
 
+
 def test_configure_logging_with_default_log_level(monkeypatch):
     monkeypatch.delenv("LOG_LEVEL", raising=False)
     configure_logging()

@@ -26,6 +26,7 @@ logger = logging.getLogger(__name__)
 
 T = TypeVar("T")
 
+
 def configure_logging(log_level=None):
     """Configure the logging configuration based on log level.
 
