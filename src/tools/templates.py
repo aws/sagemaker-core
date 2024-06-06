@@ -354,6 +354,41 @@ def stop(self) -> None:
     self.client.{operation}(**operation_input_args)
 """
 
+GET_ALL_METHOD_WITH_ARGS_TEMPLATE = """
+@classmethod
+def get_all(
+    cls,
+{get_all_args}
+    session: Optional[Session] = None,
+    region: Optional[str] = None,
+) -> ResourceIterator["{resource}"]:
+    client = SageMakerClient(session=session, region_name=region, service_name="{service_name}").client
+        
+    operation_input_args = {{
+{operation_input_args}
+    }}
+{custom_key_mapping}
+    operation_input_args = {{k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}}
+    
+    return ResourceIterator(
+{resource_iterator_args}
+    )
+"""
+
+GET_ALL_METHOD_NO_ARGS_TEMPLATE = """
+@classmethod
+def get_all(
+    cls,
+    session: Optional[Session] = None,
+    region: Optional[str] = None,
+) -> ResourceIterator["{resource}"]:
+    client = SageMakerClient(session=session, region_name=region, service_name="{service_name}").client
+{custom_key_mapping}
+    return ResourceIterator(
+{resource_iterator_args}
+    )
+"""
+
 RESOURCE_BASE_CLASS_TEMPLATE = """
 class Base(BaseModel):
     @classmethod

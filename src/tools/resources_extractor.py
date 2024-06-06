@@ -292,7 +292,10 @@ class ResourcesExtractor:
                         invoke_method = "invoke_with_response_stream"
                     object_methods.add(invoke_method)
                 elif action_split[0] in CLASS_METHODS:
-                    class_methods.add(action_split[0])
+                    if action_low.split(resource_low)[0] == "list":
+                        class_methods.add("get_all")
+                    else:
+                        class_methods.add(action_low.split(resource_low)[0])
                 elif action_split[0] in OBJECT_METHODS:
                     object_methods.add(action_split[0])
                 else:

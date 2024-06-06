@@ -49,6 +49,8 @@ from src.tools.templates import (
     INVOKE_WITH_RESPONSE_STREAM_METHOD_TEMPLATE,
     IMPORT_METHOD_TEMPLATE,
     FAILED_STATUS_ERROR_TEMPLATE,
+    GET_ALL_METHOD_NO_ARGS_TEMPLATE,
+    GET_ALL_METHOD_WITH_ARGS_TEMPLATE,
 )
 from src.tools.data_extractor import (
     load_combined_shapes_data,
@@ -156,7 +158,7 @@ class ResourcesCodeGen:
             "from typing import Dict, List, Literal, Optional\n"
             "from boto3.session import Session",
             "from src.code_injection.codec import transform",
-            "from src.generated.utils import SageMakerClient, SageMakerRuntimeClient, Unassigned, snake_to_pascal, pascal_to_snake",
+            "from src.generated.utils import SageMakerClient, SageMakerRuntimeClient, ResourceIterator, Unassigned, snake_to_pascal, pascal_to_snake",
             "from src.generated.intelligent_defaults_helper import load_default_configs_for_resource_name, get_config_value",
             "from src.generated.shapes import *",
             "from src.generated.exceptions import *",
@@ -398,6 +400,10 @@ class ResourcesCodeGen:
 
             if import_method := self._evaluate_method(resource_name, "import", class_methods):
                 resource_class += add_indent(import_method, 4)
+
+            if list_method := self._evaluate_method(resource_name, "get_all", class_methods):
+                resource_class += add_indent(list_method, 4)
+
         else:
             # If there's no 'get' method, log a message
             # TODO: Handle the resources without 'get' differently
@@ -1052,6 +1058,101 @@ class ResourcesCodeGen:
             status_key_path=status_key_path,
             failed_error_block=formatted_failed_block,
             resource_name=resource_name,
+        )
+        return formatted_method
+
+    def generate_get_all_method(self, resource_name: str) -> str:
+        """Auto-Generate 'get_all' class Method [list API] for a resource.
+
+        Args:
+            resource_name (str): The resource name.
+
+        Returns:
+            str: The formatted get_all Method template.
+        """
+        operation_name = "List" + resource_name + "s"
+        operation_metadata = self.operations[operation_name]
+        operation_input_shape_name = operation_metadata["input"]["shape"]
+
+        operation = convert_to_snake_case(operation_name)
+
+        get_list_operation_output_shape = self.operations[operation_name]["output"]["shape"]
+        list_operation_output_members = self.shapes[get_list_operation_output_shape]["members"]
+
+        filtered_list_operation_output_members = next(
+            {key: value}
+            for key, value in list_operation_output_members.items()
+            if key != "NextToken"
+        )
+
+        summaries_key = next(iter(filtered_list_operation_output_members))
+        summaries_shape_name = filtered_list_operation_output_members[summaries_key]["shape"]
+
+        summary_name = self.shapes[summaries_shape_name]["member"]["shape"]
+        summary_members = self.shapes[summary_name]["members"].keys()
+
+        get_operation = self.operations["Describe" + resource_name]
+        get_operation_input_shape = get_operation["input"]["shape"]
+        get_operation_required_input = self.shapes[get_operation_input_shape].get("required", [])
+
+        custom_key_mapping_str = ""
+        if all(member not in summary_members for member in get_operation_required_input):
+            if "MonitoringJobDefinitionSummary" == summary_name:
+                custom_key_mapping = {
+                    "monitoring_job_definition_name": "job_definition_name",
+                    "monitoring_job_definition_arn": "job_definition_arn",
+                }
+                custom_key_mapping_str = f"custom_key_mapping = {json.dumps(custom_key_mapping)}"
+                custom_key_mapping_str = add_indent(custom_key_mapping_str, 4)
+            else:
+                log.warn(
+                    f"Resource {resource_name} summaries do not have required members to create object instance. Resource may require custom key mapping for get_all().\n"
+                    f"List {summary_name} Members: {summary_members}, Object Required Members: {get_operation_required_input}"
+                )
+                return ""
+
+        resource_iterator_args_list = [
+            "client=client",
+            f"list_method='{operation}'",
+            f"summaries_key='{summaries_key}'",
+            f"summary_name='{summary_name}'",
+            f"resource_cls={resource_name}",
+        ]
+
+        if custom_key_mapping_str:
+            resource_iterator_args_list.append(f"custom_key_mapping=custom_key_mapping")
+
+        exclude_list = ["next_token", "max_results"]
+        get_all_args = self._generate_method_args(operation_input_shape_name, exclude_list)
+
+        if not get_all_args.strip().strip(","):
+            resource_iterator_args = ",\n".join(resource_iterator_args_list)
+            resource_iterator_args = add_indent(resource_iterator_args, 8)
+
+            formatted_method = GET_ALL_METHOD_NO_ARGS_TEMPLATE.format(
+                service_name="sagemaker",
+                resource=resource_name,
+                operation=operation,
+                custom_key_mapping=custom_key_mapping_str,
+                resource_iterator_args=resource_iterator_args,
+            )
+            return formatted_method
+
+        operation_input_args = self._generate_operation_input_args(
+            operation_metadata, is_class_method=True, exclude_list=exclude_list
+        )
+
+        resource_iterator_args_list.append("list_method_kwargs=operation_input_args")
+        resource_iterator_args = ",\n".join(resource_iterator_args_list)
+        resource_iterator_args = add_indent(resource_iterator_args, 8)
+
+        formatted_method = GET_ALL_METHOD_WITH_ARGS_TEMPLATE.format(
+            service_name="sagemaker",
+            resource=resource_name,
+            get_all_args=get_all_args,
+            operation_input_args=operation_input_args,
+            custom_key_mapping=custom_key_mapping_str,
+            resource_iterator_args=resource_iterator_args,
         )
         return formatted_method
 
