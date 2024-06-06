@@ -43,6 +43,8 @@ def create(
         'StoppingCondition': stopping_condition,
         'Tags': tags,
     }
+    
+    operation_input_args = Base.populate_chained_attributes(resource_name='CompilationJob', operation_input_args=operation_input_args)
         
     logger.debug(f"Input request: {operation_input_args}")
     # serialize the input request

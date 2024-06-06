@@ -457,6 +457,7 @@ class ResourcesCodeGen:
         )
         resource_name_in_snake_case = pascal_to_snake(resource_name)
         method_args = ""
+        last_key = list(typed_shape_members.keys())[-1]
         for attr, attr_type in typed_shape_members.items():
             method_parameter_type = attr_type
             if (
@@ -465,12 +466,13 @@ class ResourcesCodeGen:
                 and attr != "name"
             ):
                 if attr_type.startswith("Optional"):
-                    method_args += f"{attr}: Optional[Union[str, object]] = Unassigned()"
+                    method_args += f"{attr}: Optional[Union[str, object]] = Unassigned(),"
                 else:
-                    method_args += f"{attr}: Union[str, object]"
+                    method_args += f"{attr}: Union[str, object],"
             else:
-                method_args += f"{attr}: {method_parameter_type}"
-            method_args += ",\n"
+                method_args += f"{attr}: {method_parameter_type},"
+            if attr != last_key:
+                method_args += "\n"
         method_args = add_indent(method_args)
         return method_args
 

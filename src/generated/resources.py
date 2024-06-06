@@ -140,7 +140,6 @@ class Action(Base):
         properties: Optional[Dict[str, str]] = Unassigned(),
         metadata_properties: Optional[MetadataProperties] = Unassigned(),
         tags: Optional[List[Tag]] = Unassigned(),
-    
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
@@ -326,7 +325,6 @@ class Algorithm(Base):
         validation_specification: Optional[AlgorithmValidationSpecification] = Unassigned(),
         certify_for_marketplace: Optional[bool] = Unassigned(),
         tags: Optional[List[Tag]] = Unassigned(),
-    
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
@@ -483,7 +481,6 @@ class App(Base):
         space_name: Optional[Union[str, object]] = Unassigned(),
         tags: Optional[List[Tag]] = Unassigned(),
         resource_spec: Optional[ResourceSpec] = Unassigned(),
-    
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
@@ -647,7 +644,6 @@ class AppImageConfig(Base):
         tags: Optional[List[Tag]] = Unassigned(),
         kernel_gateway_image_config: Optional[KernelGatewayImageConfig] = Unassigned(),
         jupyter_lab_app_image_config: Optional[JupyterLabAppImageConfig] = Unassigned(),
-    
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
@@ -803,7 +799,6 @@ class Artifact(Base):
         properties: Optional[Dict[str, str]] = Unassigned(),
         metadata_properties: Optional[MetadataProperties] = Unassigned(),
         tags: Optional[List[Tag]] = Unassigned(),
-    
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
@@ -1022,7 +1017,6 @@ class AutoMLJob(Base):
         generate_candidate_definitions_only: Optional[bool] = Unassigned(),
         tags: Optional[List[Tag]] = Unassigned(),
         model_deploy_config: Optional[ModelDeployConfig] = Unassigned(),
-    
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
@@ -1254,7 +1248,6 @@ class AutoMLJobV2(Base):
         auto_m_l_job_objective: Optional[AutoMLJobObjective] = Unassigned(),
         model_deploy_config: Optional[ModelDeployConfig] = Unassigned(),
         data_split_config: Optional[AutoMLDataSplitConfig] = Unassigned(),
-    
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
@@ -1392,7 +1385,6 @@ class Cluster(Base):
         instance_groups: List[ClusterInstanceGroupSpecification],
         vpc_config: Optional[VpcConfig] = Unassigned(),
         tags: Optional[List[Tag]] = Unassigned(),
-    
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
@@ -1558,7 +1550,6 @@ class CodeRepository(Base):
         code_repository_name: str,
         git_config: GitConfig,
         tags: Optional[List[Tag]] = Unassigned(),
-    
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
@@ -1730,7 +1721,6 @@ class CompilationJob(Base):
         input_config: Optional[InputConfig] = Unassigned(),
         vpc_config: Optional[NeoVpcConfig] = Unassigned(),
         tags: Optional[List[Tag]] = Unassigned(),
-    
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
@@ -1900,7 +1890,6 @@ class Context(Base):
         description: Optional[str] = Unassigned(),
         properties: Optional[Dict[str, str]] = Unassigned(),
         tags: Optional[List[Tag]] = Unassigned(),
-    
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
@@ -2135,7 +2124,6 @@ class DataQualityJobDefinition(Base):
         network_config: Optional[MonitoringNetworkConfig] = Unassigned(),
         stopping_condition: Optional[MonitoringStoppingCondition] = Unassigned(),
         tags: Optional[List[Tag]] = Unassigned(),
-    
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
@@ -2293,7 +2281,6 @@ class DeviceFleet(Base):
         description: Optional[str] = Unassigned(),
         tags: Optional[List[Tag]] = Unassigned(),
         enable_iot_role_alias: Optional[bool] = Unassigned(),
-    
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
@@ -2569,7 +2556,6 @@ class Domain(Base):
         kms_key_id: Optional[str] = Unassigned(),
         app_security_group_management: Optional[str] = Unassigned(),
         default_space_settings: Optional[DefaultSpaceSettings] = Unassigned(),
-    
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
@@ -2741,7 +2727,6 @@ class EdgeDeploymentPlan(Base):
         device_fleet_name: Union[str, object],
         stages: Optional[List[DeploymentStage]] = Unassigned(),
         tags: Optional[List[Tag]] = Unassigned(),
-    
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
@@ -2909,7 +2894,6 @@ class EdgePackagingJob(Base):
         output_config: EdgeOutputConfig,
         resource_key: Optional[str] = Unassigned(),
         tags: Optional[List[Tag]] = Unassigned(),
-    
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
@@ -3106,7 +3090,6 @@ class Endpoint(Base):
         endpoint_config_name: Union[str, object],
         deployment_config: Optional[DeploymentConfig] = Unassigned(),
         tags: Optional[List[Tag]] = Unassigned(),
-    
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
@@ -3457,7 +3440,6 @@ class EndpointConfig(Base):
         execution_role_arn: Optional[str] = Unassigned(),
         vpc_config: Optional[VpcConfig] = Unassigned(),
         enable_network_isolation: Optional[bool] = Unassigned(),
-    
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
@@ -3588,7 +3570,6 @@ class Experiment(Base):
         display_name: Optional[Union[str, object]] = Unassigned(),
         description: Optional[str] = Unassigned(),
         tags: Optional[List[Tag]] = Unassigned(),
-    
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
@@ -3782,7 +3763,6 @@ class FeatureGroup(Base):
         role_arn: Optional[str] = Unassigned(),
         description: Optional[str] = Unassigned(),
         tags: Optional[List[Tag]] = Unassigned(),
-    
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
@@ -3993,7 +3973,6 @@ class FlowDefinition(Base):
         human_loop_activation_config: Optional[HumanLoopActivationConfig] = Unassigned(),
         human_loop_config: Optional[HumanLoopConfig] = Unassigned(),
         tags: Optional[List[Tag]] = Unassigned(),
-    
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
@@ -4158,7 +4137,6 @@ class Hub(Base):
         hub_search_keywords: Optional[List[str]] = Unassigned(),
         s3_storage_config: Optional[HubS3StorageConfig] = Unassigned(),
         tags: Optional[List[Tag]] = Unassigned(),
-    
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
@@ -4516,7 +4494,6 @@ class HumanTaskUi(Base):
         human_task_ui_name: str,
         ui_template: UiTemplate,
         tags: Optional[List[Tag]] = Unassigned(),
-    
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
@@ -4720,7 +4697,6 @@ class HyperParameterTuningJob(Base):
         warm_start_config: Optional[HyperParameterTuningJobWarmStartConfig] = Unassigned(),
         tags: Optional[List[Tag]] = Unassigned(),
         autotune: Optional[Autotune] = Unassigned(),
-    
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
@@ -4899,7 +4875,6 @@ class Image(Base):
         description: Optional[str] = Unassigned(),
         display_name: Optional[Union[str, object]] = Unassigned(),
         tags: Optional[List[Tag]] = Unassigned(),
-    
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
@@ -5092,7 +5067,6 @@ class ImageVersion(Base):
         processor: Optional[str] = Unassigned(),
         horovod: Optional[bool] = Unassigned(),
         release_notes: Optional[str] = Unassigned(),
-    
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
@@ -5263,7 +5237,6 @@ class InferenceComponent(Base):
         specification: InferenceComponentSpecification,
         runtime_config: InferenceComponentRuntimeConfig,
         tags: Optional[List[Tag]] = Unassigned(),
-    
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
@@ -5482,7 +5455,6 @@ class InferenceExperiment(Base):
         data_storage_config: Optional[InferenceExperimentDataStorageConfig] = Unassigned(),
         kms_key: Optional[str] = Unassigned(),
         tags: Optional[List[Tag]] = Unassigned(),
-    
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
@@ -5721,7 +5693,6 @@ class InferenceRecommendationsJob(Base):
         stopping_conditions: Optional[RecommendationJobStoppingConditions] = Unassigned(),
         output_config: Optional[RecommendationJobOutputConfig] = Unassigned(),
         tags: Optional[List[Tag]] = Unassigned(),
-    
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
@@ -5965,7 +5936,6 @@ class LabelingJob(Base):
         stopping_conditions: Optional[LabelingJobStoppingConditions] = Unassigned(),
         labeling_job_algorithms_config: Optional[LabelingJobAlgorithmsConfig] = Unassigned(),
         tags: Optional[List[Tag]] = Unassigned(),
-    
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
@@ -6170,7 +6140,6 @@ class Model(Base):
         tags: Optional[List[Tag]] = Unassigned(),
         vpc_config: Optional[VpcConfig] = Unassigned(),
         enable_network_isolation: Optional[bool] = Unassigned(),
-    
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
@@ -6380,7 +6349,6 @@ class ModelBiasJobDefinition(Base):
         network_config: Optional[MonitoringNetworkConfig] = Unassigned(),
         stopping_condition: Optional[MonitoringStoppingCondition] = Unassigned(),
         tags: Optional[List[Tag]] = Unassigned(),
-    
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
@@ -6531,7 +6499,6 @@ class ModelCard(Base):
         model_card_status: str,
         security_config: Optional[ModelCardSecurityConfig] = Unassigned(),
         tags: Optional[List[Tag]] = Unassigned(),
-    
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
@@ -6727,7 +6694,6 @@ class ModelCardExportJob(Base):
         model_card_export_job_name: str,
         output_config: ModelCardExportOutputConfig,
         model_card_version: Optional[int] = Unassigned(),
-    
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
@@ -6952,7 +6918,6 @@ class ModelExplainabilityJobDefinition(Base):
         network_config: Optional[MonitoringNetworkConfig] = Unassigned(),
         stopping_condition: Optional[MonitoringStoppingCondition] = Unassigned(),
         tags: Optional[List[Tag]] = Unassigned(),
-    
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
@@ -7239,7 +7204,6 @@ class ModelPackage(Base):
         additional_inference_specifications: Optional[List[AdditionalInferenceSpecificationDefinition]] = Unassigned(),
         skip_model_validation: Optional[str] = Unassigned(),
         source_uri: Optional[str] = Unassigned(),
-    
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
@@ -7435,7 +7399,6 @@ class ModelPackageGroup(Base):
         model_package_group_name: str,
         model_package_group_description: Optional[str] = Unassigned(),
         tags: Optional[List[Tag]] = Unassigned(),
-    
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
@@ -7664,7 +7627,6 @@ class ModelQualityJobDefinition(Base):
         network_config: Optional[MonitoringNetworkConfig] = Unassigned(),
         stopping_condition: Optional[MonitoringStoppingCondition] = Unassigned(),
         tags: Optional[List[Tag]] = Unassigned(),
-    
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
@@ -7854,7 +7816,6 @@ class MonitoringSchedule(Base):
         monitoring_schedule_name: str,
         monitoring_schedule_config: MonitoringScheduleConfig,
         tags: Optional[List[Tag]] = Unassigned(),
-    
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
@@ -8093,7 +8054,6 @@ class NotebookInstance(Base):
         root_access: Optional[str] = Unassigned(),
         platform_identifier: Optional[str] = Unassigned(),
         instance_metadata_service_configuration: Optional[InstanceMetadataServiceConfiguration] = Unassigned(),
-    
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
@@ -8307,7 +8267,6 @@ class NotebookInstanceLifecycleConfig(Base):
         notebook_instance_lifecycle_config_name: str,
         on_create: Optional[List[NotebookInstanceLifecycleHook]] = Unassigned(),
         on_start: Optional[List[NotebookInstanceLifecycleHook]] = Unassigned(),
-    
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
@@ -8480,7 +8439,6 @@ class Pipeline(Base):
         pipeline_description: Optional[str] = Unassigned(),
         tags: Optional[List[Tag]] = Unassigned(),
         parallelism_configuration: Optional[ParallelismConfiguration] = Unassigned(),
-    
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
@@ -8863,7 +8821,6 @@ class ProcessingJob(Base):
         network_config: Optional[NetworkConfig] = Unassigned(),
         tags: Optional[List[Tag]] = Unassigned(),
         experiment_config: Optional[ExperimentConfig] = Unassigned(),
-    
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
@@ -9027,7 +8984,6 @@ class Project(Base):
         service_catalog_provisioning_details: ServiceCatalogProvisioningDetails,
         project_description: Optional[str] = Unassigned(),
         tags: Optional[List[Tag]] = Unassigned(),
-    
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
@@ -9208,7 +9164,6 @@ class Space(Base):
         ownership_settings: Optional[OwnershipSettings] = Unassigned(),
         space_sharing_settings: Optional[SpaceSharingSettings] = Unassigned(),
         space_display_name: Optional[Union[str, object]] = Unassigned(),
-    
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
@@ -9383,7 +9338,6 @@ class StudioLifecycleConfig(Base):
         studio_lifecycle_config_content: str,
         studio_lifecycle_config_app_type: str,
         tags: Optional[List[Tag]] = Unassigned(),
-    
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
@@ -9632,7 +9586,6 @@ class TrainingJob(Base):
         retry_strategy: Optional[RetryStrategy] = Unassigned(),
         remote_debug_config: Optional[RemoteDebugConfig] = Unassigned(),
         infra_check_config: Optional[InfraCheckConfig] = Unassigned(),
-    
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
@@ -9900,7 +9853,6 @@ class TransformJob(Base):
         data_processing: Optional[DataProcessing] = Unassigned(),
         tags: Optional[List[Tag]] = Unassigned(),
         experiment_config: Optional[ExperimentConfig] = Unassigned(),
-    
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
@@ -10067,7 +10019,6 @@ class Trial(Base):
         display_name: Optional[Union[str, object]] = Unassigned(),
         metadata_properties: Optional[MetadataProperties] = Unassigned(),
         tags: Optional[List[Tag]] = Unassigned(),
-    
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
@@ -10232,7 +10183,6 @@ class TrialComponent(Base):
         output_artifacts: Optional[Dict[str, TrialComponentArtifact]] = Unassigned(),
         metadata_properties: Optional[MetadataProperties] = Unassigned(),
         tags: Optional[List[Tag]] = Unassigned(),
-    
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
@@ -10482,7 +10432,6 @@ class UserProfile(Base):
         single_sign_on_user_value: Optional[str] = Unassigned(),
         tags: Optional[List[Tag]] = Unassigned(),
         user_settings: Optional[UserSettings] = Unassigned(),
-    
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
@@ -10678,7 +10627,6 @@ class Workforce(Base):
         source_ip_config: Optional[SourceIpConfig] = Unassigned(),
         tags: Optional[List[Tag]] = Unassigned(),
         workforce_vpc_config: Optional[WorkforceVpcConfigRequest] = Unassigned(),
-    
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
@@ -10846,7 +10794,6 @@ class Workteam(Base):
         workforce_name: Optional[Union[str, object]] = Unassigned(),
         notification_configuration: Optional[NotificationConfiguration] = Unassigned(),
         tags: Optional[List[Tag]] = Unassigned(),
-    
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[object]:
