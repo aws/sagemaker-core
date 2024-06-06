@@ -12,6 +12,7 @@
 # language governing permissions and limitations under the License.
 
 import logging
+import os
 
 import botocore
 import time
@@ -24,6 +25,37 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 T = TypeVar("T")
+
+def configure_logging(log_level=None):
+    """Configure the logging configuration based on log level.
+
+    Usage:
+        Set Environment Variable LOG_LEVEL to DEBUG to see debug logs
+        configure_logging()
+        configure_logging("DEBUG")
+
+    Args:
+        log_level (str): The log level to set.
+            Accepted values are: "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL".
+            Defaults to the value of the LOG_LEVEL environment variable.
+            If argument/environment variable is not set, defaults to "INFO".
+
+    Raises:
+        AttributeError: If the log level is invalid.
+    """
+
+    if not log_level:
+        log_level = os.environ.get("LOG_LEVEL", "INFO").upper()
+    _logger = logging.getLogger()
+    _logger.setLevel(getattr(logging, log_level))
+    # reset any currently associated handlers with log level
+    for handler in _logger.handlers:
+        _logger.removeHandler(handler)
+    console_handler = logging.StreamHandler()
+    console_handler.setFormatter(
+        logging.Formatter("%(asctime)s : %(levelname)s : %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
+    )
+    _logger.addHandler(console_handler)
 
 
 def snake_to_pascal(snake_str):
