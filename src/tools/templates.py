@@ -391,6 +391,8 @@ def get_all(
 
 RESOURCE_BASE_CLASS_TEMPLATE = """
 class Base(BaseModel):
+    model_config = ConfigDict(protected_namespaces=())
+    
     @classmethod
     def _serialize(cls, data: Dict) -> Dict:
         result = {}
@@ -436,6 +438,8 @@ class Base(BaseModel):
 
 SHAPE_BASE_CLASS_TEMPLATE = """
 class {class_name}:
+    model_config = ConfigDict(protected_namespaces=())
+    
     def serialize(self):
         result = {{}}
         for attr, value in self.__dict__.items():
