@@ -4,6 +4,11 @@ class SageMakerCoreError(Exception):
     fmt = "An unspecified error occurred."
 
     def __init__(self, **kwargs):
+        """Initialize a SageMakerCoreError exception.
+
+        Args:
+            **kwargs: Keyword arguments to be formatted into the custom error message template.
+        """
         msg = self.fmt.format(**kwargs)
         Exception.__init__(self, msg)
 
@@ -14,8 +19,13 @@ class ValidationError(SageMakerCoreError):
 
     fmt = "An error occurred while validating user input/setup. {message}"
 
-    def __init__(self, message=""):
-        super().__init__(message=message)
+    def __init__(self, message="", **kwargs):
+        """Initialize a ValidationError exception.
+
+        Args:
+            message (str): A message describing the error.
+        """
+        super().__init__(message=message, **kwargs)
 
 
 ### Waiter Errors
@@ -24,8 +34,14 @@ class WaiterError(SageMakerCoreError):
 
     fmt = "An error occurred while waiting for {resource_type}. Final Resource State: {status}."
 
-    def __init__(self, resource_type="(Unkown)", status="(Unkown)"):
-        super().__init__(resource_type=resource_type, status=status)
+    def __init__(self, resource_type="(Unkown)", status="(Unkown)", **kwargs):
+        """Initialize a WaiterError exception.
+
+        Args:
+            resource_type (str): The type of resource being waited on.
+            status (str): The final status of the resource.
+        """
+        super().__init__(resource_type=resource_type, status=status, **kwargs)
 
 
 class FailedStatusError(WaiterError):
@@ -34,6 +50,13 @@ class FailedStatusError(WaiterError):
     fmt = "Encountered unexpected failed state while waiting for {resource_type}. Final Resource State: {status}. Failure Reason: {reason}"
 
     def __init__(self, resource_type="(Unkown)", status="(Unkown)", reason="(Unkown)"):
+        """Initialize a FailedStatusError exception.
+
+        Args:
+            resource_type (str): The type of resource being waited on.
+            status (str): The final status of the resource.
+            reason (str): The reason the resource entered a failed state.
+        """
         super().__init__(resource_type=resource_type, status=status, reason=reason)
 
 
@@ -43,6 +66,12 @@ class TimeoutExceededError(WaiterError):
     fmt = "Timeout exceeded while waiting for {resource_type}. Final Resource State: {status}. Increase the timeout and try again."
 
     def __init__(self, resource_type="(Unkown)", status="(Unkown)", reason="(Unkown)"):
+        """Initialize a TimeoutExceededError exception.
+        Args:
+            resource_type (str): The type of resource being waited on.
+            status (str): The final status of the resource.
+            reason (str): The reason the resource entered a failed state.
+        """
         super().__init__(resource_type=resource_type, status=status, reason=reason)
 
 
@@ -52,8 +81,12 @@ class IntelligentDefaultsError(SageMakerCoreError):
 
     fmt = "An error occurred while loading Intelligent Default. {message}"
 
-    def __init__(self, message=""):
-        super().__init__(message=message)
+    def __init__(self, message="", **kwargs):
+        """Initialize an IntelligentDefaultsError exception.
+        Args:
+            message (str): A message describing the error.
+        """
+        super().__init__(message=message, **kwargs)
 
 
 class LocalConfigNotFoundError(IntelligentDefaultsError):
@@ -62,7 +95,12 @@ class LocalConfigNotFoundError(IntelligentDefaultsError):
     fmt = "Failed to load configuration file from location: {file_path}. {message}"
 
     def __init__(self, file_path="(Unkown)", message=""):
-        super().__init__(file_path, message=message)
+        """Initialize a LocalConfigNotFoundError exception.
+        Args:
+            file_path (str): The path to the configuration file.
+            message (str): A message describing the error.
+        """
+        super().__init__(file_path=file_path, message=message)
 
 
 class S3ConfigNotFoundError(IntelligentDefaultsError):
@@ -71,7 +109,12 @@ class S3ConfigNotFoundError(IntelligentDefaultsError):
     fmt = "Failed to load configuration file from S3 location: {s3_uri}. {message}"
 
     def __init__(self, s3_uri="(Unkown)", message=""):
-        super().__init__(s3_uri, message=message)
+        """Initialize a S3ConfigNotFoundError exception.
+        Args:
+            s3_uri (str): The S3 URI path to the configuration file.
+            message (str): A message describing the error.
+        """
+        super().__init__(s3_uri=s3_uri, message=message)
 
 
 class ConfigSchemaValidationError(IntelligentDefaultsError, ValidationError):
@@ -80,4 +123,9 @@ class ConfigSchemaValidationError(IntelligentDefaultsError, ValidationError):
     fmt = "Failed to validate configuration file from location: {file_path}. {message}"
 
     def __init__(self, file_path="(Unkown)", message=""):
-        super().__init__(file_path, message=message)
+        """Initialize a ConfigSchemaValidationError exception.
+        Args:
+            file_path (str): The path to the configuration file.
+            message (str): A message describing the error.
+        """
+        super().__init__(file_path=file_path, message=message)
