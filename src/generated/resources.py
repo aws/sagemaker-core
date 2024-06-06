@@ -1524,6 +1524,27 @@ class Cluster(Base):
             list_method_kwargs=operation_input_args
         )
 
+    def get_node(
+        self,
+        node_id: str,
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional[ClusterNodeDetails]:
+
+        operation_input_args = {
+            "ClusterName": self.cluster_name,
+            "NodeId": node_id,
+        }
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
+        response = client.describe_cluster_node(**operation_input_args)
+
+        transformed_response = transform(response, "DescribeClusterNodeResponse")
+        return ClusterNodeDetails(**transformed_response)
+
 
 class CodeRepository(Base):
     code_repository_name: str
@@ -7494,6 +7515,41 @@ class ModelPackageGroup(Base):
             list_method_kwargs=operation_input_args
         )
 
+    def get_policy(
+        self,
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional[str]:
+
+        operation_input_args = {
+            "ModelPackageGroupName": self.model_package_group_name,
+        }
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
+        response = client.get_model_package_group_policy(**operation_input_args)
+
+        transformed_response = transform(response, "GetModelPackageGroupPolicyOutput")
+        return str(**transformed_response)
+
+    def delete_policy(
+        self,
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> None:
+
+        operation_input_args = {
+            "ModelPackageGroupName": self.model_package_group_name,
+        }
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
+        response = client.delete_model_package_group_policy(**operation_input_args)
+
 
 class ModelQualityJobDefinition(Base):
     job_definition_name: str
@@ -8705,6 +8761,25 @@ class PipelineExecution(Base):
             resource_cls=PipelineExecution,
             list_method_kwargs=operation_input_args
         )
+
+    def retry(
+        self,
+        client_request_token: str,
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> None:
+
+        operation_input_args = {
+            "PipelineExecutionArn": self.pipeline_execution_arn,
+            "ClientRequestToken": client_request_token,
+            "ParallelismConfiguration": self.parallelism_configuration,
+        }
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
+        response = client.retry_pipeline_execution(**operation_input_args)
 
 
 class ProcessingJob(Base):

@@ -15,6 +15,22 @@
             "return_type": "None",
             "method_type": "object_method",
             "service_name": "sagemaker"
+        },
+        "GetModelPackageGroupPolicy": {
+            "operation_name": "GetModelPackageGroupPolicy",
+            "resource_name": "ModelPackageGroup",
+            "method_name": "get_policy",
+            "return_type": "str",
+            "method_type": "object_method",
+            "service_name": "sagemaker"
+        },
+        "DeleteModelPackageGroupPolicy": {
+            "operation_name": "DeleteModelPackageGroupPolicy",
+            "resource_name": "ModelPackageGroup",
+            "method_name": "delete_policy",
+            "return_type": "None",
+            "method_type": "object_method",
+            "service_name": "sagemaker"
         }
     }
 }
