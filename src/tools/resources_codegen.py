@@ -662,7 +662,6 @@ class ResourcesCodeGen:
                 resource_name=resource_name,
                 create_args=create_args,
                 resource_lower=resource_lower,
-                resource_name=resource_name,
                 service_name="sagemaker",  # TODO: change service name based on the service - runtime, sagemaker, etc.
                 operation_input_args=operation_input_args,
                 operation=operation,
@@ -673,7 +672,6 @@ class ResourcesCodeGen:
                 resource_name=resource_name,
                 create_args=create_args,
                 resource_lower=resource_lower,
-                resource_name=resource_name,
                 service_name="sagemaker",  # TODO: change service name based on the service - runtime, sagemaker, etc.
                 operation_input_args=operation_input_args,
                 operation=operation,
