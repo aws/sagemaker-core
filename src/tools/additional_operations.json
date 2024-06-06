@@ -1,0 +1,20 @@
+{
+    "operations": {
+        "DescribeClusterNode": {
+            "operation_name": "DescribeClusterNode",
+            "resource_name": "Cluster",
+            "method_name": "get_node",
+            "return_type": "ClusterNodeDetails",
+            "method_type": "object_method",
+            "service_name": "sagemaker"
+        },
+        "RetryPipelineExecution": {
+            "operation_name": "RetryPipelineExecution",
+            "resource_name": "PipelineExecution",
+            "method_name": "retry",
+            "return_type": "None",
+            "method_type": "object_method",
+            "service_name": "sagemaker"
+        }
+    }
+}

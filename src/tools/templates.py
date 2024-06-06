@@ -401,6 +401,67 @@ def get_all(
     )
 """
 
+GET_ALL_METHOD_WITH_ARGS_TEMPLATE = """
+@classmethod
+def get_all(
+    cls,
+{get_all_args}
+    session: Optional[Session] = None,
+    region: Optional[str] = None,
+) -> ResourceIterator["{resource}"]:
+    client = SageMakerClient(session=session, region_name=region, service_name="{service_name}").client
+        
+    operation_input_args = {{
+{operation_input_args}
+    }}
+{custom_key_mapping}
+    operation_input_args = {{k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}}
+    
+    return ResourceIterator(
+{resource_iterator_args}
+    )
+"""
+
+GET_ALL_METHOD_NO_ARGS_TEMPLATE = """
+@classmethod
+def get_all(
+    cls,
+    session: Optional[Session] = None,
+    region: Optional[str] = None,
+) -> ResourceIterator["{resource}"]:
+    client = SageMakerClient(session=session, region_name=region, service_name="{service_name}").client
+{custom_key_mapping}
+    return ResourceIterator(
+{resource_iterator_args}
+    )
+"""
+
+GENERIC_METHOD_TEMPLATE = """
+{decorator}
+def {method_name}(
+{method_args}
+){return_type}:
+{serialize_operation_input}
+{initialize_client}
+{call_operation_api}
+{deserialize_response}
+"""
+
+SERIALIZE_INPUT_TEMPLATE = """
+    operation_input_args = {{
+{operation_input_args}
+    }}"""
+
+INITIALIZE_CLIENT_TEMPLATE = """
+    client = SageMakerClient(session=session, region_name=region, service_name='{service_name}').client"""
+
+CALL_OPERATION_API_TEMPLATE = """
+    response = client.{operation}(**operation_input_args)"""
+
+DESERIALIZE_RESPONSE_TEMPLATE = """
+    transformed_response = transform(response, '{operation_output_shape}')
+    return {return_type_conversion}(**transformed_response)"""
+
 RESOURCE_BASE_CLASS_TEMPLATE = """
 class Base(BaseModel):
     model_config = ConfigDict(protected_namespaces=())
