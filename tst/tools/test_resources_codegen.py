@@ -29,7 +29,7 @@ def create(
     tags: Optional[List[Tag]] = Unassigned(),
     session: Optional[Session] = None,
     region: Optional[str] = None,
-) -> Optional[object]:
+) -> Optional["CompilationJob"]:
     logger.debug("Creating compilation_job resource.")
     client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
 
@@ -80,7 +80,7 @@ def load(
     tags: Optional[List[Tag]] = Unassigned(),
     session: Optional[Session] = None,
     region: Optional[str] = None,
-) -> Optional[object]:
+) -> Optional["HubContent"]:
     logger.debug(f"Importing hub_content resource.")
     client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
 
@@ -119,7 +119,7 @@ def update(
     exclude_retained_variant_properties: Optional[List[VariantProperty]] = Unassigned(),
     deployment_config: Optional[DeploymentConfig] = Unassigned(),
     retain_deployment_config: Optional[bool] = Unassigned(),
-) -> Optional[object]:
+) -> Optional["Endpoint"]:
     logger.debug("Creating endpoint resource.")
     client = SageMakerClient().client
 
@@ -164,7 +164,7 @@ def get(
     space_name: Optional[str] = Unassigned(),
     session: Optional[Session] = None,
     region: Optional[str] = None,
-) -> Optional[object]:
+) -> Optional["App"]:
     operation_input_args = {
         'DomainId': domain_id,
         'UserProfileName': user_profile_name,
@@ -186,7 +186,7 @@ def get(
 
     def test_generate_refresh_method(self):
         expected_output = """
-def refresh(self) -> Optional[object]:
+def refresh(self) -> Optional["App"]:
 
     operation_input_args = {
         'DomainId': self.domain_id,
@@ -229,12 +229,11 @@ def stop(self) -> None:
 
     def test_generate_wait_method(self):
         expected_output = """
-@validate_call
 def wait(
     self,
     poll: int = 5,
     timeout: Optional[int] = None
-) -> Optional[object]:
+) -> Optional["TrainingJob"]:
     terminal_states = ['Completed', 'Failed', 'Stopped']
     start_time = time.time()
 
@@ -247,7 +246,7 @@ def wait(
             if "failed" in current_status.lower():
                 raise FailedStatusError(resource_type="TrainingJob", status=current_status, reason=self.failure_reason)
 
-            return
+            return self
 
         if timeout is not None and time.time() - start_time >= timeout:
             raise TimeoutExceededError(resouce_type="TrainingJob", status=current_status)
@@ -258,13 +257,12 @@ def wait(
 
     def test_generate_wait_for_status_method(self):
         expected_output = """
-@validate_call
 def wait_for_status(
     self,
     status: Literal['InService', 'Creating', 'Updating', 'Failed', 'Deleting'],
     poll: int = 5,
     timeout: Optional[int] = None
-) -> Optional[object]:
+) -> Optional["InferenceComponent"]:
     start_time = time.time()
 
     while True:
@@ -272,7 +270,7 @@ def wait_for_status(
         current_status = self.inference_component_status
 
         if status == current_status:
-            return
+            return self
         
         if "failed" in current_status.lower():
             raise FailedStatusError(resource_type="InferenceComponent", status=current_status, reason=self.failure_reason)
@@ -289,13 +287,12 @@ def wait_for_status(
 
     def test_generate_wait_for_status_method_without_failed_state(self):
         expected_output = """
-@validate_call
 def wait_for_status(
     self,
     status: Literal['Creating', 'Created', 'Updating', 'Running', 'Starting', 'Stopping', 'Completed', 'Cancelled'],
     poll: int = 5,
     timeout: Optional[int] = None
-) -> Optional[object]:
+) -> Optional["InferenceExperiment"]:
     start_time = time.time()
 
     while True:
@@ -303,7 +300,7 @@ def wait_for_status(
         current_status = self.status
 
         if status == current_status:
-            return
+            return self
 
         if timeout is not None and time.time() - start_time >= timeout:
             raise TimeoutExceededError(resouce_type="InferenceExperiment", status=current_status)

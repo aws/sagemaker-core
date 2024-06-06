@@ -39,7 +39,7 @@ def create(
 {create_args}
     session: Optional[Session] = None,
     region: Optional[str] = None,
-) -> Optional[object]:
+) -> Optional["{resource_name}"]:
     logger.debug("Creating {resource_lower} resource.")
     client = SageMakerClient(session=session, region_name=region, service_name='{service_name}').client
 
@@ -66,7 +66,7 @@ def create(
 {create_args}
     session: Optional[Session] = None,
     region: Optional[str] = None,
-) -> Optional[object]:
+) -> Optional["{resource_name}"]:
     logger.debug("Creating {resource_lower} resource.")
     client = SageMakerClient(session=session, region_name=region, service_name='{service_name}').client
 
@@ -93,7 +93,7 @@ def load(
 {import_args}
     session: Optional[Session] = None,
     region: Optional[str] = None,
-) -> Optional[object]:
+) -> Optional["{resource_name}"]:
     logger.debug(f"Importing {resource_lower} resource.")
     client = SageMakerClient(session=session, region_name=region, service_name='{service_name}').client
 
@@ -117,7 +117,7 @@ UPDATE_METHOD_TEMPLATE = """
 def update(
     self,
 {update_args}
-) -> Optional[object]:
+) -> Optional["{resource_name}"]:
     logger.debug("Creating {resource_lower} resource.")
     client = SageMakerClient().client
 
@@ -229,7 +229,7 @@ def create(
 {create_args}
     session: Optional[Session] = None,
     region: Optional[str] = None,
-) -> Optional[object]:
+) -> Optional["{resource_name}"]:
     logger.debug("Creating {resource_lower} resource.")
     client = SageMakerClient(session=session, region_name=region, service_name='{service_name}')
 
@@ -255,7 +255,7 @@ def get(
 {describe_args}
     session: Optional[Session] = None,
     region: Optional[str] = None,
-) -> Optional[object]:
+) -> Optional["{resource_name}"]:
     operation_input_args = {{
 {operation_input_args}
     }}
@@ -271,7 +271,7 @@ def get(
 """
 
 REFRESH_METHOD_TEMPLATE = """
-def refresh(self) -> Optional[object]:
+def refresh(self) -> Optional["{resource_name}"]:
 
     operation_input_args = {{
 {operation_input_args}
@@ -290,12 +290,11 @@ if "failed" in current_status.lower():
 """
 
 WAIT_METHOD_TEMPLATE = """
-@validate_call
 def wait(
     self,
     poll: int = 5,
     timeout: Optional[int] = None
-) -> Optional[object]:
+) -> Optional["{resource_name}"]:
     terminal_states = {terminal_resource_states}
     start_time = time.time()
 
@@ -305,7 +304,7 @@ def wait(
 
         if current_status in terminal_states:
 {failed_error_block}
-            return
+            return self
 
         if timeout is not None and time.time() - start_time >= timeout:
             raise TimeoutExceededError(resouce_type="{resource_name}", status=current_status)
@@ -314,13 +313,12 @@ def wait(
 """
 
 WAIT_FOR_STATUS_METHOD_TEMPLATE = """
-@validate_call
 def wait_for_status(
     self,
     status: Literal{resource_states},
     poll: int = 5,
     timeout: Optional[int] = None
-) -> Optional[object]:
+) -> Optional["{resource_name}"]:
     start_time = time.time()
 
     while True:
@@ -328,7 +326,7 @@ def wait_for_status(
         current_status = self{status_key_path}
 
         if status == current_status:
-            return
+            return self
 {failed_error_block}
         if timeout is not None and time.time() - start_time >= timeout:
             raise TimeoutExceededError(resouce_type="{resource_name}", status=current_status)

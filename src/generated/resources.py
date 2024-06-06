@@ -121,7 +121,7 @@ class Action(Base):
         tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["Action"]:
         logger.debug("Creating action resource.")
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
@@ -155,7 +155,7 @@ class Action(Base):
         action_name: str,
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["Action"]:
         operation_input_args = {
             "ActionName": action_name,
         }
@@ -171,7 +171,7 @@ class Action(Base):
         action = cls(**transformed_response)
         return action
 
-    def refresh(self) -> Optional[object]:
+    def refresh(self) -> Optional["Action"]:
 
         operation_input_args = {
             "ActionName": self.action_name,
@@ -186,7 +186,7 @@ class Action(Base):
     def update(
         self,
         properties_to_remove: Optional[List[str]] = Unassigned(),
-    ) -> Optional[object]:
+    ) -> Optional["Action"]:
         logger.debug("Creating action resource.")
         client = SageMakerClient().client
 
@@ -303,7 +303,7 @@ class Algorithm(Base):
         tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["Algorithm"]:
         logger.debug("Creating algorithm resource.")
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
@@ -336,7 +336,7 @@ class Algorithm(Base):
         algorithm_name: str,
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["Algorithm"]:
         operation_input_args = {
             "AlgorithmName": algorithm_name,
         }
@@ -352,7 +352,7 @@ class Algorithm(Base):
         algorithm = cls(**transformed_response)
         return algorithm
 
-    def refresh(self) -> Optional[object]:
+    def refresh(self) -> Optional["Algorithm"]:
 
         operation_input_args = {
             "AlgorithmName": self.algorithm_name,
@@ -371,13 +371,12 @@ class Algorithm(Base):
         }
         self.client.delete_algorithm(**operation_input_args)
 
-    @validate_call
     def wait_for_status(
         self,
         status: Literal["Pending", "InProgress", "Completed", "Failed", "Deleting"],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ) -> Optional[object]:
+    ) -> Optional["Algorithm"]:
         start_time = time.time()
 
         while True:
@@ -385,7 +384,7 @@ class Algorithm(Base):
             current_status = self.algorithm_status
 
             if status == current_status:
-                return
+                return self
 
             if "failed" in current_status.lower():
                 raise FailedStatusError(
@@ -462,7 +461,7 @@ class App(Base):
         resource_spec: Optional[ResourceSpec] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["App"]:
         logger.debug("Creating app resource.")
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
@@ -505,7 +504,7 @@ class App(Base):
         space_name: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["App"]:
         operation_input_args = {
             "DomainId": domain_id,
             "UserProfileName": user_profile_name,
@@ -525,7 +524,7 @@ class App(Base):
         app = cls(**transformed_response)
         return app
 
-    def refresh(self) -> Optional[object]:
+    def refresh(self) -> Optional["App"]:
 
         operation_input_args = {
             "DomainId": self.domain_id,
@@ -552,13 +551,12 @@ class App(Base):
         }
         self.client.delete_app(**operation_input_args)
 
-    @validate_call
     def wait_for_status(
         self,
         status: Literal["Deleted", "Deleting", "Failed", "InService", "Pending"],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ) -> Optional[object]:
+    ) -> Optional["App"]:
         start_time = time.time()
 
         while True:
@@ -566,7 +564,7 @@ class App(Base):
             current_status = self.status
 
             if status == current_status:
-                return
+                return self
 
             if "failed" in current_status.lower():
                 raise FailedStatusError(
@@ -634,7 +632,7 @@ class AppImageConfig(Base):
         jupyter_lab_app_image_config: Optional[JupyterLabAppImageConfig] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["AppImageConfig"]:
         logger.debug("Creating app_image_config resource.")
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
@@ -664,7 +662,7 @@ class AppImageConfig(Base):
         app_image_config_name: str,
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["AppImageConfig"]:
         operation_input_args = {
             "AppImageConfigName": app_image_config_name,
         }
@@ -680,7 +678,7 @@ class AppImageConfig(Base):
         app_image_config = cls(**transformed_response)
         return app_image_config
 
-    def refresh(self) -> Optional[object]:
+    def refresh(self) -> Optional["AppImageConfig"]:
 
         operation_input_args = {
             "AppImageConfigName": self.app_image_config_name,
@@ -694,7 +692,7 @@ class AppImageConfig(Base):
 
     def update(
         self,
-    ) -> Optional[object]:
+    ) -> Optional["AppImageConfig"]:
         logger.debug("Creating app_image_config resource.")
         client = SageMakerClient().client
 
@@ -789,7 +787,7 @@ class Artifact(Base):
         tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["Artifact"]:
         logger.debug("Creating artifact resource.")
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
@@ -821,7 +819,7 @@ class Artifact(Base):
         artifact_arn: str,
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["Artifact"]:
         operation_input_args = {
             "ArtifactArn": artifact_arn,
         }
@@ -837,7 +835,7 @@ class Artifact(Base):
         artifact = cls(**transformed_response)
         return artifact
 
-    def refresh(self) -> Optional[object]:
+    def refresh(self) -> Optional["Artifact"]:
 
         operation_input_args = {
             "ArtifactArn": self.artifact_arn,
@@ -852,7 +850,7 @@ class Artifact(Base):
     def update(
         self,
         properties_to_remove: Optional[List[str]] = Unassigned(),
-    ) -> Optional[object]:
+    ) -> Optional["Artifact"]:
         logger.debug("Creating artifact resource.")
         client = SageMakerClient().client
 
@@ -992,7 +990,7 @@ class AutoMLJob(Base):
         model_deploy_config: Optional[ModelDeployConfig] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["AutoMLJob"]:
         logger.debug("Creating auto_m_l_job resource.")
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
@@ -1028,7 +1026,7 @@ class AutoMLJob(Base):
         auto_m_l_job_name: str,
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["AutoMLJob"]:
         operation_input_args = {
             "AutoMLJobName": auto_m_l_job_name,
         }
@@ -1044,7 +1042,7 @@ class AutoMLJob(Base):
         auto_m_l_job = cls(**transformed_response)
         return auto_m_l_job
 
-    def refresh(self) -> Optional[object]:
+    def refresh(self) -> Optional["AutoMLJob"]:
 
         operation_input_args = {
             "AutoMLJobName": self.auto_m_l_job_name,
@@ -1063,8 +1061,7 @@ class AutoMLJob(Base):
         }
         self.client.stop_auto_m_l_job(**operation_input_args)
 
-    @validate_call
-    def wait(self, poll: int = 5, timeout: Optional[int] = None) -> Optional[object]:
+    def wait(self, poll: int = 5, timeout: Optional[int] = None) -> Optional["AutoMLJob"]:
         terminal_states = ["Completed", "Failed", "Stopped"]
         start_time = time.time()
 
@@ -1079,7 +1076,7 @@ class AutoMLJob(Base):
                         resource_type="AutoMLJob", status=current_status, reason=self.failure_reason
                     )
 
-                return
+                return self
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="AutoMLJob", status=current_status)
@@ -1202,7 +1199,7 @@ class AutoMLJobV2(Base):
         data_split_config: Optional[AutoMLDataSplitConfig] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["AutoMLJobV2"]:
         logger.debug("Creating auto_m_l_job_v2 resource.")
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
@@ -1238,7 +1235,7 @@ class AutoMLJobV2(Base):
         auto_m_l_job_name: str,
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["AutoMLJobV2"]:
         operation_input_args = {
             "AutoMLJobName": auto_m_l_job_name,
         }
@@ -1254,7 +1251,7 @@ class AutoMLJobV2(Base):
         auto_m_l_job_v2 = cls(**transformed_response)
         return auto_m_l_job_v2
 
-    def refresh(self) -> Optional[object]:
+    def refresh(self) -> Optional["AutoMLJobV2"]:
 
         operation_input_args = {
             "AutoMLJobName": self.auto_m_l_job_name,
@@ -1266,8 +1263,7 @@ class AutoMLJobV2(Base):
         transform(response, "DescribeAutoMLJobV2Response", self)
         return self
 
-    @validate_call
-    def wait(self, poll: int = 5, timeout: Optional[int] = None) -> Optional[object]:
+    def wait(self, poll: int = 5, timeout: Optional[int] = None) -> Optional["AutoMLJobV2"]:
         terminal_states = ["Completed", "Failed", "Stopped"]
         start_time = time.time()
 
@@ -1284,7 +1280,7 @@ class AutoMLJobV2(Base):
                         reason=self.failure_reason,
                     )
 
-                return
+                return self
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="AutoMLJobV2", status=current_status)
@@ -1328,7 +1324,7 @@ class Cluster(Base):
         tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["Cluster"]:
         logger.debug("Creating cluster resource.")
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
@@ -1358,7 +1354,7 @@ class Cluster(Base):
         cluster_name: str,
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["Cluster"]:
         operation_input_args = {
             "ClusterName": cluster_name,
         }
@@ -1374,7 +1370,7 @@ class Cluster(Base):
         cluster = cls(**transformed_response)
         return cluster
 
-    def refresh(self) -> Optional[object]:
+    def refresh(self) -> Optional["Cluster"]:
 
         operation_input_args = {
             "ClusterName": self.cluster_name,
@@ -1388,7 +1384,7 @@ class Cluster(Base):
 
     def update(
         self,
-    ) -> Optional[object]:
+    ) -> Optional["Cluster"]:
         logger.debug("Creating cluster resource.")
         client = SageMakerClient().client
 
@@ -1415,7 +1411,6 @@ class Cluster(Base):
         }
         self.client.delete_cluster(**operation_input_args)
 
-    @validate_call
     def wait_for_status(
         self,
         status: Literal[
@@ -1429,7 +1424,7 @@ class Cluster(Base):
         ],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ) -> Optional[object]:
+    ) -> Optional["Cluster"]:
         start_time = time.time()
 
         while True:
@@ -1437,7 +1432,7 @@ class Cluster(Base):
             current_status = self.cluster_status
 
             if status == current_status:
-                return
+                return self
 
             if "failed" in current_status.lower():
                 raise FailedStatusError(
@@ -1503,7 +1498,7 @@ class CodeRepository(Base):
         tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["CodeRepository"]:
         logger.debug("Creating code_repository resource.")
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
@@ -1532,7 +1527,7 @@ class CodeRepository(Base):
         code_repository_name: str,
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["CodeRepository"]:
         operation_input_args = {
             "CodeRepositoryName": code_repository_name,
         }
@@ -1548,7 +1543,7 @@ class CodeRepository(Base):
         code_repository = cls(**transformed_response)
         return code_repository
 
-    def refresh(self) -> Optional[object]:
+    def refresh(self) -> Optional["CodeRepository"]:
 
         operation_input_args = {
             "CodeRepositoryName": self.code_repository_name,
@@ -1562,7 +1557,7 @@ class CodeRepository(Base):
 
     def update(
         self,
-    ) -> Optional[object]:
+    ) -> Optional["CodeRepository"]:
         logger.debug("Creating code_repository resource.")
         client = SageMakerClient().client
 
@@ -1648,7 +1643,7 @@ class CompilationJob(Base):
         tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["CompilationJob"]:
         logger.debug("Creating compilation_job resource.")
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
@@ -1682,7 +1677,7 @@ class CompilationJob(Base):
         compilation_job_name: str,
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["CompilationJob"]:
         operation_input_args = {
             "CompilationJobName": compilation_job_name,
         }
@@ -1698,7 +1693,7 @@ class CompilationJob(Base):
         compilation_job = cls(**transformed_response)
         return compilation_job
 
-    def refresh(self) -> Optional[object]:
+    def refresh(self) -> Optional["CompilationJob"]:
 
         operation_input_args = {
             "CompilationJobName": self.compilation_job_name,
@@ -1724,8 +1719,7 @@ class CompilationJob(Base):
         }
         self.client.stop_compilation_job(**operation_input_args)
 
-    @validate_call
-    def wait(self, poll: int = 5, timeout: Optional[int] = None) -> Optional[object]:
+    def wait(self, poll: int = 5, timeout: Optional[int] = None) -> Optional["CompilationJob"]:
         terminal_states = ["COMPLETED", "FAILED", "STOPPED"]
         start_time = time.time()
 
@@ -1742,7 +1736,7 @@ class CompilationJob(Base):
                         reason=self.failure_reason,
                     )
 
-                return
+                return self
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="CompilationJob", status=current_status)
@@ -1818,7 +1812,7 @@ class Context(Base):
         tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["Context"]:
         logger.debug("Creating context resource.")
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
@@ -1850,7 +1844,7 @@ class Context(Base):
         context_name: str,
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["Context"]:
         operation_input_args = {
             "ContextName": context_name,
         }
@@ -1866,7 +1860,7 @@ class Context(Base):
         context = cls(**transformed_response)
         return context
 
-    def refresh(self) -> Optional[object]:
+    def refresh(self) -> Optional["Context"]:
 
         operation_input_args = {
             "ContextName": self.context_name,
@@ -1881,7 +1875,7 @@ class Context(Base):
     def update(
         self,
         properties_to_remove: Optional[List[str]] = Unassigned(),
-    ) -> Optional[object]:
+    ) -> Optional["Context"]:
         logger.debug("Creating context resource.")
         client = SageMakerClient().client
 
@@ -2017,7 +2011,7 @@ class DataQualityJobDefinition(Base):
         tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["DataQualityJobDefinition"]:
         logger.debug("Creating data_quality_job_definition resource.")
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
@@ -2053,7 +2047,7 @@ class DataQualityJobDefinition(Base):
         job_definition_name: str,
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["DataQualityJobDefinition"]:
         operation_input_args = {
             "JobDefinitionName": job_definition_name,
         }
@@ -2069,7 +2063,7 @@ class DataQualityJobDefinition(Base):
         data_quality_job_definition = cls(**transformed_response)
         return data_quality_job_definition
 
-    def refresh(self) -> Optional[object]:
+    def refresh(self) -> Optional["DataQualityJobDefinition"]:
 
         operation_input_args = {
             "JobDefinitionName": self.job_definition_name,
@@ -2174,7 +2168,7 @@ class DeviceFleet(Base):
         enable_iot_role_alias: Optional[bool] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["DeviceFleet"]:
         logger.debug("Creating device_fleet resource.")
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
@@ -2206,7 +2200,7 @@ class DeviceFleet(Base):
         device_fleet_name: str,
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["DeviceFleet"]:
         operation_input_args = {
             "DeviceFleetName": device_fleet_name,
         }
@@ -2222,7 +2216,7 @@ class DeviceFleet(Base):
         device_fleet = cls(**transformed_response)
         return device_fleet
 
-    def refresh(self) -> Optional[object]:
+    def refresh(self) -> Optional["DeviceFleet"]:
 
         operation_input_args = {
             "DeviceFleetName": self.device_fleet_name,
@@ -2237,7 +2231,7 @@ class DeviceFleet(Base):
     def update(
         self,
         enable_iot_role_alias: Optional[bool] = Unassigned(),
-    ) -> Optional[object]:
+    ) -> Optional["DeviceFleet"]:
         logger.debug("Creating device_fleet resource.")
         client = SageMakerClient().client
 
@@ -2402,7 +2396,7 @@ class Domain(Base):
         default_space_settings: Optional[DefaultSpaceSettings] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["Domain"]:
         logger.debug("Creating domain resource.")
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
@@ -2440,7 +2434,7 @@ class Domain(Base):
         domain_id: str,
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["Domain"]:
         operation_input_args = {
             "DomainId": domain_id,
         }
@@ -2456,7 +2450,7 @@ class Domain(Base):
         domain = cls(**transformed_response)
         return domain
 
-    def refresh(self) -> Optional[object]:
+    def refresh(self) -> Optional["Domain"]:
 
         operation_input_args = {
             "DomainId": self.domain_id,
@@ -2471,7 +2465,7 @@ class Domain(Base):
     def update(
         self,
         domain_settings_for_update: Optional[DomainSettingsForUpdate] = Unassigned(),
-    ) -> Optional[object]:
+    ) -> Optional["Domain"]:
         logger.debug("Creating domain resource.")
         client = SageMakerClient().client
 
@@ -2504,7 +2498,6 @@ class Domain(Base):
         }
         self.client.delete_domain(**operation_input_args)
 
-    @validate_call
     def wait_for_status(
         self,
         status: Literal[
@@ -2518,7 +2511,7 @@ class Domain(Base):
         ],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ) -> Optional[object]:
+    ) -> Optional["Domain"]:
         start_time = time.time()
 
         while True:
@@ -2526,7 +2519,7 @@ class Domain(Base):
             current_status = self.status
 
             if status == current_status:
-                return
+                return self
 
             if "failed" in current_status.lower():
                 raise FailedStatusError(
@@ -2580,7 +2573,7 @@ class EdgeDeploymentPlan(Base):
         tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["EdgeDeploymentPlan"]:
         logger.debug("Creating edge_deployment_plan resource.")
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
@@ -2615,7 +2608,7 @@ class EdgeDeploymentPlan(Base):
         max_results: Optional[int] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["EdgeDeploymentPlan"]:
         operation_input_args = {
             "EdgeDeploymentPlanName": edge_deployment_plan_name,
             "NextToken": next_token,
@@ -2633,7 +2626,7 @@ class EdgeDeploymentPlan(Base):
         edge_deployment_plan = cls(**transformed_response)
         return edge_deployment_plan
 
-    def refresh(self) -> Optional[object]:
+    def refresh(self) -> Optional["EdgeDeploymentPlan"]:
 
         operation_input_args = {
             "EdgeDeploymentPlanName": self.edge_deployment_plan_name,
@@ -2748,7 +2741,7 @@ class EdgePackagingJob(Base):
         tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["EdgePackagingJob"]:
         logger.debug("Creating edge_packaging_job resource.")
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
@@ -2784,7 +2777,7 @@ class EdgePackagingJob(Base):
         edge_packaging_job_name: str,
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["EdgePackagingJob"]:
         operation_input_args = {
             "EdgePackagingJobName": edge_packaging_job_name,
         }
@@ -2800,7 +2793,7 @@ class EdgePackagingJob(Base):
         edge_packaging_job = cls(**transformed_response)
         return edge_packaging_job
 
-    def refresh(self) -> Optional[object]:
+    def refresh(self) -> Optional["EdgePackagingJob"]:
 
         operation_input_args = {
             "EdgePackagingJobName": self.edge_packaging_job_name,
@@ -2819,8 +2812,7 @@ class EdgePackagingJob(Base):
         }
         self.client.stop_edge_packaging_job(**operation_input_args)
 
-    @validate_call
-    def wait(self, poll: int = 5, timeout: Optional[int] = None) -> Optional[object]:
+    def wait(self, poll: int = 5, timeout: Optional[int] = None) -> Optional["EdgePackagingJob"]:
         terminal_states = ["COMPLETED", "FAILED", "STOPPED"]
         start_time = time.time()
 
@@ -2837,7 +2829,7 @@ class EdgePackagingJob(Base):
                         reason=self.edge_packaging_job_status_message,
                     )
 
-                return
+                return self
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="EdgePackagingJob", status=current_status)
@@ -2941,7 +2933,7 @@ class Endpoint(Base):
         tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["Endpoint"]:
         logger.debug("Creating endpoint resource.")
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
@@ -2971,7 +2963,7 @@ class Endpoint(Base):
         endpoint_name: str,
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["Endpoint"]:
         operation_input_args = {
             "EndpointName": endpoint_name,
         }
@@ -2987,7 +2979,7 @@ class Endpoint(Base):
         endpoint = cls(**transformed_response)
         return endpoint
 
-    def refresh(self) -> Optional[object]:
+    def refresh(self) -> Optional["Endpoint"]:
 
         operation_input_args = {
             "EndpointName": self.endpoint_name,
@@ -3005,7 +2997,7 @@ class Endpoint(Base):
         exclude_retained_variant_properties: Optional[List[VariantProperty]] = Unassigned(),
         deployment_config: Optional[DeploymentConfig] = Unassigned(),
         retain_deployment_config: Optional[bool] = Unassigned(),
-    ) -> Optional[object]:
+    ) -> Optional["Endpoint"]:
         logger.debug("Creating endpoint resource.")
         client = SageMakerClient().client
 
@@ -3036,7 +3028,6 @@ class Endpoint(Base):
         }
         self.client.delete_endpoint(**operation_input_args)
 
-    @validate_call
     def wait_for_status(
         self,
         status: Literal[
@@ -3052,7 +3043,7 @@ class Endpoint(Base):
         ],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ) -> Optional[object]:
+    ) -> Optional["Endpoint"]:
         start_time = time.time()
 
         while True:
@@ -3060,7 +3051,7 @@ class Endpoint(Base):
             current_status = self.endpoint_status
 
             if status == current_status:
-                return
+                return self
 
             if "failed" in current_status.lower():
                 raise FailedStatusError(
@@ -3287,7 +3278,7 @@ class EndpointConfig(Base):
         enable_network_isolation: Optional[bool] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["EndpointConfig"]:
         logger.debug("Creating endpoint_config resource.")
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
@@ -3324,7 +3315,7 @@ class EndpointConfig(Base):
         endpoint_config_name: str,
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["EndpointConfig"]:
         operation_input_args = {
             "EndpointConfigName": endpoint_config_name,
         }
@@ -3340,7 +3331,7 @@ class EndpointConfig(Base):
         endpoint_config = cls(**transformed_response)
         return endpoint_config
 
-    def refresh(self) -> Optional[object]:
+    def refresh(self) -> Optional["EndpointConfig"]:
 
         operation_input_args = {
             "EndpointConfigName": self.endpoint_config_name,
@@ -3418,7 +3409,7 @@ class Experiment(Base):
         tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["Experiment"]:
         logger.debug("Creating experiment resource.")
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
@@ -3448,7 +3439,7 @@ class Experiment(Base):
         experiment_name: str,
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["Experiment"]:
         operation_input_args = {
             "ExperimentName": experiment_name,
         }
@@ -3464,7 +3455,7 @@ class Experiment(Base):
         experiment = cls(**transformed_response)
         return experiment
 
-    def refresh(self) -> Optional[object]:
+    def refresh(self) -> Optional["Experiment"]:
 
         operation_input_args = {
             "ExperimentName": self.experiment_name,
@@ -3478,7 +3469,7 @@ class Experiment(Base):
 
     def update(
         self,
-    ) -> Optional[object]:
+    ) -> Optional["Experiment"]:
         logger.debug("Creating experiment resource.")
         client = SageMakerClient().client
 
@@ -3601,7 +3592,7 @@ class FeatureGroup(Base):
         tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["FeatureGroup"]:
         logger.debug("Creating feature_group resource.")
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
@@ -3638,7 +3629,7 @@ class FeatureGroup(Base):
         next_token: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["FeatureGroup"]:
         operation_input_args = {
             "FeatureGroupName": feature_group_name,
             "NextToken": next_token,
@@ -3655,7 +3646,7 @@ class FeatureGroup(Base):
         feature_group = cls(**transformed_response)
         return feature_group
 
-    def refresh(self) -> Optional[object]:
+    def refresh(self) -> Optional["FeatureGroup"]:
 
         operation_input_args = {
             "FeatureGroupName": self.feature_group_name,
@@ -3671,7 +3662,7 @@ class FeatureGroup(Base):
     def update(
         self,
         feature_additions: Optional[List[FeatureDefinition]] = Unassigned(),
-    ) -> Optional[object]:
+    ) -> Optional["FeatureGroup"]:
         logger.debug("Creating feature_group resource.")
         client = SageMakerClient().client
 
@@ -3700,13 +3691,12 @@ class FeatureGroup(Base):
         }
         self.client.delete_feature_group(**operation_input_args)
 
-    @validate_call
     def wait_for_status(
         self,
         status: Literal["Creating", "Created", "CreateFailed", "Deleting", "DeleteFailed"],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ) -> Optional[object]:
+    ) -> Optional["FeatureGroup"]:
         start_time = time.time()
 
         while True:
@@ -3714,7 +3704,7 @@ class FeatureGroup(Base):
             current_status = self.feature_group_status
 
             if status == current_status:
-                return
+                return self
 
             if "failed" in current_status.lower():
                 raise FailedStatusError(
@@ -3812,7 +3802,7 @@ class FlowDefinition(Base):
         tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["FlowDefinition"]:
         logger.debug("Creating flow_definition resource.")
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
@@ -3845,7 +3835,7 @@ class FlowDefinition(Base):
         flow_definition_name: str,
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["FlowDefinition"]:
         operation_input_args = {
             "FlowDefinitionName": flow_definition_name,
         }
@@ -3861,7 +3851,7 @@ class FlowDefinition(Base):
         flow_definition = cls(**transformed_response)
         return flow_definition
 
-    def refresh(self) -> Optional[object]:
+    def refresh(self) -> Optional["FlowDefinition"]:
 
         operation_input_args = {
             "FlowDefinitionName": self.flow_definition_name,
@@ -3880,13 +3870,12 @@ class FlowDefinition(Base):
         }
         self.client.delete_flow_definition(**operation_input_args)
 
-    @validate_call
     def wait_for_status(
         self,
         status: Literal["Initializing", "Active", "Failed", "Deleting"],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ) -> Optional[object]:
+    ) -> Optional["FlowDefinition"]:
         start_time = time.time()
 
         while True:
@@ -3894,7 +3883,7 @@ class FlowDefinition(Base):
             current_status = self.flow_definition_status
 
             if status == current_status:
-                return
+                return self
 
             if "failed" in current_status.lower():
                 raise FailedStatusError(
@@ -3981,7 +3970,7 @@ class Hub(Base):
         tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["Hub"]:
         logger.debug("Creating hub resource.")
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
@@ -4013,7 +4002,7 @@ class Hub(Base):
         hub_name: str,
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["Hub"]:
         operation_input_args = {
             "HubName": hub_name,
         }
@@ -4029,7 +4018,7 @@ class Hub(Base):
         hub = cls(**transformed_response)
         return hub
 
-    def refresh(self) -> Optional[object]:
+    def refresh(self) -> Optional["Hub"]:
 
         operation_input_args = {
             "HubName": self.hub_name,
@@ -4043,7 +4032,7 @@ class Hub(Base):
 
     def update(
         self,
-    ) -> Optional[object]:
+    ) -> Optional["Hub"]:
         logger.debug("Creating hub resource.")
         client = SageMakerClient().client
 
@@ -4072,7 +4061,6 @@ class Hub(Base):
         }
         self.client.delete_hub(**operation_input_args)
 
-    @validate_call
     def wait_for_status(
         self,
         status: Literal[
@@ -4086,7 +4074,7 @@ class Hub(Base):
         ],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ) -> Optional[object]:
+    ) -> Optional["Hub"]:
         start_time = time.time()
 
         while True:
@@ -4094,7 +4082,7 @@ class Hub(Base):
             current_status = self.hub_status
 
             if status == current_status:
-                return
+                return self
 
             if "failed" in current_status.lower():
                 raise FailedStatusError(
@@ -4176,7 +4164,7 @@ class HubContent(Base):
         hub_content_version: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["HubContent"]:
         operation_input_args = {
             "HubName": hub_name,
             "HubContentType": hub_content_type,
@@ -4195,7 +4183,7 @@ class HubContent(Base):
         hub_content = cls(**transformed_response)
         return hub_content
 
-    def refresh(self) -> Optional[object]:
+    def refresh(self) -> Optional["HubContent"]:
 
         operation_input_args = {
             "HubName": self.hub_name,
@@ -4220,13 +4208,12 @@ class HubContent(Base):
         }
         self.client.delete_hub_content(**operation_input_args)
 
-    @validate_call
     def wait_for_status(
         self,
         status: Literal["Available", "Importing", "Deleting", "ImportFailed", "DeleteFailed"],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ) -> Optional[object]:
+    ) -> Optional["HubContent"]:
         start_time = time.time()
 
         while True:
@@ -4234,7 +4221,7 @@ class HubContent(Base):
             current_status = self.hub_content_status
 
             if status == current_status:
-                return
+                return self
 
             if "failed" in current_status.lower():
                 raise FailedStatusError(
@@ -4262,7 +4249,7 @@ class HubContent(Base):
         tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["HubContent"]:
         logger.debug(f"Importing hub_content resource.")
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
@@ -4359,7 +4346,7 @@ class HumanTaskUi(Base):
         tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["HumanTaskUi"]:
         logger.debug("Creating human_task_ui resource.")
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
@@ -4388,7 +4375,7 @@ class HumanTaskUi(Base):
         human_task_ui_name: str,
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["HumanTaskUi"]:
         operation_input_args = {
             "HumanTaskUiName": human_task_ui_name,
         }
@@ -4404,7 +4391,7 @@ class HumanTaskUi(Base):
         human_task_ui = cls(**transformed_response)
         return human_task_ui
 
-    def refresh(self) -> Optional[object]:
+    def refresh(self) -> Optional["HumanTaskUi"]:
 
         operation_input_args = {
             "HumanTaskUiName": self.human_task_ui_name,
@@ -4423,10 +4410,9 @@ class HumanTaskUi(Base):
         }
         self.client.delete_human_task_ui(**operation_input_args)
 
-    @validate_call
     def wait_for_status(
         self, status: Literal["Active", "Deleting"], poll: int = 5, timeout: Optional[int] = None
-    ) -> Optional[object]:
+    ) -> Optional["HumanTaskUi"]:
         start_time = time.time()
 
         while True:
@@ -4434,7 +4420,7 @@ class HumanTaskUi(Base):
             current_status = self.human_task_ui_status
 
             if status == current_status:
-                return
+                return self
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="HumanTaskUi", status=current_status)
@@ -4540,7 +4526,7 @@ class HyperParameterTuningJob(Base):
         autotune: Optional[Autotune] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["HyperParameterTuningJob"]:
         logger.debug("Creating hyper_parameter_tuning_job resource.")
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
@@ -4577,7 +4563,7 @@ class HyperParameterTuningJob(Base):
         hyper_parameter_tuning_job_name: str,
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["HyperParameterTuningJob"]:
         operation_input_args = {
             "HyperParameterTuningJobName": hyper_parameter_tuning_job_name,
         }
@@ -4593,7 +4579,7 @@ class HyperParameterTuningJob(Base):
         hyper_parameter_tuning_job = cls(**transformed_response)
         return hyper_parameter_tuning_job
 
-    def refresh(self) -> Optional[object]:
+    def refresh(self) -> Optional["HyperParameterTuningJob"]:
 
         operation_input_args = {
             "HyperParameterTuningJobName": self.hyper_parameter_tuning_job_name,
@@ -4619,8 +4605,9 @@ class HyperParameterTuningJob(Base):
         }
         self.client.stop_hyper_parameter_tuning_job(**operation_input_args)
 
-    @validate_call
-    def wait(self, poll: int = 5, timeout: Optional[int] = None) -> Optional[object]:
+    def wait(
+        self, poll: int = 5, timeout: Optional[int] = None
+    ) -> Optional["HyperParameterTuningJob"]:
         terminal_states = ["Completed", "Failed", "Stopped", "DeleteFailed"]
         start_time = time.time()
 
@@ -4637,7 +4624,7 @@ class HyperParameterTuningJob(Base):
                         reason=self.failure_reason,
                     )
 
-                return
+                return self
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(
@@ -4725,7 +4712,7 @@ class Image(Base):
         tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["Image"]:
         logger.debug("Creating image resource.")
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
@@ -4756,7 +4743,7 @@ class Image(Base):
         image_name: str,
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["Image"]:
         operation_input_args = {
             "ImageName": image_name,
         }
@@ -4772,7 +4759,7 @@ class Image(Base):
         image = cls(**transformed_response)
         return image
 
-    def refresh(self) -> Optional[object]:
+    def refresh(self) -> Optional["Image"]:
 
         operation_input_args = {
             "ImageName": self.image_name,
@@ -4787,7 +4774,7 @@ class Image(Base):
     def update(
         self,
         delete_properties: Optional[List[str]] = Unassigned(),
-    ) -> Optional[object]:
+    ) -> Optional["Image"]:
         logger.debug("Creating image resource.")
         client = SageMakerClient().client
 
@@ -4817,7 +4804,6 @@ class Image(Base):
         }
         self.client.delete_image(**operation_input_args)
 
-    @validate_call
     def wait_for_status(
         self,
         status: Literal[
@@ -4831,7 +4817,7 @@ class Image(Base):
         ],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ) -> Optional[object]:
+    ) -> Optional["Image"]:
         start_time = time.time()
 
         while True:
@@ -4839,7 +4825,7 @@ class Image(Base):
             current_status = self.image_status
 
             if status == current_status:
-                return
+                return self
 
             if "failed" in current_status.lower():
                 raise FailedStatusError(
@@ -4928,7 +4914,7 @@ class ImageVersion(Base):
         release_notes: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["ImageVersion"]:
         logger.debug("Creating image_version resource.")
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
@@ -4967,7 +4953,7 @@ class ImageVersion(Base):
         alias: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["ImageVersion"]:
         operation_input_args = {
             "ImageName": image_name,
             "Version": version,
@@ -4985,7 +4971,7 @@ class ImageVersion(Base):
         image_version = cls(**transformed_response)
         return image_version
 
-    def refresh(self) -> Optional[object]:
+    def refresh(self) -> Optional["ImageVersion"]:
 
         operation_input_args = {
             "ImageName": self.image_name,
@@ -5005,7 +4991,7 @@ class ImageVersion(Base):
         alias: Optional[str] = Unassigned(),
         aliases_to_add: Optional[List[str]] = Unassigned(),
         aliases_to_delete: Optional[List[str]] = Unassigned(),
-    ) -> Optional[object]:
+    ) -> Optional["ImageVersion"]:
         logger.debug("Creating image_version resource.")
         client = SageMakerClient().client
 
@@ -5044,13 +5030,12 @@ class ImageVersion(Base):
         }
         self.client.delete_image_version(**operation_input_args)
 
-    @validate_call
     def wait_for_status(
         self,
         status: Literal["CREATING", "CREATED", "CREATE_FAILED", "DELETING", "DELETE_FAILED"],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ) -> Optional[object]:
+    ) -> Optional["ImageVersion"]:
         start_time = time.time()
 
         while True:
@@ -5058,7 +5043,7 @@ class ImageVersion(Base):
             current_status = self.image_version_status
 
             if status == current_status:
-                return
+                return self
 
             if "failed" in current_status.lower():
                 raise FailedStatusError(
@@ -5095,7 +5080,7 @@ class InferenceComponent(Base):
         tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["InferenceComponent"]:
         logger.debug("Creating inference_component resource.")
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
@@ -5129,7 +5114,7 @@ class InferenceComponent(Base):
         inference_component_name: str,
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["InferenceComponent"]:
         operation_input_args = {
             "InferenceComponentName": inference_component_name,
         }
@@ -5145,7 +5130,7 @@ class InferenceComponent(Base):
         inference_component = cls(**transformed_response)
         return inference_component
 
-    def refresh(self) -> Optional[object]:
+    def refresh(self) -> Optional["InferenceComponent"]:
 
         operation_input_args = {
             "InferenceComponentName": self.inference_component_name,
@@ -5159,7 +5144,7 @@ class InferenceComponent(Base):
 
     def update(
         self,
-    ) -> Optional[object]:
+    ) -> Optional["InferenceComponent"]:
         logger.debug("Creating inference_component resource.")
         client = SageMakerClient().client
 
@@ -5187,13 +5172,12 @@ class InferenceComponent(Base):
         }
         self.client.delete_inference_component(**operation_input_args)
 
-    @validate_call
     def wait_for_status(
         self,
         status: Literal["InService", "Creating", "Updating", "Failed", "Deleting"],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ) -> Optional[object]:
+    ) -> Optional["InferenceComponent"]:
         start_time = time.time()
 
         while True:
@@ -5201,7 +5185,7 @@ class InferenceComponent(Base):
             current_status = self.inference_component_status
 
             if status == current_status:
-                return
+                return self
 
             if "failed" in current_status.lower():
                 raise FailedStatusError(
@@ -5315,7 +5299,7 @@ class InferenceExperiment(Base):
         tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["InferenceExperiment"]:
         logger.debug("Creating inference_experiment resource.")
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
@@ -5352,7 +5336,7 @@ class InferenceExperiment(Base):
         name: str,
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["InferenceExperiment"]:
         operation_input_args = {
             "Name": name,
         }
@@ -5368,7 +5352,7 @@ class InferenceExperiment(Base):
         inference_experiment = cls(**transformed_response)
         return inference_experiment
 
-    def refresh(self) -> Optional[object]:
+    def refresh(self) -> Optional["InferenceExperiment"]:
 
         operation_input_args = {
             "Name": self.name,
@@ -5382,7 +5366,7 @@ class InferenceExperiment(Base):
 
     def update(
         self,
-    ) -> Optional[object]:
+    ) -> Optional["InferenceExperiment"]:
         logger.debug("Creating inference_experiment resource.")
         client = SageMakerClient().client
 
@@ -5424,7 +5408,6 @@ class InferenceExperiment(Base):
         }
         self.client.stop_inference_experiment(**operation_input_args)
 
-    @validate_call
     def wait_for_status(
         self,
         status: Literal[
@@ -5439,7 +5422,7 @@ class InferenceExperiment(Base):
         ],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ) -> Optional[object]:
+    ) -> Optional["InferenceExperiment"]:
         start_time = time.time()
 
         while True:
@@ -5447,7 +5430,7 @@ class InferenceExperiment(Base):
             current_status = self.status
 
             if status == current_status:
-                return
+                return self
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(
@@ -5554,7 +5537,7 @@ class InferenceRecommendationsJob(Base):
         tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["InferenceRecommendationsJob"]:
         logger.debug("Creating inference_recommendations_job resource.")
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
@@ -5588,7 +5571,7 @@ class InferenceRecommendationsJob(Base):
         job_name: str,
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["InferenceRecommendationsJob"]:
         operation_input_args = {
             "JobName": job_name,
         }
@@ -5604,7 +5587,7 @@ class InferenceRecommendationsJob(Base):
         inference_recommendations_job = cls(**transformed_response)
         return inference_recommendations_job
 
-    def refresh(self) -> Optional[object]:
+    def refresh(self) -> Optional["InferenceRecommendationsJob"]:
 
         operation_input_args = {
             "JobName": self.job_name,
@@ -5623,8 +5606,9 @@ class InferenceRecommendationsJob(Base):
         }
         self.client.stop_inference_recommendations_job(**operation_input_args)
 
-    @validate_call
-    def wait(self, poll: int = 5, timeout: Optional[int] = None) -> Optional[object]:
+    def wait(
+        self, poll: int = 5, timeout: Optional[int] = None
+    ) -> Optional["InferenceRecommendationsJob"]:
         terminal_states = ["COMPLETED", "FAILED", "STOPPED", "DELETED"]
         start_time = time.time()
 
@@ -5641,7 +5625,7 @@ class InferenceRecommendationsJob(Base):
                         reason=self.failure_reason,
                     )
 
-                return
+                return self
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(
@@ -5768,7 +5752,7 @@ class LabelingJob(Base):
         tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["LabelingJob"]:
         logger.debug("Creating labeling_job resource.")
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
@@ -5804,7 +5788,7 @@ class LabelingJob(Base):
         labeling_job_name: str,
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["LabelingJob"]:
         operation_input_args = {
             "LabelingJobName": labeling_job_name,
         }
@@ -5820,7 +5804,7 @@ class LabelingJob(Base):
         labeling_job = cls(**transformed_response)
         return labeling_job
 
-    def refresh(self) -> Optional[object]:
+    def refresh(self) -> Optional["LabelingJob"]:
 
         operation_input_args = {
             "LabelingJobName": self.labeling_job_name,
@@ -5839,8 +5823,7 @@ class LabelingJob(Base):
         }
         self.client.stop_labeling_job(**operation_input_args)
 
-    @validate_call
-    def wait(self, poll: int = 5, timeout: Optional[int] = None) -> Optional[object]:
+    def wait(self, poll: int = 5, timeout: Optional[int] = None) -> Optional["LabelingJob"]:
         terminal_states = ["Completed", "Failed", "Stopped"]
         start_time = time.time()
 
@@ -5857,7 +5840,7 @@ class LabelingJob(Base):
                         reason=self.failure_reason,
                     )
 
-                return
+                return self
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="LabelingJob", status=current_status)
@@ -5961,7 +5944,7 @@ class Model(Base):
         enable_network_isolation: Optional[bool] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["Model"]:
         logger.debug("Creating model resource.")
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
@@ -5995,7 +5978,7 @@ class Model(Base):
         model_name: str,
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["Model"]:
         operation_input_args = {
             "ModelName": model_name,
         }
@@ -6011,7 +5994,7 @@ class Model(Base):
         model = cls(**transformed_response)
         return model
 
-    def refresh(self) -> Optional[object]:
+    def refresh(self) -> Optional["Model"]:
 
         operation_input_args = {
             "ModelName": self.model_name,
@@ -6135,7 +6118,7 @@ class ModelBiasJobDefinition(Base):
         tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["ModelBiasJobDefinition"]:
         logger.debug("Creating model_bias_job_definition resource.")
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
@@ -6171,7 +6154,7 @@ class ModelBiasJobDefinition(Base):
         job_definition_name: str,
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["ModelBiasJobDefinition"]:
         operation_input_args = {
             "JobDefinitionName": job_definition_name,
         }
@@ -6187,7 +6170,7 @@ class ModelBiasJobDefinition(Base):
         model_bias_job_definition = cls(**transformed_response)
         return model_bias_job_definition
 
-    def refresh(self) -> Optional[object]:
+    def refresh(self) -> Optional["ModelBiasJobDefinition"]:
 
         operation_input_args = {
             "JobDefinitionName": self.job_definition_name,
@@ -6287,7 +6270,7 @@ class ModelCard(Base):
         tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["ModelCard"]:
         logger.debug("Creating model_card resource.")
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
@@ -6319,7 +6302,7 @@ class ModelCard(Base):
         model_card_version: Optional[int] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["ModelCard"]:
         operation_input_args = {
             "ModelCardName": model_card_name,
             "ModelCardVersion": model_card_version,
@@ -6336,7 +6319,7 @@ class ModelCard(Base):
         model_card = cls(**transformed_response)
         return model_card
 
-    def refresh(self) -> Optional[object]:
+    def refresh(self) -> Optional["ModelCard"]:
 
         operation_input_args = {
             "ModelCardName": self.model_card_name,
@@ -6351,7 +6334,7 @@ class ModelCard(Base):
 
     def update(
         self,
-    ) -> Optional[object]:
+    ) -> Optional["ModelCard"]:
         logger.debug("Creating model_card resource.")
         client = SageMakerClient().client
 
@@ -6379,13 +6362,12 @@ class ModelCard(Base):
         }
         self.client.delete_model_card(**operation_input_args)
 
-    @validate_call
     def wait_for_status(
         self,
         status: Literal["Draft", "PendingReview", "Approved", "Archived"],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ) -> Optional[object]:
+    ) -> Optional["ModelCard"]:
         start_time = time.time()
 
         while True:
@@ -6393,7 +6375,7 @@ class ModelCard(Base):
             current_status = self.model_card_status
 
             if status == current_status:
-                return
+                return self
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="ModelCard", status=current_status)
@@ -6478,7 +6460,7 @@ class ModelCardExportJob(Base):
         model_card_version: Optional[int] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["ModelCardExportJob"]:
         logger.debug("Creating model_card_export_job resource.")
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
@@ -6512,7 +6494,7 @@ class ModelCardExportJob(Base):
         model_card_export_job_arn: str,
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["ModelCardExportJob"]:
         operation_input_args = {
             "ModelCardExportJobArn": model_card_export_job_arn,
         }
@@ -6528,7 +6510,7 @@ class ModelCardExportJob(Base):
         model_card_export_job = cls(**transformed_response)
         return model_card_export_job
 
-    def refresh(self) -> Optional[object]:
+    def refresh(self) -> Optional["ModelCardExportJob"]:
 
         operation_input_args = {
             "ModelCardExportJobArn": self.model_card_export_job_arn,
@@ -6540,8 +6522,7 @@ class ModelCardExportJob(Base):
         transform(response, "DescribeModelCardExportJobResponse", self)
         return self
 
-    @validate_call
-    def wait(self, poll: int = 5, timeout: Optional[int] = None) -> Optional[object]:
+    def wait(self, poll: int = 5, timeout: Optional[int] = None) -> Optional["ModelCardExportJob"]:
         terminal_states = ["Completed", "Failed"]
         start_time = time.time()
 
@@ -6558,7 +6539,7 @@ class ModelCardExportJob(Base):
                         reason=self.failure_reason,
                     )
 
-                return
+                return self
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="ModelCardExportJob", status=current_status)
@@ -6679,7 +6660,7 @@ class ModelExplainabilityJobDefinition(Base):
         tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["ModelExplainabilityJobDefinition"]:
         logger.debug("Creating model_explainability_job_definition resource.")
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
@@ -6715,7 +6696,7 @@ class ModelExplainabilityJobDefinition(Base):
         job_definition_name: str,
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["ModelExplainabilityJobDefinition"]:
         operation_input_args = {
             "JobDefinitionName": job_definition_name,
         }
@@ -6733,7 +6714,7 @@ class ModelExplainabilityJobDefinition(Base):
         model_explainability_job_definition = cls(**transformed_response)
         return model_explainability_job_definition
 
-    def refresh(self) -> Optional[object]:
+    def refresh(self) -> Optional["ModelExplainabilityJobDefinition"]:
 
         operation_input_args = {
             "JobDefinitionName": self.job_definition_name,
@@ -6905,7 +6886,7 @@ class ModelPackage(Base):
         source_uri: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["ModelPackage"]:
         logger.debug("Creating model_package resource.")
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
@@ -6953,7 +6934,7 @@ class ModelPackage(Base):
         model_package_name: str,
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["ModelPackage"]:
         operation_input_args = {
             "ModelPackageName": model_package_name,
         }
@@ -6969,7 +6950,7 @@ class ModelPackage(Base):
         model_package = cls(**transformed_response)
         return model_package
 
-    def refresh(self) -> Optional[object]:
+    def refresh(self) -> Optional["ModelPackage"]:
 
         operation_input_args = {
             "ModelPackageName": self.model_package_name,
@@ -6987,7 +6968,7 @@ class ModelPackage(Base):
         additional_inference_specifications_to_add: Optional[
             List[AdditionalInferenceSpecificationDefinition]
         ] = Unassigned(),
-    ) -> Optional[object]:
+    ) -> Optional["ModelPackage"]:
         logger.debug("Creating model_package resource.")
         client = SageMakerClient().client
 
@@ -7020,13 +7001,12 @@ class ModelPackage(Base):
         }
         self.client.delete_model_package(**operation_input_args)
 
-    @validate_call
     def wait_for_status(
         self,
         status: Literal["Pending", "InProgress", "Completed", "Failed", "Deleting"],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ) -> Optional[object]:
+    ) -> Optional["ModelPackage"]:
         start_time = time.time()
 
         while True:
@@ -7034,7 +7014,7 @@ class ModelPackage(Base):
             current_status = self.model_package_status
 
             if status == current_status:
-                return
+                return self
 
             if "failed" in current_status.lower():
                 raise FailedStatusError(
@@ -7107,7 +7087,7 @@ class ModelPackageGroup(Base):
         tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["ModelPackageGroup"]:
         logger.debug("Creating model_package_group resource.")
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
@@ -7138,7 +7118,7 @@ class ModelPackageGroup(Base):
         model_package_group_name: str,
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["ModelPackageGroup"]:
         operation_input_args = {
             "ModelPackageGroupName": model_package_group_name,
         }
@@ -7154,7 +7134,7 @@ class ModelPackageGroup(Base):
         model_package_group = cls(**transformed_response)
         return model_package_group
 
-    def refresh(self) -> Optional[object]:
+    def refresh(self) -> Optional["ModelPackageGroup"]:
 
         operation_input_args = {
             "ModelPackageGroupName": self.model_package_group_name,
@@ -7173,13 +7153,12 @@ class ModelPackageGroup(Base):
         }
         self.client.delete_model_package_group(**operation_input_args)
 
-    @validate_call
     def wait_for_status(
         self,
         status: Literal["Pending", "InProgress", "Completed", "Failed", "Deleting", "DeleteFailed"],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ) -> Optional[object]:
+    ) -> Optional["ModelPackageGroup"]:
         start_time = time.time()
 
         while True:
@@ -7187,7 +7166,7 @@ class ModelPackageGroup(Base):
             current_status = self.model_package_group_status
 
             if status == current_status:
-                return
+                return self
 
             if "failed" in current_status.lower():
                 raise FailedStatusError(
@@ -7304,7 +7283,7 @@ class ModelQualityJobDefinition(Base):
         tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["ModelQualityJobDefinition"]:
         logger.debug("Creating model_quality_job_definition resource.")
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
@@ -7340,7 +7319,7 @@ class ModelQualityJobDefinition(Base):
         job_definition_name: str,
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["ModelQualityJobDefinition"]:
         operation_input_args = {
             "JobDefinitionName": job_definition_name,
         }
@@ -7356,7 +7335,7 @@ class ModelQualityJobDefinition(Base):
         model_quality_job_definition = cls(**transformed_response)
         return model_quality_job_definition
 
-    def refresh(self) -> Optional[object]:
+    def refresh(self) -> Optional["ModelQualityJobDefinition"]:
 
         operation_input_args = {
             "JobDefinitionName": self.job_definition_name,
@@ -7476,7 +7455,7 @@ class MonitoringSchedule(Base):
         tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["MonitoringSchedule"]:
         logger.debug("Creating monitoring_schedule resource.")
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
@@ -7507,7 +7486,7 @@ class MonitoringSchedule(Base):
         monitoring_schedule_name: str,
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["MonitoringSchedule"]:
         operation_input_args = {
             "MonitoringScheduleName": monitoring_schedule_name,
         }
@@ -7523,7 +7502,7 @@ class MonitoringSchedule(Base):
         monitoring_schedule = cls(**transformed_response)
         return monitoring_schedule
 
-    def refresh(self) -> Optional[object]:
+    def refresh(self) -> Optional["MonitoringSchedule"]:
 
         operation_input_args = {
             "MonitoringScheduleName": self.monitoring_schedule_name,
@@ -7537,7 +7516,7 @@ class MonitoringSchedule(Base):
 
     def update(
         self,
-    ) -> Optional[object]:
+    ) -> Optional["MonitoringSchedule"]:
         logger.debug("Creating monitoring_schedule resource.")
         client = SageMakerClient().client
 
@@ -7571,13 +7550,12 @@ class MonitoringSchedule(Base):
         }
         self.client.stop_monitoring_schedule(**operation_input_args)
 
-    @validate_call
     def wait_for_status(
         self,
         status: Literal["Pending", "Failed", "Scheduled", "Stopped"],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ) -> Optional[object]:
+    ) -> Optional["MonitoringSchedule"]:
         start_time = time.time()
 
         while True:
@@ -7585,7 +7563,7 @@ class MonitoringSchedule(Base):
             current_status = self.monitoring_schedule_status
 
             if status == current_status:
-                return
+                return self
 
             if "failed" in current_status.lower():
                 raise FailedStatusError(
@@ -7717,7 +7695,7 @@ class NotebookInstance(Base):
         ] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["NotebookInstance"]:
         logger.debug("Creating notebook_instance resource.")
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
@@ -7761,7 +7739,7 @@ class NotebookInstance(Base):
         notebook_instance_name: str,
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["NotebookInstance"]:
         operation_input_args = {
             "NotebookInstanceName": notebook_instance_name,
         }
@@ -7777,7 +7755,7 @@ class NotebookInstance(Base):
         notebook_instance = cls(**transformed_response)
         return notebook_instance
 
-    def refresh(self) -> Optional[object]:
+    def refresh(self) -> Optional["NotebookInstance"]:
 
         operation_input_args = {
             "NotebookInstanceName": self.notebook_instance_name,
@@ -7796,7 +7774,7 @@ class NotebookInstance(Base):
         disassociate_accelerator_types: Optional[bool] = Unassigned(),
         disassociate_default_code_repository: Optional[bool] = Unassigned(),
         disassociate_additional_code_repositories: Optional[bool] = Unassigned(),
-    ) -> Optional[object]:
+    ) -> Optional["NotebookInstance"]:
         logger.debug("Creating notebook_instance resource.")
         client = SageMakerClient().client
 
@@ -7842,7 +7820,6 @@ class NotebookInstance(Base):
         }
         self.client.stop_notebook_instance(**operation_input_args)
 
-    @validate_call
     def wait_for_status(
         self,
         status: Literal[
@@ -7850,7 +7827,7 @@ class NotebookInstance(Base):
         ],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ) -> Optional[object]:
+    ) -> Optional["NotebookInstance"]:
         start_time = time.time()
 
         while True:
@@ -7858,7 +7835,7 @@ class NotebookInstance(Base):
             current_status = self.notebook_instance_status
 
             if status == current_status:
-                return
+                return self
 
             if "failed" in current_status.lower():
                 raise FailedStatusError(
@@ -7939,7 +7916,7 @@ class NotebookInstanceLifecycleConfig(Base):
         on_start: Optional[List[NotebookInstanceLifecycleHook]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["NotebookInstanceLifecycleConfig"]:
         logger.debug("Creating notebook_instance_lifecycle_config resource.")
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
@@ -7972,7 +7949,7 @@ class NotebookInstanceLifecycleConfig(Base):
         notebook_instance_lifecycle_config_name: str,
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["NotebookInstanceLifecycleConfig"]:
         operation_input_args = {
             "NotebookInstanceLifecycleConfigName": notebook_instance_lifecycle_config_name,
         }
@@ -7988,7 +7965,7 @@ class NotebookInstanceLifecycleConfig(Base):
         notebook_instance_lifecycle_config = cls(**transformed_response)
         return notebook_instance_lifecycle_config
 
-    def refresh(self) -> Optional[object]:
+    def refresh(self) -> Optional["NotebookInstanceLifecycleConfig"]:
 
         operation_input_args = {
             "NotebookInstanceLifecycleConfigName": self.notebook_instance_lifecycle_config_name,
@@ -8002,7 +7979,7 @@ class NotebookInstanceLifecycleConfig(Base):
 
     def update(
         self,
-    ) -> Optional[object]:
+    ) -> Optional["NotebookInstanceLifecycleConfig"]:
         logger.debug("Creating notebook_instance_lifecycle_config resource.")
         client = SageMakerClient().client
 
@@ -8115,7 +8092,7 @@ class Pipeline(Base):
         parallelism_configuration: Optional[ParallelismConfiguration] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["Pipeline"]:
         logger.debug("Creating pipeline resource.")
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
@@ -8150,7 +8127,7 @@ class Pipeline(Base):
         pipeline_name: str,
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["Pipeline"]:
         operation_input_args = {
             "PipelineName": pipeline_name,
         }
@@ -8166,7 +8143,7 @@ class Pipeline(Base):
         pipeline = cls(**transformed_response)
         return pipeline
 
-    def refresh(self) -> Optional[object]:
+    def refresh(self) -> Optional["Pipeline"]:
 
         operation_input_args = {
             "PipelineName": self.pipeline_name,
@@ -8181,7 +8158,7 @@ class Pipeline(Base):
     def update(
         self,
         pipeline_definition_s3_location: Optional[PipelineDefinitionS3Location] = Unassigned(),
-    ) -> Optional[object]:
+    ) -> Optional["Pipeline"]:
         logger.debug("Creating pipeline resource.")
         client = SageMakerClient().client
 
@@ -8214,10 +8191,9 @@ class Pipeline(Base):
         }
         self.client.delete_pipeline(**operation_input_args)
 
-    @validate_call
     def wait_for_status(
         self, status: Literal["Active", "Deleting"], poll: int = 5, timeout: Optional[int] = None
-    ) -> Optional[object]:
+    ) -> Optional["Pipeline"]:
         start_time = time.time()
 
         while True:
@@ -8225,7 +8201,7 @@ class Pipeline(Base):
             current_status = self.pipeline_status
 
             if status == current_status:
-                return
+                return self
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="Pipeline", status=current_status)
@@ -8292,7 +8268,7 @@ class PipelineExecution(Base):
         pipeline_execution_arn: str,
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["PipelineExecution"]:
         operation_input_args = {
             "PipelineExecutionArn": pipeline_execution_arn,
         }
@@ -8308,7 +8284,7 @@ class PipelineExecution(Base):
         pipeline_execution = cls(**transformed_response)
         return pipeline_execution
 
-    def refresh(self) -> Optional[object]:
+    def refresh(self) -> Optional["PipelineExecution"]:
 
         operation_input_args = {
             "PipelineExecutionArn": self.pipeline_execution_arn,
@@ -8322,7 +8298,7 @@ class PipelineExecution(Base):
 
     def update(
         self,
-    ) -> Optional[object]:
+    ) -> Optional["PipelineExecution"]:
         logger.debug("Creating pipeline_execution resource.")
         client = SageMakerClient().client
 
@@ -8352,13 +8328,12 @@ class PipelineExecution(Base):
         }
         self.client.stop_pipeline_execution(**operation_input_args)
 
-    @validate_call
     def wait_for_status(
         self,
         status: Literal["Executing", "Stopping", "Stopped", "Failed", "Succeeded"],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ) -> Optional[object]:
+    ) -> Optional["PipelineExecution"]:
         start_time = time.time()
 
         while True:
@@ -8366,7 +8341,7 @@ class PipelineExecution(Base):
             current_status = self.pipeline_execution_status
 
             if status == current_status:
-                return
+                return self
 
             if "failed" in current_status.lower():
                 raise FailedStatusError(
@@ -8483,7 +8458,7 @@ class ProcessingJob(Base):
         experiment_config: Optional[ExperimentConfig] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["ProcessingJob"]:
         logger.debug("Creating processing_job resource.")
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
@@ -8520,7 +8495,7 @@ class ProcessingJob(Base):
         processing_job_name: str,
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["ProcessingJob"]:
         operation_input_args = {
             "ProcessingJobName": processing_job_name,
         }
@@ -8536,7 +8511,7 @@ class ProcessingJob(Base):
         processing_job = cls(**transformed_response)
         return processing_job
 
-    def refresh(self) -> Optional[object]:
+    def refresh(self) -> Optional["ProcessingJob"]:
 
         operation_input_args = {
             "ProcessingJobName": self.processing_job_name,
@@ -8555,8 +8530,7 @@ class ProcessingJob(Base):
         }
         self.client.stop_processing_job(**operation_input_args)
 
-    @validate_call
-    def wait(self, poll: int = 5, timeout: Optional[int] = None) -> Optional[object]:
+    def wait(self, poll: int = 5, timeout: Optional[int] = None) -> Optional["ProcessingJob"]:
         terminal_states = ["Completed", "Failed", "Stopped"]
         start_time = time.time()
 
@@ -8573,7 +8547,7 @@ class ProcessingJob(Base):
                         reason=self.failure_reason,
                     )
 
-                return
+                return self
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="ProcessingJob", status=current_status)
@@ -8649,7 +8623,7 @@ class Project(Base):
         tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["Project"]:
         logger.debug("Creating project resource.")
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
@@ -8679,7 +8653,7 @@ class Project(Base):
         project_name: str,
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["Project"]:
         operation_input_args = {
             "ProjectName": project_name,
         }
@@ -8695,7 +8669,7 @@ class Project(Base):
         project = cls(**transformed_response)
         return project
 
-    def refresh(self) -> Optional[object]:
+    def refresh(self) -> Optional["Project"]:
 
         operation_input_args = {
             "ProjectName": self.project_name,
@@ -8713,7 +8687,7 @@ class Project(Base):
             ServiceCatalogProvisioningUpdateDetails
         ] = Unassigned(),
         tags: Optional[List[Tag]] = Unassigned(),
-    ) -> Optional[object]:
+    ) -> Optional["Project"]:
         logger.debug("Creating project resource.")
         client = SageMakerClient().client
 
@@ -8742,7 +8716,6 @@ class Project(Base):
         }
         self.client.delete_project(**operation_input_args)
 
-    @validate_call
     def wait_for_status(
         self,
         status: Literal[
@@ -8759,7 +8732,7 @@ class Project(Base):
         ],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ) -> Optional[object]:
+    ) -> Optional["Project"]:
         start_time = time.time()
 
         while True:
@@ -8767,7 +8740,7 @@ class Project(Base):
             current_status = self.project_status
 
             if status == current_status:
-                return
+                return self
 
             if "failed" in current_status.lower():
                 raise FailedStatusError(
@@ -8845,7 +8818,7 @@ class Space(Base):
         space_display_name: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["Space"]:
         logger.debug("Creating space resource.")
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
@@ -8879,7 +8852,7 @@ class Space(Base):
         space_name: str,
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["Space"]:
         operation_input_args = {
             "DomainId": domain_id,
             "SpaceName": space_name,
@@ -8896,7 +8869,7 @@ class Space(Base):
         space = cls(**transformed_response)
         return space
 
-    def refresh(self) -> Optional[object]:
+    def refresh(self) -> Optional["Space"]:
 
         operation_input_args = {
             "DomainId": self.domain_id,
@@ -8911,7 +8884,7 @@ class Space(Base):
 
     def update(
         self,
-    ) -> Optional[object]:
+    ) -> Optional["Space"]:
         logger.debug("Creating space resource.")
         client = SageMakerClient().client
 
@@ -8941,7 +8914,6 @@ class Space(Base):
         }
         self.client.delete_space(**operation_input_args)
 
-    @validate_call
     def wait_for_status(
         self,
         status: Literal[
@@ -8955,7 +8927,7 @@ class Space(Base):
         ],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ) -> Optional[object]:
+    ) -> Optional["Space"]:
         start_time = time.time()
 
         while True:
@@ -8963,7 +8935,7 @@ class Space(Base):
             current_status = self.status
 
             if status == current_status:
-                return
+                return self
 
             if "failed" in current_status.lower():
                 raise FailedStatusError(
@@ -9029,7 +9001,7 @@ class StudioLifecycleConfig(Base):
         tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["StudioLifecycleConfig"]:
         logger.debug("Creating studio_lifecycle_config resource.")
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
@@ -9063,7 +9035,7 @@ class StudioLifecycleConfig(Base):
         studio_lifecycle_config_name: str,
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["StudioLifecycleConfig"]:
         operation_input_args = {
             "StudioLifecycleConfigName": studio_lifecycle_config_name,
         }
@@ -9079,7 +9051,7 @@ class StudioLifecycleConfig(Base):
         studio_lifecycle_config = cls(**transformed_response)
         return studio_lifecycle_config
 
-    def refresh(self) -> Optional[object]:
+    def refresh(self) -> Optional["StudioLifecycleConfig"]:
 
         operation_input_args = {
             "StudioLifecycleConfigName": self.studio_lifecycle_config_name,
@@ -9246,7 +9218,7 @@ class TrainingJob(Base):
         infra_check_config: Optional[InfraCheckConfig] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["TrainingJob"]:
         logger.debug("Creating training_job resource.")
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
@@ -9296,7 +9268,7 @@ class TrainingJob(Base):
         training_job_name: str,
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["TrainingJob"]:
         operation_input_args = {
             "TrainingJobName": training_job_name,
         }
@@ -9312,7 +9284,7 @@ class TrainingJob(Base):
         training_job = cls(**transformed_response)
         return training_job
 
-    def refresh(self) -> Optional[object]:
+    def refresh(self) -> Optional["TrainingJob"]:
 
         operation_input_args = {
             "TrainingJobName": self.training_job_name,
@@ -9326,7 +9298,7 @@ class TrainingJob(Base):
 
     def update(
         self,
-    ) -> Optional[object]:
+    ) -> Optional["TrainingJob"]:
         logger.debug("Creating training_job resource.")
         client = SageMakerClient().client
 
@@ -9356,8 +9328,7 @@ class TrainingJob(Base):
         }
         self.client.stop_training_job(**operation_input_args)
 
-    @validate_call
-    def wait(self, poll: int = 5, timeout: Optional[int] = None) -> Optional[object]:
+    def wait(self, poll: int = 5, timeout: Optional[int] = None) -> Optional["TrainingJob"]:
         terminal_states = ["Completed", "Failed", "Stopped"]
         start_time = time.time()
 
@@ -9374,7 +9345,7 @@ class TrainingJob(Base):
                         reason=self.failure_reason,
                     )
 
-                return
+                return self
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="TrainingJob", status=current_status)
@@ -9501,7 +9472,7 @@ class TransformJob(Base):
         experiment_config: Optional[ExperimentConfig] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["TransformJob"]:
         logger.debug("Creating transform_job resource.")
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
@@ -9541,7 +9512,7 @@ class TransformJob(Base):
         transform_job_name: str,
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["TransformJob"]:
         operation_input_args = {
             "TransformJobName": transform_job_name,
         }
@@ -9557,7 +9528,7 @@ class TransformJob(Base):
         transform_job = cls(**transformed_response)
         return transform_job
 
-    def refresh(self) -> Optional[object]:
+    def refresh(self) -> Optional["TransformJob"]:
 
         operation_input_args = {
             "TransformJobName": self.transform_job_name,
@@ -9576,8 +9547,7 @@ class TransformJob(Base):
         }
         self.client.stop_transform_job(**operation_input_args)
 
-    @validate_call
-    def wait(self, poll: int = 5, timeout: Optional[int] = None) -> Optional[object]:
+    def wait(self, poll: int = 5, timeout: Optional[int] = None) -> Optional["TransformJob"]:
         terminal_states = ["Completed", "Failed", "Stopped"]
         start_time = time.time()
 
@@ -9594,7 +9564,7 @@ class TransformJob(Base):
                         reason=self.failure_reason,
                     )
 
-                return
+                return self
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="TransformJob", status=current_status)
@@ -9668,7 +9638,7 @@ class Trial(Base):
         tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["Trial"]:
         logger.debug("Creating trial resource.")
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
@@ -9699,7 +9669,7 @@ class Trial(Base):
         trial_name: str,
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["Trial"]:
         operation_input_args = {
             "TrialName": trial_name,
         }
@@ -9715,7 +9685,7 @@ class Trial(Base):
         trial = cls(**transformed_response)
         return trial
 
-    def refresh(self) -> Optional[object]:
+    def refresh(self) -> Optional["Trial"]:
 
         operation_input_args = {
             "TrialName": self.trial_name,
@@ -9729,7 +9699,7 @@ class Trial(Base):
 
     def update(
         self,
-    ) -> Optional[object]:
+    ) -> Optional["Trial"]:
         logger.debug("Creating trial resource.")
         client = SageMakerClient().client
 
@@ -9832,7 +9802,7 @@ class TrialComponent(Base):
         tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["TrialComponent"]:
         logger.debug("Creating trial_component resource.")
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
@@ -9868,7 +9838,7 @@ class TrialComponent(Base):
         trial_component_name: str,
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["TrialComponent"]:
         operation_input_args = {
             "TrialComponentName": trial_component_name,
         }
@@ -9884,7 +9854,7 @@ class TrialComponent(Base):
         trial_component = cls(**transformed_response)
         return trial_component
 
-    def refresh(self) -> Optional[object]:
+    def refresh(self) -> Optional["TrialComponent"]:
 
         operation_input_args = {
             "TrialComponentName": self.trial_component_name,
@@ -9901,7 +9871,7 @@ class TrialComponent(Base):
         parameters_to_remove: Optional[List[str]] = Unassigned(),
         input_artifacts_to_remove: Optional[List[str]] = Unassigned(),
         output_artifacts_to_remove: Optional[List[str]] = Unassigned(),
-    ) -> Optional[object]:
+    ) -> Optional["TrialComponent"]:
         logger.debug("Creating trial_component resource.")
         client = SageMakerClient().client
 
@@ -9937,13 +9907,12 @@ class TrialComponent(Base):
         }
         self.client.delete_trial_component(**operation_input_args)
 
-    @validate_call
     def wait_for_status(
         self,
         status: Literal["InProgress", "Completed", "Failed", "Stopping", "Stopped"],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ) -> Optional[object]:
+    ) -> Optional["TrialComponent"]:
         start_time = time.time()
 
         while True:
@@ -9951,7 +9920,7 @@ class TrialComponent(Base):
             current_status = self.status.primary_status
 
             if status == current_status:
-                return
+                return self
 
             if "failed" in current_status.lower():
                 raise FailedStatusError(
@@ -10065,7 +10034,7 @@ class UserProfile(Base):
         user_settings: Optional[UserSettings] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["UserProfile"]:
         logger.debug("Creating user_profile resource.")
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
@@ -10100,7 +10069,7 @@ class UserProfile(Base):
         user_profile_name: str,
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["UserProfile"]:
         operation_input_args = {
             "DomainId": domain_id,
             "UserProfileName": user_profile_name,
@@ -10117,7 +10086,7 @@ class UserProfile(Base):
         user_profile = cls(**transformed_response)
         return user_profile
 
-    def refresh(self) -> Optional[object]:
+    def refresh(self) -> Optional["UserProfile"]:
 
         operation_input_args = {
             "DomainId": self.domain_id,
@@ -10132,7 +10101,7 @@ class UserProfile(Base):
 
     def update(
         self,
-    ) -> Optional[object]:
+    ) -> Optional["UserProfile"]:
         logger.debug("Creating user_profile resource.")
         client = SageMakerClient().client
 
@@ -10161,7 +10130,6 @@ class UserProfile(Base):
         }
         self.client.delete_user_profile(**operation_input_args)
 
-    @validate_call
     def wait_for_status(
         self,
         status: Literal[
@@ -10175,7 +10143,7 @@ class UserProfile(Base):
         ],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ) -> Optional[object]:
+    ) -> Optional["UserProfile"]:
         start_time = time.time()
 
         while True:
@@ -10183,7 +10151,7 @@ class UserProfile(Base):
             current_status = self.status
 
             if status == current_status:
-                return
+                return self
 
             if "failed" in current_status.lower():
                 raise FailedStatusError(
@@ -10266,7 +10234,7 @@ class Workforce(Base):
         workforce_vpc_config: Optional[WorkforceVpcConfigRequest] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["Workforce"]:
         logger.debug("Creating workforce resource.")
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
@@ -10298,7 +10266,7 @@ class Workforce(Base):
         workforce_name: str,
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["Workforce"]:
         operation_input_args = {
             "WorkforceName": workforce_name,
         }
@@ -10314,7 +10282,7 @@ class Workforce(Base):
         workforce = cls(**transformed_response)
         return workforce
 
-    def refresh(self) -> Optional[object]:
+    def refresh(self) -> Optional["Workforce"]:
 
         operation_input_args = {
             "WorkforceName": self.workforce_name,
@@ -10332,7 +10300,7 @@ class Workforce(Base):
         source_ip_config: Optional[SourceIpConfig] = Unassigned(),
         oidc_config: Optional[OidcConfig] = Unassigned(),
         workforce_vpc_config: Optional[WorkforceVpcConfigRequest] = Unassigned(),
-    ) -> Optional[object]:
+    ) -> Optional["Workforce"]:
         logger.debug("Creating workforce resource.")
         client = SageMakerClient().client
 
@@ -10361,13 +10329,12 @@ class Workforce(Base):
         }
         self.client.delete_workforce(**operation_input_args)
 
-    @validate_call
     def wait_for_status(
         self,
         status: Literal["Initializing", "Updating", "Deleting", "Failed", "Active"],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ) -> Optional[object]:
+    ) -> Optional["Workforce"]:
         start_time = time.time()
 
         while True:
@@ -10375,7 +10342,7 @@ class Workforce(Base):
             current_status = self.workforce.status
 
             if status == current_status:
-                return
+                return self
 
             if "failed" in current_status.lower():
                 raise FailedStatusError(
@@ -10436,7 +10403,7 @@ class Workteam(Base):
         tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["Workteam"]:
         logger.debug("Creating workteam resource.")
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
@@ -10468,7 +10435,7 @@ class Workteam(Base):
         workteam_name: str,
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[object]:
+    ) -> Optional["Workteam"]:
         operation_input_args = {
             "WorkteamName": workteam_name,
         }
@@ -10484,7 +10451,7 @@ class Workteam(Base):
         workteam = cls(**transformed_response)
         return workteam
 
-    def refresh(self) -> Optional[object]:
+    def refresh(self) -> Optional["Workteam"]:
 
         operation_input_args = {
             "WorkteamName": self.workteam_name,
@@ -10502,7 +10469,7 @@ class Workteam(Base):
         member_definitions: Optional[List[MemberDefinition]] = Unassigned(),
         description: Optional[str] = Unassigned(),
         notification_configuration: Optional[NotificationConfiguration] = Unassigned(),
-    ) -> Optional[object]:
+    ) -> Optional["Workteam"]:
         logger.debug("Creating workteam resource.")
         client = SageMakerClient().client
 

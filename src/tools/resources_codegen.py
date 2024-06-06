@@ -620,6 +620,7 @@ class ResourcesCodeGen:
         # Format the method using the CREATE_METHOD_TEMPLATE
         if kwargs["needs_defaults_decorator"]:
             formatted_method = CREATE_METHOD_TEMPLATE.format(
+                resource_name=resource_name,
                 create_args=create_args,
                 resource_lower=resource_lower,
                 service_name="sagemaker",  # TODO: change service name based on the service - runtime, sagemaker, etc.
@@ -629,6 +630,7 @@ class ResourcesCodeGen:
             )
         else:
             formatted_method = CREATE_METHOD_TEMPLATE_WITHOUT_DEFAULTS.format(
+                resource_name=resource_name,
                 create_args=create_args,
                 resource_lower=resource_lower,
                 service_name="sagemaker",  # TODO: change service name based on the service - runtime, sagemaker, etc.
@@ -642,21 +644,21 @@ class ResourcesCodeGen:
 
     def generate_import_method(self, resource_name: str) -> str:
         """
-        Auto-generate the CREATE method for a resource.
+        Auto-generate the IMPORT method for a resource.
 
         Args:
             resource_name (str): The resource name.
 
         Returns:
-            str: The formatted Create Method template.
+            str: The formatted Import Method template.
 
         """
-        # Get the operation and shape for the 'create' method
+        # Get the operation and shape for the 'import' method
         operation_name = "Import" + resource_name
         operation_metadata = self.operations[operation_name]
         operation_input_shape_name = operation_metadata["input"]["shape"]
 
-        # Generate the arguments for the 'create' method
+        # Generate the arguments for the 'import' method
         import_args = self._generate_method_args(operation_input_shape_name)
 
         operation_input_args = self._generate_operation_input_args(
@@ -671,8 +673,9 @@ class ResourcesCodeGen:
 
         get_args = self._generate_get_args(resource_name, operation_input_shape_name)
 
-        # Format the method using the CREATE_METHOD_TEMPLATE
+        # Format the method using the IMPORT_METHOD_TEMPLATE
         formatted_method = IMPORT_METHOD_TEMPLATE.format(
+            resource_name=resource_name,
             import_args=import_args,
             resource_lower=resource_lower,
             service_name="sagemaker",  # TODO: change service name based on the service - runtime, sagemaker, etc.
@@ -888,6 +891,7 @@ class ResourcesCodeGen:
         operation = convert_to_snake_case(operation_name)
 
         formatted_method = GET_METHOD_TEMPLATE.format(
+            resource_name=resource_name,
             service_name="sagemaker",  # TODO: change service name based on the service - runtime, sagemaker, etc.
             describe_args=describe_args,
             resource_lower=resource_lower,
@@ -917,6 +921,7 @@ class ResourcesCodeGen:
         operation = convert_to_snake_case(operation_name)
 
         formatted_method = REFRESH_METHOD_TEMPLATE.format(
+            resource_name=resource_name,
             operation_input_args=operation_input_args,
             operation=operation,
             describe_operation_output_shape=resource_operation_output_shape_name,
@@ -1105,7 +1110,7 @@ class ResourcesCodeGen:
                 custom_key_mapping_str = f"custom_key_mapping = {json.dumps(custom_key_mapping)}"
                 custom_key_mapping_str = add_indent(custom_key_mapping_str, 4)
             else:
-                log.warn(
+                log.warning(
                     f"Resource {resource_name} summaries do not have required members to create object instance. Resource may require custom key mapping for get_all().\n"
                     f"List {summary_name} Members: {summary_members}, Object Required Members: {get_operation_required_input}"
                 )
