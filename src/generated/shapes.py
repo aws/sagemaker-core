@@ -15,7 +15,7 @@ import datetime
 
 from pydantic import BaseModel
 from typing import List, Dict, Optional, Any, Union
-
+from generated.utils import Unassigned
 
 class Base(BaseModel):
     def serialize(self):
@@ -43,14 +43,6 @@ class Base(BaseModel):
         return {k: v.serialize() if hasattr(v, 'serialize') else v for k, v in value.items()}
 
 
-class Unassigned:
-    """A custom type used to signify an undefined optional argument."""
-    _instance = None
-
-    def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-        return cls._instance
 
 
 class ActionSource(Base):
@@ -69,12 +61,6 @@ class ActionSource(Base):
     source_id: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'action_source_name':
-                return value
-        return None
 
 class ActionSummary(Base):
     """
@@ -100,12 +86,6 @@ class ActionSummary(Base):
     last_modified_time: Optional[datetime.datetime] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'action_summary_name':
-                return value
-        return None
 
 class Tag(Base):
     """
@@ -121,12 +101,6 @@ class Tag(Base):
     value: str
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'tag_name':
-                return value
-        return None
 
 class ModelAccessConfig(Base):
     """
@@ -140,12 +114,6 @@ class ModelAccessConfig(Base):
     accept_eula: bool
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'model_access_config_name':
-                return value
-        return None
 
 class S3ModelDataSource(Base):
     """
@@ -165,12 +133,6 @@ class S3ModelDataSource(Base):
     model_access_config: Optional[ModelAccessConfig] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 's3_model_data_source_name':
-                return value
-        return None
 
 class ModelDataSource(Base):
     """
@@ -184,12 +146,6 @@ class ModelDataSource(Base):
     s3_data_source: Optional[S3ModelDataSource] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'model_data_source_name':
-                return value
-        return None
 
 class ModelInput(Base):
     """
@@ -203,12 +159,6 @@ class ModelInput(Base):
     data_input_config: str
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'model_input_name':
-                return value
-        return None
 
 class AdditionalS3DataSource(Base):
     """
@@ -226,12 +176,6 @@ class AdditionalS3DataSource(Base):
     compression_type: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'additional_s3_data_source_name':
-                return value
-        return None
 
 class ModelPackageContainerDefinition(Base):
     """
@@ -267,12 +211,6 @@ class ModelPackageContainerDefinition(Base):
     additional_s3_data_source: Optional[AdditionalS3DataSource] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'model_package_container_definition_name':
-                return value
-        return None
 
 class AdditionalInferenceSpecificationDefinition(Base):
     """
@@ -298,12 +236,6 @@ class AdditionalInferenceSpecificationDefinition(Base):
     supported_response_m_i_m_e_types: Optional[List[str]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'additional_inference_specification_definition_name':
-                return value
-        return None
 
 class AgentVersion(Base):
     """
@@ -319,12 +251,6 @@ class AgentVersion(Base):
     agent_count: int
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'agent_version_name':
-                return value
-        return None
 
 class Alarm(Base):
     """
@@ -338,12 +264,6 @@ class Alarm(Base):
     alarm_name: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'alarm_name':
-                return value
-        return None
 
 class MetricDefinition(Base):
     """
@@ -359,12 +279,6 @@ class MetricDefinition(Base):
     regex: str
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'metric_definition_name':
-                return value
-        return None
 
 class TrainingRepositoryAuthConfig(Base):
     """
@@ -378,12 +292,6 @@ class TrainingRepositoryAuthConfig(Base):
     training_repository_credentials_provider_arn: str
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'training_repository_auth_config_name':
-                return value
-        return None
 
 class TrainingImageConfig(Base):
     """
@@ -399,12 +307,6 @@ class TrainingImageConfig(Base):
     training_repository_auth_config: Optional[TrainingRepositoryAuthConfig] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'training_image_config_name':
-                return value
-        return None
 
 class AlgorithmSpecification(Base):
     """
@@ -432,12 +334,6 @@ class AlgorithmSpecification(Base):
     training_image_config: Optional[TrainingImageConfig] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'algorithm_specification_name':
-                return value
-        return None
 
 class AlgorithmStatusItem(Base):
     """
@@ -455,12 +351,6 @@ class AlgorithmStatusItem(Base):
     failure_reason: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'algorithm_status_item_name':
-                return value
-        return None
 
 class AlgorithmStatusDetails(Base):
     """
@@ -476,12 +366,6 @@ class AlgorithmStatusDetails(Base):
     image_scan_statuses: Optional[List[AlgorithmStatusItem]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'algorithm_status_details_name':
-                return value
-        return None
 
 class AlgorithmSummary(Base):
     """
@@ -503,12 +387,6 @@ class AlgorithmSummary(Base):
     algorithm_description: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'algorithm_summary_name':
-                return value
-        return None
 
 class S3DataSource(Base):
     """
@@ -530,12 +408,6 @@ class S3DataSource(Base):
     instance_group_names: Optional[List[str]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 's3_data_source_name':
-                return value
-        return None
 
 class FileSystemDataSource(Base):
     """
@@ -555,12 +427,6 @@ class FileSystemDataSource(Base):
     directory_path: str
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'file_system_data_source_name':
-                return value
-        return None
 
 class DataSource(Base):
     """
@@ -576,12 +442,6 @@ class DataSource(Base):
     file_system_data_source: Optional[FileSystemDataSource] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'data_source_name':
-                return value
-        return None
 
 class ShuffleConfig(Base):
     """
@@ -595,12 +455,6 @@ class ShuffleConfig(Base):
     seed: int
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'shuffle_config_name':
-                return value
-        return None
 
 class Channel(Base):
     """
@@ -626,12 +480,6 @@ class Channel(Base):
     shuffle_config: Optional[ShuffleConfig] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'channel_name':
-                return value
-        return None
 
 class OutputDataConfig(Base):
     """
@@ -649,12 +497,6 @@ class OutputDataConfig(Base):
     compression_type: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'output_data_config_name':
-                return value
-        return None
 
 class InstanceGroup(Base):
     """
@@ -672,12 +514,6 @@ class InstanceGroup(Base):
     instance_group_name: str
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'instance_group_name':
-                return value
-        return None
 
 class ResourceConfig(Base):
     """
@@ -701,12 +537,6 @@ class ResourceConfig(Base):
     instance_groups: Optional[List[InstanceGroup]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'resource_config_name':
-                return value
-        return None
 
 class StoppingCondition(Base):
     """
@@ -724,12 +554,6 @@ class StoppingCondition(Base):
     max_pending_time_in_seconds: Optional[int] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'stopping_condition_name':
-                return value
-        return None
 
 class TrainingJobDefinition(Base):
     """
@@ -753,12 +577,6 @@ class TrainingJobDefinition(Base):
     hyper_parameters: Optional[Dict[str, str]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'training_job_definition_name':
-                return value
-        return None
 
 class TransformS3DataSource(Base):
     """
@@ -774,12 +592,6 @@ class TransformS3DataSource(Base):
     s3_uri: str
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'transform_s3_data_source_name':
-                return value
-        return None
 
 class TransformDataSource(Base):
     """
@@ -793,12 +605,6 @@ class TransformDataSource(Base):
     s3_data_source: TransformS3DataSource
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'transform_data_source_name':
-                return value
-        return None
 
 class TransformInput(Base):
     """
@@ -818,12 +624,6 @@ class TransformInput(Base):
     split_type: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'transform_input_name':
-                return value
-        return None
 
 class TransformOutput(Base):
     """
@@ -843,12 +643,6 @@ class TransformOutput(Base):
     kms_key_id: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'transform_output_name':
-                return value
-        return None
 
 class TransformResources(Base):
     """
@@ -866,12 +660,6 @@ class TransformResources(Base):
     volume_kms_key_id: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'transform_resources_name':
-                return value
-        return None
 
 class TransformJobDefinition(Base):
     """
@@ -897,12 +685,6 @@ class TransformJobDefinition(Base):
     environment: Optional[Dict[str, str]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'transform_job_definition_name':
-                return value
-        return None
 
 class AlgorithmValidationProfile(Base):
     """
@@ -920,12 +702,6 @@ class AlgorithmValidationProfile(Base):
     transform_job_definition: Optional[TransformJobDefinition] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'algorithm_validation_profile_name':
-                return value
-        return None
 
 class AlgorithmValidationSpecification(Base):
     """
@@ -941,12 +717,6 @@ class AlgorithmValidationSpecification(Base):
     validation_profiles: List[AlgorithmValidationProfile]
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'algorithm_validation_specification_name':
-                return value
-        return None
 
 class AnnotationConsolidationConfig(Base):
     """
@@ -960,12 +730,6 @@ class AnnotationConsolidationConfig(Base):
     annotation_consolidation_lambda_arn: str
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'annotation_consolidation_config_name':
-                return value
-        return None
 
 class ResourceSpec(Base):
     """
@@ -987,12 +751,6 @@ class ResourceSpec(Base):
     lifecycle_config_arn: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'resource_spec_name':
-                return value
-        return None
 
 class AppDetails(Base):
     """
@@ -1020,12 +778,6 @@ class AppDetails(Base):
     resource_spec: Optional[ResourceSpec] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'app_details_name':
-                return value
-        return None
 
 class KernelSpec(Base):
     """
@@ -1041,12 +793,6 @@ class KernelSpec(Base):
     display_name: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'kernel_spec_name':
-                return value
-        return None
 
 class FileSystemConfig(Base):
     """
@@ -1064,12 +810,6 @@ class FileSystemConfig(Base):
     default_gid: Optional[int] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'file_system_config_name':
-                return value
-        return None
 
 class KernelGatewayImageConfig(Base):
     """
@@ -1085,12 +825,6 @@ class KernelGatewayImageConfig(Base):
     file_system_config: Optional[FileSystemConfig] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'kernel_gateway_image_config_name':
-                return value
-        return None
 
 class ContainerConfig(Base):
     """
@@ -1108,12 +842,6 @@ class ContainerConfig(Base):
     container_environment_variables: Optional[Dict[str, str]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'container_config_name':
-                return value
-        return None
 
 class JupyterLabAppImageConfig(Base):
     """
@@ -1129,12 +857,6 @@ class JupyterLabAppImageConfig(Base):
     container_config: Optional[ContainerConfig] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'jupyter_lab_app_image_config_name':
-                return value
-        return None
 
 class AppImageConfigDetails(Base):
     """
@@ -1158,12 +880,6 @@ class AppImageConfigDetails(Base):
     jupyter_lab_app_image_config: Optional[JupyterLabAppImageConfig] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'app_image_config_details_name':
-                return value
-        return None
 
 class AppSpecification(Base):
     """
@@ -1181,12 +897,6 @@ class AppSpecification(Base):
     container_arguments: Optional[List[str]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'app_specification_name':
-                return value
-        return None
 
 class ArtifactSourceType(Base):
     """
@@ -1202,12 +912,6 @@ class ArtifactSourceType(Base):
     value: str
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'artifact_source_type_name':
-                return value
-        return None
 
 class ArtifactSource(Base):
     """
@@ -1223,12 +927,6 @@ class ArtifactSource(Base):
     source_types: Optional[List[ArtifactSourceType]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'artifact_source_name':
-                return value
-        return None
 
 class ArtifactSummary(Base):
     """
@@ -1252,12 +950,6 @@ class ArtifactSummary(Base):
     last_modified_time: Optional[datetime.datetime] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'artifact_summary_name':
-                return value
-        return None
 
 class IamIdentity(Base):
     """
@@ -1275,12 +967,6 @@ class IamIdentity(Base):
     source_identity: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'iam_identity_name':
-                return value
-        return None
 
 class UserContext(Base):
     """
@@ -1300,12 +986,6 @@ class UserContext(Base):
     iam_identity: Optional[IamIdentity] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'user_context_name':
-                return value
-        return None
 
 class AssociationSummary(Base):
     """
@@ -1335,12 +1015,6 @@ class AssociationSummary(Base):
     created_by: Optional[UserContext] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'association_summary_name':
-                return value
-        return None
 
 class AsyncInferenceClientConfig(Base):
     """
@@ -1354,12 +1028,6 @@ class AsyncInferenceClientConfig(Base):
     max_concurrent_invocations_per_instance: Optional[int] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'async_inference_client_config_name':
-                return value
-        return None
 
 class AsyncInferenceNotificationConfig(Base):
     """
@@ -1377,12 +1045,6 @@ class AsyncInferenceNotificationConfig(Base):
     include_inference_response_in: Optional[List[str]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'async_inference_notification_config_name':
-                return value
-        return None
 
 class AsyncInferenceOutputConfig(Base):
     """
@@ -1402,12 +1064,6 @@ class AsyncInferenceOutputConfig(Base):
     s3_failure_path: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'async_inference_output_config_name':
-                return value
-        return None
 
 class AsyncInferenceConfig(Base):
     """
@@ -1423,12 +1079,6 @@ class AsyncInferenceConfig(Base):
     client_config: Optional[AsyncInferenceClientConfig] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'async_inference_config_name':
-                return value
-        return None
 
 class AthenaDatasetDefinition(Base):
     """
@@ -1456,12 +1106,6 @@ class AthenaDatasetDefinition(Base):
     output_compression: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'athena_dataset_definition_name':
-                return value
-        return None
 
 class AutoMLAlgorithmConfig(Base):
     """
@@ -1475,12 +1119,6 @@ class AutoMLAlgorithmConfig(Base):
     auto_m_l_algorithms: List[str]
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'auto_m_l_algorithm_config_name':
-                return value
-        return None
 
 class FinalAutoMLJobObjectiveMetric(Base):
     """
@@ -1500,12 +1138,6 @@ class FinalAutoMLJobObjectiveMetric(Base):
     standard_metric_name: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'final_auto_m_l_job_objective_metric_name':
-                return value
-        return None
 
 class AutoMLCandidateStep(Base):
     """
@@ -1523,12 +1155,6 @@ class AutoMLCandidateStep(Base):
     candidate_step_name: str
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'auto_m_l_candidate_step_name':
-                return value
-        return None
 
 class AutoMLContainerDefinition(Base):
     """
@@ -1546,12 +1172,6 @@ class AutoMLContainerDefinition(Base):
     environment: Optional[Dict[str, str]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'auto_m_l_container_definition_name':
-                return value
-        return None
 
 class CandidateArtifactLocations(Base):
     """
@@ -1569,12 +1189,6 @@ class CandidateArtifactLocations(Base):
     backtest_results: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'candidate_artifact_locations_name':
-                return value
-        return None
 
 class MetricDatum(Base):
     """
@@ -1594,12 +1208,6 @@ class MetricDatum(Base):
     standard_metric_name: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'metric_datum_name':
-                return value
-        return None
 
 class CandidateProperties(Base):
     """
@@ -1615,12 +1223,6 @@ class CandidateProperties(Base):
     candidate_metrics: Optional[List[MetricDatum]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'candidate_properties_name':
-                return value
-        return None
 
 class AutoMLCandidate(Base):
     """
@@ -1656,12 +1258,6 @@ class AutoMLCandidate(Base):
     inference_container_definitions: Optional[Dict[str, List[AutoMLContainerDefinition]]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'auto_m_l_candidate_name':
-                return value
-        return None
 
 class AutoMLCandidateGenerationConfig(Base):
     """
@@ -1677,12 +1273,6 @@ class AutoMLCandidateGenerationConfig(Base):
     algorithms_config: Optional[List[AutoMLAlgorithmConfig]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'auto_m_l_candidate_generation_config_name':
-                return value
-        return None
 
 class AutoMLS3DataSource(Base):
     """
@@ -1698,12 +1288,6 @@ class AutoMLS3DataSource(Base):
     s3_uri: str
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'auto_m_l_s3_data_source_name':
-                return value
-        return None
 
 class AutoMLDataSource(Base):
     """
@@ -1717,12 +1301,6 @@ class AutoMLDataSource(Base):
     s3_data_source: AutoMLS3DataSource
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'auto_m_l_data_source_name':
-                return value
-        return None
 
 class AutoMLChannel(Base):
     """
@@ -1746,12 +1324,6 @@ class AutoMLChannel(Base):
     sample_weight_attribute_name: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'auto_m_l_channel_name':
-                return value
-        return None
 
 class AutoMLDataSplitConfig(Base):
     """
@@ -1765,12 +1337,6 @@ class AutoMLDataSplitConfig(Base):
     validation_fraction: Optional[float] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'auto_m_l_data_split_config_name':
-                return value
-        return None
 
 class AutoMLJobArtifacts(Base):
     """
@@ -1786,12 +1352,6 @@ class AutoMLJobArtifacts(Base):
     data_exploration_notebook_location: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'auto_m_l_job_artifacts_name':
-                return value
-        return None
 
 class AutoMLJobChannel(Base):
     """
@@ -1811,12 +1371,6 @@ class AutoMLJobChannel(Base):
     data_source: Optional[AutoMLDataSource] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'auto_m_l_job_channel_name':
-                return value
-        return None
 
 class AutoMLJobCompletionCriteria(Base):
     """
@@ -1834,12 +1388,6 @@ class AutoMLJobCompletionCriteria(Base):
     max_auto_m_l_job_runtime_in_seconds: Optional[int] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'auto_m_l_job_completion_criteria_name':
-                return value
-        return None
 
 class VpcConfig(Base):
     """
@@ -1855,12 +1403,6 @@ class VpcConfig(Base):
     subnets: List[str]
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'vpc_config_name':
-                return value
-        return None
 
 class AutoMLSecurityConfig(Base):
     """
@@ -1878,12 +1420,6 @@ class AutoMLSecurityConfig(Base):
     vpc_config: Optional[VpcConfig] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'auto_m_l_security_config_name':
-                return value
-        return None
 
 class AutoMLJobConfig(Base):
     """
@@ -1905,12 +1441,6 @@ class AutoMLJobConfig(Base):
     mode: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'auto_m_l_job_config_name':
-                return value
-        return None
 
 class AutoMLJobObjective(Base):
     """
@@ -1924,12 +1454,6 @@ class AutoMLJobObjective(Base):
     metric_name: str
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'auto_m_l_job_objective_name':
-                return value
-        return None
 
 class AutoMLJobStepMetadata(Base):
     """
@@ -1943,12 +1467,6 @@ class AutoMLJobStepMetadata(Base):
     arn: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'auto_m_l_job_step_metadata_name':
-                return value
-        return None
 
 class AutoMLPartialFailureReason(Base):
     """
@@ -1962,12 +1480,6 @@ class AutoMLPartialFailureReason(Base):
     partial_failure_message: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'auto_m_l_partial_failure_reason_name':
-                return value
-        return None
 
 class AutoMLJobSummary(Base):
     """
@@ -1997,12 +1509,6 @@ class AutoMLJobSummary(Base):
     partial_failure_reasons: Optional[List[AutoMLPartialFailureReason]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'auto_m_l_job_summary_name':
-                return value
-        return None
 
 class AutoMLOutputDataConfig(Base):
     """
@@ -2018,12 +1524,6 @@ class AutoMLOutputDataConfig(Base):
     kms_key_id: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'auto_m_l_output_data_config_name':
-                return value
-        return None
 
 class ImageClassificationJobConfig(Base):
     """
@@ -2037,12 +1537,6 @@ class ImageClassificationJobConfig(Base):
     completion_criteria: Optional[AutoMLJobCompletionCriteria] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'image_classification_job_config_name':
-                return value
-        return None
 
 class TextClassificationJobConfig(Base):
     """
@@ -2060,12 +1554,6 @@ class TextClassificationJobConfig(Base):
     completion_criteria: Optional[AutoMLJobCompletionCriteria] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'text_classification_job_config_name':
-                return value
-        return None
 
 class TimeSeriesTransformations(Base):
     """
@@ -2081,12 +1569,6 @@ class TimeSeriesTransformations(Base):
     aggregation: Optional[Dict[str, str]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'time_series_transformations_name':
-                return value
-        return None
 
 class TimeSeriesConfig(Base):
     """
@@ -2106,12 +1588,6 @@ class TimeSeriesConfig(Base):
     grouping_attribute_names: Optional[List[str]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'time_series_config_name':
-                return value
-        return None
 
 class HolidayConfigAttributes(Base):
     """
@@ -2125,12 +1601,6 @@ class HolidayConfigAttributes(Base):
     country_code: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'holiday_config_attributes_name':
-                return value
-        return None
 
 class TimeSeriesForecastingJobConfig(Base):
     """
@@ -2158,12 +1628,6 @@ class TimeSeriesForecastingJobConfig(Base):
     holiday_config: Optional[List[HolidayConfigAttributes]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'time_series_forecasting_job_config_name':
-                return value
-        return None
 
 class CandidateGenerationConfig(Base):
     """
@@ -2177,12 +1641,6 @@ class CandidateGenerationConfig(Base):
     algorithms_config: Optional[List[AutoMLAlgorithmConfig]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'candidate_generation_config_name':
-                return value
-        return None
 
 class TabularJobConfig(Base):
     """
@@ -2210,12 +1668,6 @@ class TabularJobConfig(Base):
     sample_weight_attribute_name: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'tabular_job_config_name':
-                return value
-        return None
 
 class TextGenerationJobConfig(Base):
     """
@@ -2235,12 +1687,6 @@ class TextGenerationJobConfig(Base):
     model_access_config: Optional[ModelAccessConfig] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'text_generation_job_config_name':
-                return value
-        return None
 
 class AutoMLProblemTypeConfig(Base):
     """
@@ -2262,12 +1708,6 @@ class AutoMLProblemTypeConfig(Base):
     text_generation_job_config: Optional[TextGenerationJobConfig] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'auto_m_l_problem_type_config_name':
-                return value
-        return None
 
 class TabularResolvedAttributes(Base):
     """
@@ -2281,12 +1721,6 @@ class TabularResolvedAttributes(Base):
     problem_type: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'tabular_resolved_attributes_name':
-                return value
-        return None
 
 class TextGenerationResolvedAttributes(Base):
     """
@@ -2300,12 +1734,6 @@ class TextGenerationResolvedAttributes(Base):
     base_model_name: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'text_generation_resolved_attributes_name':
-                return value
-        return None
 
 class AutoMLProblemTypeResolvedAttributes(Base):
     """
@@ -2321,12 +1749,6 @@ class AutoMLProblemTypeResolvedAttributes(Base):
     text_generation_resolved_attributes: Optional[TextGenerationResolvedAttributes] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'auto_m_l_problem_type_resolved_attributes_name':
-                return value
-        return None
 
 class AutoMLResolvedAttributes(Base):
     """
@@ -2344,12 +1766,6 @@ class AutoMLResolvedAttributes(Base):
     auto_m_l_problem_type_resolved_attributes: Optional[AutoMLProblemTypeResolvedAttributes] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'auto_m_l_resolved_attributes_name':
-                return value
-        return None
 
 class AutoParameter(Base):
     """
@@ -2365,12 +1781,6 @@ class AutoParameter(Base):
     value_hint: str
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'auto_parameter_name':
-                return value
-        return None
 
 class AutoRollbackConfig(Base):
     """
@@ -2384,12 +1794,6 @@ class AutoRollbackConfig(Base):
     alarms: Optional[List[Alarm]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'auto_rollback_config_name':
-                return value
-        return None
 
 class Autotune(Base):
     """
@@ -2403,12 +1807,6 @@ class Autotune(Base):
     mode: str
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'autotune_name':
-                return value
-        return None
 
 class BatchDataCaptureConfig(Base):
     """
@@ -2426,12 +1824,6 @@ class BatchDataCaptureConfig(Base):
     generate_inference_id: Optional[bool] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'batch_data_capture_config_name':
-                return value
-        return None
 
 class BatchDescribeModelPackageError(Base):
     """
@@ -2447,12 +1839,6 @@ class BatchDescribeModelPackageError(Base):
     error_response: str
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'batch_describe_model_package_error_name':
-                return value
-        return None
 
 class InferenceSpecification(Base):
     """
@@ -2474,12 +1860,6 @@ class InferenceSpecification(Base):
     supported_response_m_i_m_e_types: Optional[List[str]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'inference_specification_name':
-                return value
-        return None
 
 class BatchDescribeModelPackageSummary(Base):
     """
@@ -2507,12 +1887,6 @@ class BatchDescribeModelPackageSummary(Base):
     model_approval_status: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'batch_describe_model_package_summary_name':
-                return value
-        return None
 
 class MonitoringCsvDatasetFormat(Base):
     """
@@ -2526,12 +1900,6 @@ class MonitoringCsvDatasetFormat(Base):
     header: Optional[bool] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'monitoring_csv_dataset_format_name':
-                return value
-        return None
 
 class MonitoringJsonDatasetFormat(Base):
     """
@@ -2545,12 +1913,6 @@ class MonitoringJsonDatasetFormat(Base):
     line: Optional[bool] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'monitoring_json_dataset_format_name':
-                return value
-        return None
 
 class MonitoringParquetDatasetFormat(Base):
     """
@@ -2562,12 +1924,6 @@ class MonitoringParquetDatasetFormat(Base):
     """
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'monitoring_parquet_dataset_format_name':
-                return value
-        return None
 
 class MonitoringDatasetFormat(Base):
     """
@@ -2585,12 +1941,6 @@ class MonitoringDatasetFormat(Base):
     parquet: Optional[MonitoringParquetDatasetFormat] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'monitoring_dataset_format_name':
-                return value
-        return None
 
 class BatchTransformInput(Base):
     """
@@ -2626,12 +1976,6 @@ class BatchTransformInput(Base):
     exclude_features_attribute: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'batch_transform_input_name':
-                return value
-        return None
 
 class BestObjectiveNotImproving(Base):
     """
@@ -2645,12 +1989,6 @@ class BestObjectiveNotImproving(Base):
     max_number_of_training_jobs_not_improving: Optional[int] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'best_objective_not_improving_name':
-                return value
-        return None
 
 class MetricsSource(Base):
     """
@@ -2668,12 +2006,6 @@ class MetricsSource(Base):
     content_digest: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'metrics_source_name':
-                return value
-        return None
 
 class Bias(Base):
     """
@@ -2691,12 +2023,6 @@ class Bias(Base):
     post_training_report: Optional[MetricsSource] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'bias_name':
-                return value
-        return None
 
 class CapacitySize(Base):
     """
@@ -2712,12 +2038,6 @@ class CapacitySize(Base):
     value: int
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'capacity_size_name':
-                return value
-        return None
 
 class TrafficRoutingConfig(Base):
     """
@@ -2737,12 +2057,6 @@ class TrafficRoutingConfig(Base):
     linear_step_size: Optional[CapacitySize] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'traffic_routing_config_name':
-                return value
-        return None
 
 class BlueGreenUpdatePolicy(Base):
     """
@@ -2760,12 +2074,6 @@ class BlueGreenUpdatePolicy(Base):
     maximum_execution_timeout_in_seconds: Optional[int] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'blue_green_update_policy_name':
-                return value
-        return None
 
 class CacheHitResult(Base):
     """
@@ -2779,12 +2087,6 @@ class CacheHitResult(Base):
     source_pipeline_execution_arn: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'cache_hit_result_name':
-                return value
-        return None
 
 class OutputParameter(Base):
     """
@@ -2800,12 +2102,6 @@ class OutputParameter(Base):
     value: str
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'output_parameter_name':
-                return value
-        return None
 
 class CallbackStepMetadata(Base):
     """
@@ -2823,12 +2119,6 @@ class CallbackStepMetadata(Base):
     output_parameters: Optional[List[OutputParameter]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'callback_step_metadata_name':
-                return value
-        return None
 
 class TimeSeriesForecastingSettings(Base):
     """
@@ -2844,12 +2134,6 @@ class TimeSeriesForecastingSettings(Base):
     amazon_forecast_role_arn: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'time_series_forecasting_settings_name':
-                return value
-        return None
 
 class ModelRegisterSettings(Base):
     """
@@ -2865,12 +2149,6 @@ class ModelRegisterSettings(Base):
     cross_account_model_register_role_arn: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'model_register_settings_name':
-                return value
-        return None
 
 class WorkspaceSettings(Base):
     """
@@ -2886,12 +2164,6 @@ class WorkspaceSettings(Base):
     s3_kms_key_id: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'workspace_settings_name':
-                return value
-        return None
 
 class IdentityProviderOAuthSetting(Base):
     """
@@ -2909,12 +2181,6 @@ class IdentityProviderOAuthSetting(Base):
     secret_arn: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'identity_provider_o_auth_setting_name':
-                return value
-        return None
 
 class DirectDeploySettings(Base):
     """
@@ -2928,12 +2194,6 @@ class DirectDeploySettings(Base):
     status: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'direct_deploy_settings_name':
-                return value
-        return None
 
 class KendraSettings(Base):
     """
@@ -2947,12 +2207,6 @@ class KendraSettings(Base):
     status: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'kendra_settings_name':
-                return value
-        return None
 
 class GenerativeAiSettings(Base):
     """
@@ -2966,12 +2220,6 @@ class GenerativeAiSettings(Base):
     amazon_bedrock_role_arn: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'generative_ai_settings_name':
-                return value
-        return None
 
 class CanvasAppSettings(Base):
     """
@@ -2997,12 +2245,6 @@ class CanvasAppSettings(Base):
     generative_ai_settings: Optional[GenerativeAiSettings] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'canvas_app_settings_name':
-                return value
-        return None
 
 class CaptureContentTypeHeader(Base):
     """
@@ -3018,12 +2260,6 @@ class CaptureContentTypeHeader(Base):
     json_content_types: Optional[List[str]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'capture_content_type_header_name':
-                return value
-        return None
 
 class CaptureOption(Base):
     """
@@ -3037,12 +2273,6 @@ class CaptureOption(Base):
     capture_mode: str
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'capture_option_name':
-                return value
-        return None
 
 class CategoricalParameter(Base):
     """
@@ -3058,12 +2288,6 @@ class CategoricalParameter(Base):
     value: List[str]
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'categorical_parameter_name':
-                return value
-        return None
 
 class CategoricalParameterRange(Base):
     """
@@ -3079,12 +2303,6 @@ class CategoricalParameterRange(Base):
     values: List[str]
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'categorical_parameter_range_name':
-                return value
-        return None
 
 class CategoricalParameterRangeSpecification(Base):
     """
@@ -3098,12 +2316,6 @@ class CategoricalParameterRangeSpecification(Base):
     values: List[str]
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'categorical_parameter_range_specification_name':
-                return value
-        return None
 
 class ChannelSpecification(Base):
     """
@@ -3127,12 +2339,6 @@ class ChannelSpecification(Base):
     supported_compression_types: Optional[List[str]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'channel_specification_name':
-                return value
-        return None
 
 class CheckpointConfig(Base):
     """
@@ -3148,12 +2354,6 @@ class CheckpointConfig(Base):
     local_path: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'checkpoint_config_name':
-                return value
-        return None
 
 class ClarifyCheckStepMetadata(Base):
     """
@@ -3181,12 +2381,6 @@ class ClarifyCheckStepMetadata(Base):
     register_new_baseline: Optional[bool] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'clarify_check_step_metadata_name':
-                return value
-        return None
 
 class ClarifyInferenceConfig(Base):
     """
@@ -3220,12 +2414,6 @@ class ClarifyInferenceConfig(Base):
     feature_types: Optional[List[str]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'clarify_inference_config_name':
-                return value
-        return None
 
 class ClarifyShapBaselineConfig(Base):
     """
@@ -3243,12 +2431,6 @@ class ClarifyShapBaselineConfig(Base):
     shap_baseline_uri: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'clarify_shap_baseline_config_name':
-                return value
-        return None
 
 class ClarifyTextConfig(Base):
     """
@@ -3264,12 +2446,6 @@ class ClarifyTextConfig(Base):
     granularity: str
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'clarify_text_config_name':
-                return value
-        return None
 
 class ClarifyShapConfig(Base):
     """
@@ -3291,12 +2467,6 @@ class ClarifyShapConfig(Base):
     text_config: Optional[ClarifyTextConfig] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'clarify_shap_config_name':
-                return value
-        return None
 
 class ClarifyExplainerConfig(Base):
     """
@@ -3314,12 +2484,6 @@ class ClarifyExplainerConfig(Base):
     inference_config: Optional[ClarifyInferenceConfig] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'clarify_explainer_config_name':
-                return value
-        return None
 
 class ClusterLifeCycleConfig(Base):
     """
@@ -3335,12 +2499,6 @@ class ClusterLifeCycleConfig(Base):
     on_create: str
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'cluster_life_cycle_config_name':
-                return value
-        return None
 
 class ClusterInstanceGroupDetails(Base):
     """
@@ -3366,12 +2524,6 @@ class ClusterInstanceGroupDetails(Base):
     threads_per_core: Optional[int] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'cluster_instance_group_details_name':
-                return value
-        return None
 
 class ClusterInstanceGroupSpecification(Base):
     """
@@ -3395,12 +2547,6 @@ class ClusterInstanceGroupSpecification(Base):
     threads_per_core: Optional[int] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'cluster_instance_group_specification_name':
-                return value
-        return None
 
 class ClusterInstanceStatusDetails(Base):
     """
@@ -3416,12 +2562,6 @@ class ClusterInstanceStatusDetails(Base):
     message: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'cluster_instance_status_details_name':
-                return value
-        return None
 
 class ClusterNodeDetails(Base):
     """
@@ -3447,12 +2587,6 @@ class ClusterNodeDetails(Base):
     threads_per_core: Optional[int] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'cluster_node_details_name':
-                return value
-        return None
 
 class ClusterNodeSummary(Base):
     """
@@ -3474,12 +2608,6 @@ class ClusterNodeSummary(Base):
     instance_status: ClusterInstanceStatusDetails
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'cluster_node_summary_name':
-                return value
-        return None
 
 class ClusterSummary(Base):
     """
@@ -3499,12 +2627,6 @@ class ClusterSummary(Base):
     cluster_status: str
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'cluster_summary_name':
-                return value
-        return None
 
 class CodeEditorAppSettings(Base):
     """
@@ -3520,12 +2642,6 @@ class CodeEditorAppSettings(Base):
     lifecycle_config_arns: Optional[List[str]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'code_editor_app_settings_name':
-                return value
-        return None
 
 class CodeRepository(Base):
     """
@@ -3539,12 +2655,6 @@ class CodeRepository(Base):
     repository_url: str
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'code_repository_name':
-                return value
-        return None
 
 class GitConfig(Base):
     """
@@ -3562,12 +2672,6 @@ class GitConfig(Base):
     secret_arn: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'git_config_name':
-                return value
-        return None
 
 class CodeRepositorySummary(Base):
     """
@@ -3589,12 +2693,6 @@ class CodeRepositorySummary(Base):
     git_config: Optional[GitConfig] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'code_repository_summary_name':
-                return value
-        return None
 
 class CognitoConfig(Base):
     """
@@ -3610,12 +2708,6 @@ class CognitoConfig(Base):
     client_id: str
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'cognito_config_name':
-                return value
-        return None
 
 class CognitoMemberDefinition(Base):
     """
@@ -3633,12 +2725,6 @@ class CognitoMemberDefinition(Base):
     client_id: str
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'cognito_member_definition_name':
-                return value
-        return None
 
 class VectorConfig(Base):
     """
@@ -3652,12 +2738,6 @@ class VectorConfig(Base):
     dimension: int
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'vector_config_name':
-                return value
-        return None
 
 class CollectionConfig(Base):
     """
@@ -3671,12 +2751,6 @@ class CollectionConfig(Base):
     vector_config: Optional[VectorConfig] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'collection_config_name':
-                return value
-        return None
 
 class CollectionConfiguration(Base):
     """
@@ -3692,12 +2766,6 @@ class CollectionConfiguration(Base):
     collection_parameters: Optional[Dict[str, str]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'collection_configuration_name':
-                return value
-        return None
 
 class CompilationJobSummary(Base):
     """
@@ -3731,12 +2799,6 @@ class CompilationJobSummary(Base):
     last_modified_time: Optional[datetime.datetime] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'compilation_job_summary_name':
-                return value
-        return None
 
 class ConditionStepMetadata(Base):
     """
@@ -3750,12 +2812,6 @@ class ConditionStepMetadata(Base):
     outcome: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'condition_step_metadata_name':
-                return value
-        return None
 
 class ConflictException(Base):
     """
@@ -3769,12 +2825,6 @@ class ConflictException(Base):
     message: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'conflict_exception_name':
-                return value
-        return None
 
 class RepositoryAuthConfig(Base):
     """
@@ -3788,12 +2838,6 @@ class RepositoryAuthConfig(Base):
     repository_credentials_provider_arn: str
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'repository_auth_config_name':
-                return value
-        return None
 
 class ImageConfig(Base):
     """
@@ -3809,12 +2853,6 @@ class ImageConfig(Base):
     repository_auth_config: Optional[RepositoryAuthConfig] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'image_config_name':
-                return value
-        return None
 
 class MultiModelConfig(Base):
     """
@@ -3828,12 +2866,6 @@ class MultiModelConfig(Base):
     model_cache_setting: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'multi_model_config_name':
-                return value
-        return None
 
 class ContainerDefinition(Base):
     """
@@ -3865,12 +2897,6 @@ class ContainerDefinition(Base):
     multi_model_config: Optional[MultiModelConfig] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'container_definition_name':
-                return value
-        return None
 
 class ContextSource(Base):
     """
@@ -3888,12 +2914,6 @@ class ContextSource(Base):
     source_id: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'context_source_name':
-                return value
-        return None
 
 class ContextSummary(Base):
     """
@@ -3917,12 +2937,6 @@ class ContextSummary(Base):
     last_modified_time: Optional[datetime.datetime] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'context_summary_name':
-                return value
-        return None
 
 class ContinuousParameterRange(Base):
     """
@@ -3942,12 +2956,6 @@ class ContinuousParameterRange(Base):
     scaling_type: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'continuous_parameter_range_name':
-                return value
-        return None
 
 class ContinuousParameterRangeSpecification(Base):
     """
@@ -3963,12 +2971,6 @@ class ContinuousParameterRangeSpecification(Base):
     max_value: str
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'continuous_parameter_range_specification_name':
-                return value
-        return None
 
 class ConvergenceDetected(Base):
     """
@@ -3982,12 +2984,6 @@ class ConvergenceDetected(Base):
     complete_on_convergence: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'convergence_detected_name':
-                return value
-        return None
 
 class MetadataProperties(Base):
     """
@@ -4007,12 +3003,6 @@ class MetadataProperties(Base):
     project_id: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'metadata_properties_name':
-                return value
-        return None
 
 class IntegerParameterRangeSpecification(Base):
     """
@@ -4028,12 +3018,6 @@ class IntegerParameterRangeSpecification(Base):
     max_value: str
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'integer_parameter_range_specification_name':
-                return value
-        return None
 
 class ParameterRange(Base):
     """
@@ -4051,12 +3035,6 @@ class ParameterRange(Base):
     categorical_parameter_range_specification: Optional[CategoricalParameterRangeSpecification] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'parameter_range_name':
-                return value
-        return None
 
 class HyperParameterSpecification(Base):
     """
@@ -4082,12 +3060,6 @@ class HyperParameterSpecification(Base):
     default_value: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'hyper_parameter_specification_name':
-                return value
-        return None
 
 class HyperParameterTuningJobObjective(Base):
     """
@@ -4103,12 +3075,6 @@ class HyperParameterTuningJobObjective(Base):
     metric_name: str
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'hyper_parameter_tuning_job_objective_name':
-                return value
-        return None
 
 class TrainingSpecification(Base):
     """
@@ -4138,12 +3104,6 @@ class TrainingSpecification(Base):
     additional_s3_data_source: Optional[AdditionalS3DataSource] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'training_specification_name':
-                return value
-        return None
 
 class ModelDeployConfig(Base):
     """
@@ -4159,12 +3119,6 @@ class ModelDeployConfig(Base):
     endpoint_name: Optional[Union[str, object]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'model_deploy_config_name':
-                return value
-        return None
 
 class InputConfig(Base):
     """
@@ -4184,12 +3138,6 @@ class InputConfig(Base):
     framework_version: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'input_config_name':
-                return value
-        return None
 
 class TargetPlatform(Base):
     """
@@ -4207,12 +3155,6 @@ class TargetPlatform(Base):
     accelerator: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'target_platform_name':
-                return value
-        return None
 
 class OutputConfig(Base):
     """
@@ -4234,12 +3176,6 @@ class OutputConfig(Base):
     kms_key_id: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'output_config_name':
-                return value
-        return None
 
 class NeoVpcConfig(Base):
     """
@@ -4255,12 +3191,6 @@ class NeoVpcConfig(Base):
     subnets: List[str]
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'neo_vpc_config_name':
-                return value
-        return None
 
 class MonitoringConstraintsResource(Base):
     """
@@ -4274,12 +3204,6 @@ class MonitoringConstraintsResource(Base):
     s3_uri: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'monitoring_constraints_resource_name':
-                return value
-        return None
 
 class MonitoringStatisticsResource(Base):
     """
@@ -4293,12 +3217,6 @@ class MonitoringStatisticsResource(Base):
     s3_uri: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'monitoring_statistics_resource_name':
-                return value
-        return None
 
 class DataQualityBaselineConfig(Base):
     """
@@ -4316,12 +3234,6 @@ class DataQualityBaselineConfig(Base):
     statistics_resource: Optional[MonitoringStatisticsResource] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'data_quality_baseline_config_name':
-                return value
-        return None
 
 class DataQualityAppSpecification(Base):
     """
@@ -4345,12 +3257,6 @@ class DataQualityAppSpecification(Base):
     environment: Optional[Dict[str, str]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'data_quality_app_specification_name':
-                return value
-        return None
 
 class EndpointInput(Base):
     """
@@ -4384,12 +3290,6 @@ class EndpointInput(Base):
     exclude_features_attribute: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'endpoint_input_name':
-                return value
-        return None
 
 class DataQualityJobInput(Base):
     """
@@ -4405,12 +3305,6 @@ class DataQualityJobInput(Base):
     batch_transform_input: Optional[BatchTransformInput] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'data_quality_job_input_name':
-                return value
-        return None
 
 class MonitoringS3Output(Base):
     """
@@ -4428,12 +3322,6 @@ class MonitoringS3Output(Base):
     s3_upload_mode: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'monitoring_s3_output_name':
-                return value
-        return None
 
 class MonitoringOutput(Base):
     """
@@ -4447,12 +3335,6 @@ class MonitoringOutput(Base):
     s3_output: MonitoringS3Output
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'monitoring_output_name':
-                return value
-        return None
 
 class MonitoringOutputConfig(Base):
     """
@@ -4468,12 +3350,6 @@ class MonitoringOutputConfig(Base):
     kms_key_id: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'monitoring_output_config_name':
-                return value
-        return None
 
 class MonitoringClusterConfig(Base):
     """
@@ -4493,12 +3369,6 @@ class MonitoringClusterConfig(Base):
     volume_kms_key_id: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'monitoring_cluster_config_name':
-                return value
-        return None
 
 class MonitoringResources(Base):
     """
@@ -4512,12 +3382,6 @@ class MonitoringResources(Base):
     cluster_config: MonitoringClusterConfig
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'monitoring_resources_name':
-                return value
-        return None
 
 class MonitoringNetworkConfig(Base):
     """
@@ -4535,12 +3399,6 @@ class MonitoringNetworkConfig(Base):
     vpc_config: Optional[VpcConfig] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'monitoring_network_config_name':
-                return value
-        return None
 
 class MonitoringStoppingCondition(Base):
     """
@@ -4554,12 +3412,6 @@ class MonitoringStoppingCondition(Base):
     max_runtime_in_seconds: int
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'monitoring_stopping_condition_name':
-                return value
-        return None
 
 class EdgeOutputConfig(Base):
     """
@@ -4579,12 +3431,6 @@ class EdgeOutputConfig(Base):
     preset_deployment_config: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'edge_output_config_name':
-                return value
-        return None
 
 class SharingSettings(Base):
     """
@@ -4602,12 +3448,6 @@ class SharingSettings(Base):
     s3_kms_key_id: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'sharing_settings_name':
-                return value
-        return None
 
 class JupyterServerAppSettings(Base):
     """
@@ -4625,12 +3465,6 @@ class JupyterServerAppSettings(Base):
     code_repositories: Optional[List[CodeRepository]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'jupyter_server_app_settings_name':
-                return value
-        return None
 
 class CustomImage(Base):
     """
@@ -4648,12 +3482,6 @@ class CustomImage(Base):
     image_version_number: Optional[int] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'custom_image_name':
-                return value
-        return None
 
 class KernelGatewayAppSettings(Base):
     """
@@ -4671,12 +3499,6 @@ class KernelGatewayAppSettings(Base):
     lifecycle_config_arns: Optional[List[str]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'kernel_gateway_app_settings_name':
-                return value
-        return None
 
 class TensorBoardAppSettings(Base):
     """
@@ -4690,12 +3512,6 @@ class TensorBoardAppSettings(Base):
     default_resource_spec: Optional[ResourceSpec] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'tensor_board_app_settings_name':
-                return value
-        return None
 
 class RStudioServerProAppSettings(Base):
     """
@@ -4711,12 +3527,6 @@ class RStudioServerProAppSettings(Base):
     user_group: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'r_studio_server_pro_app_settings_name':
-                return value
-        return None
 
 class RSessionAppSettings(Base):
     """
@@ -4732,12 +3542,6 @@ class RSessionAppSettings(Base):
     custom_images: Optional[List[CustomImage]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'r_session_app_settings_name':
-                return value
-        return None
 
 class JupyterLabAppSettings(Base):
     """
@@ -4757,12 +3561,6 @@ class JupyterLabAppSettings(Base):
     code_repositories: Optional[List[CodeRepository]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'jupyter_lab_app_settings_name':
-                return value
-        return None
 
 class DefaultEbsStorageSettings(Base):
     """
@@ -4778,12 +3576,6 @@ class DefaultEbsStorageSettings(Base):
     maximum_ebs_volume_size_in_gb: int
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'default_ebs_storage_settings_name':
-                return value
-        return None
 
 class DefaultSpaceStorageSettings(Base):
     """
@@ -4797,12 +3589,6 @@ class DefaultSpaceStorageSettings(Base):
     default_ebs_storage_settings: Optional[DefaultEbsStorageSettings] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'default_space_storage_settings_name':
-                return value
-        return None
 
 class CustomPosixUserConfig(Base):
     """
@@ -4818,12 +3604,6 @@ class CustomPosixUserConfig(Base):
     gid: int
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'custom_posix_user_config_name':
-                return value
-        return None
 
 class EFSFileSystemConfig(Base):
     """
@@ -4839,12 +3619,6 @@ class EFSFileSystemConfig(Base):
     file_system_path: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'e_f_s_file_system_config_name':
-                return value
-        return None
 
 class CustomFileSystemConfig(Base):
     """
@@ -4858,12 +3632,6 @@ class CustomFileSystemConfig(Base):
     e_f_s_file_system_config: Optional[EFSFileSystemConfig] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'custom_file_system_config_name':
-                return value
-        return None
 
 class UserSettings(Base):
     """
@@ -4907,12 +3675,6 @@ class UserSettings(Base):
     custom_file_system_configs: Optional[List[CustomFileSystemConfig]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'user_settings_name':
-                return value
-        return None
 
 class RStudioServerProDomainSettings(Base):
     """
@@ -4932,12 +3694,6 @@ class RStudioServerProDomainSettings(Base):
     default_resource_spec: Optional[ResourceSpec] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'r_studio_server_pro_domain_settings_name':
-                return value
-        return None
 
 class DockerSettings(Base):
     """
@@ -4953,12 +3709,6 @@ class DockerSettings(Base):
     vpc_only_trusted_accounts: Optional[List[str]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'docker_settings_name':
-                return value
-        return None
 
 class DomainSettings(Base):
     """
@@ -4978,12 +3728,6 @@ class DomainSettings(Base):
     docker_settings: Optional[DockerSettings] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'domain_settings_name':
-                return value
-        return None
 
 class DefaultSpaceSettings(Base):
     """
@@ -5003,12 +3747,6 @@ class DefaultSpaceSettings(Base):
     kernel_gateway_app_settings: Optional[KernelGatewayAppSettings] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'default_space_settings_name':
-                return value
-        return None
 
 class EdgeDeploymentModelConfig(Base):
     """
@@ -5024,12 +3762,6 @@ class EdgeDeploymentModelConfig(Base):
     edge_packaging_job_name: Union[str, object]
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'edge_deployment_model_config_name':
-                return value
-        return None
 
 class DeviceSelectionConfig(Base):
     """
@@ -5049,12 +3781,6 @@ class DeviceSelectionConfig(Base):
     device_name_contains: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'device_selection_config_name':
-                return value
-        return None
 
 class EdgeDeploymentConfig(Base):
     """
@@ -5068,12 +3794,6 @@ class EdgeDeploymentConfig(Base):
     failure_handling_policy: str
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'edge_deployment_config_name':
-                return value
-        return None
 
 class DeploymentStage(Base):
     """
@@ -5091,12 +3811,6 @@ class DeploymentStage(Base):
     deployment_config: Optional[EdgeDeploymentConfig] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'deployment_stage_name':
-                return value
-        return None
 
 class ProductionVariantCoreDumpConfig(Base):
     """
@@ -5112,12 +3826,6 @@ class ProductionVariantCoreDumpConfig(Base):
     kms_key_id: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'production_variant_core_dump_config_name':
-                return value
-        return None
 
 class ProductionVariantServerlessConfig(Base):
     """
@@ -5135,12 +3843,6 @@ class ProductionVariantServerlessConfig(Base):
     provisioned_concurrency: Optional[int] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'production_variant_serverless_config_name':
-                return value
-        return None
 
 class ProductionVariantManagedInstanceScaling(Base):
     """
@@ -5158,12 +3860,6 @@ class ProductionVariantManagedInstanceScaling(Base):
     max_instance_count: Optional[int] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'production_variant_managed_instance_scaling_name':
-                return value
-        return None
 
 class ProductionVariantRoutingConfig(Base):
     """
@@ -5177,12 +3873,6 @@ class ProductionVariantRoutingConfig(Base):
     routing_strategy: str
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'production_variant_routing_config_name':
-                return value
-        return None
 
 class ProductionVariant(Base):
     """
@@ -5222,12 +3912,6 @@ class ProductionVariant(Base):
     routing_config: Optional[ProductionVariantRoutingConfig] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'production_variant_name':
-                return value
-        return None
 
 class DataCaptureConfig(Base):
     """
@@ -5251,12 +3935,6 @@ class DataCaptureConfig(Base):
     capture_content_type_header: Optional[CaptureContentTypeHeader] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'data_capture_config_name':
-                return value
-        return None
 
 class ExplainerConfig(Base):
     """
@@ -5270,12 +3948,6 @@ class ExplainerConfig(Base):
     clarify_explainer_config: Optional[ClarifyExplainerConfig] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'explainer_config_name':
-                return value
-        return None
 
 class RollingUpdatePolicy(Base):
     """
@@ -5295,12 +3967,6 @@ class RollingUpdatePolicy(Base):
     rollback_maximum_batch_size: Optional[CapacitySize] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'rolling_update_policy_name':
-                return value
-        return None
 
 class DeploymentConfig(Base):
     """
@@ -5318,12 +3984,6 @@ class DeploymentConfig(Base):
     auto_rollback_configuration: Optional[AutoRollbackConfig] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'deployment_config_name':
-                return value
-        return None
 
 class FeatureDefinition(Base):
     """
@@ -5343,12 +4003,6 @@ class FeatureDefinition(Base):
     collection_config: Optional[CollectionConfig] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'feature_definition_name':
-                return value
-        return None
 
 class OnlineStoreSecurityConfig(Base):
     """
@@ -5362,12 +4016,6 @@ class OnlineStoreSecurityConfig(Base):
     kms_key_id: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'online_store_security_config_name':
-                return value
-        return None
 
 class TtlDuration(Base):
     """
@@ -5383,12 +4031,6 @@ class TtlDuration(Base):
     value: Optional[int] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'ttl_duration_name':
-                return value
-        return None
 
 class OnlineStoreConfig(Base):
     """
@@ -5408,12 +4050,6 @@ class OnlineStoreConfig(Base):
     storage_type: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'online_store_config_name':
-                return value
-        return None
 
 class S3StorageConfig(Base):
     """
@@ -5431,12 +4067,6 @@ class S3StorageConfig(Base):
     resolved_output_s3_uri: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 's3_storage_config_name':
-                return value
-        return None
 
 class DataCatalogConfig(Base):
     """
@@ -5454,12 +4084,6 @@ class DataCatalogConfig(Base):
     database: str
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'data_catalog_config_name':
-                return value
-        return None
 
 class OfflineStoreConfig(Base):
     """
@@ -5479,12 +4103,6 @@ class OfflineStoreConfig(Base):
     table_format: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'offline_store_config_name':
-                return value
-        return None
 
 class ThroughputConfig(Base):
     """
@@ -5502,12 +4120,6 @@ class ThroughputConfig(Base):
     provisioned_write_capacity_units: Optional[int] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'throughput_config_name':
-                return value
-        return None
 
 class HumanLoopRequestSource(Base):
     """
@@ -5521,12 +4133,6 @@ class HumanLoopRequestSource(Base):
     aws_managed_human_loop_request_source: str
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'human_loop_request_source_name':
-                return value
-        return None
 
 class HumanLoopActivationConditionsConfig(Base):
     """
@@ -5540,12 +4146,6 @@ class HumanLoopActivationConditionsConfig(Base):
     human_loop_activation_conditions: str
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'human_loop_activation_conditions_config_name':
-                return value
-        return None
 
 class HumanLoopActivationConfig(Base):
     """
@@ -5559,12 +4159,6 @@ class HumanLoopActivationConfig(Base):
     human_loop_activation_conditions_config: HumanLoopActivationConditionsConfig
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'human_loop_activation_config_name':
-                return value
-        return None
 
 class USD(Base):
     """
@@ -5582,12 +4176,6 @@ class USD(Base):
     tenth_fractions_of_a_cent: Optional[int] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'u_s_d_name':
-                return value
-        return None
 
 class PublicWorkforceTaskPrice(Base):
     """
@@ -5601,12 +4189,6 @@ class PublicWorkforceTaskPrice(Base):
     amount_in_usd: Optional[USD] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'public_workforce_task_price_name':
-                return value
-        return None
 
 class HumanLoopConfig(Base):
     """
@@ -5636,12 +4218,6 @@ class HumanLoopConfig(Base):
     public_workforce_task_price: Optional[PublicWorkforceTaskPrice] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'human_loop_config_name':
-                return value
-        return None
 
 class FlowDefinitionOutputConfig(Base):
     """
@@ -5657,12 +4233,6 @@ class FlowDefinitionOutputConfig(Base):
     kms_key_id: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'flow_definition_output_config_name':
-                return value
-        return None
 
 class HubS3StorageConfig(Base):
     """
@@ -5676,12 +4246,6 @@ class HubS3StorageConfig(Base):
     s3_output_path: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'hub_s3_storage_config_name':
-                return value
-        return None
 
 class UiTemplate(Base):
     """
@@ -5695,12 +4259,6 @@ class UiTemplate(Base):
     content: str
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'ui_template_name':
-                return value
-        return None
 
 class HyperbandStrategyConfig(Base):
     """
@@ -5716,12 +4274,6 @@ class HyperbandStrategyConfig(Base):
     max_resource: Optional[int] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'hyperband_strategy_config_name':
-                return value
-        return None
 
 class HyperParameterTuningJobStrategyConfig(Base):
     """
@@ -5735,12 +4287,6 @@ class HyperParameterTuningJobStrategyConfig(Base):
     hyperband_strategy_config: Optional[HyperbandStrategyConfig] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'hyper_parameter_tuning_job_strategy_config_name':
-                return value
-        return None
 
 class ResourceLimits(Base):
     """
@@ -5758,12 +4304,6 @@ class ResourceLimits(Base):
     max_runtime_in_seconds: Optional[int] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'resource_limits_name':
-                return value
-        return None
 
 class IntegerParameterRange(Base):
     """
@@ -5783,12 +4323,6 @@ class IntegerParameterRange(Base):
     scaling_type: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'integer_parameter_range_name':
-                return value
-        return None
 
 class ParameterRanges(Base):
     """
@@ -5808,12 +4342,6 @@ class ParameterRanges(Base):
     auto_parameters: Optional[List[AutoParameter]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'parameter_ranges_name':
-                return value
-        return None
 
 class TuningJobCompletionCriteria(Base):
     """
@@ -5831,12 +4359,6 @@ class TuningJobCompletionCriteria(Base):
     convergence_detected: Optional[ConvergenceDetected] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'tuning_job_completion_criteria_name':
-                return value
-        return None
 
 class HyperParameterTuningJobConfig(Base):
     """
@@ -5864,12 +4386,6 @@ class HyperParameterTuningJobConfig(Base):
     random_seed: Optional[int] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'hyper_parameter_tuning_job_config_name':
-                return value
-        return None
 
 class HyperParameterAlgorithmSpecification(Base):
     """
@@ -5889,12 +4405,6 @@ class HyperParameterAlgorithmSpecification(Base):
     metric_definitions: Optional[List[MetricDefinition]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'hyper_parameter_algorithm_specification_name':
-                return value
-        return None
 
 class HyperParameterTuningInstanceConfig(Base):
     """
@@ -5912,12 +4422,6 @@ class HyperParameterTuningInstanceConfig(Base):
     volume_size_in_g_b: int
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'hyper_parameter_tuning_instance_config_name':
-                return value
-        return None
 
 class HyperParameterTuningResourceConfig(Base):
     """
@@ -5941,12 +4445,6 @@ class HyperParameterTuningResourceConfig(Base):
     instance_configs: Optional[List[HyperParameterTuningInstanceConfig]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'hyper_parameter_tuning_resource_config_name':
-                return value
-        return None
 
 class RetryStrategy(Base):
     """
@@ -5960,12 +4458,6 @@ class RetryStrategy(Base):
     maximum_retry_attempts: int
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'retry_strategy_name':
-                return value
-        return None
 
 class HyperParameterTrainingJobDefinition(Base):
     """
@@ -6013,12 +4505,6 @@ class HyperParameterTrainingJobDefinition(Base):
     environment: Optional[Dict[str, str]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'hyper_parameter_training_job_definition_name':
-                return value
-        return None
 
 class ParentHyperParameterTuningJob(Base):
     """
@@ -6032,12 +4518,6 @@ class ParentHyperParameterTuningJob(Base):
     hyper_parameter_tuning_job_name: Optional[Union[str, object]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'parent_hyper_parameter_tuning_job_name':
-                return value
-        return None
 
 class HyperParameterTuningJobWarmStartConfig(Base):
     """
@@ -6053,12 +4533,6 @@ class HyperParameterTuningJobWarmStartConfig(Base):
     warm_start_type: str
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'hyper_parameter_tuning_job_warm_start_config_name':
-                return value
-        return None
 
 class InferenceComponentContainerSpecification(Base):
     """
@@ -6076,12 +4550,6 @@ class InferenceComponentContainerSpecification(Base):
     environment: Optional[Dict[str, str]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'inference_component_container_specification_name':
-                return value
-        return None
 
 class InferenceComponentStartupParameters(Base):
     """
@@ -6097,12 +4565,6 @@ class InferenceComponentStartupParameters(Base):
     container_startup_health_check_timeout_in_seconds: Optional[int] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'inference_component_startup_parameters_name':
-                return value
-        return None
 
 class InferenceComponentComputeResourceRequirements(Base):
     """
@@ -6122,12 +4584,6 @@ class InferenceComponentComputeResourceRequirements(Base):
     max_memory_required_in_mb: Optional[int] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'inference_component_compute_resource_requirements_name':
-                return value
-        return None
 
 class InferenceComponentSpecification(Base):
     """
@@ -6147,12 +4603,6 @@ class InferenceComponentSpecification(Base):
     startup_parameters: Optional[InferenceComponentStartupParameters] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'inference_component_specification_name':
-                return value
-        return None
 
 class InferenceComponentRuntimeConfig(Base):
     """
@@ -6166,12 +4616,6 @@ class InferenceComponentRuntimeConfig(Base):
     copy_count: int
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'inference_component_runtime_config_name':
-                return value
-        return None
 
 class InferenceExperimentSchedule(Base):
     """
@@ -6187,12 +4631,6 @@ class InferenceExperimentSchedule(Base):
     end_time: Optional[datetime.datetime] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'inference_experiment_schedule_name':
-                return value
-        return None
 
 class RealTimeInferenceConfig(Base):
     """
@@ -6208,12 +4646,6 @@ class RealTimeInferenceConfig(Base):
     instance_count: int
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'real_time_inference_config_name':
-                return value
-        return None
 
 class ModelInfrastructureConfig(Base):
     """
@@ -6229,12 +4661,6 @@ class ModelInfrastructureConfig(Base):
     real_time_inference_config: RealTimeInferenceConfig
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'model_infrastructure_config_name':
-                return value
-        return None
 
 class ModelVariantConfig(Base):
     """
@@ -6252,12 +4678,6 @@ class ModelVariantConfig(Base):
     infrastructure_config: ModelInfrastructureConfig
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'model_variant_config_name':
-                return value
-        return None
 
 class InferenceExperimentDataStorageConfig(Base):
     """
@@ -6275,12 +4695,6 @@ class InferenceExperimentDataStorageConfig(Base):
     content_type: Optional[CaptureContentTypeHeader] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'inference_experiment_data_storage_config_name':
-                return value
-        return None
 
 class ShadowModelVariantConfig(Base):
     """
@@ -6296,12 +4710,6 @@ class ShadowModelVariantConfig(Base):
     sampling_percentage: int
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'shadow_model_variant_config_name':
-                return value
-        return None
 
 class ShadowModeConfig(Base):
     """
@@ -6317,12 +4725,6 @@ class ShadowModeConfig(Base):
     shadow_model_variants: List[ShadowModelVariantConfig]
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'shadow_mode_config_name':
-                return value
-        return None
 
 class Phase(Base):
     """
@@ -6340,12 +4742,6 @@ class Phase(Base):
     duration_in_seconds: Optional[int] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'phase_name':
-                return value
-        return None
 
 class Stairs(Base):
     """
@@ -6363,12 +4759,6 @@ class Stairs(Base):
     users_per_step: Optional[int] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'stairs_name':
-                return value
-        return None
 
 class TrafficPattern(Base):
     """
@@ -6386,12 +4776,6 @@ class TrafficPattern(Base):
     stairs: Optional[Stairs] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'traffic_pattern_name':
-                return value
-        return None
 
 class RecommendationJobResourceLimit(Base):
     """
@@ -6407,12 +4791,6 @@ class RecommendationJobResourceLimit(Base):
     max_parallel_of_tests: Optional[int] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'recommendation_job_resource_limit_name':
-                return value
-        return None
 
 class EnvironmentParameterRanges(Base):
     """
@@ -6426,12 +4804,6 @@ class EnvironmentParameterRanges(Base):
     categorical_parameter_ranges: Optional[List[CategoricalParameter]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'environment_parameter_ranges_name':
-                return value
-        return None
 
 class EndpointInputConfiguration(Base):
     """
@@ -6451,12 +4823,6 @@ class EndpointInputConfiguration(Base):
     environment_parameter_ranges: Optional[EnvironmentParameterRanges] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'endpoint_input_configuration_name':
-                return value
-        return None
 
 class RecommendationJobPayloadConfig(Base):
     """
@@ -6472,12 +4838,6 @@ class RecommendationJobPayloadConfig(Base):
     supported_content_types: Optional[List[str]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'recommendation_job_payload_config_name':
-                return value
-        return None
 
 class RecommendationJobContainerConfig(Base):
     """
@@ -6509,12 +4869,6 @@ class RecommendationJobContainerConfig(Base):
     supported_response_m_i_m_e_types: Optional[List[str]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'recommendation_job_container_config_name':
-                return value
-        return None
 
 class EndpointInfo(Base):
     """
@@ -6528,12 +4882,6 @@ class EndpointInfo(Base):
     endpoint_name: Optional[Union[str, object]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'endpoint_info_name':
-                return value
-        return None
 
 class RecommendationJobVpcConfig(Base):
     """
@@ -6549,12 +4897,6 @@ class RecommendationJobVpcConfig(Base):
     subnets: List[str]
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'recommendation_job_vpc_config_name':
-                return value
-        return None
 
 class RecommendationJobInputConfig(Base):
     """
@@ -6586,12 +4928,6 @@ class RecommendationJobInputConfig(Base):
     vpc_config: Optional[RecommendationJobVpcConfig] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'recommendation_job_input_config_name':
-                return value
-        return None
 
 class ModelLatencyThreshold(Base):
     """
@@ -6607,12 +4943,6 @@ class ModelLatencyThreshold(Base):
     value_in_milliseconds: Optional[int] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'model_latency_threshold_name':
-                return value
-        return None
 
 class RecommendationJobStoppingConditions(Base):
     """
@@ -6630,12 +4960,6 @@ class RecommendationJobStoppingConditions(Base):
     flat_invocations: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'recommendation_job_stopping_conditions_name':
-                return value
-        return None
 
 class RecommendationJobCompiledOutputConfig(Base):
     """
@@ -6649,12 +4973,6 @@ class RecommendationJobCompiledOutputConfig(Base):
     s3_output_uri: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'recommendation_job_compiled_output_config_name':
-                return value
-        return None
 
 class RecommendationJobOutputConfig(Base):
     """
@@ -6670,12 +4988,6 @@ class RecommendationJobOutputConfig(Base):
     compiled_output_config: Optional[RecommendationJobCompiledOutputConfig] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'recommendation_job_output_config_name':
-                return value
-        return None
 
 class LabelingJobS3DataSource(Base):
     """
@@ -6689,12 +5001,6 @@ class LabelingJobS3DataSource(Base):
     manifest_s3_uri: str
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'labeling_job_s3_data_source_name':
-                return value
-        return None
 
 class LabelingJobSnsDataSource(Base):
     """
@@ -6708,12 +5014,6 @@ class LabelingJobSnsDataSource(Base):
     sns_topic_arn: str
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'labeling_job_sns_data_source_name':
-                return value
-        return None
 
 class LabelingJobDataSource(Base):
     """
@@ -6729,12 +5029,6 @@ class LabelingJobDataSource(Base):
     sns_data_source: Optional[LabelingJobSnsDataSource] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'labeling_job_data_source_name':
-                return value
-        return None
 
 class LabelingJobDataAttributes(Base):
     """
@@ -6748,12 +5042,6 @@ class LabelingJobDataAttributes(Base):
     content_classifiers: Optional[List[str]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'labeling_job_data_attributes_name':
-                return value
-        return None
 
 class LabelingJobInputConfig(Base):
     """
@@ -6769,12 +5057,6 @@ class LabelingJobInputConfig(Base):
     data_attributes: Optional[LabelingJobDataAttributes] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'labeling_job_input_config_name':
-                return value
-        return None
 
 class LabelingJobOutputConfig(Base):
     """
@@ -6792,12 +5074,6 @@ class LabelingJobOutputConfig(Base):
     sns_topic_arn: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'labeling_job_output_config_name':
-                return value
-        return None
 
 class LabelingJobStoppingConditions(Base):
     """
@@ -6813,12 +5089,6 @@ class LabelingJobStoppingConditions(Base):
     max_percentage_of_input_dataset_labeled: Optional[int] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'labeling_job_stopping_conditions_name':
-                return value
-        return None
 
 class LabelingJobResourceConfig(Base):
     """
@@ -6834,12 +5104,6 @@ class LabelingJobResourceConfig(Base):
     vpc_config: Optional[VpcConfig] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'labeling_job_resource_config_name':
-                return value
-        return None
 
 class LabelingJobAlgorithmsConfig(Base):
     """
@@ -6857,12 +5121,6 @@ class LabelingJobAlgorithmsConfig(Base):
     labeling_job_resource_config: Optional[LabelingJobResourceConfig] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'labeling_job_algorithms_config_name':
-                return value
-        return None
 
 class UiConfig(Base):
     """
@@ -6878,12 +5136,6 @@ class UiConfig(Base):
     human_task_ui_arn: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'ui_config_name':
-                return value
-        return None
 
 class HumanTaskConfig(Base):
     """
@@ -6919,12 +5171,6 @@ class HumanTaskConfig(Base):
     public_workforce_task_price: Optional[PublicWorkforceTaskPrice] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'human_task_config_name':
-                return value
-        return None
 
 class ModelBiasBaselineConfig(Base):
     """
@@ -6940,12 +5186,6 @@ class ModelBiasBaselineConfig(Base):
     constraints_resource: Optional[MonitoringConstraintsResource] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'model_bias_baseline_config_name':
-                return value
-        return None
 
 class ModelBiasAppSpecification(Base):
     """
@@ -6963,12 +5203,6 @@ class ModelBiasAppSpecification(Base):
     environment: Optional[Dict[str, str]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'model_bias_app_specification_name':
-                return value
-        return None
 
 class MonitoringGroundTruthS3Input(Base):
     """
@@ -6982,12 +5216,6 @@ class MonitoringGroundTruthS3Input(Base):
     s3_uri: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'monitoring_ground_truth_s3_input_name':
-                return value
-        return None
 
 class ModelBiasJobInput(Base):
     """
@@ -7005,12 +5233,6 @@ class ModelBiasJobInput(Base):
     batch_transform_input: Optional[BatchTransformInput] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'model_bias_job_input_name':
-                return value
-        return None
 
 class ModelCardExportOutputConfig(Base):
     """
@@ -7024,12 +5246,6 @@ class ModelCardExportOutputConfig(Base):
     s3_output_path: str
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'model_card_export_output_config_name':
-                return value
-        return None
 
 class ModelCardSecurityConfig(Base):
     """
@@ -7043,12 +5259,6 @@ class ModelCardSecurityConfig(Base):
     kms_key_id: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'model_card_security_config_name':
-                return value
-        return None
 
 class ModelExplainabilityBaselineConfig(Base):
     """
@@ -7064,12 +5274,6 @@ class ModelExplainabilityBaselineConfig(Base):
     constraints_resource: Optional[MonitoringConstraintsResource] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'model_explainability_baseline_config_name':
-                return value
-        return None
 
 class ModelExplainabilityAppSpecification(Base):
     """
@@ -7087,12 +5291,6 @@ class ModelExplainabilityAppSpecification(Base):
     environment: Optional[Dict[str, str]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'model_explainability_app_specification_name':
-                return value
-        return None
 
 class ModelExplainabilityJobInput(Base):
     """
@@ -7108,12 +5306,6 @@ class ModelExplainabilityJobInput(Base):
     batch_transform_input: Optional[BatchTransformInput] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'model_explainability_job_input_name':
-                return value
-        return None
 
 class InferenceExecutionConfig(Base):
     """
@@ -7127,12 +5319,6 @@ class InferenceExecutionConfig(Base):
     mode: str
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'inference_execution_config_name':
-                return value
-        return None
 
 class ModelPackageValidationProfile(Base):
     """
@@ -7148,12 +5334,6 @@ class ModelPackageValidationProfile(Base):
     transform_job_definition: TransformJobDefinition
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'model_package_validation_profile_name':
-                return value
-        return None
 
 class ModelPackageValidationSpecification(Base):
     """
@@ -7169,12 +5349,6 @@ class ModelPackageValidationSpecification(Base):
     validation_profiles: List[ModelPackageValidationProfile]
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'model_package_validation_specification_name':
-                return value
-        return None
 
 class SourceAlgorithm(Base):
     """
@@ -7192,12 +5366,6 @@ class SourceAlgorithm(Base):
     model_data_source: Optional[ModelDataSource] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'source_algorithm_name':
-                return value
-        return None
 
 class SourceAlgorithmSpecification(Base):
     """
@@ -7211,12 +5379,6 @@ class SourceAlgorithmSpecification(Base):
     source_algorithms: List[SourceAlgorithm]
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'source_algorithm_specification_name':
-                return value
-        return None
 
 class ModelQuality(Base):
     """
@@ -7232,12 +5394,6 @@ class ModelQuality(Base):
     constraints: Optional[MetricsSource] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'model_quality_name':
-                return value
-        return None
 
 class ModelDataQuality(Base):
     """
@@ -7253,12 +5409,6 @@ class ModelDataQuality(Base):
     constraints: Optional[MetricsSource] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'model_data_quality_name':
-                return value
-        return None
 
 class Explainability(Base):
     """
@@ -7272,12 +5422,6 @@ class Explainability(Base):
     report: Optional[MetricsSource] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'explainability_name':
-                return value
-        return None
 
 class ModelMetrics(Base):
     """
@@ -7297,12 +5441,6 @@ class ModelMetrics(Base):
     explainability: Optional[Explainability] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'model_metrics_name':
-                return value
-        return None
 
 class FileSource(Base):
     """
@@ -7320,12 +5458,6 @@ class FileSource(Base):
     content_digest: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'file_source_name':
-                return value
-        return None
 
 class DriftCheckBias(Base):
     """
@@ -7343,12 +5475,6 @@ class DriftCheckBias(Base):
     post_training_constraints: Optional[MetricsSource] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'drift_check_bias_name':
-                return value
-        return None
 
 class DriftCheckExplainability(Base):
     """
@@ -7364,12 +5490,6 @@ class DriftCheckExplainability(Base):
     config_file: Optional[FileSource] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'drift_check_explainability_name':
-                return value
-        return None
 
 class DriftCheckModelQuality(Base):
     """
@@ -7385,12 +5505,6 @@ class DriftCheckModelQuality(Base):
     constraints: Optional[MetricsSource] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'drift_check_model_quality_name':
-                return value
-        return None
 
 class DriftCheckModelDataQuality(Base):
     """
@@ -7406,12 +5520,6 @@ class DriftCheckModelDataQuality(Base):
     constraints: Optional[MetricsSource] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'drift_check_model_data_quality_name':
-                return value
-        return None
 
 class DriftCheckBaselines(Base):
     """
@@ -7431,12 +5539,6 @@ class DriftCheckBaselines(Base):
     model_data_quality: Optional[DriftCheckModelDataQuality] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'drift_check_baselines_name':
-                return value
-        return None
 
 class ModelQualityBaselineConfig(Base):
     """
@@ -7452,12 +5554,6 @@ class ModelQualityBaselineConfig(Base):
     constraints_resource: Optional[MonitoringConstraintsResource] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'model_quality_baseline_config_name':
-                return value
-        return None
 
 class ModelQualityAppSpecification(Base):
     """
@@ -7483,12 +5579,6 @@ class ModelQualityAppSpecification(Base):
     environment: Optional[Dict[str, str]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'model_quality_app_specification_name':
-                return value
-        return None
 
 class ModelQualityJobInput(Base):
     """
@@ -7506,12 +5596,6 @@ class ModelQualityJobInput(Base):
     batch_transform_input: Optional[BatchTransformInput] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'model_quality_job_input_name':
-                return value
-        return None
 
 class ScheduleConfig(Base):
     """
@@ -7529,12 +5613,6 @@ class ScheduleConfig(Base):
     data_analysis_end_time: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'schedule_config_name':
-                return value
-        return None
 
 class MonitoringBaselineConfig(Base):
     """
@@ -7552,12 +5630,6 @@ class MonitoringBaselineConfig(Base):
     statistics_resource: Optional[MonitoringStatisticsResource] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'monitoring_baseline_config_name':
-                return value
-        return None
 
 class MonitoringInput(Base):
     """
@@ -7573,12 +5645,6 @@ class MonitoringInput(Base):
     batch_transform_input: Optional[BatchTransformInput] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'monitoring_input_name':
-                return value
-        return None
 
 class MonitoringAppSpecification(Base):
     """
@@ -7600,12 +5666,6 @@ class MonitoringAppSpecification(Base):
     post_analytics_processor_source_uri: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'monitoring_app_specification_name':
-                return value
-        return None
 
 class NetworkConfig(Base):
     """
@@ -7623,12 +5683,6 @@ class NetworkConfig(Base):
     vpc_config: Optional[VpcConfig] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'network_config_name':
-                return value
-        return None
 
 class MonitoringJobDefinition(Base):
     """
@@ -7658,12 +5712,6 @@ class MonitoringJobDefinition(Base):
     network_config: Optional[NetworkConfig] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'monitoring_job_definition_name':
-                return value
-        return None
 
 class MonitoringScheduleConfig(Base):
     """
@@ -7683,12 +5731,6 @@ class MonitoringScheduleConfig(Base):
     monitoring_type: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'monitoring_schedule_config_name':
-                return value
-        return None
 
 class InstanceMetadataServiceConfiguration(Base):
     """
@@ -7702,12 +5744,6 @@ class InstanceMetadataServiceConfiguration(Base):
     minimum_instance_metadata_service_version: str
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'instance_metadata_service_configuration_name':
-                return value
-        return None
 
 class NotebookInstanceLifecycleHook(Base):
     """
@@ -7721,12 +5757,6 @@ class NotebookInstanceLifecycleHook(Base):
     content: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'notebook_instance_lifecycle_hook_name':
-                return value
-        return None
 
 class PipelineDefinitionS3Location(Base):
     """
@@ -7744,12 +5774,6 @@ class PipelineDefinitionS3Location(Base):
     version_id: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'pipeline_definition_s3_location_name':
-                return value
-        return None
 
 class ParallelismConfiguration(Base):
     """
@@ -7763,12 +5787,6 @@ class ParallelismConfiguration(Base):
     max_parallel_execution_steps: int
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'parallelism_configuration_name':
-                return value
-        return None
 
 class ProcessingS3Input(Base):
     """
@@ -7792,12 +5810,6 @@ class ProcessingS3Input(Base):
     s3_compression_type: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'processing_s3_input_name':
-                return value
-        return None
 
 class RedshiftDatasetDefinition(Base):
     """
@@ -7827,12 +5839,6 @@ class RedshiftDatasetDefinition(Base):
     output_compression: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'redshift_dataset_definition_name':
-                return value
-        return None
 
 class DatasetDefinition(Base):
     """
@@ -7854,12 +5860,6 @@ class DatasetDefinition(Base):
     input_mode: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'dataset_definition_name':
-                return value
-        return None
 
 class ProcessingInput(Base):
     """
@@ -7879,12 +5879,6 @@ class ProcessingInput(Base):
     dataset_definition: Optional[DatasetDefinition] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'processing_input_name':
-                return value
-        return None
 
 class ProcessingS3Output(Base):
     """
@@ -7902,12 +5896,6 @@ class ProcessingS3Output(Base):
     s3_upload_mode: str
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'processing_s3_output_name':
-                return value
-        return None
 
 class ProcessingFeatureStoreOutput(Base):
     """
@@ -7921,12 +5909,6 @@ class ProcessingFeatureStoreOutput(Base):
     feature_group_name: Union[str, object]
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'processing_feature_store_output_name':
-                return value
-        return None
 
 class ProcessingOutput(Base):
     """
@@ -7946,12 +5928,6 @@ class ProcessingOutput(Base):
     app_managed: Optional[bool] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'processing_output_name':
-                return value
-        return None
 
 class ProcessingOutputConfig(Base):
     """
@@ -7967,12 +5943,6 @@ class ProcessingOutputConfig(Base):
     kms_key_id: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'processing_output_config_name':
-                return value
-        return None
 
 class ProcessingClusterConfig(Base):
     """
@@ -7992,12 +5962,6 @@ class ProcessingClusterConfig(Base):
     volume_kms_key_id: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'processing_cluster_config_name':
-                return value
-        return None
 
 class ProcessingResources(Base):
     """
@@ -8011,12 +5975,6 @@ class ProcessingResources(Base):
     cluster_config: ProcessingClusterConfig
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'processing_resources_name':
-                return value
-        return None
 
 class ProcessingStoppingCondition(Base):
     """
@@ -8030,12 +5988,6 @@ class ProcessingStoppingCondition(Base):
     max_runtime_in_seconds: int
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'processing_stopping_condition_name':
-                return value
-        return None
 
 class ExperimentConfig(Base):
     """
@@ -8055,12 +6007,6 @@ class ExperimentConfig(Base):
     run_name: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'experiment_config_name':
-                return value
-        return None
 
 class ProvisioningParameter(Base):
     """
@@ -8076,12 +6022,6 @@ class ProvisioningParameter(Base):
     value: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'provisioning_parameter_name':
-                return value
-        return None
 
 class ServiceCatalogProvisioningDetails(Base):
     """
@@ -8101,12 +6041,6 @@ class ServiceCatalogProvisioningDetails(Base):
     provisioning_parameters: Optional[List[ProvisioningParameter]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'service_catalog_provisioning_details_name':
-                return value
-        return None
 
 class SpaceCodeEditorAppSettings(Base):
     """
@@ -8120,12 +6054,6 @@ class SpaceCodeEditorAppSettings(Base):
     default_resource_spec: Optional[ResourceSpec] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'space_code_editor_app_settings_name':
-                return value
-        return None
 
 class SpaceJupyterLabAppSettings(Base):
     """
@@ -8141,12 +6069,6 @@ class SpaceJupyterLabAppSettings(Base):
     code_repositories: Optional[List[CodeRepository]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'space_jupyter_lab_app_settings_name':
-                return value
-        return None
 
 class EbsStorageSettings(Base):
     """
@@ -8160,12 +6082,6 @@ class EbsStorageSettings(Base):
     ebs_volume_size_in_gb: int
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'ebs_storage_settings_name':
-                return value
-        return None
 
 class SpaceStorageSettings(Base):
     """
@@ -8179,12 +6095,6 @@ class SpaceStorageSettings(Base):
     ebs_storage_settings: Optional[EbsStorageSettings] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'space_storage_settings_name':
-                return value
-        return None
 
 class EFSFileSystem(Base):
     """
@@ -8198,12 +6108,6 @@ class EFSFileSystem(Base):
     file_system_id: str
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'e_f_s_file_system_name':
-                return value
-        return None
 
 class CustomFileSystem(Base):
     """
@@ -8217,12 +6121,6 @@ class CustomFileSystem(Base):
     e_f_s_file_system: Optional[EFSFileSystem] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'custom_file_system_name':
-                return value
-        return None
 
 class SpaceSettings(Base):
     """
@@ -8248,12 +6146,6 @@ class SpaceSettings(Base):
     custom_file_systems: Optional[List[CustomFileSystem]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'space_settings_name':
-                return value
-        return None
 
 class OwnershipSettings(Base):
     """
@@ -8267,12 +6159,6 @@ class OwnershipSettings(Base):
     owner_user_profile_name: str
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'ownership_settings_name':
-                return value
-        return None
 
 class SpaceSharingSettings(Base):
     """
@@ -8286,12 +6172,6 @@ class SpaceSharingSettings(Base):
     sharing_type: str
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'space_sharing_settings_name':
-                return value
-        return None
 
 class DebugHookConfig(Base):
     """
@@ -8311,12 +6191,6 @@ class DebugHookConfig(Base):
     collection_configurations: Optional[List[CollectionConfiguration]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'debug_hook_config_name':
-                return value
-        return None
 
 class DebugRuleConfiguration(Base):
     """
@@ -8342,12 +6216,6 @@ class DebugRuleConfiguration(Base):
     rule_parameters: Optional[Dict[str, str]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'debug_rule_configuration_name':
-                return value
-        return None
 
 class TensorBoardOutputConfig(Base):
     """
@@ -8363,12 +6231,6 @@ class TensorBoardOutputConfig(Base):
     local_path: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'tensor_board_output_config_name':
-                return value
-        return None
 
 class ProfilerConfig(Base):
     """
@@ -8388,12 +6250,6 @@ class ProfilerConfig(Base):
     disable_profiler: Optional[bool] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'profiler_config_name':
-                return value
-        return None
 
 class ProfilerRuleConfiguration(Base):
     """
@@ -8419,12 +6275,6 @@ class ProfilerRuleConfiguration(Base):
     rule_parameters: Optional[Dict[str, str]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'profiler_rule_configuration_name':
-                return value
-        return None
 
 class RemoteDebugConfig(Base):
     """
@@ -8438,12 +6288,6 @@ class RemoteDebugConfig(Base):
     enable_remote_debug: Optional[bool] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'remote_debug_config_name':
-                return value
-        return None
 
 class InfraCheckConfig(Base):
     """
@@ -8457,12 +6301,6 @@ class InfraCheckConfig(Base):
     enable_infra_check: Optional[bool] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'infra_check_config_name':
-                return value
-        return None
 
 class ModelClientConfig(Base):
     """
@@ -8478,12 +6316,6 @@ class ModelClientConfig(Base):
     invocations_max_retries: Optional[int] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'model_client_config_name':
-                return value
-        return None
 
 class DataProcessing(Base):
     """
@@ -8501,12 +6333,6 @@ class DataProcessing(Base):
     join_source: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'data_processing_name':
-                return value
-        return None
 
 class TrialComponentStatus(Base):
     """
@@ -8522,12 +6348,6 @@ class TrialComponentStatus(Base):
     message: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'trial_component_status_name':
-                return value
-        return None
 
 class TrialComponentParameterValue(Base):
     """
@@ -8543,12 +6363,6 @@ class TrialComponentParameterValue(Base):
     number_value: Optional[float] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'trial_component_parameter_value_name':
-                return value
-        return None
 
 class TrialComponentArtifact(Base):
     """
@@ -8564,12 +6378,6 @@ class TrialComponentArtifact(Base):
     media_type: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'trial_component_artifact_name':
-                return value
-        return None
 
 class OidcConfig(Base):
     """
@@ -8597,12 +6405,6 @@ class OidcConfig(Base):
     jwks_uri: str
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'oidc_config_name':
-                return value
-        return None
 
 class SourceIpConfig(Base):
     """
@@ -8616,12 +6418,6 @@ class SourceIpConfig(Base):
     cidrs: List[str]
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'source_ip_config_name':
-                return value
-        return None
 
 class WorkforceVpcConfigRequest(Base):
     """
@@ -8639,12 +6435,6 @@ class WorkforceVpcConfigRequest(Base):
     subnets: Optional[List[str]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'workforce_vpc_config_request_name':
-                return value
-        return None
 
 class OidcMemberDefinition(Base):
     """
@@ -8658,12 +6448,6 @@ class OidcMemberDefinition(Base):
     groups: Optional[List[str]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'oidc_member_definition_name':
-                return value
-        return None
 
 class MemberDefinition(Base):
     """
@@ -8679,12 +6463,6 @@ class MemberDefinition(Base):
     oidc_member_definition: Optional[OidcMemberDefinition] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'member_definition_name':
-                return value
-        return None
 
 class NotificationConfiguration(Base):
     """
@@ -8698,12 +6476,6 @@ class NotificationConfiguration(Base):
     notification_topic_arn: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'notification_configuration_name':
-                return value
-        return None
 
 class CustomizedMetricSpecification(Base):
     """
@@ -8721,12 +6493,6 @@ class CustomizedMetricSpecification(Base):
     statistic: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'customized_metric_specification_name':
-                return value
-        return None
 
 class DataCaptureConfigSummary(Base):
     """
@@ -8748,12 +6514,6 @@ class DataCaptureConfigSummary(Base):
     kms_key_id: str
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'data_capture_config_summary_name':
-                return value
-        return None
 
 class DebugRuleEvaluationStatus(Base):
     """
@@ -8775,12 +6535,6 @@ class DebugRuleEvaluationStatus(Base):
     last_modified_time: Optional[datetime.datetime] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'debug_rule_evaluation_status_name':
-                return value
-        return None
 
 class RetentionPolicy(Base):
     """
@@ -8794,12 +6548,6 @@ class RetentionPolicy(Base):
     home_efs_file_system: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'retention_policy_name':
-                return value
-        return None
 
 class DeployedImage(Base):
     """
@@ -8817,12 +6565,6 @@ class DeployedImage(Base):
     resolution_time: Optional[datetime.datetime] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'deployed_image_name':
-                return value
-        return None
 
 class RealTimeInferenceRecommendation(Base):
     """
@@ -8840,12 +6582,6 @@ class RealTimeInferenceRecommendation(Base):
     environment: Optional[Dict[str, str]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'real_time_inference_recommendation_name':
-                return value
-        return None
 
 class DeploymentRecommendation(Base):
     """
@@ -8861,12 +6597,6 @@ class DeploymentRecommendation(Base):
     real_time_inference_recommendations: Optional[List[RealTimeInferenceRecommendation]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'deployment_recommendation_name':
-                return value
-        return None
 
 class EdgeDeploymentStatus(Base):
     """
@@ -8890,12 +6620,6 @@ class EdgeDeploymentStatus(Base):
     edge_deployment_stage_start_time: Optional[datetime.datetime] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'edge_deployment_status_name':
-                return value
-        return None
 
 class DeploymentStageStatusSummary(Base):
     """
@@ -8915,12 +6639,6 @@ class DeploymentStageStatusSummary(Base):
     deployment_status: EdgeDeploymentStatus
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'deployment_stage_status_summary_name':
-                return value
-        return None
 
 class DerivedInformation(Base):
     """
@@ -8934,12 +6652,6 @@ class DerivedInformation(Base):
     derived_data_input_config: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'derived_information_name':
-                return value
-        return None
 
 class ResolvedAttributes(Base):
     """
@@ -8957,12 +6669,6 @@ class ResolvedAttributes(Base):
     completion_criteria: Optional[AutoMLJobCompletionCriteria] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'resolved_attributes_name':
-                return value
-        return None
 
 class ModelDeployResult(Base):
     """
@@ -8976,12 +6682,6 @@ class ModelDeployResult(Base):
     endpoint_name: Optional[Union[str, object]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'model_deploy_result_name':
-                return value
-        return None
 
 class ModelArtifacts(Base):
     """
@@ -8995,12 +6695,6 @@ class ModelArtifacts(Base):
     s3_model_artifacts: str
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'model_artifacts_name':
-                return value
-        return None
 
 class ModelDigests(Base):
     """
@@ -9014,12 +6708,6 @@ class ModelDigests(Base):
     artifact_digest: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'model_digests_name':
-                return value
-        return None
 
 class EdgeModel(Base):
     """
@@ -9039,12 +6727,6 @@ class EdgeModel(Base):
     latest_inference: Optional[datetime.datetime] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'edge_model_name':
-                return value
-        return None
 
 class EdgePresetDeploymentOutput(Base):
     """
@@ -9064,12 +6746,6 @@ class EdgePresetDeploymentOutput(Base):
     status_message: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'edge_preset_deployment_output_name':
-                return value
-        return None
 
 class ProductionVariantStatus(Base):
     """
@@ -9087,12 +6763,6 @@ class ProductionVariantStatus(Base):
     start_time: Optional[datetime.datetime] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'production_variant_status_name':
-                return value
-        return None
 
 class ProductionVariantSummary(Base):
     """
@@ -9126,12 +6796,6 @@ class ProductionVariantSummary(Base):
     routing_config: Optional[ProductionVariantRoutingConfig] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'production_variant_summary_name':
-                return value
-        return None
 
 class PendingProductionVariantSummary(Base):
     """
@@ -9169,12 +6833,6 @@ class PendingProductionVariantSummary(Base):
     routing_config: Optional[ProductionVariantRoutingConfig] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'pending_production_variant_summary_name':
-                return value
-        return None
 
 class PendingDeploymentSummary(Base):
     """
@@ -9194,12 +6852,6 @@ class PendingDeploymentSummary(Base):
     shadow_production_variants: Optional[List[PendingProductionVariantSummary]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'pending_deployment_summary_name':
-                return value
-        return None
 
 class ExperimentSource(Base):
     """
@@ -9215,12 +6867,6 @@ class ExperimentSource(Base):
     source_type: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'experiment_source_name':
-                return value
-        return None
 
 class ThroughputConfigDescription(Base):
     """
@@ -9238,12 +6884,6 @@ class ThroughputConfigDescription(Base):
     provisioned_write_capacity_units: Optional[int] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'throughput_config_description_name':
-                return value
-        return None
 
 class OfflineStoreStatus(Base):
     """
@@ -9259,12 +6899,6 @@ class OfflineStoreStatus(Base):
     blocked_reason: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'offline_store_status_name':
-                return value
-        return None
 
 class LastUpdateStatus(Base):
     """
@@ -9280,12 +6914,6 @@ class LastUpdateStatus(Base):
     failure_reason: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'last_update_status_name':
-                return value
-        return None
 
 class FeatureParameter(Base):
     """
@@ -9301,12 +6929,6 @@ class FeatureParameter(Base):
     value: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'feature_parameter_name':
-                return value
-        return None
 
 class HubContentDependency(Base):
     """
@@ -9322,12 +6944,6 @@ class HubContentDependency(Base):
     dependency_copy_path: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'hub_content_dependency_name':
-                return value
-        return None
 
 class UiTemplateInfo(Base):
     """
@@ -9343,12 +6959,6 @@ class UiTemplateInfo(Base):
     content_sha256: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'ui_template_info_name':
-                return value
-        return None
 
 class TrainingJobStatusCounters(Base):
     """
@@ -9370,12 +6980,6 @@ class TrainingJobStatusCounters(Base):
     stopped: Optional[int] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'training_job_status_counters_name':
-                return value
-        return None
 
 class ObjectiveStatusCounters(Base):
     """
@@ -9393,12 +6997,6 @@ class ObjectiveStatusCounters(Base):
     failed: Optional[int] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'objective_status_counters_name':
-                return value
-        return None
 
 class FinalHyperParameterTuningJobObjectiveMetric(Base):
     """
@@ -9416,12 +7014,6 @@ class FinalHyperParameterTuningJobObjectiveMetric(Base):
     type: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'final_hyper_parameter_tuning_job_objective_metric_name':
-                return value
-        return None
 
 class HyperParameterTrainingJobSummary(Base):
     """
@@ -9457,12 +7049,6 @@ class HyperParameterTrainingJobSummary(Base):
     objective_status: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'hyper_parameter_training_job_summary_name':
-                return value
-        return None
 
 class HyperParameterTuningJobCompletionDetails(Base):
     """
@@ -9478,12 +7064,6 @@ class HyperParameterTuningJobCompletionDetails(Base):
     convergence_detected_time: Optional[datetime.datetime] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'hyper_parameter_tuning_job_completion_details_name':
-                return value
-        return None
 
 class HyperParameterTuningJobConsumedResources(Base):
     """
@@ -9497,12 +7077,6 @@ class HyperParameterTuningJobConsumedResources(Base):
     runtime_in_seconds: Optional[int] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'hyper_parameter_tuning_job_consumed_resources_name':
-                return value
-        return None
 
 class InferenceComponentContainerSpecificationSummary(Base):
     """
@@ -9520,12 +7094,6 @@ class InferenceComponentContainerSpecificationSummary(Base):
     environment: Optional[Dict[str, str]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'inference_component_container_specification_summary_name':
-                return value
-        return None
 
 class InferenceComponentSpecificationSummary(Base):
     """
@@ -9545,12 +7113,6 @@ class InferenceComponentSpecificationSummary(Base):
     compute_resource_requirements: Optional[InferenceComponentComputeResourceRequirements] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'inference_component_specification_summary_name':
-                return value
-        return None
 
 class InferenceComponentRuntimeConfigSummary(Base):
     """
@@ -9566,12 +7128,6 @@ class InferenceComponentRuntimeConfigSummary(Base):
     current_copy_count: Optional[int] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'inference_component_runtime_config_summary_name':
-                return value
-        return None
 
 class EndpointMetadata(Base):
     """
@@ -9591,12 +7147,6 @@ class EndpointMetadata(Base):
     failure_reason: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'endpoint_metadata_name':
-                return value
-        return None
 
 class ModelVariantConfigSummary(Base):
     """
@@ -9616,12 +7166,6 @@ class ModelVariantConfigSummary(Base):
     status: str
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'model_variant_config_summary_name':
-                return value
-        return None
 
 class RecommendationMetrics(Base):
     """
@@ -9647,12 +7191,6 @@ class RecommendationMetrics(Base):
     model_setup_time: Optional[int] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'recommendation_metrics_name':
-                return value
-        return None
 
 class EndpointOutputConfiguration(Base):
     """
@@ -9674,12 +7212,6 @@ class EndpointOutputConfiguration(Base):
     serverless_config: Optional[ProductionVariantServerlessConfig] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'endpoint_output_configuration_name':
-                return value
-        return None
 
 class EnvironmentParameter(Base):
     """
@@ -9697,12 +7229,6 @@ class EnvironmentParameter(Base):
     value: str
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'environment_parameter_name':
-                return value
-        return None
 
 class ModelConfiguration(Base):
     """
@@ -9720,12 +7246,6 @@ class ModelConfiguration(Base):
     compilation_job_name: Optional[Union[str, object]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'model_configuration_name':
-                return value
-        return None
 
 class InferenceRecommendation(Base):
     """
@@ -9749,12 +7269,6 @@ class InferenceRecommendation(Base):
     invocation_start_time: Optional[datetime.datetime] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'inference_recommendation_name':
-                return value
-        return None
 
 class InferenceMetrics(Base):
     """
@@ -9770,12 +7284,6 @@ class InferenceMetrics(Base):
     model_latency: int
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'inference_metrics_name':
-                return value
-        return None
 
 class EndpointPerformance(Base):
     """
@@ -9791,12 +7299,6 @@ class EndpointPerformance(Base):
     endpoint_info: EndpointInfo
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'endpoint_performance_name':
-                return value
-        return None
 
 class LabelCounters(Base):
     """
@@ -9818,12 +7320,6 @@ class LabelCounters(Base):
     unlabeled: Optional[int] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'label_counters_name':
-                return value
-        return None
 
 class LabelingJobOutput(Base):
     """
@@ -9839,12 +7335,6 @@ class LabelingJobOutput(Base):
     final_active_learning_model_arn: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'labeling_job_output_name':
-                return value
-        return None
 
 class ModelCardExportArtifacts(Base):
     """
@@ -9858,12 +7348,6 @@ class ModelCardExportArtifacts(Base):
     s3_export_artifacts: str
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'model_card_export_artifacts_name':
-                return value
-        return None
 
 class ModelPackageStatusItem(Base):
     """
@@ -9881,12 +7365,6 @@ class ModelPackageStatusItem(Base):
     failure_reason: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'model_package_status_item_name':
-                return value
-        return None
 
 class ModelPackageStatusDetails(Base):
     """
@@ -9902,12 +7380,6 @@ class ModelPackageStatusDetails(Base):
     image_scan_statuses: Optional[List[ModelPackageStatusItem]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'model_package_status_details_name':
-                return value
-        return None
 
 class MonitoringExecutionSummary(Base):
     """
@@ -9939,12 +7411,6 @@ class MonitoringExecutionSummary(Base):
     monitoring_type: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'monitoring_execution_summary_name':
-                return value
-        return None
 
 class PipelineExperimentConfig(Base):
     """
@@ -9960,12 +7426,6 @@ class PipelineExperimentConfig(Base):
     trial_name: Optional[Union[str, object]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'pipeline_experiment_config_name':
-                return value
-        return None
 
 class SelectedStep(Base):
     """
@@ -9979,12 +7439,6 @@ class SelectedStep(Base):
     step_name: str
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'selected_step_name':
-                return value
-        return None
 
 class SelectiveExecutionConfig(Base):
     """
@@ -10000,12 +7454,6 @@ class SelectiveExecutionConfig(Base):
     source_pipeline_execution_arn: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'selective_execution_config_name':
-                return value
-        return None
 
 class ServiceCatalogProvisionedProductDetails(Base):
     """
@@ -10021,12 +7469,6 @@ class ServiceCatalogProvisionedProductDetails(Base):
     provisioned_product_status_message: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'service_catalog_provisioned_product_details_name':
-                return value
-        return None
 
 class SubscribedWorkteam(Base):
     """
@@ -10048,12 +7490,6 @@ class SubscribedWorkteam(Base):
     listing_id: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'subscribed_workteam_name':
-                return value
-        return None
 
 class WarmPoolStatus(Base):
     """
@@ -10071,12 +7507,6 @@ class WarmPoolStatus(Base):
     reused_by_job: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'warm_pool_status_name':
-                return value
-        return None
 
 class SecondaryStatusTransition(Base):
     """
@@ -10096,12 +7526,6 @@ class SecondaryStatusTransition(Base):
     status_message: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'secondary_status_transition_name':
-                return value
-        return None
 
 class MetricData(Base):
     """
@@ -10119,12 +7543,6 @@ class MetricData(Base):
     timestamp: Optional[datetime.datetime] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'metric_data_name':
-                return value
-        return None
 
 class ProfilerRuleEvaluationStatus(Base):
     """
@@ -10146,12 +7564,6 @@ class ProfilerRuleEvaluationStatus(Base):
     last_modified_time: Optional[datetime.datetime] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'profiler_rule_evaluation_status_name':
-                return value
-        return None
 
 class TrialComponentSource(Base):
     """
@@ -10167,12 +7579,6 @@ class TrialComponentSource(Base):
     source_type: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'trial_component_source_name':
-                return value
-        return None
 
 class TrialComponentMetricSummary(Base):
     """
@@ -10202,12 +7608,6 @@ class TrialComponentMetricSummary(Base):
     std_dev: Optional[float] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'trial_component_metric_summary_name':
-                return value
-        return None
 
 class TrialSource(Base):
     """
@@ -10223,12 +7623,6 @@ class TrialSource(Base):
     source_type: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'trial_source_name':
-                return value
-        return None
 
 class OidcConfigForResponse(Base):
     """
@@ -10254,12 +7648,6 @@ class OidcConfigForResponse(Base):
     jwks_uri: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'oidc_config_for_response_name':
-                return value
-        return None
 
 class WorkforceVpcConfigResponse(Base):
     """
@@ -10279,12 +7667,6 @@ class WorkforceVpcConfigResponse(Base):
     vpc_endpoint_id: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'workforce_vpc_config_response_name':
-                return value
-        return None
 
 class Workforce(Base):
     """
@@ -10318,12 +7700,6 @@ class Workforce(Base):
     failure_reason: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'workforce_name':
-                return value
-        return None
 
 class Workteam(Base):
     """
@@ -10355,12 +7731,6 @@ class Workteam(Base):
     notification_configuration: Optional[NotificationConfiguration] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'workteam_name':
-                return value
-        return None
 
 class ProductionVariantServerlessUpdateConfig(Base):
     """
@@ -10376,12 +7746,6 @@ class ProductionVariantServerlessUpdateConfig(Base):
     provisioned_concurrency: Optional[int] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'production_variant_serverless_update_config_name':
-                return value
-        return None
 
 class DesiredWeightAndCapacity(Base):
     """
@@ -10401,12 +7765,6 @@ class DesiredWeightAndCapacity(Base):
     serverless_update_config: Optional[ProductionVariantServerlessUpdateConfig] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'desired_weight_and_capacity_name':
-                return value
-        return None
 
 class Device(Base):
     """
@@ -10424,12 +7782,6 @@ class Device(Base):
     iot_thing_name: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'device_name':
-                return value
-        return None
 
 class DeviceDeploymentSummary(Base):
     """
@@ -10463,12 +7815,6 @@ class DeviceDeploymentSummary(Base):
     deployment_start_time: Optional[datetime.datetime] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'device_deployment_summary_name':
-                return value
-        return None
 
 class DeviceFleetSummary(Base):
     """
@@ -10488,12 +7834,6 @@ class DeviceFleetSummary(Base):
     last_modified_time: Optional[datetime.datetime] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'device_fleet_summary_name':
-                return value
-        return None
 
 class DeviceStats(Base):
     """
@@ -10509,12 +7849,6 @@ class DeviceStats(Base):
     registered_device_count: int
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'device_stats_name':
-                return value
-        return None
 
 class EdgeModelSummary(Base):
     """
@@ -10530,12 +7864,6 @@ class EdgeModelSummary(Base):
     model_version: str
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'edge_model_summary_name':
-                return value
-        return None
 
 class DeviceSummary(Base):
     """
@@ -10565,12 +7893,6 @@ class DeviceSummary(Base):
     agent_version: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'device_summary_name':
-                return value
-        return None
 
 class DomainDetails(Base):
     """
@@ -10596,12 +7918,6 @@ class DomainDetails(Base):
     url: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'domain_details_name':
-                return value
-        return None
 
 class RStudioServerProDomainSettingsForUpdate(Base):
     """
@@ -10621,12 +7937,6 @@ class RStudioServerProDomainSettingsForUpdate(Base):
     r_studio_package_manager_url: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'r_studio_server_pro_domain_settings_for_update_name':
-                return value
-        return None
 
 class DomainSettingsForUpdate(Base):
     """
@@ -10646,12 +7956,6 @@ class DomainSettingsForUpdate(Base):
     docker_settings: Optional[DockerSettings] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'domain_settings_for_update_name':
-                return value
-        return None
 
 class PredefinedMetricSpecification(Base):
     """
@@ -10665,12 +7969,6 @@ class PredefinedMetricSpecification(Base):
     predefined_metric_type: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'predefined_metric_specification_name':
-                return value
-        return None
 
 class MetricSpecification(Base):
     """
@@ -10686,12 +7984,6 @@ class MetricSpecification(Base):
     customized: Optional[CustomizedMetricSpecification] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'metric_specification_name':
-                return value
-        return None
 
 class TargetTrackingScalingPolicyConfiguration(Base):
     """
@@ -10707,12 +7999,6 @@ class TargetTrackingScalingPolicyConfiguration(Base):
     target_value: Optional[float] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'target_tracking_scaling_policy_configuration_name':
-                return value
-        return None
 
 class ScalingPolicy(Base):
     """
@@ -10726,12 +8012,6 @@ class ScalingPolicy(Base):
     target_tracking: Optional[TargetTrackingScalingPolicyConfiguration] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'scaling_policy_name':
-                return value
-        return None
 
 class DynamicScalingConfiguration(Base):
     """
@@ -10753,12 +8033,6 @@ class DynamicScalingConfiguration(Base):
     scaling_policies: Optional[List[ScalingPolicy]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'dynamic_scaling_configuration_name':
-                return value
-        return None
 
 class EMRStepMetadata(Base):
     """
@@ -10778,12 +8052,6 @@ class EMRStepMetadata(Base):
     log_file_path: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'e_m_r_step_metadata_name':
-                return value
-        return None
 
 class Edge(Base):
     """
@@ -10801,12 +8069,6 @@ class Edge(Base):
     association_type: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'edge_name':
-                return value
-        return None
 
 class EdgeDeploymentPlanSummary(Base):
     """
@@ -10834,12 +8096,6 @@ class EdgeDeploymentPlanSummary(Base):
     last_modified_time: Optional[datetime.datetime] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'edge_deployment_plan_summary_name':
-                return value
-        return None
 
 class EdgeModelStat(Base):
     """
@@ -10863,12 +8119,6 @@ class EdgeModelStat(Base):
     sampling_device_count: int
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'edge_model_stat_name':
-                return value
-        return None
 
 class EdgePackagingJobSummary(Base):
     """
@@ -10896,12 +8146,6 @@ class EdgePackagingJobSummary(Base):
     last_modified_time: Optional[datetime.datetime] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'edge_packaging_job_summary_name':
-                return value
-        return None
 
 class MonitoringSchedule(Base):
     """
@@ -10935,12 +8179,6 @@ class MonitoringSchedule(Base):
     tags: Optional[List[Tag]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'monitoring_schedule_name':
-                return value
-        return None
 
 class Endpoint(Base):
     """
@@ -10976,12 +8214,6 @@ class Endpoint(Base):
     shadow_production_variants: Optional[List[ProductionVariantSummary]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'endpoint_name':
-                return value
-        return None
 
 class EndpointConfigSummary(Base):
     """
@@ -10999,12 +8231,6 @@ class EndpointConfigSummary(Base):
     creation_time: datetime.datetime
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'endpoint_config_summary_name':
-                return value
-        return None
 
 class EndpointSummary(Base):
     """
@@ -11026,12 +8252,6 @@ class EndpointSummary(Base):
     endpoint_status: str
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'endpoint_summary_name':
-                return value
-        return None
 
 class Experiment(Base):
     """
@@ -11063,12 +8283,6 @@ class Experiment(Base):
     tags: Optional[List[Tag]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'experiment_name':
-                return value
-        return None
 
 class ExperimentSummary(Base):
     """
@@ -11092,12 +8306,6 @@ class ExperimentSummary(Base):
     last_modified_time: Optional[datetime.datetime] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'experiment_summary_name':
-                return value
-        return None
 
 class FailStepMetadata(Base):
     """
@@ -11111,12 +8319,6 @@ class FailStepMetadata(Base):
     error_message: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'fail_step_metadata_name':
-                return value
-        return None
 
 class FeatureGroup(Base):
     """
@@ -11160,12 +8362,6 @@ class FeatureGroup(Base):
     tags: Optional[List[Tag]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'feature_group_name':
-                return value
-        return None
 
 class FeatureGroupSummary(Base):
     """
@@ -11187,12 +8383,6 @@ class FeatureGroupSummary(Base):
     offline_store_status: Optional[OfflineStoreStatus] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'feature_group_summary_name':
-                return value
-        return None
 
 class FeatureMetadata(Base):
     """
@@ -11220,12 +8410,6 @@ class FeatureMetadata(Base):
     parameters: Optional[List[FeatureParameter]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'feature_metadata_name':
-                return value
-        return None
 
 class Filter(Base):
     """
@@ -11243,12 +8427,6 @@ class Filter(Base):
     value: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'filter_name':
-                return value
-        return None
 
 class FlowDefinitionSummary(Base):
     """
@@ -11270,12 +8448,6 @@ class FlowDefinitionSummary(Base):
     failure_reason: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'flow_definition_summary_name':
-                return value
-        return None
 
 class ScalingPolicyObjective(Base):
     """
@@ -11291,12 +8463,6 @@ class ScalingPolicyObjective(Base):
     max_invocations_per_minute: Optional[int] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'scaling_policy_objective_name':
-                return value
-        return None
 
 class ScalingPolicyMetric(Base):
     """
@@ -11312,12 +8478,6 @@ class ScalingPolicyMetric(Base):
     model_latency: Optional[int] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'scaling_policy_metric_name':
-                return value
-        return None
 
 class PropertyNameQuery(Base):
     """
@@ -11331,12 +8491,6 @@ class PropertyNameQuery(Base):
     property_name_hint: str
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'property_name_query_name':
-                return value
-        return None
 
 class SuggestionQuery(Base):
     """
@@ -11350,12 +8504,6 @@ class SuggestionQuery(Base):
     property_name_query: Optional[PropertyNameQuery] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'suggestion_query_name':
-                return value
-        return None
 
 class PropertyNameSuggestion(Base):
     """
@@ -11369,12 +8517,6 @@ class PropertyNameSuggestion(Base):
     property_name: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'property_name_suggestion_name':
-                return value
-        return None
 
 class GitConfigForUpdate(Base):
     """
@@ -11388,12 +8530,6 @@ class GitConfigForUpdate(Base):
     secret_arn: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'git_config_for_update_name':
-                return value
-        return None
 
 class HubContentInfo(Base):
     """
@@ -11425,12 +8561,6 @@ class HubContentInfo(Base):
     hub_content_search_keywords: Optional[List[str]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'hub_content_info_name':
-                return value
-        return None
 
 class HubInfo(Base):
     """
@@ -11458,12 +8588,6 @@ class HubInfo(Base):
     hub_search_keywords: Optional[List[str]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'hub_info_name':
-                return value
-        return None
 
 class HumanTaskUiSummary(Base):
     """
@@ -11481,12 +8605,6 @@ class HumanTaskUiSummary(Base):
     creation_time: datetime.datetime
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'human_task_ui_summary_name':
-                return value
-        return None
 
 class HyperParameterTuningJobSearchEntity(Base):
     """
@@ -11534,12 +8652,6 @@ class HyperParameterTuningJobSearchEntity(Base):
     tags: Optional[List[Tag]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'hyper_parameter_tuning_job_search_entity_name':
-                return value
-        return None
 
 class HyperParameterTuningJobSummary(Base):
     """
@@ -11571,12 +8683,6 @@ class HyperParameterTuningJobSummary(Base):
     resource_limits: Optional[ResourceLimits] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'hyper_parameter_tuning_job_summary_name':
-                return value
-        return None
 
 class Image(Base):
     """
@@ -11604,12 +8710,6 @@ class Image(Base):
     failure_reason: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'image_name':
-                return value
-        return None
 
 class ImageVersion(Base):
     """
@@ -11635,12 +8735,6 @@ class ImageVersion(Base):
     failure_reason: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'image_version_name':
-                return value
-        return None
 
 class InferenceComponentSummary(Base):
     """
@@ -11668,12 +8762,6 @@ class InferenceComponentSummary(Base):
     inference_component_status: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'inference_component_summary_name':
-                return value
-        return None
 
 class InferenceExperimentSummary(Base):
     """
@@ -11705,12 +8793,6 @@ class InferenceExperimentSummary(Base):
     role_arn: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'inference_experiment_summary_name':
-                return value
-        return None
 
 class InferenceRecommendationsJob(Base):
     """
@@ -11748,12 +8830,6 @@ class InferenceRecommendationsJob(Base):
     model_package_version_arn: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'inference_recommendations_job_name':
-                return value
-        return None
 
 class RecommendationJobInferenceBenchmark(Base):
     """
@@ -11779,12 +8855,6 @@ class RecommendationJobInferenceBenchmark(Base):
     invocation_start_time: Optional[datetime.datetime] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'recommendation_job_inference_benchmark_name':
-                return value
-        return None
 
 class InferenceRecommendationsJobStep(Base):
     """
@@ -11804,12 +8874,6 @@ class InferenceRecommendationsJobStep(Base):
     inference_benchmark: Optional[RecommendationJobInferenceBenchmark] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'inference_recommendations_job_step_name':
-                return value
-        return None
 
 class LabelCountersForWorkteam(Base):
     """
@@ -11827,12 +8891,6 @@ class LabelCountersForWorkteam(Base):
     total: Optional[int] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'label_counters_for_workteam_name':
-                return value
-        return None
 
 class LabelingJobForWorkteamSummary(Base):
     """
@@ -11856,12 +8914,6 @@ class LabelingJobForWorkteamSummary(Base):
     number_of_human_workers_per_data_object: Optional[int] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'labeling_job_for_workteam_summary_name':
-                return value
-        return None
 
 class LabelingJobSummary(Base):
     """
@@ -11897,12 +8949,6 @@ class LabelingJobSummary(Base):
     input_config: Optional[LabelingJobInputConfig] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'labeling_job_summary_name':
-                return value
-        return None
 
 class LambdaStepMetadata(Base):
     """
@@ -11918,12 +8964,6 @@ class LambdaStepMetadata(Base):
     output_parameters: Optional[List[OutputParameter]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'lambda_step_metadata_name':
-                return value
-        return None
 
 class LineageGroupSummary(Base):
     """
@@ -11945,12 +8985,6 @@ class LineageGroupSummary(Base):
     last_modified_time: Optional[datetime.datetime] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'lineage_group_summary_name':
-                return value
-        return None
 
 class MonitoringJobDefinitionSummary(Base):
     """
@@ -11970,12 +9004,6 @@ class MonitoringJobDefinitionSummary(Base):
     endpoint_name: Union[str, object]
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'monitoring_job_definition_summary_name':
-                return value
-        return None
 
 class ModelCardExportJobSummary(Base):
     """
@@ -12001,12 +9029,6 @@ class ModelCardExportJobSummary(Base):
     last_modified_at: datetime.datetime
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'model_card_export_job_summary_name':
-                return value
-        return None
 
 class ModelCardVersionSummary(Base):
     """
@@ -12030,12 +9052,6 @@ class ModelCardVersionSummary(Base):
     last_modified_time: Optional[datetime.datetime] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'model_card_version_summary_name':
-                return value
-        return None
 
 class ModelCardSummary(Base):
     """
@@ -12057,12 +9073,6 @@ class ModelCardSummary(Base):
     last_modified_time: Optional[datetime.datetime] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'model_card_summary_name':
-                return value
-        return None
 
 class ModelMetadataFilter(Base):
     """
@@ -12078,12 +9088,6 @@ class ModelMetadataFilter(Base):
     value: str
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'model_metadata_filter_name':
-                return value
-        return None
 
 class ModelMetadataSearchExpression(Base):
     """
@@ -12097,12 +9101,6 @@ class ModelMetadataSearchExpression(Base):
     filters: Optional[List[ModelMetadataFilter]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'model_metadata_search_expression_name':
-                return value
-        return None
 
 class ModelMetadataSummary(Base):
     """
@@ -12124,12 +9122,6 @@ class ModelMetadataSummary(Base):
     framework_version: str
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'model_metadata_summary_name':
-                return value
-        return None
 
 class ModelPackageGroupSummary(Base):
     """
@@ -12151,12 +9143,6 @@ class ModelPackageGroupSummary(Base):
     model_package_group_description: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'model_package_group_summary_name':
-                return value
-        return None
 
 class ModelPackageSummary(Base):
     """
@@ -12184,12 +9170,6 @@ class ModelPackageSummary(Base):
     model_approval_status: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'model_package_summary_name':
-                return value
-        return None
 
 class ModelSummary(Base):
     """
@@ -12207,12 +9187,6 @@ class ModelSummary(Base):
     creation_time: datetime.datetime
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'model_summary_name':
-                return value
-        return None
 
 class MonitoringAlertHistorySummary(Base):
     """
@@ -12232,12 +9206,6 @@ class MonitoringAlertHistorySummary(Base):
     alert_status: str
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'monitoring_alert_history_summary_name':
-                return value
-        return None
 
 class ModelDashboardIndicatorAction(Base):
     """
@@ -12251,12 +9219,6 @@ class ModelDashboardIndicatorAction(Base):
     enabled: Optional[bool] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'model_dashboard_indicator_action_name':
-                return value
-        return None
 
 class MonitoringAlertActions(Base):
     """
@@ -12270,12 +9232,6 @@ class MonitoringAlertActions(Base):
     model_dashboard_indicator: Optional[ModelDashboardIndicatorAction] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'monitoring_alert_actions_name':
-                return value
-        return None
 
 class MonitoringAlertSummary(Base):
     """
@@ -12301,12 +9257,6 @@ class MonitoringAlertSummary(Base):
     actions: MonitoringAlertActions
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'monitoring_alert_summary_name':
-                return value
-        return None
 
 class MonitoringScheduleSummary(Base):
     """
@@ -12334,12 +9284,6 @@ class MonitoringScheduleSummary(Base):
     monitoring_type: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'monitoring_schedule_summary_name':
-                return value
-        return None
 
 class NotebookInstanceLifecycleConfigSummary(Base):
     """
@@ -12359,12 +9303,6 @@ class NotebookInstanceLifecycleConfigSummary(Base):
     last_modified_time: Optional[datetime.datetime] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'notebook_instance_lifecycle_config_summary_name':
-                return value
-        return None
 
 class NotebookInstanceSummary(Base):
     """
@@ -12396,12 +9334,6 @@ class NotebookInstanceSummary(Base):
     additional_code_repositories: Optional[List[str]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'notebook_instance_summary_name':
-                return value
-        return None
 
 class TrainingJobStepMetadata(Base):
     """
@@ -12415,12 +9347,6 @@ class TrainingJobStepMetadata(Base):
     arn: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'training_job_step_metadata_name':
-                return value
-        return None
 
 class ProcessingJobStepMetadata(Base):
     """
@@ -12434,12 +9360,6 @@ class ProcessingJobStepMetadata(Base):
     arn: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'processing_job_step_metadata_name':
-                return value
-        return None
 
 class TransformJobStepMetadata(Base):
     """
@@ -12453,12 +9373,6 @@ class TransformJobStepMetadata(Base):
     arn: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'transform_job_step_metadata_name':
-                return value
-        return None
 
 class TuningJobStepMetaData(Base):
     """
@@ -12472,12 +9386,6 @@ class TuningJobStepMetaData(Base):
     arn: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'tuning_job_step_meta_data_name':
-                return value
-        return None
 
 class ModelStepMetadata(Base):
     """
@@ -12491,12 +9399,6 @@ class ModelStepMetadata(Base):
     arn: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'model_step_metadata_name':
-                return value
-        return None
 
 class RegisterModelStepMetadata(Base):
     """
@@ -12510,12 +9412,6 @@ class RegisterModelStepMetadata(Base):
     arn: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'register_model_step_metadata_name':
-                return value
-        return None
 
 class QualityCheckStepMetadata(Base):
     """
@@ -12547,12 +9443,6 @@ class QualityCheckStepMetadata(Base):
     register_new_baseline: Optional[bool] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'quality_check_step_metadata_name':
-                return value
-        return None
 
 class PipelineExecutionStepMetadata(Base):
     """
@@ -12592,12 +9482,6 @@ class PipelineExecutionStepMetadata(Base):
     auto_m_l_job: Optional[AutoMLJobStepMetadata] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'pipeline_execution_step_metadata_name':
-                return value
-        return None
 
 class SelectiveExecutionResult(Base):
     """
@@ -12611,12 +9495,6 @@ class SelectiveExecutionResult(Base):
     source_pipeline_execution_arn: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'selective_execution_result_name':
-                return value
-        return None
 
 class PipelineExecutionStep(Base):
     """
@@ -12650,12 +9528,6 @@ class PipelineExecutionStep(Base):
     selective_execution_result: Optional[SelectiveExecutionResult] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'pipeline_execution_step_name':
-                return value
-        return None
 
 class PipelineExecutionSummary(Base):
     """
@@ -12679,12 +9551,6 @@ class PipelineExecutionSummary(Base):
     pipeline_execution_failure_reason: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'pipeline_execution_summary_name':
-                return value
-        return None
 
 class Parameter(Base):
     """
@@ -12700,12 +9566,6 @@ class Parameter(Base):
     value: str
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'parameter_name':
-                return value
-        return None
 
 class PipelineSummary(Base):
     """
@@ -12733,12 +9593,6 @@ class PipelineSummary(Base):
     last_execution_time: Optional[datetime.datetime] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'pipeline_summary_name':
-                return value
-        return None
 
 class ProcessingJobSummary(Base):
     """
@@ -12766,12 +9620,6 @@ class ProcessingJobSummary(Base):
     exit_message: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'processing_job_summary_name':
-                return value
-        return None
 
 class ProjectSummary(Base):
     """
@@ -12795,12 +9643,6 @@ class ProjectSummary(Base):
     project_description: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'project_summary_name':
-                return value
-        return None
 
 class ResourceCatalog(Base):
     """
@@ -12820,12 +9662,6 @@ class ResourceCatalog(Base):
     creation_time: datetime.datetime
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'resource_catalog_name':
-                return value
-        return None
 
 class SpaceSettingsSummary(Base):
     """
@@ -12841,12 +9677,6 @@ class SpaceSettingsSummary(Base):
     space_storage_settings: Optional[SpaceStorageSettings] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'space_settings_summary_name':
-                return value
-        return None
 
 class SpaceSharingSettingsSummary(Base):
     """
@@ -12860,12 +9690,6 @@ class SpaceSharingSettingsSummary(Base):
     sharing_type: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'space_sharing_settings_summary_name':
-                return value
-        return None
 
 class OwnershipSettingsSummary(Base):
     """
@@ -12879,12 +9703,6 @@ class OwnershipSettingsSummary(Base):
     owner_user_profile_name: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'ownership_settings_summary_name':
-                return value
-        return None
 
 class SpaceDetails(Base):
     """
@@ -12914,12 +9732,6 @@ class SpaceDetails(Base):
     space_display_name: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'space_details_name':
-                return value
-        return None
 
 class StudioLifecycleConfigDetails(Base):
     """
@@ -12941,12 +9753,6 @@ class StudioLifecycleConfigDetails(Base):
     studio_lifecycle_config_app_type: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'studio_lifecycle_config_details_name':
-                return value
-        return None
 
 class TrainingJobSummary(Base):
     """
@@ -12972,12 +9778,6 @@ class TrainingJobSummary(Base):
     warm_pool_status: Optional[WarmPoolStatus] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'training_job_summary_name':
-                return value
-        return None
 
 class TransformJobSummary(Base):
     """
@@ -13003,12 +9803,6 @@ class TransformJobSummary(Base):
     failure_reason: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'transform_job_summary_name':
-                return value
-        return None
 
 class TrialComponentSummary(Base):
     """
@@ -13042,12 +9836,6 @@ class TrialComponentSummary(Base):
     last_modified_by: Optional[UserContext] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'trial_component_summary_name':
-                return value
-        return None
 
 class TrialSummary(Base):
     """
@@ -13071,12 +9859,6 @@ class TrialSummary(Base):
     last_modified_time: Optional[datetime.datetime] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'trial_summary_name':
-                return value
-        return None
 
 class UserProfileDetails(Base):
     """
@@ -13098,12 +9880,6 @@ class UserProfileDetails(Base):
     last_modified_time: Optional[datetime.datetime] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'user_profile_details_name':
-                return value
-        return None
 
 class Model(Base):
     """
@@ -13137,12 +9913,6 @@ class Model(Base):
     deployment_recommendation: Optional[DeploymentRecommendation] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'model_name':
-                return value
-        return None
 
 class ModelCard(Base):
     """
@@ -13182,12 +9952,6 @@ class ModelCard(Base):
     model_package_group_name: Optional[Union[str, object]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'model_card_name':
-                return value
-        return None
 
 class ModelDashboardEndpoint(Base):
     """
@@ -13209,12 +9973,6 @@ class ModelDashboardEndpoint(Base):
     endpoint_status: str
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'model_dashboard_endpoint_name':
-                return value
-        return None
 
 class TransformJob(Base):
     """
@@ -13270,12 +10028,6 @@ class TransformJob(Base):
     tags: Optional[List[Tag]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'transform_job_name':
-                return value
-        return None
 
 class ModelDashboardMonitoringSchedule(Base):
     """
@@ -13311,12 +10063,6 @@ class ModelDashboardMonitoringSchedule(Base):
     batch_transform_input: Optional[BatchTransformInput] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'model_dashboard_monitoring_schedule_name':
-                return value
-        return None
 
 class ModelDashboardModelCard(Base):
     """
@@ -13352,12 +10098,6 @@ class ModelDashboardModelCard(Base):
     risk_rating: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'model_dashboard_model_card_name':
-                return value
-        return None
 
 class ModelDashboardModel(Base):
     """
@@ -13379,12 +10119,6 @@ class ModelDashboardModel(Base):
     model_card: Optional[ModelDashboardModelCard] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'model_dashboard_model_name':
-                return value
-        return None
 
 class ModelPackage(Base):
     """
@@ -13452,12 +10186,6 @@ class ModelPackage(Base):
     skip_model_validation: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'model_package_name':
-                return value
-        return None
 
 class ModelPackageGroup(Base):
     """
@@ -13483,12 +10211,6 @@ class ModelPackageGroup(Base):
     tags: Optional[List[Tag]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'model_package_group_name':
-                return value
-        return None
 
 class NestedFilters(Base):
     """
@@ -13504,12 +10226,6 @@ class NestedFilters(Base):
     filters: List[Filter]
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'nested_filters_name':
-                return value
-        return None
 
 class OnlineStoreConfigUpdate(Base):
     """
@@ -13523,12 +10239,6 @@ class OnlineStoreConfigUpdate(Base):
     ttl_duration: Optional[TtlDuration] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'online_store_config_update_name':
-                return value
-        return None
 
 class Parent(Base):
     """
@@ -13544,12 +10254,6 @@ class Parent(Base):
     experiment_name: Optional[Union[str, object]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'parent_name':
-                return value
-        return None
 
 class Pipeline(Base):
     """
@@ -13587,12 +10291,6 @@ class Pipeline(Base):
     tags: Optional[List[Tag]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'pipeline_name':
-                return value
-        return None
 
 class PipelineExecution(Base):
     """
@@ -13632,12 +10330,6 @@ class PipelineExecution(Base):
     pipeline_parameters: Optional[List[Parameter]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'pipeline_execution_name':
-                return value
-        return None
 
 class ProcessingJob(Base):
     """
@@ -13693,12 +10385,6 @@ class ProcessingJob(Base):
     tags: Optional[List[Tag]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'processing_job_name':
-                return value
-        return None
 
 class ProfilerConfigForUpdate(Base):
     """
@@ -13718,12 +10404,6 @@ class ProfilerConfigForUpdate(Base):
     disable_profiler: Optional[bool] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'profiler_config_for_update_name':
-                return value
-        return None
 
 class Project(Base):
     """
@@ -13759,12 +10439,6 @@ class Project(Base):
     last_modified_by: Optional[UserContext] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'project_name':
-                return value
-        return None
 
 class QueryFilters(Base):
     """
@@ -13790,12 +10464,6 @@ class QueryFilters(Base):
     properties: Optional[Dict[str, str]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'query_filters_name':
-                return value
-        return None
 
 class Vertex(Base):
     """
@@ -13813,12 +10481,6 @@ class Vertex(Base):
     lineage_type: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'vertex_name':
-                return value
-        return None
 
 class RemoteDebugConfigForUpdate(Base):
     """
@@ -13832,12 +10494,6 @@ class RemoteDebugConfigForUpdate(Base):
     enable_remote_debug: Optional[bool] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'remote_debug_config_for_update_name':
-                return value
-        return None
 
 class RenderableTask(Base):
     """
@@ -13851,12 +10507,6 @@ class RenderableTask(Base):
     input: str
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'renderable_task_name':
-                return value
-        return None
 
 class RenderingError(Base):
     """
@@ -13872,12 +10522,6 @@ class RenderingError(Base):
     message: str
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'rendering_error_name':
-                return value
-        return None
 
 class ResourceConfigForUpdate(Base):
     """
@@ -13891,12 +10535,6 @@ class ResourceConfigForUpdate(Base):
     keep_alive_period_in_seconds: int
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'resource_config_for_update_name':
-                return value
-        return None
 
 class ResourceInUse(Base):
     """
@@ -13910,12 +10548,6 @@ class ResourceInUse(Base):
     message: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'resource_in_use_name':
-                return value
-        return None
 
 class ResourceLimitExceeded(Base):
     """
@@ -13929,12 +10561,6 @@ class ResourceLimitExceeded(Base):
     message: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'resource_limit_exceeded_name':
-                return value
-        return None
 
 class ResourceNotFound(Base):
     """
@@ -13948,12 +10574,6 @@ class ResourceNotFound(Base):
     message: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'resource_not_found_name':
-                return value
-        return None
 
 class SearchExpression(Base):
     """
@@ -13973,12 +10593,6 @@ class SearchExpression(Base):
     operator: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'search_expression_name':
-                return value
-        return None
 
 class TrainingJob(Base):
     """
@@ -14066,12 +10680,6 @@ class TrainingJob(Base):
     tags: Optional[List[Tag]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'training_job_name':
-                return value
-        return None
 
 class TrialComponentSimpleSummary(Base):
     """
@@ -14093,12 +10701,6 @@ class TrialComponentSimpleSummary(Base):
     created_by: Optional[UserContext] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'trial_component_simple_summary_name':
-                return value
-        return None
 
 class Trial(Base):
     """
@@ -14134,12 +10736,6 @@ class Trial(Base):
     trial_component_summaries: Optional[List[TrialComponentSimpleSummary]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'trial_name':
-                return value
-        return None
 
 class TrialComponentSourceDetail(Base):
     """
@@ -14159,12 +10755,6 @@ class TrialComponentSourceDetail(Base):
     transform_job: Optional[TransformJob] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'trial_component_source_detail_name':
-                return value
-        return None
 
 class TrialComponent(Base):
     """
@@ -14218,12 +10808,6 @@ class TrialComponent(Base):
     run_name: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'trial_component_name':
-                return value
-        return None
 
 class SearchRecord(Base):
     """
@@ -14265,12 +10849,6 @@ class SearchRecord(Base):
     model: Optional[ModelDashboardModel] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'search_record_name':
-                return value
-        return None
 
 class VisibilityConditions(Base):
     """
@@ -14286,12 +10864,6 @@ class VisibilityConditions(Base):
     value: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'visibility_conditions_name':
-                return value
-        return None
 
 class ServiceCatalogProvisioningUpdateDetails(Base):
     """
@@ -14307,12 +10879,6 @@ class ServiceCatalogProvisioningUpdateDetails(Base):
     provisioning_parameters: Optional[List[ProvisioningParameter]] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'service_catalog_provisioning_update_details_name':
-                return value
-        return None
 
 class ThroughputConfigUpdate(Base):
     """
@@ -14330,12 +10896,6 @@ class ThroughputConfigUpdate(Base):
     provisioned_write_capacity_units: Optional[int] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'throughput_config_update_name':
-                return value
-        return None
 
 class VariantProperty(Base):
     """
@@ -14349,12 +10909,6 @@ class VariantProperty(Base):
     variant_property_type: str
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'variant_property_name':
-                return value
-        return None
 
 class InternalDependencyException(Base):
     """
@@ -14368,12 +10922,6 @@ class InternalDependencyException(Base):
     message: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'internal_dependency_exception_name':
-                return value
-        return None
 
 class InternalFailure(Base):
     """
@@ -14387,12 +10935,6 @@ class InternalFailure(Base):
     message: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'internal_failure_name':
-                return value
-        return None
 
 class InternalStreamFailure(Base):
     """
@@ -14406,12 +10948,6 @@ class InternalStreamFailure(Base):
     message: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'internal_stream_failure_name':
-                return value
-        return None
 
 class PayloadPart(Base):
     """
@@ -14425,12 +10961,6 @@ class PayloadPart(Base):
     bytes: Optional[Any] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'payload_part_name':
-                return value
-        return None
 
 class ModelStreamError(Base):
     """
@@ -14446,12 +10976,6 @@ class ModelStreamError(Base):
     error_code: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'model_stream_error_name':
-                return value
-        return None
 
 class ResponseStream(Base):
     """
@@ -14469,12 +10993,6 @@ class ResponseStream(Base):
     internal_stream_failure: Optional[InternalStreamFailure] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'response_stream_name':
-                return value
-        return None
 
 class ModelError(Base):
     """
@@ -14494,12 +11012,6 @@ class ModelError(Base):
     log_stream_arn: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'model_error_name':
-                return value
-        return None
 
 class ModelNotReadyException(Base):
     """
@@ -14513,12 +11025,6 @@ class ModelNotReadyException(Base):
     message: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'model_not_ready_exception_name':
-                return value
-        return None
 
 class ServiceUnavailable(Base):
     """
@@ -14532,12 +11038,6 @@ class ServiceUnavailable(Base):
     message: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'service_unavailable_name':
-                return value
-        return None
 
 class ValidationError(Base):
     """
@@ -14551,9 +11051,3 @@ class ValidationError(Base):
     message: Optional[str] = Unassigned()
 
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'validation_error_name':
-                return value
-        return None

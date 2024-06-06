@@ -200,6 +200,7 @@ class ShapesCodeGen:
         imports += "\n"
         imports += "from pydantic import BaseModel\n"
         imports += "from typing import List, Dict, Optional, Any, Union\n"
+        imports += "from generated.utils import Unassigned"
         imports += "\n"
         return imports
 
@@ -264,20 +265,20 @@ class ShapesCodeGen:
             file.write("\n\n")
 
             # Write Unassigned Class
-            class_definition_string = '''\
-            class Unassigned:
-                """A custom type used to signify an undefined optional argument."""
-                _instance = None
-
-                def __new__(cls):
-                    if cls._instance is None:
-                        cls._instance = super().__new__(cls)
-                    return cls._instance
-            '''
-            wrapped_class_definition = textwrap.indent(
-                textwrap.dedent(class_definition_string), prefix=""
-            )
-            file.write(wrapped_class_definition)
+            # class_definition_string = '''\
+            # class Unassigned:
+            #     """A custom type used to signify an undefined optional argument."""
+            #     _instance = None
+            #
+            #     def __new__(cls):
+            #         if cls._instance is None:
+            #             cls._instance = super().__new__(cls)
+            #         return cls._instance
+            # '''
+            # wrapped_class_definition = textwrap.indent(
+            #     textwrap.dedent(class_definition_string), prefix=""
+            # )
+            # file.write(wrapped_class_definition)
             file.write("\n")
 
             # Iterate through shapes in topological order and generate classes

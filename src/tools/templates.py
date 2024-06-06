@@ -373,6 +373,7 @@ class Base(BaseModel):
     @classmethod
     def _serialize(cls, data: Dict) -> Dict:
         result = {}
+
         for attr, value in data.items():
             if isinstance(value, Unassigned):
                 continue
@@ -389,11 +390,17 @@ class Base(BaseModel):
     
     @classmethod
     def _serialize_list(cls, value: List):
-        return [v.serialize() if hasattr(v, 'serialize') else v for v in value]
+        return [
+            cls._serialize(v)
+                for v in value
+                ]
     
     @classmethod
     def _serialize_dict(cls, value: Dict):
-        return {k: v.serialize() if hasattr(v, 'serialize') else v for k, v in value.items()}
+        return {
+            k: cls._serialize(v)
+            for k, v in value.items()
+        }
     
     @staticmethod
     def get_updated_kwargs_with_configured_attributes(config_schema_for_resource: dict, resource_name: str, **kwargs):
@@ -419,13 +426,15 @@ class Base(BaseModel):
         updated_args = operation_input_args
         for arg, value in operation_input_args.items():
             arg_snake = pascal_to_snake(arg)
+            if value == Unassigned() or value == None or not value:
+                continue
             if arg_snake.endswith('name') and arg_snake[
                                               :-len('_name')] != resource_name_in_snake_case and arg_snake != 'name':
                 if value and value != Unassigned() and type(value) != str:
                     updated_args[arg] = value.get_name()
             elif isinstance(value, list):
                 updated_args[arg] = [
-                    Base.populate_chained_attributes(resource_name=type(value).__name__,
+                    Base.populate_chained_attributes(resource_name=type(list_item).__name__,
                                                      operation_input_args={snake_to_pascal(k): v for k, v in list_item.__dict__.items()})
                     for list_item in value
                 ]
@@ -471,10 +480,4 @@ class {class_name}:
     """
 {data_class_members}
 
-    def get_name(self) -> Optional[str]:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == '{class_name_snake}_name':
-                return value
-        return None
 '''
