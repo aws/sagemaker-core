@@ -42,6 +42,8 @@ BASIC_JSON_TYPES_TO_PYTHON_TYPES = {
     "blob": "Any",
 }
 
+BASIC_RETURN_TYPES = {"str", "int", "bool", "float", "datetime.datetime"}
+
 SHAPE_DAG_FILE_PATH = os.getcwd() + "/src/code_injection/shape_dag.py"
 PYTHON_TYPES_TO_BASIC_JSON_TYPES = {
     "str": "string",

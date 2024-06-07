@@ -87,14 +87,21 @@ class ResourcesExtractor:
         self._extract_resources_plan()
 
     def _filter_additional_operations(self):
-        for operation_name, operation in self.additional_operations["operations"].items():
-            if operation["resource_name"] not in self.resource_methods:
-                self.resource_methods[operation["resource_name"]] = dict()
-            self.actions_under_resource.update(operation_name)
-            self.resource_methods[operation["resource_name"]][operation["method_name"]] = Method(
-                **operation
-            )
-            self.actions.remove(operation_name)
+        """
+        Extracts information from additional operations defined in additional_operations.json
+
+        Returns:
+            None
+        """
+        for resource_name, resource_operations in self.additional_operations.items():
+            if resource_name not in self.resource_methods:
+                self.resource_methods[resource_name] = dict()
+            for operation_name, operation in resource_operations.items():
+                self.actions_under_resource.update(operation_name)
+                self.resource_methods[operation["resource_name"]][operation["method_name"]] = (
+                    Method(**operation)
+                )
+                self.actions.remove(operation_name)
 
     def _filter_actions_for_resources(self, resources):
         """

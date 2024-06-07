@@ -1,3 +1,12 @@
+from enum import Enum
+
+
+class MethodType(Enum):
+    CLASS = "class"
+    OBJECT = "object"
+    # TODO: add static if we add operations as static methods in future
+
+
 class Method:
     """
     A class to store the information of methods to be generated
@@ -7,7 +16,7 @@ class Method:
     resource_name: str
     method_name: str
     return_type: str
-    method_type: str
+    method_type: MethodType
     service_name: str
 
     def __init__(self, **kwargs):

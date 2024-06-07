@@ -20,6 +20,7 @@ import json
 from src.code_injection.codec import pascal_to_snake
 from src.generated.config_schema import SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA
 from src.tools.constants import (
+    BASIC_RETURN_TYPES,
     GENERATED_CLASSES_LOCATION,
     RESOURCES_CODEGEN_FILE_NAME,
     LICENCES_STRING,
@@ -30,7 +31,7 @@ from src.tools.constants import (
     PYTHON_TYPES_TO_BASIC_JSON_TYPES,
     CONFIGURABLE_ATTRIBUTE_SUBSTRINGS,
 )
-from src.tools.method import Method
+from src.tools.method import Method, MethodType
 from src.util.util import add_indent, convert_to_snake_case, snake_to_pascal
 from src.tools.resources_extractor import ResourcesExtractor
 from src.tools.shapes_extractor import ShapesExtractor
@@ -38,6 +39,7 @@ from src.tools.templates import (
     CALL_OPERATION_API_TEMPLATE,
     CREATE_METHOD_TEMPLATE,
     DESERIALIZE_RESPONSE_TEMPLATE,
+    DESERIALIZE_RESPONSE_TO_BASIC_TYPE_TEMPLATE,
     GENERIC_METHOD_TEMPLATE,
     GET_METHOD_TEMPLATE,
     INITIALIZE_CLIENT_TEMPLATE,
@@ -1088,7 +1090,7 @@ class ResourcesCodeGen:
         # TODO: Use special templates for some methods with different formats like list and wait
         operation_metadata = self.operations[method.operation_name]
         operation_input_shape_name = operation_metadata["input"]["shape"]
-        if method.method_type == "class_method":
+        if method.method_type == MethodType.CLASS:
             decorator = "@classmethod"
             method_args = add_indent("cls,\n", 4)
             method_args += self._generate_method_args(operation_input_shape_name)
@@ -1113,6 +1115,9 @@ class ResourcesCodeGen:
         if method.return_type == "None":
             return_type = "None"
             deserialize_response = ""
+        elif method.return_type in BASIC_RETURN_TYPES:
+            return_type = f"Optional[{method.return_type}]"
+            deserialize_response = DESERIALIZE_RESPONSE_TO_BASIC_TYPE_TEMPLATE
         else:
             if method.return_type == "cls":
                 return_type = f'Optional["{method.resource_name}"]'

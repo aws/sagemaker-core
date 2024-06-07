@@ -7531,8 +7531,7 @@ class ModelPackageGroup(Base):
 
         response = client.get_model_package_group_policy(**operation_input_args)
 
-        transformed_response = transform(response, "GetModelPackageGroupPolicyOutput")
-        return str(**transformed_response)
+        return list(response.values())[0]
 
     def delete_policy(
         self,

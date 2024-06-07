@@ -462,6 +462,9 @@ DESERIALIZE_RESPONSE_TEMPLATE = """
     transformed_response = transform(response, '{operation_output_shape}')
     return {return_type_conversion}(**transformed_response)"""
 
+DESERIALIZE_RESPONSE_TO_BASIC_TYPE_TEMPLATE = """
+    return list(response.values())[0]"""
+
 RESOURCE_BASE_CLASS_TEMPLATE = """
 class Base(BaseModel):
     model_config = ConfigDict(protected_namespaces=())
