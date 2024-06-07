@@ -14,8 +14,8 @@ class TestGeneratedShape(unittest.TestCase):
         # This test ensures that all generated shapes inherit Base which inherits BaseModel, thereby forcing pydantic validiation
         assert issubclass(Base, BaseModel)
         assert (
-            self._fetch_number_of_classes_in_file_not_inheriting_a_class(FILE_NAME, "Base") == 2
-        )  # 2 Because Base class itself does not inherit and Unassigned does not need to inherit
+            self._fetch_number_of_classes_in_file_not_inheriting_a_class(FILE_NAME, "Base") == 1
+        )  # 1 Because Base class itself does not inherit
 
     def test_pydantic_validation_for_generated_class_success(self):
         additional_s3_data_source = AdditionalS3DataSource(

@@ -87,6 +87,10 @@ def pascal_to_snake(pascal_str):
     return "".join(["_" + i.lower() if i.isupper() else i for i in pascal_str]).lstrip("_")
 
 
+def is_not_primitive(obj):
+    return not isinstance(obj, (int, float, str, bool, complex))
+
+
 class Unassigned:
     """A custom type used to signify an undefined optional argument."""
 
