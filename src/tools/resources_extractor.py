@@ -11,8 +11,6 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 """A class for extracting resource information from a service JSON."""
-import json
-import os
 import logging
 from typing import Optional
 
@@ -20,9 +18,11 @@ import pandas as pd
 
 from src.tools.constants import CLASS_METHODS, OBJECT_METHODS
 from src.tools.data_extractor import (
+    load_additional_operations_data,
     load_combined_operations_data,
     load_combined_shapes_data,
 )
+from src.tools.method import Method
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
@@ -77,10 +77,31 @@ class ResourcesExtractor:
         """
         self.operations = combined_operations or load_combined_operations_data()
         self.shapes = combined_shapes or load_combined_shapes_data()
+        self.additional_operations = load_additional_operations_data()
+        # contains information about additional methods only now.
+        # TODO: replace resource_actions with resource_methods to include all methods
+        self.resource_methods = {}
         self.resource_actions = {}
         self.actions_under_resource = set()
 
         self._extract_resources_plan()
+
+    def _filter_additional_operations(self):
+        """
+        Extracts information from additional operations defined in additional_operations.json
+
+        Returns:
+            None
+        """
+        for resource_name, resource_operations in self.additional_operations.items():
+            if resource_name not in self.resource_methods:
+                self.resource_methods[resource_name] = dict()
+            for operation_name, operation in resource_operations.items():
+                self.actions_under_resource.update(operation_name)
+                self.resource_methods[operation["resource_name"]][operation["method_name"]] = (
+                    Method(**operation)
+                )
+                self.actions.remove(operation_name)
 
     def _filter_actions_for_resources(self, resources):
         """
@@ -120,27 +141,22 @@ class ResourcesExtractor:
         self.create_resources = set(
             [key[len("Create") :] for key in self.actions if key.startswith("Create")]
         )
-        self._filter_actions_for_resources(self.create_resources)
 
         self.add_resources = set(
             [key[len("Add") :] for key in self.actions if key.startswith("Add")]
         )
-        self._filter_actions_for_resources(self.add_resources)
 
         self.start_resources = set(
             [key[len("Start") :] for key in self.actions if key.startswith("Start")]
         )
-        self._filter_actions_for_resources(self.start_resources)
 
         self.register_resources = set(
             [key[len("Register") :] for key in self.actions if key.startswith("Register")]
         )
-        self._filter_actions_for_resources(self.register_resources)
 
         self.import_resources = set(
             [key[len("Import") :] for key in self.actions if key.startswith("Import")]
         )
-        self._filter_actions_for_resources(self.import_resources)
 
         self.resources = (
             self.create_resources
@@ -149,9 +165,16 @@ class ResourcesExtractor:
             | self.register_resources
             | self.import_resources
         )
+
+        self._filter_additional_operations()
+
+        self._filter_actions_for_resources(self.resources)
+
         log.info(f"Total resource - {len(self.resources)}")
 
         log.info(f"Total actions_under_resource - {len(self.actions_under_resource)}")
+
+        log.info(f"Unsupported actions: - {len(self.actions)}")
 
         self._extract_resource_plan_as_dataframe()
 
@@ -330,6 +353,15 @@ class ResourcesExtractor:
             df (DataFrame): The resource plan DataFrame.
         """
         return self.df
+
+    def get_resource_methods(self):
+        """
+        Returns the resource methods dict.
+
+        Returns:
+            resource_methods (dict): The resource methods dict.
+        """
+        return self.resource_methods
 
 
 resource_extractor = ResourcesExtractor()

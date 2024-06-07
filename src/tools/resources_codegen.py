@@ -20,6 +20,7 @@ import json
 from src.code_injection.codec import pascal_to_snake
 from src.generated.config_schema import SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA
 from src.tools.constants import (
+    BASIC_RETURN_TYPES,
     GENERATED_CLASSES_LOCATION,
     RESOURCES_CODEGEN_FILE_NAME,
     LICENCES_STRING,
@@ -30,14 +31,21 @@ from src.tools.constants import (
     PYTHON_TYPES_TO_BASIC_JSON_TYPES,
     CONFIGURABLE_ATTRIBUTE_SUBSTRINGS,
 )
+from src.tools.method import Method, MethodType
 from src.util.util import add_indent, convert_to_snake_case, snake_to_pascal
 from src.tools.resources_extractor import ResourcesExtractor
 from src.tools.shapes_extractor import ShapesExtractor
 from src.tools.templates import (
+    CALL_OPERATION_API_TEMPLATE,
     CREATE_METHOD_TEMPLATE,
+    DESERIALIZE_RESPONSE_TEMPLATE,
+    DESERIALIZE_RESPONSE_TO_BASIC_TYPE_TEMPLATE,
+    GENERIC_METHOD_TEMPLATE,
     GET_METHOD_TEMPLATE,
+    INITIALIZE_CLIENT_TEMPLATE,
     REFRESH_METHOD_TEMPLATE,
     RESOURCE_BASE_CLASS_TEMPLATE,
+    SERIALIZE_INPUT_TEMPLATE,
     STOP_METHOD_TEMPLATE,
     DELETE_METHOD_TEMPLATE,
     WAIT_METHOD_TEMPLATE,
@@ -125,6 +133,7 @@ class ResourcesCodeGen:
 
         # Extract the resources plan and shapes DAG
         self.resources_plan = self.resources_extractor.get_resource_plan()
+        self.resource_methods = self.resources_extractor.get_resource_methods()
         self.shape_dag = self.shapes_extractor.get_shapes_dag()
 
         # Create the Config Schema
@@ -282,7 +291,7 @@ class ResourcesCodeGen:
         if method_name in methods:
             return getattr(self, f"generate_{method_name}_method")(resource_name, **kwargs)
         else:
-            log.warning(f"Resource {resource_name} does not have a {method_name.upper()} method")
+            # log.warning(f"Resource {resource_name} does not have a {method_name.upper()} method")
             return ""
 
     def generate_resource_class(
@@ -429,6 +438,12 @@ class ResourcesCodeGen:
             # TODO: Handle the resources without 'get' differently
             log.warning(f"Resource {resource_name} does not have a GET method")
 
+        if resource_name in self.resource_methods:
+            # TODO: use resource_methods for all methods
+            for method in self.resource_methods[resource_name].values():
+                formatted_method = self.generate_method(method, resource_attributes)
+                resource_class += add_indent(formatted_method, 4)
+
         # Return the class definition
         return resource_class
 
@@ -504,6 +519,47 @@ class ResourcesCodeGen:
                 method_args += "\n"
         method_args = add_indent(method_args)
         return method_args
+
+    # TODO: use this method to replace _generate_operation_input_args
+    def _generate_operation_input_args_updated(
+        self,
+        resource_operation: dict,
+        is_class_method: bool,
+        resource_attributes: list,
+        exclude_list: list = [],
+    ) -> str:
+        """Generate the operation input arguments string.
+
+        Args:
+            resource_operation (dict): The resource operation dictionary.
+            is_class_method (bool): Indicates method is class method, else object method.
+
+        Returns:
+            str: The formatted operation input arguments string.
+        """
+        input_shape_name = resource_operation["input"]["shape"]
+        input_shape_members = list(self.shapes[input_shape_name]["members"].keys())
+
+        if is_class_method:
+            args = (
+                f"'{member}': {convert_to_snake_case(member)}"
+                for member in input_shape_members
+                if convert_to_snake_case(member) not in exclude_list
+            )
+        else:
+            args = []
+            for member in input_shape_members:
+                if convert_to_snake_case(member) not in exclude_list:
+                    if convert_to_snake_case(member) in resource_attributes:
+                        args.append(f"'{member}': self.{convert_to_snake_case(member)}")
+                    else:
+                        args.append(f"'{member}': {convert_to_snake_case(member)}")
+
+        operation_input_args = ",\n".join(args)
+        operation_input_args += ","
+        operation_input_args = add_indent(operation_input_args, 8)
+
+        return operation_input_args
 
     def _generate_operation_input_args(
         self, resource_operation: dict, is_class_method: bool, exclude_list: list = []
@@ -1051,6 +1107,70 @@ class ResourcesCodeGen:
         formatted_method = STOP_METHOD_TEMPLATE.format(
             operation_input_args=operation_input_args,
             operation=operation,
+        )
+        return formatted_method
+
+    def generate_method(self, method: Method, resource_attributes: list):
+        # TODO: Use special templates for some methods with different formats like list and wait
+        operation_metadata = self.operations[method.operation_name]
+        operation_input_shape_name = operation_metadata["input"]["shape"]
+        if method.method_type == MethodType.CLASS:
+            decorator = "@classmethod"
+            method_args = add_indent("cls,\n", 4)
+            method_args += self._generate_method_args(operation_input_shape_name)
+            operation_input_args = self._generate_operation_input_args_updated(
+                operation_metadata, True, resource_attributes
+            )
+        else:
+            decorator = ""
+            method_args = add_indent("self,\n", 4)
+            method_args += (
+                self._generate_method_args_excluding_resource_class_attributes(
+                    operation_input_shape_name, resource_attributes
+                )
+                + "\n"
+            )
+            operation_input_args = self._generate_operation_input_args_updated(
+                operation_metadata, False, resource_attributes
+            )
+        method_args += add_indent("session: Optional[Session] = None,\n", 4)
+        method_args += add_indent("region: Optional[str] = None,\n", 4)
+
+        if method.return_type == "None":
+            return_type = "None"
+            deserialize_response = ""
+        elif method.return_type in BASIC_RETURN_TYPES:
+            return_type = f"Optional[{method.return_type}]"
+            deserialize_response = DESERIALIZE_RESPONSE_TO_BASIC_TYPE_TEMPLATE
+        else:
+            if method.return_type == "cls":
+                return_type = f'Optional["{method.resource_name}"]'
+                return_type_conversion = "cls"
+            else:
+                return_type = f"Optional[{method.return_type}]"
+                return_type_conversion = method.return_type
+            operation_output_shape = operation_metadata["output"]["shape"]
+            deserialize_response = DESERIALIZE_RESPONSE_TEMPLATE.format(
+                operation_output_shape=operation_output_shape,
+                return_type_conversion=return_type_conversion,
+            )
+
+        serialize_operation_input = SERIALIZE_INPUT_TEMPLATE.format(
+            operation_input_args=operation_input_args
+        )
+        initialize_client = INITIALIZE_CLIENT_TEMPLATE.format(service_name=method.service_name)
+        call_operation_api = CALL_OPERATION_API_TEMPLATE.format(
+            operation=convert_to_snake_case(method.operation_name)
+        )
+        formatted_method = GENERIC_METHOD_TEMPLATE.format(
+            decorator=decorator,
+            method_name=method.method_name,
+            method_args=method_args,
+            return_type=return_type,
+            serialize_operation_input=serialize_operation_input,
+            initialize_client=initialize_client,
+            call_operation_api=call_operation_api,
+            deserialize_response=deserialize_response,
         )
         return formatted_method
 
