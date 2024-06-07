@@ -108,6 +108,26 @@ class Base(BaseModel):
 
         
 class Action(Base):
+    """
+    Action 
+     Class representing resource Action
+    Attributes
+    ---------------------
+    action_name:<p>The name of the action.</p>
+    action_arn:<p>The Amazon Resource Name (ARN) of the action.</p>
+    source:<p>The source of the action.</p>
+    action_type:<p>The type of the action.</p>
+    description:<p>The description of the action.</p>
+    status:<p>The status of the action.</p>
+    properties:<p>A list of the action's properties.</p>
+    creation_time:<p>When the action was created.</p>
+    created_by:
+    last_modified_time:<p>When the action was last modified.</p>
+    last_modified_by:
+    metadata_properties:
+    lineage_group_arn:<p>The Amazon Resource Name (ARN) of the lineage group.</p>
+    
+    """
     action_name: str
     action_arn: Optional[str] = Unassigned()
     source: Optional[ActionSource] = Unassigned()
@@ -271,6 +291,24 @@ class Action(Base):
 
 
 class Algorithm(Base):
+    """
+    Algorithm 
+     Class representing resource Algorithm
+    Attributes
+    ---------------------
+    algorithm_name:<p>The name of the algorithm being described.</p>
+    algorithm_arn:<p>The Amazon Resource Name (ARN) of the algorithm.</p>
+    creation_time:<p>A timestamp specifying when the algorithm was created.</p>
+    training_specification:<p>Details about training jobs run by this algorithm.</p>
+    algorithm_status:<p>The current status of the algorithm.</p>
+    algorithm_status_details:<p>Details about the current status of the algorithm.</p>
+    algorithm_description:<p>A brief summary about the algorithm.</p>
+    inference_specification:<p>Details about inference jobs that the algorithm runs.</p>
+    validation_specification:<p>Details about configurations for one or more training jobs that SageMaker runs to test the algorithm.</p>
+    product_id:<p>The product identifier of the algorithm.</p>
+    certify_for_marketplace:<p>Whether the algorithm is certified to be listed in Amazon Web Services Marketplace.</p>
+    
+    """
     algorithm_name: str
     algorithm_arn: Optional[str] = Unassigned()
     algorithm_description: Optional[str] = Unassigned()
@@ -450,6 +488,25 @@ class Algorithm(Base):
 
 
 class App(Base):
+    """
+    App 
+     Class representing resource App
+    Attributes
+    ---------------------
+    app_arn:<p>The Amazon Resource Name (ARN) of the app.</p>
+    app_type:<p>The type of app.</p>
+    app_name:<p>The name of the app.</p>
+    domain_id:<p>The domain ID.</p>
+    user_profile_name:<p>The user profile name.</p>
+    space_name:<p>The name of the space. If this value is not set, then <code>UserProfileName</code> must be set.</p>
+    status:<p>The status.</p>
+    last_health_check_timestamp:<p>The timestamp of the last health check.</p>
+    last_user_activity_timestamp:<p>The timestamp of the last user's activity. <code>LastUserActivityTimestamp</code> is also updated when SageMaker performs health checks without user activity. As a result, this value is set to the same value as <code>LastHealthCheckTimestamp</code>.</p>
+    creation_time:<p>The creation time of the application.</p> <note> <p>After an application has been shut down for 24 hours, SageMaker deletes all metadata for the application. To be considered an update and retain application metadata, applications must be restarted within 24 hours after the previous application has been shut down. After this time window, creation of an application is considered a new application rather than an update of the previous application.</p> </note>
+    failure_reason:<p>The failure reason.</p>
+    resource_spec:<p>The instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance.</p>
+    
+    """
     domain_id: str
     app_type: str
     app_name: str
@@ -621,6 +678,19 @@ class App(Base):
 
 
 class AppImageConfig(Base):
+    """
+    AppImageConfig 
+     Class representing resource AppImageConfig
+    Attributes
+    ---------------------
+    app_image_config_arn:<p>The ARN of the AppImageConfig.</p>
+    app_image_config_name:<p>The name of the AppImageConfig.</p>
+    creation_time:<p>When the AppImageConfig was created.</p>
+    last_modified_time:<p>When the AppImageConfig was last modified.</p>
+    kernel_gateway_image_config:<p>The configuration of a KernelGateway app.</p>
+    jupyter_lab_app_image_config:<p>The configuration of the JupyterLab app.</p>
+    
+    """
     app_image_config_name: str
     app_image_config_arn: Optional[str] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
@@ -769,6 +839,24 @@ class AppImageConfig(Base):
 
 
 class Artifact(Base):
+    """
+    Artifact 
+     Class representing resource Artifact
+    Attributes
+    ---------------------
+    artifact_name:<p>The name of the artifact.</p>
+    artifact_arn:<p>The Amazon Resource Name (ARN) of the artifact.</p>
+    source:<p>The source of the artifact.</p>
+    artifact_type:<p>The type of the artifact.</p>
+    properties:<p>A list of the artifact's properties.</p>
+    creation_time:<p>When the artifact was created.</p>
+    created_by:
+    last_modified_time:<p>When the artifact was last modified.</p>
+    last_modified_by:
+    metadata_properties:
+    lineage_group_arn:<p>The Amazon Resource Name (ARN) of the lineage group.</p>
+    
+    """
     artifact_arn: str
     artifact_name: Optional[str] = Unassigned()
     source: Optional[ArtifactSource] = Unassigned()
@@ -926,6 +1014,34 @@ class Artifact(Base):
 
 
 class AutoMLJob(Base):
+    """
+    AutoMLJob 
+     Class representing resource AutoMLJob
+    Attributes
+    ---------------------
+    auto_m_l_job_name:<p>Returns the name of the AutoML job.</p>
+    auto_m_l_job_arn:<p>Returns the ARN of the AutoML job.</p>
+    input_data_config:<p>Returns the input data configuration for the AutoML job.</p>
+    output_data_config:<p>Returns the job's output data config.</p>
+    role_arn:<p>The ARN of the IAM role that has read permission to the input data location and write permission to the output data location in Amazon S3.</p>
+    creation_time:<p>Returns the creation time of the AutoML job.</p>
+    last_modified_time:<p>Returns the job's last modified time.</p>
+    auto_m_l_job_status:<p>Returns the status of the AutoML job.</p>
+    auto_m_l_job_secondary_status:<p>Returns the secondary status of the AutoML job.</p>
+    auto_m_l_job_objective:<p>Returns the job's objective.</p>
+    problem_type:<p>Returns the job's problem type.</p>
+    auto_m_l_job_config:<p>Returns the configuration for the AutoML job.</p>
+    end_time:<p>Returns the end time of the AutoML job.</p>
+    failure_reason:<p>Returns the failure reason for an AutoML job, when applicable.</p>
+    partial_failure_reasons:<p>Returns a list of reasons for partial failures within an AutoML job.</p>
+    best_candidate:<p>The best model candidate selected by SageMaker Autopilot using both the best objective metric and lowest <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/autopilot-metrics-validation.html">InferenceLatency</a> for an experiment.</p>
+    generate_candidate_definitions_only:<p>Indicates whether the output for an AutoML job generates candidate definitions only.</p>
+    auto_m_l_job_artifacts:<p>Returns information on the job's artifacts found in <code>AutoMLJobArtifacts</code>.</p>
+    resolved_attributes:<p>Contains <code>ProblemType</code>, <code>AutoMLJobObjective</code>, and <code>CompletionCriteria</code>. If you do not provide these values, they are inferred.</p>
+    model_deploy_config:<p>Indicates whether the model was deployed automatically to an endpoint and the name of that endpoint if deployed automatically.</p>
+    model_deploy_result:<p>Provides information about endpoint for the model deployment.</p>
+    
+    """
     auto_m_l_job_name: str
     auto_m_l_job_arn: Optional[str] = Unassigned()
     input_data_config: Optional[List[AutoMLChannel]] = Unassigned()
@@ -1150,6 +1266,35 @@ class AutoMLJob(Base):
 
 
 class AutoMLJobV2(Base):
+    """
+    AutoMLJobV2 
+     Class representing resource AutoMLJobV2
+    Attributes
+    ---------------------
+    auto_m_l_job_name:<p>Returns the name of the AutoML job V2.</p>
+    auto_m_l_job_arn:<p>Returns the Amazon Resource Name (ARN) of the AutoML job V2.</p>
+    auto_m_l_job_input_data_config:<p>Returns an array of channel objects describing the input data and their location.</p>
+    output_data_config:<p>Returns the job's output data config.</p>
+    role_arn:<p>The ARN of the IAM role that has read permission to the input data location and write permission to the output data location in Amazon S3.</p>
+    creation_time:<p>Returns the creation time of the AutoML job V2.</p>
+    last_modified_time:<p>Returns the job's last modified time.</p>
+    auto_m_l_job_status:<p>Returns the status of the AutoML job V2.</p>
+    auto_m_l_job_secondary_status:<p>Returns the secondary status of the AutoML job V2.</p>
+    auto_m_l_job_objective:<p>Returns the job's objective.</p>
+    auto_m_l_problem_type_config:<p>Returns the configuration settings of the problem type set for the AutoML job V2.</p>
+    auto_m_l_problem_type_config_name:<p>Returns the name of the problem type configuration set for the AutoML job V2.</p>
+    end_time:<p>Returns the end time of the AutoML job V2.</p>
+    failure_reason:<p>Returns the reason for the failure of the AutoML job V2, when applicable.</p>
+    partial_failure_reasons:<p>Returns a list of reasons for partial failures within an AutoML job V2.</p>
+    best_candidate:<p>Information about the candidate produced by an AutoML training job V2, including its status, steps, and other properties.</p>
+    auto_m_l_job_artifacts:
+    resolved_attributes:<p>Returns the resolved attributes used by the AutoML job V2.</p>
+    model_deploy_config:<p>Indicates whether the model was deployed automatically to an endpoint and the name of that endpoint if deployed automatically.</p>
+    model_deploy_result:<p>Provides information about endpoint for the model deployment.</p>
+    data_split_config:<p>Returns the configuration settings of how the data are split into train and validation datasets.</p>
+    security_config:<p>Returns the security configuration for traffic encryption or Amazon VPC settings.</p>
+    
+    """
     auto_m_l_job_name: str
     auto_m_l_job_arn: Optional[str] = Unassigned()
     auto_m_l_job_input_data_config: Optional[List[AutoMLJobChannel]] = Unassigned()
@@ -1335,6 +1480,20 @@ class AutoMLJobV2(Base):
 
 
 class Cluster(Base):
+    """
+    Cluster 
+     Class representing resource Cluster
+    Attributes
+    ---------------------
+    cluster_arn:<p>The Amazon Resource Name (ARN) of the SageMaker HyperPod cluster.</p>
+    cluster_status:<p>The status of the SageMaker HyperPod cluster.</p>
+    instance_groups:<p>The instance groups of the SageMaker HyperPod cluster.</p>
+    cluster_name:<p>The name of the SageMaker HyperPod cluster.</p>
+    creation_time:<p>The time when the SageMaker Cluster is created.</p>
+    failure_message:<p>The failure message of the SageMaker HyperPod cluster.</p>
+    vpc_config:
+    
+    """
     cluster_name: str
     cluster_arn: Optional[str] = Unassigned()
     cluster_status: Optional[str] = Unassigned()
@@ -1526,6 +1685,18 @@ class Cluster(Base):
 
 
 class CodeRepository(Base):
+    """
+    CodeRepository 
+     Class representing resource CodeRepository
+    Attributes
+    ---------------------
+    code_repository_name:<p>The name of the Git repository.</p>
+    code_repository_arn:<p>The Amazon Resource Name (ARN) of the Git repository.</p>
+    creation_time:<p>The date and time that the repository was created.</p>
+    last_modified_time:<p>The date and time that the repository was last changed.</p>
+    git_config:<p>Configuration details about the repository, including the URL where the repository is located, the default branch, and the Amazon Resource Name (ARN) of the Amazon Web Services Secrets Manager secret that contains the credentials used to access the repository.</p>
+    
+    """
     code_repository_name: str
     code_repository_arn: Optional[str] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
@@ -1634,6 +1805,31 @@ class CodeRepository(Base):
 
 
 class CompilationJob(Base):
+    """
+    CompilationJob 
+     Class representing resource CompilationJob
+    Attributes
+    ---------------------
+    compilation_job_name:<p>The name of the model compilation job.</p>
+    compilation_job_arn:<p>The Amazon Resource Name (ARN) of the model compilation job.</p>
+    compilation_job_status:<p>The status of the model compilation job.</p>
+    stopping_condition:<p>Specifies a limit to how long a model compilation job can run. When the job reaches the time limit, Amazon SageMaker ends the compilation job. Use this API to cap model training costs.</p>
+    creation_time:<p>The time that the model compilation job was created.</p>
+    last_modified_time:<p>The time that the status of the model compilation job was last modified.</p>
+    failure_reason:<p>If a model compilation job failed, the reason it failed. </p>
+    model_artifacts:<p>Information about the location in Amazon S3 that has been configured for storing the model artifacts used in the compilation job.</p>
+    role_arn:<p>The Amazon Resource Name (ARN) of an IAM role that Amazon SageMaker assumes to perform the model compilation job.</p>
+    input_config:<p>Information about the location in Amazon S3 of the input model artifacts, the name and shape of the expected data inputs, and the framework in which the model was trained.</p>
+    output_config:<p>Information about the output location for the compiled model and the target device that the model runs on.</p>
+    compilation_start_time:<p>The time when the model compilation job started the <code>CompilationJob</code> instances. </p> <p>You are billed for the time between this timestamp and the timestamp in the <code>CompilationEndTime</code> field. In Amazon CloudWatch Logs, the start time might be later than this time. That's because it takes time to download the compilation job, which depends on the size of the compilation job container. </p>
+    compilation_end_time:<p>The time when the model compilation job on a compilation job instance ended. For a successful or stopped job, this is when the job's model artifacts have finished uploading. For a failed job, this is when Amazon SageMaker detected that the job failed. </p>
+    inference_image:<p>The inference image to use when compiling a model. Specify an image only if the target device is a cloud instance.</p>
+    model_package_version_arn:<p>The Amazon Resource Name (ARN) of the versioned model package that was provided to SageMaker Neo when you initiated a compilation job.</p>
+    model_digests:<p>Provides a BLAKE2 hash value that identifies the compiled model artifacts in Amazon S3.</p>
+    vpc_config:<p>A <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_VpcConfig.html">VpcConfig</a> object that specifies the VPC that you want your compilation job to connect to. Control access to your models by configuring the VPC. For more information, see <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/neo-vpc.html">Protect Compilation Jobs by Using an Amazon Virtual Private Cloud</a>.</p>
+    derived_information:<p>Information that SageMaker Neo automatically derived about the model.</p>
+    
+    """
     compilation_job_name: str
     compilation_job_arn: Optional[str] = Unassigned()
     compilation_job_status: Optional[str] = Unassigned()
@@ -1856,6 +2052,24 @@ class CompilationJob(Base):
 
 
 class Context(Base):
+    """
+    Context 
+     Class representing resource Context
+    Attributes
+    ---------------------
+    context_name:<p>The name of the context.</p>
+    context_arn:<p>The Amazon Resource Name (ARN) of the context.</p>
+    source:<p>The source of the context.</p>
+    context_type:<p>The type of the context.</p>
+    description:<p>The description of the context.</p>
+    properties:<p>A list of the context's properties.</p>
+    creation_time:<p>When the context was created.</p>
+    created_by:
+    last_modified_time:<p>When the context was last modified.</p>
+    last_modified_by:
+    lineage_group_arn:<p>The Amazon Resource Name (ARN) of the lineage group.</p>
+    
+    """
     context_name: str
     context_arn: Optional[str] = Unassigned()
     source: Optional[ContextSource] = Unassigned()
@@ -2012,6 +2226,24 @@ class Context(Base):
 
 
 class DataQualityJobDefinition(Base):
+    """
+    DataQualityJobDefinition 
+     Class representing resource DataQualityJobDefinition
+    Attributes
+    ---------------------
+    job_definition_arn:<p>The Amazon Resource Name (ARN) of the data quality monitoring job definition.</p>
+    job_definition_name:<p>The name of the data quality monitoring job definition.</p>
+    creation_time:<p>The time that the data quality monitoring job definition was created.</p>
+    data_quality_app_specification:<p>Information about the container that runs the data quality monitoring job.</p>
+    data_quality_job_input:<p>The list of inputs for the data quality monitoring job. Currently endpoints are supported.</p>
+    data_quality_job_output_config:
+    job_resources:
+    role_arn:<p>The Amazon Resource Name (ARN) of an IAM role that Amazon SageMaker can assume to perform tasks on your behalf.</p>
+    data_quality_baseline_config:<p>The constraints and baselines for the data quality monitoring job definition.</p>
+    network_config:<p>The networking configuration for the data quality monitoring job.</p>
+    stopping_condition:
+    
+    """
     job_definition_name: str
     job_definition_arn: Optional[str] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
@@ -2226,6 +2458,21 @@ class DataQualityJobDefinition(Base):
 
 
 class DeviceFleet(Base):
+    """
+    DeviceFleet 
+     Class representing resource DeviceFleet
+    Attributes
+    ---------------------
+    device_fleet_name:<p>The name of the fleet.</p>
+    device_fleet_arn:<p>The The Amazon Resource Name (ARN) of the fleet.</p>
+    output_config:<p>The output configuration for storing sampled data.</p>
+    creation_time:<p>Timestamp of when the device fleet was created.</p>
+    last_modified_time:<p>Timestamp of when the device fleet was last updated.</p>
+    description:<p>A description of the fleet.</p>
+    role_arn:<p>The Amazon Resource Name (ARN) that has access to Amazon Web Services Internet of Things (IoT).</p>
+    iot_role_alias:<p>The Amazon Resource Name (ARN) alias created in Amazon Web Services Internet of Things (IoT).</p>
+    
+    """
     device_fleet_name: str
     device_fleet_arn: Optional[str] = Unassigned()
     output_config: Optional[EdgeOutputConfig] = Unassigned()
@@ -2406,6 +2653,35 @@ class DeviceFleet(Base):
 
 
 class Domain(Base):
+    """
+    Domain 
+     Class representing resource Domain
+    Attributes
+    ---------------------
+    domain_arn:<p>The domain's Amazon Resource Name (ARN).</p>
+    domain_id:<p>The domain ID.</p>
+    domain_name:<p>The domain name.</p>
+    home_efs_file_system_id:<p>The ID of the Amazon Elastic File System managed by this Domain.</p>
+    single_sign_on_managed_application_instance_id:<p>The IAM Identity Center managed application instance ID.</p>
+    single_sign_on_application_arn:<p>The ARN of the application managed by SageMaker in IAM Identity Center. This value is only returned for domains created after October 1, 2023.</p>
+    status:<p>The status.</p>
+    creation_time:<p>The creation time.</p>
+    last_modified_time:<p>The last modified time.</p>
+    failure_reason:<p>The failure reason.</p>
+    security_group_id_for_domain_boundary:<p>The ID of the security group that authorizes traffic between the <code>RSessionGateway</code> apps and the <code>RStudioServerPro</code> app.</p>
+    auth_mode:<p>The domain's authentication mode.</p>
+    default_user_settings:<p>Settings which are applied to UserProfiles in this domain if settings are not explicitly specified in a given UserProfile. </p>
+    domain_settings:<p>A collection of <code>Domain</code> settings.</p>
+    app_network_access_type:<p>Specifies the VPC used for non-EFS traffic. The default value is <code>PublicInternetOnly</code>.</p> <ul> <li> <p> <code>PublicInternetOnly</code> - Non-EFS traffic is through a VPC managed by Amazon SageMaker, which allows direct internet access</p> </li> <li> <p> <code>VpcOnly</code> - All traffic is through the specified VPC and subnets</p> </li> </ul>
+    home_efs_file_system_kms_key_id:<p>Use <code>KmsKeyId</code>.</p>
+    subnet_ids:<p>The VPC subnets that the domain uses for communication.</p>
+    url:<p>The domain's URL.</p>
+    vpc_id:<p>The ID of the Amazon Virtual Private Cloud (VPC) that the domain uses for communication.</p>
+    kms_key_id:<p>The Amazon Web Services KMS customer managed key used to encrypt the EFS volume attached to the domain.</p>
+    app_security_group_management:<p>The entity that creates and manages the required security groups for inter-app communication in <code>VPCOnly</code> mode. Required when <code>CreateDomain.AppNetworkAccessType</code> is <code>VPCOnly</code> and <code>DomainSettings.RStudioServerProDomainSettings.DomainExecutionRoleArn</code> is provided.</p>
+    default_space_settings:<p>The default settings used to create a space.</p>
+    
+    """
     domain_id: str
     domain_arn: Optional[str] = Unassigned()
     domain_name: Optional[str] = Unassigned()
@@ -2693,6 +2969,24 @@ class Domain(Base):
 
 
 class EdgeDeploymentPlan(Base):
+    """
+    EdgeDeploymentPlan 
+     Class representing resource EdgeDeploymentPlan
+    Attributes
+    ---------------------
+    edge_deployment_plan_arn:<p>The ARN of edge deployment plan.</p>
+    edge_deployment_plan_name:<p>The name of the edge deployment plan.</p>
+    model_configs:<p>List of models associated with the edge deployment plan.</p>
+    device_fleet_name:<p>The device fleet used for this edge deployment plan.</p>
+    stages:<p>List of stages in the edge deployment plan.</p>
+    edge_deployment_success:<p>The number of edge devices with the successful deployment.</p>
+    edge_deployment_pending:<p>The number of edge devices yet to pick up deployment, or in progress.</p>
+    edge_deployment_failed:<p>The number of edge devices that failed the deployment.</p>
+    next_token:<p>Token to use when calling the next set of stages in the edge deployment plan.</p>
+    creation_time:<p>The time when the edge deployment plan was created.</p>
+    last_modified_time:<p>The time when the edge deployment plan was last updated.</p>
+    
+    """
     edge_deployment_plan_name: str
     edge_deployment_plan_arn: Optional[str] = Unassigned()
     model_configs: Optional[List[EdgeDeploymentModelConfig]] = Unassigned()
@@ -2832,6 +3126,28 @@ class EdgeDeploymentPlan(Base):
 
 
 class EdgePackagingJob(Base):
+    """
+    EdgePackagingJob 
+     Class representing resource EdgePackagingJob
+    Attributes
+    ---------------------
+    edge_packaging_job_arn:<p>The Amazon Resource Name (ARN) of the edge packaging job.</p>
+    edge_packaging_job_name:<p>The name of the edge packaging job.</p>
+    edge_packaging_job_status:<p>The current status of the packaging job.</p>
+    compilation_job_name:<p>The name of the SageMaker Neo compilation job that is used to locate model artifacts that are being packaged.</p>
+    model_name:<p>The name of the model.</p>
+    model_version:<p>The version of the model.</p>
+    role_arn:<p>The Amazon Resource Name (ARN) of an IAM role that enables Amazon SageMaker to download and upload the model, and to contact Neo.</p>
+    output_config:<p>The output configuration for the edge packaging job.</p>
+    resource_key:<p>The Amazon Web Services KMS key to use when encrypting the EBS volume the job run on.</p>
+    edge_packaging_job_status_message:<p>Returns a message describing the job status and error messages.</p>
+    creation_time:<p>The timestamp of when the packaging job was created.</p>
+    last_modified_time:<p>The timestamp of when the job was last updated.</p>
+    model_artifact:<p>The Amazon Simple Storage (S3) URI where model artifacts ares stored.</p>
+    model_signature:<p>The signature document of files in the model artifact.</p>
+    preset_deployment_output:<p>The output of a SageMaker Edge Manager deployable resource.</p>
+    
+    """
     edge_packaging_job_name: str
     edge_packaging_job_arn: Optional[str] = Unassigned()
     compilation_job_name: Optional[str] = Unassigned()
@@ -3022,6 +3338,27 @@ class EdgePackagingJob(Base):
 
 
 class Endpoint(Base):
+    """
+    Endpoint 
+     Class representing resource Endpoint
+    Attributes
+    ---------------------
+    endpoint_name:<p>Name of the endpoint.</p>
+    endpoint_arn:<p>The Amazon Resource Name (ARN) of the endpoint.</p>
+    endpoint_status:<p>The status of the endpoint.</p> <ul> <li> <p> <code>OutOfService</code>: Endpoint is not available to take incoming requests.</p> </li> <li> <p> <code>Creating</code>: <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_CreateEndpoint.html">CreateEndpoint</a> is executing.</p> </li> <li> <p> <code>Updating</code>: <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_UpdateEndpoint.html">UpdateEndpoint</a> or <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_UpdateEndpointWeightsAndCapacities.html">UpdateEndpointWeightsAndCapacities</a> is executing.</p> </li> <li> <p> <code>SystemUpdating</code>: Endpoint is undergoing maintenance and cannot be updated or deleted or re-scaled until it has completed. This maintenance operation does not change any customer-specified values such as VPC config, KMS encryption, model, instance type, or instance count.</p> </li> <li> <p> <code>RollingBack</code>: Endpoint fails to scale up or down or change its variant weight and is in the process of rolling back to its previous configuration. Once the rollback completes, endpoint returns to an <code>InService</code> status. This transitional status only applies to an endpoint that has autoscaling enabled and is undergoing variant weight or capacity changes as part of an <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_UpdateEndpointWeightsAndCapacities.html">UpdateEndpointWeightsAndCapacities</a> call or when the <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_UpdateEndpointWeightsAndCapacities.html">UpdateEndpointWeightsAndCapacities</a> operation is called explicitly.</p> </li> <li> <p> <code>InService</code>: Endpoint is available to process incoming requests.</p> </li> <li> <p> <code>Deleting</code>: <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_DeleteEndpoint.html">DeleteEndpoint</a> is executing.</p> </li> <li> <p> <code>Failed</code>: Endpoint could not be created, updated, or re-scaled. Use the <code>FailureReason</code> value returned by <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_DescribeEndpoint.html">DescribeEndpoint</a> for information about the failure. <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_DeleteEndpoint.html">DeleteEndpoint</a> is the only operation that can be performed on a failed endpoint.</p> </li> <li> <p> <code>UpdateRollbackFailed</code>: Both the rolling deployment and auto-rollback failed. Your endpoint is in service with a mix of the old and new endpoint configurations. For information about how to remedy this issue and restore the endpoint's status to <code>InService</code>, see <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/deployment-guardrails-rolling.html">Rolling Deployments</a>.</p> </li> </ul>
+    creation_time:<p>A timestamp that shows when the endpoint was created.</p>
+    last_modified_time:<p>A timestamp that shows when the endpoint was last modified.</p>
+    endpoint_config_name:<p>The name of the endpoint configuration associated with this endpoint.</p>
+    production_variants:<p>An array of <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_ProductionVariantSummary.html">ProductionVariantSummary</a> objects, one for each model hosted behind this endpoint.</p>
+    data_capture_config:
+    failure_reason:<p>If the status of the endpoint is <code>Failed</code>, the reason why it failed. </p>
+    last_deployment_config:<p>The most recent deployment configuration for the endpoint.</p>
+    async_inference_config:<p>Returns the description of an endpoint configuration created using the <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_CreateEndpointConfig.html"> <code>CreateEndpointConfig</code> </a> API.</p>
+    pending_deployment_summary:<p>Returns the summary of an in-progress deployment. This field is only returned when the endpoint is creating or updating with a new endpoint configuration.</p>
+    explainer_config:<p>The configuration parameters for an explainer.</p>
+    shadow_production_variants:<p>An array of <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_ProductionVariantSummary.html">ProductionVariantSummary</a> objects, one for each model that you want to host at this endpoint in shadow mode with production traffic replicated from the model specified on <code>ProductionVariants</code>.</p>
+    
+    """
     endpoint_name: str
     endpoint_arn: Optional[str] = Unassigned()
     endpoint_config_name: Optional[str] = Unassigned()
@@ -3346,6 +3683,25 @@ class Endpoint(Base):
 
 
 class EndpointConfig(Base):
+    """
+    EndpointConfig 
+     Class representing resource EndpointConfig
+    Attributes
+    ---------------------
+    endpoint_config_name:<p>Name of the SageMaker endpoint configuration.</p>
+    endpoint_config_arn:<p>The Amazon Resource Name (ARN) of the endpoint configuration.</p>
+    production_variants:<p>An array of <code>ProductionVariant</code> objects, one for each model that you want to host at this endpoint.</p>
+    creation_time:<p>A timestamp that shows when the endpoint configuration was created.</p>
+    data_capture_config:
+    kms_key_id:<p>Amazon Web Services KMS key ID Amazon SageMaker uses to encrypt data when storing it on the ML storage volume attached to the instance.</p>
+    async_inference_config:<p>Returns the description of an endpoint configuration created using the <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_CreateEndpointConfig.html"> <code>CreateEndpointConfig</code> </a> API.</p>
+    explainer_config:<p>The configuration parameters for an explainer.</p>
+    shadow_production_variants:<p>An array of <code>ProductionVariant</code> objects, one for each model that you want to host at this endpoint in shadow mode with production traffic replicated from the model specified on <code>ProductionVariants</code>.</p>
+    execution_role_arn:<p>The Amazon Resource Name (ARN) of the IAM role that you assigned to the endpoint configuration.</p>
+    vpc_config:
+    enable_network_isolation:<p>Indicates whether all model containers deployed to the endpoint are isolated. If they are, no inbound or outbound network calls can be made to or from the model containers.</p>
+    
+    """
     endpoint_config_name: str
     endpoint_config_arn: Optional[str] = Unassigned()
     production_variants: Optional[List[ProductionVariant]] = Unassigned()
@@ -3537,6 +3893,22 @@ class EndpointConfig(Base):
 
 
 class Experiment(Base):
+    """
+    Experiment 
+     Class representing resource Experiment
+    Attributes
+    ---------------------
+    experiment_name:<p>The name of the experiment.</p>
+    experiment_arn:<p>The Amazon Resource Name (ARN) of the experiment.</p>
+    display_name:<p>The name of the experiment as displayed. If <code>DisplayName</code> isn't specified, <code>ExperimentName</code> is displayed.</p>
+    source:<p>The Amazon Resource Name (ARN) of the source and, optionally, the type.</p>
+    description:<p>The description of the experiment.</p>
+    creation_time:<p>When the experiment was created.</p>
+    created_by:<p>Who created the experiment.</p>
+    last_modified_time:<p>When the experiment was last modified.</p>
+    last_modified_by:<p>Who last modified the experiment.</p>
+    
+    """
     experiment_name: str
     experiment_arn: Optional[str] = Unassigned()
     display_name: Optional[str] = Unassigned()
@@ -3682,6 +4054,31 @@ class Experiment(Base):
 
 
 class FeatureGroup(Base):
+    """
+    FeatureGroup 
+     Class representing resource FeatureGroup
+    Attributes
+    ---------------------
+    feature_group_arn:<p>The Amazon Resource Name (ARN) of the <code>FeatureGroup</code>. </p>
+    feature_group_name:<p>he name of the <code>FeatureGroup</code>.</p>
+    record_identifier_feature_name:<p>The name of the <code>Feature</code> used for <code>RecordIdentifier</code>, whose value uniquely identifies a record stored in the feature store.</p>
+    event_time_feature_name:<p>The name of the feature that stores the <code>EventTime</code> of a Record in a <code>FeatureGroup</code>.</p> <p> An <code>EventTime</code> is a point in time when a new event occurs that corresponds to the creation or update of a <code>Record</code> in a <code>FeatureGroup</code>. All <code>Records</code> in the <code>FeatureGroup</code> have a corresponding <code>EventTime</code>.</p>
+    feature_definitions:<p>A list of the <code>Features</code> in the <code>FeatureGroup</code>. Each feature is defined by a <code>FeatureName</code> and <code>FeatureType</code>.</p>
+    creation_time:<p>A timestamp indicating when SageMaker created the <code>FeatureGroup</code>.</p>
+    next_token:<p>A token to resume pagination of the list of <code>Features</code> (<code>FeatureDefinitions</code>).</p>
+    last_modified_time:<p>A timestamp indicating when the feature group was last updated.</p>
+    online_store_config:<p>The configuration for the <code>OnlineStore</code>.</p>
+    offline_store_config:<p>The configuration of the offline store. It includes the following configurations:</p> <ul> <li> <p>Amazon S3 location of the offline store.</p> </li> <li> <p>Configuration of the Glue data catalog.</p> </li> <li> <p>Table format of the offline store.</p> </li> <li> <p>Option to disable the automatic creation of a Glue table for the offline store.</p> </li> <li> <p>Encryption configuration.</p> </li> </ul>
+    throughput_config:
+    role_arn:<p>The Amazon Resource Name (ARN) of the IAM execution role used to persist data into the OfflineStore if an OfflineStoreConfig is provided.</p>
+    feature_group_status:<p>The status of the feature group.</p>
+    offline_store_status:<p>The status of the <code>OfflineStore</code>. Notifies you if replicating data into the <code>OfflineStore</code> has failed. Returns either: <code>Active</code> or <code>Blocked</code> </p>
+    last_update_status:<p>A value indicating whether the update made to the feature group was successful.</p>
+    failure_reason:<p>The reason that the <code>FeatureGroup</code> failed to be replicated in the <code>OfflineStore</code>. This is failure can occur because:</p> <ul> <li> <p>The <code>FeatureGroup</code> could not be created in the <code>OfflineStore</code>.</p> </li> <li> <p>The <code>FeatureGroup</code> could not be deleted from the <code>OfflineStore</code>.</p> </li> </ul>
+    description:<p>A free form description of the feature group.</p>
+    online_store_total_size_bytes:<p>The size of the <code>OnlineStore</code> in bytes.</p>
+    
+    """
     feature_group_name: str
     feature_group_arn: Optional[str] = Unassigned()
     record_identifier_feature_name: Optional[str] = Unassigned()
@@ -3914,6 +4311,23 @@ class FeatureGroup(Base):
 
 
 class FlowDefinition(Base):
+    """
+    FlowDefinition 
+     Class representing resource FlowDefinition
+    Attributes
+    ---------------------
+    flow_definition_arn:<p>The Amazon Resource Name (ARN) of the flow defintion.</p>
+    flow_definition_name:<p>The Amazon Resource Name (ARN) of the flow definition.</p>
+    flow_definition_status:<p>The status of the flow definition. Valid values are listed below.</p>
+    creation_time:<p>The timestamp when the flow definition was created.</p>
+    output_config:<p>An object containing information about the output file.</p>
+    role_arn:<p>The Amazon Resource Name (ARN) of the Amazon Web Services Identity and Access Management (IAM) execution role for the flow definition.</p>
+    human_loop_request_source:<p>Container for configuring the source of human task requests. Used to specify if Amazon Rekognition or Amazon Textract is used as an integration source.</p>
+    human_loop_activation_config:<p>An object containing information about what triggers a human review workflow.</p>
+    human_loop_config:<p>An object containing information about who works on the task, the workforce task price, and other task details.</p>
+    failure_reason:<p>The reason your flow definition failed.</p>
+    
+    """
     flow_definition_name: str
     flow_definition_arn: Optional[str] = Unassigned()
     flow_definition_status: Optional[str] = Unassigned()
@@ -4084,6 +4498,23 @@ class FlowDefinition(Base):
 
 
 class Hub(Base):
+    """
+    Hub 
+     Class representing resource Hub
+    Attributes
+    ---------------------
+    hub_name:<p>The name of the hub.</p>
+    hub_arn:<p>The Amazon Resource Name (ARN) of the hub.</p>
+    hub_status:<p>The status of the hub.</p>
+    creation_time:<p>The date and time that the hub was created.</p>
+    last_modified_time:<p>The date and time that the hub was last modified.</p>
+    hub_display_name:<p>The display name of the hub.</p>
+    hub_description:<p>A description of the hub.</p>
+    hub_search_keywords:<p>The searchable keywords for the hub.</p>
+    s3_storage_config:<p>The Amazon S3 storage configuration for the hub.</p>
+    failure_reason:<p>The failure reason if importing hub content failed.</p>
+    
+    """
     hub_name: str
     hub_arn: Optional[str] = Unassigned()
     hub_display_name: Optional[str] = Unassigned()
@@ -4279,6 +4710,29 @@ class Hub(Base):
 
 
 class HubContent(Base):
+    """
+    HubContent 
+     Class representing resource HubContent
+    Attributes
+    ---------------------
+    hub_content_name:<p>The name of the hub content.</p>
+    hub_content_arn:<p>The Amazon Resource Name (ARN) of the hub content.</p>
+    hub_content_version:<p>The version of the hub content.</p>
+    hub_content_type:<p>The type of hub content.</p>
+    document_schema_version:<p>The document schema version for the hub content.</p>
+    hub_name:<p>The name of the hub that contains the content.</p>
+    hub_arn:<p>The Amazon Resource Name (ARN) of the hub that contains the content. </p>
+    hub_content_document:<p>The hub content document that describes information about the hub content such as type, associated containers, scripts, and more.</p>
+    hub_content_status:<p>The status of the hub content.</p>
+    creation_time:<p>The date and time that hub content was created.</p>
+    hub_content_display_name:<p>The display name of the hub content.</p>
+    hub_content_description:<p>A description of the hub content.</p>
+    hub_content_markdown:<p>A string that provides a description of the hub content. This string can include links, tables, and standard markdown formating.</p>
+    hub_content_search_keywords:<p>The searchable keywords for the hub content.</p>
+    hub_content_dependencies:<p>The location of any dependencies that the hub content has, such as scripts, model artifacts, datasets, or notebooks.</p>
+    failure_reason:<p>The failure reason if importing hub content failed.</p>
+    
+    """
     hub_name: str
     hub_content_type: str
     hub_content_name: str
@@ -4462,6 +4916,18 @@ class HubContent(Base):
 
 
 class HumanTaskUi(Base):
+    """
+    HumanTaskUi 
+     Class representing resource HumanTaskUi
+    Attributes
+    ---------------------
+    human_task_ui_arn:<p>The Amazon Resource Name (ARN) of the human task user interface (worker task template).</p>
+    human_task_ui_name:<p>The name of the human task user interface (worker task template).</p>
+    creation_time:<p>The timestamp when the human task user interface was created.</p>
+    ui_template:
+    human_task_ui_status:<p>The status of the human task user interface (worker task template). Valid values are listed below.</p>
+    
+    """
     human_task_ui_name: str
     human_task_ui_arn: Optional[str] = Unassigned()
     human_task_ui_status: Optional[str] = Unassigned()
@@ -4595,6 +5061,31 @@ class HumanTaskUi(Base):
 
 
 class HyperParameterTuningJob(Base):
+    """
+    HyperParameterTuningJob 
+     Class representing resource HyperParameterTuningJob
+    Attributes
+    ---------------------
+    hyper_parameter_tuning_job_name:<p>The name of the hyperparameter tuning job.</p>
+    hyper_parameter_tuning_job_arn:<p>The Amazon Resource Name (ARN) of the tuning job.</p>
+    hyper_parameter_tuning_job_config:<p>The <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_HyperParameterTuningJobConfig.html">HyperParameterTuningJobConfig</a> object that specifies the configuration of the tuning job.</p>
+    hyper_parameter_tuning_job_status:<p>The status of the tuning job.</p>
+    creation_time:<p>The date and time that the tuning job started.</p>
+    training_job_status_counters:<p>The <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_TrainingJobStatusCounters.html">TrainingJobStatusCounters</a> object that specifies the number of training jobs, categorized by status, that this tuning job launched.</p>
+    objective_status_counters:<p>The <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_ObjectiveStatusCounters.html">ObjectiveStatusCounters</a> object that specifies the number of training jobs, categorized by the status of their final objective metric, that this tuning job launched.</p>
+    training_job_definition:<p>The <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_HyperParameterTrainingJobDefinition.html">HyperParameterTrainingJobDefinition</a> object that specifies the definition of the training jobs that this tuning job launches.</p>
+    training_job_definitions:<p>A list of the <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_HyperParameterTrainingJobDefinition.html">HyperParameterTrainingJobDefinition</a> objects launched for this tuning job.</p>
+    hyper_parameter_tuning_end_time:<p>The date and time that the tuning job ended.</p>
+    last_modified_time:<p>The date and time that the status of the tuning job was modified. </p>
+    best_training_job:<p>A <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_TrainingJobSummary.html">TrainingJobSummary</a> object that describes the training job that completed with the best current <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_HyperParameterTuningJobObjective.html">HyperParameterTuningJobObjective</a>.</p>
+    overall_best_training_job:<p>If the hyperparameter tuning job is an warm start tuning job with a <code>WarmStartType</code> of <code>IDENTICAL_DATA_AND_ALGORITHM</code>, this is the <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_TrainingJobSummary.html">TrainingJobSummary</a> for the training job with the best objective metric value of all training jobs launched by this tuning job and all parent jobs specified for the warm start tuning job.</p>
+    warm_start_config:<p>The configuration for starting the hyperparameter parameter tuning job using one or more previous tuning jobs as a starting point. The results of previous tuning jobs are used to inform which combinations of hyperparameters to search over in the new tuning job.</p>
+    autotune:<p>A flag to indicate if autotune is enabled for the hyperparameter tuning job.</p>
+    failure_reason:<p>If the tuning job failed, the reason it failed.</p>
+    tuning_job_completion_details:<p>Tuning job completion information returned as the response from a hyperparameter tuning job. This information tells if your tuning job has or has not converged. It also includes the number of training jobs that have not improved model performance as evaluated against the objective function.</p>
+    consumed_resources:
+    
+    """
     hyper_parameter_tuning_job_name: str
     hyper_parameter_tuning_job_arn: Optional[str] = Unassigned()
     hyper_parameter_tuning_job_config: Optional[HyperParameterTuningJobConfig] = Unassigned()
@@ -4822,6 +5313,22 @@ class HyperParameterTuningJob(Base):
 
 
 class Image(Base):
+    """
+    Image 
+     Class representing resource Image
+    Attributes
+    ---------------------
+    creation_time:<p>When the image was created.</p>
+    description:<p>The description of the image.</p>
+    display_name:<p>The name of the image as displayed.</p>
+    failure_reason:<p>When a create, update, or delete operation fails, the reason for the failure.</p>
+    image_arn:<p>The ARN of the image.</p>
+    image_name:<p>The name of the image.</p>
+    image_status:<p>The status of the image.</p>
+    last_modified_time:<p>When the image was last modified.</p>
+    role_arn:<p>The ARN of the IAM role that enables Amazon SageMaker to perform tasks on your behalf.</p>
+    
+    """
     image_name: str
     creation_time: Optional[datetime.datetime] = Unassigned()
     description: Optional[str] = Unassigned()
@@ -5013,6 +5520,29 @@ class Image(Base):
 
 
 class ImageVersion(Base):
+    """
+    ImageVersion 
+     Class representing resource ImageVersion
+    Attributes
+    ---------------------
+    base_image:<p>The registry path of the container image on which this image version is based.</p>
+    container_image:<p>The registry path of the container image that contains this image version.</p>
+    creation_time:<p>When the version was created.</p>
+    failure_reason:<p>When a create or delete operation fails, the reason for the failure.</p>
+    image_arn:<p>The ARN of the image the version is based on.</p>
+    image_version_arn:<p>The ARN of the version.</p>
+    image_version_status:<p>The status of the version.</p>
+    last_modified_time:<p>When the version was last modified.</p>
+    version:<p>The version number.</p>
+    vendor_guidance:<p>The stability of the image version specified by the maintainer.</p> <ul> <li> <p> <code>NOT_PROVIDED</code>: The maintainers did not provide a status for image version stability.</p> </li> <li> <p> <code>STABLE</code>: The image version is stable.</p> </li> <li> <p> <code>TO_BE_ARCHIVED</code>: The image version is set to be archived. Custom image versions that are set to be archived are automatically archived after three months.</p> </li> <li> <p> <code>ARCHIVED</code>: The image version is archived. Archived image versions are not searchable and are no longer actively supported. </p> </li> </ul>
+    job_type:<p>Indicates SageMaker job type compatibility.</p> <ul> <li> <p> <code>TRAINING</code>: The image version is compatible with SageMaker training jobs.</p> </li> <li> <p> <code>INFERENCE</code>: The image version is compatible with SageMaker inference jobs.</p> </li> <li> <p> <code>NOTEBOOK_KERNEL</code>: The image version is compatible with SageMaker notebook kernels.</p> </li> </ul>
+    m_l_framework:<p>The machine learning framework vended in the image version.</p>
+    programming_lang:<p>The supported programming language and its version.</p>
+    processor:<p>Indicates CPU or GPU compatibility.</p> <ul> <li> <p> <code>CPU</code>: The image version is compatible with CPU.</p> </li> <li> <p> <code>GPU</code>: The image version is compatible with GPU.</p> </li> </ul>
+    horovod:<p>Indicates Horovod compatibility.</p>
+    release_notes:<p>The maintainer description of the image version.</p>
+    
+    """
     base_image: Optional[str] = Unassigned()
     container_image: Optional[str] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
@@ -5192,6 +5722,24 @@ class ImageVersion(Base):
 
 
 class InferenceComponent(Base):
+    """
+    InferenceComponent 
+     Class representing resource InferenceComponent
+    Attributes
+    ---------------------
+    inference_component_name:<p>The name of the inference component.</p>
+    inference_component_arn:<p>The Amazon Resource Name (ARN) of the inference component.</p>
+    endpoint_name:<p>The name of the endpoint that hosts the inference component.</p>
+    endpoint_arn:<p>The Amazon Resource Name (ARN) of the endpoint that hosts the inference component.</p>
+    creation_time:<p>The time when the inference component was created.</p>
+    last_modified_time:<p>The time when the inference component was last updated.</p>
+    variant_name:<p>The name of the production variant that hosts the inference component.</p>
+    failure_reason:<p>If the inference component status is <code>Failed</code>, the reason for the failure.</p>
+    specification:<p>Details about the resources that are deployed with this inference component.</p>
+    runtime_config:<p>Details about the runtime settings for the model that is deployed with the inference component.</p>
+    inference_component_status:<p>The status of the inference component.</p>
+    
+    """
     inference_component_name: str
     inference_component_arn: Optional[str] = Unassigned()
     endpoint_name: Optional[str] = Unassigned()
@@ -5378,6 +5926,29 @@ class InferenceComponent(Base):
 
 
 class InferenceExperiment(Base):
+    """
+    InferenceExperiment 
+     Class representing resource InferenceExperiment
+    Attributes
+    ---------------------
+    arn:<p>The ARN of the inference experiment being described.</p>
+    name:<p>The name of the inference experiment.</p>
+    type:<p>The type of the inference experiment.</p>
+    status:<p> The status of the inference experiment. The following are the possible statuses for an inference experiment: </p> <ul> <li> <p> <code>Creating</code> - Amazon SageMaker is creating your experiment. </p> </li> <li> <p> <code>Created</code> - Amazon SageMaker has finished the creation of your experiment and will begin the experiment at the scheduled time. </p> </li> <li> <p> <code>Updating</code> - When you make changes to your experiment, your experiment shows as updating. </p> </li> <li> <p> <code>Starting</code> - Amazon SageMaker is beginning your experiment. </p> </li> <li> <p> <code>Running</code> - Your experiment is in progress. </p> </li> <li> <p> <code>Stopping</code> - Amazon SageMaker is stopping your experiment. </p> </li> <li> <p> <code>Completed</code> - Your experiment has completed. </p> </li> <li> <p> <code>Cancelled</code> - When you conclude your experiment early using the <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_StopInferenceExperiment.html">StopInferenceExperiment</a> API, or if any operation fails with an unexpected error, it shows as cancelled. </p> </li> </ul>
+    endpoint_metadata:<p>The metadata of the endpoint on which the inference experiment ran.</p>
+    model_variants:<p> An array of <code>ModelVariantConfigSummary</code> objects. There is one for each variant in the inference experiment. Each <code>ModelVariantConfigSummary</code> object in the array describes the infrastructure configuration for deploying the corresponding variant. </p>
+    schedule:<p>The duration for which the inference experiment ran or will run.</p>
+    status_reason:<p> The error message or client-specified <code>Reason</code> from the <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_StopInferenceExperiment.html">StopInferenceExperiment</a> API, that explains the status of the inference experiment. </p>
+    description:<p>The description of the inference experiment.</p>
+    creation_time:<p>The timestamp at which you created the inference experiment.</p>
+    completion_time:<p> The timestamp at which the inference experiment was completed. </p>
+    last_modified_time:<p>The timestamp at which you last modified the inference experiment.</p>
+    role_arn:<p> The ARN of the IAM role that Amazon SageMaker can assume to access model artifacts and container images, and manage Amazon SageMaker Inference endpoints for model deployment. </p>
+    data_storage_config:<p>The Amazon S3 location and configuration for storing inference request and response data.</p>
+    shadow_mode_config:<p> The configuration of <code>ShadowMode</code> inference experiment type, which shows the production variant that takes all the inference requests, and the shadow variant to which Amazon SageMaker replicates a percentage of the inference requests. For the shadow variant it also shows the percentage of requests that Amazon SageMaker replicates. </p>
+    kms_key:<p> The Amazon Web Services Key Management Service (Amazon Web Services KMS) key that Amazon SageMaker uses to encrypt data on the storage volume attached to the ML compute instance that hosts the endpoint. For more information, see <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_CreateInferenceExperiment.html">CreateInferenceExperiment</a>. </p>
+    
+    """
     name: str
     arn: Optional[str] = Unassigned()
     type: Optional[str] = Unassigned()
@@ -5609,6 +6180,27 @@ class InferenceExperiment(Base):
 
 
 class InferenceRecommendationsJob(Base):
+    """
+    InferenceRecommendationsJob 
+     Class representing resource InferenceRecommendationsJob
+    Attributes
+    ---------------------
+    job_name:<p>The name of the job. The name must be unique within an Amazon Web Services Region in the Amazon Web Services account.</p>
+    job_type:<p>The job type that you provided when you initiated the job.</p>
+    job_arn:<p>The Amazon Resource Name (ARN) of the job.</p>
+    role_arn:<p>The Amazon Resource Name (ARN) of the Amazon Web Services Identity and Access Management (IAM) role you provided when you initiated the job.</p>
+    status:<p>The status of the job.</p>
+    creation_time:<p>A timestamp that shows when the job was created.</p>
+    last_modified_time:<p>A timestamp that shows when the job was last modified.</p>
+    input_config:<p>Returns information about the versioned model package Amazon Resource Name (ARN), the traffic pattern, and endpoint configurations you provided when you initiated the job.</p>
+    job_description:<p>The job description that you provided when you initiated the job.</p>
+    completion_time:<p>A timestamp that shows when the job completed.</p>
+    failure_reason:<p>If the job fails, provides information why the job failed.</p>
+    stopping_conditions:<p>The stopping conditions that you provided when you initiated the job.</p>
+    inference_recommendations:<p>The recommendations made by Inference Recommender.</p>
+    endpoint_performances:<p>The performance results from running an Inference Recommender job on an existing endpoint.</p>
+    
+    """
     job_name: str
     job_description: Optional[str] = Unassigned()
     job_type: Optional[str] = Unassigned()
@@ -5811,6 +6403,31 @@ class InferenceRecommendationsJob(Base):
 
 
 class LabelingJob(Base):
+    """
+    LabelingJob 
+     Class representing resource LabelingJob
+    Attributes
+    ---------------------
+    labeling_job_status:<p>The processing status of the labeling job. </p>
+    label_counters:<p>Provides a breakdown of the number of data objects labeled by humans, the number of objects labeled by machine, the number of objects than couldn't be labeled, and the total number of objects labeled. </p>
+    creation_time:<p>The date and time that the labeling job was created.</p>
+    last_modified_time:<p>The date and time that the labeling job was last updated.</p>
+    job_reference_code:<p>A unique identifier for work done as part of a labeling job.</p>
+    labeling_job_name:<p>The name assigned to the labeling job when it was created.</p>
+    labeling_job_arn:<p>The Amazon Resource Name (ARN) of the labeling job.</p>
+    input_config:<p>Input configuration information for the labeling job, such as the Amazon S3 location of the data objects and the location of the manifest file that describes the data objects.</p>
+    output_config:<p>The location of the job's output data and the Amazon Web Services Key Management Service key ID for the key used to encrypt the output data, if any.</p>
+    role_arn:<p>The Amazon Resource Name (ARN) that SageMaker assumes to perform tasks on your behalf during data labeling.</p>
+    human_task_config:<p>Configuration information required for human workers to complete a labeling task.</p>
+    failure_reason:<p>If the job failed, the reason that it failed. </p>
+    label_attribute_name:<p>The attribute used as the label in the output manifest file.</p>
+    label_category_config_s3_uri:<p>The S3 location of the JSON file that defines the categories used to label data objects. Please note the following label-category limits:</p> <ul> <li> <p>Semantic segmentation labeling jobs using automated labeling: 20 labels</p> </li> <li> <p>Box bounding labeling jobs (all): 10 labels</p> </li> </ul> <p>The file is a JSON structure in the following format:</p> <p> <code>{</code> </p> <p> <code> "document-version": "2018-11-28"</code> </p> <p> <code> "labels": [</code> </p> <p> <code> {</code> </p> <p> <code> "label": "<i>label 1</i>"</code> </p> <p> <code> },</code> </p> <p> <code> {</code> </p> <p> <code> "label": "<i>label 2</i>"</code> </p> <p> <code> },</code> </p> <p> <code> ...</code> </p> <p> <code> {</code> </p> <p> <code> "label": "<i>label n</i>"</code> </p> <p> <code> }</code> </p> <p> <code> ]</code> </p> <p> <code>}</code> </p>
+    stopping_conditions:<p>A set of conditions for stopping a labeling job. If any of the conditions are met, the job is automatically stopped.</p>
+    labeling_job_algorithms_config:<p>Configuration information for automated data labeling.</p>
+    tags:<p>An array of key-value pairs. You can use tags to categorize your Amazon Web Services resources in different ways, for example, by purpose, owner, or environment. For more information, see <a href="https://docs.aws.amazon.com/general/latest/gr/aws_tagging.html">Tagging Amazon Web Services Resources</a>.</p>
+    labeling_job_output:<p>The location of the output produced by the labeling job.</p>
+    
+    """
     labeling_job_name: str
     labeling_job_status: Optional[str] = Unassigned()
     label_counters: Optional[LabelCounters] = Unassigned()
@@ -6051,6 +6668,23 @@ class LabelingJob(Base):
 
 
 class Model(Base):
+    """
+    Model 
+     Class representing resource Model
+    Attributes
+    ---------------------
+    model_name:<p>Name of the SageMaker model.</p>
+    creation_time:<p>A timestamp that shows when the model was created.</p>
+    model_arn:<p>The Amazon Resource Name (ARN) of the model.</p>
+    primary_container:<p>The location of the primary inference code, associated artifacts, and custom environment map that the inference code uses when it is deployed in production. </p>
+    containers:<p>The containers in the inference pipeline.</p>
+    inference_execution_config:<p>Specifies details of how containers in a multi-container endpoint are called.</p>
+    execution_role_arn:<p>The Amazon Resource Name (ARN) of the IAM role that you specified for the model.</p>
+    vpc_config:<p>A <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_VpcConfig.html">VpcConfig</a> object that specifies the VPC that this model has access to. For more information, see <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/host-vpc.html">Protect Endpoints by Using an Amazon Virtual Private Cloud</a> </p>
+    enable_network_isolation:<p>If <code>True</code>, no inbound or outbound network calls can be made to or from the model container.</p>
+    deployment_recommendation:<p>A set of recommended deployment configurations for the model.</p>
+    
+    """
     model_name: str
     primary_container: Optional[ContainerDefinition] = Unassigned()
     containers: Optional[List[ContainerDefinition]] = Unassigned()
@@ -6222,6 +6856,24 @@ class Model(Base):
 
 
 class ModelBiasJobDefinition(Base):
+    """
+    ModelBiasJobDefinition 
+     Class representing resource ModelBiasJobDefinition
+    Attributes
+    ---------------------
+    job_definition_arn:<p>The Amazon Resource Name (ARN) of the model bias job.</p>
+    job_definition_name:<p>The name of the bias job definition. The name must be unique within an Amazon Web Services Region in the Amazon Web Services account.</p>
+    creation_time:<p>The time at which the model bias job was created.</p>
+    model_bias_app_specification:<p>Configures the model bias job to run a specified Docker container image.</p>
+    model_bias_job_input:<p>Inputs for the model bias job.</p>
+    model_bias_job_output_config:
+    job_resources:
+    role_arn:<p>The Amazon Resource Name (ARN) of the IAM role that has read permission to the input data location and write permission to the output data location in Amazon S3.</p>
+    model_bias_baseline_config:<p>The baseline configuration for a model bias job.</p>
+    network_config:<p>Networking options for a model bias job.</p>
+    stopping_condition:
+    
+    """
     job_definition_name: str
     job_definition_arn: Optional[str] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
@@ -6436,6 +7088,24 @@ class ModelBiasJobDefinition(Base):
 
 
 class ModelCard(Base):
+    """
+    ModelCard 
+     Class representing resource ModelCard
+    Attributes
+    ---------------------
+    model_card_arn:<p>The Amazon Resource Name (ARN) of the model card.</p>
+    model_card_name:<p>The name of the model card.</p>
+    model_card_version:<p>The version of the model card.</p>
+    content:<p>The content of the model card.</p>
+    model_card_status:<p>The approval status of the model card within your organization. Different organizations might have different criteria for model card review and approval.</p> <ul> <li> <p> <code>Draft</code>: The model card is a work in progress.</p> </li> <li> <p> <code>PendingReview</code>: The model card is pending review.</p> </li> <li> <p> <code>Approved</code>: The model card is approved.</p> </li> <li> <p> <code>Archived</code>: The model card is archived. No more updates should be made to the model card, but it can still be exported.</p> </li> </ul>
+    creation_time:<p>The date and time the model card was created.</p>
+    created_by:
+    security_config:<p>The security configuration used to protect model card content.</p>
+    last_modified_time:<p>The date and time the model card was last modified.</p>
+    last_modified_by:
+    model_card_processing_status:<p>The processing status of model card deletion. The <code>ModelCardProcessingStatus</code> updates throughout the different deletion steps.</p> <ul> <li> <p> <code>DeletePending</code>: Model card deletion request received.</p> </li> <li> <p> <code>DeleteInProgress</code>: Model card deletion is in progress.</p> </li> <li> <p> <code>ContentDeleted</code>: Deleted model card content.</p> </li> <li> <p> <code>ExportJobsDeleted</code>: Deleted all export jobs associated with the model card.</p> </li> <li> <p> <code>DeleteCompleted</code>: Successfully deleted the model card.</p> </li> <li> <p> <code>DeleteFailed</code>: The model card failed to delete.</p> </li> </ul>
+    
+    """
     model_card_name: str
     model_card_arn: Optional[str] = Unassigned()
     model_card_version: Optional[int] = Unassigned()
@@ -6627,6 +7297,23 @@ class ModelCard(Base):
 
 
 class ModelCardExportJob(Base):
+    """
+    ModelCardExportJob 
+     Class representing resource ModelCardExportJob
+    Attributes
+    ---------------------
+    model_card_export_job_name:<p>The name of the model card export job to describe.</p>
+    model_card_export_job_arn:<p>The Amazon Resource Name (ARN) of the model card export job.</p>
+    status:<p>The completion status of the model card export job.</p> <ul> <li> <p> <code>InProgress</code>: The model card export job is in progress.</p> </li> <li> <p> <code>Completed</code>: The model card export job is complete.</p> </li> <li> <p> <code>Failed</code>: The model card export job failed. To see the reason for the failure, see the <code>FailureReason</code> field in the response to a <code>DescribeModelCardExportJob</code> call.</p> </li> </ul>
+    model_card_name:<p>The name or Amazon Resource Name (ARN) of the model card that the model export job exports.</p>
+    model_card_version:<p>The version of the model card that the model export job exports.</p>
+    output_config:<p>The export output details for the model card.</p>
+    created_at:<p>The date and time that the model export job was created.</p>
+    last_modified_at:<p>The date and time that the model export job was last modified.</p>
+    failure_reason:<p>The failure reason if the model export job fails.</p>
+    export_artifacts:<p>The exported model card artifacts.</p>
+    
+    """
     model_card_export_job_arn: str
     model_card_export_job_name: Optional[str] = Unassigned()
     status: Optional[str] = Unassigned()
@@ -6794,6 +7481,24 @@ class ModelCardExportJob(Base):
 
 
 class ModelExplainabilityJobDefinition(Base):
+    """
+    ModelExplainabilityJobDefinition 
+     Class representing resource ModelExplainabilityJobDefinition
+    Attributes
+    ---------------------
+    job_definition_arn:<p>The Amazon Resource Name (ARN) of the model explainability job.</p>
+    job_definition_name:<p>The name of the explainability job definition. The name must be unique within an Amazon Web Services Region in the Amazon Web Services account.</p>
+    creation_time:<p>The time at which the model explainability job was created.</p>
+    model_explainability_app_specification:<p>Configures the model explainability job to run a specified Docker container image.</p>
+    model_explainability_job_input:<p>Inputs for the model explainability job.</p>
+    model_explainability_job_output_config:
+    job_resources:
+    role_arn:<p>The Amazon Resource Name (ARN) of the IAM role that has read permission to the input data location and write permission to the output data location in Amazon S3.</p>
+    model_explainability_baseline_config:<p>The baseline configuration for a model explainability job.</p>
+    network_config:<p>Networking options for a model explainability job.</p>
+    stopping_condition:
+    
+    """
     job_definition_name: str
     job_definition_arn: Optional[str] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
@@ -7003,6 +7708,40 @@ class ModelExplainabilityJobDefinition(Base):
 
 
 class ModelPackage(Base):
+    """
+    ModelPackage 
+     Class representing resource ModelPackage
+    Attributes
+    ---------------------
+    model_package_name:<p>The name of the model package being described.</p>
+    model_package_arn:<p>The Amazon Resource Name (ARN) of the model package.</p>
+    creation_time:<p>A timestamp specifying when the model package was created.</p>
+    model_package_status:<p>The current status of the model package.</p>
+    model_package_status_details:<p>Details about the current status of the model package.</p>
+    model_package_group_name:<p>If the model is a versioned model, the name of the model group that the versioned model belongs to.</p>
+    model_package_version:<p>The version of the model package.</p>
+    model_package_description:<p>A brief summary of the model package.</p>
+    inference_specification:<p>Details about inference jobs that you can run with models based on this model package.</p>
+    source_algorithm_specification:<p>Details about the algorithm that was used to create the model package.</p>
+    validation_specification:<p>Configurations for one or more transform jobs that SageMaker runs to test the model package.</p>
+    certify_for_marketplace:<p>Whether the model package is certified for listing on Amazon Web Services Marketplace.</p>
+    model_approval_status:<p>The approval status of the model package.</p>
+    created_by:
+    metadata_properties:
+    model_metrics:<p>Metrics for the model.</p>
+    last_modified_time:<p>The last time that the model package was modified.</p>
+    last_modified_by:
+    approval_description:<p>A description provided for the model approval.</p>
+    domain:<p>The machine learning domain of the model package you specified. Common machine learning domains include computer vision and natural language processing.</p>
+    task:<p>The machine learning task you specified that your model package accomplishes. Common machine learning tasks include object detection and image classification.</p>
+    sample_payload_url:<p>The Amazon Simple Storage Service (Amazon S3) path where the sample payload are stored. This path points to a single gzip compressed tar archive (.tar.gz suffix).</p>
+    customer_metadata_properties:<p>The metadata properties associated with the model package versions.</p>
+    drift_check_baselines:<p>Represents the drift check baselines that can be used when the model monitor is set using the model package. For more information, see the topic on <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/pipelines-quality-clarify-baseline-lifecycle.html#pipelines-quality-clarify-baseline-drift-detection">Drift Detection against Previous Baselines in SageMaker Pipelines</a> in the <i>Amazon SageMaker Developer Guide</i>. </p>
+    additional_inference_specifications:<p>An array of additional Inference Specification objects. Each additional Inference Specification specifies artifacts based on this model package that can be used on inference endpoints. Generally used with SageMaker Neo to store the compiled artifacts.</p>
+    skip_model_validation:<p>Indicates if you want to skip model validation.</p>
+    source_uri:<p>The URI of the source for the model package.</p>
+    
+    """
     model_package_name: str
     model_package_group_name: Optional[str] = Unassigned()
     model_package_version: Optional[int] = Unassigned()
@@ -7355,6 +8094,19 @@ class ModelPackage(Base):
 
 
 class ModelPackageGroup(Base):
+    """
+    ModelPackageGroup 
+     Class representing resource ModelPackageGroup
+    Attributes
+    ---------------------
+    model_package_group_name:<p>The name of the model group.</p>
+    model_package_group_arn:<p>The Amazon Resource Name (ARN) of the model group.</p>
+    creation_time:<p>The time that the model group was created.</p>
+    created_by:
+    model_package_group_status:<p>The status of the model group.</p>
+    model_package_group_description:<p>A description of the model group.</p>
+    
+    """
     model_package_group_name: str
     model_package_group_arn: Optional[str] = Unassigned()
     model_package_group_description: Optional[str] = Unassigned()
@@ -7496,6 +8248,24 @@ class ModelPackageGroup(Base):
 
 
 class ModelQualityJobDefinition(Base):
+    """
+    ModelQualityJobDefinition 
+     Class representing resource ModelQualityJobDefinition
+    Attributes
+    ---------------------
+    job_definition_arn:<p>The Amazon Resource Name (ARN) of the model quality job.</p>
+    job_definition_name:<p>The name of the quality job definition. The name must be unique within an Amazon Web Services Region in the Amazon Web Services account.</p>
+    creation_time:<p>The time at which the model quality job was created.</p>
+    model_quality_app_specification:<p>Configures the model quality job to run a specified Docker container image.</p>
+    model_quality_job_input:<p>Inputs for the model quality job.</p>
+    model_quality_job_output_config:
+    job_resources:
+    role_arn:<p>The Amazon Resource Name (ARN) of an IAM role that Amazon SageMaker can assume to perform tasks on your behalf.</p>
+    model_quality_baseline_config:<p>The baseline configuration for a model quality job.</p>
+    network_config:<p>Networking options for a model quality job.</p>
+    stopping_condition:
+    
+    """
     job_definition_name: str
     job_definition_arn: Optional[str] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
@@ -7710,6 +8480,23 @@ class ModelQualityJobDefinition(Base):
 
 
 class MonitoringSchedule(Base):
+    """
+    MonitoringSchedule 
+     Class representing resource MonitoringSchedule
+    Attributes
+    ---------------------
+    monitoring_schedule_arn:<p>The Amazon Resource Name (ARN) of the monitoring schedule.</p>
+    monitoring_schedule_name:<p>Name of the monitoring schedule.</p>
+    monitoring_schedule_status:<p>The status of an monitoring job.</p>
+    creation_time:<p>The time at which the monitoring job was created.</p>
+    last_modified_time:<p>The time at which the monitoring job was last modified.</p>
+    monitoring_schedule_config:<p>The configuration object that specifies the monitoring schedule and defines the monitoring job.</p>
+    monitoring_type:<p>The type of the monitoring job that this schedule runs. This is one of the following values.</p> <ul> <li> <p> <code>DATA_QUALITY</code> - The schedule is for a data quality monitoring job.</p> </li> <li> <p> <code>MODEL_QUALITY</code> - The schedule is for a model quality monitoring job.</p> </li> <li> <p> <code>MODEL_BIAS</code> - The schedule is for a bias monitoring job.</p> </li> <li> <p> <code>MODEL_EXPLAINABILITY</code> - The schedule is for an explainability monitoring job.</p> </li> </ul>
+    failure_reason:<p>A string, up to one KB in size, that contains the reason a monitoring job failed, if it failed.</p>
+    endpoint_name:<p> The name of the endpoint for the monitoring job.</p>
+    last_monitoring_execution_summary:<p>Describes metadata on the last execution to run, if there was one.</p>
+    
+    """
     monitoring_schedule_name: str
     monitoring_schedule_arn: Optional[str] = Unassigned()
     monitoring_schedule_status: Optional[str] = Unassigned()
@@ -7954,6 +8741,35 @@ class MonitoringSchedule(Base):
 
 
 class NotebookInstance(Base):
+    """
+    NotebookInstance 
+     Class representing resource NotebookInstance
+    Attributes
+    ---------------------
+    notebook_instance_arn:<p>The Amazon Resource Name (ARN) of the notebook instance.</p>
+    notebook_instance_name:<p>The name of the SageMaker notebook instance. </p>
+    notebook_instance_status:<p>The status of the notebook instance.</p>
+    failure_reason:<p>If status is <code>Failed</code>, the reason it failed.</p>
+    url:<p>The URL that you use to connect to the Jupyter notebook that is running in your notebook instance. </p>
+    instance_type:<p>The type of ML compute instance running on the notebook instance.</p>
+    subnet_id:<p>The ID of the VPC subnet.</p>
+    security_groups:<p>The IDs of the VPC security groups.</p>
+    role_arn:<p>The Amazon Resource Name (ARN) of the IAM role associated with the instance. </p>
+    kms_key_id:<p>The Amazon Web Services KMS key ID SageMaker uses to encrypt data when storing it on the ML storage volume attached to the instance. </p>
+    network_interface_id:<p>The network interface IDs that SageMaker created at the time of creating the instance. </p>
+    last_modified_time:<p>A timestamp. Use this parameter to retrieve the time when the notebook instance was last modified. </p>
+    creation_time:<p>A timestamp. Use this parameter to return the time when the notebook instance was created</p>
+    notebook_instance_lifecycle_config_name:<p>Returns the name of a notebook instance lifecycle configuration.</p> <p>For information about notebook instance lifestyle configurations, see <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/notebook-lifecycle-config.html">Step 2.1: (Optional) Customize a Notebook Instance</a> </p>
+    direct_internet_access:<p>Describes whether SageMaker provides internet access to the notebook instance. If this value is set to <i>Disabled</i>, the notebook instance does not have internet access, and cannot connect to SageMaker training and endpoint services.</p> <p>For more information, see <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/appendix-additional-considerations.html#appendix-notebook-and-internet-access">Notebook Instances Are Internet-Enabled by Default</a>.</p>
+    volume_size_in_g_b:<p>The size, in GB, of the ML storage volume attached to the notebook instance.</p>
+    accelerator_types:<p>A list of the Elastic Inference (EI) instance types associated with this notebook instance. Currently only one EI instance type can be associated with a notebook instance. For more information, see <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/ei.html">Using Elastic Inference in Amazon SageMaker</a>.</p>
+    default_code_repository:<p>The Git repository associated with the notebook instance as its default code repository. This can be either the name of a Git repository stored as a resource in your account, or the URL of a Git repository in <a href="https://docs.aws.amazon.com/codecommit/latest/userguide/welcome.html">Amazon Web Services CodeCommit</a> or in any other Git repository. When you open a notebook instance, it opens in the directory that contains this repository. For more information, see <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/nbi-git-repo.html">Associating Git Repositories with SageMaker Notebook Instances</a>.</p>
+    additional_code_repositories:<p>An array of up to three Git repositories associated with the notebook instance. These can be either the names of Git repositories stored as resources in your account, or the URL of Git repositories in <a href="https://docs.aws.amazon.com/codecommit/latest/userguide/welcome.html">Amazon Web Services CodeCommit</a> or in any other Git repository. These repositories are cloned at the same level as the default repository of your notebook instance. For more information, see <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/nbi-git-repo.html">Associating Git Repositories with SageMaker Notebook Instances</a>.</p>
+    root_access:<p>Whether root access is enabled or disabled for users of the notebook instance.</p> <note> <p>Lifecycle configurations need root access to be able to set up a notebook instance. Because of this, lifecycle configurations associated with a notebook instance always run with root access even if you disable root access for users.</p> </note>
+    platform_identifier:<p>The platform identifier of the notebook instance runtime environment.</p>
+    instance_metadata_service_configuration:<p>Information on the IMDS configuration of the notebook instance</p>
+    
+    """
     notebook_instance_name: str
     notebook_instance_arn: Optional[str] = Unassigned()
     notebook_instance_status: Optional[str] = Unassigned()
@@ -8220,6 +9036,19 @@ class NotebookInstance(Base):
 
 
 class NotebookInstanceLifecycleConfig(Base):
+    """
+    NotebookInstanceLifecycleConfig 
+     Class representing resource NotebookInstanceLifecycleConfig
+    Attributes
+    ---------------------
+    notebook_instance_lifecycle_config_arn:<p>The Amazon Resource Name (ARN) of the lifecycle configuration.</p>
+    notebook_instance_lifecycle_config_name:<p>The name of the lifecycle configuration.</p>
+    on_create:<p>The shell script that runs only once, when you create a notebook instance.</p>
+    on_start:<p>The shell script that runs every time you start a notebook instance, including when you create the notebook instance.</p>
+    last_modified_time:<p>A timestamp that tells when the lifecycle configuration was last modified.</p>
+    creation_time:<p>A timestamp that tells when the lifecycle configuration was created.</p>
+    
+    """
     notebook_instance_lifecycle_config_name: str
     notebook_instance_lifecycle_config_arn: Optional[str] = Unassigned()
     on_create: Optional[List[NotebookInstanceLifecycleHook]] = Unassigned()
@@ -8366,6 +9195,26 @@ class NotebookInstanceLifecycleConfig(Base):
 
 
 class Pipeline(Base):
+    """
+    Pipeline 
+     Class representing resource Pipeline
+    Attributes
+    ---------------------
+    pipeline_arn:<p>The Amazon Resource Name (ARN) of the pipeline.</p>
+    pipeline_name:<p>The name of the pipeline.</p>
+    pipeline_display_name:<p>The display name of the pipeline.</p>
+    pipeline_definition:<p>The JSON pipeline definition.</p>
+    pipeline_description:<p>The description of the pipeline.</p>
+    role_arn:<p>The Amazon Resource Name (ARN) that the pipeline uses to execute.</p>
+    pipeline_status:<p>The status of the pipeline execution.</p>
+    creation_time:<p>The time when the pipeline was created.</p>
+    last_modified_time:<p>The time when the pipeline was last modified.</p>
+    last_run_time:<p>The time when the pipeline was last run.</p>
+    created_by:
+    last_modified_by:
+    parallelism_configuration:<p>Lists the parallelism configuration applied to the pipeline.</p>
+    
+    """
     pipeline_name: str
     pipeline_arn: Optional[str] = Unassigned()
     pipeline_display_name: Optional[str] = Unassigned()
@@ -8565,6 +9414,26 @@ class Pipeline(Base):
 
 
 class PipelineExecution(Base):
+    """
+    PipelineExecution 
+     Class representing resource PipelineExecution
+    Attributes
+    ---------------------
+    pipeline_arn:<p>The Amazon Resource Name (ARN) of the pipeline.</p>
+    pipeline_execution_arn:<p>The Amazon Resource Name (ARN) of the pipeline execution.</p>
+    pipeline_execution_display_name:<p>The display name of the pipeline execution.</p>
+    pipeline_execution_status:<p>The status of the pipeline execution.</p>
+    pipeline_execution_description:<p>The description of the pipeline execution.</p>
+    pipeline_experiment_config:
+    failure_reason:<p>If the execution failed, a message describing why.</p>
+    creation_time:<p>The time when the pipeline execution was created.</p>
+    last_modified_time:<p>The time when the pipeline execution was modified last.</p>
+    created_by:
+    last_modified_by:
+    parallelism_configuration:<p>The parallelism configuration applied to the pipeline.</p>
+    selective_execution_config:<p>The selective execution configuration applied to the pipeline run.</p>
+    
+    """
     pipeline_execution_arn: str
     pipeline_arn: Optional[str] = Unassigned()
     pipeline_execution_display_name: Optional[str] = Unassigned()
@@ -8708,6 +9577,34 @@ class PipelineExecution(Base):
 
 
 class ProcessingJob(Base):
+    """
+    ProcessingJob 
+     Class representing resource ProcessingJob
+    Attributes
+    ---------------------
+    processing_job_name:<p>The name of the processing job. The name must be unique within an Amazon Web Services Region in the Amazon Web Services account.</p>
+    processing_resources:<p>Identifies the resources, ML compute instances, and ML storage volumes to deploy for a processing job. In distributed training, you specify more than one instance.</p>
+    app_specification:<p>Configures the processing job to run a specified container image.</p>
+    processing_job_arn:<p>The Amazon Resource Name (ARN) of the processing job.</p>
+    processing_job_status:<p>Provides the status of a processing job.</p>
+    creation_time:<p>The time at which the processing job was created.</p>
+    processing_inputs:<p>The inputs for a processing job.</p>
+    processing_output_config:<p>Output configuration for the processing job.</p>
+    stopping_condition:<p>The time limit for how long the processing job is allowed to run.</p>
+    environment:<p>The environment variables set in the Docker container.</p>
+    network_config:<p>Networking options for a processing job.</p>
+    role_arn:<p>The Amazon Resource Name (ARN) of an IAM role that Amazon SageMaker can assume to perform tasks on your behalf.</p>
+    experiment_config:<p>The configuration information used to create an experiment.</p>
+    exit_message:<p>An optional string, up to one KB in size, that contains metadata from the processing container when the processing job exits.</p>
+    failure_reason:<p>A string, up to one KB in size, that contains the reason a processing job failed, if it failed.</p>
+    processing_end_time:<p>The time at which the processing job completed.</p>
+    processing_start_time:<p>The time at which the processing job started.</p>
+    last_modified_time:<p>The time at which the processing job was last modified.</p>
+    monitoring_schedule_arn:<p>The ARN of a monitoring schedule for an endpoint associated with this processing job.</p>
+    auto_m_l_job_arn:<p>The ARN of an AutoML job associated with this processing job.</p>
+    training_job_arn:<p>The ARN of a training job associated with this processing job.</p>
+    
+    """
     processing_job_name: str
     processing_inputs: Optional[List[ProcessingInput]] = Unassigned()
     processing_output_config: Optional[ProcessingOutputConfig] = Unassigned()
@@ -8928,6 +9825,24 @@ class ProcessingJob(Base):
 
 
 class Project(Base):
+    """
+    Project 
+     Class representing resource Project
+    Attributes
+    ---------------------
+    project_arn:<p>The Amazon Resource Name (ARN) of the project.</p>
+    project_name:<p>The name of the project.</p>
+    project_id:<p>The ID of the project.</p>
+    service_catalog_provisioning_details:<p>Information used to provision a service catalog product. For information, see <a href="https://docs.aws.amazon.com/servicecatalog/latest/adminguide/introduction.html">What is Amazon Web Services Service Catalog</a>.</p>
+    project_status:<p>The status of the project.</p>
+    creation_time:<p>The time when the project was created.</p>
+    project_description:<p>The description of the project.</p>
+    service_catalog_provisioned_product_details:<p>Information about a provisioned service catalog product.</p>
+    created_by:
+    last_modified_time:<p>The timestamp when project was last modified.</p>
+    last_modified_by:
+    
+    """
     project_name: str
     project_arn: Optional[str] = Unassigned()
     project_id: Optional[str] = Unassigned()
@@ -9102,6 +10017,26 @@ class Project(Base):
 
 
 class Space(Base):
+    """
+    Space 
+     Class representing resource Space
+    Attributes
+    ---------------------
+    domain_id:<p>The ID of the associated domain.</p>
+    space_arn:<p>The space's Amazon Resource Name (ARN).</p>
+    space_name:<p>The name of the space.</p>
+    home_efs_file_system_uid:<p>The ID of the space's profile in the Amazon EFS volume.</p>
+    status:<p>The status.</p>
+    last_modified_time:<p>The last modified time.</p>
+    creation_time:<p>The creation time.</p>
+    failure_reason:<p>The failure reason.</p>
+    space_settings:<p>A collection of space settings.</p>
+    ownership_settings:<p>The collection of ownership settings for a space.</p>
+    space_sharing_settings:<p>The collection of space sharing settings for a space.</p>
+    space_display_name:<p>The name of the space that appears in the Amazon SageMaker Studio UI.</p>
+    url:<p>Returns the URL of the space. If the space is created with Amazon Web Services IAM Identity Center (Successor to Amazon Web Services Single Sign-On) authentication, users can navigate to the URL after appending the respective redirect parameter for the application type to be federated through Amazon Web Services IAM Identity Center.</p> <p>The following application types are supported:</p> <ul> <li> <p>Studio Classic: <code>&amp;redirect=JupyterServer</code> </p> </li> <li> <p>JupyterLab: <code>&amp;redirect=JupyterLab</code> </p> </li> <li> <p>Code Editor, based on Code-OSS, Visual Studio Code - Open Source: <code>&amp;redirect=CodeEditor</code> </p> </li> </ul>
+    
+    """
     domain_id: str
     space_name: str
     space_arn: Optional[str] = Unassigned()
@@ -9285,6 +10220,19 @@ class Space(Base):
 
 
 class StudioLifecycleConfig(Base):
+    """
+    StudioLifecycleConfig 
+     Class representing resource StudioLifecycleConfig
+    Attributes
+    ---------------------
+    studio_lifecycle_config_arn:<p>The ARN of the Lifecycle Configuration to describe.</p>
+    studio_lifecycle_config_name:<p>The name of the Amazon SageMaker Studio Lifecycle Configuration that is described.</p>
+    creation_time:<p>The creation time of the Amazon SageMaker Studio Lifecycle Configuration.</p>
+    last_modified_time:<p>This value is equivalent to CreationTime because Amazon SageMaker Studio Lifecycle Configurations are immutable.</p>
+    studio_lifecycle_config_content:<p>The content of your Amazon SageMaker Studio Lifecycle Configuration script.</p>
+    studio_lifecycle_config_app_type:<p>The App type that the Lifecycle Configuration is attached to.</p>
+    
+    """
     studio_lifecycle_config_name: str
     studio_lifecycle_config_arn: Optional[str] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
@@ -9411,6 +10359,56 @@ class StudioLifecycleConfig(Base):
 
 
 class TrainingJob(Base):
+    """
+    TrainingJob 
+     Class representing resource TrainingJob
+    Attributes
+    ---------------------
+    training_job_name:<p> Name of the model training job. </p>
+    training_job_arn:<p>The Amazon Resource Name (ARN) of the training job.</p>
+    model_artifacts:<p>Information about the Amazon S3 location that is configured for storing model artifacts. </p>
+    training_job_status:<p>The status of the training job.</p> <p>SageMaker provides the following training job statuses:</p> <ul> <li> <p> <code>InProgress</code> - The training is in progress.</p> </li> <li> <p> <code>Completed</code> - The training job has completed.</p> </li> <li> <p> <code>Failed</code> - The training job has failed. To see the reason for the failure, see the <code>FailureReason</code> field in the response to a <code>DescribeTrainingJobResponse</code> call.</p> </li> <li> <p> <code>Stopping</code> - The training job is stopping.</p> </li> <li> <p> <code>Stopped</code> - The training job has stopped.</p> </li> </ul> <p>For more detailed information, see <code>SecondaryStatus</code>. </p>
+    secondary_status:<p> Provides detailed information about the state of the training job. For detailed information on the secondary status of the training job, see <code>StatusMessage</code> under <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_SecondaryStatusTransition.html">SecondaryStatusTransition</a>.</p> <p>SageMaker provides primary statuses and secondary statuses that apply to each of them:</p> <dl> <dt>InProgress</dt> <dd> <ul> <li> <p> <code>Starting</code> - Starting the training job.</p> </li> <li> <p> <code>Downloading</code> - An optional stage for algorithms that support <code>File</code> training input mode. It indicates that data is being downloaded to the ML storage volumes.</p> </li> <li> <p> <code>Training</code> - Training is in progress.</p> </li> <li> <p> <code>Interrupted</code> - The job stopped because the managed spot training instances were interrupted. </p> </li> <li> <p> <code>Uploading</code> - Training is complete and the model artifacts are being uploaded to the S3 location.</p> </li> </ul> </dd> <dt>Completed</dt> <dd> <ul> <li> <p> <code>Completed</code> - The training job has completed.</p> </li> </ul> </dd> <dt>Failed</dt> <dd> <ul> <li> <p> <code>Failed</code> - The training job has failed. The reason for the failure is returned in the <code>FailureReason</code> field of <code>DescribeTrainingJobResponse</code>.</p> </li> </ul> </dd> <dt>Stopped</dt> <dd> <ul> <li> <p> <code>MaxRuntimeExceeded</code> - The job stopped because it exceeded the maximum allowed runtime.</p> </li> <li> <p> <code>MaxWaitTimeExceeded</code> - The job stopped because it exceeded the maximum allowed wait time.</p> </li> <li> <p> <code>Stopped</code> - The training job has stopped.</p> </li> </ul> </dd> <dt>Stopping</dt> <dd> <ul> <li> <p> <code>Stopping</code> - Stopping the training job.</p> </li> </ul> </dd> </dl> <important> <p>Valid values for <code>SecondaryStatus</code> are subject to change. </p> </important> <p>We no longer support the following secondary statuses:</p> <ul> <li> <p> <code>LaunchingMLInstances</code> </p> </li> <li> <p> <code>PreparingTraining</code> </p> </li> <li> <p> <code>DownloadingTrainingImage</code> </p> </li> </ul>
+    algorithm_specification:<p>Information about the algorithm used for training, and algorithm metadata. </p>
+    resource_config:<p>Resources, including ML compute instances and ML storage volumes, that are configured for model training. </p>
+    stopping_condition:<p>Specifies a limit to how long a model training job can run. It also specifies how long a managed Spot training job has to complete. When the job reaches the time limit, SageMaker ends the training job. Use this API to cap model training costs.</p> <p>To stop a job, SageMaker sends the algorithm the <code>SIGTERM</code> signal, which delays job termination for 120 seconds. Algorithms can use this 120-second window to save the model artifacts, so the results of training are not lost. </p>
+    creation_time:<p>A timestamp that indicates when the training job was created.</p>
+    tuning_job_arn:<p>The Amazon Resource Name (ARN) of the associated hyperparameter tuning job if the training job was launched by a hyperparameter tuning job.</p>
+    labeling_job_arn:<p>The Amazon Resource Name (ARN) of the SageMaker Ground Truth labeling job that created the transform or training job.</p>
+    auto_m_l_job_arn:<p>The Amazon Resource Name (ARN) of an AutoML job.</p>
+    failure_reason:<p>If the training job failed, the reason it failed. </p>
+    hyper_parameters:<p>Algorithm-specific parameters. </p>
+    role_arn:<p>The Amazon Web Services Identity and Access Management (IAM) role configured for the training job. </p>
+    input_data_config:<p>An array of <code>Channel</code> objects that describes each data input channel. </p>
+    output_data_config:<p>The S3 path where model artifacts that you configured when creating the job are stored. SageMaker creates subfolders for model artifacts. </p>
+    warm_pool_status:<p>The status of the warm pool associated with the training job.</p>
+    vpc_config:<p>A <a href="https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_VpcConfig.html">VpcConfig</a> object that specifies the VPC that this training job has access to. For more information, see <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/train-vpc.html">Protect Training Jobs by Using an Amazon Virtual Private Cloud</a>.</p>
+    training_start_time:<p>Indicates the time when the training job starts on training instances. You are billed for the time interval between this time and the value of <code>TrainingEndTime</code>. The start time in CloudWatch Logs might be later than this time. The difference is due to the time it takes to download the training data and to the size of the training container.</p>
+    training_end_time:<p>Indicates the time when the training job ends on training instances. You are billed for the time interval between the value of <code>TrainingStartTime</code> and this time. For successful jobs and stopped jobs, this is the time after model artifacts are uploaded. For failed jobs, this is the time when SageMaker detects a job failure.</p>
+    last_modified_time:<p>A timestamp that indicates when the status of the training job was last modified.</p>
+    secondary_status_transitions:<p>A history of all of the secondary statuses that the training job has transitioned through.</p>
+    final_metric_data_list:<p>A collection of <code>MetricData</code> objects that specify the names, values, and dates and times that the training algorithm emitted to Amazon CloudWatch.</p>
+    enable_network_isolation:<p>If you want to allow inbound or outbound network calls, except for calls between peers within a training cluster for distributed training, choose <code>True</code>. If you enable network isolation for training jobs that are configured to use a VPC, SageMaker downloads and uploads customer data and model artifacts through the specified VPC, but the training container does not have network access.</p>
+    enable_inter_container_traffic_encryption:<p>To encrypt all communications between ML compute instances in distributed training, choose <code>True</code>. Encryption provides greater security for distributed training, but training might take longer. How long it takes depends on the amount of communication between compute instances, especially if you use a deep learning algorithms in distributed training.</p>
+    enable_managed_spot_training:<p>A Boolean indicating whether managed spot training is enabled (<code>True</code>) or not (<code>False</code>).</p>
+    checkpoint_config:
+    training_time_in_seconds:<p>The training time in seconds.</p>
+    billable_time_in_seconds:<p>The billable time in seconds. Billable time refers to the absolute wall-clock time.</p> <p>Multiply <code>BillableTimeInSeconds</code> by the number of instances (<code>InstanceCount</code>) in your training cluster to get the total compute time SageMaker bills you if you run distributed training. The formula is as follows: <code>BillableTimeInSeconds * InstanceCount</code> .</p> <p>You can calculate the savings from using managed spot training using the formula <code>(1 - BillableTimeInSeconds / TrainingTimeInSeconds) * 100</code>. For example, if <code>BillableTimeInSeconds</code> is 100 and <code>TrainingTimeInSeconds</code> is 500, the savings is 80%.</p>
+    debug_hook_config:
+    experiment_config:
+    debug_rule_configurations:<p>Configuration information for Amazon SageMaker Debugger rules for debugging output tensors.</p>
+    tensor_board_output_config:
+    debug_rule_evaluation_statuses:<p>Evaluation status of Amazon SageMaker Debugger rules for debugging on a training job.</p>
+    profiler_config:
+    profiler_rule_configurations:<p>Configuration information for Amazon SageMaker Debugger rules for profiling system and framework metrics.</p>
+    profiler_rule_evaluation_statuses:<p>Evaluation status of Amazon SageMaker Debugger rules for profiling on a training job.</p>
+    profiling_status:<p>Profiling status of a training job.</p>
+    environment:<p>The environment variables to set in the Docker container.</p>
+    retry_strategy:<p>The number of times to retry the job when the job fails due to an <code>InternalServerError</code>.</p>
+    remote_debug_config:<p>Configuration for remote debugging. To learn more about the remote debugging functionality of SageMaker, see <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/train-remote-debugging.html">Access a training container through Amazon Web Services Systems Manager (SSM) for remote debugging</a>.</p>
+    infra_check_config:<p>Contains information about the infrastructure health check configuration for the training job.</p>
+    
+    """
     training_job_name: str
     training_job_arn: Optional[str] = Unassigned()
     tuning_job_arn: Optional[str] = Unassigned()
@@ -9731,6 +10729,34 @@ class TrainingJob(Base):
 
 
 class TransformJob(Base):
+    """
+    TransformJob 
+     Class representing resource TransformJob
+    Attributes
+    ---------------------
+    transform_job_name:<p>The name of the transform job.</p>
+    transform_job_arn:<p>The Amazon Resource Name (ARN) of the transform job.</p>
+    transform_job_status:<p>The status of the transform job. If the transform job failed, the reason is returned in the <code>FailureReason</code> field.</p>
+    model_name:<p>The name of the model used in the transform job.</p>
+    transform_input:<p>Describes the dataset to be transformed and the Amazon S3 location where it is stored.</p>
+    transform_resources:<p>Describes the resources, including ML instance types and ML instance count, to use for the transform job.</p>
+    creation_time:<p>A timestamp that shows when the transform Job was created.</p>
+    failure_reason:<p>If the transform job failed, <code>FailureReason</code> describes why it failed. A transform job creates a log file, which includes error messages, and stores it as an Amazon S3 object. For more information, see <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/logging-cloudwatch.html">Log Amazon SageMaker Events with Amazon CloudWatch</a>.</p>
+    max_concurrent_transforms:<p>The maximum number of parallel requests on each instance node that can be launched in a transform job. The default value is 1.</p>
+    model_client_config:<p>The timeout and maximum number of retries for processing a transform job invocation.</p>
+    max_payload_in_m_b:<p>The maximum payload size, in MB, used in the transform job.</p>
+    batch_strategy:<p>Specifies the number of records to include in a mini-batch for an HTTP inference request. A <i>record</i> <i/> is a single unit of input data that inference can be made on. For example, a single line in a CSV file is a record. </p> <p>To enable the batch strategy, you must set <code>SplitType</code> to <code>Line</code>, <code>RecordIO</code>, or <code>TFRecord</code>.</p>
+    environment:<p>The environment variables to set in the Docker container. We support up to 16 key and values entries in the map.</p>
+    transform_output:<p>Identifies the Amazon S3 location where you want Amazon SageMaker to save the results from the transform job.</p>
+    data_capture_config:<p>Configuration to control how SageMaker captures inference data.</p>
+    transform_start_time:<p>Indicates when the transform job starts on ML instances. You are billed for the time interval between this time and the value of <code>TransformEndTime</code>.</p>
+    transform_end_time:<p>Indicates when the transform job has been completed, or has stopped or failed. You are billed for the time interval between this time and the value of <code>TransformStartTime</code>.</p>
+    labeling_job_arn:<p>The Amazon Resource Name (ARN) of the Amazon SageMaker Ground Truth labeling job that created the transform or training job.</p>
+    auto_m_l_job_arn:<p>The Amazon Resource Name (ARN) of the AutoML transform job.</p>
+    data_processing:
+    experiment_config:
+    
+    """
     transform_job_name: str
     transform_job_arn: Optional[str] = Unassigned()
     transform_job_status: Optional[str] = Unassigned()
@@ -9959,6 +10985,23 @@ class TransformJob(Base):
 
 
 class Trial(Base):
+    """
+    Trial 
+     Class representing resource Trial
+    Attributes
+    ---------------------
+    trial_name:<p>The name of the trial.</p>
+    trial_arn:<p>The Amazon Resource Name (ARN) of the trial.</p>
+    display_name:<p>The name of the trial as displayed. If <code>DisplayName</code> isn't specified, <code>TrialName</code> is displayed.</p>
+    experiment_name:<p>The name of the experiment the trial is part of.</p>
+    source:<p>The Amazon Resource Name (ARN) of the source and, optionally, the job type.</p>
+    creation_time:<p>When the trial was created.</p>
+    created_by:<p>Who created the trial.</p>
+    last_modified_time:<p>When the trial was last modified.</p>
+    last_modified_by:<p>Who last modified the trial.</p>
+    metadata_properties:
+    
+    """
     trial_name: str
     trial_arn: Optional[str] = Unassigned()
     display_name: Optional[str] = Unassigned()
@@ -10110,6 +11153,31 @@ class Trial(Base):
 
 
 class TrialComponent(Base):
+    """
+    TrialComponent 
+     Class representing resource TrialComponent
+    Attributes
+    ---------------------
+    trial_component_name:<p>The name of the trial component.</p>
+    trial_component_arn:<p>The Amazon Resource Name (ARN) of the trial component.</p>
+    display_name:<p>The name of the component as displayed. If <code>DisplayName</code> isn't specified, <code>TrialComponentName</code> is displayed.</p>
+    source:<p>The Amazon Resource Name (ARN) of the source and, optionally, the job type.</p>
+    status:<p>The status of the component. States include:</p> <ul> <li> <p>InProgress</p> </li> <li> <p>Completed</p> </li> <li> <p>Failed</p> </li> </ul>
+    start_time:<p>When the component started.</p>
+    end_time:<p>When the component ended.</p>
+    creation_time:<p>When the component was created.</p>
+    created_by:<p>Who created the trial component.</p>
+    last_modified_time:<p>When the component was last modified.</p>
+    last_modified_by:<p>Who last modified the component.</p>
+    parameters:<p>The hyperparameters of the component.</p>
+    input_artifacts:<p>The input artifacts of the component.</p>
+    output_artifacts:<p>The output artifacts of the component.</p>
+    metadata_properties:
+    metrics:<p>The metrics for the component.</p>
+    lineage_group_arn:<p>The Amazon Resource Name (ARN) of the lineage group.</p>
+    sources:<p>A list of ARNs and, if applicable, job types for multiple sources of an experiment run.</p>
+    
+    """
     trial_component_name: str
     trial_component_arn: Optional[str] = Unassigned()
     display_name: Optional[str] = Unassigned()
@@ -10315,6 +11383,24 @@ class TrialComponent(Base):
 
 
 class UserProfile(Base):
+    """
+    UserProfile 
+     Class representing resource UserProfile
+    Attributes
+    ---------------------
+    domain_id:<p>The ID of the domain that contains the profile.</p>
+    user_profile_arn:<p>The user profile Amazon Resource Name (ARN).</p>
+    user_profile_name:<p>The user profile name.</p>
+    home_efs_file_system_uid:<p>The ID of the user's profile in the Amazon Elastic File System volume.</p>
+    status:<p>The status.</p>
+    last_modified_time:<p>The last modified time.</p>
+    creation_time:<p>The creation time.</p>
+    failure_reason:<p>The failure reason.</p>
+    single_sign_on_user_identifier:<p>The IAM Identity Center user identifier.</p>
+    single_sign_on_user_value:<p>The IAM Identity Center user value.</p>
+    user_settings:<p>A collection of settings.</p>
+    
+    """
     domain_id: str
     user_profile_name: str
     user_profile_arn: Optional[str] = Unassigned()
@@ -10547,6 +11633,14 @@ class UserProfile(Base):
 
 
 class Workforce(Base):
+    """
+    Workforce 
+     Class representing resource Workforce
+    Attributes
+    ---------------------
+    workforce:<p>A single private workforce, which is automatically created when you create your first private work team. You can create one private work force in each Amazon Web Services Region. By default, any workforce-related API operation used in a specific region will apply to the workforce created in that region. To learn how to create a private workforce, see <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/sms-workforce-create-private.html">Create a Private Workforce</a>.</p>
+    
+    """
     workforce: Optional[Workforce] = Unassigned()
     
     def get_name(self) -> str:
@@ -10739,6 +11833,14 @@ class Workforce(Base):
 
 
 class Workteam(Base):
+    """
+    Workteam 
+     Class representing resource Workteam
+    Attributes
+    ---------------------
+    workteam:<p>A <code>Workteam</code> instance that contains information about the work team. </p>
+    
+    """
     workteam: Optional[Workteam] = Unassigned()
     
     def get_name(self) -> str:

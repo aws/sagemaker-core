@@ -319,6 +319,14 @@ class ResourcesCodeGen:
 
             class_attributes = self._get_class_attributes(resource_name)
             class_attributes_string = class_attributes[1]
+            get_operation = self.operations["Describe" + resource_name]
+            get_operation_shape = get_operation["output"]["shape"]
+            class_attributes_and_documentation = (
+                self.shapes_extractor.fetch_shape_members_and_doc_strings(get_operation_shape)
+            )
+            class_documentation_string = self._get_class_documentation_string(
+                class_attributes_and_documentation, resource_name
+            )
             resource_attributes = list(class_attributes[0].keys())
 
             defaults_decorator_method = ""
@@ -336,6 +344,9 @@ class ResourcesCodeGen:
 
             # Generate the 'get' method
             get_method = self.generate_get_method(resource_name)
+
+            # Add the class attributes and methods to the class definition
+            resource_class += add_indent(f'"""\n{class_documentation_string}\n"""\n', 4)
 
             # Add the class attributes and methods to the class definition
             resource_class += add_indent(class_attributes_string, 4)
@@ -445,6 +456,20 @@ class ResourcesCodeGen:
             shape=get_operation_shape, required_override=tuple(required_attributes)
         )
         return class_attributes
+
+    def _get_class_documentation_string(
+        self, class_attributes_and_documentation, resource_name
+    ) -> str:
+        documentation_string = f"{resource_name} \n Class representing resource {resource_name}\n"
+        documentation_string += f"Attributes\n"
+        documentation_string += f"---------------------\n"
+        for class_attribute, documentation in class_attributes_and_documentation.items():
+            class_attribute_snake = pascal_to_snake(class_attribute)
+            if documentation == None:
+                documentation_string += f"{class_attribute_snake}:\n"
+            else:
+                documentation_string += f"{class_attribute_snake}:{documentation}\n"
+        return documentation_string
 
     def _generate_create_method_args(
         self, operation_input_shape_name: str, resource_name: str
