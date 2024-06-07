@@ -2108,7 +2108,7 @@ class DataQualityJobDefinition(Base):
     @populate_inputs_decorator
     def create(
         cls,
-        job_definition_name: Union[str, object],
+        job_definition_name: str,
         data_quality_app_specification: DataQualityAppSpecification,
         data_quality_job_input: DataQualityJobInput,
         data_quality_job_output_config: MonitoringOutputConfig,
@@ -3558,7 +3558,7 @@ class Experiment(Base):
     def create(
         cls,
         experiment_name: str,
-        display_name: Optional[Union[str, object]] = Unassigned(),
+        display_name: Optional[str] = Unassigned(),
         description: Optional[str] = Unassigned(),
         tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
@@ -3745,8 +3745,8 @@ class FeatureGroup(Base):
     def create(
         cls,
         feature_group_name: str,
-        record_identifier_feature_name: Union[str, object],
-        event_time_feature_name: Union[str, object],
+        record_identifier_feature_name: str,
+        event_time_feature_name: str,
         feature_definitions: List[FeatureDefinition],
         online_store_config: Optional[OnlineStoreConfig] = Unassigned(),
         offline_store_config: Optional[OfflineStoreConfig] = Unassigned(),
@@ -4122,7 +4122,7 @@ class Hub(Base):
         cls,
         hub_name: str,
         hub_description: str,
-        hub_display_name: Optional[Union[str, object]] = Unassigned(),
+        hub_display_name: Optional[str] = Unassigned(),
         hub_search_keywords: Optional[List[str]] = Unassigned(),
         s3_storage_config: Optional[HubS3StorageConfig] = Unassigned(),
         tags: Optional[List[Tag]] = Unassigned(),
@@ -4858,7 +4858,7 @@ class Image(Base):
         image_name: str,
         role_arn: str,
         description: Optional[str] = Unassigned(),
-        display_name: Optional[Union[str, object]] = Unassigned(),
+        display_name: Optional[str] = Unassigned(),
         tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
@@ -5216,7 +5216,7 @@ class InferenceComponent(Base):
         cls,
         inference_component_name: str,
         endpoint_name: Union[str, object],
-        variant_name: Union[str, object],
+        variant_name: str,
         specification: InferenceComponentSpecification,
         runtime_config: InferenceComponentRuntimeConfig,
         tags: Optional[List[Tag]] = Unassigned(),
@@ -5666,7 +5666,7 @@ class InferenceRecommendationsJob(Base):
     @populate_inputs_decorator
     def create(
         cls,
-        job_name: Union[str, object],
+        job_name: str,
         job_type: str,
         role_arn: str,
         input_config: RecommendationJobInputConfig,
@@ -5907,7 +5907,7 @@ class LabelingJob(Base):
     def create(
         cls,
         labeling_job_name: str,
-        label_attribute_name: Union[str, object],
+        label_attribute_name: str,
         input_config: LabelingJobInputConfig,
         output_config: LabelingJobOutputConfig,
         role_arn: str,
@@ -6318,7 +6318,7 @@ class ModelBiasJobDefinition(Base):
     @populate_inputs_decorator
     def create(
         cls,
-        job_definition_name: Union[str, object],
+        job_definition_name: str,
         model_bias_app_specification: ModelBiasAppSpecification,
         model_bias_job_input: ModelBiasJobInput,
         model_bias_job_output_config: MonitoringOutputConfig,
@@ -6885,7 +6885,7 @@ class ModelExplainabilityJobDefinition(Base):
     @populate_inputs_decorator
     def create(
         cls,
-        job_definition_name: Union[str, object],
+        job_definition_name: str,
         model_explainability_app_specification: ModelExplainabilityAppSpecification,
         model_explainability_job_input: ModelExplainabilityJobInput,
         model_explainability_job_output_config: MonitoringOutputConfig,
@@ -7592,7 +7592,7 @@ class ModelQualityJobDefinition(Base):
     @populate_inputs_decorator
     def create(
         cls,
-        job_definition_name: Union[str, object],
+        job_definition_name: str,
         model_quality_app_specification: ModelQualityAppSpecification,
         model_quality_job_input: ModelQualityJobInput,
         model_quality_job_output_config: MonitoringOutputConfig,
@@ -8019,7 +8019,7 @@ class NotebookInstance(Base):
         security_group_ids: Optional[List[str]] = Unassigned(),
         kms_key_id: Optional[str] = Unassigned(),
         tags: Optional[List[Tag]] = Unassigned(),
-        lifecycle_config_name: Optional[Union[str, object]] = Unassigned(),
+        lifecycle_config_name: Optional[str] = Unassigned(),
         direct_internet_access: Optional[str] = Unassigned(),
         volume_size_in_g_b: Optional[int] = Unassigned(),
         accelerator_types: Optional[List[str]] = Unassigned(),
@@ -8406,7 +8406,7 @@ class Pipeline(Base):
         pipeline_name: str,
         client_request_token: str,
         role_arn: str,
-        pipeline_display_name: Optional[Union[str, object]] = Unassigned(),
+        pipeline_display_name: Optional[str] = Unassigned(),
         pipeline_definition: Optional[str] = Unassigned(),
         pipeline_definition_s3_location: Optional[PipelineDefinitionS3Location] = Unassigned(),
         pipeline_description: Optional[str] = Unassigned(),
@@ -9132,7 +9132,7 @@ class Space(Base):
         space_settings: Optional[SpaceSettings] = Unassigned(),
         ownership_settings: Optional[OwnershipSettings] = Unassigned(),
         space_sharing_settings: Optional[SpaceSharingSettings] = Unassigned(),
-        space_display_name: Optional[Union[str, object]] = Unassigned(),
+        space_display_name: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["Space"]:
@@ -9982,7 +9982,7 @@ class Trial(Base):
         cls,
         trial_name: str,
         experiment_name: Union[str, object],
-        display_name: Optional[Union[str, object]] = Unassigned(),
+        display_name: Optional[str] = Unassigned(),
         metadata_properties: Optional[MetadataProperties] = Unassigned(),
         tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
@@ -10140,7 +10140,7 @@ class TrialComponent(Base):
     def create(
         cls,
         trial_component_name: str,
-        display_name: Optional[Union[str, object]] = Unassigned(),
+        display_name: Optional[str] = Unassigned(),
         status: Optional[TrialComponentStatus] = Unassigned(),
         start_time: Optional[datetime.datetime] = Unassigned(),
         end_time: Optional[datetime.datetime] = Unassigned(),

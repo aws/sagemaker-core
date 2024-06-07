@@ -237,6 +237,9 @@ class ResourcesCodeGen:
             # Generate and write the base class to the file
             file.write(self.generate_base_class())
 
+            self.resource_names = [
+                row["resource_name"] for _, row in self.resources_plan.iterrows()
+            ]
             # Iterate over the rows in the resources plan
             for _, row in self.resources_plan.iterrows():
                 # Extract the necessary data from the row
@@ -464,6 +467,7 @@ class ResourcesCodeGen:
                 attr.endswith("name")
                 and attr[: -len("_name")] != resource_name_in_snake_case
                 and attr != "name"
+                and snake_to_pascal(attr[: -len("_name")]) in self.resource_names
             ):
                 if attr_type.startswith("Optional"):
                     method_args += f"{attr}: Optional[Union[str, object]] = Unassigned(),"

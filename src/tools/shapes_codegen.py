@@ -263,23 +263,6 @@ class ShapesCodeGen:
             file.write(base_class)
             file.write("\n\n")
 
-            # Write Unassigned Class
-            # class_definition_string = '''\
-            # class Unassigned:
-            #     """A custom type used to signify an undefined optional argument."""
-            #     _instance = None
-            #
-            #     def __new__(cls):
-            #         if cls._instance is None:
-            #             cls._instance = super().__new__(cls)
-            #         return cls._instance
-            # '''
-            # wrapped_class_definition = textwrap.indent(
-            #     textwrap.dedent(class_definition_string), prefix=""
-            # )
-            # file.write(wrapped_class_definition)
-            file.write("\n")
-
             # Iterate through shapes in topological order and generate classes
             topological_order = self.topological_sort()
             for shape in topological_order:
