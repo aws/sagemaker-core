@@ -494,7 +494,6 @@ class ResourcesCodeGen:
                 method_args += "\n"
         method_args = add_indent(method_args)
         return method_args
-    
 
     # TODO: use this method to replace _generate_operation_input_args
     def _generate_operation_input_args_updated(
