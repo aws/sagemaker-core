@@ -3,7 +3,11 @@ from functools import lru_cache
 
 from pydantic import BaseModel
 
-from src.tools.constants import SERVICE_JSON_FILE_PATH, RUNTIME_SERVICE_JSON_FILE_PATH
+from src.tools.constants import (
+    ADDITIONAL_OPERATION_FILE_PATH,
+    SERVICE_JSON_FILE_PATH,
+    RUNTIME_SERVICE_JSON_FILE_PATH,
+)
 
 
 class ServiceJsonData(BaseModel):
@@ -36,3 +40,10 @@ def load_combined_operations_data() -> dict:
         **service_json_data.sagemaker["operations"],
         **service_json_data.sagemaker_runtime["operations"],
     }
+
+
+@lru_cache(maxsize=1)
+def load_additional_operations_data() -> dict:
+    with open(ADDITIONAL_OPERATION_FILE_PATH, "r") as file:
+        additional_operation_json = json.load(file)
+    return additional_operation_json

@@ -1,0 +1,40 @@
+{
+    "Cluster": {
+        "DescribeClusterNode": {
+            "operation_name": "DescribeClusterNode",
+            "resource_name": "Cluster",
+            "method_name": "get_node",
+            "return_type": "ClusterNodeDetails",
+            "method_type": "object",
+            "service_name": "sagemaker"
+        }
+    },
+    "PipelineExecution": {
+        "RetryPipelineExecution": {
+            "operation_name": "RetryPipelineExecution",
+            "resource_name": "PipelineExecution",
+            "method_name": "retry",
+            "return_type": "None",
+            "method_type": "object",
+            "service_name": "sagemaker"
+        }
+    },
+    "ModelPackageGroup": {
+        "GetModelPackageGroupPolicy": {
+            "operation_name": "GetModelPackageGroupPolicy",
+            "resource_name": "ModelPackageGroup",
+            "method_name": "get_policy",
+            "return_type": "str",
+            "method_type": "object",
+            "service_name": "sagemaker"
+        },
+        "DeleteModelPackageGroupPolicy": {
+            "operation_name": "DeleteModelPackageGroupPolicy",
+            "resource_name": "ModelPackageGroup",
+            "method_name": "delete_policy",
+            "return_type": "None",
+            "method_type": "object",
+            "service_name": "sagemaker"
+        }
+    }
+}
