@@ -16,7 +16,7 @@ from functools import lru_cache
 
 import os
 import json
-
+import re
 from src.code_injection.codec import pascal_to_snake
 from src.generated.config_schema import SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA
 from src.tools.constants import (
@@ -469,7 +469,11 @@ class ResourcesCodeGen:
                 documentation_string += f"{class_attribute_snake}:\n"
             else:
                 documentation_string += f"{class_attribute_snake}:{documentation}\n"
-        return documentation_string
+        return self._remove_html_tags(documentation_string)
+
+    def _remove_html_tags(self, text):
+        clean = re.compile("<.*?>")
+        return re.sub(clean, "", text)
 
     def _generate_create_method_args(
         self, operation_input_shape_name: str, resource_name: str
