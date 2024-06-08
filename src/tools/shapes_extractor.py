@@ -234,6 +234,20 @@ class ShapesExtractor:
                 )
         return init_data_body
 
+    @lru_cache
+    def fetch_shape_members_and_doc_strings(self, shape, required_override=()):
+        shape_dict = self.combined_shapes[shape]
+        members = shape_dict["members"]
+        required_args = list(required_override) or shape_dict.get("required", [])
+        # bring the required members in front
+        ordered_members = {key: members[key] for key in required_args if key in members}
+        ordered_members.update(members)
+        shape_members_and_docstrings = {}
+        for member_name, member_attrs in ordered_members.items():
+            member_shape_documentation = member_attrs.get("documentation")
+            shape_members_and_docstrings[member_name] = member_shape_documentation
+        return shape_members_and_docstrings
+
     def get_required_members(self, shape):
         shape_dict = self.combined_shapes[shape]
         required_args = shape_dict.get("required", [])

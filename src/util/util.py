@@ -74,3 +74,8 @@ def reformat_file_with_black(filename):
         print(f"File '{filename}' reformatted successfully.")
     except subprocess.CalledProcessError as e:
         print(f"An error occurred while reformatting '{filename}': {e}")
+
+
+def remove_html_tags(text):
+    clean = re.compile("<.*?>")
+    return re.sub(clean, "", text)

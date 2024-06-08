@@ -16,7 +16,7 @@ from functools import lru_cache
 
 import os
 import json
-
+import re
 from src.code_injection.codec import pascal_to_snake
 from src.generated.config_schema import SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA
 from src.tools.constants import (
@@ -32,7 +32,7 @@ from src.tools.constants import (
     CONFIGURABLE_ATTRIBUTE_SUBSTRINGS,
 )
 from src.tools.method import Method, MethodType
-from src.util.util import add_indent, convert_to_snake_case, snake_to_pascal
+from src.util.util import add_indent, convert_to_snake_case, snake_to_pascal, remove_html_tags
 from src.tools.resources_extractor import ResourcesExtractor
 from src.tools.shapes_extractor import ShapesExtractor
 from src.tools.templates import (
@@ -328,6 +328,14 @@ class ResourcesCodeGen:
 
             class_attributes = self._get_class_attributes(resource_name)
             class_attributes_string = class_attributes[1]
+            get_operation = self.operations["Describe" + resource_name]
+            get_operation_shape = get_operation["output"]["shape"]
+            class_attributes_and_documentation = (
+                self.shapes_extractor.fetch_shape_members_and_doc_strings(get_operation_shape)
+            )
+            class_documentation_string = self._get_class_documentation_string(
+                class_attributes_and_documentation, resource_name
+            )
             resource_attributes = list(class_attributes[0].keys())
 
             defaults_decorator_method = ""
@@ -345,6 +353,9 @@ class ResourcesCodeGen:
 
             # Generate the 'get' method
             get_method = self.generate_get_method(resource_name)
+
+            # Add the class attributes and methods to the class definition
+            resource_class += add_indent(f'"""\n{class_documentation_string}\n"""\n', 4)
 
             # Add the class attributes and methods to the class definition
             resource_class += add_indent(class_attributes_string, 4)
@@ -460,6 +471,20 @@ class ResourcesCodeGen:
             shape=get_operation_shape, required_override=tuple(required_attributes)
         )
         return class_attributes
+
+    def _get_class_documentation_string(
+        self, class_attributes_and_documentation, resource_name
+    ) -> str:
+        documentation_string = f"{resource_name} \n Class representing resource {resource_name}\n"
+        documentation_string += f"Attributes\n"
+        documentation_string += f"---------------------\n"
+        for class_attribute, documentation in class_attributes_and_documentation.items():
+            class_attribute_snake = pascal_to_snake(class_attribute)
+            if documentation == None:
+                documentation_string += f"{class_attribute_snake}:\n"
+            else:
+                documentation_string += f"{class_attribute_snake}:{documentation}\n"
+        return remove_html_tags(documentation_string)
 
     def _generate_create_method_args(
         self, operation_input_shape_name: str, resource_name: str
