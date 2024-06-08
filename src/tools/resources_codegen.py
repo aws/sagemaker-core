@@ -32,7 +32,7 @@ from src.tools.constants import (
     CONFIGURABLE_ATTRIBUTE_SUBSTRINGS,
 )
 from src.tools.method import Method, MethodType
-from src.util.util import add_indent, convert_to_snake_case, snake_to_pascal
+from src.util.util import add_indent, convert_to_snake_case, snake_to_pascal, remove_html_tags
 from src.tools.resources_extractor import ResourcesExtractor
 from src.tools.shapes_extractor import ShapesExtractor
 from src.tools.templates import (
@@ -484,11 +484,7 @@ class ResourcesCodeGen:
                 documentation_string += f"{class_attribute_snake}:\n"
             else:
                 documentation_string += f"{class_attribute_snake}:{documentation}\n"
-        return self._remove_html_tags(documentation_string)
-
-    def _remove_html_tags(self, text):
-        clean = re.compile("<.*?>")
-        return re.sub(clean, "", text)
+        return remove_html_tags(documentation_string)
 
     def _generate_create_method_args(
         self, operation_input_shape_name: str, resource_name: str
