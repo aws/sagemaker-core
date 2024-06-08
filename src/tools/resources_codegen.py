@@ -75,6 +75,7 @@ OBJECT = "object"
 PROPERTIES = "properties"
 SAGEMAKER = "SageMaker"
 PYTHON_SDK = "PythonSDK"
+SCHEMA_VERSION = "SchemaVersion"
 RESOURCES = "Resources"
 REQUIRED = "required"
 GLOBAL_DEFAULTS = "GlobalDefaults"
@@ -1396,7 +1397,11 @@ class ResourcesCodeGen:
             "$schema": "https://json-schema.org/draft/2020-12/schema",
             TYPE: OBJECT,
             PROPERTIES: {
-                "SchemaVersion": "1.0",
+                SCHEMA_VERSION: {
+                    TYPE: "string",
+                    "enum": ["1.0"],
+                    "description": "The schema version of the document.",
+                },
                 SAGEMAKER: {
                     TYPE: OBJECT,
                     PROPERTIES: {

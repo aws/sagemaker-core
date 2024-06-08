@@ -36,34 +36,33 @@ class Base(BaseModel):
     model_config = ConfigDict(protected_namespaces=())
     
     @classmethod
-    def _serialize(cls, data: Dict) -> Dict:
-        result = {}
-        for attr, value in data.items():
-            if isinstance(value, Unassigned):
-                continue
-            elif isinstance(value, List):
-                result[attr] = cls._serialize_list(value)
-            elif isinstance(value, Dict):
-                result[attr] = cls._serialize_dict(value)
-            elif hasattr(value, 'serialize'):
-                result[attr] = value.serialize()
-            else:
-                result[attr] = value
-        return result
-    
+    def _serialize(cls, value: any) -> any:
+        if isinstance(value, Unassigned):
+            return None
+        elif isinstance(value, List):
+            return cls._serialize_list(value)
+        elif isinstance(value, Dict):
+            return cls._serialize_dict(value)
+        elif hasattr(value, 'serialize'):
+            return value.serialize()
+        else:
+            return value
+
     @classmethod
     def _serialize_list(cls, value: List):
-        return [
-            cls._serialize(v)
-                for v in value
-                ]
-    
+        serialized_list = []
+        for v in value:
+            if serialize_result := cls._serialize(v):
+                serialized_list.append(serialize_result)
+        return serialized_list
+
     @classmethod
     def _serialize_dict(cls, value: Dict):
-        return {
-            k: cls._serialize(v)
-            for k, v in value.items()
-        }
+        serialized_dict = {}
+        for k, v in value.items():
+            if serialize_result := cls._serialize(v):
+                serialized_dict.update({k: serialize_result})
+        return serialized_dict
     
     @staticmethod
     def get_updated_kwargs_with_configured_attributes(config_schema_for_resource: dict, resource_name: str, **kwargs):
@@ -98,13 +97,20 @@ class Base(BaseModel):
             elif isinstance(value, list):
                 updated_args[arg] = [
                     Base.populate_chained_attributes(resource_name=type(list_item).__name__,
-                                                     operation_input_args={snake_to_pascal(k): v for k, v in list_item.__dict__.items()})
+                                                     operation_input_args={
+                                                         snake_to_pascal(k): v
+                                                         for k, v in Base._get_items(list_item)
+                                                     })
                     for list_item in value
                 ]
             elif is_not_primitive(value):
-                obj_dict = {snake_to_pascal(k): v for k, v in value.__dict__.items()}
+                obj_dict = {snake_to_pascal(k): v for k, v in Base._get_items(value)}
                 updated_args[arg] = Base.populate_chained_attributes(resource_name=type(value).__name__, operation_input_args=obj_dict)
         return updated_args
+
+    @staticmethod
+    def _get_items(object):
+        return object.items() if type(object) == dict else object.__dict__.items()
 
         
 class Action(Base):
