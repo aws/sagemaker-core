@@ -62,7 +62,7 @@ class Base(BaseModel):
         for k, v in value.items():
             if serialize_result := cls._serialize(v):
                 serialized_dict.update({k: serialize_result})
-        return serialized_dict
+        return serialized_dict 
     
     @staticmethod
     def get_updated_kwargs_with_configured_attributes(config_schema_for_resource: dict, resource_name: str, **kwargs):
