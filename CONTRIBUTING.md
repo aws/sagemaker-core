@@ -33,7 +33,7 @@ source .env
 ## Run CodeGen
 * To generate all CodeGen code run the below
 ```
-python src/tools/codegen.py
+python src/sagemaker_core/tools/codegen.py
 ```
 
 ## Testing

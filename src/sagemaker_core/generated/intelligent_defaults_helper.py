@@ -25,8 +25,8 @@ from platformdirs import site_config_dir, user_config_dir
 
 from botocore.utils import merge_dicts
 from six.moves.urllib.parse import urlparse
-from src.generated.config_schema import SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA
-from src.generated.exceptions import (
+from sagemaker_core.generated.config_schema import SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA
+from sagemaker_core.generated.exceptions import (
     LocalConfigNotFoundError,
     S3ConfigNotFoundError,
     IntelligentDefaultsError,

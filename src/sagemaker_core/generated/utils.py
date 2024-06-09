@@ -19,7 +19,7 @@ import time
 from boto3.session import Session
 from botocore.config import Config
 from typing import TypeVar, Generic, Type
-from src.code_injection.codec import transform
+from sagemaker_core.code_injection.codec import transform
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
