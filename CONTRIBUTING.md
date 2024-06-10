@@ -43,6 +43,6 @@ pytest tst
 ```
 * Use Pylint to detect errors and improve code quality. For code style errors use `black` to format the files.
 ```
-black . -l 100
+black .
 pylint **/*.py
 ```

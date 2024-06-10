@@ -38,3 +38,6 @@ codegen = [
 
 [project.urls]
 Repository = "https://github.com/aws/sagemaker-core.git"
+
+[tool.black]
+line-length = 100
