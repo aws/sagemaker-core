@@ -164,6 +164,7 @@ class SageMakerRuntimeClient(metaclass=SingletonMeta):
         session: Session = None,
         region_name: str = None,
         service_name="sagemaker-runtime",
+        config: Config = None,
     ):
         """
         Initializes the SageMakerClient with a boto3 session, region name, and service name.
