@@ -17,9 +17,9 @@ from functools import lru_cache
 import os
 import json
 import re
-from src.code_injection.codec import pascal_to_snake
-from src.generated.config_schema import SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA
-from src.tools.constants import (
+from sagemaker_core.code_injection.codec import pascal_to_snake
+from sagemaker_core.generated.config_schema import SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA
+from sagemaker_core.tools.constants import (
     BASIC_RETURN_TYPES,
     GENERATED_CLASSES_LOCATION,
     RESOURCES_CODEGEN_FILE_NAME,
@@ -31,11 +31,16 @@ from src.tools.constants import (
     PYTHON_TYPES_TO_BASIC_JSON_TYPES,
     CONFIGURABLE_ATTRIBUTE_SUBSTRINGS,
 )
-from src.tools.method import Method, MethodType
-from src.util.util import add_indent, convert_to_snake_case, snake_to_pascal, remove_html_tags
-from src.tools.resources_extractor import ResourcesExtractor
-from src.tools.shapes_extractor import ShapesExtractor
-from src.tools.templates import (
+from sagemaker_core.tools.method import Method, MethodType
+from sagemaker_core.util.util import (
+    add_indent,
+    convert_to_snake_case,
+    snake_to_pascal,
+    remove_html_tags,
+)
+from sagemaker_core.tools.resources_extractor import ResourcesExtractor
+from sagemaker_core.tools.shapes_extractor import ShapesExtractor
+from sagemaker_core.tools.templates import (
     CALL_OPERATION_API_TEMPLATE,
     CREATE_METHOD_TEMPLATE,
     DESERIALIZE_RESPONSE_TEMPLATE,
@@ -62,7 +67,7 @@ from src.tools.templates import (
     GET_ALL_METHOD_NO_ARGS_TEMPLATE,
     GET_ALL_METHOD_WITH_ARGS_TEMPLATE,
 )
-from src.tools.data_extractor import (
+from sagemaker_core.tools.data_extractor import (
     load_combined_shapes_data,
     load_combined_operations_data,
 )
@@ -169,11 +174,11 @@ class ResourcesCodeGen:
             "from pydantic import validate_call",
             "from typing import Dict, List, Literal, Optional, Union\n"
             "from boto3.session import Session",
-            "from src.code_injection.codec import transform",
-            "from src.generated.utils import SageMakerClient, SageMakerRuntimeClient, ResourceIterator, Unassigned, snake_to_pascal, pascal_to_snake, is_not_primitive",
-            "from src.generated.intelligent_defaults_helper import load_default_configs_for_resource_name, get_config_value",
-            "from src.generated.shapes import *",
-            "from src.generated.exceptions import *",
+            "from sagemaker_core.code_injection.codec import transform",
+            "from sagemaker_core.generated.utils import SageMakerClient, SageMakerRuntimeClient, ResourceIterator, Unassigned, snake_to_pascal, pascal_to_snake, is_not_primitive",
+            "from sagemaker_core.generated.intelligent_defaults_helper import load_default_configs_for_resource_name, get_config_value",
+            "from sagemaker_core.generated.shapes import *",
+            "from sagemaker_core.generated.exceptions import *",
         ]
 
         formated_imports = "\n".join(imports)

@@ -2,8 +2,8 @@ import pytest
 import datetime
 import logging
 from unittest.mock import Mock, patch, call
-from src.generated.resources import TrainingJob, DataQualityJobDefinition
-from src.generated.utils import *
+from sagemaker_core.generated.resources import TrainingJob, DataQualityJobDefinition
+from sagemaker_core.generated.utils import *
 
 
 LIST_TRAINING_JOB_RESPONSE_WITH_NEXT_TOKEN = {

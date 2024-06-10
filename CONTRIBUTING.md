@@ -26,14 +26,14 @@ pyenv activate py3.10.14
 
 * Install dependencies required for CodeGen and set PYTHONPATH
 ```
-pip install -e ".[codegen]"
+pip install ".[codegen]"
 source .env
 ```
 
 ## Run CodeGen
 * To generate all CodeGen code run the below
 ```
-python src/tools/codegen.py
+python src/sagemaker_core/tools/codegen.py
 ```
 
 ## Testing
@@ -43,6 +43,13 @@ pytest tst
 ```
 * Use Pylint to detect errors and improve code quality. For code style errors use `black` to format the files.
 ```
-black . -l 100
+black .
 pylint **/*.py
+```
+
+## Building Distribution
+* To build a distribution of SageMakerCore run below
+```
+pip install --upgrade build
+python -m build
 ```

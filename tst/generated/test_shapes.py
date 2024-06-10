@@ -3,8 +3,8 @@ import unittest
 
 from pydantic import BaseModel, ValidationError
 
-from src.generated.shapes import Base, AdditionalS3DataSource, Unassigned
-from src.tools.constants import GENERATED_CLASSES_LOCATION, SHAPES_CODEGEN_FILE_NAME
+from sagemaker_core.generated.shapes import Base, AdditionalS3DataSource, Unassigned
+from sagemaker_core.tools.constants import GENERATED_CLASSES_LOCATION, SHAPES_CODEGEN_FILE_NAME
 
 FILE_NAME = GENERATED_CLASSES_LOCATION + "/" + SHAPES_CODEGEN_FILE_NAME
 

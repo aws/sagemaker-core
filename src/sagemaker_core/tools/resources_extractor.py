@@ -16,13 +16,13 @@ from typing import Optional
 
 import pandas as pd
 
-from src.tools.constants import CLASS_METHODS, OBJECT_METHODS
-from src.tools.data_extractor import (
+from sagemaker_core.tools.constants import CLASS_METHODS, OBJECT_METHODS
+from sagemaker_core.tools.data_extractor import (
     load_additional_operations_data,
     load_combined_operations_data,
     load_combined_shapes_data,
 )
-from src.tools.method import Method
+from sagemaker_core.tools.method import Method
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)

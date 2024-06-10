@@ -1,7 +1,7 @@
 import json
-from src.tools.method import Method
-from src.tools.resources_codegen import ResourcesCodeGen
-from src.tools.constants import SERVICE_JSON_FILE_PATH
+from sagemaker_core.tools.method import Method
+from sagemaker_core.tools.resources_codegen import ResourcesCodeGen
+from sagemaker_core.tools.constants import SERVICE_JSON_FILE_PATH
 
 
 class TestGenerateResource:

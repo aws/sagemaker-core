@@ -14,8 +14,8 @@ import logging
 
 from dataclasses import asdict
 
-from src.code_injection.shape_dag import SHAPE_DAG
-from src.code_injection.constants import (
+from sagemaker_core.code_injection.shape_dag import SHAPE_DAG
+from sagemaker_core.code_injection.constants import (
     BASIC_TYPES,
     STRUCTURE_TYPE,
     LIST_TYPE,

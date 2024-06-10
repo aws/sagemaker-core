@@ -20,8 +20,8 @@ from pprint import pprint
 from pydantic import validate_call
 from typing import Dict, List, Literal, Optional, Union
 from boto3.session import Session
-from src.code_injection.codec import transform
-from src.generated.utils import (
+from sagemaker_core.code_injection.codec import transform
+from sagemaker_core.generated.utils import (
     SageMakerClient,
     SageMakerRuntimeClient,
     ResourceIterator,
@@ -30,12 +30,12 @@ from src.generated.utils import (
     pascal_to_snake,
     is_not_primitive,
 )
-from src.generated.intelligent_defaults_helper import (
+from sagemaker_core.generated.intelligent_defaults_helper import (
     load_default_configs_for_resource_name,
     get_config_value,
 )
-from src.generated.shapes import *
-from src.generated.exceptions import *
+from sagemaker_core.generated.shapes import *
+from sagemaker_core.generated.exceptions import *
 
 
 logging.basicConfig(level=logging.INFO)

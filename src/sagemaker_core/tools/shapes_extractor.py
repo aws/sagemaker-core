@@ -16,13 +16,13 @@ import pprint
 from functools import lru_cache
 from typing import Optional, Any
 
-from src.tools.constants import BASIC_JSON_TYPES_TO_PYTHON_TYPES, SHAPE_DAG_FILE_PATH
-from src.util.util import (
+from sagemaker_core.tools.constants import BASIC_JSON_TYPES_TO_PYTHON_TYPES, SHAPE_DAG_FILE_PATH
+from sagemaker_core.util.util import (
     reformat_file_with_black,
     convert_to_snake_case,
     snake_to_pascal,
 )
-from src.tools.data_extractor import load_combined_shapes_data
+from sagemaker_core.tools.data_extractor import load_combined_shapes_data
 
 
 class ShapesExtractor:
