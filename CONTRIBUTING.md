@@ -46,3 +46,10 @@ pytest tst
 black .
 pylint **/*.py
 ```
+
+## Building Distribution
+* To build a distribution of SageMakerCore run below
+```
+pip install --upgrade build
+python -m build
+```
