@@ -44,7 +44,7 @@ BASIC_JSON_TYPES_TO_PYTHON_TYPES = {
 
 BASIC_RETURN_TYPES = {"str", "int", "bool", "float", "datetime.datetime"}
 
-SHAPE_DAG_FILE_PATH = os.getcwd() + "/src/code_injection/shape_dag.py"
+SHAPE_DAG_FILE_PATH = os.getcwd() + "/src/sagemaker_core/code_injection/shape_dag.py"
 PYTHON_TYPES_TO_BASIC_JSON_TYPES = {
     "str": "string",
     "int": "integer",
@@ -79,11 +79,13 @@ logger = logging.getLogger(__name__)
 """
 
 # TODO: The file name should be injected, we should update it to be more generic
-ADDITIONAL_OPERATION_FILE_PATH = os.getcwd() + "/src/tools/additional_operations.json"
+ADDITIONAL_OPERATION_FILE_PATH = (
+    os.getcwd() + "/src/sagemaker_core/tools/additional_operations.json"
+)
 SERVICE_JSON_FILE_PATH = os.getcwd() + "/sample/sagemaker/2017-07-24/service-2.json"
 RUNTIME_SERVICE_JSON_FILE_PATH = os.getcwd() + "/sample/sagemaker-runtime/2017-05-13/service-2.json"
 
-GENERATED_CLASSES_LOCATION = os.getcwd() + "/src/generated"
+GENERATED_CLASSES_LOCATION = os.getcwd() + "/src/sagemaker_core/generated"
 UTILS_CODEGEN_FILE_NAME = "utils.py"
 INTELLIGENT_DEFAULTS_HELPER_CODEGEN_FILE_NAME = "intelligent_defaults_helper.py"
 

@@ -11,12 +11,12 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 """Generates the code for the service model."""
-from src.tools.shapes_codegen import ShapesCodeGen
-from src.tools.resources_codegen import ResourcesCodeGen
+from sagemaker_core.tools.shapes_codegen import ShapesCodeGen
+from sagemaker_core.tools.resources_codegen import ResourcesCodeGen
 from typing import Optional
 
-from src.tools.data_extractor import ServiceJsonData, load_service_jsons
-from src.util.util import reformat_file_with_black
+from sagemaker_core.tools.data_extractor import ServiceJsonData, load_service_jsons
+from sagemaker_core.util.util import reformat_file_with_black
 
 
 def generate_code(
