@@ -7,6 +7,14 @@
             "return_type": "ClusterNodeDetails",
             "method_type": "object",
             "service_name": "sagemaker"
+        },
+        "UpdateClusterSoftware": {
+            "operation_name": "UpdateClusterSoftware",
+            "resource_name": "Cluster",
+            "method_name": "update_software",
+            "return_type": "None",
+            "method_type": "object",
+            "service_name": "sagemaker"
         }
     },
     "PipelineExecution": {
@@ -14,6 +22,22 @@
             "operation_name": "RetryPipelineExecution",
             "resource_name": "PipelineExecution",
             "method_name": "retry",
+            "return_type": "None",
+            "method_type": "object",
+            "service_name": "sagemaker"
+        },
+        "SendPipelineExecutionStepFailure": {
+            "operation_name": "SendPipelineExecutionStepFailure",
+            "resource_name": "PipelineExecution",
+            "method_name": "send_execution_step_failure",
+            "return_type": "None",
+            "method_type": "object",
+            "service_name": "sagemaker"
+        },
+        "SendPipelineExecutionStepSuccess": {
+            "operation_name": "SendPipelineExecutionStepSuccess",
+            "resource_name": "PipelineExecution",
+            "method_name": "send_execution_step_success",
             "return_type": "None",
             "method_type": "object",
             "service_name": "sagemaker"
@@ -32,6 +56,52 @@
             "operation_name": "DeleteModelPackageGroupPolicy",
             "resource_name": "ModelPackageGroup",
             "method_name": "delete_policy",
+            "return_type": "None",
+            "method_type": "object",
+            "service_name": "sagemaker"
+        },
+        "PutModelPackageGroupPolicy": {
+            "operation_name": "PutModelPackageGroupPolicy",
+            "resource_name": "ModelPackageGroup",
+            "method_name": "put_policy",
+            "return_type": "None",
+            "method_type": "object",
+            "service_name": "sagemaker"
+        }
+    },
+    "Endpoint": {
+        "UpdateEndpointWeightsAndCapacities": {
+            "operation_name": "UpdateEndpointWeightsAndCapacities",
+            "resource_name": "Endpoint",
+            "method_name": "update_weights_and_capacities",
+            "return_type": "None",
+            "method_type": "object",
+            "service_name": "sagemaker"
+        }
+    },
+    "InferenceComponent": {
+        "UpdateInferenceComponentRuntimeConfig": {
+            "operation_name": "UpdateInferenceComponentRuntimeConfig",
+            "resource_name": "InferenceComponent",
+            "method_name": "update_runtime_configs",
+            "return_type": "None",
+            "method_type": "object",
+            "service_name": "sagemaker"
+        }
+    },
+    "TrialComponent": {
+        "AssociateTrialComponent": {
+            "operation_name": "AssociateTrialComponent",
+            "resource_name": "TrialComponent",
+            "method_name": "associate_trail",
+            "return_type": "None",
+            "method_type": "object",
+            "service_name": "sagemaker"
+        },
+        "DisassociateTrialComponent": {
+            "operation_name": "DisassociateTrialComponent",
+            "resource_name": "TrialComponent",
+            "method_name": "disassociate_trail",
             "return_type": "None",
             "method_type": "object",
             "service_name": "sagemaker"

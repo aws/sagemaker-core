@@ -1623,6 +1623,22 @@ class Cluster(Base):
         transformed_response = transform(response, "DescribeClusterNodeResponse")
         return ClusterNodeDetails(**transformed_response)
 
+    def update_software(
+        self,
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> None:
+
+        operation_input_args = {
+            "ClusterName": self.cluster_name,
+        }
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
+        response = client.update_cluster_software(**operation_input_args)
+
 
 class CodeRepository(Base):
     code_repository_name: str
@@ -3455,6 +3471,24 @@ class Endpoint(Base):
             resource_cls=Endpoint,
             list_method_kwargs=operation_input_args,
         )
+
+    def update_weights_and_capacities(
+        self,
+        desired_weights_and_capacities: List[DesiredWeightAndCapacity],
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> None:
+
+        operation_input_args = {
+            "EndpointName": self.endpoint_name,
+            "DesiredWeightsAndCapacities": desired_weights_and_capacities,
+        }
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
+        response = client.update_endpoint_weights_and_capacities(**operation_input_args)
 
 
 class EndpointConfig(Base):
@@ -5604,6 +5638,24 @@ class InferenceComponent(Base):
             list_method_kwargs=operation_input_args,
         )
 
+    def update_runtime_configs(
+        self,
+        desired_runtime_config: InferenceComponentRuntimeConfig,
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> None:
+
+        operation_input_args = {
+            "InferenceComponentName": self.inference_component_name,
+            "DesiredRuntimeConfig": desired_runtime_config,
+        }
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
+        response = client.update_inference_component_runtime_config(**operation_input_args)
+
 
 class InferenceExperiment(Base):
     name: str
@@ -7718,6 +7770,24 @@ class ModelPackageGroup(Base):
 
         response = client.delete_model_package_group_policy(**operation_input_args)
 
+    def put_policy(
+        self,
+        resource_policy: str,
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> None:
+
+        operation_input_args = {
+            "ModelPackageGroupName": self.model_package_group_name,
+            "ResourcePolicy": resource_policy,
+        }
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
+        response = client.put_model_package_group_policy(**operation_input_args)
+
 
 class ModelQualityJobDefinition(Base):
     job_definition_name: str
@@ -8976,6 +9046,47 @@ class PipelineExecution(Base):
         ).client
 
         response = client.retry_pipeline_execution(**operation_input_args)
+
+    def send_execution_step_failure(
+        self,
+        callback_token: str,
+        client_request_token: Optional[str] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> None:
+
+        operation_input_args = {
+            "CallbackToken": callback_token,
+            "FailureReason": self.failure_reason,
+            "ClientRequestToken": client_request_token,
+        }
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
+        response = client.send_pipeline_execution_step_failure(**operation_input_args)
+
+    def send_execution_step_success(
+        self,
+        callback_token: str,
+        output_parameters: Optional[List[OutputParameter]] = Unassigned(),
+        client_request_token: Optional[str] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> None:
+
+        operation_input_args = {
+            "CallbackToken": callback_token,
+            "OutputParameters": output_parameters,
+            "ClientRequestToken": client_request_token,
+        }
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
+        response = client.send_pipeline_execution_step_success(**operation_input_args)
 
 
 class ProcessingJob(Base):
@@ -10645,6 +10756,42 @@ class TrialComponent(Base):
             resource_cls=TrialComponent,
             list_method_kwargs=operation_input_args,
         )
+
+    def associate_trail(
+        self,
+        trial_name: str,
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> None:
+
+        operation_input_args = {
+            "TrialComponentName": self.trial_component_name,
+            "TrialName": trial_name,
+        }
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
+        response = client.associate_trial_component(**operation_input_args)
+
+    def disassociate_trail(
+        self,
+        trial_name: str,
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> None:
+
+        operation_input_args = {
+            "TrialComponentName": self.trial_component_name,
+            "TrialName": trial_name,
+        }
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
+        response = client.disassociate_trial_component(**operation_input_args)
 
 
 class UserProfile(Base):
