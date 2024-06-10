@@ -33,7 +33,9 @@ def pascal_to_snake(pascal_str):
     Returns:
         str: The converted snake_case string.
     """
-    return "".join(["_" + i.lower() if i.isupper() else i for i in pascal_str]).lstrip("_")
+    return "".join(["_" + i.lower() if i.isupper() else i for i in pascal_str]).lstrip(
+        "_"
+    )
 
 
 def deserialize(data, cls) -> object:

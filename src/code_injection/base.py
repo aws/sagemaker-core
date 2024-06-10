@@ -37,6 +37,8 @@ class Base:
         self.region = region if region else os.getenv("AWS_REGION")
 
         # Create a custom config with the user agent
-        custom_config = Config(region_name=self.region, user_agent_extra="SageMakerSDK/3.0")
+        custom_config = Config(
+            region_name=self.region, user_agent_extra="SageMakerSDK/3.0"
+        )
 
         self.client = self.session.client("sagemaker", config=custom_config)

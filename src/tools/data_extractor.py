@@ -21,7 +21,9 @@ def load_service_jsons() -> ServiceJsonData:
         service_json = json.load(file)
     with open(RUNTIME_SERVICE_JSON_FILE_PATH, "r") as file:
         runtime_service_json = json.load(file)
-    return ServiceJsonData(sagemaker=service_json, sagemaker_runtime=runtime_service_json)
+    return ServiceJsonData(
+        sagemaker=service_json, sagemaker_runtime=runtime_service_json
+    )
 
 
 @lru_cache(maxsize=1)

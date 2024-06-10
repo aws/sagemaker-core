@@ -24,7 +24,9 @@ def test_deserializer_for_structure_type():
     # StructA → basic_type_member
     # StructA → StructB -> basic_type_member
     describe_model_response = {
-        "CreationTime": datetime.datetime(2024, 3, 13, 15, 7, 44, 459000, tzinfo=tzlocal()),
+        "CreationTime": datetime.datetime(
+            2024, 3, 13, 15, 7, 44, 459000, tzinfo=tzlocal()
+        ),
         "DeploymentRecommendation": {
             "RealTimeInferenceRecommendations": [],
             "RecommendationStatus": "COMPLETED",
@@ -52,7 +54,10 @@ def test_deserializer_for_structure_type():
     instance = Model(**transformed_data)
     assert instance.execution_role_arn == "arn:aws:iam::616250812882:role/SageMakerRole"
     assert not instance.enable_network_isolation
-    assert instance.primary_container.model_data_source.s3_data_source.s3_data_type == "S3Object"
+    assert (
+        instance.primary_container.model_data_source.s3_data_source.s3_data_type
+        == "S3Object"
+    )
 
 
 def test_deserializer_for_list_type():
@@ -62,7 +67,9 @@ def test_deserializer_for_list_type():
     # ToDo: Struct -> list(basic types)
     # StructA → StructB -> list(structure) -> map(string, string)
     describe_model_response = {
-        "CreationTime": datetime.datetime(2024, 3, 13, 15, 7, 44, 459000, tzinfo=tzlocal()),
+        "CreationTime": datetime.datetime(
+            2024, 3, 13, 15, 7, 44, 459000, tzinfo=tzlocal()
+        ),
         "DeploymentRecommendation": {
             "RealTimeInferenceRecommendations": [
                 {
@@ -88,9 +95,13 @@ def test_deserializer_for_list_type():
         instance.deployment_recommendation.real_time_inference_recommendations
     )
     assert type(real_time_inference_recommendations) == list
-    assert real_time_inference_recommendations[0].recommendation_id == "dummy-recomm-id-1"
+    assert (
+        real_time_inference_recommendations[0].recommendation_id == "dummy-recomm-id-1"
+    )
     assert real_time_inference_recommendations[1].instance_type == "mlm4"
-    assert real_time_inference_recommendations[1].environment == {"ENV_VAR_2": "ENV_VAR_2_VALUE"}
+    assert real_time_inference_recommendations[1].environment == {
+        "ENV_VAR_2": "ENV_VAR_2_VALUE"
+    }
 
 
 def test_deserializer_for_map_type():
@@ -210,24 +221,36 @@ def test_deserializer_for_map_type():
                     },
                 ]
             },
-            "LastModifiedTime": datetime.datetime(2021, 10, 4, 11, 8, 9, 941000, tzinfo=tzlocal()),
+            "LastModifiedTime": datetime.datetime(
+                2021, 10, 4, 11, 8, 9, 941000, tzinfo=tzlocal()
+            ),
             "ObjectiveStatus": "Succeeded",
         },
         "OutputDataConfig": {"S3OutputPath": "s3://sagemaker-us-west-2-616250812882/"},
         "RoleArn": "arn:aws:iam::616250812882:role/SageMakerRole",
-        "CreationTime": datetime.datetime(2024, 3, 13, 15, 7, 44, 459000, tzinfo=tzlocal()),
-        "LastModifiedTime": datetime.datetime(2021, 10, 4, 11, 8, 9, 941000, tzinfo=tzlocal()),
+        "CreationTime": datetime.datetime(
+            2024, 3, 13, 15, 7, 44, 459000, tzinfo=tzlocal()
+        ),
+        "LastModifiedTime": datetime.datetime(
+            2021, 10, 4, 11, 8, 9, 941000, tzinfo=tzlocal()
+        ),
     }
-    transformed_data = transform(describe_auto_ml_job_v2_response, "DescribeAutoMLJobV2Response")
+    transformed_data = transform(
+        describe_auto_ml_job_v2_response, "DescribeAutoMLJobV2Response"
+    )
     instance = AutoMLJobV2(**transformed_data)
     best_candidate = instance.best_candidate
     inference_container_definitions = best_candidate.inference_container_definitions
     assert type(inference_container_definitions) == dict
-    assert best_candidate.candidate_name == "python-sdk-integ-test-base-jobTA-001-143b672d"
+    assert (
+        best_candidate.candidate_name == "python-sdk-integ-test-base-jobTA-001-143b672d"
+    )
     inference_container_definitions_def1 = inference_container_definitions["def1"]
     assert type(inference_container_definitions_def1) == list
     assert inference_container_definitions_def1[0].image == "dummy-image-1"
-    assert inference_container_definitions_def1[1].environment == {"ENV_VAR_2": "ENV_VAR_2_VALUE"}
+    assert inference_container_definitions_def1[1].environment == {
+        "ENV_VAR_2": "ENV_VAR_2_VALUE"
+    }
     # StructA -> map(string, map)
     assert (
         instance.auto_m_l_problem_type_config.time_series_forecasting_job_config.transformations.filling

@@ -1,4 +1,5 @@
 import json
+from src.tools.method import Method
 from src.tools.resources_codegen import ResourcesCodeGen
 from src.tools.constants import SERVICE_JSON_FILE_PATH
 
@@ -111,7 +112,10 @@ def load(
 
     return cls.get(hub_name=hub_name, hub_content_type=hub_content_type, hub_content_name=hub_content_name, session=session, region=region)
 """
-        assert self.resource_generator.generate_import_method("HubContent") == expected_output
+        assert (
+            self.resource_generator.generate_import_method("HubContent")
+            == expected_output
+        )
 
     def test_generate_update_method(self):
         expected_output = """
@@ -215,7 +219,10 @@ def delete(self) -> None:
     }
     self.client.delete_compilation_job(**operation_input_args)
 """
-        assert self.resource_generator.generate_delete_method("CompilationJob") == expected_output
+        assert (
+            self.resource_generator.generate_delete_method("CompilationJob")
+            == expected_output
+        )
 
     # create a unit test for generate_stop_method
     def test_generate_stop_method(self):
@@ -227,7 +234,10 @@ def stop(self) -> None:
     }
     self.client.stop_compilation_job(**operation_input_args)
 """
-        assert self.resource_generator.generate_stop_method("CompilationJob") == expected_output
+        assert (
+            self.resource_generator.generate_stop_method("CompilationJob")
+            == expected_output
+        )
 
     def test_generate_wait_method(self):
         expected_output = """
@@ -255,7 +265,10 @@ def wait(
         print("-", end="")
         time.sleep(poll)
 """
-        assert self.resource_generator.generate_wait_method("TrainingJob") == expected_output
+        assert (
+            self.resource_generator.generate_wait_method("TrainingJob")
+            == expected_output
+        )
 
     def test_generate_wait_for_status_method(self):
         expected_output = """
@@ -283,7 +296,9 @@ def wait_for_status(
         time.sleep(poll)
 """
         assert (
-            self.resource_generator.generate_wait_for_status_method("InferenceComponent")
+            self.resource_generator.generate_wait_for_status_method(
+                "InferenceComponent"
+            )
             == expected_output
         )
 
@@ -310,7 +325,9 @@ def wait_for_status(
         time.sleep(poll)
 """
         assert (
-            self.resource_generator.generate_wait_for_status_method("InferenceExperiment")
+            self.resource_generator.generate_wait_for_status_method(
+                "InferenceExperiment"
+            )
             == expected_output
         )
 
@@ -501,7 +518,9 @@ def get_all(
         resource_cls=Domain
     )
 """
-        assert self.resource_generator.generate_get_all_method("Domain") == expected_output
+        assert (
+            self.resource_generator.generate_get_all_method("Domain") == expected_output
+        )
 
     def test_get_all_method_with_custom_key_mapping(self):
         expected_output = """
@@ -542,5 +561,79 @@ def get_all(
 """
         assert (
             self.resource_generator.generate_get_all_method("DataQualityJobDefinition")
+            == expected_output
+        )
+
+    def test_get_node(self):
+        expected_output = """
+
+def get_node(
+    self,
+    node_id: str,
+    session: Optional[Session] = None,
+    region: Optional[str] = None,
+) -> Optional[ClusterNodeDetails]:
+
+    operation_input_args = {
+        'ClusterName': self.cluster_name,
+        'NodeId': node_id,
+    }
+
+    client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+
+    response = client.describe_cluster_node(**operation_input_args)
+
+    transformed_response = transform(response, 'DescribeClusterNodeResponse')
+    return ClusterNodeDetails(**transformed_response)
+"""
+        method = Method(
+            **{
+                "operation_name": "DescribeClusterNode",
+                "resource_name": "Cluster",
+                "method_name": "get_node",
+                "return_type": "ClusterNodeDetails",
+                "method_type": "object",
+                "service_name": "sagemaker",
+            }
+        )
+        assert (
+            self.resource_generator.generate_method(method, ["cluster_name"])
+            == expected_output
+        )
+
+    def test_update_weights_and_capacities(self):
+        expected_output = """
+
+def update_weights_and_capacities(
+    self,
+    endpoint_name: str,
+    session: Optional[Session] = None,
+    region: Optional[str] = None,
+) -> None:
+
+    operation_input_args = {
+        'EndpointName': endpoint_name,
+        'DesiredWeightsAndCapacities': self.desired_weights_and_capacities,
+    }
+
+    client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+
+    response = client.update_endpoint_weights_and_capacities(**operation_input_args)
+
+"""
+        method = Method(
+            **{
+                "operation_name": "UpdateEndpointWeightsAndCapacities",
+                "resource_name": "Endpoint",
+                "method_name": "update_weights_and_capacities",
+                "return_type": "None",
+                "method_type": "object",
+                "service_name": "sagemaker",
+            }
+        )
+        assert (
+            self.resource_generator.generate_method(
+                method, ["desired_weights_and_capacities"]
+            )
             == expected_output
         )

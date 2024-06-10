@@ -14,7 +14,10 @@ class TestGeneratedShape(unittest.TestCase):
         # This test ensures that all generated shapes inherit Base which inherits BaseModel, thereby forcing pydantic validiation
         assert issubclass(Base, BaseModel)
         assert (
-            self._fetch_number_of_classes_in_file_not_inheriting_a_class(FILE_NAME, "Base") == 1
+            self._fetch_number_of_classes_in_file_not_inheriting_a_class(
+                FILE_NAME, "Base"
+            )
+            == 1
         )  # 1 Because Base class itself does not inherit
 
     def test_pydantic_validation_for_generated_class_success(self):
@@ -49,7 +52,9 @@ class TestGeneratedShape(unittest.TestCase):
             tree = ast.parse(file.read(), filename=filepath)
             for node in tree.body:
                 if isinstance(node, ast.ClassDef):
-                    if not any(base_class.id == base_class_name for base_class in node.bases):
+                    if not any(
+                        base_class.id == base_class_name for base_class in node.bases
+                    ):
                         count = count + 1
         return count
 
