@@ -2,7 +2,11 @@ SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA = {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "type": "object",
     "properties": {
-        "SchemaVersion": "1.0",
+        "SchemaVersion": {
+            "type": "string",
+            "enum": ["1.0"],
+            "description": "The schema version of the document.",
+        },
         "SageMaker": {
             "type": "object",
             "properties": {
@@ -49,9 +53,7 @@ SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA = {
                                                 },
                                             },
                                             "candidate_generation_config": {
-                                                "feature_specification_s3_uri": {
-                                                    "type": "string"
-                                                }
+                                                "feature_specification_s3_uri": {"type": "string"}
                                             },
                                         },
                                     },
@@ -66,14 +68,10 @@ SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA = {
                                         "role_arn": {"type": "string"},
                                         "auto_m_l_problem_type_config": {
                                             "time_series_forecasting_job_config": {
-                                                "feature_specification_s3_uri": {
-                                                    "type": "string"
-                                                }
+                                                "feature_specification_s3_uri": {"type": "string"}
                                             },
                                             "tabular_job_config": {
-                                                "feature_specification_s3_uri": {
-                                                    "type": "string"
-                                                }
+                                                "feature_specification_s3_uri": {"type": "string"}
                                             },
                                         },
                                         "security_config": {
@@ -136,18 +134,14 @@ SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA = {
                                         "data_quality_job_input": {
                                             "endpoint_input": {
                                                 "s3_input_mode": {"type": "string"},
-                                                "s3_data_distribution_type": {
-                                                    "type": "string"
-                                                },
+                                                "s3_data_distribution_type": {"type": "string"},
                                             },
                                             "batch_transform_input": {
                                                 "data_captured_destination_s3_uri": {
                                                     "type": "string"
                                                 },
                                                 "s3_input_mode": {"type": "string"},
-                                                "s3_data_distribution_type": {
-                                                    "type": "string"
-                                                },
+                                                "s3_data_distribution_type": {"type": "string"},
                                             },
                                         },
                                         "data_quality_job_output_config": {
@@ -160,12 +154,8 @@ SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA = {
                                         },
                                         "role_arn": {"type": "string"},
                                         "data_quality_baseline_config": {
-                                            "constraints_resource": {
-                                                "s3_uri": {"type": "string"}
-                                            },
-                                            "statistics_resource": {
-                                                "s3_uri": {"type": "string"}
-                                            },
+                                            "constraints_resource": {"s3_uri": {"type": "string"}},
+                                            "statistics_resource": {"s3_uri": {"type": "string"}},
                                         },
                                         "network_config": {
                                             "vpc_config": {
@@ -195,9 +185,7 @@ SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA = {
                                 "Domain": {
                                     "type": "object",
                                     "properties": {
-                                        "security_group_id_for_domain_boundary": {
-                                            "type": "string"
-                                        },
+                                        "security_group_id_for_domain_boundary": {"type": "string"},
                                         "default_user_settings": {
                                             "execution_role": {"type": "string"},
                                             "security_groups": {
@@ -210,9 +198,7 @@ SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA = {
                                             },
                                             "canvas_app_settings": {
                                                 "time_series_forecasting_settings": {
-                                                    "amazon_forecast_role_arn": {
-                                                        "type": "string"
-                                                    }
+                                                    "amazon_forecast_role_arn": {"type": "string"}
                                                 },
                                                 "model_register_settings": {
                                                     "cross_account_model_register_role_arn": {
@@ -220,15 +206,11 @@ SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA = {
                                                     }
                                                 },
                                                 "workspace_settings": {
-                                                    "s3_artifact_path": {
-                                                        "type": "string"
-                                                    },
+                                                    "s3_artifact_path": {"type": "string"},
                                                     "s3_kms_key_id": {"type": "string"},
                                                 },
                                                 "generative_ai_settings": {
-                                                    "amazon_bedrock_role_arn": {
-                                                        "type": "string"
-                                                    }
+                                                    "amazon_bedrock_role_arn": {"type": "string"}
                                                 },
                                             },
                                         },
@@ -238,25 +220,17 @@ SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA = {
                                                 "items": {"type": "string"},
                                             },
                                             "r_studio_server_pro_domain_settings": {
-                                                "domain_execution_role_arn": {
-                                                    "type": "string"
-                                                }
+                                                "domain_execution_role_arn": {"type": "string"}
                                             },
-                                            "execution_role_identity_config": {
-                                                "type": "string"
-                                            },
+                                            "execution_role_identity_config": {"type": "string"},
                                         },
-                                        "home_efs_file_system_kms_key_id": {
-                                            "type": "string"
-                                        },
+                                        "home_efs_file_system_kms_key_id": {"type": "string"},
                                         "subnet_ids": {
                                             "type": "array",
                                             "items": {"type": "string"},
                                         },
                                         "kms_key_id": {"type": "string"},
-                                        "app_security_group_management": {
-                                            "type": "string"
-                                        },
+                                        "app_security_group_management": {"type": "string"},
                                         "default_space_settings": {
                                             "execution_role": {"type": "string"},
                                             "security_groups": {
@@ -324,17 +298,13 @@ SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA = {
                                     "type": "object",
                                     "properties": {
                                         "online_store_config": {
-                                            "security_config": {
-                                                "kms_key_id": {"type": "string"}
-                                            }
+                                            "security_config": {"kms_key_id": {"type": "string"}}
                                         },
                                         "offline_store_config": {
                                             "s3_storage_config": {
                                                 "s3_uri": {"type": "string"},
                                                 "kms_key_id": {"type": "string"},
-                                                "resolved_output_s3_uri": {
-                                                    "type": "string"
-                                                },
+                                                "resolved_output_s3_uri": {"type": "string"},
                                             }
                                         },
                                         "role_arn": {"type": "string"},
@@ -353,9 +323,7 @@ SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA = {
                                 "Hub": {
                                     "type": "object",
                                     "properties": {
-                                        "s3_storage_config": {
-                                            "s3_output_path": {"type": "string"}
-                                        }
+                                        "s3_storage_config": {"s3_output_path": {"type": "string"}}
                                     },
                                 },
                                 "HyperParameterTuningJob": {
@@ -383,9 +351,7 @@ SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA = {
                                             "hyper_parameter_tuning_resource_config": {
                                                 "volume_kms_key_id": {"type": "string"}
                                             },
-                                            "checkpoint_config": {
-                                                "s3_uri": {"type": "string"}
-                                            },
+                                            "checkpoint_config": {"s3_uri": {"type": "string"}},
                                         }
                                     },
                                 },
@@ -397,9 +363,7 @@ SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA = {
                                     "type": "object",
                                     "properties": {
                                         "role_arn": {"type": "string"},
-                                        "data_storage_config": {
-                                            "kms_key": {"type": "string"}
-                                        },
+                                        "data_storage_config": {"kms_key": {"type": "string"}},
                                         "kms_key": {"type": "string"},
                                     },
                                 },
@@ -428,9 +392,7 @@ SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA = {
                                         "input_config": {
                                             "data_source": {
                                                 "s3_data_source": {
-                                                    "manifest_s3_uri": {
-                                                        "type": "string"
-                                                    }
+                                                    "manifest_s3_uri": {"type": "string"}
                                                 }
                                             }
                                         },
@@ -440,13 +402,9 @@ SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA = {
                                         },
                                         "role_arn": {"type": "string"},
                                         "human_task_config": {
-                                            "ui_config": {
-                                                "ui_template_s3_uri": {"type": "string"}
-                                            }
+                                            "ui_config": {"ui_template_s3_uri": {"type": "string"}}
                                         },
-                                        "label_category_config_s3_uri": {
-                                            "type": "string"
-                                        },
+                                        "label_category_config_s3_uri": {"type": "string"},
                                         "labeling_job_algorithms_config": {
                                             "labeling_job_resource_config": {
                                                 "volume_kms_key_id": {"type": "string"},
@@ -495,23 +453,17 @@ SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA = {
                                     "type": "object",
                                     "properties": {
                                         "model_bias_job_input": {
-                                            "ground_truth_s3_input": {
-                                                "s3_uri": {"type": "string"}
-                                            },
+                                            "ground_truth_s3_input": {"s3_uri": {"type": "string"}},
                                             "endpoint_input": {
                                                 "s3_input_mode": {"type": "string"},
-                                                "s3_data_distribution_type": {
-                                                    "type": "string"
-                                                },
+                                                "s3_data_distribution_type": {"type": "string"},
                                             },
                                             "batch_transform_input": {
                                                 "data_captured_destination_s3_uri": {
                                                     "type": "string"
                                                 },
                                                 "s3_input_mode": {"type": "string"},
-                                                "s3_data_distribution_type": {
-                                                    "type": "string"
-                                                },
+                                                "s3_data_distribution_type": {"type": "string"},
                                             },
                                         },
                                         "model_bias_job_output_config": {
@@ -524,9 +476,7 @@ SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA = {
                                         },
                                         "role_arn": {"type": "string"},
                                         "model_bias_baseline_config": {
-                                            "constraints_resource": {
-                                                "s3_uri": {"type": "string"}
-                                            }
+                                            "constraints_resource": {"s3_uri": {"type": "string"}}
                                         },
                                         "network_config": {
                                             "vpc_config": {
@@ -545,17 +495,13 @@ SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA = {
                                 "ModelCard": {
                                     "type": "object",
                                     "properties": {
-                                        "security_config": {
-                                            "kms_key_id": {"type": "string"}
-                                        }
+                                        "security_config": {"kms_key_id": {"type": "string"}}
                                     },
                                 },
                                 "ModelCardExportJob": {
                                     "type": "object",
                                     "properties": {
-                                        "output_config": {
-                                            "s3_output_path": {"type": "string"}
-                                        },
+                                        "output_config": {"s3_output_path": {"type": "string"}},
                                         "export_artifacts": {
                                             "s3_export_artifacts": {"type": "string"}
                                         },
@@ -567,18 +513,14 @@ SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA = {
                                         "model_explainability_job_input": {
                                             "endpoint_input": {
                                                 "s3_input_mode": {"type": "string"},
-                                                "s3_data_distribution_type": {
-                                                    "type": "string"
-                                                },
+                                                "s3_data_distribution_type": {"type": "string"},
                                             },
                                             "batch_transform_input": {
                                                 "data_captured_destination_s3_uri": {
                                                     "type": "string"
                                                 },
                                                 "s3_input_mode": {"type": "string"},
-                                                "s3_data_distribution_type": {
-                                                    "type": "string"
-                                                },
+                                                "s3_data_distribution_type": {"type": "string"},
                                             },
                                         },
                                         "model_explainability_job_output_config": {
@@ -591,9 +533,7 @@ SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA = {
                                         },
                                         "role_arn": {"type": "string"},
                                         "model_explainability_baseline_config": {
-                                            "constraints_resource": {
-                                                "s3_uri": {"type": "string"}
-                                            }
+                                            "constraints_resource": {"s3_uri": {"type": "string"}}
                                         },
                                         "network_config": {
                                             "vpc_config": {
@@ -617,25 +557,15 @@ SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA = {
                                         },
                                         "model_metrics": {
                                             "model_quality": {
-                                                "statistics": {
-                                                    "s3_uri": {"type": "string"}
-                                                },
-                                                "constraints": {
-                                                    "s3_uri": {"type": "string"}
-                                                },
+                                                "statistics": {"s3_uri": {"type": "string"}},
+                                                "constraints": {"s3_uri": {"type": "string"}},
                                             },
                                             "model_data_quality": {
-                                                "statistics": {
-                                                    "s3_uri": {"type": "string"}
-                                                },
-                                                "constraints": {
-                                                    "s3_uri": {"type": "string"}
-                                                },
+                                                "statistics": {"s3_uri": {"type": "string"}},
+                                                "constraints": {"s3_uri": {"type": "string"}},
                                             },
                                             "bias": {
-                                                "report": {
-                                                    "s3_uri": {"type": "string"}
-                                                },
+                                                "report": {"s3_uri": {"type": "string"}},
                                                 "pre_training_report": {
                                                     "s3_uri": {"type": "string"}
                                                 },
@@ -649,9 +579,7 @@ SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA = {
                                         },
                                         "drift_check_baselines": {
                                             "bias": {
-                                                "config_file": {
-                                                    "s3_uri": {"type": "string"}
-                                                },
+                                                "config_file": {"s3_uri": {"type": "string"}},
                                                 "pre_training_constraints": {
                                                     "s3_uri": {"type": "string"}
                                                 },
@@ -660,28 +588,16 @@ SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA = {
                                                 },
                                             },
                                             "explainability": {
-                                                "constraints": {
-                                                    "s3_uri": {"type": "string"}
-                                                },
-                                                "config_file": {
-                                                    "s3_uri": {"type": "string"}
-                                                },
+                                                "constraints": {"s3_uri": {"type": "string"}},
+                                                "config_file": {"s3_uri": {"type": "string"}},
                                             },
                                             "model_quality": {
-                                                "statistics": {
-                                                    "s3_uri": {"type": "string"}
-                                                },
-                                                "constraints": {
-                                                    "s3_uri": {"type": "string"}
-                                                },
+                                                "statistics": {"s3_uri": {"type": "string"}},
+                                                "constraints": {"s3_uri": {"type": "string"}},
                                             },
                                             "model_data_quality": {
-                                                "statistics": {
-                                                    "s3_uri": {"type": "string"}
-                                                },
-                                                "constraints": {
-                                                    "s3_uri": {"type": "string"}
-                                                },
+                                                "statistics": {"s3_uri": {"type": "string"}},
+                                                "constraints": {"s3_uri": {"type": "string"}},
                                             },
                                         },
                                     },
@@ -690,23 +606,17 @@ SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA = {
                                     "type": "object",
                                     "properties": {
                                         "model_quality_job_input": {
-                                            "ground_truth_s3_input": {
-                                                "s3_uri": {"type": "string"}
-                                            },
+                                            "ground_truth_s3_input": {"s3_uri": {"type": "string"}},
                                             "endpoint_input": {
                                                 "s3_input_mode": {"type": "string"},
-                                                "s3_data_distribution_type": {
-                                                    "type": "string"
-                                                },
+                                                "s3_data_distribution_type": {"type": "string"},
                                             },
                                             "batch_transform_input": {
                                                 "data_captured_destination_s3_uri": {
                                                     "type": "string"
                                                 },
                                                 "s3_input_mode": {"type": "string"},
-                                                "s3_data_distribution_type": {
-                                                    "type": "string"
-                                                },
+                                                "s3_data_distribution_type": {"type": "string"},
                                             },
                                         },
                                         "model_quality_job_output_config": {
@@ -719,9 +629,7 @@ SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA = {
                                         },
                                         "role_arn": {"type": "string"},
                                         "model_quality_baseline_config": {
-                                            "constraints_resource": {
-                                                "s3_uri": {"type": "string"}
-                                            }
+                                            "constraints_resource": {"s3_uri": {"type": "string"}}
                                         },
                                         "network_config": {
                                             "vpc_config": {
@@ -747,9 +655,7 @@ SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA = {
                                                 },
                                                 "monitoring_resources": {
                                                     "cluster_config": {
-                                                        "volume_kms_key_id": {
-                                                            "type": "string"
-                                                        }
+                                                        "volume_kms_key_id": {"type": "string"}
                                                     }
                                                 },
                                                 "role_arn": {"type": "string"},
@@ -843,18 +749,12 @@ SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA = {
                                                 "items": {"type": "string"},
                                             },
                                         },
-                                        "checkpoint_config": {
-                                            "s3_uri": {"type": "string"}
-                                        },
-                                        "debug_hook_config": {
-                                            "s3_output_path": {"type": "string"}
-                                        },
+                                        "checkpoint_config": {"s3_uri": {"type": "string"}},
+                                        "debug_hook_config": {"s3_output_path": {"type": "string"}},
                                         "tensor_board_output_config": {
                                             "s3_output_path": {"type": "string"}
                                         },
-                                        "profiler_config": {
-                                            "s3_output_path": {"type": "string"}
-                                        },
+                                        "profiler_config": {"s3_output_path": {"type": "string"}},
                                     },
                                 },
                                 "TransformJob": {
@@ -896,9 +796,7 @@ SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA = {
                                             },
                                             "canvas_app_settings": {
                                                 "time_series_forecasting_settings": {
-                                                    "amazon_forecast_role_arn": {
-                                                        "type": "string"
-                                                    }
+                                                    "amazon_forecast_role_arn": {"type": "string"}
                                                 },
                                                 "model_register_settings": {
                                                     "cross_account_model_register_role_arn": {
@@ -906,15 +804,11 @@ SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA = {
                                                     }
                                                 },
                                                 "workspace_settings": {
-                                                    "s3_artifact_path": {
-                                                        "type": "string"
-                                                    },
+                                                    "s3_artifact_path": {"type": "string"},
                                                     "s3_kms_key_id": {"type": "string"},
                                                 },
                                                 "generative_ai_settings": {
-                                                    "amazon_bedrock_role_arn": {
-                                                        "type": "string"
-                                                    }
+                                                    "amazon_bedrock_role_arn": {"type": "string"}
                                                 },
                                             },
                                         }

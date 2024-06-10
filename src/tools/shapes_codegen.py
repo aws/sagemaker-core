@@ -24,7 +24,7 @@ from src.tools.constants import (
     SHAPES_CODEGEN_FILE_NAME,
 )
 from src.tools.shapes_extractor import ShapesExtractor
-from src.util.util import add_indent, convert_to_snake_case
+from src.util.util import add_indent, convert_to_snake_case, remove_html_tags
 from src.tools.templates import SHAPE_CLASS_TEMPLATE, SHAPE_BASE_CLASS_TEMPLATE
 from src.tools.data_extractor import (
     load_combined_shapes_data,
@@ -178,7 +178,7 @@ class ShapesCodeGen:
                 if "documentation" in member_attributes:
                     docstring += f": \t {member_attributes['documentation']}"
 
-        return docstring
+        return remove_html_tags(docstring)
 
     def generate_license(self):
         """

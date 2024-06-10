@@ -174,9 +174,7 @@ class ShapesExtractor:
         shape_members = self.generate_shape_members(shape, required_override)
         resource_names = None
         if resource_plan is not None:
-            resource_names = [
-                row["resource_name"] for _, row in resource_plan.iterrows()
-            ]
+            resource_names = [row["resource_name"] for _, row in resource_plan.iterrows()]
         init_data_body = ""
         for attr, value in shape_members.items():
             if (
@@ -187,9 +185,7 @@ class ShapesExtractor:
                 and snake_to_pascal(attr[: -len("_name")]) in resource_names
             ):
                 if value.startswith("Optional"):
-                    init_data_body += (
-                        f"{attr}: Optional[Union[str, object]] = Unassigned()\n"
-                    )
+                    init_data_body += f"{attr}: Optional[Union[str, object]] = Unassigned()\n"
                 else:
                     init_data_body += f"{attr}: Union[str, object]\n"
             elif attr == "lambda":
@@ -198,9 +194,7 @@ class ShapesExtractor:
                 init_data_body += f"{attr}: {value}\n"
         return shape_members, init_data_body
 
-    def generate_data_shape_string_body(
-        self, shape, resource_plan, required_override=()
-    ):
+    def generate_data_shape_string_body(self, shape, resource_plan, required_override=()):
         return self.generate_data_shape_members_and_string_body(
             shape, resource_plan, required_override
         )[1]
@@ -234,9 +228,7 @@ class ShapesExtractor:
                     # Shape is a simple type like string
                     member_type = BASIC_JSON_TYPES_TO_PYTHON_TYPES[member_shape_type]
             else:
-                raise Exception(
-                    "The Shape definition mush exist. The Json Data might be corrupt"
-                )
+                raise Exception("The Shape definition mush exist. The Json Data might be corrupt")
             member_name_snake_case = convert_to_snake_case(member_name)
             if member_name in required_args:
                 init_data_body[f"{member_name_snake_case}"] = f"{member_type}"
@@ -245,6 +237,20 @@ class ShapesExtractor:
                     f"Optional[{member_type}] = Unassigned()"
                 )
         return init_data_body
+
+    @lru_cache
+    def fetch_shape_members_and_doc_strings(self, shape, required_override=()):
+        shape_dict = self.combined_shapes[shape]
+        members = shape_dict["members"]
+        required_args = list(required_override) or shape_dict.get("required", [])
+        # bring the required members in front
+        ordered_members = {key: members[key] for key in required_args if key in members}
+        ordered_members.update(members)
+        shape_members_and_docstrings = {}
+        for member_name, member_attrs in ordered_members.items():
+            member_shape_documentation = member_attrs.get("documentation")
+            shape_members_and_docstrings[member_name] = member_shape_documentation
+        return shape_members_and_docstrings
 
     def get_required_members(self, shape):
         shape_dict = self.combined_shapes[shape]

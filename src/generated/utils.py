@@ -54,9 +54,7 @@ def configure_logging(log_level=None):
         _logger.removeHandler(handler)
     console_handler = logging.StreamHandler()
     console_handler.setFormatter(
-        logging.Formatter(
-            "%(asctime)s : %(levelname)s : %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
-        )
+        logging.Formatter("%(asctime)s : %(levelname)s : %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
     )
     _logger.addHandler(console_handler)
 
@@ -86,9 +84,7 @@ def pascal_to_snake(pascal_str):
     Returns:
         str: The converted snake_case string.
     """
-    return "".join(["_" + i.lower() if i.isupper() else i for i in pascal_str]).lstrip(
-        "_"
-    )
+    return "".join(["_" + i.lower() if i.isupper() else i for i in pascal_str]).lstrip("_")
 
 
 def is_not_primitive(obj):
@@ -242,9 +238,7 @@ class ResourceIterator(Generic[T]):
             init_data = transform(summary, self.summary_name)
 
             if self.custom_key_mapping:
-                init_data = {
-                    self.custom_key_mapping.get(k, k): v for k, v in init_data.items()
-                }
+                init_data = {self.custom_key_mapping.get(k, k): v for k, v in init_data.items()}
 
             # Initialize the resource object
             resource_object = self.resource_cls(**init_data)
@@ -268,9 +262,7 @@ class ResourceIterator(Generic[T]):
                     NextToken=self.next_token, **self.list_method_kwargs
                 )
             else:
-                response = getattr(self.client, self.list_method)(
-                    **self.list_method_kwargs
-                )
+                response = getattr(self.client, self.list_method)(**self.list_method_kwargs)
 
             self.summary_list = response.get(self.summaries_key, [])
             self.next_token = response.get("NextToken", None)

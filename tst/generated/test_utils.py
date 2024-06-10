@@ -107,9 +107,7 @@ def resource_iterator_with_custom_key_mapping():
 def test_next_with_summaries_in_summary_list(resource_iterator):
     iterator, _, _ = resource_iterator
     iterator.index = 0
-    iterator.summary_list = LIST_TRAINING_JOB_RESPONSE_WITHOUT_NEXT_TOKEN[
-        "TrainingJobSummaries"
-    ]
+    iterator.summary_list = LIST_TRAINING_JOB_RESPONSE_WITHOUT_NEXT_TOKEN["TrainingJobSummaries"]
     expected_training_job_data = LIST_TRAINING_JOB_RESPONSE_WITHOUT_NEXT_TOKEN[
         "TrainingJobSummaries"
     ][0]
@@ -119,31 +117,17 @@ def test_next_with_summaries_in_summary_list(resource_iterator):
         assert isinstance(next_item, TrainingJob)
         assert mock_refresh.call_count == 1
 
-        assert (
-            next_item.training_job_name == expected_training_job_data["TrainingJobName"]
-        )
-        assert (
-            next_item.training_job_arn == expected_training_job_data["TrainingJobArn"]
-        )
+        assert next_item.training_job_name == expected_training_job_data["TrainingJobName"]
+        assert next_item.training_job_arn == expected_training_job_data["TrainingJobArn"]
         assert next_item.creation_time == expected_training_job_data["CreationTime"]
-        assert (
-            next_item.training_end_time == expected_training_job_data["TrainingEndTime"]
-        )
-        assert (
-            next_item.last_modified_time
-            == expected_training_job_data["LastModifiedTime"]
-        )
-        assert (
-            next_item.training_job_status
-            == expected_training_job_data["TrainingJobStatus"]
-        )
+        assert next_item.training_end_time == expected_training_job_data["TrainingEndTime"]
+        assert next_item.last_modified_time == expected_training_job_data["LastModifiedTime"]
+        assert next_item.training_job_status == expected_training_job_data["TrainingJobStatus"]
 
 
 def test_next_reached_end_of_summary_list_without_next_token(resource_iterator):
     iterator, _, _ = resource_iterator
-    iterator.summary_list = LIST_TRAINING_JOB_RESPONSE_WITHOUT_NEXT_TOKEN[
-        "TrainingJobSummaries"
-    ]
+    iterator.summary_list = LIST_TRAINING_JOB_RESPONSE_WITHOUT_NEXT_TOKEN["TrainingJobSummaries"]
     iterator.index = len(iterator.summary_list)
 
     with pytest.raises(StopIteration):
@@ -160,9 +144,7 @@ def test_next_client_returns_empty_list(resource_iterator):
 
 def test_next_without_next_token(resource_iterator):
     iterator, client, _ = resource_iterator
-    client.list_training_jobs.return_value = (
-        LIST_TRAINING_JOB_RESPONSE_WITHOUT_NEXT_TOKEN
-    )
+    client.list_training_jobs.return_value = LIST_TRAINING_JOB_RESPONSE_WITHOUT_NEXT_TOKEN
 
     with patch.object(TrainingJob, "refresh") as mock_refresh:
         index = 0
@@ -171,34 +153,18 @@ def test_next_without_next_token(resource_iterator):
                 next_item = next(iterator)
                 assert isinstance(next_item, TrainingJob)
 
-                expected_training_job_data = (
-                    LIST_TRAINING_JOB_RESPONSE_WITHOUT_NEXT_TOKEN[
-                        "TrainingJobSummaries"
-                    ][index]
+                expected_training_job_data = LIST_TRAINING_JOB_RESPONSE_WITHOUT_NEXT_TOKEN[
+                    "TrainingJobSummaries"
+                ][index]
+                assert next_item.training_job_name == expected_training_job_data["TrainingJobName"]
+                assert next_item.training_job_arn == expected_training_job_data["TrainingJobArn"]
+                assert next_item.creation_time == expected_training_job_data["CreationTime"]
+                assert next_item.training_end_time == expected_training_job_data["TrainingEndTime"]
+                assert (
+                    next_item.last_modified_time == expected_training_job_data["LastModifiedTime"]
                 )
                 assert (
-                    next_item.training_job_name
-                    == expected_training_job_data["TrainingJobName"]
-                )
-                assert (
-                    next_item.training_job_arn
-                    == expected_training_job_data["TrainingJobArn"]
-                )
-                assert (
-                    next_item.creation_time
-                    == expected_training_job_data["CreationTime"]
-                )
-                assert (
-                    next_item.training_end_time
-                    == expected_training_job_data["TrainingEndTime"]
-                )
-                assert (
-                    next_item.last_modified_time
-                    == expected_training_job_data["LastModifiedTime"]
-                )
-                assert (
-                    next_item.training_job_status
-                    == expected_training_job_data["TrainingJobStatus"]
+                    next_item.training_job_status == expected_training_job_data["TrainingJobStatus"]
                 )
                 index += 1
             except StopIteration:
@@ -222,51 +188,27 @@ def test_next_with_next_token(resource_iterator):
                 next_item = next(iterator)
                 assert isinstance(next_item, TrainingJob)
 
-                if index < len(
-                    LIST_TRAINING_JOB_RESPONSE_WITH_NEXT_TOKEN["TrainingJobSummaries"]
-                ):
-                    expected_training_job_data = (
-                        LIST_TRAINING_JOB_RESPONSE_WITH_NEXT_TOKEN[
-                            "TrainingJobSummaries"
-                        ][index]
-                    )
+                if index < len(LIST_TRAINING_JOB_RESPONSE_WITH_NEXT_TOKEN["TrainingJobSummaries"]):
+                    expected_training_job_data = LIST_TRAINING_JOB_RESPONSE_WITH_NEXT_TOKEN[
+                        "TrainingJobSummaries"
+                    ][index]
                 else:
-                    expected_training_job_data = (
-                        LIST_TRAINING_JOB_RESPONSE_WITHOUT_NEXT_TOKEN[
-                            "TrainingJobSummaries"
-                        ][
-                            index
-                            - len(
-                                LIST_TRAINING_JOB_RESPONSE_WITH_NEXT_TOKEN[
-                                    "TrainingJobSummaries"
-                                ]
-                            )
-                        ]
-                    )
+                    expected_training_job_data = LIST_TRAINING_JOB_RESPONSE_WITHOUT_NEXT_TOKEN[
+                        "TrainingJobSummaries"
+                    ][
+                        index
+                        - len(LIST_TRAINING_JOB_RESPONSE_WITH_NEXT_TOKEN["TrainingJobSummaries"])
+                    ]
 
+                assert next_item.training_job_name == expected_training_job_data["TrainingJobName"]
+                assert next_item.training_job_arn == expected_training_job_data["TrainingJobArn"]
+                assert next_item.creation_time == expected_training_job_data["CreationTime"]
+                assert next_item.training_end_time == expected_training_job_data["TrainingEndTime"]
                 assert (
-                    next_item.training_job_name
-                    == expected_training_job_data["TrainingJobName"]
+                    next_item.last_modified_time == expected_training_job_data["LastModifiedTime"]
                 )
                 assert (
-                    next_item.training_job_arn
-                    == expected_training_job_data["TrainingJobArn"]
-                )
-                assert (
-                    next_item.creation_time
-                    == expected_training_job_data["CreationTime"]
-                )
-                assert (
-                    next_item.training_end_time
-                    == expected_training_job_data["TrainingEndTime"]
-                )
-                assert (
-                    next_item.last_modified_time
-                    == expected_training_job_data["LastModifiedTime"]
-                )
-                assert (
-                    next_item.training_job_status
-                    == expected_training_job_data["TrainingJobStatus"]
+                    next_item.training_job_status == expected_training_job_data["TrainingJobStatus"]
                 )
                 index += 1
             except StopIteration:
@@ -300,15 +242,11 @@ def test_next_with_custom_key_mapping(resource_iterator_with_custom_key_mapping)
 
                 assert (
                     next_item.job_definition_name
-                    == expected_data_quality_job_definition_data[
-                        "MonitoringJobDefinitionName"
-                    ]
+                    == expected_data_quality_job_definition_data["MonitoringJobDefinitionName"]
                 )
                 assert (
                     next_item.job_definition_arn
-                    == expected_data_quality_job_definition_data[
-                        "MonitoringJobDefinitionArn"
-                    ]
+                    == expected_data_quality_job_definition_data["MonitoringJobDefinitionArn"]
                 )
                 assert (
                     next_item.creation_time

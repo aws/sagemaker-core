@@ -42,14 +42,10 @@ _APP_NAME = "sagemaker"
 _CONFIG_FILE_NAME = "config.yaml"
 # The default config file location of the Administrator provided config file. This path can be
 # overridden with `SAGEMAKER_ADMIN_CONFIG_OVERRIDE` environment variable.
-_DEFAULT_ADMIN_CONFIG_FILE_PATH = os.path.join(
-    site_config_dir(_APP_NAME), _CONFIG_FILE_NAME
-)
+_DEFAULT_ADMIN_CONFIG_FILE_PATH = os.path.join(site_config_dir(_APP_NAME), _CONFIG_FILE_NAME)
 # The default config file location of the user provided config file. This path can be
 # overridden with `SAGEMAKER_USER_CONFIG_OVERRIDE` environment variable.
-_DEFAULT_USER_CONFIG_FILE_PATH = os.path.join(
-    user_config_dir(_APP_NAME), _CONFIG_FILE_NAME
-)
+_DEFAULT_USER_CONFIG_FILE_PATH = os.path.join(user_config_dir(_APP_NAME), _CONFIG_FILE_NAME)
 # The default config file location of the local mode.
 _DEFAULT_LOCAL_MODE_CONFIG_FILE_PATH = os.path.join(
     os.path.expanduser("~"), ".sagemaker", _CONFIG_FILE_NAME
@@ -64,9 +60,7 @@ def load_default_configs(additional_config_paths: List[str] = None, s3_resource=
     default_config_path = os.getenv(
         ENV_VARIABLE_ADMIN_CONFIG_OVERRIDE, _DEFAULT_ADMIN_CONFIG_FILE_PATH
     )
-    user_config_path = os.getenv(
-        ENV_VARIABLE_USER_CONFIG_OVERRIDE, _DEFAULT_USER_CONFIG_FILE_PATH
-    )
+    user_config_path = os.getenv(ENV_VARIABLE_USER_CONFIG_OVERRIDE, _DEFAULT_USER_CONFIG_FILE_PATH)
 
     config_paths = [default_config_path, user_config_path]
     if additional_config_paths:
@@ -96,9 +90,7 @@ def load_default_configs(additional_config_paths: List[str] = None, s3_resource=
             try:
                 validate_sagemaker_config(config_from_file)
             except jsonschema.exceptions.ValidationError as error:
-                raise ConfigSchemaValidationError(
-                    file_path=file_path, message=str(error)
-                )
+                raise ConfigSchemaValidationError(file_path=file_path, message=str(error))
             merge_dicts(merged_config, config_from_file)
             print("Fetched defaults config from location: %s", file_path)
         else:
@@ -130,9 +122,7 @@ def _load_config_from_s3(s3_uri, s3_resource_for_config) -> dict:
                     + "Setup local AWS configuration with a valid region supported by SageMaker."
                 )
             )
-        s3_resource_for_config = boto_session.resource(
-            "s3", region_name=boto_region_name
-        )
+        s3_resource_for_config = boto_session.resource("s3", region_name=boto_region_name)
 
     logger.debug("Fetching defaults config from location: %s", s3_uri)
     inferred_s3_uri = _get_inferred_s3_uri(s3_uri, s3_resource_for_config)
