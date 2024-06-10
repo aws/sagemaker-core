@@ -53,7 +53,7 @@ class Base(BaseModel):
             return cls._serialize_list(value)
         elif isinstance(value, Dict):
             return cls._serialize_dict(value)
-        elif hasattr(value, 'serialize'):
+        elif hasattr(value, "serialize"):
             return value.serialize()
         else:
             return value
@@ -72,8 +72,8 @@ class Base(BaseModel):
         for k, v in value.items():
             if serialize_result := cls._serialize(v):
                 serialized_dict.update({k: serialize_result})
-        return serialized_dict 
-    
+        return serialized_dict
+
     @staticmethod
     def get_updated_kwargs_with_configured_attributes(
         config_schema_for_resource: dict, resource_name: str, **kwargs
@@ -114,42 +114,26 @@ class Base(BaseModel):
                     updated_args[arg] = value.get_name()
             elif isinstance(value, list):
                 updated_args[arg] = [
-<<<<<<< HEAD:src/generated/resources.py
-                    Base.populate_chained_attributes(resource_name=type(list_item).__name__,
-                                                     operation_input_args={
-                                                         snake_to_pascal(k): v
-                                                         for k, v in Base._get_items(list_item)
-                                                     })
+                    Base.populate_chained_attributes(
+                        resource_name=type(list_item).__name__,
+                        operation_input_args={
+                            snake_to_pascal(k): v for k, v in Base._get_items(list_item)
+                        },
+                    )
                     for list_item in value
                 ]
             elif is_not_primitive(value):
                 obj_dict = {snake_to_pascal(k): v for k, v in Base._get_items(value)}
-                updated_args[arg] = Base.populate_chained_attributes(resource_name=type(value).__name__, operation_input_args=obj_dict)
+                updated_args[arg] = Base.populate_chained_attributes(
+                    resource_name=type(value).__name__, operation_input_args=obj_dict
+                )
         return updated_args
 
     @staticmethod
     def _get_items(object):
         return object.items() if type(object) == dict else object.__dict__.items()
 
-        
-=======
-                    Base.populate_chained_attributes(
-                        resource_name=type(list_item).__name__,
-                        operation_input_args={
-                            snake_to_pascal(k): v for k, v in list_item.__dict__.items()
-                        },
-                    )
-                    for list_item in value
-                ]
-            elif is_not_primitive(value):
-                obj_dict = {snake_to_pascal(k): v for k, v in value.__dict__.items()}
-                updated_args[arg] = Base.populate_chained_attributes(
-                    resource_name=type(value).__name__, operation_input_args=obj_dict
-                )
-        return updated_args
 
-
->>>>>>> bafc490 (Migrate setup.py to modern pyproject.toml and allow import using sagemaker_core namespace):src/sagemaker_core/generated/resources.py
 class Action(Base):
     """
     Action
