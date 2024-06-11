@@ -1357,6 +1357,42 @@ class AutoMLJob(Base):
             list_method_kwargs=operation_input_args,
         )
 
+    def get_all_candidates(
+        self,
+        status_equals: Optional[str] = Unassigned(),
+        candidate_name_equals: Optional[str] = Unassigned(),
+        sort_order: Optional[str] = Unassigned(),
+        sort_by: Optional[str] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> ResourceIterator[AutoMLCandidate]:
+
+        operation_input_args = {
+            "AutoMLJobName": self.auto_m_l_job_name,
+            "StatusEquals": status_equals,
+            "CandidateNameEquals": candidate_name_equals,
+            "SortOrder": sort_order,
+            "SortBy": sort_by,
+        }
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
+        return ResourceIterator(
+            client=client,
+            list_method="list_candidates_for_auto_m_l_job",
+            summaries_key="Candidates",
+            summary_name="AutoMLCandidate",
+            resource_cls=AutoMLCandidate,
+            list_method_kwargs=operation_input_args,
+        )
+
 
 class AutoMLJobV2(Base):
     """
@@ -1799,6 +1835,44 @@ class Cluster(Base):
 
         transformed_response = transform(response, "DescribeClusterNodeResponse")
         return ClusterNodeDetails(**transformed_response)
+
+    def get_all_nodes(
+        self,
+        creation_time_after: Optional[datetime.datetime] = Unassigned(),
+        creation_time_before: Optional[datetime.datetime] = Unassigned(),
+        instance_group_name_contains: Optional[str] = Unassigned(),
+        sort_by: Optional[str] = Unassigned(),
+        sort_order: Optional[str] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> ResourceIterator[ClusterNodeDetails]:
+
+        operation_input_args = {
+            "ClusterName": self.cluster_name,
+            "CreationTimeAfter": creation_time_after,
+            "CreationTimeBefore": creation_time_before,
+            "InstanceGroupNameContains": instance_group_name_contains,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
+        }
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
+        return ResourceIterator(
+            client=client,
+            list_method="list_cluster_nodes",
+            summaries_key="ClusterNodeSummaries",
+            summary_name="ClusterNodeSummary",
+            resource_cls=ClusterNodeDetails,
+            list_method_kwargs=operation_input_args,
+        )
 
     def update_software(
         self,
@@ -5641,6 +5715,40 @@ class HyperParameterTuningJob(Base):
             summaries_key="HyperParameterTuningJobSummaries",
             summary_name="HyperParameterTuningJobSummary",
             resource_cls=HyperParameterTuningJob,
+            list_method_kwargs=operation_input_args,
+        )
+
+    def get_all_training_jobs(
+        self,
+        status_equals: Optional[str] = Unassigned(),
+        sort_by: Optional[str] = Unassigned(),
+        sort_order: Optional[str] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> ResourceIterator[HyperParameterTrainingJobSummary]:
+
+        operation_input_args = {
+            "HyperParameterTuningJobName": self.hyper_parameter_tuning_job_name,
+            "StatusEquals": status_equals,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
+        }
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
+        return ResourceIterator(
+            client=client,
+            list_method="list_training_jobs_for_hyper_parameter_tuning_job",
+            summaries_key="TrainingJobSummaries",
+            summary_name="HyperParameterTrainingJobSummary",
+            resource_cls=HyperParameterTrainingJobSummary,
             list_method_kwargs=operation_input_args,
         )
 
@@ -12786,5 +12894,44 @@ class Workteam(Base):
             summaries_key="Workteams",
             summary_name="Workteam",
             resource_cls=Workteam,
+            list_method_kwargs=operation_input_args,
+        )
+
+    def get_all_labeling_jobs(
+        self,
+        workteam_arn: str,
+        creation_time_after: Optional[datetime.datetime] = Unassigned(),
+        creation_time_before: Optional[datetime.datetime] = Unassigned(),
+        job_reference_code_contains: Optional[str] = Unassigned(),
+        sort_by: Optional[str] = Unassigned(),
+        sort_order: Optional[str] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> ResourceIterator[LabelingJob]:
+
+        operation_input_args = {
+            "WorkteamArn": workteam_arn,
+            "CreationTimeAfter": creation_time_after,
+            "CreationTimeBefore": creation_time_before,
+            "JobReferenceCodeContains": job_reference_code_contains,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
+        }
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
+        return ResourceIterator(
+            client=client,
+            list_method="list_labeling_jobs_for_workteam",
+            summaries_key="LabelingJobSummaryList",
+            summary_name="LabelingJobForWorkteamSummary",
+            resource_cls=LabelingJob,
             list_method_kwargs=operation_input_args,
         )

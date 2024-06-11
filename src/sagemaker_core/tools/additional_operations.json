@@ -8,6 +8,14 @@
             "method_type": "object",
             "service_name": "sagemaker"
         },
+        "ListClusterNodes": {
+            "operation_name": "ListClusterNodes",
+            "resource_name": "Cluster",
+            "method_name": "get_all_nodes",
+            "return_type": "ClusterNodeDetails",
+            "method_type": "object",
+            "service_name": "sagemaker"
+        },
         "UpdateClusterSoftware": {
             "operation_name": "UpdateClusterSoftware",
             "resource_name": "Cluster",
@@ -169,6 +177,36 @@
             "resource_name": "ModelCard",
             "method_name": "get_all_versions",
             "return_type": "ModelCardVersionSummary",
+            "method_type": "object",
+            "service_name": "sagemaker"
+        }
+    },
+    "AutoMLJob": {
+        "ListCandidatesForAutoMLJob": {
+            "operation_name": "ListCandidatesForAutoMLJob",
+            "resource_name": "AutoMLJob",
+            "method_name": "get_all_candidates",
+            "return_type": "AutoMLCandidate",
+            "method_type": "object",
+            "service_name": "sagemaker"
+        }
+    },
+    "HyperParameterTuningJob": {
+        "ListTrainingJobsForHyperParameterTuningJob": {
+            "operation_name": "ListTrainingJobsForHyperParameterTuningJob",
+            "resource_name": "HyperParameterTuningJob",
+            "method_name": "get_all_training_jobs",
+            "return_type": "HyperParameterTrainingJobSummary",
+            "method_type": "object",
+            "service_name": "sagemaker"
+        }
+    },
+    "Workteam": {
+        "ListLabelingJobsForWorkteam": {
+            "operation_name": "ListLabelingJobsForWorkteam",
+            "resource_name": "Workteam",
+            "method_name": "get_all_labeling_jobs",
+            "return_type": "LabelingJob",
             "method_type": "object",
             "service_name": "sagemaker"
         }
