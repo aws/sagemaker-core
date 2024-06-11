@@ -1942,6 +1942,47 @@ class CodeRepository(Base):
         }
         self.client.delete_code_repository(**operation_input_args)
 
+    def get_all(
+        self,
+        creation_time_after: Optional[datetime.datetime] = Unassigned(),
+        creation_time_before: Optional[datetime.datetime] = Unassigned(),
+        last_modified_time_after: Optional[datetime.datetime] = Unassigned(),
+        last_modified_time_before: Optional[datetime.datetime] = Unassigned(),
+        name_contains: Optional[str] = Unassigned(),
+        sort_by: Optional[str] = Unassigned(),
+        sort_order: Optional[str] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> ResourceIterator["CodeRepository"]:
+
+        operation_input_args = {
+            "CreationTimeAfter": creation_time_after,
+            "CreationTimeBefore": creation_time_before,
+            "LastModifiedTimeAfter": last_modified_time_after,
+            "LastModifiedTimeBefore": last_modified_time_before,
+            "NameContains": name_contains,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
+        }
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
+        return ResourceIterator(
+            client=client,
+            list_method="list_code_repositories",
+            summaries_key="CodeRepositorySummaryList",
+            summary_name="CodeRepositorySummary",
+            resource_cls=CodeRepository,
+            list_method_kwargs=operation_input_args,
+        )
+
 
 class CompilationJob(Base):
     """
@@ -5153,6 +5194,48 @@ class HubContent(Base):
             list_method_kwargs=operation_input_args,
         )
 
+    def get_all_versions(
+        self,
+        min_version: Optional[str] = Unassigned(),
+        max_schema_version: Optional[str] = Unassigned(),
+        creation_time_before: Optional[datetime.datetime] = Unassigned(),
+        creation_time_after: Optional[datetime.datetime] = Unassigned(),
+        sort_by: Optional[str] = Unassigned(),
+        sort_order: Optional[str] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> ResourceIterator["HubContent"]:
+
+        operation_input_args = {
+            "HubName": self.hub_name,
+            "HubContentType": self.hub_content_type,
+            "HubContentName": self.hub_content_name,
+            "MinVersion": min_version,
+            "MaxSchemaVersion": max_schema_version,
+            "CreationTimeBefore": creation_time_before,
+            "CreationTimeAfter": creation_time_after,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
+        }
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
+        return ResourceIterator(
+            client=client,
+            list_method="list_hub_content_versions",
+            summaries_key="HubContentSummaries",
+            summary_name="HubContentInfo",
+            resource_cls=HubContent,
+            list_method_kwargs=operation_input_args,
+        )
+
 
 class HumanTaskUi(Base):
     """
@@ -6745,6 +6828,37 @@ class InferenceRecommendationsJob(Base):
             list_method_kwargs=operation_input_args,
         )
 
+    def get_all_steps(
+        self,
+        step_type: Optional[str] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> ResourceIterator[InferenceRecommendationsJobStep]:
+
+        operation_input_args = {
+            "JobName": self.job_name,
+            "Status": self.status,
+            "StepType": step_type,
+        }
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
+        return ResourceIterator(
+            client=client,
+            list_method="list_inference_recommendations_job_steps",
+            summaries_key="Steps",
+            summary_name="InferenceRecommendationsJobStep",
+            resource_cls=InferenceRecommendationsJobStep,
+            list_method_kwargs=operation_input_args,
+        )
+
 
 class LabelingJob(Base):
     """
@@ -7180,6 +7294,35 @@ class Model(Base):
             list_method_kwargs=operation_input_args,
         )
 
+    def get_all_metadata(
+        self,
+        search_expression: Optional[ModelMetadataSearchExpression] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> ResourceIterator[ModelMetadataSummary]:
+
+        operation_input_args = {
+            "SearchExpression": search_expression,
+        }
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
+        return ResourceIterator(
+            client=client,
+            list_method="list_model_metadata",
+            summaries_key="ModelMetadataSummaries",
+            summary_name="ModelMetadataSummary",
+            resource_cls=ModelMetadataSummary,
+            list_method_kwargs=operation_input_args,
+        )
+
 
 class ModelBiasJobDefinition(Base):
     """
@@ -7608,6 +7751,43 @@ class ModelCard(Base):
             summaries_key="ModelCardSummaries",
             summary_name="ModelCardSummary",
             resource_cls=ModelCard,
+            list_method_kwargs=operation_input_args,
+        )
+
+    def get_all_versions(
+        self,
+        creation_time_after: Optional[datetime.datetime] = Unassigned(),
+        creation_time_before: Optional[datetime.datetime] = Unassigned(),
+        sort_by: Optional[str] = Unassigned(),
+        sort_order: Optional[str] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> ResourceIterator[ModelCardVersionSummary]:
+
+        operation_input_args = {
+            "CreationTimeAfter": creation_time_after,
+            "CreationTimeBefore": creation_time_before,
+            "ModelCardName": self.model_card_name,
+            "ModelCardStatus": self.model_card_status,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
+        }
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
+        return ResourceIterator(
+            client=client,
+            list_method="list_model_card_versions",
+            summaries_key="ModelCardVersionSummaryList",
+            summary_name="ModelCardVersionSummary",
+            resource_cls=ModelCardVersionSummary,
             list_method_kwargs=operation_input_args,
         )
 
@@ -9948,6 +10128,64 @@ class PipelineExecution(Base):
             summaries_key="PipelineExecutionSummaries",
             summary_name="PipelineExecutionSummary",
             resource_cls=PipelineExecution,
+            list_method_kwargs=operation_input_args,
+        )
+
+    def get_all_steps(
+        self,
+        sort_order: Optional[str] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> ResourceIterator[PipelineExecutionStep]:
+
+        operation_input_args = {
+            "PipelineExecutionArn": self.pipeline_execution_arn,
+            "SortOrder": sort_order,
+        }
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
+        return ResourceIterator(
+            client=client,
+            list_method="list_pipeline_execution_steps",
+            summaries_key="PipelineExecutionSteps",
+            summary_name="PipelineExecutionStep",
+            resource_cls=PipelineExecutionStep,
+            list_method_kwargs=operation_input_args,
+        )
+
+    def get_all_parameters(
+        self,
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> ResourceIterator[Parameter]:
+
+        operation_input_args = {
+            "PipelineExecutionArn": self.pipeline_execution_arn,
+        }
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
+        return ResourceIterator(
+            client=client,
+            list_method="list_pipeline_parameters_for_execution",
+            summaries_key="PipelineParameters",
+            summary_name="Parameter",
+            resource_cls=Parameter,
             list_method_kwargs=operation_input_args,
         )
 
