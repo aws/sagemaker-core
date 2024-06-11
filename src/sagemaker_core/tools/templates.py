@@ -467,7 +467,7 @@ DESERIALIZE_RESPONSE_TO_BASIC_TYPE_TEMPLATE = """
 
 RESOURCE_BASE_CLASS_TEMPLATE = """
 class Base(BaseModel):
-    model_config = ConfigDict(protected_namespaces=())
+    model_config = ConfigDict(protected_namespaces=(), validate_assignment=True)
     
     @classmethod
     def _serialize(cls, value: any) -> any:
@@ -551,7 +551,7 @@ class Base(BaseModel):
 
 SHAPE_BASE_CLASS_TEMPLATE = """
 class {class_name}:
-    model_config = ConfigDict(protected_namespaces=())
+    model_config = ConfigDict(protected_namespaces=(), validate_assignment=True)
     
     def serialize(self):
         result = {{}}

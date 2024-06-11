@@ -44,7 +44,7 @@ logger = logging.getLogger(__name__)
 
 
 class Base(BaseModel):
-    model_config = ConfigDict(protected_namespaces=())
+    model_config = ConfigDict(protected_namespaces=(), validate_assignment=True)
 
     @classmethod
     def _serialize(cls, value: any) -> any:

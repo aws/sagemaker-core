@@ -18,7 +18,7 @@ from sagemaker_core.generated.utils import Unassigned
 
 
 class Base(BaseModel):
-    model_config = ConfigDict(protected_namespaces=())
+    model_config = ConfigDict(protected_namespaces=(), validate_assignment=True)
 
     def serialize(self):
         result = {}
