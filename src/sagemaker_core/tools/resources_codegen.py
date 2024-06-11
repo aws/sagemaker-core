@@ -175,7 +175,7 @@ class ResourcesCodeGen:
             "from typing import Dict, List, Literal, Optional, Union\n"
             "from boto3.session import Session",
             "from sagemaker_core.code_injection.codec import transform",
-            "from sagemaker_core.generated.utils import SageMakerClient, SageMakerRuntimeClient, ResourceIterator, Unassigned, snake_to_pascal, pascal_to_snake, is_not_primitive",
+            "from sagemaker_core.generated.utils import SageMakerClient, SageMakerRuntimeClient, ResourceIterator, Unassigned, snake_to_pascal, pascal_to_snake, is_not_primitive, is_not_str_dict",
             "from sagemaker_core.generated.intelligent_defaults_helper import load_default_configs_for_resource_name, get_config_value",
             "from sagemaker_core.generated.shapes import *",
             "from sagemaker_core.generated.exceptions import *",
