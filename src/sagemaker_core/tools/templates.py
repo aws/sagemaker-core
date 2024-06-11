@@ -550,7 +550,7 @@ class Base(BaseModel):
                                                      })
                     for list_item in value
                 ]
-            elif is_not_primitive(value):
+            elif is_not_primitive(value) and is_not_str_dict(value):
                 obj_dict = {snake_to_pascal(k): v for k, v in Base._get_items(value)}
                 updated_args[arg] = Base.populate_chained_attributes(resource_name=type(value).__name__, operation_input_args=obj_dict)
         return updated_args

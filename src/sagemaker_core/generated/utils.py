@@ -91,6 +91,10 @@ def is_not_primitive(obj):
     return not isinstance(obj, (int, float, str, bool, complex))
 
 
+def is_not_str_dict(obj):
+    return not isinstance(obj, dict) or not all(isinstance(k, str) for k in obj.keys())
+
+
 class Unassigned:
     """A custom type used to signify an undefined optional argument."""
 
@@ -164,6 +168,7 @@ class SageMakerRuntimeClient(metaclass=SingletonMeta):
         session: Session = None,
         region_name: str = None,
         service_name="sagemaker-runtime",
+        config: Config = None,
     ):
         """
         Initializes the SageMakerClient with a boto3 session, region name, and service name.
