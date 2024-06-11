@@ -1,4 +1,5 @@
 import json
+from sagemaker_core.tools.method import Method
 from sagemaker_core.tools.resources_codegen import ResourcesCodeGen
 from sagemaker_core.tools.constants import SERVICE_JSON_FILE_PATH
 
@@ -542,5 +543,74 @@ def get_all(
 """
         assert (
             self.resource_generator.generate_get_all_method("DataQualityJobDefinition")
+            == expected_output
+        )
+
+    def test_get_node(self):
+        expected_output = """
+
+def get_node(
+    self,
+    node_id: str,
+    session: Optional[Session] = None,
+    region: Optional[str] = None,
+) -> Optional[ClusterNodeDetails]:
+
+    operation_input_args = {
+        'ClusterName': self.cluster_name,
+        'NodeId': node_id,
+    }
+
+    client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+
+    response = client.describe_cluster_node(**operation_input_args)
+
+    transformed_response = transform(response, 'DescribeClusterNodeResponse')
+    return ClusterNodeDetails(**transformed_response)
+"""
+        method = Method(
+            **{
+                "operation_name": "DescribeClusterNode",
+                "resource_name": "Cluster",
+                "method_name": "get_node",
+                "return_type": "ClusterNodeDetails",
+                "method_type": "object",
+                "service_name": "sagemaker",
+            }
+        )
+        assert self.resource_generator.generate_method(method, ["cluster_name"]) == expected_output
+
+    def test_update_weights_and_capacities(self):
+        expected_output = """
+
+def update_weights_and_capacities(
+    self,
+    endpoint_name: str,
+    session: Optional[Session] = None,
+    region: Optional[str] = None,
+) -> None:
+
+    operation_input_args = {
+        'EndpointName': endpoint_name,
+        'DesiredWeightsAndCapacities': self.desired_weights_and_capacities,
+    }
+
+    client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+
+    response = client.update_endpoint_weights_and_capacities(**operation_input_args)
+
+"""
+        method = Method(
+            **{
+                "operation_name": "UpdateEndpointWeightsAndCapacities",
+                "resource_name": "Endpoint",
+                "method_name": "update_weights_and_capacities",
+                "return_type": "None",
+                "method_type": "object",
+                "service_name": "sagemaker",
+            }
+        )
+        assert (
+            self.resource_generator.generate_method(method, ["desired_weights_and_capacities"])
             == expected_output
         )

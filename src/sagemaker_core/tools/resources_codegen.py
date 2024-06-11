@@ -1140,7 +1140,7 @@ class ResourcesCodeGen:
                 operation_metadata, False, resource_attributes
             )
         method_args += add_indent("session: Optional[Session] = None,\n", 4)
-        method_args += add_indent("region: Optional[str] = None,\n", 4)
+        method_args += add_indent("region: Optional[str] = None,", 4)
 
         if method.return_type == "None":
             return_type = "None"
