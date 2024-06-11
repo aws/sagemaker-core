@@ -465,6 +465,19 @@ DESERIALIZE_RESPONSE_TEMPLATE = """
 DESERIALIZE_RESPONSE_TO_BASIC_TYPE_TEMPLATE = """
     return list(response.values())[0]"""
 
+SERIALIZE_LIST_INPUT_TEMPLATE = """
+    operation_input_args = {{
+{operation_input_args}
+    }}
+    operation_input_args = {{k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}}
+"""
+
+RETURN_ITERATOR_TEMPLATE = """
+    return ResourceIterator(
+{resource_iterator_args}
+    )
+"""
+
 RESOURCE_BASE_CLASS_TEMPLATE = """
 class Base(BaseModel):
     model_config = ConfigDict(protected_namespaces=())
