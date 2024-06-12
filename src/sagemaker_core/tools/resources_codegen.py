@@ -662,35 +662,6 @@ class ResourcesCodeGen:
         method_args = add_indent(method_args)
         return method_args
 
-    def _generate_method_args_excluding_resource_class_attributes(
-        self, operation_input_shape_name: str, resource_attributes: list
-    ) -> str:
-        """Generates the arguments for a method.
-        This will  exclude the resource class attributes from the arguments,
-         because they need not be specificed by the user explicitly once they have initiated the class already.
-
-        Args:
-            operation_input_shape_name (str): The name of the input shape for the operation.
-            resource_attributes (list): The list of resource class attributes.
-            include_serialiser_functions (bool): Indicates whether to include serialiser functions in the arguments.
-        Returns:
-            str: The generated arguments string.
-        """
-        typed_shape_members = self.shapes_extractor.generate_shape_members(
-            operation_input_shape_name
-        )
-        method_args = ""
-
-        method_args += ",\n".join(
-            f"{attr}: {attr_type}"
-            for attr, attr_type in typed_shape_members.items()
-            if attr not in resource_attributes
-        )
-        if method_args:
-            method_args += ","
-            method_args = add_indent(method_args)
-        return method_args
-
     def _generate_get_args(self, resource_name: str, operation_input_shape_name: str) -> str:
         """
         Generates a resource identifier based on the required members for the Describe and Create operations.
@@ -856,7 +827,7 @@ class ResourcesCodeGen:
         exclude_required_attributes = []
         for member in required_members:
             snake_member = convert_to_snake_case(member)
-            if snake_member in list(kwargs["resource_attributes"]) and any(
+            if snake_member in kwargs["resource_attributes"] and any(
                 id in snake_member for id in ["name", "arn", "id"]
             ):
                 exclude_required_attributes.append(snake_member)
