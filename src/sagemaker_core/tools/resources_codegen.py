@@ -852,12 +852,13 @@ class ResourcesCodeGen:
 
         required_members = self.shapes[operation_input_shape_name]["required"]
 
-        # Exclude any required attributes that are already present as resource attributes.
-        # For update, these are the resource identifiers. Everything else should be included in the method args.
+        # Exclude any required attributes that are already present as resource attributes and are also identifiers
         exclude_required_attributes = []
         for member in required_members:
             snake_member = convert_to_snake_case(member)
-            if snake_member in list(kwargs["resource_attributes"]):
+            if snake_member in list(kwargs["resource_attributes"]) and any(
+                id in snake_member for id in ["name", "arn", "id"]
+            ):
                 exclude_required_attributes.append(snake_member)
 
         # Generate the arguments for the 'update' method

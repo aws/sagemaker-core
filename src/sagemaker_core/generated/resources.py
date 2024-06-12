@@ -1725,13 +1725,14 @@ class Cluster(Base):
 
     def update(
         self,
+        instance_groups: List[ClusterInstanceGroupSpecification],
     ) -> Optional["Cluster"]:
         logger.debug("Creating cluster resource.")
         client = SageMakerClient().client
 
         operation_input_args = {
             "ClusterName": self.cluster_name,
-            "InstanceGroups": self.instance_groups,
+            "InstanceGroups": instance_groups,
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -2846,6 +2847,7 @@ class DeviceFleet(Base):
 
     def update(
         self,
+        output_config: EdgeOutputConfig,
         role_arn: Optional[str] = Unassigned(),
         description: Optional[str] = Unassigned(),
         enable_iot_role_alias: Optional[bool] = Unassigned(),
@@ -2857,7 +2859,7 @@ class DeviceFleet(Base):
             "DeviceFleetName": self.device_fleet_name,
             "RoleArn": role_arn,
             "Description": description,
-            "OutputConfig": self.output_config,
+            "OutputConfig": output_config,
             "EnableIotRoleAlias": enable_iot_role_alias,
         }
         logger.debug(f"Input request: {operation_input_args}")
@@ -9313,13 +9315,14 @@ class MonitoringSchedule(Base):
 
     def update(
         self,
+        monitoring_schedule_config: MonitoringScheduleConfig,
     ) -> Optional["MonitoringSchedule"]:
         logger.debug("Creating monitoring_schedule resource.")
         client = SageMakerClient().client
 
         operation_input_args = {
             "MonitoringScheduleName": self.monitoring_schedule_name,
-            "MonitoringScheduleConfig": self.monitoring_schedule_config,
+            "MonitoringScheduleConfig": monitoring_schedule_config,
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
