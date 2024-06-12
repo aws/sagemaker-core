@@ -1379,6 +1379,7 @@ class AutoMLJob(Base):
             for k, v in operation_input_args.items()
             if v is not None and not isinstance(v, Unassigned)
         }
+        logger.debug(f"Input request: {operation_input_args}")
 
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
@@ -1826,12 +1827,15 @@ class Cluster(Base):
             "ClusterName": self.cluster_name,
             "NodeId": node_id,
         }
+        logger.debug(f"Input request: {operation_input_args}")
 
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
 
+        logger.debug(f"Calling describe_cluster_node API")
         response = client.describe_cluster_node(**operation_input_args)
+        logger.debug(f"Response: {response}")
 
         transformed_response = transform(response, "DescribeClusterNodeResponse")
         return ClusterNodeDetails(**transformed_response)
@@ -1860,6 +1864,7 @@ class Cluster(Base):
             for k, v in operation_input_args.items()
             if v is not None and not isinstance(v, Unassigned)
         }
+        logger.debug(f"Input request: {operation_input_args}")
 
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
@@ -1883,12 +1888,15 @@ class Cluster(Base):
         operation_input_args = {
             "ClusterName": self.cluster_name,
         }
+        logger.debug(f"Input request: {operation_input_args}")
 
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
 
+        logger.debug(f"Calling update_cluster_software API")
         response = client.update_cluster_software(**operation_input_args)
+        logger.debug(f"Response: {response}")
 
 
 class CodeRepository(Base):
@@ -2043,6 +2051,7 @@ class CodeRepository(Base):
             for k, v in operation_input_args.items()
             if v is not None and not isinstance(v, Unassigned)
         }
+        logger.debug(f"Input request: {operation_input_args}")
 
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
@@ -3962,12 +3971,15 @@ class Endpoint(Base):
             "EndpointName": self.endpoint_name,
             "DesiredWeightsAndCapacities": desired_weights_and_capacities,
         }
+        logger.debug(f"Input request: {operation_input_args}")
 
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
 
+        logger.debug(f"Calling update_endpoint_weights_and_capacities API")
         response = client.update_endpoint_weights_and_capacities(**operation_input_args)
+        logger.debug(f"Response: {response}")
 
 
 class EndpointConfig(Base):
@@ -5296,6 +5308,7 @@ class HubContent(Base):
             for k, v in operation_input_args.items()
             if v is not None and not isinstance(v, Unassigned)
         }
+        logger.debug(f"Input request: {operation_input_args}")
 
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
@@ -5738,6 +5751,7 @@ class HyperParameterTuningJob(Base):
             for k, v in operation_input_args.items()
             if v is not None and not isinstance(v, Unassigned)
         }
+        logger.debug(f"Input request: {operation_input_args}")
 
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
@@ -6426,12 +6440,15 @@ class InferenceComponent(Base):
             "InferenceComponentName": self.inference_component_name,
             "DesiredRuntimeConfig": desired_runtime_config,
         }
+        logger.debug(f"Input request: {operation_input_args}")
 
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
 
+        logger.debug(f"Calling update_inference_component_runtime_config API")
         response = client.update_inference_component_runtime_config(**operation_input_args)
+        logger.debug(f"Response: {response}")
 
 
 class InferenceExperiment(Base):
@@ -6953,6 +6970,7 @@ class InferenceRecommendationsJob(Base):
             for k, v in operation_input_args.items()
             if v is not None and not isinstance(v, Unassigned)
         }
+        logger.debug(f"Input request: {operation_input_args}")
 
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
@@ -7417,6 +7435,7 @@ class Model(Base):
             for k, v in operation_input_args.items()
             if v is not None and not isinstance(v, Unassigned)
         }
+        logger.debug(f"Input request: {operation_input_args}")
 
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
@@ -7885,6 +7904,7 @@ class ModelCard(Base):
             for k, v in operation_input_args.items()
             if v is not None and not isinstance(v, Unassigned)
         }
+        logger.debug(f"Input request: {operation_input_args}")
 
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
@@ -8833,12 +8853,15 @@ class ModelPackageGroup(Base):
         operation_input_args = {
             "ModelPackageGroupName": self.model_package_group_name,
         }
+        logger.debug(f"Input request: {operation_input_args}")
 
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
 
+        logger.debug(f"Calling get_model_package_group_policy API")
         response = client.get_model_package_group_policy(**operation_input_args)
+        logger.debug(f"Response: {response}")
 
         return list(response.values())[0]
 
@@ -8851,12 +8874,15 @@ class ModelPackageGroup(Base):
         operation_input_args = {
             "ModelPackageGroupName": self.model_package_group_name,
         }
+        logger.debug(f"Input request: {operation_input_args}")
 
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
 
+        logger.debug(f"Calling delete_model_package_group_policy API")
         response = client.delete_model_package_group_policy(**operation_input_args)
+        logger.debug(f"Response: {response}")
 
     def put_policy(
         self,
@@ -8869,12 +8895,15 @@ class ModelPackageGroup(Base):
             "ModelPackageGroupName": self.model_package_group_name,
             "ResourcePolicy": resource_policy,
         }
+        logger.debug(f"Input request: {operation_input_args}")
 
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
 
+        logger.debug(f"Calling put_model_package_group_policy API")
         response = client.put_model_package_group_policy(**operation_input_args)
+        logger.debug(f"Response: {response}")
 
 
 class ModelQualityJobDefinition(Base):
@@ -10255,6 +10284,7 @@ class PipelineExecution(Base):
             for k, v in operation_input_args.items()
             if v is not None and not isinstance(v, Unassigned)
         }
+        logger.debug(f"Input request: {operation_input_args}")
 
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
@@ -10283,6 +10313,7 @@ class PipelineExecution(Base):
             for k, v in operation_input_args.items()
             if v is not None and not isinstance(v, Unassigned)
         }
+        logger.debug(f"Input request: {operation_input_args}")
 
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
@@ -10309,12 +10340,15 @@ class PipelineExecution(Base):
             "ClientRequestToken": client_request_token,
             "ParallelismConfiguration": self.parallelism_configuration,
         }
+        logger.debug(f"Input request: {operation_input_args}")
 
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
 
+        logger.debug(f"Calling retry_pipeline_execution API")
         response = client.retry_pipeline_execution(**operation_input_args)
+        logger.debug(f"Response: {response}")
 
     def send_execution_step_failure(
         self,
@@ -10329,12 +10363,15 @@ class PipelineExecution(Base):
             "FailureReason": self.failure_reason,
             "ClientRequestToken": client_request_token,
         }
+        logger.debug(f"Input request: {operation_input_args}")
 
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
 
+        logger.debug(f"Calling send_pipeline_execution_step_failure API")
         response = client.send_pipeline_execution_step_failure(**operation_input_args)
+        logger.debug(f"Response: {response}")
 
     def send_execution_step_success(
         self,
@@ -10350,12 +10387,15 @@ class PipelineExecution(Base):
             "OutputParameters": output_parameters,
             "ClientRequestToken": client_request_token,
         }
+        logger.debug(f"Input request: {operation_input_args}")
 
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
 
+        logger.debug(f"Calling send_pipeline_execution_step_success API")
         response = client.send_pipeline_execution_step_success(**operation_input_args)
+        logger.debug(f"Response: {response}")
 
 
 class ProcessingJob(Base):
@@ -12244,12 +12284,15 @@ class TrialComponent(Base):
             "TrialComponentName": self.trial_component_name,
             "TrialName": trial_name,
         }
+        logger.debug(f"Input request: {operation_input_args}")
 
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
 
+        logger.debug(f"Calling associate_trial_component API")
         response = client.associate_trial_component(**operation_input_args)
+        logger.debug(f"Response: {response}")
 
     def disassociate_trail(
         self,
@@ -12262,12 +12305,15 @@ class TrialComponent(Base):
             "TrialComponentName": self.trial_component_name,
             "TrialName": trial_name,
         }
+        logger.debug(f"Input request: {operation_input_args}")
 
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
 
+        logger.debug(f"Calling disassociate_trial_component API")
         response = client.disassociate_trial_component(**operation_input_args)
+        logger.debug(f"Response: {response}")
 
 
 class UserProfile(Base):
@@ -12922,6 +12968,7 @@ class Workteam(Base):
             for k, v in operation_input_args.items()
             if v is not None and not isinstance(v, Unassigned)
         }
+        logger.debug(f"Input request: {operation_input_args}")
 
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"

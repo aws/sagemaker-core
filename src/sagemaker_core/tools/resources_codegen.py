@@ -1237,6 +1237,7 @@ class ResourcesCodeGen:
 
         list_method = convert_to_snake_case(method.operation_name)
 
+        # TODO: add rules for custom key mapping and list methods with no args
         resource_iterator_args_list = [
             "client=client",
             f"list_method='{list_method}'",
