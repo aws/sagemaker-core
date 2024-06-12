@@ -1357,6 +1357,43 @@ class AutoMLJob(Base):
             list_method_kwargs=operation_input_args,
         )
 
+    def get_all_candidates(
+        self,
+        status_equals: Optional[str] = Unassigned(),
+        candidate_name_equals: Optional[str] = Unassigned(),
+        sort_order: Optional[str] = Unassigned(),
+        sort_by: Optional[str] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> ResourceIterator[AutoMLCandidate]:
+
+        operation_input_args = {
+            "AutoMLJobName": self.auto_m_l_job_name,
+            "StatusEquals": status_equals,
+            "CandidateNameEquals": candidate_name_equals,
+            "SortOrder": sort_order,
+            "SortBy": sort_by,
+        }
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
+        return ResourceIterator(
+            client=client,
+            list_method="list_candidates_for_auto_m_l_job",
+            summaries_key="Candidates",
+            summary_name="AutoMLCandidate",
+            resource_cls=AutoMLCandidate,
+            list_method_kwargs=operation_input_args,
+        )
+
 
 class AutoMLJobV2(Base):
     """
@@ -1790,15 +1827,57 @@ class Cluster(Base):
             "ClusterName": self.cluster_name,
             "NodeId": node_id,
         }
+        logger.debug(f"Input request: {operation_input_args}")
 
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
 
+        logger.debug(f"Calling describe_cluster_node API")
         response = client.describe_cluster_node(**operation_input_args)
+        logger.debug(f"Response: {response}")
 
         transformed_response = transform(response, "DescribeClusterNodeResponse")
         return ClusterNodeDetails(**transformed_response)
+
+    def get_all_nodes(
+        self,
+        creation_time_after: Optional[datetime.datetime] = Unassigned(),
+        creation_time_before: Optional[datetime.datetime] = Unassigned(),
+        instance_group_name_contains: Optional[str] = Unassigned(),
+        sort_by: Optional[str] = Unassigned(),
+        sort_order: Optional[str] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> ResourceIterator[ClusterNodeDetails]:
+
+        operation_input_args = {
+            "ClusterName": self.cluster_name,
+            "CreationTimeAfter": creation_time_after,
+            "CreationTimeBefore": creation_time_before,
+            "InstanceGroupNameContains": instance_group_name_contains,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
+        }
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
+        return ResourceIterator(
+            client=client,
+            list_method="list_cluster_nodes",
+            summaries_key="ClusterNodeSummaries",
+            summary_name="ClusterNodeSummary",
+            resource_cls=ClusterNodeDetails,
+            list_method_kwargs=operation_input_args,
+        )
 
     def update_software(
         self,
@@ -1809,12 +1888,15 @@ class Cluster(Base):
         operation_input_args = {
             "ClusterName": self.cluster_name,
         }
+        logger.debug(f"Input request: {operation_input_args}")
 
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
 
+        logger.debug(f"Calling update_cluster_software API")
         response = client.update_cluster_software(**operation_input_args)
+        logger.debug(f"Response: {response}")
 
 
 class CodeRepository(Base):
@@ -1941,6 +2023,48 @@ class CodeRepository(Base):
             "CodeRepositoryName": self.code_repository_name,
         }
         self.client.delete_code_repository(**operation_input_args)
+
+    def get_all(
+        self,
+        creation_time_after: Optional[datetime.datetime] = Unassigned(),
+        creation_time_before: Optional[datetime.datetime] = Unassigned(),
+        last_modified_time_after: Optional[datetime.datetime] = Unassigned(),
+        last_modified_time_before: Optional[datetime.datetime] = Unassigned(),
+        name_contains: Optional[str] = Unassigned(),
+        sort_by: Optional[str] = Unassigned(),
+        sort_order: Optional[str] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> ResourceIterator["CodeRepository"]:
+
+        operation_input_args = {
+            "CreationTimeAfter": creation_time_after,
+            "CreationTimeBefore": creation_time_before,
+            "LastModifiedTimeAfter": last_modified_time_after,
+            "LastModifiedTimeBefore": last_modified_time_before,
+            "NameContains": name_contains,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
+        }
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
+        return ResourceIterator(
+            client=client,
+            list_method="list_code_repositories",
+            summaries_key="CodeRepositorySummaryList",
+            summary_name="CodeRepositorySummary",
+            resource_cls=CodeRepository,
+            list_method_kwargs=operation_input_args,
+        )
 
 
 class CompilationJob(Base):
@@ -3847,12 +3971,15 @@ class Endpoint(Base):
             "EndpointName": self.endpoint_name,
             "DesiredWeightsAndCapacities": desired_weights_and_capacities,
         }
+        logger.debug(f"Input request: {operation_input_args}")
 
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
 
+        logger.debug(f"Calling update_endpoint_weights_and_capacities API")
         response = client.update_endpoint_weights_and_capacities(**operation_input_args)
+        logger.debug(f"Response: {response}")
 
 
 class EndpointConfig(Base):
@@ -5153,6 +5280,49 @@ class HubContent(Base):
             list_method_kwargs=operation_input_args,
         )
 
+    def get_all_versions(
+        self,
+        min_version: Optional[str] = Unassigned(),
+        max_schema_version: Optional[str] = Unassigned(),
+        creation_time_before: Optional[datetime.datetime] = Unassigned(),
+        creation_time_after: Optional[datetime.datetime] = Unassigned(),
+        sort_by: Optional[str] = Unassigned(),
+        sort_order: Optional[str] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> ResourceIterator["HubContent"]:
+
+        operation_input_args = {
+            "HubName": self.hub_name,
+            "HubContentType": self.hub_content_type,
+            "HubContentName": self.hub_content_name,
+            "MinVersion": min_version,
+            "MaxSchemaVersion": max_schema_version,
+            "CreationTimeBefore": creation_time_before,
+            "CreationTimeAfter": creation_time_after,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
+        }
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
+        return ResourceIterator(
+            client=client,
+            list_method="list_hub_content_versions",
+            summaries_key="HubContentSummaries",
+            summary_name="HubContentInfo",
+            resource_cls=HubContent,
+            list_method_kwargs=operation_input_args,
+        )
+
 
 class HumanTaskUi(Base):
     """
@@ -5558,6 +5728,41 @@ class HyperParameterTuningJob(Base):
             summaries_key="HyperParameterTuningJobSummaries",
             summary_name="HyperParameterTuningJobSummary",
             resource_cls=HyperParameterTuningJob,
+            list_method_kwargs=operation_input_args,
+        )
+
+    def get_all_training_jobs(
+        self,
+        status_equals: Optional[str] = Unassigned(),
+        sort_by: Optional[str] = Unassigned(),
+        sort_order: Optional[str] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> ResourceIterator[HyperParameterTrainingJobSummary]:
+
+        operation_input_args = {
+            "HyperParameterTuningJobName": self.hyper_parameter_tuning_job_name,
+            "StatusEquals": status_equals,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
+        }
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
+        return ResourceIterator(
+            client=client,
+            list_method="list_training_jobs_for_hyper_parameter_tuning_job",
+            summaries_key="TrainingJobSummaries",
+            summary_name="HyperParameterTrainingJobSummary",
+            resource_cls=HyperParameterTrainingJobSummary,
             list_method_kwargs=operation_input_args,
         )
 
@@ -6235,12 +6440,15 @@ class InferenceComponent(Base):
             "InferenceComponentName": self.inference_component_name,
             "DesiredRuntimeConfig": desired_runtime_config,
         }
+        logger.debug(f"Input request: {operation_input_args}")
 
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
 
+        logger.debug(f"Calling update_inference_component_runtime_config API")
         response = client.update_inference_component_runtime_config(**operation_input_args)
+        logger.debug(f"Response: {response}")
 
 
 class InferenceExperiment(Base):
@@ -6745,6 +6953,38 @@ class InferenceRecommendationsJob(Base):
             list_method_kwargs=operation_input_args,
         )
 
+    def get_all_steps(
+        self,
+        step_type: Optional[str] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> ResourceIterator[InferenceRecommendationsJobStep]:
+
+        operation_input_args = {
+            "JobName": self.job_name,
+            "Status": self.status,
+            "StepType": step_type,
+        }
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
+        return ResourceIterator(
+            client=client,
+            list_method="list_inference_recommendations_job_steps",
+            summaries_key="Steps",
+            summary_name="InferenceRecommendationsJobStep",
+            resource_cls=InferenceRecommendationsJobStep,
+            list_method_kwargs=operation_input_args,
+        )
+
 
 class LabelingJob(Base):
     """
@@ -7180,6 +7420,36 @@ class Model(Base):
             list_method_kwargs=operation_input_args,
         )
 
+    def get_all_metadata(
+        self,
+        search_expression: Optional[ModelMetadataSearchExpression] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> ResourceIterator[ModelMetadataSummary]:
+
+        operation_input_args = {
+            "SearchExpression": search_expression,
+        }
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
+        return ResourceIterator(
+            client=client,
+            list_method="list_model_metadata",
+            summaries_key="ModelMetadataSummaries",
+            summary_name="ModelMetadataSummary",
+            resource_cls=ModelMetadataSummary,
+            list_method_kwargs=operation_input_args,
+        )
+
 
 class ModelBiasJobDefinition(Base):
     """
@@ -7608,6 +7878,44 @@ class ModelCard(Base):
             summaries_key="ModelCardSummaries",
             summary_name="ModelCardSummary",
             resource_cls=ModelCard,
+            list_method_kwargs=operation_input_args,
+        )
+
+    def get_all_versions(
+        self,
+        creation_time_after: Optional[datetime.datetime] = Unassigned(),
+        creation_time_before: Optional[datetime.datetime] = Unassigned(),
+        sort_by: Optional[str] = Unassigned(),
+        sort_order: Optional[str] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> ResourceIterator[ModelCardVersionSummary]:
+
+        operation_input_args = {
+            "CreationTimeAfter": creation_time_after,
+            "CreationTimeBefore": creation_time_before,
+            "ModelCardName": self.model_card_name,
+            "ModelCardStatus": self.model_card_status,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
+        }
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
+        return ResourceIterator(
+            client=client,
+            list_method="list_model_card_versions",
+            summaries_key="ModelCardVersionSummaryList",
+            summary_name="ModelCardVersionSummary",
+            resource_cls=ModelCardVersionSummary,
             list_method_kwargs=operation_input_args,
         )
 
@@ -8545,12 +8853,15 @@ class ModelPackageGroup(Base):
         operation_input_args = {
             "ModelPackageGroupName": self.model_package_group_name,
         }
+        logger.debug(f"Input request: {operation_input_args}")
 
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
 
+        logger.debug(f"Calling get_model_package_group_policy API")
         response = client.get_model_package_group_policy(**operation_input_args)
+        logger.debug(f"Response: {response}")
 
         return list(response.values())[0]
 
@@ -8563,12 +8874,15 @@ class ModelPackageGroup(Base):
         operation_input_args = {
             "ModelPackageGroupName": self.model_package_group_name,
         }
+        logger.debug(f"Input request: {operation_input_args}")
 
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
 
+        logger.debug(f"Calling delete_model_package_group_policy API")
         response = client.delete_model_package_group_policy(**operation_input_args)
+        logger.debug(f"Response: {response}")
 
     def put_policy(
         self,
@@ -8581,12 +8895,15 @@ class ModelPackageGroup(Base):
             "ModelPackageGroupName": self.model_package_group_name,
             "ResourcePolicy": resource_policy,
         }
+        logger.debug(f"Input request: {operation_input_args}")
 
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
 
+        logger.debug(f"Calling put_model_package_group_policy API")
         response = client.put_model_package_group_policy(**operation_input_args)
+        logger.debug(f"Response: {response}")
 
 
 class ModelQualityJobDefinition(Base):
@@ -9951,6 +10268,66 @@ class PipelineExecution(Base):
             list_method_kwargs=operation_input_args,
         )
 
+    def get_all_steps(
+        self,
+        sort_order: Optional[str] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> ResourceIterator[PipelineExecutionStep]:
+
+        operation_input_args = {
+            "PipelineExecutionArn": self.pipeline_execution_arn,
+            "SortOrder": sort_order,
+        }
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
+        return ResourceIterator(
+            client=client,
+            list_method="list_pipeline_execution_steps",
+            summaries_key="PipelineExecutionSteps",
+            summary_name="PipelineExecutionStep",
+            resource_cls=PipelineExecutionStep,
+            list_method_kwargs=operation_input_args,
+        )
+
+    def get_all_parameters(
+        self,
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> ResourceIterator[Parameter]:
+
+        operation_input_args = {
+            "PipelineExecutionArn": self.pipeline_execution_arn,
+        }
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
+        return ResourceIterator(
+            client=client,
+            list_method="list_pipeline_parameters_for_execution",
+            summaries_key="PipelineParameters",
+            summary_name="Parameter",
+            resource_cls=Parameter,
+            list_method_kwargs=operation_input_args,
+        )
+
     def retry(
         self,
         client_request_token: str,
@@ -9963,12 +10340,15 @@ class PipelineExecution(Base):
             "ClientRequestToken": client_request_token,
             "ParallelismConfiguration": self.parallelism_configuration,
         }
+        logger.debug(f"Input request: {operation_input_args}")
 
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
 
+        logger.debug(f"Calling retry_pipeline_execution API")
         response = client.retry_pipeline_execution(**operation_input_args)
+        logger.debug(f"Response: {response}")
 
     def send_execution_step_failure(
         self,
@@ -9983,12 +10363,15 @@ class PipelineExecution(Base):
             "FailureReason": self.failure_reason,
             "ClientRequestToken": client_request_token,
         }
+        logger.debug(f"Input request: {operation_input_args}")
 
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
 
+        logger.debug(f"Calling send_pipeline_execution_step_failure API")
         response = client.send_pipeline_execution_step_failure(**operation_input_args)
+        logger.debug(f"Response: {response}")
 
     def send_execution_step_success(
         self,
@@ -10004,12 +10387,15 @@ class PipelineExecution(Base):
             "OutputParameters": output_parameters,
             "ClientRequestToken": client_request_token,
         }
+        logger.debug(f"Input request: {operation_input_args}")
 
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
 
+        logger.debug(f"Calling send_pipeline_execution_step_success API")
         response = client.send_pipeline_execution_step_success(**operation_input_args)
+        logger.debug(f"Response: {response}")
 
 
 class ProcessingJob(Base):
@@ -11898,12 +12284,15 @@ class TrialComponent(Base):
             "TrialComponentName": self.trial_component_name,
             "TrialName": trial_name,
         }
+        logger.debug(f"Input request: {operation_input_args}")
 
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
 
+        logger.debug(f"Calling associate_trial_component API")
         response = client.associate_trial_component(**operation_input_args)
+        logger.debug(f"Response: {response}")
 
     def disassociate_trail(
         self,
@@ -11916,12 +12305,15 @@ class TrialComponent(Base):
             "TrialComponentName": self.trial_component_name,
             "TrialName": trial_name,
         }
+        logger.debug(f"Input request: {operation_input_args}")
 
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
 
+        logger.debug(f"Calling disassociate_trial_component API")
         response = client.disassociate_trial_component(**operation_input_args)
+        logger.debug(f"Response: {response}")
 
 
 class UserProfile(Base):
@@ -12548,5 +12940,45 @@ class Workteam(Base):
             summaries_key="Workteams",
             summary_name="Workteam",
             resource_cls=Workteam,
+            list_method_kwargs=operation_input_args,
+        )
+
+    def get_all_labeling_jobs(
+        self,
+        workteam_arn: str,
+        creation_time_after: Optional[datetime.datetime] = Unassigned(),
+        creation_time_before: Optional[datetime.datetime] = Unassigned(),
+        job_reference_code_contains: Optional[str] = Unassigned(),
+        sort_by: Optional[str] = Unassigned(),
+        sort_order: Optional[str] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> ResourceIterator[LabelingJob]:
+
+        operation_input_args = {
+            "WorkteamArn": workteam_arn,
+            "CreationTimeAfter": creation_time_after,
+            "CreationTimeBefore": creation_time_before,
+            "JobReferenceCodeContains": job_reference_code_contains,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
+        }
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
+        return ResourceIterator(
+            client=client,
+            list_method="list_labeling_jobs_for_workteam",
+            summaries_key="LabelingJobSummaryList",
+            summary_name="LabelingJobForWorkteamSummary",
+            resource_cls=LabelingJob,
             list_method_kwargs=operation_input_args,
         )

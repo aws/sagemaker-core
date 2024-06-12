@@ -8,6 +8,14 @@
             "method_type": "object",
             "service_name": "sagemaker"
         },
+        "ListClusterNodes": {
+            "operation_name": "ListClusterNodes",
+            "resource_name": "Cluster",
+            "method_name": "get_all_nodes",
+            "return_type": "ClusterNodeDetails",
+            "method_type": "object",
+            "service_name": "sagemaker"
+        },
         "UpdateClusterSoftware": {
             "operation_name": "UpdateClusterSoftware",
             "resource_name": "Cluster",
@@ -18,6 +26,22 @@
         }
     },
     "PipelineExecution": {
+        "ListPipelineExecutionSteps": {
+            "operation_name": "ListPipelineExecutionSteps",
+            "resource_name": "PipelineExecution",
+            "method_name": "get_all_steps",
+            "return_type": "PipelineExecutionStep",
+            "method_type": "object",
+            "service_name": "sagemaker"
+        },
+        "ListPipelineParametersForExecution": {
+            "operation_name": "ListPipelineParametersForExecution",
+            "resource_name": "PipelineExecution",
+            "method_name": "get_all_parameters",
+            "return_type": "Parameter",
+            "method_type": "object",
+            "service_name": "sagemaker"
+        },
         "RetryPipelineExecution": {
             "operation_name": "RetryPipelineExecution",
             "resource_name": "PipelineExecution",
@@ -103,6 +127,86 @@
             "resource_name": "TrialComponent",
             "method_name": "disassociate_trail",
             "return_type": "None",
+            "method_type": "object",
+            "service_name": "sagemaker"
+        }
+    },
+    "HubContent": {
+        "ListHubContentVersions": {
+            "operation_name": "ListHubContentVersions",
+            "resource_name": "HubContent",
+            "method_name": "get_all_versions",
+            "return_type": "HubContent",
+            "method_type": "object",
+            "service_name": "sagemaker"
+        }
+    },
+    "CodeRepository": {
+        "ListCodeRepositories": {
+            "operation_name": "ListCodeRepositories",
+            "resource_name": "CodeRepository",
+            "method_name": "get_all",
+            "return_type": "CodeRepository",
+            "method_type": "class",
+            "service_name": "sagemaker"
+        }
+    },
+    "InferenceRecommendationsJob": {
+        "ListInferenceRecommendationsJobSteps": {
+            "operation_name": "ListInferenceRecommendationsJobSteps",
+            "resource_name": "InferenceRecommendationsJob",
+            "method_name": "get_all_steps",
+            "return_type": "InferenceRecommendationsJobStep",
+            "method_type": "object",
+            "service_name": "sagemaker"
+        }
+    },
+    "Model": {
+        "ListModelMetadata": {
+            "operation_name": "ListModelMetadata",
+            "resource_name": "Model",
+            "method_name": "get_all_metadata",
+            "return_type": "ModelMetadataSummary",
+            "method_type": "object",
+            "service_name": "sagemaker"
+        }
+    },
+    "ModelCard": {
+        "ListModelCardVersions": {
+            "operation_name": "ListModelCardVersions",
+            "resource_name": "ModelCard",
+            "method_name": "get_all_versions",
+            "return_type": "ModelCardVersionSummary",
+            "method_type": "object",
+            "service_name": "sagemaker"
+        }
+    },
+    "AutoMLJob": {
+        "ListCandidatesForAutoMLJob": {
+            "operation_name": "ListCandidatesForAutoMLJob",
+            "resource_name": "AutoMLJob",
+            "method_name": "get_all_candidates",
+            "return_type": "AutoMLCandidate",
+            "method_type": "object",
+            "service_name": "sagemaker"
+        }
+    },
+    "HyperParameterTuningJob": {
+        "ListTrainingJobsForHyperParameterTuningJob": {
+            "operation_name": "ListTrainingJobsForHyperParameterTuningJob",
+            "resource_name": "HyperParameterTuningJob",
+            "method_name": "get_all_training_jobs",
+            "return_type": "HyperParameterTrainingJobSummary",
+            "method_type": "object",
+            "service_name": "sagemaker"
+        }
+    },
+    "Workteam": {
+        "ListLabelingJobsForWorkteam": {
+            "operation_name": "ListLabelingJobsForWorkteam",
+            "resource_name": "Workteam",
+            "method_name": "get_all_labeling_jobs",
+            "return_type": "LabelingJob",
             "method_type": "object",
             "service_name": "sagemaker"
         }

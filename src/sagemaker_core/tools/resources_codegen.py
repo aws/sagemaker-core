@@ -50,7 +50,9 @@ from sagemaker_core.tools.templates import (
     INITIALIZE_CLIENT_TEMPLATE,
     REFRESH_METHOD_TEMPLATE,
     RESOURCE_BASE_CLASS_TEMPLATE,
+    RETURN_ITERATOR_TEMPLATE,
     SERIALIZE_INPUT_TEMPLATE,
+    SERIALIZE_LIST_INPUT_TEMPLATE,
     STOP_METHOD_TEMPLATE,
     DELETE_METHOD_TEMPLATE,
     WAIT_METHOD_TEMPLATE,
@@ -651,6 +653,8 @@ class ResourcesCodeGen:
             if attr not in exclude_list
         )
         method_args = ",\n".join(args)
+        if not method_args:
+            return ""
         method_args += ","
         method_args = add_indent(method_args)
         return method_args
@@ -1118,6 +1122,8 @@ class ResourcesCodeGen:
 
     def generate_method(self, method: Method, resource_attributes: list):
         # TODO: Use special templates for some methods with different formats like list and wait
+        if method.method_name.startswith("get_all"):
+            return self.generate_additional_get_all_method(method, resource_attributes)
         operation_metadata = self.operations[method.operation_name]
         operation_input_shape_name = operation_metadata["input"]["shape"]
         if method.method_type == MethodType.CLASS:
@@ -1179,6 +1185,88 @@ class ResourcesCodeGen:
             deserialize_response=deserialize_response,
         )
         return formatted_method
+
+    def generate_additional_get_all_method(self, method: Method, resource_attributes: list):
+        """Auto-Generate methods that return a list of objects.
+
+        Args:
+            resource_name (str): The resource name.
+
+        Returns:
+            str: The formatted method code.
+        """
+        # TODO: merge this with generate_get_all_method
+        operation_metadata = self.operations[method.operation_name]
+        operation_input_shape_name = operation_metadata["input"]["shape"]
+        exclude_list = ["next_token", "max_results"]
+        if method.method_type == MethodType.CLASS:
+            decorator = "@classmethod"
+            method_args = add_indent("cls,\n", 4)
+            method_args += self._generate_method_args(operation_input_shape_name, exclude_list)
+            operation_input_args = self._generate_operation_input_args_updated(
+                operation_metadata, True, resource_attributes, exclude_list
+            )
+        else:
+            decorator = ""
+            method_args = add_indent("self,\n", 4)
+            method_args += self._generate_method_args(
+                operation_input_shape_name, exclude_list + resource_attributes
+            )
+            operation_input_args = self._generate_operation_input_args_updated(
+                operation_metadata, False, resource_attributes, exclude_list
+            )
+        method_args += add_indent("session: Optional[Session] = None,\n", 4)
+        method_args += add_indent("region: Optional[str] = None,", 4)
+
+        if method.return_type == method.resource_name:
+            return_type = f'ResourceIterator["{method.resource_name}"]'
+        else:
+            return_type = f"ResourceIterator[{method.return_type}]"
+
+        get_list_operation_output_shape = operation_metadata["output"]["shape"]
+        list_operation_output_members = self.shapes[get_list_operation_output_shape]["members"]
+
+        filtered_list_operation_output_members = next(
+            {key: value}
+            for key, value in list_operation_output_members.items()
+            if key != "NextToken"
+        )
+        summaries_key = next(iter(filtered_list_operation_output_members))
+        summaries_shape_name = filtered_list_operation_output_members[summaries_key]["shape"]
+        summary_name = self.shapes[summaries_shape_name]["member"]["shape"]
+
+        list_method = convert_to_snake_case(method.operation_name)
+
+        # TODO: add rules for custom key mapping and list methods with no args
+        resource_iterator_args_list = [
+            "client=client",
+            f"list_method='{list_method}'",
+            f"summaries_key='{summaries_key}'",
+            f"summary_name='{summary_name}'",
+            f"resource_cls={method.return_type}",
+            "list_method_kwargs=operation_input_args",
+        ]
+
+        resource_iterator_args = ",\n".join(resource_iterator_args_list)
+        resource_iterator_args = add_indent(resource_iterator_args, 8)
+        serialize_operation_input = SERIALIZE_LIST_INPUT_TEMPLATE.format(
+            operation_input_args=operation_input_args
+        )
+        initialize_client = INITIALIZE_CLIENT_TEMPLATE.format(service_name=method.service_name)
+        deserialize_response = RETURN_ITERATOR_TEMPLATE.format(
+            resource_iterator_args=resource_iterator_args
+        )
+
+        return GENERIC_METHOD_TEMPLATE.format(
+            decorator=decorator,
+            method_name=method.method_name,
+            method_args=method_args,
+            return_type=return_type,
+            serialize_operation_input=serialize_operation_input,
+            initialize_client=initialize_client,
+            call_operation_api="",
+            deserialize_response=deserialize_response,
+        )
 
     def _get_failure_reason_ref(self, resource_name: str) -> str:
         """Get the failure reason reference for a resource object.

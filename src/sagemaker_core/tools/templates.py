@@ -450,13 +450,16 @@ def {method_name}(
 SERIALIZE_INPUT_TEMPLATE = """
     operation_input_args = {{
 {operation_input_args}
-    }}"""
+    }}
+    logger.debug(f"Input request: {{operation_input_args}}")"""
 
 INITIALIZE_CLIENT_TEMPLATE = """
     client = SageMakerClient(session=session, region_name=region, service_name='{service_name}').client"""
 
 CALL_OPERATION_API_TEMPLATE = """
-    response = client.{operation}(**operation_input_args)"""
+    logger.debug(f"Calling {operation} API")
+    response = client.{operation}(**operation_input_args)
+    logger.debug(f"Response: {{response}}")"""
 
 DESERIALIZE_RESPONSE_TEMPLATE = """
     transformed_response = transform(response, '{operation_output_shape}')
@@ -464,6 +467,18 @@ DESERIALIZE_RESPONSE_TEMPLATE = """
 
 DESERIALIZE_RESPONSE_TO_BASIC_TYPE_TEMPLATE = """
     return list(response.values())[0]"""
+
+SERIALIZE_LIST_INPUT_TEMPLATE = """
+    operation_input_args = {{
+{operation_input_args}
+    }}
+    operation_input_args = {{k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}}
+    logger.debug(f"Input request: {{operation_input_args}}")"""
+
+RETURN_ITERATOR_TEMPLATE = """
+    return ResourceIterator(
+{resource_iterator_args}
+    )"""
 
 RESOURCE_BASE_CLASS_TEMPLATE = """
 class Base(BaseModel):
