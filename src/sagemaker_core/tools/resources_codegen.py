@@ -636,9 +636,12 @@ class ResourcesCodeGen:
         self, operation_input_shape_name: str, exclude_list: list = []
     ) -> str:
         """Generates the arguments for a method.
+        This will exclude attributes in the exclude_list from the arguments. For example, This is used for update() method
+         which does not require the resource identifier attributes to be passed as arguments.
 
         Args:
             operation_input_shape_name (str): The name of the input shape for the operation.
+            exclude_list (list): The list of attributes to exclude from the arguments.
 
         Returns:
             str: The generated arguments string.
@@ -657,35 +660,6 @@ class ResourcesCodeGen:
             return ""
         method_args += ","
         method_args = add_indent(method_args)
-        return method_args
-
-    def _generate_method_args_excluding_resource_class_attributes(
-        self, operation_input_shape_name: str, resource_attributes: list
-    ) -> str:
-        """Generates the arguments for a method.
-        This will  exclude the resource class attributes from the arguments,
-         because they need not be specificed by the user explicitly once they have initiated the class already.
-
-        Args:
-            operation_input_shape_name (str): The name of the input shape for the operation.
-            resource_attributes (list): The list of resource class attributes.
-            include_serialiser_functions (bool): Indicates whether to include serialiser functions in the arguments.
-        Returns:
-            str: The generated arguments string.
-        """
-        typed_shape_members = self.shapes_extractor.generate_shape_members(
-            operation_input_shape_name
-        )
-        method_args = ""
-
-        method_args += ",\n".join(
-            f"{attr}: {attr_type}"
-            for attr, attr_type in typed_shape_members.items()
-            if attr not in resource_attributes
-        )
-        if method_args:
-            method_args += ","
-            method_args = add_indent(method_args)
         return method_args
 
     def _generate_get_args(self, resource_name: str, operation_input_shape_name: str) -> str:
@@ -842,18 +816,29 @@ class ResourcesCodeGen:
             str: The formatted Update Method template.
 
         """
-        # Get the operation and shape for the 'create' method
+        # Get the operation and shape for the 'update' method
         operation_name = "Update" + resource_name
         operation_metadata = self.operations[operation_name]
         operation_input_shape_name = operation_metadata["input"]["shape"]
 
-        # Generate the arguments for the 'create' method
-        update_args = self._generate_method_args_excluding_resource_class_attributes(
-            operation_input_shape_name, kwargs["resource_attributes"]
+        required_members = self.shapes[operation_input_shape_name]["required"]
+
+        # Exclude any required attributes that are already present as resource attributes and are also identifiers
+        exclude_required_attributes = []
+        for member in required_members:
+            snake_member = convert_to_snake_case(member)
+            if snake_member in kwargs["resource_attributes"] and any(
+                id in snake_member for id in ["name", "arn", "id"]
+            ):
+                exclude_required_attributes.append(snake_member)
+
+        # Generate the arguments for the 'update' method
+        update_args = self._generate_method_args(
+            operation_input_shape_name, exclude_required_attributes
         )
 
         operation_input_args = self._generate_operation_input_necessary_args(
-            operation_metadata, kwargs["resource_attributes"]
+            operation_metadata, exclude_required_attributes
         )
 
         # Convert the resource name to snake case
@@ -864,7 +849,7 @@ class ResourcesCodeGen:
 
         # Format the method using the CREATE_METHOD_TEMPLATE
         formatted_method = UPDATE_METHOD_TEMPLATE.format(
-            service_name="sagemaker",  # TODO: change service name based on the service - runtime, sagemaker, etc.
+            service_name="sagemaker",
             resource_name=resource_name,
             resource_lower=resource_lower,
             update_args=update_args,
@@ -892,7 +877,7 @@ class ResourcesCodeGen:
         operation_input_shape_name = operation_metadata["input"]["shape"]
 
         # Generate the arguments for the 'create' method
-        invoke_args = self._generate_method_args_excluding_resource_class_attributes(
+        invoke_args = self._generate_method_args(
             operation_input_shape_name, kwargs["resource_attributes"]
         )
 
@@ -936,7 +921,7 @@ class ResourcesCodeGen:
         operation_input_shape_name = operation_metadata["input"]["shape"]
 
         # Generate the arguments for the 'create' method
-        invoke_args = self._generate_method_args_excluding_resource_class_attributes(
+        invoke_args = self._generate_method_args(
             operation_input_shape_name, kwargs["resource_attributes"]
         )
 
@@ -980,7 +965,7 @@ class ResourcesCodeGen:
         operation_input_shape_name = operation_metadata["input"]["shape"]
 
         # Generate the arguments for the 'create' method
-        invoke_args = self._generate_method_args_excluding_resource_class_attributes(
+        invoke_args = self._generate_method_args(
             operation_input_shape_name, kwargs["resource_attributes"]
         )
 
@@ -1137,10 +1122,7 @@ class ResourcesCodeGen:
             decorator = ""
             method_args = add_indent("self,\n", 4)
             method_args += (
-                self._generate_method_args_excluding_resource_class_attributes(
-                    operation_input_shape_name, resource_attributes
-                )
-                + "\n"
+                self._generate_method_args(operation_input_shape_name, resource_attributes) + "\n"
             )
             operation_input_args = self._generate_operation_input_args_updated(
                 operation_metadata, False, resource_attributes
