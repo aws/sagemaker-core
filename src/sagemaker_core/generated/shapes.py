@@ -7797,7 +7797,7 @@ class Device(Base):
        iot_thing_name: 	 Amazon Web Services Internet of Things (IoT) object name.
     """
 
-    device_name: str
+    device_name: Union[str, object]
     description: Optional[str] = Unassigned()
     iot_thing_name: Optional[str] = Unassigned()
 
@@ -7825,7 +7825,7 @@ class DeviceDeploymentSummary(Base):
     edge_deployment_plan_arn: str
     edge_deployment_plan_name: Union[str, object]
     stage_name: str
-    device_name: str
+    device_name: Union[str, object]
     device_arn: str
     deployed_stage_name: Optional[str] = Unassigned()
     device_fleet_name: Optional[Union[str, object]] = Unassigned()
@@ -7902,7 +7902,7 @@ class DeviceSummary(Base):
        agent_version: 	 Edge Manager agent version.
     """
 
-    device_name: str
+    device_name: Union[str, object]
     device_arn: str
     description: Optional[str] = Unassigned()
     device_fleet_name: Optional[Union[str, object]] = Unassigned()
@@ -9001,7 +9001,7 @@ class LineageGroupSummary(Base):
     """
 
     lineage_group_arn: Optional[str] = Unassigned()
-    lineage_group_name: Optional[str] = Unassigned()
+    lineage_group_name: Optional[Union[str, object]] = Unassigned()
     display_name: Optional[str] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()

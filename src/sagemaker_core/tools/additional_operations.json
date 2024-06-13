@@ -210,5 +210,44 @@
             "method_type": "object",
             "service_name": "sagemaker"
         }
+    },
+    "Device": {},
+    "FeatureMetadata": {},
+    "SubscribedWorkteam": {},
+    "LineageGroup": {
+        "GetLineageGroupPolicy": {
+            "operation_name": "GetLineageGroupPolicy",
+            "resource_name": "LineageGroup",
+            "method_name": "get_policy",
+            "return_type": "str",
+            "method_type": "object",
+            "service_name": "sagemaker"
+        }
+    },
+    "DeviceFleet": {
+        "DeregisterDevices": {
+            "operation_name": "DeregisterDevices",
+            "resource_name": "DeviceFleet",
+            "method_name": "deregister_devices",
+            "return_type": "None",
+            "method_type": "object",
+            "service_name": "sagemaker"
+        },
+        "RegisterDevices": {
+            "operation_name": "RegisterDevices",
+            "resource_name": "DeviceFleet",
+            "method_name": "register_devices",
+            "return_type": "None",
+            "method_type": "object",
+            "service_name": "sagemaker"
+        },
+        "UpdateDevices": {
+            "operation_name": "UpdateDevices",
+            "resource_name": "DeviceFleet",
+            "method_name": "update_devices",
+            "return_type": "None",
+            "method_type": "object",
+            "service_name": "sagemaker"
+        }
     }
 }

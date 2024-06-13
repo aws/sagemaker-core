@@ -94,6 +94,7 @@ class ResourcesExtractor:
             None
         """
         for resource_name, resource_operations in self.additional_operations.items():
+            self.resources.add(resource_name)
             if resource_name not in self.resource_methods:
                 self.resource_methods[resource_name] = dict()
             for operation_name, operation in resource_operations.items():
