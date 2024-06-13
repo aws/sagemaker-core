@@ -1598,6 +1598,7 @@ class Cluster(Base):
         transform(response, 'DescribeClusterResponse', self)
         return self
     
+    @populate_inputs_decorator
     def update(
         self,
     
@@ -2603,6 +2604,7 @@ class DeviceFleet(Base):
         transform(response, 'DescribeDeviceFleetResponse', self)
         return self
     
+    @populate_inputs_decorator
     def update(
         self,
         enable_iot_role_alias: Optional[bool] = Unassigned(),
@@ -2913,6 +2915,7 @@ class Domain(Base):
         transform(response, 'DescribeDomainResponse', self)
         return self
     
+    @populate_inputs_decorator
     def update(
         self,
         domain_settings_for_update: Optional[DomainSettingsForUpdate] = Unassigned(),
@@ -3498,6 +3501,7 @@ class Endpoint(Base):
         transform(response, 'DescribeEndpointOutput', self)
         return self
     
+    @populate_inputs_decorator
     def update(
         self,
         retain_all_variant_properties: Optional[bool] = Unassigned(),
@@ -4239,6 +4243,7 @@ class FeatureGroup(Base):
         transform(response, 'DescribeFeatureGroupResponse', self)
         return self
     
+    @populate_inputs_decorator
     def update(
         self,
         feature_additions: Optional[List[FeatureDefinition]] = Unassigned(),
@@ -4638,6 +4643,7 @@ class Hub(Base):
         transform(response, 'DescribeHubResponse', self)
         return self
     
+    @populate_inputs_decorator
     def update(
         self,
     
@@ -5447,6 +5453,7 @@ class Image(Base):
         transform(response, 'DescribeImageResponse', self)
         return self
     
+    @populate_inputs_decorator
     def update(
         self,
         delete_properties: Optional[List[str]] = Unassigned(),
@@ -6094,6 +6101,7 @@ class InferenceExperiment(Base):
         transform(response, 'DescribeInferenceExperimentResponse', self)
         return self
     
+    @populate_inputs_decorator
     def update(
         self,
     
@@ -7231,6 +7239,7 @@ class ModelCard(Base):
         transform(response, 'DescribeModelCardResponse', self)
         return self
     
+    @populate_inputs_decorator
     def update(
         self,
     
@@ -8015,6 +8024,7 @@ class ModelPackage(Base):
         transform(response, 'DescribeModelPackageOutput', self)
         return self
     
+    @populate_inputs_decorator
     def update(
         self,
         customer_metadata_properties_to_remove: Optional[List[str]] = Unassigned(),
@@ -8693,6 +8703,7 @@ class MonitoringSchedule(Base):
         transform(response, 'DescribeMonitoringScheduleResponse', self)
         return self
     
+    @populate_inputs_decorator
     def update(
         self,
     
@@ -8972,6 +8983,7 @@ class NotebookInstance(Base):
         transform(response, 'DescribeNotebookInstanceOutput', self)
         return self
     
+    @populate_inputs_decorator
     def update(
         self,
         lifecycle_config_name: Optional[str] = Unassigned(),
@@ -9382,6 +9394,7 @@ class Pipeline(Base):
         transform(response, 'DescribePipelineResponse', self)
         return self
     
+    @populate_inputs_decorator
     def update(
         self,
         pipeline_definition_s3_location: Optional[PipelineDefinitionS3Location] = Unassigned(),
@@ -10708,6 +10721,7 @@ class TrainingJob(Base):
         transform(response, 'DescribeTrainingJobResponse', self)
         return self
     
+    @populate_inputs_decorator
     def update(
         self,
     
@@ -11624,6 +11638,7 @@ class UserProfile(Base):
         transform(response, 'DescribeUserProfileResponse', self)
         return self
     
+    @populate_inputs_decorator
     def update(
         self,
     
@@ -11823,6 +11838,7 @@ class Workforce(Base):
         transform(response, 'DescribeWorkforceResponse', self)
         return self
     
+    @populate_inputs_decorator
     def update(
         self,
         workforce_name: str,
