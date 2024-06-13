@@ -17,9 +17,9 @@ from functools import lru_cache
 import os
 import json
 import re
-from src.code_injection.codec import pascal_to_snake
-from src.generated.config_schema import SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA
-from src.tools.constants import (
+from sagemaker_core.code_injection.codec import pascal_to_snake
+from sagemaker_core.generated.config_schema import SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA
+from sagemaker_core.tools.constants import (
     BASIC_RETURN_TYPES,
     GENERATED_CLASSES_LOCATION,
     RESOURCES_CODEGEN_FILE_NAME,
@@ -31,11 +31,16 @@ from src.tools.constants import (
     PYTHON_TYPES_TO_BASIC_JSON_TYPES,
     CONFIGURABLE_ATTRIBUTE_SUBSTRINGS,
 )
-from src.tools.method import Method, MethodType
-from src.util.util import add_indent, convert_to_snake_case, snake_to_pascal, remove_html_tags
-from src.tools.resources_extractor import ResourcesExtractor
-from src.tools.shapes_extractor import ShapesExtractor
-from src.tools.templates import (
+from sagemaker_core.tools.method import Method, MethodType
+from sagemaker_core.util.util import (
+    add_indent,
+    convert_to_snake_case,
+    snake_to_pascal,
+    remove_html_tags,
+)
+from sagemaker_core.tools.resources_extractor import ResourcesExtractor
+from sagemaker_core.tools.shapes_extractor import ShapesExtractor
+from sagemaker_core.tools.templates import (
     CALL_OPERATION_API_TEMPLATE,
     CREATE_METHOD_TEMPLATE,
     DESERIALIZE_RESPONSE_TEMPLATE,
@@ -45,7 +50,9 @@ from src.tools.templates import (
     INITIALIZE_CLIENT_TEMPLATE,
     REFRESH_METHOD_TEMPLATE,
     RESOURCE_BASE_CLASS_TEMPLATE,
+    RETURN_ITERATOR_TEMPLATE,
     SERIALIZE_INPUT_TEMPLATE,
+    SERIALIZE_LIST_INPUT_TEMPLATE,
     STOP_METHOD_TEMPLATE,
     DELETE_METHOD_TEMPLATE,
     WAIT_METHOD_TEMPLATE,
@@ -63,7 +70,7 @@ from src.tools.templates import (
     GET_ALL_METHOD_WITH_ARGS_TEMPLATE,
     UPDATE_METHOD_TEMPLATE_WITHOUT_DECORATOR,
 )
-from src.tools.data_extractor import (
+from sagemaker_core.tools.data_extractor import (
     load_combined_shapes_data,
     load_combined_operations_data,
 )
@@ -76,6 +83,7 @@ OBJECT = "object"
 PROPERTIES = "properties"
 SAGEMAKER = "SageMaker"
 PYTHON_SDK = "PythonSDK"
+SCHEMA_VERSION = "SchemaVersion"
 RESOURCES = "Resources"
 REQUIRED = "required"
 GLOBAL_DEFAULTS = "GlobalDefaults"
@@ -169,11 +177,11 @@ class ResourcesCodeGen:
             "from pydantic import validate_call",
             "from typing import Dict, List, Literal, Optional, Union\n"
             "from boto3.session import Session",
-            "from src.code_injection.codec import transform",
-            "from src.generated.utils import SageMakerClient, SageMakerRuntimeClient, ResourceIterator, Unassigned, snake_to_pascal, pascal_to_snake, is_not_primitive",
-            "from src.generated.intelligent_defaults_helper import load_default_configs_for_resource_name, get_config_value",
-            "from src.generated.shapes import *",
-            "from src.generated.exceptions import *",
+            "from sagemaker_core.code_injection.codec import transform",
+            "from sagemaker_core.generated.utils import SageMakerClient, SageMakerRuntimeClient, ResourceIterator, Unassigned, snake_to_pascal, pascal_to_snake, is_not_primitive, is_not_str_dict",
+            "from sagemaker_core.generated.intelligent_defaults_helper import load_default_configs_for_resource_name, get_config_value",
+            "from sagemaker_core.generated.shapes import *",
+            "from sagemaker_core.generated.exceptions import *",
         ]
 
         formated_imports = "\n".join(imports)
@@ -630,9 +638,12 @@ class ResourcesCodeGen:
         self, operation_input_shape_name: str, exclude_list: list = []
     ) -> str:
         """Generates the arguments for a method.
+        This will exclude attributes in the exclude_list from the arguments. For example, This is used for update() method
+         which does not require the resource identifier attributes to be passed as arguments.
 
         Args:
             operation_input_shape_name (str): The name of the input shape for the operation.
+            exclude_list (list): The list of attributes to exclude from the arguments.
 
         Returns:
             str: The generated arguments string.
@@ -647,37 +658,10 @@ class ResourcesCodeGen:
             if attr not in exclude_list
         )
         method_args = ",\n".join(args)
+        if not method_args:
+            return ""
         method_args += ","
         method_args = add_indent(method_args)
-        return method_args
-
-    def _generate_method_args_excluding_resource_class_attributes(
-        self, operation_input_shape_name: str, resource_attributes: list
-    ) -> str:
-        """Generates the arguments for a method.
-        This will  exclude the resource class attributes from the arguments,
-         because they need not be specificed by the user explicitly once they have initiated the class already.
-
-        Args:
-            operation_input_shape_name (str): The name of the input shape for the operation.
-            resource_attributes (list): The list of resource class attributes.
-            include_serialiser_functions (bool): Indicates whether to include serialiser functions in the arguments.
-        Returns:
-            str: The generated arguments string.
-        """
-        typed_shape_members = self.shapes_extractor.generate_shape_members(
-            operation_input_shape_name
-        )
-        method_args = ""
-
-        method_args += ",\n".join(
-            f"{attr}: {attr_type}"
-            for attr, attr_type in typed_shape_members.items()
-            if attr not in resource_attributes
-        )
-        if method_args:
-            method_args += ","
-            method_args = add_indent(method_args)
         return method_args
 
     def _generate_get_args(self, resource_name: str, operation_input_shape_name: str) -> str:
@@ -834,18 +818,29 @@ class ResourcesCodeGen:
             str: The formatted Update Method template.
 
         """
-        # Get the operation and shape for the 'create' method
+        # Get the operation and shape for the 'update' method
         operation_name = "Update" + resource_name
         operation_metadata = self.operations[operation_name]
         operation_input_shape_name = operation_metadata["input"]["shape"]
 
-        # Generate the arguments for the 'create' method
-        update_args = self._generate_method_args_excluding_resource_class_attributes(
-            operation_input_shape_name, kwargs["resource_attributes"]
+        required_members = self.shapes[operation_input_shape_name]["required"]
+
+        # Exclude any required attributes that are already present as resource attributes and are also identifiers
+        exclude_required_attributes = []
+        for member in required_members:
+            snake_member = convert_to_snake_case(member)
+            if snake_member in kwargs["resource_attributes"] and any(
+                id in snake_member for id in ["name", "arn", "id"]
+            ):
+                exclude_required_attributes.append(snake_member)
+
+        # Generate the arguments for the 'update' method
+        update_args = self._generate_method_args(
+            operation_input_shape_name, exclude_required_attributes
         )
 
         operation_input_args = self._generate_operation_input_necessary_args(
-            operation_metadata, kwargs["resource_attributes"]
+            operation_metadata, exclude_required_attributes
         )
 
         # Convert the resource name to snake case
@@ -893,7 +888,7 @@ class ResourcesCodeGen:
         operation_input_shape_name = operation_metadata["input"]["shape"]
 
         # Generate the arguments for the 'create' method
-        invoke_args = self._generate_method_args_excluding_resource_class_attributes(
+        invoke_args = self._generate_method_args(
             operation_input_shape_name, kwargs["resource_attributes"]
         )
 
@@ -937,7 +932,7 @@ class ResourcesCodeGen:
         operation_input_shape_name = operation_metadata["input"]["shape"]
 
         # Generate the arguments for the 'create' method
-        invoke_args = self._generate_method_args_excluding_resource_class_attributes(
+        invoke_args = self._generate_method_args(
             operation_input_shape_name, kwargs["resource_attributes"]
         )
 
@@ -981,7 +976,7 @@ class ResourcesCodeGen:
         operation_input_shape_name = operation_metadata["input"]["shape"]
 
         # Generate the arguments for the 'create' method
-        invoke_args = self._generate_method_args_excluding_resource_class_attributes(
+        invoke_args = self._generate_method_args(
             operation_input_shape_name, kwargs["resource_attributes"]
         )
 
@@ -1123,6 +1118,8 @@ class ResourcesCodeGen:
 
     def generate_method(self, method: Method, resource_attributes: list):
         # TODO: Use special templates for some methods with different formats like list and wait
+        if method.method_name.startswith("get_all"):
+            return self.generate_additional_get_all_method(method, resource_attributes)
         operation_metadata = self.operations[method.operation_name]
         operation_input_shape_name = operation_metadata["input"]["shape"]
         if method.method_type == MethodType.CLASS:
@@ -1136,16 +1133,13 @@ class ResourcesCodeGen:
             decorator = ""
             method_args = add_indent("self,\n", 4)
             method_args += (
-                self._generate_method_args_excluding_resource_class_attributes(
-                    operation_input_shape_name, resource_attributes
-                )
-                + "\n"
+                self._generate_method_args(operation_input_shape_name, resource_attributes) + "\n"
             )
             operation_input_args = self._generate_operation_input_args_updated(
                 operation_metadata, False, resource_attributes
             )
         method_args += add_indent("session: Optional[Session] = None,\n", 4)
-        method_args += add_indent("region: Optional[str] = None,\n", 4)
+        method_args += add_indent("region: Optional[str] = None,", 4)
 
         if method.return_type == "None":
             return_type = "None"
@@ -1184,6 +1178,88 @@ class ResourcesCodeGen:
             deserialize_response=deserialize_response,
         )
         return formatted_method
+
+    def generate_additional_get_all_method(self, method: Method, resource_attributes: list):
+        """Auto-Generate methods that return a list of objects.
+
+        Args:
+            resource_name (str): The resource name.
+
+        Returns:
+            str: The formatted method code.
+        """
+        # TODO: merge this with generate_get_all_method
+        operation_metadata = self.operations[method.operation_name]
+        operation_input_shape_name = operation_metadata["input"]["shape"]
+        exclude_list = ["next_token", "max_results"]
+        if method.method_type == MethodType.CLASS:
+            decorator = "@classmethod"
+            method_args = add_indent("cls,\n", 4)
+            method_args += self._generate_method_args(operation_input_shape_name, exclude_list)
+            operation_input_args = self._generate_operation_input_args_updated(
+                operation_metadata, True, resource_attributes, exclude_list
+            )
+        else:
+            decorator = ""
+            method_args = add_indent("self,\n", 4)
+            method_args += self._generate_method_args(
+                operation_input_shape_name, exclude_list + resource_attributes
+            )
+            operation_input_args = self._generate_operation_input_args_updated(
+                operation_metadata, False, resource_attributes, exclude_list
+            )
+        method_args += add_indent("session: Optional[Session] = None,\n", 4)
+        method_args += add_indent("region: Optional[str] = None,", 4)
+
+        if method.return_type == method.resource_name:
+            return_type = f'ResourceIterator["{method.resource_name}"]'
+        else:
+            return_type = f"ResourceIterator[{method.return_type}]"
+
+        get_list_operation_output_shape = operation_metadata["output"]["shape"]
+        list_operation_output_members = self.shapes[get_list_operation_output_shape]["members"]
+
+        filtered_list_operation_output_members = next(
+            {key: value}
+            for key, value in list_operation_output_members.items()
+            if key != "NextToken"
+        )
+        summaries_key = next(iter(filtered_list_operation_output_members))
+        summaries_shape_name = filtered_list_operation_output_members[summaries_key]["shape"]
+        summary_name = self.shapes[summaries_shape_name]["member"]["shape"]
+
+        list_method = convert_to_snake_case(method.operation_name)
+
+        # TODO: add rules for custom key mapping and list methods with no args
+        resource_iterator_args_list = [
+            "client=client",
+            f"list_method='{list_method}'",
+            f"summaries_key='{summaries_key}'",
+            f"summary_name='{summary_name}'",
+            f"resource_cls={method.return_type}",
+            "list_method_kwargs=operation_input_args",
+        ]
+
+        resource_iterator_args = ",\n".join(resource_iterator_args_list)
+        resource_iterator_args = add_indent(resource_iterator_args, 8)
+        serialize_operation_input = SERIALIZE_LIST_INPUT_TEMPLATE.format(
+            operation_input_args=operation_input_args
+        )
+        initialize_client = INITIALIZE_CLIENT_TEMPLATE.format(service_name=method.service_name)
+        deserialize_response = RETURN_ITERATOR_TEMPLATE.format(
+            resource_iterator_args=resource_iterator_args
+        )
+
+        return GENERIC_METHOD_TEMPLATE.format(
+            decorator=decorator,
+            method_name=method.method_name,
+            method_args=method_args,
+            return_type=return_type,
+            serialize_operation_input=serialize_operation_input,
+            initialize_client=initialize_client,
+            call_operation_api="",
+            deserialize_response=deserialize_response,
+        )
 
     def _get_failure_reason_ref(self, resource_name: str) -> str:
         """Get the failure reason reference for a resource object.
@@ -1407,7 +1483,11 @@ class ResourcesCodeGen:
             "$schema": "https://json-schema.org/draft/2020-12/schema",
             TYPE: OBJECT,
             PROPERTIES: {
-                "SchemaVersion": "1.0",
+                SCHEMA_VERSION: {
+                    TYPE: "string",
+                    "enum": ["1.0"],
+                    "description": "The schema version of the document.",
+                },
                 SAGEMAKER: {
                     TYPE: OBJECT,
                     PROPERTIES: {

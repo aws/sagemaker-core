@@ -1,6 +1,7 @@
 import json
-from src.tools.resources_codegen import ResourcesCodeGen
-from src.tools.constants import SERVICE_JSON_FILE_PATH
+from sagemaker_core.tools.method import Method
+from sagemaker_core.tools.resources_codegen import ResourcesCodeGen
+from sagemaker_core.tools.constants import SERVICE_JSON_FILE_PATH
 
 
 class TestGenerateResource:
@@ -542,5 +543,127 @@ def get_all(
 """
         assert (
             self.resource_generator.generate_get_all_method("DataQualityJobDefinition")
+            == expected_output
+        )
+
+    def test_get_node(self):
+        expected_output = """
+
+def get_node(
+    self,
+    node_id: str,
+    session: Optional[Session] = None,
+    region: Optional[str] = None,
+) -> Optional[ClusterNodeDetails]:
+
+    operation_input_args = {
+        'ClusterName': self.cluster_name,
+        'NodeId': node_id,
+    }
+    logger.debug(f"Input request: {operation_input_args}")
+
+    client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+
+    logger.debug(f"Calling describe_cluster_node API")
+    response = client.describe_cluster_node(**operation_input_args)
+    logger.debug(f"Response: {response}")
+
+    transformed_response = transform(response, 'DescribeClusterNodeResponse')
+    return ClusterNodeDetails(**transformed_response)
+"""
+        method = Method(
+            **{
+                "operation_name": "DescribeClusterNode",
+                "resource_name": "Cluster",
+                "method_name": "get_node",
+                "return_type": "ClusterNodeDetails",
+                "method_type": "object",
+                "service_name": "sagemaker",
+            }
+        )
+        assert self.resource_generator.generate_method(method, ["cluster_name"]) == expected_output
+
+    def test_update_weights_and_capacities(self):
+        expected_output = """
+
+def update_weights_and_capacities(
+    self,
+    endpoint_name: str,
+    session: Optional[Session] = None,
+    region: Optional[str] = None,
+) -> None:
+
+    operation_input_args = {
+        'EndpointName': endpoint_name,
+        'DesiredWeightsAndCapacities': self.desired_weights_and_capacities,
+    }
+    logger.debug(f"Input request: {operation_input_args}")
+
+    client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+
+    logger.debug(f"Calling update_endpoint_weights_and_capacities API")
+    response = client.update_endpoint_weights_and_capacities(**operation_input_args)
+    logger.debug(f"Response: {response}")
+
+"""
+        method = Method(
+            **{
+                "operation_name": "UpdateEndpointWeightsAndCapacities",
+                "resource_name": "Endpoint",
+                "method_name": "update_weights_and_capacities",
+                "return_type": "None",
+                "method_type": "object",
+                "service_name": "sagemaker",
+            }
+        )
+        assert (
+            self.resource_generator.generate_method(method, ["desired_weights_and_capacities"])
+            == expected_output
+        )
+
+    def test_get_all_training_jobs(self):
+        expected_output = """
+
+def get_all_training_jobs(
+    self,
+    status_equals: Optional[str] = Unassigned(),
+    sort_by: Optional[str] = Unassigned(),
+    sort_order: Optional[str] = Unassigned(),    session: Optional[Session] = None,
+    region: Optional[str] = None,
+) -> ResourceIterator[HyperParameterTrainingJobSummary]:
+
+    operation_input_args = {
+        'HyperParameterTuningJobName': self.hyper_parameter_tuning_job_name,
+        'StatusEquals': status_equals,
+        'SortBy': sort_by,
+        'SortOrder': sort_order,
+    }
+    operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
+    logger.debug(f"Input request: {operation_input_args}")
+
+    client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+
+
+    return ResourceIterator(
+        client=client,
+        list_method='list_training_jobs_for_hyper_parameter_tuning_job',
+        summaries_key='TrainingJobSummaries',
+        summary_name='HyperParameterTrainingJobSummary',
+        resource_cls=HyperParameterTrainingJobSummary,
+        list_method_kwargs=operation_input_args
+    )
+"""
+        method = Method(
+            **{
+                "operation_name": "ListTrainingJobsForHyperParameterTuningJob",
+                "resource_name": "HyperParameterTuningJob",
+                "method_name": "get_all_training_jobs",
+                "return_type": "HyperParameterTrainingJobSummary",
+                "method_type": "object",
+                "service_name": "sagemaker",
+            }
+        )
+        assert (
+            self.resource_generator.generate_method(method, ["hyper_parameter_tuning_job_name"])
             == expected_output
         )

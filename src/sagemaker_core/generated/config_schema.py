@@ -2,7 +2,11 @@ SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA = {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "type": "object",
     "properties": {
-        "SchemaVersion": "1.0",
+        "SchemaVersion": {
+            "type": "string",
+            "enum": ["1.0"],
+            "description": "The schema version of the document.",
+        },
         "SageMaker": {
             "type": "object",
             "properties": {

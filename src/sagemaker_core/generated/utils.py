@@ -19,7 +19,7 @@ import time
 from boto3.session import Session
 from botocore.config import Config
 from typing import TypeVar, Generic, Type
-from src.code_injection.codec import transform
+from sagemaker_core.code_injection.codec import transform
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -89,6 +89,10 @@ def pascal_to_snake(pascal_str):
 
 def is_not_primitive(obj):
     return not isinstance(obj, (int, float, str, bool, complex))
+
+
+def is_not_str_dict(obj):
+    return not isinstance(obj, dict) or not all(isinstance(k, str) for k in obj.keys())
 
 
 class Unassigned:
@@ -164,6 +168,7 @@ class SageMakerRuntimeClient(metaclass=SingletonMeta):
         session: Session = None,
         region_name: str = None,
         service_name="sagemaker-runtime",
+        config: Config = None,
     ):
         """
         Initializes the SageMakerClient with a boto3 session, region name, and service name.

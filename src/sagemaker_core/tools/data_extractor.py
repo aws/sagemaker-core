@@ -3,7 +3,7 @@ from functools import lru_cache
 
 from pydantic import BaseModel
 
-from src.tools.constants import (
+from sagemaker_core.tools.constants import (
     ADDITIONAL_OPERATION_FILE_PATH,
     SERVICE_JSON_FILE_PATH,
     RUNTIME_SERVICE_JSON_FILE_PATH,

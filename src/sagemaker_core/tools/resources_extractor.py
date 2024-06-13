@@ -16,13 +16,13 @@ from typing import Optional
 
 import pandas as pd
 
-from src.tools.constants import CLASS_METHODS, OBJECT_METHODS
-from src.tools.data_extractor import (
+from sagemaker_core.tools.constants import CLASS_METHODS, OBJECT_METHODS
+from sagemaker_core.tools.data_extractor import (
     load_additional_operations_data,
     load_combined_operations_data,
     load_combined_shapes_data,
 )
-from src.tools.method import Method
+from sagemaker_core.tools.method import Method
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
@@ -94,6 +94,7 @@ class ResourcesExtractor:
             None
         """
         for resource_name, resource_operations in self.additional_operations.items():
+            self.resources.add(resource_name)
             if resource_name not in self.resource_methods:
                 self.resource_methods[resource_name] = dict()
             for operation_name, operation in resource_operations.items():
@@ -137,6 +138,10 @@ class ResourcesExtractor:
         """
         self.actions = set(self.operations.keys())
 
+        # Filter out additional operations and resources first
+        self.resources = set()
+        self._filter_additional_operations()
+
         log.info(f"Total actions - {len(self.actions)}")
         self.create_resources = set(
             [key[len("Create") :] for key in self.actions if key.startswith("Create")]
@@ -158,15 +163,13 @@ class ResourcesExtractor:
             [key[len("Import") :] for key in self.actions if key.startswith("Import")]
         )
 
-        self.resources = (
+        self.resources.update(
             self.create_resources
             | self.add_resources
             | self.start_resources
             | self.register_resources
             | self.import_resources
         )
-
-        self._filter_additional_operations()
 
         self._filter_actions_for_resources(self.resources)
 
