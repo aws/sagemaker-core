@@ -12,9 +12,8 @@ CodeRepository,resource,"['create', 'get']","['delete', 'refresh', 'update']",[]
 CompilationJob,resource,"['create', 'get', 'get_all']","['delete', 'refresh', 'stop', 'wait']",[],[],"['CreateCompilationJob', 'DeleteCompilationJob', 'DescribeCompilationJob', 'ListCompilationJobs', 'StopCompilationJob']","[{'name': 'CompilationJobStatus', 'shape_name': 'CompilationJobStatus'}]","['INPROGRESS', 'COMPLETED', 'FAILED', 'STARTING', 'STOPPING', 'STOPPED']"
 Context,resource,"['create', 'get', 'get_all']","['delete', 'refresh', 'update']",[],[],"['CreateContext', 'DeleteContext', 'DescribeContext', 'ListContexts', 'UpdateContext']",[],[]
 DataQualityJobDefinition,resource,"['create', 'get', 'get_all']","['delete', 'refresh']",[],[],"['CreateDataQualityJobDefinition', 'DeleteDataQualityJobDefinition', 'DescribeDataQualityJobDefinition', 'ListDataQualityJobDefinitions']",[],[]
-Device,resource,['get'],['refresh'],[],[],['DescribeDevice'],[],[]
+Device,resource,"['get', 'get_all']",['refresh'],[],['ListStageDevices'],"['DescribeDevice', 'ListDevices', 'ListStageDevices']",[],[]
 DeviceFleet,resource,"['create', 'get', 'get_all']","['delete', 'refresh', 'update']",[],[],"['CreateDeviceFleet', 'DeleteDeviceFleet', 'DescribeDeviceFleet', 'ListDeviceFleets', 'UpdateDeviceFleet']",[],[]
-Devices,resource,['get_all'],[],[],['ListStageDevices'],"['ListDevices', 'ListStageDevices']",[],[]
 Domain,resource,"['create', 'get', 'get_all']","['delete', 'refresh', 'update', 'wait_for_status']",[],[],"['CreateDomain', 'DeleteDomain', 'DescribeDomain', 'ListDomains', 'UpdateDomain']","[{'name': 'Status', 'shape_name': 'DomainStatus'}]","['Deleting', 'Failed', 'InService', 'Pending', 'Updating', 'Update_Failed', 'Delete_Failed']"
 EdgeDeploymentPlan,resource,"['create', 'get', 'get_all']","['delete', 'refresh']",['DeviceFleet'],[],"['CreateEdgeDeploymentPlan', 'DeleteEdgeDeploymentPlan', 'DescribeEdgeDeploymentPlan', 'ListEdgeDeploymentPlans']",[],[]
 EdgeDeploymentStage,resource,"['create', 'start']","['delete', 'stop']",['EdgeDeploymentPlan'],[],"['CreateEdgeDeploymentStage', 'DeleteEdgeDeploymentStage', 'StartEdgeDeploymentStage', 'StopEdgeDeploymentStage']",[],[]

@@ -2785,6 +2785,40 @@ class Device(Base):
         transform(response, "DescribeDeviceResponse", self)
         return self
 
+    @classmethod
+    def get_all(
+        cls,
+        latest_heartbeat_after: Optional[datetime.datetime] = Unassigned(),
+        model_name: Optional[str] = Unassigned(),
+        device_fleet_name: Optional[str] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> ResourceIterator["Device"]:
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
+        operation_input_args = {
+            "LatestHeartbeatAfter": latest_heartbeat_after,
+            "ModelName": model_name,
+            "DeviceFleetName": device_fleet_name,
+        }
+
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
+
+        return ResourceIterator(
+            client=client,
+            list_method="list_devices",
+            summaries_key="DeviceSummaries",
+            summary_name="DeviceSummary",
+            resource_cls=Device,
+            list_method_kwargs=operation_input_args,
+        )
+
 
 class DeviceFleet(Base):
     """
