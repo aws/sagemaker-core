@@ -2717,6 +2717,120 @@ class DataQualityJobDefinition(Base):
         )
 
 
+class Device(Base):
+    """
+    Device
+     Class representing resource Device
+    Attributes
+    ---------------------
+    device_name:The unique identifier of the device.
+    device_fleet_name:The name of the fleet the device belongs to.
+    registration_time:The timestamp of the last registration or de-reregistration.
+    device_arn:The Amazon Resource Name (ARN) of the device.
+    description:A description of the device.
+    iot_thing_name:The Amazon Web Services Internet of Things (IoT) object thing name associated with the device.
+    latest_heartbeat:The last heartbeat received from the device.
+    models:Models on the device.
+    max_models:The maximum number of models.
+    next_token:The response from the last list when returning a list large enough to need tokening.
+    agent_version:Edge Manager agent version.
+
+    """
+
+    device_name: str
+    device_fleet_name: str
+    device_arn: Optional[str] = Unassigned()
+    description: Optional[str] = Unassigned()
+    iot_thing_name: Optional[str] = Unassigned()
+    registration_time: Optional[datetime.datetime] = Unassigned()
+    latest_heartbeat: Optional[datetime.datetime] = Unassigned()
+    models: Optional[List[EdgeModel]] = Unassigned()
+    max_models: Optional[int] = Unassigned()
+    next_token: Optional[str] = Unassigned()
+    agent_version: Optional[str] = Unassigned()
+
+    def get_name(self) -> str:
+        attributes = vars(self)
+        for attribute, value in attributes.items():
+            if attribute == "name" or attribute == "device_name":
+                return value
+        raise Exception("Name attribute not found for object")
+
+    @classmethod
+    def get(
+        cls,
+        device_name: str,
+        device_fleet_name: str,
+        next_token: Optional[str] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional["Device"]:
+        operation_input_args = {
+            "NextToken": next_token,
+            "DeviceName": device_name,
+            "DeviceFleetName": device_fleet_name,
+        }
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+        response = client.describe_device(**operation_input_args)
+
+        pprint(response)
+
+        # deserialize the response
+        transformed_response = transform(response, "DescribeDeviceResponse")
+        device = cls(**transformed_response)
+        return device
+
+    def refresh(self) -> Optional["Device"]:
+
+        operation_input_args = {
+            "NextToken": self.next_token,
+            "DeviceName": self.device_name,
+            "DeviceFleetName": self.device_fleet_name,
+        }
+        client = SageMakerClient().client
+        response = client.describe_device(**operation_input_args)
+
+        # deserialize response and update self
+        transform(response, "DescribeDeviceResponse", self)
+        return self
+
+    @classmethod
+    def get_all(
+        cls,
+        latest_heartbeat_after: Optional[datetime.datetime] = Unassigned(),
+        model_name: Optional[str] = Unassigned(),
+        device_fleet_name: Optional[str] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> ResourceIterator["Device"]:
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
+        operation_input_args = {
+            "LatestHeartbeatAfter": latest_heartbeat_after,
+            "ModelName": model_name,
+            "DeviceFleetName": device_fleet_name,
+        }
+
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
+
+        return ResourceIterator(
+            client=client,
+            list_method="list_devices",
+            summaries_key="DeviceSummaries",
+            summary_name="DeviceSummary",
+            resource_cls=Device,
+            list_method_kwargs=operation_input_args,
+        )
+
+
 class DeviceFleet(Base):
     """
     DeviceFleet
@@ -2922,6 +3036,71 @@ class DeviceFleet(Base):
             resource_cls=DeviceFleet,
             list_method_kwargs=operation_input_args,
         )
+
+    def deregister_devices(
+        self,
+        device_names: List[str],
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> None:
+
+        operation_input_args = {
+            "DeviceFleetName": self.device_fleet_name,
+            "DeviceNames": device_names,
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
+        logger.debug(f"Calling deregister_devices API")
+        response = client.deregister_devices(**operation_input_args)
+        logger.debug(f"Response: {response}")
+
+    def register_devices(
+        self,
+        devices: List[Device],
+        tags: Optional[List[Tag]] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> None:
+
+        operation_input_args = {
+            "DeviceFleetName": self.device_fleet_name,
+            "Devices": devices,
+            "Tags": tags,
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
+        logger.debug(f"Calling register_devices API")
+        response = client.register_devices(**operation_input_args)
+        logger.debug(f"Response: {response}")
+
+    def update_devices(
+        self,
+        devices: List[Device],
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> None:
+
+        operation_input_args = {
+            "DeviceFleetName": self.device_fleet_name,
+            "Devices": devices,
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
+        logger.debug(f"Calling update_devices API")
+        response = client.update_devices(**operation_input_args)
+        logger.debug(f"Response: {response}")
 
 
 class Domain(Base):
@@ -4641,6 +4820,104 @@ class FeatureGroup(Base):
             resource_cls=FeatureGroup,
             list_method_kwargs=operation_input_args,
         )
+
+
+class FeatureMetadata(Base):
+    """
+    FeatureMetadata
+     Class representing resource FeatureMetadata
+    Attributes
+    ---------------------
+    feature_group_arn:The Amazon Resource Number (ARN) of the feature group that contains the feature.
+    feature_group_name:The name of the feature group that you've specified.
+    feature_name:The name of the feature that you've specified.
+    feature_type:The data type of the feature.
+    creation_time:A timestamp indicating when the feature was created.
+    last_modified_time:A timestamp indicating when the metadata for the feature group was modified. For example, if you add a parameter describing the feature, the timestamp changes to reflect the last time you
+    description:The description you added to describe the feature.
+    parameters:The key-value pairs that you added to describe the feature.
+
+    """
+
+    feature_group_name: str
+    feature_name: str
+    feature_group_arn: Optional[str] = Unassigned()
+    feature_type: Optional[str] = Unassigned()
+    creation_time: Optional[datetime.datetime] = Unassigned()
+    last_modified_time: Optional[datetime.datetime] = Unassigned()
+    description: Optional[str] = Unassigned()
+    parameters: Optional[List[FeatureParameter]] = Unassigned()
+
+    def get_name(self) -> str:
+        attributes = vars(self)
+        for attribute, value in attributes.items():
+            if attribute == "name" or attribute == "feature_metadata_name":
+                return value
+        raise Exception("Name attribute not found for object")
+
+    @classmethod
+    def get(
+        cls,
+        feature_group_name: str,
+        feature_name: str,
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional["FeatureMetadata"]:
+        operation_input_args = {
+            "FeatureGroupName": feature_group_name,
+            "FeatureName": feature_name,
+        }
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+        response = client.describe_feature_metadata(**operation_input_args)
+
+        pprint(response)
+
+        # deserialize the response
+        transformed_response = transform(response, "DescribeFeatureMetadataResponse")
+        feature_metadata = cls(**transformed_response)
+        return feature_metadata
+
+    def refresh(self) -> Optional["FeatureMetadata"]:
+
+        operation_input_args = {
+            "FeatureGroupName": self.feature_group_name,
+            "FeatureName": self.feature_name,
+        }
+        client = SageMakerClient().client
+        response = client.describe_feature_metadata(**operation_input_args)
+
+        # deserialize response and update self
+        transform(response, "DescribeFeatureMetadataResponse", self)
+        return self
+
+    def update(
+        self,
+        parameter_additions: Optional[List[FeatureParameter]] = Unassigned(),
+        parameter_removals: Optional[List[str]] = Unassigned(),
+    ) -> Optional["FeatureMetadata"]:
+        logger.debug("Creating feature_metadata resource.")
+        client = SageMakerClient().client
+
+        operation_input_args = {
+            "FeatureGroupName": self.feature_group_name,
+            "FeatureName": self.feature_name,
+            "Description": self.description,
+            "ParameterAdditions": parameter_additions,
+            "ParameterRemovals": parameter_removals,
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = FeatureMetadata._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+
+        # create the resource
+        response = client.update_feature_metadata(**operation_input_args)
+        logger.debug(f"Response: {response}")
+        self.refresh()
+
+        return self
 
 
 class FlowDefinition(Base):
@@ -7274,6 +7551,131 @@ class LabelingJob(Base):
             resource_cls=LabelingJob,
             list_method_kwargs=operation_input_args,
         )
+
+
+class LineageGroup(Base):
+    """
+    LineageGroup
+     Class representing resource LineageGroup
+    Attributes
+    ---------------------
+    lineage_group_name:The name of the lineage group.
+    lineage_group_arn:The Amazon Resource Name (ARN) of the lineage group.
+    display_name:The display name of the lineage group.
+    description:The description of the lineage group.
+    creation_time:The creation time of lineage group.
+    created_by:
+    last_modified_time:The last modified time of the lineage group.
+    last_modified_by:
+
+    """
+
+    lineage_group_name: str
+    lineage_group_arn: Optional[str] = Unassigned()
+    display_name: Optional[str] = Unassigned()
+    description: Optional[str] = Unassigned()
+    creation_time: Optional[datetime.datetime] = Unassigned()
+    created_by: Optional[UserContext] = Unassigned()
+    last_modified_time: Optional[datetime.datetime] = Unassigned()
+    last_modified_by: Optional[UserContext] = Unassigned()
+
+    def get_name(self) -> str:
+        attributes = vars(self)
+        for attribute, value in attributes.items():
+            if attribute == "name" or attribute == "lineage_group_name":
+                return value
+        raise Exception("Name attribute not found for object")
+
+    @classmethod
+    def get(
+        cls,
+        lineage_group_name: str,
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional["LineageGroup"]:
+        operation_input_args = {
+            "LineageGroupName": lineage_group_name,
+        }
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+        response = client.describe_lineage_group(**operation_input_args)
+
+        pprint(response)
+
+        # deserialize the response
+        transformed_response = transform(response, "DescribeLineageGroupResponse")
+        lineage_group = cls(**transformed_response)
+        return lineage_group
+
+    def refresh(self) -> Optional["LineageGroup"]:
+
+        operation_input_args = {
+            "LineageGroupName": self.lineage_group_name,
+        }
+        client = SageMakerClient().client
+        response = client.describe_lineage_group(**operation_input_args)
+
+        # deserialize response and update self
+        transform(response, "DescribeLineageGroupResponse", self)
+        return self
+
+    @classmethod
+    def get_all(
+        cls,
+        created_after: Optional[datetime.datetime] = Unassigned(),
+        created_before: Optional[datetime.datetime] = Unassigned(),
+        sort_by: Optional[str] = Unassigned(),
+        sort_order: Optional[str] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> ResourceIterator["LineageGroup"]:
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
+        operation_input_args = {
+            "CreatedAfter": created_after,
+            "CreatedBefore": created_before,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
+        }
+
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
+
+        return ResourceIterator(
+            client=client,
+            list_method="list_lineage_groups",
+            summaries_key="LineageGroupSummaries",
+            summary_name="LineageGroupSummary",
+            resource_cls=LineageGroup,
+            list_method_kwargs=operation_input_args,
+        )
+
+    def get_policy(
+        self,
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional[str]:
+
+        operation_input_args = {
+            "LineageGroupName": self.lineage_group_name,
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
+        logger.debug(f"Calling get_lineage_group_policy API")
+        response = client.get_lineage_group_policy(**operation_input_args)
+        logger.debug(f"Response: {response}")
+
+        return list(response.values())[0]
 
 
 class Model(Base):
@@ -11317,6 +11719,90 @@ class StudioLifecycleConfig(Base):
             summaries_key="StudioLifecycleConfigs",
             summary_name="StudioLifecycleConfigDetails",
             resource_cls=StudioLifecycleConfig,
+            list_method_kwargs=operation_input_args,
+        )
+
+
+class SubscribedWorkteam(Base):
+    """
+    SubscribedWorkteam
+     Class representing resource SubscribedWorkteam
+    Attributes
+    ---------------------
+    subscribed_workteam:A Workteam instance that contains information about the work team.
+
+    """
+
+    subscribed_workteam: Optional[SubscribedWorkteam] = Unassigned()
+
+    def get_name(self) -> str:
+        attributes = vars(self)
+        for attribute, value in attributes.items():
+            if attribute == "name" or attribute == "subscribed_workteam_name":
+                return value
+        raise Exception("Name attribute not found for object")
+
+    @classmethod
+    def get(
+        cls,
+        workteam_arn: str,
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional["SubscribedWorkteam"]:
+        operation_input_args = {
+            "WorkteamArn": workteam_arn,
+        }
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+        response = client.describe_subscribed_workteam(**operation_input_args)
+
+        pprint(response)
+
+        # deserialize the response
+        transformed_response = transform(response, "DescribeSubscribedWorkteamResponse")
+        subscribed_workteam = cls(**transformed_response)
+        return subscribed_workteam
+
+    def refresh(self) -> Optional["SubscribedWorkteam"]:
+
+        operation_input_args = {
+            "WorkteamArn": self.workteam_arn,
+        }
+        client = SageMakerClient().client
+        response = client.describe_subscribed_workteam(**operation_input_args)
+
+        # deserialize response and update self
+        transform(response, "DescribeSubscribedWorkteamResponse", self)
+        return self
+
+    @classmethod
+    def get_all(
+        cls,
+        name_contains: Optional[str] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> ResourceIterator["SubscribedWorkteam"]:
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
+        operation_input_args = {
+            "NameContains": name_contains,
+        }
+
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
+
+        return ResourceIterator(
+            client=client,
+            list_method="list_subscribed_workteams",
+            summaries_key="SubscribedWorkteams",
+            summary_name="SubscribedWorkteam",
+            resource_cls=SubscribedWorkteam,
             list_method_kwargs=operation_input_args,
         )
 

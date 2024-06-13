@@ -94,6 +94,7 @@ class ResourcesExtractor:
             None
         """
         for resource_name, resource_operations in self.additional_operations.items():
+            self.resources.add(resource_name)
             if resource_name not in self.resource_methods:
                 self.resource_methods[resource_name] = dict()
             for operation_name, operation in resource_operations.items():
@@ -137,6 +138,10 @@ class ResourcesExtractor:
         """
         self.actions = set(self.operations.keys())
 
+        # Filter out additional operations and resources first
+        self.resources = set()
+        self._filter_additional_operations()
+
         log.info(f"Total actions - {len(self.actions)}")
         self.create_resources = set(
             [key[len("Create") :] for key in self.actions if key.startswith("Create")]
@@ -158,15 +163,13 @@ class ResourcesExtractor:
             [key[len("Import") :] for key in self.actions if key.startswith("Import")]
         )
 
-        self.resources = (
+        self.resources.update(
             self.create_resources
             | self.add_resources
             | self.start_resources
             | self.register_resources
             | self.import_resources
         )
-
-        self._filter_additional_operations()
 
         self._filter_actions_for_resources(self.resources)
 
