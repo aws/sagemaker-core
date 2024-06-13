@@ -3058,6 +3058,28 @@ class DeviceFleet(Base):
         response = client.deregister_devices(**operation_input_args)
         logger.debug(f"Response: {response}")
 
+    def get_report(
+        self,
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional[GetDeviceFleetReportResponse]:
+
+        operation_input_args = {
+            "DeviceFleetName": self.device_fleet_name,
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
+        logger.debug(f"Calling get_device_fleet_report API")
+        response = client.get_device_fleet_report(**operation_input_args)
+        logger.debug(f"Response: {response}")
+
+        transformed_response = transform(response, "GetDeviceFleetReportResponse")
+        return GetDeviceFleetReportResponse(**transformed_response)
+
     def register_devices(
         self,
         devices: List[Device],
@@ -4894,6 +4916,7 @@ class FeatureMetadata(Base):
 
     def update(
         self,
+        description: Optional[str] = Unassigned(),
         parameter_additions: Optional[List[FeatureParameter]] = Unassigned(),
         parameter_removals: Optional[List[str]] = Unassigned(),
     ) -> Optional["FeatureMetadata"]:
@@ -4903,7 +4926,7 @@ class FeatureMetadata(Base):
         operation_input_args = {
             "FeatureGroupName": self.feature_group_name,
             "FeatureName": self.feature_name,
-            "Description": self.description,
+            "Description": description,
             "ParameterAdditions": parameter_additions,
             "ParameterRemovals": parameter_removals,
         }
@@ -7660,7 +7683,7 @@ class LineageGroup(Base):
         self,
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[str]:
+    ) -> Optional[GetLineageGroupPolicyResponse]:
 
         operation_input_args = {
             "LineageGroupName": self.lineage_group_name,
@@ -7675,7 +7698,8 @@ class LineageGroup(Base):
         response = client.get_lineage_group_policy(**operation_input_args)
         logger.debug(f"Response: {response}")
 
-        return list(response.values())[0]
+        transformed_response = transform(response, "GetLineageGroupPolicyResponse")
+        return GetLineageGroupPolicyResponse(**transformed_response)
 
 
 class Model(Base):
@@ -9125,6 +9149,29 @@ class ModelPackage(Base):
             resource_cls=ModelPackage,
             list_method_kwargs=operation_input_args,
         )
+
+    def batch_get(
+        self,
+        model_package_arn_list: List[str],
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional[BatchDescribeModelPackageOutput]:
+
+        operation_input_args = {
+            "ModelPackageArnList": model_package_arn_list,
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
+        logger.debug(f"Calling batch_describe_model_package API")
+        response = client.batch_describe_model_package(**operation_input_args)
+        logger.debug(f"Response: {response}")
+
+        transformed_response = transform(response, "BatchDescribeModelPackageOutput")
+        return BatchDescribeModelPackageOutput(**transformed_response)
 
 
 class ModelPackageGroup(Base):
@@ -10741,6 +10788,28 @@ class PipelineExecution(Base):
             resource_cls=PipelineExecution,
             list_method_kwargs=operation_input_args,
         )
+
+    def get_pipeline_definition(
+        self,
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional[DescribePipelineDefinitionForExecutionResponse]:
+
+        operation_input_args = {
+            "PipelineExecutionArn": self.pipeline_execution_arn,
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
+        logger.debug(f"Calling describe_pipeline_definition_for_execution API")
+        response = client.describe_pipeline_definition_for_execution(**operation_input_args)
+        logger.debug(f"Response: {response}")
+
+        transformed_response = transform(response, "DescribePipelineDefinitionForExecutionResponse")
+        return DescribePipelineDefinitionForExecutionResponse(**transformed_response)
 
     def get_all_steps(
         self,
