@@ -1,10 +1,10 @@
 [build-system]
-requires = ["setuptools >= 61.0"]
+requires = ["setuptools>=64"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "sagemaker-core"
-version = "0.1.0"
+dynamic = ["version"]
 description = "An python package for sagemaker core functionalities"
 authors = [
   {name = "AWS", email = "sagemaker-interests@amazon.com"}
@@ -41,3 +41,6 @@ Repository = "https://github.com/aws/sagemaker-core.git"
 
 [tool.black]
 line-length = 100
+
+[tool.setuptools.dynamic]
+version = { attr = "sagemaker_core._version.__version__"}
