@@ -48,8 +48,8 @@ def convert_to_snake_case(entity_name):
     Returns:
         str: The converted string in snake_case.
     """
-    snake_case_string = re.sub(r"(?<!^)(?=[A-Z])", "_", entity_name).lower()
-    return snake_case_string
+    snake_case = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", entity_name)
+    return re.sub("([a-z0-9])([A-Z])", r"\1_\2", snake_case).lower()
 
 
 def snake_to_pascal(snake_str):
