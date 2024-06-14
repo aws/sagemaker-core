@@ -20,17 +20,6 @@ class {class_name}:
 {object_methods}
 """
 
-INIT_METHOD_TEMPLATE = """
-def __init__(self, 
-    session: Optional[Session] = None, 
-    region: Optional[str] = None
-    {init_args}):
-    self.session = session
-    self.region = region
-    {init_assignments}
-
-"""
-
 CREATE_METHOD_TEMPLATE = """
 @classmethod
 @populate_inputs_decorator
@@ -40,6 +29,7 @@ def create(
     session: Optional[Session] = None,
     region: Optional[str] = None,
 ) -> Optional["{resource_name}"]:
+{docstring}
     logger.debug("Creating {resource_lower} resource.")
     client = SageMakerClient(session=session, region_name=region, service_name='{service_name}').client
 
@@ -69,6 +59,7 @@ def create(
     session: Optional[Session] = None,
     region: Optional[str] = None,
 ) -> Optional["{resource_name}"]:
+{docstring}
     logger.debug("Creating {resource_lower} resource.")
     client = SageMakerClient(session=session, region_name=region, service_name='{service_name}').client
 
@@ -98,6 +89,7 @@ def load(
     session: Optional[Session] = None,
     region: Optional[str] = None,
 ) -> Optional["{resource_name}"]:
+{docstring}
     logger.debug(f"Importing {resource_lower} resource.")
     client = SageMakerClient(session=session, region_name=region, service_name='{service_name}').client
 
@@ -128,11 +120,38 @@ def get_name(self) -> str:
 
 
 UPDATE_METHOD_TEMPLATE = """
+@populate_inputs_decorator
 def update(
     self,
 {update_args}
 ) -> Optional["{resource_name}"]:
-    logger.debug("Creating {resource_lower} resource.")
+{docstring}
+    logger.debug("Updating {resource_lower} resource.")
+    client = SageMakerClient().client
+
+    operation_input_args = {{
+{operation_input_args}
+    }}
+    logger.debug(f"Input request: {{operation_input_args}}")
+    # serialize the input request
+    operation_input_args = {resource_name}._serialize(operation_input_args)
+    logger.debug(f"Serialized input request: {{operation_input_args}}")
+
+    # create the resource
+    response = client.{operation}(**operation_input_args)
+    logger.debug(f"Response: {{response}}")
+    self.refresh()
+
+    return self
+"""
+
+UPDATE_METHOD_TEMPLATE_WITHOUT_DECORATOR = """
+def update(
+    self,
+{update_args}
+) -> Optional["{resource_name}"]:
+{docstring}
+    logger.debug("Updating {resource_lower} resource.")
     client = SageMakerClient().client
 
     operation_input_args = {{
@@ -155,6 +174,7 @@ INVOKE_METHOD_TEMPLATE = """
 def invoke(self, 
 {invoke_args}
 ) -> Optional[object]:
+{docstring}
     logger.debug(f"Invoking {resource_lower} resource.")
     client = SageMakerRuntimeClient(service_name="{service_name}").client
     operation_input_args = {{
@@ -176,6 +196,7 @@ INVOKE_ASYNC_METHOD_TEMPLATE = """
 def invoke_async(self, 
 {create_args}
 ) -> Optional[object]:
+{docstring}
     logger.debug(f"Invoking {resource_lower} resource Async.")
     client = SageMakerRuntimeClient(service_name="{service_name}").client
     
@@ -198,6 +219,7 @@ INVOKE_WITH_RESPONSE_STREAM_METHOD_TEMPLATE = """
 def invoke_with_response_stream(self, 
 {create_args}
 ) -> Optional[object]:
+{docstring}
     logger.debug(f"Invoking {resource_lower} resource with Response Stream.")
     client = SageMakerRuntimeClient(service_name="{service_name}").client
 
@@ -236,32 +258,6 @@ def populate_inputs_decorator(create_func):
     return wrapper
 """
 
-CREATE_METHOD_TEMPLATE_WITHOUT_DECORATOR = """
-@classmethod
-def create(
-    cls,
-{create_args}
-    session: Optional[Session] = None,
-    region: Optional[str] = None,
-) -> Optional["{resource_name}"]:
-    logger.debug("Creating {resource_lower} resource.")
-    client = SageMakerClient(session=session, region_name=region, service_name='{service_name}')
-
-    operation_input_args = {{
-{operation_input_args}
-    }}
-    logger.debug(f"Input request: {{operation_input_args}}")
-    # serialize the input request
-    operation_input_args = cls._serialize(operation_input_args)
-    logger.debug(f"Serialized input request: {{operation_input_args}}")
-
-    # create the resource
-    response = client.{operation}(**operation_input_args)
-    logger.debug(f"Response: {{response}}")
-
-    return cls.get({resource_identifier}, session=session, region=region)
-"""
-
 GET_METHOD_TEMPLATE = """
 @classmethod
 def get(
@@ -270,6 +266,7 @@ def get(
     session: Optional[Session] = None,
     region: Optional[str] = None,
 ) -> Optional["{resource_name}"]:
+{docstring}
     operation_input_args = {{
 {operation_input_args}
     }}
@@ -286,7 +283,7 @@ def get(
 
 REFRESH_METHOD_TEMPLATE = """
 def refresh(self) -> Optional["{resource_name}"]:
-
+{docstring}
     operation_input_args = {{
 {operation_input_args}
     }}
@@ -303,12 +300,28 @@ if "failed" in current_status.lower():
     raise FailedStatusError(resource_type="{resource_name}", status=current_status, reason={reason})
 """
 
-WAIT_METHOD_TEMPLATE = """
+WAIT_METHOD_TEMPLATE = '''
 def wait(
     self,
     poll: int = 5,
     timeout: Optional[int] = None
 ) -> Optional["{resource_name}"]:
+    """
+    Wait for a {resource_name} resource.
+    
+    Parameters:
+        poll: The number of seconds to wait between each poll.
+        timeout: The maximum number of seconds to wait before timing out.
+    
+    Returns:
+        The {resource_name} resource.
+    
+    Raises:
+        TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
+        FailedStatusError:   If the resource reaches a failed state.
+        WaiterError: Raised when an error occurs while waiting.
+    
+    """
     terminal_states = {terminal_resource_states}
     start_time = time.time()
 
@@ -324,15 +337,32 @@ def wait(
             raise TimeoutExceededError(resouce_type="{resource_name}", status=current_status)
         print("-", end="")
         time.sleep(poll)
-"""
+'''
 
-WAIT_FOR_STATUS_METHOD_TEMPLATE = """
+WAIT_FOR_STATUS_METHOD_TEMPLATE = '''
 def wait_for_status(
     self,
     status: Literal{resource_states},
     poll: int = 5,
     timeout: Optional[int] = None
 ) -> Optional["{resource_name}"]:
+    """
+    Wait for a {resource_name} resource.
+    
+    Parameters:
+        status: The status to wait for.
+        poll: The number of seconds to wait between each poll.
+        timeout: The maximum number of seconds to wait before timing out.
+    
+    Returns:
+        The {resource_name} resource.
+    
+    Raises:
+        TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
+        FailedStatusError:   If the resource reaches a failed state.
+        WaiterError: Raised when an error occurs while waiting.
+    
+    """
     start_time = time.time()
 
     while True:
@@ -346,24 +376,28 @@ def wait_for_status(
             raise TimeoutExceededError(resouce_type="{resource_name}", status=current_status)
         print("-", end="")
         time.sleep(poll)
-"""
+'''
 
 DELETE_METHOD_TEMPLATE = """
 def delete(self) -> None:
+{docstring}
+    client = SageMakerClient().client
 
     operation_input_args = {{
 {operation_input_args}
     }}
-    self.client.{operation}(**operation_input_args)
+    client.{operation}(**operation_input_args)
 """
 
 STOP_METHOD_TEMPLATE = """
 def stop(self) -> None:
+{docstring}
+    client = SageMakerClient().client
 
     operation_input_args = {{
 {operation_input_args}
     }}
-    self.client.{operation}(**operation_input_args)
+    client.{operation}(**operation_input_args)
 """
 
 GET_ALL_METHOD_WITH_ARGS_TEMPLATE = """
@@ -374,6 +408,7 @@ def get_all(
     session: Optional[Session] = None,
     region: Optional[str] = None,
 ) -> ResourceIterator["{resource}"]:
+{docstring}
     client = SageMakerClient(session=session, region_name=region, service_name="{service_name}").client
         
     operation_input_args = {{
@@ -387,60 +422,37 @@ def get_all(
     )
 """
 
-GET_ALL_METHOD_NO_ARGS_TEMPLATE = """
+GET_ALL_METHOD_NO_ARGS_TEMPLATE = '''
 @classmethod
 def get_all(
     cls,
     session: Optional[Session] = None,
     region: Optional[str] = None,
 ) -> ResourceIterator["{resource}"]:
-    client = SageMakerClient(session=session, region_name=region, service_name="{service_name}").client
-{custom_key_mapping}
-    return ResourceIterator(
-{resource_iterator_args}
-    )
-"""
-
-GET_ALL_METHOD_WITH_ARGS_TEMPLATE = """
-@classmethod
-def get_all(
-    cls,
-{get_all_args}
-    session: Optional[Session] = None,
-    region: Optional[str] = None,
-) -> ResourceIterator["{resource}"]:
-    client = SageMakerClient(session=session, region_name=region, service_name="{service_name}").client
-        
-    operation_input_args = {{
-{operation_input_args}
-    }}
-{custom_key_mapping}
-    operation_input_args = {{k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}}
+    """
+    Get all {resource} resources.
     
-    return ResourceIterator(
-{resource_iterator_args}
-    )
-"""
+    Parameters:
+        session: Boto3 session.
+        region: Region name.
 
-GET_ALL_METHOD_NO_ARGS_TEMPLATE = """
-@classmethod
-def get_all(
-    cls,
-    session: Optional[Session] = None,
-    region: Optional[str] = None,
-) -> ResourceIterator["{resource}"]:
+    Returns:
+        Iterator for listed {resource} resources.
+
+    """
     client = SageMakerClient(session=session, region_name=region, service_name="{service_name}").client
 {custom_key_mapping}
     return ResourceIterator(
 {resource_iterator_args}
     )
-"""
+'''
 
 GENERIC_METHOD_TEMPLATE = """
 {decorator}
 def {method_name}(
 {method_args}
 ) -> {return_type}:
+{docstring}
 {serialize_operation_input}
 {initialize_client}
 {call_operation_api}
@@ -601,3 +613,16 @@ class {class_name}:
 {data_class_members}
 
 '''
+
+RESOURCE_METHOD_EXCEPTION_DOCSTRING = """
+Raises:
+    botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+        The error message and error code can be parsed from the exception as follows:
+    
+        ```
+        try:
+            # AWS service call here
+        except botocore.exceptions.ClientError as e:
+            error_message = e.response['Error']['Message']
+            error_code = e.response['Error']['Code']
+        ```"""
