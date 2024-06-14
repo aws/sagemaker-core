@@ -11,6 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 """Generates the resource classes for the service model."""
+from collections import OrderedDict
 import logging
 from functools import lru_cache
 
@@ -19,6 +20,7 @@ import json
 import re
 from sagemaker_core.code_injection.codec import pascal_to_snake
 from sagemaker_core.generated.config_schema import SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA
+from sagemaker_core.generated.exceptions import IntelligentDefaultsError
 from sagemaker_core.tools.constants import (
     BASIC_RETURN_TYPES,
     GENERATED_CLASSES_LOCATION,
@@ -69,6 +71,7 @@ from sagemaker_core.tools.templates import (
     GET_ALL_METHOD_NO_ARGS_TEMPLATE,
     GET_ALL_METHOD_WITH_ARGS_TEMPLATE,
     UPDATE_METHOD_TEMPLATE_WITHOUT_DECORATOR,
+    RESOURCE_METHOD_EXCEPTION_DOCSTRING,
 )
 from sagemaker_core.tools.data_extractor import (
     load_combined_shapes_data,
@@ -339,11 +342,13 @@ class ResourcesCodeGen:
             class_attributes_string = class_attributes[1]
             get_operation = self.operations["Describe" + resource_name]
             get_operation_shape = get_operation["output"]["shape"]
-            class_attributes_and_documentation = (
+            attributes_and_documentation = (
                 self.shapes_extractor.fetch_shape_members_and_doc_strings(get_operation_shape)
             )
-            class_documentation_string = self._get_class_documentation_string(
-                class_attributes_and_documentation, resource_name
+            class_documentation_string = f"Class representing resource {resource_name}\n\n"
+            class_documentation_string += f"Attributes:\n"
+            class_documentation_string += self._get_shape_attr_documentation_string(
+                attributes_and_documentation
             )
             resource_attributes = list(class_attributes[0].keys())
 
@@ -482,18 +487,21 @@ class ResourcesCodeGen:
         )
         return class_attributes
 
-    def _get_class_documentation_string(
-        self, class_attributes_and_documentation, resource_name
+    def _get_shape_attr_documentation_string(
+        self, attributes_and_documentation, exclude_resource_attrs=None
     ) -> str:
-        documentation_string = f"{resource_name} \n Class representing resource {resource_name}\n"
-        documentation_string += f"Attributes\n"
-        documentation_string += f"---------------------\n"
-        for class_attribute, documentation in class_attributes_and_documentation.items():
-            class_attribute_snake = pascal_to_snake(class_attribute)
-            if documentation == None:
-                documentation_string += f"{class_attribute_snake}:\n"
+        documentation_string = ""
+        for attribute, documentation in attributes_and_documentation.items():
+            attribute_snake = pascal_to_snake(attribute)
+            if exclude_resource_attrs and attribute_snake in exclude_resource_attrs:
+                #  exclude resource attributes from documentation
+                continue
             else:
-                documentation_string += f"{class_attribute_snake}:{documentation}\n"
+                if documentation == None:
+                    documentation_string += f"{attribute_snake}:\n"
+                else:
+                    documentation_string += f"{attribute_snake}:{documentation}\n"
+        documentation_string = add_indent(documentation_string)
         return remove_html_tags(documentation_string)
 
     def _generate_create_method_args(
@@ -727,9 +735,19 @@ class ResourcesCodeGen:
 
         get_args = self._generate_get_args(resource_name, operation_input_shape_name)
 
+        docstring = self._generate_docstring(
+            title=f"Create a {resource_name} resource",
+            operation_name=operation_name,
+            resource_name=resource_name,
+            operation_input_shape_name=operation_input_shape_name,
+            include_session_region=True,
+            include_return_resource_docstring=True,
+            include_intelligent_defaults_errors=True,
+        )
         # Format the method using the CREATE_METHOD_TEMPLATE
         if kwargs["needs_defaults_decorator"]:
             formatted_method = CREATE_METHOD_TEMPLATE.format(
+                docstring=docstring,
                 resource_name=resource_name,
                 create_args=create_args,
                 resource_lower=resource_lower,
@@ -740,6 +758,7 @@ class ResourcesCodeGen:
             )
         else:
             formatted_method = CREATE_METHOD_TEMPLATE_WITHOUT_DEFAULTS.format(
+                docstring=docstring,
                 resource_name=resource_name,
                 create_args=create_args,
                 resource_lower=resource_lower,
@@ -751,6 +770,90 @@ class ResourcesCodeGen:
 
         # Return the formatted method
         return formatted_method
+
+    @lru_cache
+    def _fetch_shape_errors_and_doc_strings(self, operation):
+        operation_dict = self.operations[operation]
+        errors = operation_dict.get("errors", [])
+        shape_errors_and_docstrings = {}
+        if errors:
+            for e in errors:
+                error_shape = e["shape"]
+                error_shape_dict = self.shapes[error_shape]
+                error_shape_documentation = error_shape_dict.get("documentation").strip()
+                shape_errors_and_docstrings[error_shape] = error_shape_documentation
+        sorted_keys = sorted(shape_errors_and_docstrings.keys())
+        return {key: shape_errors_and_docstrings[key] for key in sorted_keys}
+
+    def _exception_docstring(self, operation: str) -> str:
+        _docstring = RESOURCE_METHOD_EXCEPTION_DOCSTRING
+        for error, documentaion in self._fetch_shape_errors_and_doc_strings(operation).items():
+            _docstring += f"\n    {error}: {remove_html_tags(documentaion).strip()}"
+        return _docstring
+
+    def _generate_docstring(
+        self,
+        title: str,
+        operation_name: str,
+        resource_name: str,
+        operation_input_shape_name: str = None,
+        include_session_region: bool = False,
+        include_return_resource_docstring: bool = False,
+        return_string: str = None,
+        include_intelligent_defaults_errors: bool = False,
+        exclude_resource_attrs: list = None,
+    ) -> str:
+        """
+        Generate the docstring for a method of a resource.
+
+        Args:
+            title (str): The title of the docstring.
+            operation_name (str): The name of the operation.
+            resource_name (str): The name of the resource.
+            operation_input_shape_name (str): The name of the operation input shape.
+            include_session_region (bool): Whether to include session and region documentation.
+            include_return_resource_docstring (bool): Whether to include resource-specific documentation.
+            return_string (str): The return string.
+            include_intelligent_defaults_errors (bool): Whether to include intelligent defaults errors.
+            exclude_resource_attrs (list): A list of attributes to exclude from the docstring.
+
+        Returns:
+            str: The generated docstring for the IMPORT method.
+        """
+        docstring = f"{title}\n\n"
+        if operation_input_shape_name:
+            _shape_attr_documentation_string = self._get_shape_attr_documentation_string(
+                self.shapes_extractor.fetch_shape_members_and_doc_strings(
+                    operation_input_shape_name
+                ),
+                exclude_resource_attrs=exclude_resource_attrs,
+            )
+            if _shape_attr_documentation_string:
+                docstring += f"Parameters:\n"
+                docstring += _shape_attr_documentation_string
+            if not include_session_region:
+                docstring += "\n"
+
+        if include_session_region:
+            docstring += add_indent(f"session: Boto3 session.\nregion: Region name.\n\n")
+
+        if include_return_resource_docstring:
+            docstring += f"Returns:\n" f"    The {resource_name} resource.\n"
+        elif return_string:
+            docstring += return_string
+
+        docstring += self._exception_docstring(operation_name)
+
+        if include_intelligent_defaults_errors:
+            subclasses = set(IntelligentDefaultsError.__subclasses__())
+            _id_exception_docstrings = [
+                f"\n    {subclass.__name__}: {subclass.__doc__}" for subclass in subclasses
+            ]
+            sorted_id_exception_docstrings = sorted(_id_exception_docstrings)
+            docstring += "".join(sorted_id_exception_docstrings)
+        docstring = add_indent(f'"""\n{docstring}\n"""\n', 4)
+
+        return docstring
 
     def generate_import_method(self, resource_name: str) -> str:
         """
@@ -783,8 +886,18 @@ class ResourcesCodeGen:
 
         get_args = self._generate_get_args(resource_name, operation_input_shape_name)
 
+        docstring = self._generate_docstring(
+            title=f"Import a {resource_name} resource",
+            operation_name=operation_name,
+            resource_name=resource_name,
+            operation_input_shape_name=operation_input_shape_name,
+            include_session_region=True,
+            include_return_resource_docstring=True,
+        )
+
         # Format the method using the IMPORT_METHOD_TEMPLATE
         formatted_method = IMPORT_METHOD_TEMPLATE.format(
+            docstring=docstring,
             resource_name=resource_name,
             import_args=import_args,
             resource_lower=resource_lower,
@@ -849,8 +962,20 @@ class ResourcesCodeGen:
         # Convert the operation name to snake case
         operation = convert_to_snake_case(operation_name)
 
+        docstring = self._generate_docstring(
+            title=f"Update a {resource_name} resource",
+            operation_name=operation_name,
+            resource_name=resource_name,
+            operation_input_shape_name=operation_input_shape_name,
+            include_session_region=False,
+            include_return_resource_docstring=True,
+            exclude_resource_attrs=kwargs["resource_attributes"],
+        )
+
+        # Format the method using the CREATE_METHOD_TEMPLATE
         if kwargs["needs_defaults_decorator"]:
             formatted_method = UPDATE_METHOD_TEMPLATE.format(
+                docstring=docstring,
                 service_name="sagemaker",
                 resource_name=resource_name,
                 resource_lower=resource_lower,
@@ -860,6 +985,7 @@ class ResourcesCodeGen:
             )
         else:
             formatted_method = UPDATE_METHOD_TEMPLATE_WITHOUT_DECORATOR.format(
+                docstring=docstring,
                 service_name="sagemaker",
                 resource_name=resource_name,
                 resource_lower=resource_lower,
@@ -902,8 +1028,20 @@ class ResourcesCodeGen:
         # Convert the operation name to snake case
         operation = convert_to_snake_case(operation_name)
 
+        # generate docstring
+        docstring = self._generate_docstring(
+            title=f"Invoke a {resource_name} resource",
+            operation_name=operation_name,
+            resource_name=resource_name,
+            operation_input_shape_name=operation_input_shape_name,
+            include_session_region=False,
+            include_return_resource_docstring=False,
+            return_string=f"\nReturns:\n" f"    The Invoke response.\n",
+            exclude_resource_attrs=kwargs["resource_attributes"],
+        )
         # Format the method using the CREATE_METHOD_TEMPLATE
         formatted_method = INVOKE_METHOD_TEMPLATE.format(
+            docstring=docstring,
             service_name="sagemaker-runtime",
             invoke_args=invoke_args,
             resource_name=resource_name,
@@ -946,8 +1084,20 @@ class ResourcesCodeGen:
         # Convert the operation name to snake case
         operation = convert_to_snake_case(operation_name)
 
+        # generate docstring
+        docstring = self._generate_docstring(
+            title=f"Invoke Async a {resource_name} resource",
+            operation_name=operation_name,
+            resource_name=resource_name,
+            operation_input_shape_name=operation_input_shape_name,
+            include_session_region=False,
+            include_return_resource_docstring=False,
+            return_string=f"\nReturns:\n" f"    The Invoke response.\n",
+            exclude_resource_attrs=kwargs["resource_attributes"],
+        )
         # Format the method using the CREATE_METHOD_TEMPLATE
         formatted_method = INVOKE_ASYNC_METHOD_TEMPLATE.format(
+            docstring=docstring,
             service_name="sagemaker-runtime",
             create_args=invoke_args,
             resource_name=resource_name,
@@ -990,8 +1140,20 @@ class ResourcesCodeGen:
         # Convert the operation name to snake case
         operation = convert_to_snake_case(operation_name)
 
+        # generate docstring
+        docstring = self._generate_docstring(
+            title=f"Invoke with response stream a {resource_name} resource",
+            operation_name=operation_name,
+            resource_name=resource_name,
+            operation_input_shape_name=operation_input_shape_name,
+            include_session_region=False,
+            include_return_resource_docstring=False,
+            return_string=f"\nReturns:\n" f"    The Invoke response.\n",
+            exclude_resource_attrs=kwargs["resource_attributes"],
+        )
         # Format the method using the CREATE_METHOD_TEMPLATE
         formatted_method = INVOKE_WITH_RESPONSE_STREAM_METHOD_TEMPLATE.format(
+            docstring=docstring,
             service_name="sagemaker-runtime",
             create_args=invoke_args,
             resource_name=resource_name,
@@ -1030,7 +1192,18 @@ class ResourcesCodeGen:
 
         operation = convert_to_snake_case(operation_name)
 
+        # generate docstring
+        docstring = self._generate_docstring(
+            title=f"Get a {resource_name} resource",
+            operation_name=operation_name,
+            resource_name=resource_name,
+            operation_input_shape_name=resource_operation_input_shape_name,
+            include_session_region=True,
+            include_return_resource_docstring=True,
+        )
+
         formatted_method = GET_METHOD_TEMPLATE.format(
+            docstring=docstring,
             resource_name=resource_name,
             service_name="sagemaker",  # TODO: change service name based on the service - runtime, sagemaker, etc.
             describe_args=describe_args,
@@ -1060,7 +1233,17 @@ class ResourcesCodeGen:
 
         operation = convert_to_snake_case(operation_name)
 
+        # generate docstring
+        docstring = self._generate_docstring(
+            title=f"Refresh a {resource_name} resource",
+            operation_name=operation_name,
+            resource_name=resource_name,
+            include_session_region=False,
+            include_return_resource_docstring=True,
+        )
+
         formatted_method = REFRESH_METHOD_TEMPLATE.format(
+            docstring=docstring,
             resource_name=resource_name,
             operation_input_args=operation_input_args,
             operation=operation,
@@ -1086,7 +1269,18 @@ class ResourcesCodeGen:
 
         operation = convert_to_snake_case(operation_name)
 
+        # generate docstring
+        docstring = self._generate_docstring(
+            title=f"Delete a {resource_name} resource",
+            operation_name=operation_name,
+            resource_name=resource_name,
+            include_session_region=False,
+            include_return_resource_docstring=False,
+        )
+
         formatted_method = DELETE_METHOD_TEMPLATE.format(
+            docstring=docstring,
+            resource_name=resource_name,
             operation_input_args=operation_input_args,
             operation=operation,
         )
@@ -1110,7 +1304,18 @@ class ResourcesCodeGen:
 
         operation = convert_to_snake_case(operation_name)
 
+        # generate docstring
+        docstring = self._generate_docstring(
+            title=f"Stop a {resource_name} resource",
+            operation_name=operation_name,
+            resource_name=resource_name,
+            include_session_region=False,
+            include_return_resource_docstring=False,
+        )
+
         formatted_method = STOP_METHOD_TEMPLATE.format(
+            docstring=docstring,
+            resource_name=resource_name,
             operation_input_args=operation_input_args,
             operation=operation,
         )
@@ -1129,6 +1334,11 @@ class ResourcesCodeGen:
             operation_input_args = self._generate_operation_input_args_updated(
                 operation_metadata, True, resource_attributes
             )
+            _get_shape_attr_documentation_string = self._get_shape_attr_documentation_string(
+                self.shapes_extractor.fetch_shape_members_and_doc_strings(
+                    operation_input_shape_name
+                )
+            )
         else:
             decorator = ""
             method_args = add_indent("self,\n", 4)
@@ -1137,6 +1347,12 @@ class ResourcesCodeGen:
             )
             operation_input_args = self._generate_operation_input_args_updated(
                 operation_metadata, False, resource_attributes
+            )
+            _get_shape_attr_documentation_string = self._get_shape_attr_documentation_string(
+                self.shapes_extractor.fetch_shape_members_and_doc_strings(
+                    operation_input_shape_name
+                ),
+                exclude_resource_attrs=resource_attributes,
             )
         method_args += add_indent("session: Optional[Session] = None,\n", 4)
         method_args += add_indent("region: Optional[str] = None,", 4)
@@ -1167,7 +1383,17 @@ class ResourcesCodeGen:
         call_operation_api = CALL_OPERATION_API_TEMPLATE.format(
             operation=convert_to_snake_case(method.operation_name)
         )
+
+        # generate docstring
+        docstring = f"Perform {method.operation_name} on a {method.resource_name} resource.\n\n"
+        if _get_shape_attr_documentation_string:
+            docstring += f"Parameters:\n"
+            docstring += _get_shape_attr_documentation_string
+            docstring += add_indent(f"session: Boto3 session.\nregion: Region name.\n\n")
+        docstring = add_indent(f'"""\n{docstring}\n"""\n', 4)
+
         formatted_method = GENERIC_METHOD_TEMPLATE.format(
+            docstring=docstring,
             decorator=decorator,
             method_name=method.method_name,
             method_args=method_args,
@@ -1199,6 +1425,11 @@ class ResourcesCodeGen:
             operation_input_args = self._generate_operation_input_args_updated(
                 operation_metadata, True, resource_attributes, exclude_list
             )
+            _get_shape_attr_documentation_string = self._get_shape_attr_documentation_string(
+                self.shapes_extractor.fetch_shape_members_and_doc_strings(
+                    operation_input_shape_name
+                )
+            )
         else:
             decorator = ""
             method_args = add_indent("self,\n", 4)
@@ -1207,6 +1438,12 @@ class ResourcesCodeGen:
             )
             operation_input_args = self._generate_operation_input_args_updated(
                 operation_metadata, False, resource_attributes, exclude_list
+            )
+            _get_shape_attr_documentation_string = self._get_shape_attr_documentation_string(
+                self.shapes_extractor.fetch_shape_members_and_doc_strings(
+                    operation_input_shape_name
+                ),
+                exclude_resource_attrs=resource_attributes,
             )
         method_args += add_indent("session: Optional[Session] = None,\n", 4)
         method_args += add_indent("region: Optional[str] = None,", 4)
@@ -1250,7 +1487,17 @@ class ResourcesCodeGen:
             resource_iterator_args=resource_iterator_args
         )
 
+        # generate docstring
+        docstring = f"Perform {method.operation_name} on a {method.resource_name} resource.\n\n"
+        if _get_shape_attr_documentation_string:
+            docstring += f"Parameters:\n"
+            docstring += _get_shape_attr_documentation_string
+            docstring += add_indent(f"session: Boto3 session.\nregion: Region name.\n\n")
+
+        docstring = add_indent(f'"""\n{docstring}\n"""\n', 4)
+
         return GENERIC_METHOD_TEMPLATE.format(
+            docstring=docstring,
             decorator=decorator,
             method_name=method.method_name,
             method_args=method_args,
@@ -1436,7 +1683,19 @@ class ResourcesCodeGen:
         resource_iterator_args = ",\n".join(resource_iterator_args_list)
         resource_iterator_args = add_indent(resource_iterator_args, 8)
 
+        # generate docstring
+        docstring = self._generate_docstring(
+            title=f"Get all {resource_name} resources",
+            operation_name=operation_name,
+            resource_name=resource_name,
+            operation_input_shape_name=operation_input_shape_name,
+            include_session_region=True,
+            include_return_resource_docstring=False,
+            return_string=f"Returns:\n" f"    Iterator for listed {resource_name} resources.\n",
+        )
+
         formatted_method = GET_ALL_METHOD_WITH_ARGS_TEMPLATE.format(
+            docstring=docstring,
             service_name="sagemaker",
             resource=resource_name,
             get_all_args=get_all_args,

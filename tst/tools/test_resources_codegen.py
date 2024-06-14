@@ -16,7 +16,7 @@ class TestGenerateResource:
 
     # create a unit test for generate_create_method()
     def test_generate_create_method(self):
-        expected_output = """
+        expected_output = '''
 @classmethod
 def create(
     cls,
@@ -31,6 +31,42 @@ def create(
     session: Optional[Session] = None,
     region: Optional[str] = None,
 ) -> Optional["CompilationJob"]:
+    """
+    Create a CompilationJob resource
+    
+    Parameters:
+        compilation_job_name:A name for the model compilation job. The name must be unique within the Amazon Web Services Region and within your Amazon Web Services account. 
+        role_arn:The Amazon Resource Name (ARN) of an IAM role that enables Amazon SageMaker to perform tasks on your behalf.  During model compilation, Amazon SageMaker needs your permission to:   Read input data from an S3 bucket   Write model artifacts to an S3 bucket   Write logs to Amazon CloudWatch Logs   Publish metrics to Amazon CloudWatch   You grant permissions for all of these tasks to an IAM role. To pass this role to Amazon SageMaker, the caller of this API must have the iam:PassRole permission. For more information, see Amazon SageMaker Roles. 
+        output_config:Provides information about the output location for the compiled model and the target device the model runs on.
+        stopping_condition:Specifies a limit to how long a model compilation job can run. When the job reaches the time limit, Amazon SageMaker ends the compilation job. Use this API to cap model training costs.
+        model_package_version_arn:The Amazon Resource Name (ARN) of a versioned model package. Provide either a ModelPackageVersionArn or an InputConfig object in the request syntax. The presence of both objects in the CreateCompilationJob request will return an exception.
+        input_config:Provides information about the location of input model artifacts, the name and shape of the expected data inputs, and the framework in which the model was trained.
+        vpc_config:A VpcConfig object that specifies the VPC that you want your compilation job to connect to. Control access to your models by configuring the VPC. For more information, see Protect Compilation Jobs by Using an Amazon Virtual Private Cloud.
+        tags:An array of key-value pairs. You can use tags to categorize your Amazon Web Services resources in different ways, for example, by purpose, owner, or environment. For more information, see Tagging Amazon Web Services Resources.
+        session: Boto3 session.
+        region: Region name.
+        
+    Returns:
+        The CompilationJob resource.
+    
+    Raises:
+        botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            The error message and error code can be parsed from the exception as follows:
+        
+            ```
+            try:
+                # AWS service call here
+            except botocore.exceptions.ClientError as e:
+                error_message = e.response['Error']['Message']
+                error_code = e.response['Error']['Code']
+            ```
+        ResourceInUse: Resource being accessed is in use.
+        ResourceLimitExceeded: You have exceeded an SageMaker resource limit. For example, you might have too many training jobs created.
+        ConfigSchemaValidationError: Raised when a configuration file does not adhere to the schema
+        LocalConfigNotFoundError: Raised when a configuration file is not found in local file system
+        S3ConfigNotFoundError: Raised when a configuration file is not found in S3
+    """
+
     logger.debug("Creating compilation_job resource.")
     client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
 
@@ -57,7 +93,7 @@ def create(
     logger.debug(f"Response: {response}")
 
     return cls.get(compilation_job_name=compilation_job_name, session=session, region=region)
-"""
+'''
         assert (
             self.resource_generator.generate_create_method(
                 "CompilationJob", needs_defaults_decorator=False
@@ -66,7 +102,7 @@ def create(
         )
 
     def test_generate_import_method(self):
-        expected_output = """
+        expected_output = '''
 @classmethod
 def load(
     cls,
@@ -84,6 +120,43 @@ def load(
     session: Optional[Session] = None,
     region: Optional[str] = None,
 ) -> Optional["HubContent"]:
+    """
+    Import a HubContent resource
+    
+    Parameters:
+        hub_content_name:The name of the hub content to import.
+        hub_content_type:The type of hub content to import.
+        document_schema_version:The version of the hub content schema to import.
+        hub_name:The name of the hub to import content into.
+        hub_content_document:The hub content document that describes information about the hub content such as type, associated containers, scripts, and more.
+        hub_content_version:The version of the hub content to import.
+        hub_content_display_name:The display name of the hub content to import.
+        hub_content_description:A description of the hub content to import.
+        hub_content_markdown:A string that provides a description of the hub content. This string can include links, tables, and standard markdown formating.
+        hub_content_search_keywords:The searchable keywords of the hub content.
+        tags:Any tags associated with the hub content.
+        session: Boto3 session.
+        region: Region name.
+        
+    Returns:
+        The HubContent resource.
+    
+    Raises:
+        botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            The error message and error code can be parsed from the exception as follows:
+        
+            ```
+            try:
+                # AWS service call here
+            except botocore.exceptions.ClientError as e:
+                error_message = e.response['Error']['Message']
+                error_code = e.response['Error']['Code']
+            ```
+        ResourceInUse: Resource being accessed is in use.
+        ResourceLimitExceeded: You have exceeded an SageMaker resource limit. For example, you might have too many training jobs created.
+        ResourceNotFound: Resource being access is not found.
+    """
+
     logger.debug(f"Importing hub_content resource.")
     client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
 
@@ -111,7 +184,7 @@ def load(
     logger.debug(f"Response: {response}")
 
     return cls.get(hub_name=hub_name, hub_content_type=hub_content_type, hub_content_name=hub_content_name, session=session, region=region)
-"""
+'''
         assert self.resource_generator.generate_import_method("HubContent") == expected_output
 
     def test_generate_update_method_with_decorator(self):
@@ -157,7 +230,7 @@ def update(
         )
 
     def test_generate_update_method(self):
-        expected_output = """
+        expected_output = '''
 def update(
     self,
     retain_all_variant_properties: Optional[bool] = Unassigned(),
@@ -165,7 +238,33 @@ def update(
     deployment_config: Optional[DeploymentConfig] = Unassigned(),
     retain_deployment_config: Optional[bool] = Unassigned(),
 ) -> Optional["Endpoint"]:
-    logger.debug("Creating endpoint resource.")
+    """
+    Update a Endpoint resource
+    
+    Parameters:
+        retain_all_variant_properties:When updating endpoint resources, enables or disables the retention of variant properties, such as the instance count or the variant weight. To retain the variant properties of an endpoint when updating it, set RetainAllVariantProperties to true. To use the variant properties specified in a new EndpointConfig call when updating an endpoint, set RetainAllVariantProperties to false. The default is false.
+        exclude_retained_variant_properties:When you are updating endpoint resources with RetainAllVariantProperties, whose value is set to true, ExcludeRetainedVariantProperties specifies the list of type VariantProperty to override with the values provided by EndpointConfig. If you don't specify a value for ExcludeRetainedVariantProperties, no variant properties are overridden. 
+        deployment_config:The deployment configuration for an endpoint, which contains the desired deployment strategy and rollback configurations.
+        retain_deployment_config:Specifies whether to reuse the last deployment configuration. The default value is false (the configuration is not reused).
+    
+    Returns:
+        The Endpoint resource.
+    
+    Raises:
+        botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            The error message and error code can be parsed from the exception as follows:
+        
+            ```
+            try:
+                # AWS service call here
+            except botocore.exceptions.ClientError as e:
+                error_message = e.response['Error']['Message']
+                error_code = e.response['Error']['Code']
+            ```
+        ResourceLimitExceeded: You have exceeded an SageMaker resource limit. For example, you might have too many training jobs created.
+    """
+
+    logger.debug("Updating endpoint resource.")
     client = SageMakerClient().client
 
     operation_input_args = {
@@ -187,7 +286,7 @@ def update(
     self.refresh()
 
     return self
-"""
+'''
         class_attributes = self.resource_generator._get_class_attributes("Endpoint")
         resource_attributes = list(class_attributes[0].keys())
         assert (
@@ -198,7 +297,7 @@ def update(
         )
 
     def test_generate_get_method(self):
-        expected_output = """
+        expected_output = '''
 @classmethod
 def get(
     cls,
@@ -210,6 +309,35 @@ def get(
     session: Optional[Session] = None,
     region: Optional[str] = None,
 ) -> Optional["App"]:
+    """
+    Get a App resource
+    
+    Parameters:
+        domain_id:The domain ID.
+        app_type:The type of app.
+        app_name:The name of the app.
+        user_profile_name:The user profile name. If this value is not set, then SpaceName must be set.
+        space_name:The name of the space.
+        session: Boto3 session.
+        region: Region name.
+        
+    Returns:
+        The App resource.
+    
+    Raises:
+        botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            The error message and error code can be parsed from the exception as follows:
+        
+            ```
+            try:
+                # AWS service call here
+            except botocore.exceptions.ClientError as e:
+                error_message = e.response['Error']['Message']
+                error_code = e.response['Error']['Code']
+            ```
+        ResourceNotFound: Resource being access is not found.
+    """
+
     operation_input_args = {
         'DomainId': domain_id,
         'UserProfileName': user_profile_name,
@@ -226,12 +354,31 @@ def get(
     transformed_response = transform(response, 'DescribeAppResponse')
     app = cls(**transformed_response)
     return app
-"""
+'''
         assert self.resource_generator.generate_get_method("App") == expected_output
 
     def test_generate_refresh_method(self):
-        expected_output = """
+        expected_output = '''
 def refresh(self) -> Optional["App"]:
+    """
+    Refresh a App resource
+    
+    Returns:
+        The App resource.
+    
+    Raises:
+        botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            The error message and error code can be parsed from the exception as follows:
+        
+            ```
+            try:
+                # AWS service call here
+            except botocore.exceptions.ClientError as e:
+                error_message = e.response['Error']['Message']
+                error_code = e.response['Error']['Code']
+            ```
+        ResourceNotFound: Resource being access is not found.
+    """
 
     operation_input_args = {
         'DomainId': self.domain_id,
@@ -246,39 +393,93 @@ def refresh(self) -> Optional["App"]:
     # deserialize response and update self
     transform(response, 'DescribeAppResponse', self)
     return self
-"""
+'''
         assert self.resource_generator.generate_refresh_method("App") == expected_output
 
     def test_generate_delete_method(self):
-        expected_output = """
+        expected_output = '''
 def delete(self) -> None:
+    """
+    Delete a CompilationJob resource
+    
+    
+    Raises:
+        botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            The error message and error code can be parsed from the exception as follows:
+        
+            ```
+            try:
+                # AWS service call here
+            except botocore.exceptions.ClientError as e:
+                error_message = e.response['Error']['Message']
+                error_code = e.response['Error']['Code']
+            ```
+        ResourceNotFound: Resource being access is not found.
+    """
+
+    client = SageMakerClient().client
 
     operation_input_args = {
         'CompilationJobName': self.compilation_job_name,
     }
-    self.client.delete_compilation_job(**operation_input_args)
-"""
+    client.delete_compilation_job(**operation_input_args)
+'''
         assert self.resource_generator.generate_delete_method("CompilationJob") == expected_output
 
     # create a unit test for generate_stop_method
     def test_generate_stop_method(self):
-        expected_output = """
+        expected_output = '''
 def stop(self) -> None:
+    """
+    Stop a CompilationJob resource
+    
+    
+    Raises:
+        botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            The error message and error code can be parsed from the exception as follows:
+        
+            ```
+            try:
+                # AWS service call here
+            except botocore.exceptions.ClientError as e:
+                error_message = e.response['Error']['Message']
+                error_code = e.response['Error']['Code']
+            ```
+        ResourceNotFound: Resource being access is not found.
+    """
+
+    client = SageMakerClient().client
 
     operation_input_args = {
         'CompilationJobName': self.compilation_job_name,
     }
-    self.client.stop_compilation_job(**operation_input_args)
-"""
+    client.stop_compilation_job(**operation_input_args)
+'''
         assert self.resource_generator.generate_stop_method("CompilationJob") == expected_output
 
     def test_generate_wait_method(self):
-        expected_output = """
+        expected_output = '''
 def wait(
     self,
     poll: int = 5,
     timeout: Optional[int] = None
 ) -> Optional["TrainingJob"]:
+    """
+    Wait for a TrainingJob resource.
+    
+    Parameters:
+        poll: The number of seconds to wait between each poll.
+        timeout: The maximum number of seconds to wait before timing out.
+    
+    Returns:
+        The TrainingJob resource.
+    
+    Raises:
+        TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
+        FailedStatusError:   If the resource reaches a failed state.
+        WaiterError: Raised when an error occurs while waiting.
+    
+    """
     terminal_states = ['Completed', 'Failed', 'Stopped']
     start_time = time.time()
 
@@ -297,17 +498,34 @@ def wait(
             raise TimeoutExceededError(resouce_type="TrainingJob", status=current_status)
         print("-", end="")
         time.sleep(poll)
-"""
+'''
         assert self.resource_generator.generate_wait_method("TrainingJob") == expected_output
 
     def test_generate_wait_for_status_method(self):
-        expected_output = """
+        expected_output = '''
 def wait_for_status(
     self,
     status: Literal['InService', 'Creating', 'Updating', 'Failed', 'Deleting'],
     poll: int = 5,
     timeout: Optional[int] = None
 ) -> Optional["InferenceComponent"]:
+    """
+    Wait for a InferenceComponent resource.
+    
+    Parameters:
+        status: The status to wait for.
+        poll: The number of seconds to wait between each poll.
+        timeout: The maximum number of seconds to wait before timing out.
+    
+    Returns:
+        The InferenceComponent resource.
+    
+    Raises:
+        TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
+        FailedStatusError:   If the resource reaches a failed state.
+        WaiterError: Raised when an error occurs while waiting.
+    
+    """
     start_time = time.time()
 
     while True:
@@ -324,20 +542,37 @@ def wait_for_status(
             raise TimeoutExceededError(resouce_type="InferenceComponent", status=current_status)
         print("-", end="")
         time.sleep(poll)
-"""
+'''
         assert (
             self.resource_generator.generate_wait_for_status_method("InferenceComponent")
             == expected_output
         )
 
     def test_generate_wait_for_status_method_without_failed_state(self):
-        expected_output = """
+        expected_output = '''
 def wait_for_status(
     self,
     status: Literal['Creating', 'Created', 'Updating', 'Running', 'Starting', 'Stopping', 'Completed', 'Cancelled'],
     poll: int = 5,
     timeout: Optional[int] = None
 ) -> Optional["InferenceExperiment"]:
+    """
+    Wait for a InferenceExperiment resource.
+    
+    Parameters:
+        status: The status to wait for.
+        poll: The number of seconds to wait between each poll.
+        timeout: The maximum number of seconds to wait before timing out.
+    
+    Returns:
+        The InferenceExperiment resource.
+    
+    Raises:
+        TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
+        FailedStatusError:   If the resource reaches a failed state.
+        WaiterError: Raised when an error occurs while waiting.
+    
+    """
     start_time = time.time()
 
     while True:
@@ -351,14 +586,14 @@ def wait_for_status(
             raise TimeoutExceededError(resouce_type="InferenceExperiment", status=current_status)
         print("-", end="")
         time.sleep(poll)
-"""
+'''
         assert (
             self.resource_generator.generate_wait_for_status_method("InferenceExperiment")
             == expected_output
         )
 
     def test_generate_invoke_method(self):
-        expected_output = """
+        expected_output = '''
 def invoke(self, 
     body: Any,
     content_type: Optional[str] = Unassigned(),
@@ -371,6 +606,44 @@ def invoke(self,
     enable_explanations: Optional[str] = Unassigned(),
     inference_component_name: Optional[str] = Unassigned(),
 ) -> Optional[object]:
+    """
+    Invoke a Endpoint resource
+    
+    Parameters:
+        body:Provides input data, in the format specified in the ContentType request header. Amazon SageMaker passes all of the data in the body to the model.  For information about the format of the request body, see Common Data Formats-Inference.
+        content_type:The MIME type of the input data in the request body.
+        accept:The desired MIME type of the inference response from the model container.
+        custom_attributes:Provides additional information about a request for an inference submitted to a model hosted at an Amazon SageMaker endpoint. The information is an opaque value that is forwarded verbatim. You could use this value, for example, to provide an ID that you can use to track a request or to provide other metadata that a service endpoint was programmed to process. The value must consist of no more than 1024 visible US-ASCII characters as specified in Section 3.3.6. Field Value Components of the Hypertext Transfer Protocol (HTTP/1.1).  The code in your model is responsible for setting or updating any custom attributes in the response. If your code does not set this value in the response, an empty value is returned. For example, if a custom attribute represents the trace ID, your model can prepend the custom attribute with Trace ID: in your post-processing function.  This feature is currently supported in the Amazon Web Services SDKs but not in the Amazon SageMaker Python SDK. 
+        target_model:The model to request for inference when invoking a multi-model endpoint.
+        target_variant:Specify the production variant to send the inference request to when invoking an endpoint that is running two or more variants. Note that this parameter overrides the default behavior for the endpoint, which is to distribute the invocation traffic based on the variant weights. For information about how to use variant targeting to perform a/b testing, see Test models in production 
+        target_container_hostname:If the endpoint hosts multiple containers and is configured to use direct invocation, this parameter specifies the host name of the container to invoke.
+        inference_id:If you provide a value, it is added to the captured data when you enable data capture on the endpoint. For information about data capture, see Capture Data.
+        enable_explanations:An optional JMESPath expression used to override the EnableExplanations parameter of the ClarifyExplainerConfig API. See the EnableExplanations section in the developer guide for more information. 
+        inference_component_name:If the endpoint hosts one or more inference components, this parameter specifies the name of inference component to invoke.
+    
+    
+    Returns:
+        The Invoke response.
+    
+    Raises:
+        botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            The error message and error code can be parsed from the exception as follows:
+        
+            ```
+            try:
+                # AWS service call here
+            except botocore.exceptions.ClientError as e:
+                error_message = e.response['Error']['Message']
+                error_code = e.response['Error']['Code']
+            ```
+        InternalDependencyException: Your request caused an exception with an internal dependency. Contact customer support.
+        InternalFailure: An internal failure occurred.
+        ModelError: Model (owned by the customer in the container) returned 4xx or 5xx error code.
+        ModelNotReadyException: Either a serverless endpoint variant's resources are still being provisioned, or a multi-model endpoint is still downloading or loading the target model. Wait and try your request again.
+        ServiceUnavailable: The service is unavailable. Try your call again.
+        ValidationError: Inspect your request and try again.
+    """
+
     logger.debug(f"Invoking endpoint resource.")
     client = SageMakerRuntimeClient(service_name="sagemaker-runtime").client
     operation_input_args = {
@@ -396,7 +669,7 @@ def invoke(self,
     logger.debug(f"Response: {response}")
 
     return response
-"""
+'''
         assert (
             self.resource_generator.generate_invoke_method(
                 "Endpoint", resource_attributes=["endpoint_name"]
@@ -405,7 +678,7 @@ def invoke(self,
         )
 
     def test_generate_invoke_async_method(self):
-        expected_output = """
+        expected_output = '''
 def invoke_async(self, 
     input_location: str,
     content_type: Optional[str] = Unassigned(),
@@ -415,6 +688,38 @@ def invoke_async(self,
     request_t_t_l_seconds: Optional[int] = Unassigned(),
     invocation_timeout_seconds: Optional[int] = Unassigned(),
 ) -> Optional[object]:
+    """
+    Invoke Async a Endpoint resource
+    
+    Parameters:
+        input_location:The Amazon S3 URI where the inference request payload is stored.
+        content_type:The MIME type of the input data in the request body.
+        accept:The desired MIME type of the inference response from the model container.
+        custom_attributes:Provides additional information about a request for an inference submitted to a model hosted at an Amazon SageMaker endpoint. The information is an opaque value that is forwarded verbatim. You could use this value, for example, to provide an ID that you can use to track a request or to provide other metadata that a service endpoint was programmed to process. The value must consist of no more than 1024 visible US-ASCII characters as specified in Section 3.3.6. Field Value Components of the Hypertext Transfer Protocol (HTTP/1.1).  The code in your model is responsible for setting or updating any custom attributes in the response. If your code does not set this value in the response, an empty value is returned. For example, if a custom attribute represents the trace ID, your model can prepend the custom attribute with Trace ID: in your post-processing function.  This feature is currently supported in the Amazon Web Services SDKs but not in the Amazon SageMaker Python SDK. 
+        inference_id:The identifier for the inference request. Amazon SageMaker will generate an identifier for you if none is specified. 
+        request_t_t_l_seconds:Maximum age in seconds a request can be in the queue before it is marked as expired. The default is 6 hours, or 21,600 seconds.
+        invocation_timeout_seconds:Maximum amount of time in seconds a request can be processed before it is marked as expired. The default is 15 minutes, or 900 seconds.
+    
+    
+    Returns:
+        The Invoke response.
+    
+    Raises:
+        botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            The error message and error code can be parsed from the exception as follows:
+        
+            ```
+            try:
+                # AWS service call here
+            except botocore.exceptions.ClientError as e:
+                error_message = e.response['Error']['Message']
+                error_code = e.response['Error']['Code']
+            ```
+        InternalFailure: An internal failure occurred.
+        ServiceUnavailable: The service is unavailable. Try your call again.
+        ValidationError: Inspect your request and try again.
+    """
+
     logger.debug(f"Invoking endpoint resource Async.")
     client = SageMakerRuntimeClient(service_name="sagemaker-runtime").client
     
@@ -438,7 +743,7 @@ def invoke_async(self,
     logger.debug(f"Response: {response}")
 
     return response
-"""
+'''
         assert (
             self.resource_generator.generate_invoke_async_method(
                 "Endpoint", resource_attributes=["endpoint_name"]
@@ -447,7 +752,7 @@ def invoke_async(self,
         )
 
     def test_generate_invoke_with_response_stream_method(self):
-        expected_output = """
+        expected_output = '''
 def invoke_with_response_stream(self, 
     body: Any,
     content_type: Optional[str] = Unassigned(),
@@ -458,6 +763,42 @@ def invoke_with_response_stream(self,
     inference_id: Optional[str] = Unassigned(),
     inference_component_name: Optional[str] = Unassigned(),
 ) -> Optional[object]:
+    """
+    Invoke with response stream a Endpoint resource
+    
+    Parameters:
+        body:Provides input data, in the format specified in the ContentType request header. Amazon SageMaker passes all of the data in the body to the model.  For information about the format of the request body, see Common Data Formats-Inference.
+        content_type:The MIME type of the input data in the request body.
+        accept:The desired MIME type of the inference response from the model container.
+        custom_attributes:Provides additional information about a request for an inference submitted to a model hosted at an Amazon SageMaker endpoint. The information is an opaque value that is forwarded verbatim. You could use this value, for example, to provide an ID that you can use to track a request or to provide other metadata that a service endpoint was programmed to process. The value must consist of no more than 1024 visible US-ASCII characters as specified in Section 3.3.6. Field Value Components of the Hypertext Transfer Protocol (HTTP/1.1).  The code in your model is responsible for setting or updating any custom attributes in the response. If your code does not set this value in the response, an empty value is returned. For example, if a custom attribute represents the trace ID, your model can prepend the custom attribute with Trace ID: in your post-processing function.  This feature is currently supported in the Amazon Web Services SDKs but not in the Amazon SageMaker Python SDK. 
+        target_variant:Specify the production variant to send the inference request to when invoking an endpoint that is running two or more variants. Note that this parameter overrides the default behavior for the endpoint, which is to distribute the invocation traffic based on the variant weights. For information about how to use variant targeting to perform a/b testing, see Test models in production 
+        target_container_hostname:If the endpoint hosts multiple containers and is configured to use direct invocation, this parameter specifies the host name of the container to invoke.
+        inference_id:An identifier that you assign to your request.
+        inference_component_name:If the endpoint hosts one or more inference components, this parameter specifies the name of inference component to invoke for a streaming response.
+    
+    
+    Returns:
+        The Invoke response.
+    
+    Raises:
+        botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            The error message and error code can be parsed from the exception as follows:
+        
+            ```
+            try:
+                # AWS service call here
+            except botocore.exceptions.ClientError as e:
+                error_message = e.response['Error']['Message']
+                error_code = e.response['Error']['Code']
+            ```
+        InternalFailure: An internal failure occurred.
+        InternalStreamFailure: The stream processing failed because of an unknown error, exception or failure. Try your request again.
+        ModelError: Model (owned by the customer in the container) returned 4xx or 5xx error code.
+        ModelStreamError: An error occurred while streaming the response body. This error can have the following error codes:  ModelInvocationTimeExceeded  The model failed to finish sending the response within the timeout period allowed by Amazon SageMaker.  StreamBroken  The Transmission Control Protocol (TCP) connection between the client and the model was reset or closed.
+        ServiceUnavailable: The service is unavailable. Try your call again.
+        ValidationError: Inspect your request and try again.
+    """
+
     logger.debug(f"Invoking endpoint resource with Response Stream.")
     client = SageMakerRuntimeClient(service_name="sagemaker-runtime").client
 
@@ -482,7 +823,7 @@ def invoke_with_response_stream(self,
     logger.debug(f"Response: {response}")
 
     return response
-"""
+'''
         assert (
             self.resource_generator.generate_invoke_with_response_stream_method(
                 "Endpoint", resource_attributes=["endpoint_name"]
@@ -491,7 +832,7 @@ def invoke_with_response_stream(self,
         )
 
     def test_get_all_method(self):
-        expected_output = """
+        expected_output = '''
 @classmethod
 def get_all(
     cls,
@@ -503,6 +844,36 @@ def get_all(
     session: Optional[Session] = None,
     region: Optional[str] = None,
 ) -> ResourceIterator["App"]:
+    """
+    Get all App resources
+    
+    Parameters:
+        next_token:If the previous response was truncated, you will receive this token. Use it in your next request to receive the next set of results.
+        max_results:The total number of items to return in the response. If the total number of items available is more than the value specified, a NextToken is provided in the response. To resume pagination, provide the NextToken value in the as part of a subsequent call. The default value is 10.
+        sort_order:The sort order for the results. The default is Ascending.
+        sort_by:The parameter by which to sort the results. The default is CreationTime.
+        domain_id_equals:A parameter to search for the domain ID.
+        user_profile_name_equals:A parameter to search by user profile name. If SpaceNameEquals is set, then this value cannot be set.
+        space_name_equals:A parameter to search by space name. If UserProfileNameEquals is set, then this value cannot be set.
+        session: Boto3 session.
+        region: Region name.
+        
+    Returns:
+        Iterator for listed App resources.
+    
+    Raises:
+        botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            The error message and error code can be parsed from the exception as follows:
+        
+            ```
+            try:
+                # AWS service call here
+            except botocore.exceptions.ClientError as e:
+                error_message = e.response['Error']['Message']
+                error_code = e.response['Error']['Code']
+            ```
+    """
+
     client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
         
     operation_input_args = {
@@ -523,17 +894,28 @@ def get_all(
         resource_cls=App,
         list_method_kwargs=operation_input_args
     )
-"""
+'''
         assert self.resource_generator.generate_get_all_method("App") == expected_output
 
     def test_get_all_method_with_no_args(self):
-        expected_output = """
+        expected_output = '''
 @classmethod
 def get_all(
     cls,
     session: Optional[Session] = None,
     region: Optional[str] = None,
 ) -> ResourceIterator["Domain"]:
+    """
+    Get all Domain resources.
+    
+    Parameters:
+        session: Boto3 session.
+        region: Region name.
+
+    Returns:
+        Iterator for listed Domain resources.
+
+    """
     client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
 
     return ResourceIterator(
@@ -543,11 +925,11 @@ def get_all(
         summary_name='DomainDetails',
         resource_cls=Domain
     )
-"""
+'''
         assert self.resource_generator.generate_get_all_method("Domain") == expected_output
 
     def test_get_all_method_with_custom_key_mapping(self):
-        expected_output = """
+        expected_output = '''
 @classmethod
 def get_all(
     cls,
@@ -560,6 +942,37 @@ def get_all(
     session: Optional[Session] = None,
     region: Optional[str] = None,
 ) -> ResourceIterator["DataQualityJobDefinition"]:
+    """
+    Get all DataQualityJobDefinition resources
+    
+    Parameters:
+        endpoint_name:A filter that lists the data quality job definitions associated with the specified endpoint.
+        sort_by:The field to sort results by. The default is CreationTime.
+        sort_order:Whether to sort the results in Ascending or Descending order. The default is Descending.
+        next_token:If the result of the previous ListDataQualityJobDefinitions request was truncated, the response includes a NextToken. To retrieve the next set of transform jobs, use the token in the next request.&gt;
+        max_results:The maximum number of data quality monitoring job definitions to return in the response.
+        name_contains:A string in the data quality monitoring job definition name. This filter returns only data quality monitoring job definitions whose name contains the specified string.
+        creation_time_before:A filter that returns only data quality monitoring job definitions created before the specified time.
+        creation_time_after:A filter that returns only data quality monitoring job definitions created after the specified time.
+        session: Boto3 session.
+        region: Region name.
+        
+    Returns:
+        Iterator for listed DataQualityJobDefinition resources.
+    
+    Raises:
+        botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            The error message and error code can be parsed from the exception as follows:
+        
+            ```
+            try:
+                # AWS service call here
+            except botocore.exceptions.ClientError as e:
+                error_message = e.response['Error']['Message']
+                error_code = e.response['Error']['Code']
+            ```
+    """
+
     client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
         
     operation_input_args = {
@@ -582,7 +995,7 @@ def get_all(
         custom_key_mapping=custom_key_mapping,
         list_method_kwargs=operation_input_args
     )
-"""
+'''
         assert (
             self.resource_generator.generate_get_all_method("DataQualityJobDefinition")
             == expected_output
