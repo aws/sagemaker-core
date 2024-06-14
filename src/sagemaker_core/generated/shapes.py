@@ -1892,6 +1892,22 @@ class BatchDescribeModelPackageSummary(Base):
     model_approval_status: Optional[str] = Unassigned()
 
 
+class BatchDescribeModelPackageOutput(Base):
+    """
+    BatchDescribeModelPackageOutput
+
+        Attributes
+       ----------------------
+       model_package_summaries: 	 The summaries for the model package versions
+       batch_describe_model_package_error_map: 	 A map of the resource and BatchDescribeModelPackageError objects reporting the error associated with describing the model package.
+    """
+
+    model_package_summaries: Optional[Dict[str, BatchDescribeModelPackageSummary]] = Unassigned()
+    batch_describe_model_package_error_map: Optional[Dict[str, BatchDescribeModelPackageError]] = (
+        Unassigned()
+    )
+
+
 class MonitoringCsvDatasetFormat(Base):
     """
     MonitoringCsvDatasetFormat
@@ -7431,6 +7447,20 @@ class MonitoringExecutionSummary(Base):
     monitoring_type: Optional[str] = Unassigned()
 
 
+class DescribePipelineDefinitionForExecutionResponse(Base):
+    """
+    DescribePipelineDefinitionForExecutionResponse
+
+        Attributes
+       ----------------------
+       pipeline_definition: 	 The JSON pipeline definition.
+       creation_time: 	 The time when the pipeline was created.
+    """
+
+    pipeline_definition: Optional[str] = Unassigned()
+    creation_time: Optional[datetime.datetime] = Unassigned()
+
+
 class PipelineExperimentConfig(Base):
     """
     PipelineExperimentConfig
@@ -8468,6 +8498,46 @@ class FlowDefinitionSummary(Base):
     flow_definition_status: str
     creation_time: datetime.datetime
     failure_reason: Optional[str] = Unassigned()
+
+
+class GetDeviceFleetReportResponse(Base):
+    """
+    GetDeviceFleetReportResponse
+
+        Attributes
+       ----------------------
+       device_fleet_arn: 	 The Amazon Resource Name (ARN) of the device.
+       device_fleet_name: 	 The name of the fleet.
+       output_config: 	 The output configuration for storing sample data collected by the fleet.
+       description: 	 Description of the fleet.
+       report_generated: 	 Timestamp of when the report was generated.
+       device_stats: 	 Status of devices.
+       agent_versions: 	 The versions of Edge Manager agent deployed on the fleet.
+       model_stats: 	 Status of model on device.
+    """
+
+    device_fleet_arn: str
+    device_fleet_name: Union[str, object]
+    output_config: Optional[EdgeOutputConfig] = Unassigned()
+    description: Optional[str] = Unassigned()
+    report_generated: Optional[datetime.datetime] = Unassigned()
+    device_stats: Optional[DeviceStats] = Unassigned()
+    agent_versions: Optional[List[AgentVersion]] = Unassigned()
+    model_stats: Optional[List[EdgeModelStat]] = Unassigned()
+
+
+class GetLineageGroupPolicyResponse(Base):
+    """
+    GetLineageGroupPolicyResponse
+
+        Attributes
+       ----------------------
+       lineage_group_arn: 	 The Amazon Resource Name (ARN) of the lineage group.
+       resource_policy: 	 The resource policy that gives access to the lineage group in another account.
+    """
+
+    lineage_group_arn: Optional[str] = Unassigned()
+    resource_policy: Optional[str] = Unassigned()
 
 
 class ScalingPolicyObjective(Base):

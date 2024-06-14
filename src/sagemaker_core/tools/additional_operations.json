@@ -26,6 +26,14 @@
         }
     },
     "PipelineExecution": {
+        "DescribePipelineDefinitionForExecution": {
+            "operation_name": "DescribePipelineDefinitionForExecution",
+            "resource_name": "PipelineExecution",
+            "method_name": "get_pipeline_definition",
+            "return_type": "DescribePipelineDefinitionForExecutionResponse",
+            "method_type": "object",
+            "service_name": "sagemaker"
+        },
         "ListPipelineExecutionSteps": {
             "operation_name": "ListPipelineExecutionSteps",
             "resource_name": "PipelineExecution",
@@ -219,7 +227,7 @@
             "operation_name": "GetLineageGroupPolicy",
             "resource_name": "LineageGroup",
             "method_name": "get_policy",
-            "return_type": "str",
+            "return_type": "GetLineageGroupPolicyResponse",
             "method_type": "object",
             "service_name": "sagemaker"
         }
@@ -230,6 +238,14 @@
             "resource_name": "DeviceFleet",
             "method_name": "deregister_devices",
             "return_type": "None",
+            "method_type": "object",
+            "service_name": "sagemaker"
+        },
+        "GetDeviceFleetReport": {
+            "operation_name": "GetDeviceFleetReport",
+            "resource_name": "DeviceFleet",
+            "method_name": "get_report",
+            "return_type": "GetDeviceFleetReportResponse",
             "method_type": "object",
             "service_name": "sagemaker"
         },
@@ -246,6 +262,16 @@
             "resource_name": "DeviceFleet",
             "method_name": "update_devices",
             "return_type": "None",
+            "method_type": "object",
+            "service_name": "sagemaker"
+        }
+    },
+    "ModelPackage": {
+        "BatchDescribeModelPackage": {
+            "operation_name": "BatchDescribeModelPackage",
+            "resource_name": "ModelPackage",
+            "method_name": "batch_get",
+            "return_type": "BatchDescribeModelPackageOutput",
             "method_type": "object",
             "service_name": "sagemaker"
         }
