@@ -1185,7 +1185,7 @@ class AutoMLJob(Base):
                     "kms_key_id": {"type": "string"},
                 },
                 "role_arn": {"type": "string"},
-                "auto_m_l_job_config": {
+                "auto_ml_job_config": {
                     "security_config": {
                         "volume_kms_key_id": {"type": "string"},
                         "vpc_config": {
@@ -1471,7 +1471,7 @@ class AutoMLJobV2(Base):
                     "kms_key_id": {"type": "string"},
                 },
                 "role_arn": {"type": "string"},
-                "auto_m_l_problem_type_config": {
+                "auto_ml_problem_type_config": {
                     "time_series_forecasting_job_config": {
                         "feature_specification_s3_uri": {"type": "string"}
                     },

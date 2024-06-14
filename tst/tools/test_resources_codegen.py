@@ -370,7 +370,7 @@ def invoke_async(self,
     accept: Optional[str] = Unassigned(),
     custom_attributes: Optional[str] = Unassigned(),
     inference_id: Optional[str] = Unassigned(),
-    request_t_t_l_seconds: Optional[int] = Unassigned(),
+    request_ttl_seconds: Optional[int] = Unassigned(),
     invocation_timeout_seconds: Optional[int] = Unassigned(),
 ) -> Optional[object]:
     logger.debug(f"Invoking endpoint resource Async.")
@@ -383,7 +383,7 @@ def invoke_async(self,
         'CustomAttributes': custom_attributes,
         'InferenceId': inference_id,
         'InputLocation': input_location,
-        'RequestTTLSeconds': request_t_t_l_seconds,
+        'RequestTTLSeconds': request_ttl_seconds,
         'InvocationTimeoutSeconds': invocation_timeout_seconds,
     }
     logger.debug(f"Input request: {operation_input_args}")
