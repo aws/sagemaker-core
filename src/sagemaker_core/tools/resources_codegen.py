@@ -1390,6 +1390,7 @@ class ResourcesCodeGen:
             docstring += f"Parameters:\n"
             docstring += _get_shape_attr_documentation_string
             docstring += add_indent(f"session: Boto3 session.\nregion: Region name.\n\n")
+
         docstring = add_indent(f'"""\n{docstring}\n"""\n', 4)
 
         formatted_method = GENERIC_METHOD_TEMPLATE.format(

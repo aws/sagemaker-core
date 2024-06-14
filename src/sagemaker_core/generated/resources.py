@@ -2261,6 +2261,21 @@ class AutoMLJob(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> ResourceIterator[AutoMLCandidate]:
+        """
+        Perform ListCandidatesForAutoMLJob on a AutoMLJob resource.
+
+        Parameters:
+            status_equals:List the candidates for the job and filter by status.
+            candidate_name_equals:List the candidates for the job and filter by candidate name.
+            sort_order:The sort order for the results. The default is Ascending.
+            sort_by:The parameter by which to sort the results. The default is Descending.
+            max_results:List the job's candidates up to a specified limit.
+            next_token:If the previous response was truncated, you receive this token. Use it in your next request to receive the next set of results.
+            session: Boto3 session.
+            region: Region name.
+
+
+        """
 
         operation_input_args = {
             "AutoMLJobName": self.auto_m_l_job_name,
@@ -2986,6 +3001,9 @@ class Cluster(Base):
 
         Parameters:
             node_id:The ID of the instance.
+            session: Boto3 session.
+            region: Region name.
+
 
         """
 
@@ -3016,6 +3034,22 @@ class Cluster(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> ResourceIterator[ClusterNodeDetails]:
+        """
+        Perform ListClusterNodes on a Cluster resource.
+
+        Parameters:
+            creation_time_after:A filter that returns nodes in a SageMaker HyperPod cluster created after the specified time. Timestamps are formatted according to the ISO 8601 standard.  Acceptable formats include:    YYYY-MM-DDThh:mm:ss.sssTZD (UTC), for example, 2014-10-01T20:30:00.000Z     YYYY-MM-DDThh:mm:ss.sssTZD (with offset), for example, 2014-10-01T12:30:00.000-08:00     YYYY-MM-DD, for example, 2014-10-01    Unix time in seconds, for example, 1412195400. This is also referred to as Unix Epoch time and represents the number of seconds since midnight, January 1, 1970 UTC.   For more information about the timestamp format, see Timestamp in the Amazon Web Services Command Line Interface User Guide.
+            creation_time_before:A filter that returns nodes in a SageMaker HyperPod cluster created before the specified time. The acceptable formats are the same as the timestamp formats for CreationTimeAfter. For more information about the timestamp format, see Timestamp in the Amazon Web Services Command Line Interface User Guide.
+            instance_group_name_contains:A filter that returns the instance groups whose name contain a specified string.
+            max_results:The maximum number of nodes to return in the response.
+            next_token:If the result of the previous ListClusterNodes request was truncated, the response includes a NextToken. To retrieve the next set of cluster nodes, use the token in the next request.
+            sort_by:The field by which to sort results. The default value is CREATION_TIME.
+            sort_order:The sort order for results. The default value is Ascending.
+            session: Boto3 session.
+            region: Region name.
+
+
+        """
 
         operation_input_args = {
             "ClusterName": self.cluster_name,
@@ -3050,6 +3084,11 @@ class Cluster(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> None:
+        """
+        Perform UpdateClusterSoftware on a Cluster resource.
+
+
+        """
 
         operation_input_args = {
             "ClusterName": self.cluster_name,
@@ -3312,6 +3351,24 @@ class CodeRepository(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> ResourceIterator["CodeRepository"]:
+        """
+        Perform ListCodeRepositories on a CodeRepository resource.
+
+        Parameters:
+            creation_time_after:A filter that returns only Git repositories that were created after the specified time.
+            creation_time_before:A filter that returns only Git repositories that were created before the specified time.
+            last_modified_time_after:A filter that returns only Git repositories that were last modified after the specified time.
+            last_modified_time_before:A filter that returns only Git repositories that were last modified before the specified time.
+            max_results:The maximum number of Git repositories to return in the response.
+            name_contains:A string in the Git repositories name. This filter returns only repositories whose name contains the specified string.
+            next_token:If the result of a ListCodeRepositoriesOutput request was truncated, the response includes a NextToken. To get the next set of Git repositories, use the token in the next request.
+            sort_by:The field to sort results by. The default is Name.
+            sort_order:The sort order for results. The default is Ascending.
+            session: Boto3 session.
+            region: Region name.
+
+
+        """
 
         operation_input_args = {
             "CreationTimeAfter": creation_time_after,
@@ -4434,21 +4491,20 @@ class DataQualityJobDefinition(Base):
 
 class Device(Base):
     """
-    Device
-     Class representing resource Device
-    Attributes
-    ---------------------
-    device_name:The unique identifier of the device.
-    device_fleet_name:The name of the fleet the device belongs to.
-    registration_time:The timestamp of the last registration or de-reregistration.
-    device_arn:The Amazon Resource Name (ARN) of the device.
-    description:A description of the device.
-    iot_thing_name:The Amazon Web Services Internet of Things (IoT) object thing name associated with the device.
-    latest_heartbeat:The last heartbeat received from the device.
-    models:Models on the device.
-    max_models:The maximum number of models.
-    next_token:The response from the last list when returning a list large enough to need tokening.
-    agent_version:Edge Manager agent version.
+    Class representing resource Device
+
+    Attributes:
+        device_name:The unique identifier of the device.
+        device_fleet_name:The name of the fleet the device belongs to.
+        registration_time:The timestamp of the last registration or de-reregistration.
+        device_arn:The Amazon Resource Name (ARN) of the device.
+        description:A description of the device.
+        iot_thing_name:The Amazon Web Services Internet of Things (IoT) object thing name associated with the device.
+        latest_heartbeat:The last heartbeat received from the device.
+        models:Models on the device.
+        max_models:The maximum number of models.
+        next_token:The response from the last list when returning a list large enough to need tokening.
+        agent_version:Edge Manager agent version.
 
     """
 
@@ -4480,6 +4536,33 @@ class Device(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["Device"]:
+        """
+        Get a Device resource
+
+        Parameters:
+            device_name:The unique ID of the device.
+            device_fleet_name:The name of the fleet the devices belong to.
+            next_token:Next token of device description.
+            session: Boto3 session.
+            region: Region name.
+
+        Returns:
+            The Device resource.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceNotFound: Resource being access is not found.
+        """
+
         operation_input_args = {
             "NextToken": next_token,
             "DeviceName": device_name,
@@ -4498,6 +4581,25 @@ class Device(Base):
         return device
 
     def refresh(self) -> Optional["Device"]:
+        """
+        Refresh a Device resource
+
+        Returns:
+            The Device resource.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceNotFound: Resource being access is not found.
+        """
 
         operation_input_args = {
             "NextToken": self.next_token,
@@ -4520,6 +4622,34 @@ class Device(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> ResourceIterator["Device"]:
+        """
+        Get all Device resources
+
+        Parameters:
+            next_token:The response from the last list when returning a list large enough to need tokening.
+            max_results:Maximum number of results to select.
+            latest_heartbeat_after:Select fleets where the job was updated after X
+            model_name:A filter that searches devices that contains this name in any of their models.
+            device_fleet_name:Filter for fleets containing this name in their device fleet name.
+            session: Boto3 session.
+            region: Region name.
+
+        Returns:
+            Iterator for listed Device resources.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+        """
+
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
@@ -4910,6 +5040,16 @@ class DeviceFleet(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> None:
+        """
+        Perform DeregisterDevices on a DeviceFleet resource.
+
+        Parameters:
+            device_names:The unique IDs of the devices.
+            session: Boto3 session.
+            region: Region name.
+
+
+        """
 
         operation_input_args = {
             "DeviceFleetName": self.device_fleet_name,
@@ -4930,6 +5070,11 @@ class DeviceFleet(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[GetDeviceFleetReportResponse]:
+        """
+        Perform GetDeviceFleetReport on a DeviceFleet resource.
+
+
+        """
 
         operation_input_args = {
             "DeviceFleetName": self.device_fleet_name,
@@ -4954,6 +5099,17 @@ class DeviceFleet(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> None:
+        """
+        Perform RegisterDevices on a DeviceFleet resource.
+
+        Parameters:
+            devices:A list of devices to register with SageMaker Edge Manager.
+            tags:The tags associated with devices.
+            session: Boto3 session.
+            region: Region name.
+
+
+        """
 
         operation_input_args = {
             "DeviceFleetName": self.device_fleet_name,
@@ -4976,6 +5132,16 @@ class DeviceFleet(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> None:
+        """
+        Perform UpdateDevices on a DeviceFleet resource.
+
+        Parameters:
+            devices:List of devices to register with Edge Manager agent.
+            session: Boto3 session.
+            region: Region name.
+
+
+        """
 
         operation_input_args = {
             "DeviceFleetName": self.device_fleet_name,
@@ -6758,6 +6924,16 @@ class Endpoint(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> None:
+        """
+        Perform UpdateEndpointWeightsAndCapacities on a Endpoint resource.
+
+        Parameters:
+            desired_weights_and_capacities:An object that provides new capacity and weight values for a variant.
+            session: Boto3 session.
+            region: Region name.
+
+
+        """
 
         operation_input_args = {
             "EndpointName": self.endpoint_name,
@@ -7864,18 +8040,17 @@ class FeatureGroup(Base):
 
 class FeatureMetadata(Base):
     """
-    FeatureMetadata
-     Class representing resource FeatureMetadata
-    Attributes
-    ---------------------
-    feature_group_arn:The Amazon Resource Number (ARN) of the feature group that contains the feature.
-    feature_group_name:The name of the feature group that you've specified.
-    feature_name:The name of the feature that you've specified.
-    feature_type:The data type of the feature.
-    creation_time:A timestamp indicating when the feature was created.
-    last_modified_time:A timestamp indicating when the metadata for the feature group was modified. For example, if you add a parameter describing the feature, the timestamp changes to reflect the last time you
-    description:The description you added to describe the feature.
-    parameters:The key-value pairs that you added to describe the feature.
+    Class representing resource FeatureMetadata
+
+    Attributes:
+        feature_group_arn:The Amazon Resource Number (ARN) of the feature group that contains the feature.
+        feature_group_name:The name of the feature group that you've specified.
+        feature_name:The name of the feature that you've specified.
+        feature_type:The data type of the feature.
+        creation_time:A timestamp indicating when the feature was created.
+        last_modified_time:A timestamp indicating when the metadata for the feature group was modified. For example, if you add a parameter describing the feature, the timestamp changes to reflect the last time you
+        description:The description you added to describe the feature.
+        parameters:The key-value pairs that you added to describe the feature.
 
     """
 
@@ -7903,6 +8078,32 @@ class FeatureMetadata(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["FeatureMetadata"]:
+        """
+        Get a FeatureMetadata resource
+
+        Parameters:
+            feature_group_name:The name or Amazon Resource Name (ARN) of the feature group containing the feature.
+            feature_name:The name of the feature.
+            session: Boto3 session.
+            region: Region name.
+
+        Returns:
+            The FeatureMetadata resource.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceNotFound: Resource being access is not found.
+        """
+
         operation_input_args = {
             "FeatureGroupName": feature_group_name,
             "FeatureName": feature_name,
@@ -7920,6 +8121,25 @@ class FeatureMetadata(Base):
         return feature_metadata
 
     def refresh(self) -> Optional["FeatureMetadata"]:
+        """
+        Refresh a FeatureMetadata resource
+
+        Returns:
+            The FeatureMetadata resource.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceNotFound: Resource being access is not found.
+        """
 
         operation_input_args = {
             "FeatureGroupName": self.feature_group_name,
@@ -7938,7 +8158,31 @@ class FeatureMetadata(Base):
         parameter_additions: Optional[List[FeatureParameter]] = Unassigned(),
         parameter_removals: Optional[List[str]] = Unassigned(),
     ) -> Optional["FeatureMetadata"]:
-        logger.debug("Creating feature_metadata resource.")
+        """
+        Update a FeatureMetadata resource
+
+        Parameters:
+            parameter_additions:A list of key-value pairs that you can add to better describe the feature.
+            parameter_removals:A list of parameter keys that you can specify to remove parameters that describe your feature.
+
+        Returns:
+            The FeatureMetadata resource.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceNotFound: Resource being access is not found.
+        """
+
+        logger.debug("Updating feature_metadata resource.")
         client = SageMakerClient().client
 
         operation_input_args = {
@@ -9100,6 +9344,23 @@ class HubContent(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> ResourceIterator["HubContent"]:
+        """
+        Perform ListHubContentVersions on a HubContent resource.
+
+        Parameters:
+            min_version:The lower bound of the hub content versions to list.
+            max_schema_version:The upper bound of the hub content schema version.
+            creation_time_before:Only list hub content versions that were created before the time specified.
+            creation_time_after:Only list hub content versions that were created after the time specified.
+            sort_by:Sort hub content versions by either name or creation time.
+            sort_order:Sort hub content versions by ascending or descending order.
+            max_results:The maximum number of hub content versions to list.
+            next_token:If the response to a previous ListHubContentVersions request was truncated, the response includes a NextToken. To retrieve the next set of hub content versions, use the token in the next request.
+            session: Boto3 session.
+            region: Region name.
+
+
+        """
 
         operation_input_args = {
             "HubName": self.hub_name,
@@ -9850,6 +10111,20 @@ class HyperParameterTuningJob(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> ResourceIterator[HyperParameterTrainingJobSummary]:
+        """
+        Perform ListTrainingJobsForHyperParameterTuningJob on a HyperParameterTuningJob resource.
+
+        Parameters:
+            next_token:If the result of the previous ListTrainingJobsForHyperParameterTuningJob request was truncated, the response includes a NextToken. To retrieve the next set of training jobs, use the token in the next request.
+            max_results:The maximum number of training jobs to return. The default value is 10.
+            status_equals:A filter that returns only training jobs with the specified status.
+            sort_by:The field to sort results by. The default is Name. If the value of this field is FinalObjectiveMetricValue, any training jobs that did not return an objective metric are not listed.
+            sort_order:The sort order for results. The default is Ascending.
+            session: Boto3 session.
+            region: Region name.
+
+
+        """
 
         operation_input_args = {
             "HyperParameterTuningJobName": self.hyper_parameter_tuning_job_name,
@@ -11043,6 +11318,16 @@ class InferenceComponent(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> None:
+        """
+        Perform UpdateInferenceComponentRuntimeConfig on a InferenceComponent resource.
+
+        Parameters:
+            desired_runtime_config:Runtime settings for a model that is deployed with an inference component.
+            session: Boto3 session.
+            region: Region name.
+
+
+        """
 
         operation_input_args = {
             "InferenceComponentName": self.inference_component_name,
@@ -11917,6 +12202,18 @@ class InferenceRecommendationsJob(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> ResourceIterator[InferenceRecommendationsJobStep]:
+        """
+        Perform ListInferenceRecommendationsJobSteps on a InferenceRecommendationsJob resource.
+
+        Parameters:
+            step_type:A filter to return details about the specified type of subtask.  BENCHMARK: Evaluate the performance of your model on different instance types.
+            max_results:The maximum number of results to return.
+            next_token:A token that you can specify to return more results from the list. Specify this field if you have a token that was returned from a previous request.
+            session: Boto3 session.
+            region: Region name.
+
+
+        """
 
         operation_input_args = {
             "JobName": self.job_name,
@@ -12341,18 +12638,17 @@ class LabelingJob(Base):
 
 class LineageGroup(Base):
     """
-    LineageGroup
-     Class representing resource LineageGroup
-    Attributes
-    ---------------------
-    lineage_group_name:The name of the lineage group.
-    lineage_group_arn:The Amazon Resource Name (ARN) of the lineage group.
-    display_name:The display name of the lineage group.
-    description:The description of the lineage group.
-    creation_time:The creation time of lineage group.
-    created_by:
-    last_modified_time:The last modified time of the lineage group.
-    last_modified_by:
+    Class representing resource LineageGroup
+
+    Attributes:
+        lineage_group_name:The name of the lineage group.
+        lineage_group_arn:The Amazon Resource Name (ARN) of the lineage group.
+        display_name:The display name of the lineage group.
+        description:The description of the lineage group.
+        creation_time:The creation time of lineage group.
+        created_by:
+        last_modified_time:The last modified time of the lineage group.
+        last_modified_by:
 
     """
 
@@ -12379,6 +12675,31 @@ class LineageGroup(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["LineageGroup"]:
+        """
+        Get a LineageGroup resource
+
+        Parameters:
+            lineage_group_name:The name of the lineage group.
+            session: Boto3 session.
+            region: Region name.
+
+        Returns:
+            The LineageGroup resource.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceNotFound: Resource being access is not found.
+        """
+
         operation_input_args = {
             "LineageGroupName": lineage_group_name,
         }
@@ -12395,6 +12716,25 @@ class LineageGroup(Base):
         return lineage_group
 
     def refresh(self) -> Optional["LineageGroup"]:
+        """
+        Refresh a LineageGroup resource
+
+        Returns:
+            The LineageGroup resource.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceNotFound: Resource being access is not found.
+        """
 
         operation_input_args = {
             "LineageGroupName": self.lineage_group_name,
@@ -12416,6 +12756,35 @@ class LineageGroup(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> ResourceIterator["LineageGroup"]:
+        """
+        Get all LineageGroup resources
+
+        Parameters:
+            created_after:A timestamp to filter against lineage groups created after a certain point in time.
+            created_before:A timestamp to filter against lineage groups created before a certain point in time.
+            sort_by:The parameter by which to sort the results. The default is CreationTime.
+            sort_order:The sort order for the results. The default is Ascending.
+            next_token:If the response is truncated, SageMaker returns this token. To retrieve the next set of algorithms, use it in the subsequent request.
+            max_results:The maximum number of endpoints to return in the response. This value defaults to 10.
+            session: Boto3 session.
+            region: Region name.
+
+        Returns:
+            Iterator for listed LineageGroup resources.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+        """
+
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
@@ -12447,6 +12816,11 @@ class LineageGroup(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[GetLineageGroupPolicyResponse]:
+        """
+        Perform GetLineageGroupPolicy on a LineageGroup resource.
+
+
+        """
 
         operation_input_args = {
             "LineageGroupName": self.lineage_group_name,
@@ -12783,6 +13157,18 @@ class Model(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> ResourceIterator[ModelMetadataSummary]:
+        """
+        Perform ListModelMetadata on a Model resource.
+
+        Parameters:
+            search_expression:One or more filters that searches for the specified resource or resources in a search. All resource objects that satisfy the expression's condition are included in the search results. Specify the Framework, FrameworkVersion, Domain or Task to filter supported. Filter names and values are case-sensitive.
+            next_token:If the response to a previous ListModelMetadataResponse request was truncated, the response includes a NextToken. To retrieve the next set of model metadata, use the token in the next request.
+            max_results:The maximum number of models to return in the response.
+            session: Boto3 session.
+            region: Region name.
+
+
+        """
 
         operation_input_args = {
             "SearchExpression": search_expression,
@@ -13549,6 +13935,21 @@ class ModelCard(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> ResourceIterator[ModelCardVersionSummary]:
+        """
+        Perform ListModelCardVersions on a ModelCard resource.
+
+        Parameters:
+            creation_time_after:Only list model card versions that were created after the time specified.
+            creation_time_before:Only list model card versions that were created before the time specified.
+            max_results:The maximum number of model card versions to list.
+            next_token:If the response to a previous ListModelCardVersions request was truncated, the response includes a NextToken. To retrieve the next set of model card versions, use the token in the next request.
+            sort_by:Sort listed model card versions by version. Sorts by version by default.
+            sort_order:Sort model card versions by ascending or descending order.
+            session: Boto3 session.
+            region: Region name.
+
+
+        """
 
         operation_input_args = {
             "CreationTimeAfter": creation_time_after,
@@ -14782,6 +15183,16 @@ class ModelPackage(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[BatchDescribeModelPackageOutput]:
+        """
+        Perform BatchDescribeModelPackage on a ModelPackage resource.
+
+        Parameters:
+            model_package_arn_list:The list of Amazon Resource Name (ARN) of the model package groups.
+            session: Boto3 session.
+            region: Region name.
+
+
+        """
 
         operation_input_args = {
             "ModelPackageArnList": model_package_arn_list,
@@ -15163,6 +15574,16 @@ class ModelPackageGroup(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> None:
+        """
+        Perform PutModelPackageGroupPolicy on a ModelPackageGroup resource.
+
+        Parameters:
+            resource_policy:The resource policy for the model group.
+            session: Boto3 session.
+            region: Region name.
+
+
+        """
 
         operation_input_args = {
             "ModelPackageGroupName": self.model_package_group_name,
@@ -17535,6 +17956,11 @@ class PipelineExecution(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[DescribePipelineDefinitionForExecutionResponse]:
+        """
+        Perform DescribePipelineDefinitionForExecution on a PipelineExecution resource.
+
+
+        """
 
         operation_input_args = {
             "PipelineExecutionArn": self.pipeline_execution_arn,
@@ -17558,6 +17984,18 @@ class PipelineExecution(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> ResourceIterator[PipelineExecutionStep]:
+        """
+        Perform ListPipelineExecutionSteps on a PipelineExecution resource.
+
+        Parameters:
+            next_token:If the result of the previous ListPipelineExecutionSteps request was truncated, the response includes a NextToken. To retrieve the next set of pipeline execution steps, use the token in the next request.
+            max_results:The maximum number of pipeline execution steps to return in the response.
+            sort_order:The field by which to sort results. The default is CreatedTime.
+            session: Boto3 session.
+            region: Region name.
+
+
+        """
 
         operation_input_args = {
             "PipelineExecutionArn": self.pipeline_execution_arn,
@@ -17588,6 +18026,17 @@ class PipelineExecution(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> ResourceIterator[Parameter]:
+        """
+        Perform ListPipelineParametersForExecution on a PipelineExecution resource.
+
+        Parameters:
+            next_token:If the result of the previous ListPipelineParametersForExecution request was truncated, the response includes a NextToken. To retrieve the next set of parameters, use the token in the next request.
+            max_results:The maximum number of parameters to return in the response.
+            session: Boto3 session.
+            region: Region name.
+
+
+        """
 
         operation_input_args = {
             "PipelineExecutionArn": self.pipeline_execution_arn,
@@ -17623,6 +18072,9 @@ class PipelineExecution(Base):
 
         Parameters:
             client_request_token:A unique, case-sensitive identifier that you provide to ensure the idempotency of the operation. An idempotent operation completes no more than once.
+            session: Boto3 session.
+            region: Region name.
+
 
         """
 
@@ -17648,6 +18100,17 @@ class PipelineExecution(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> None:
+        """
+        Perform SendPipelineExecutionStepFailure on a PipelineExecution resource.
+
+        Parameters:
+            callback_token:The pipeline generated token from the Amazon SQS queue.
+            client_request_token:A unique, case-sensitive identifier that you provide to ensure the idempotency of the operation. An idempotent operation completes no more than one time.
+            session: Boto3 session.
+            region: Region name.
+
+
+        """
 
         operation_input_args = {
             "CallbackToken": callback_token,
@@ -17672,6 +18135,18 @@ class PipelineExecution(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> None:
+        """
+        Perform SendPipelineExecutionStepSuccess on a PipelineExecution resource.
+
+        Parameters:
+            callback_token:The pipeline generated token from the Amazon SQS queue.
+            output_parameters:A list of the output parameters of the callback step.
+            client_request_token:A unique, case-sensitive identifier that you provide to ensure the idempotency of the operation. An idempotent operation completes no more than one time.
+            session: Boto3 session.
+            region: Region name.
+
+
+        """
 
         operation_input_args = {
             "CallbackToken": callback_token,
@@ -19151,11 +19626,10 @@ class StudioLifecycleConfig(Base):
 
 class SubscribedWorkteam(Base):
     """
-    SubscribedWorkteam
-     Class representing resource SubscribedWorkteam
-    Attributes
-    ---------------------
-    subscribed_workteam:A Workteam instance that contains information about the work team.
+    Class representing resource SubscribedWorkteam
+
+    Attributes:
+        subscribed_workteam:A Workteam instance that contains information about the work team.
 
     """
 
@@ -19175,6 +19649,30 @@ class SubscribedWorkteam(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["SubscribedWorkteam"]:
+        """
+        Get a SubscribedWorkteam resource
+
+        Parameters:
+            workteam_arn:The Amazon Resource Name (ARN) of the subscribed work team to describe.
+            session: Boto3 session.
+            region: Region name.
+
+        Returns:
+            The SubscribedWorkteam resource.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+        """
+
         operation_input_args = {
             "WorkteamArn": workteam_arn,
         }
@@ -19191,6 +19689,24 @@ class SubscribedWorkteam(Base):
         return subscribed_workteam
 
     def refresh(self) -> Optional["SubscribedWorkteam"]:
+        """
+        Refresh a SubscribedWorkteam resource
+
+        Returns:
+            The SubscribedWorkteam resource.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+        """
 
         operation_input_args = {
             "WorkteamArn": self.workteam_arn,
@@ -19209,6 +19725,32 @@ class SubscribedWorkteam(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> ResourceIterator["SubscribedWorkteam"]:
+        """
+        Get all SubscribedWorkteam resources
+
+        Parameters:
+            name_contains:A string in the work team name. This filter returns only work teams whose name contains the specified string.
+            next_token:If the result of the previous ListSubscribedWorkteams request was truncated, the response includes a NextToken. To retrieve the next set of labeling jobs, use the token in the next request.
+            max_results:The maximum number of work teams to return in each page of the response.
+            session: Boto3 session.
+            region: Region name.
+
+        Returns:
+            Iterator for listed SubscribedWorkteam resources.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+        """
+
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
@@ -20944,6 +21486,16 @@ class TrialComponent(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> None:
+        """
+        Perform AssociateTrialComponent on a TrialComponent resource.
+
+        Parameters:
+            trial_name:The name of the trial to associate with.
+            session: Boto3 session.
+            region: Region name.
+
+
+        """
 
         operation_input_args = {
             "TrialComponentName": self.trial_component_name,
@@ -20965,6 +21517,16 @@ class TrialComponent(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> None:
+        """
+        Perform DisassociateTrialComponent on a TrialComponent resource.
+
+        Parameters:
+            trial_name:The name of the trial to disassociate from.
+            session: Boto3 session.
+            region: Region name.
+
+
+        """
 
         operation_input_args = {
             "TrialComponentName": self.trial_component_name,
@@ -22101,6 +22663,23 @@ class Workteam(Base):
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> ResourceIterator[LabelingJob]:
+        """
+        Perform ListLabelingJobsForWorkteam on a Workteam resource.
+
+        Parameters:
+            workteam_arn:The Amazon Resource Name (ARN) of the work team for which you want to see labeling jobs for.
+            max_results:The maximum number of labeling jobs to return in each page of the response.
+            next_token:If the result of the previous ListLabelingJobsForWorkteam request was truncated, the response includes a NextToken. To retrieve the next set of labeling jobs, use the token in the next request.
+            creation_time_after:A filter that returns only labeling jobs created after the specified time (timestamp).
+            creation_time_before:A filter that returns only labeling jobs created before the specified time (timestamp).
+            job_reference_code_contains:A filter the limits jobs to only the ones whose job reference code contains the specified string.
+            sort_by:The field to sort results by. The default is CreationTime.
+            sort_order:The sort order for results. The default is Ascending.
+            session: Boto3 session.
+            region: Region name.
+
+
+        """
 
         operation_input_args = {
             "WorkteamArn": workteam_arn,
