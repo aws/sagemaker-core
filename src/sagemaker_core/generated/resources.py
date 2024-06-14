@@ -1723,6 +1723,7 @@ class Cluster(Base):
         transform(response, "DescribeClusterResponse", self)
         return self
 
+    @populate_inputs_decorator
     def update(
         self,
         instance_groups: List[ClusterInstanceGroupSpecification],
@@ -2959,6 +2960,7 @@ class DeviceFleet(Base):
         transform(response, "DescribeDeviceFleetResponse", self)
         return self
 
+    @populate_inputs_decorator
     def update(
         self,
         output_config: EdgeOutputConfig,
@@ -3324,6 +3326,7 @@ class Domain(Base):
         transform(response, "DescribeDomainResponse", self)
         return self
 
+    @populate_inputs_decorator
     def update(
         self,
         default_user_settings: Optional[UserSettings] = Unassigned(),
@@ -3955,6 +3958,7 @@ class Endpoint(Base):
         transform(response, "DescribeEndpointOutput", self)
         return self
 
+    @populate_inputs_decorator
     def update(
         self,
         retain_all_variant_properties: Optional[bool] = Unassigned(),
@@ -4742,6 +4746,7 @@ class FeatureGroup(Base):
         transform(response, "DescribeFeatureGroupResponse", self)
         return self
 
+    @populate_inputs_decorator
     def update(
         self,
         feature_additions: Optional[List[FeatureDefinition]] = Unassigned(),
@@ -5272,6 +5277,7 @@ class Hub(Base):
         transform(response, "DescribeHubResponse", self)
         return self
 
+    @populate_inputs_decorator
     def update(
         self,
         hub_description: Optional[str] = Unassigned(),
@@ -6214,6 +6220,7 @@ class Image(Base):
         transform(response, "DescribeImageResponse", self)
         return self
 
+    @populate_inputs_decorator
     def update(
         self,
         delete_properties: Optional[List[str]] = Unassigned(),
@@ -6941,6 +6948,7 @@ class InferenceExperiment(Base):
         transform(response, "DescribeInferenceExperimentResponse", self)
         return self
 
+    @populate_inputs_decorator
     def update(
         self,
         schedule: Optional[InferenceExperimentSchedule] = Unassigned(),
@@ -8261,6 +8269,7 @@ class ModelCard(Base):
         transform(response, "DescribeModelCardResponse", self)
         return self
 
+    @populate_inputs_decorator
     def update(
         self,
         content: Optional[str] = Unassigned(),
@@ -9037,6 +9046,7 @@ class ModelPackage(Base):
         transform(response, "DescribeModelPackageOutput", self)
         return self
 
+    @populate_inputs_decorator
     def update(
         self,
         model_approval_status: Optional[str] = Unassigned(),
@@ -9762,6 +9772,7 @@ class MonitoringSchedule(Base):
         transform(response, "DescribeMonitoringScheduleResponse", self)
         return self
 
+    @populate_inputs_decorator
     def update(
         self,
         monitoring_schedule_config: MonitoringScheduleConfig,
@@ -10057,6 +10068,7 @@ class NotebookInstance(Base):
         transform(response, "DescribeNotebookInstanceOutput", self)
         return self
 
+    @populate_inputs_decorator
     def update(
         self,
         instance_type: Optional[str] = Unassigned(),
@@ -10515,6 +10527,7 @@ class Pipeline(Base):
         transform(response, "DescribePipelineResponse", self)
         return self
 
+    @populate_inputs_decorator
     def update(
         self,
         pipeline_display_name: Optional[str] = Unassigned(),
@@ -12119,6 +12132,7 @@ class TrainingJob(Base):
         transform(response, "DescribeTrainingJobResponse", self)
         return self
 
+    @populate_inputs_decorator
     def update(
         self,
         profiler_config: Optional[ProfilerConfigForUpdate] = Unassigned(),
@@ -13112,6 +13126,7 @@ class UserProfile(Base):
         transform(response, "DescribeUserProfileResponse", self)
         return self
 
+    @populate_inputs_decorator
     def update(
         self,
         user_settings: Optional[UserSettings] = Unassigned(),
@@ -13328,6 +13343,7 @@ class Workforce(Base):
         transform(response, "DescribeWorkforceResponse", self)
         return self
 
+    @populate_inputs_decorator
     def update(
         self,
         workforce_name: str,

@@ -114,6 +114,48 @@ def load(
 """
         assert self.resource_generator.generate_import_method("HubContent") == expected_output
 
+    def test_generate_update_method_with_decorator(self):
+        expected_output = """
+@populate_inputs_decorator
+def update(
+    self,
+    retain_all_variant_properties: Optional[bool] = Unassigned(),
+    exclude_retained_variant_properties: Optional[List[VariantProperty]] = Unassigned(),
+    deployment_config: Optional[DeploymentConfig] = Unassigned(),
+    retain_deployment_config: Optional[bool] = Unassigned(),
+) -> Optional["Endpoint"]:
+    logger.debug("Creating endpoint resource.")
+    client = SageMakerClient().client
+
+    operation_input_args = {
+        'EndpointName': self.endpoint_name,
+        'EndpointConfigName': self.endpoint_config_name,
+        'RetainAllVariantProperties': retain_all_variant_properties,
+        'ExcludeRetainedVariantProperties': exclude_retained_variant_properties,
+        'DeploymentConfig': deployment_config,
+        'RetainDeploymentConfig': retain_deployment_config,
+    }
+    logger.debug(f"Input request: {operation_input_args}")
+    # serialize the input request
+    operation_input_args = Endpoint._serialize(operation_input_args)
+    logger.debug(f"Serialized input request: {operation_input_args}")
+
+    # create the resource
+    response = client.update_endpoint(**operation_input_args)
+    logger.debug(f"Response: {response}")
+    self.refresh()
+
+    return self
+"""
+        class_attributes = self.resource_generator._get_class_attributes("Endpoint")
+        resource_attributes = list(class_attributes[0].keys())
+        assert (
+            self.resource_generator.generate_update_method(
+                "Endpoint", resource_attributes=resource_attributes, needs_defaults_decorator=True
+            )
+            == expected_output
+        )
+
     def test_generate_update_method(self):
         expected_output = """
 def update(
@@ -149,10 +191,10 @@ def update(
         class_attributes = self.resource_generator._get_class_attributes("Endpoint")
         resource_attributes = list(class_attributes[0].keys())
         assert (
-            self.resource_generator.generate_update_method(
-                "Endpoint", resource_attributes=resource_attributes
-            )
-            == expected_output
+                self.resource_generator.generate_update_method(
+                    "Endpoint", resource_attributes=resource_attributes, needs_defaults_decorator=False
+                )
+                == expected_output
         )
 
     def test_generate_get_method(self):

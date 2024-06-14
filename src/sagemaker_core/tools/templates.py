@@ -128,6 +128,31 @@ def get_name(self) -> str:
 
 
 UPDATE_METHOD_TEMPLATE = """
+@populate_inputs_decorator
+def update(
+    self,
+{update_args}
+) -> Optional["{resource_name}"]:
+    logger.debug("Creating {resource_lower} resource.")
+    client = SageMakerClient().client
+
+    operation_input_args = {{
+{operation_input_args}
+    }}
+    logger.debug(f"Input request: {{operation_input_args}}")
+    # serialize the input request
+    operation_input_args = {resource_name}._serialize(operation_input_args)
+    logger.debug(f"Serialized input request: {{operation_input_args}}")
+
+    # create the resource
+    response = client.{operation}(**operation_input_args)
+    logger.debug(f"Response: {{response}}")
+    self.refresh()
+
+    return self
+"""
+
+UPDATE_METHOD_TEMPLATE_WITHOUT_DECORATOR = """
 def update(
     self,
 {update_args}

@@ -68,6 +68,7 @@ from sagemaker_core.tools.templates import (
     GET_NAME_METHOD_TEMPLATE,
     GET_ALL_METHOD_NO_ARGS_TEMPLATE,
     GET_ALL_METHOD_WITH_ARGS_TEMPLATE,
+    UPDATE_METHOD_TEMPLATE_WITHOUT_DECORATOR,
 )
 from sagemaker_core.tools.data_extractor import (
     load_combined_shapes_data,
@@ -348,7 +349,7 @@ class ResourcesCodeGen:
 
             defaults_decorator_method = ""
             # Check if 'create' is in the class methods
-            if "create" in class_methods:
+            if "create" in class_methods or "update" in class_methods:
                 if config_schema_for_resource := self._get_config_schema_for_resources().get(
                     resource_name
                 ):
@@ -394,6 +395,7 @@ class ResourcesCodeGen:
                 "update",
                 object_methods,
                 resource_attributes=resource_attributes,
+                needs_defaults_decorator=needs_defaults_decorator,
             ):
                 resource_class += add_indent(update_method, 4)
 
@@ -847,15 +849,24 @@ class ResourcesCodeGen:
         # Convert the operation name to snake case
         operation = convert_to_snake_case(operation_name)
 
-        # Format the method using the CREATE_METHOD_TEMPLATE
-        formatted_method = UPDATE_METHOD_TEMPLATE.format(
-            service_name="sagemaker",
-            resource_name=resource_name,
-            resource_lower=resource_lower,
-            update_args=update_args,
-            operation_input_args=operation_input_args,
-            operation=operation,
-        )
+        if kwargs["needs_defaults_decorator"]:
+            formatted_method = UPDATE_METHOD_TEMPLATE.format(
+                service_name="sagemaker",
+                resource_name=resource_name,
+                resource_lower=resource_lower,
+                update_args=update_args,
+                operation_input_args=operation_input_args,
+                operation=operation,
+            )
+        else:
+            formatted_method = UPDATE_METHOD_TEMPLATE_WITHOUT_DECORATOR.format(
+                service_name="sagemaker",
+                resource_name=resource_name,
+                resource_lower=resource_lower,
+                update_args=update_args,
+                operation_input_args=operation_input_args,
+                operation=operation,
+            )
 
         # Return the formatted method
         return formatted_method
