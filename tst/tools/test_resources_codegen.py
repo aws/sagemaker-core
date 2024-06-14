@@ -1002,7 +1002,7 @@ def get_all(
         )
 
     def test_get_node(self):
-        expected_output = """
+        expected_output = '''
 
 def get_node(
     self,
@@ -1010,6 +1010,17 @@ def get_node(
     session: Optional[Session] = None,
     region: Optional[str] = None,
 ) -> Optional[ClusterNodeDetails]:
+    """
+    Perform DescribeClusterNode on a Cluster resource.
+    
+    Parameters:
+        node_id:The ID of the instance.
+        session: Boto3 session.
+        region: Region name.
+        
+    
+    """
+
 
     operation_input_args = {
         'ClusterName': self.cluster_name,
@@ -1025,7 +1036,7 @@ def get_node(
 
     transformed_response = transform(response, 'DescribeClusterNodeResponse')
     return ClusterNodeDetails(**transformed_response)
-"""
+'''
         method = Method(
             **{
                 "operation_name": "DescribeClusterNode",
@@ -1039,7 +1050,7 @@ def get_node(
         assert self.resource_generator.generate_method(method, ["cluster_name"]) == expected_output
 
     def test_update_weights_and_capacities(self):
-        expected_output = """
+        expected_output = '''
 
 def update_weights_and_capacities(
     self,
@@ -1047,6 +1058,17 @@ def update_weights_and_capacities(
     session: Optional[Session] = None,
     region: Optional[str] = None,
 ) -> None:
+    """
+    Perform UpdateEndpointWeightsAndCapacities on a Endpoint resource.
+    
+    Parameters:
+        endpoint_name:The name of an existing SageMaker endpoint.
+        session: Boto3 session.
+        region: Region name.
+        
+    
+    """
+
 
     operation_input_args = {
         'EndpointName': endpoint_name,
@@ -1060,7 +1082,7 @@ def update_weights_and_capacities(
     response = client.update_endpoint_weights_and_capacities(**operation_input_args)
     logger.debug(f"Response: {response}")
 
-"""
+'''
         method = Method(
             **{
                 "operation_name": "UpdateEndpointWeightsAndCapacities",
@@ -1077,7 +1099,7 @@ def update_weights_and_capacities(
         )
 
     def test_get_all_training_jobs(self):
-        expected_output = """
+        expected_output = '''
 
 def get_all_training_jobs(
     self,
@@ -1086,6 +1108,21 @@ def get_all_training_jobs(
     sort_order: Optional[str] = Unassigned(),    session: Optional[Session] = None,
     region: Optional[str] = None,
 ) -> ResourceIterator[HyperParameterTrainingJobSummary]:
+    """
+    Perform ListTrainingJobsForHyperParameterTuningJob on a HyperParameterTuningJob resource.
+    
+    Parameters:
+        next_token:If the result of the previous ListTrainingJobsForHyperParameterTuningJob request was truncated, the response includes a NextToken. To retrieve the next set of training jobs, use the token in the next request.
+        max_results:The maximum number of training jobs to return. The default value is 10.
+        status_equals:A filter that returns only training jobs with the specified status.
+        sort_by:The field to sort results by. The default is Name. If the value of this field is FinalObjectiveMetricValue, any training jobs that did not return an objective metric are not listed.
+        sort_order:The sort order for results. The default is Ascending.
+        session: Boto3 session.
+        region: Region name.
+        
+    
+    """
+
 
     operation_input_args = {
         'HyperParameterTuningJobName': self.hyper_parameter_tuning_job_name,
@@ -1107,7 +1144,7 @@ def get_all_training_jobs(
         resource_cls=HyperParameterTrainingJobSummary,
         list_method_kwargs=operation_input_args
     )
-"""
+'''
         method = Method(
             **{
                 "operation_name": "ListTrainingJobsForHyperParameterTuningJob",
