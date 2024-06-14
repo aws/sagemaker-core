@@ -125,7 +125,8 @@ def update(
     self,
 {update_args}
 ) -> Optional["{resource_name}"]:
-    logger.debug("Creating {resource_lower} resource.")
+{docstring}
+    logger.debug("Updating {resource_lower} resource.")
     client = SageMakerClient().client
 
     operation_input_args = {{

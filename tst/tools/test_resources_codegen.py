@@ -188,7 +188,7 @@ def load(
         assert self.resource_generator.generate_import_method("HubContent") == expected_output
 
     def test_generate_update_method_with_decorator(self):
-        expected_output = """
+        expected_output = '''
 @populate_inputs_decorator
 def update(
     self,
@@ -197,7 +197,33 @@ def update(
     deployment_config: Optional[DeploymentConfig] = Unassigned(),
     retain_deployment_config: Optional[bool] = Unassigned(),
 ) -> Optional["Endpoint"]:
-    logger.debug("Creating endpoint resource.")
+    """
+    Update a Endpoint resource
+    
+    Parameters:
+        retain_all_variant_properties:When updating endpoint resources, enables or disables the retention of variant properties, such as the instance count or the variant weight. To retain the variant properties of an endpoint when updating it, set RetainAllVariantProperties to true. To use the variant properties specified in a new EndpointConfig call when updating an endpoint, set RetainAllVariantProperties to false. The default is false.
+        exclude_retained_variant_properties:When you are updating endpoint resources with RetainAllVariantProperties, whose value is set to true, ExcludeRetainedVariantProperties specifies the list of type VariantProperty to override with the values provided by EndpointConfig. If you don't specify a value for ExcludeRetainedVariantProperties, no variant properties are overridden. 
+        deployment_config:The deployment configuration for an endpoint, which contains the desired deployment strategy and rollback configurations.
+        retain_deployment_config:Specifies whether to reuse the last deployment configuration. The default value is false (the configuration is not reused).
+    
+    Returns:
+        The Endpoint resource.
+    
+    Raises:
+        botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            The error message and error code can be parsed from the exception as follows:
+        
+            ```
+            try:
+                # AWS service call here
+            except botocore.exceptions.ClientError as e:
+                error_message = e.response['Error']['Message']
+                error_code = e.response['Error']['Code']
+            ```
+        ResourceLimitExceeded: You have exceeded an SageMaker resource limit. For example, you might have too many training jobs created.
+    """
+
+    logger.debug("Updating endpoint resource.")
     client = SageMakerClient().client
 
     operation_input_args = {
@@ -219,7 +245,7 @@ def update(
     self.refresh()
 
     return self
-"""
+'''
         class_attributes = self.resource_generator._get_class_attributes("Endpoint")
         resource_attributes = list(class_attributes[0].keys())
         assert (
@@ -290,10 +316,10 @@ def update(
         class_attributes = self.resource_generator._get_class_attributes("Endpoint")
         resource_attributes = list(class_attributes[0].keys())
         assert (
-                self.resource_generator.generate_update_method(
-                    "Endpoint", resource_attributes=resource_attributes, needs_defaults_decorator=False
-                )
-                == expected_output
+            self.resource_generator.generate_update_method(
+                "Endpoint", resource_attributes=resource_attributes, needs_defaults_decorator=False
+            )
+            == expected_output
         )
 
     def test_generate_get_method(self):
