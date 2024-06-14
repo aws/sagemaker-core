@@ -449,6 +449,8 @@ def delete(self) -> None:
         'CompilationJobName': self.compilation_job_name,
     }
     client.delete_compilation_job(**operation_input_args)
+    
+    print(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 '''
         assert self.resource_generator.generate_delete_method("CompilationJob") == expected_output
 
@@ -489,7 +491,7 @@ def wait(
     self,
     poll: int = 5,
     timeout: Optional[int] = None
-) -> Optional["TrainingJob"]:
+):
     """
     Wait for a TrainingJob resource.
     
@@ -514,11 +516,12 @@ def wait(
         current_status = self.training_job_status
 
         if current_status in terminal_states:
+            print(f"\\nFinal Resource Status: {current_status}")
             
             if "failed" in current_status.lower():
                 raise FailedStatusError(resource_type="TrainingJob", status=current_status, reason=self.failure_reason)
 
-            return self
+            return
 
         if timeout is not None and time.time() - start_time >= timeout:
             raise TimeoutExceededError(resouce_type="TrainingJob", status=current_status)
@@ -559,7 +562,8 @@ def wait_for_status(
         current_status = self.inference_component_status
 
         if status == current_status:
-            return self
+            print(f"\\nFinal Resource Status: {current_status}")
+            return
         
         if "failed" in current_status.lower():
             raise FailedStatusError(resource_type="InferenceComponent", status=current_status, reason=self.failure_reason)
@@ -606,7 +610,8 @@ def wait_for_status(
         current_status = self.status
 
         if status == current_status:
-            return self
+            print(f"\\nFinal Resource Status: {current_status}")
+            return
 
         if timeout is not None and time.time() - start_time >= timeout:
             raise TimeoutExceededError(resouce_type="InferenceExperiment", status=current_status)

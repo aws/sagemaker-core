@@ -305,7 +305,7 @@ def wait(
     self,
     poll: int = 5,
     timeout: Optional[int] = None
-) -> Optional["{resource_name}"]:
+):
     """
     Wait for a {resource_name} resource.
     
@@ -330,8 +330,9 @@ def wait(
         current_status = self{status_key_path}
 
         if current_status in terminal_states:
+            print(f"\\nFinal Resource Status: {{current_status}}")
 {failed_error_block}
-            return self
+            return
 
         if timeout is not None and time.time() - start_time >= timeout:
             raise TimeoutExceededError(resouce_type="{resource_name}", status=current_status)
@@ -370,7 +371,8 @@ def wait_for_status(
         current_status = self{status_key_path}
 
         if status == current_status:
-            return self
+            print(f"\\nFinal Resource Status: {{current_status}}")
+            return
 {failed_error_block}
         if timeout is not None and time.time() - start_time >= timeout:
             raise TimeoutExceededError(resouce_type="{resource_name}", status=current_status)
@@ -387,6 +389,8 @@ def delete(self) -> None:
 {operation_input_args}
     }}
     client.{operation}(**operation_input_args)
+    
+    print(f"Deleting {{self.__class__.__name__}} - {{self.get_name()}}")
 """
 
 STOP_METHOD_TEMPLATE = """
