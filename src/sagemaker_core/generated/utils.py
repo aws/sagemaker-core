@@ -59,6 +59,20 @@ def configure_logging(log_level=None):
     _logger.addHandler(console_handler)
 
 
+def is_snake_case(s: str):
+    if not s:
+        return False
+    if s[0].isupper():
+        return False
+    if not s.islower() and not s.isalnum():
+        return False
+    if s.startswith("_") or s.endswith("_"):
+        return False
+    if "__" in s:
+        return False
+    return True
+
+
 def snake_to_pascal(snake_str):
     """
     Convert a snake_case string to PascalCase.

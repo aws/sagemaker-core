@@ -125,7 +125,8 @@ def update(
     self,
 {update_args}
 ) -> Optional["{resource_name}"]:
-    logger.debug("Creating {resource_lower} resource.")
+{docstring}
+    logger.debug("Updating {resource_lower} resource.")
     client = SageMakerClient().client
 
     operation_input_args = {{
@@ -546,7 +547,8 @@ class Base(BaseModel):
         serialized_dict = {}
         for k, v in value.items():
             if serialize_result := cls._serialize(v):
-                serialized_dict.update({k: serialize_result})
+                key = snake_to_pascal(k) if is_snake_case(k) else k
+                serialized_dict.update({key[0].upper() + key[1:]: serialize_result})
         return serialized_dict
     
     @staticmethod
