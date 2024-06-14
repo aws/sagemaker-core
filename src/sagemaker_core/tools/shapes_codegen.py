@@ -63,6 +63,7 @@ class ShapesCodeGen:
         self.shape_dag = self.shapes_extractor.get_shapes_dag()
         self.resources_extractor = ResourcesExtractor()
         self.resources_plan = self.resources_extractor.get_resource_plan()
+        self.resource_methods = self.resources_extractor.get_resource_methods()
 
     def build_graph(self):
         """
@@ -221,14 +222,19 @@ class ShapesCodeGen:
         :param shape: The name of the shape.
         :return: True if the shape should be generated, False otherwise.
         """
-        operation_input_output_shapes = []
+        operation_input_output_shapes = set()
         for operation, attrs in self.combined_operations.items():
             if attrs.get("input"):
-                operation_input_output_shapes.append(attrs["input"]["shape"])
+                operation_input_output_shapes.add(attrs["input"]["shape"])
             if attrs.get("output"):
-                operation_input_output_shapes.append(attrs["output"]["shape"])
+                operation_input_output_shapes.add(attrs["output"]["shape"])
 
-        if shape in operation_input_output_shapes:
+        required_output_shapes = set()
+        for resource_name in self.resource_methods:
+            for method in self.resource_methods[resource_name].values():
+                required_output_shapes.add(method.return_type)
+
+        if shape in operation_input_output_shapes and shape not in required_output_shapes:
             return False
         return True
 
