@@ -30,6 +30,7 @@ from sagemaker_core.generated.utils import (
     pascal_to_snake,
     is_not_primitive,
     is_not_str_dict,
+    is_snake_case,
 )
 from sagemaker_core.generated.intelligent_defaults_helper import (
     load_default_configs_for_resource_name,
@@ -72,7 +73,8 @@ class Base(BaseModel):
         serialized_dict = {}
         for k, v in value.items():
             if serialize_result := cls._serialize(v):
-                serialized_dict.update({k: serialize_result})
+                key = snake_to_pascal(k) if is_snake_case(k) else k
+                serialized_dict.update({key[0].upper() + key[1:]: serialize_result})
         return serialized_dict
 
     @staticmethod

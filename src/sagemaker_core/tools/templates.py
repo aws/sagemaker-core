@@ -145,6 +145,7 @@ def update(
     return self
 """
 
+
 UPDATE_METHOD_TEMPLATE_WITHOUT_DECORATOR = """
 def update(
     self,
@@ -522,7 +523,8 @@ class Base(BaseModel):
         serialized_dict = {}
         for k, v in value.items():
             if serialize_result := cls._serialize(v):
-                serialized_dict.update({k: serialize_result})
+                key = snake_to_pascal(k) if is_snake_case(k) else k
+                serialized_dict.update({key[0].upper() + key[1:]: serialize_result})
         return serialized_dict
     
     @staticmethod
