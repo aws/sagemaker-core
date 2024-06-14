@@ -12,6 +12,7 @@ class TestConversion(unittest.TestCase):
         self.assertEqual(pascal_to_snake("PascalCase"), "pascal_case")
         self.assertEqual(pascal_to_snake("AnotherExample"), "another_example")
         self.assertEqual(pascal_to_snake("test"), "test")
+        self.assertEqual(pascal_to_snake("AutoMLJob"), "auto_ml_job")
 
 
 class DummyResourceClass:

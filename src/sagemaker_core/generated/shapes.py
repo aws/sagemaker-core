@@ -225,7 +225,7 @@ class AdditionalInferenceSpecificationDefinition(Base):
        supported_transform_instance_types: 	 A list of the instance types on which a transformation job can be run or on which an endpoint can be deployed.
        supported_realtime_inference_instance_types: 	 A list of the instance types that are used to generate inferences in real-time.
        supported_content_types: 	 The supported MIME types for the input data.
-       supported_response_m_i_m_e_types: 	 The supported MIME types for the output data.
+       supported_response_mime_types: 	 The supported MIME types for the output data.
     """
 
     name: str
@@ -234,7 +234,7 @@ class AdditionalInferenceSpecificationDefinition(Base):
     supported_transform_instance_types: Optional[List[str]] = Unassigned()
     supported_realtime_inference_instance_types: Optional[List[str]] = Unassigned()
     supported_content_types: Optional[List[str]] = Unassigned()
-    supported_response_m_i_m_e_types: Optional[List[str]] = Unassigned()
+    supported_response_mime_types: Optional[List[str]] = Unassigned()
 
 
 class AgentVersion(Base):
@@ -524,13 +524,13 @@ class ResourceConfig(Base):
        ----------------------
        instance_type: 	 The ML compute instance type.   SageMaker Training on Amazon Elastic Compute Cloud (EC2) P4de instances is in preview release starting December 9th, 2022.   Amazon EC2 P4de instances (currently in preview) are powered by 8 NVIDIA A100 GPUs with 80GB high-performance HBM2e GPU memory, which accelerate the speed of training ML models that need to be trained on large datasets of high-resolution data. In this preview release, Amazon SageMaker supports ML training jobs on P4de instances (ml.p4de.24xlarge) to reduce model training time. The ml.p4de.24xlarge instances are available in the following Amazon Web Services Regions.    US East (N. Virginia) (us-east-1)   US West (Oregon) (us-west-2)   To request quota limit increase and start using P4de instances, contact the SageMaker Training service team through your account team.
        instance_count: 	 The number of ML compute instances to use. For distributed training, provide a value greater than 1.
-       volume_size_in_g_b: 	 The size of the ML storage volume that you want to provision.  ML storage volumes store model artifacts and incremental states. Training algorithms might also use the ML storage volume for scratch space. If you want to store the training data in the ML storage volume, choose File as the TrainingInputMode in the algorithm specification.  When using an ML instance with NVMe SSD volumes, SageMaker doesn't provision Amazon EBS General Purpose SSD (gp2) storage. Available storage is fixed to the NVMe-type instance's storage capacity. SageMaker configures storage paths for training datasets, checkpoints, model artifacts, and outputs to use the entire capacity of the instance storage. For example, ML instance families with the NVMe-type instance storage include ml.p4d, ml.g4dn, and ml.g5.  When using an ML instance with the EBS-only storage option and without instance storage, you must define the size of EBS volume through VolumeSizeInGB in the ResourceConfig API. For example, ML instance families that use EBS volumes include ml.c5 and ml.p2.  To look up instance types and their instance storage types and volumes, see Amazon EC2 Instance Types. To find the default local paths defined by the SageMaker training platform, see Amazon SageMaker Training Storage Folders for Training Datasets, Checkpoints, Model Artifacts, and Outputs.
+       volume_size_in_gb: 	 The size of the ML storage volume that you want to provision.  ML storage volumes store model artifacts and incremental states. Training algorithms might also use the ML storage volume for scratch space. If you want to store the training data in the ML storage volume, choose File as the TrainingInputMode in the algorithm specification.  When using an ML instance with NVMe SSD volumes, SageMaker doesn't provision Amazon EBS General Purpose SSD (gp2) storage. Available storage is fixed to the NVMe-type instance's storage capacity. SageMaker configures storage paths for training datasets, checkpoints, model artifacts, and outputs to use the entire capacity of the instance storage. For example, ML instance families with the NVMe-type instance storage include ml.p4d, ml.g4dn, and ml.g5.  When using an ML instance with the EBS-only storage option and without instance storage, you must define the size of EBS volume through VolumeSizeInGB in the ResourceConfig API. For example, ML instance families that use EBS volumes include ml.c5 and ml.p2.  To look up instance types and their instance storage types and volumes, see Amazon EC2 Instance Types. To find the default local paths defined by the SageMaker training platform, see Amazon SageMaker Training Storage Folders for Training Datasets, Checkpoints, Model Artifacts, and Outputs.
        volume_kms_key_id: 	 The Amazon Web Services KMS key that SageMaker uses to encrypt data on the storage volume attached to the ML compute instance(s) that run the training job.  Certain Nitro-based instances include local storage, dependent on the instance type. Local storage volumes are encrypted using a hardware module on the instance. You can't request a VolumeKmsKeyId when using an instance type with local storage. For a list of instance types that support local instance storage, see Instance Store Volumes. For more information about local instance storage encryption, see SSD Instance Store Volumes.  The VolumeKmsKeyId can be in any of the following formats:   // KMS Key ID  "1234abcd-12ab-34cd-56ef-1234567890ab"    // Amazon Resource Name (ARN) of a KMS Key  "arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab"
        keep_alive_period_in_seconds: 	 The duration of time in seconds to retain configured resources in a warm pool for subsequent training jobs.
        instance_groups: 	 The configuration of a heterogeneous cluster in JSON format.
     """
 
-    volume_size_in_g_b: int
+    volume_size_in_gb: int
     instance_type: Optional[str] = Unassigned()
     instance_count: Optional[int] = Unassigned()
     volume_kms_key_id: Optional[str] = Unassigned()
@@ -669,7 +669,7 @@ class TransformJobDefinition(Base):
         Attributes
        ----------------------
        max_concurrent_transforms: 	 The maximum number of parallel requests that can be sent to each instance in a transform job. The default value is 1.
-       max_payload_in_m_b: 	 The maximum payload size allowed, in MB. A payload is the data portion of a record (without metadata).
+       max_payload_in_mb: 	 The maximum payload size allowed, in MB. A payload is the data portion of a record (without metadata).
        batch_strategy: 	 A string that determines the number of records included in a single mini-batch.  SingleRecord means only one record is used per mini-batch. MultiRecord means a mini-batch is set to contain as many records that can fit within the MaxPayloadInMB limit.
        environment: 	 The environment variables to set in the Docker container. We support up to 16 key and values entries in the map.
        transform_input: 	 A description of the input source and the way the transform job consumes it.
@@ -681,7 +681,7 @@ class TransformJobDefinition(Base):
     transform_output: TransformOutput
     transform_resources: TransformResources
     max_concurrent_transforms: Optional[int] = Unassigned()
-    max_payload_in_m_b: Optional[int] = Unassigned()
+    max_payload_in_mb: Optional[int] = Unassigned()
     batch_strategy: Optional[str] = Unassigned()
     environment: Optional[Dict[str, str]] = Unassigned()
 
@@ -1114,10 +1114,10 @@ class AutoMLAlgorithmConfig(Base):
 
         Attributes
        ----------------------
-       auto_m_l_algorithms: 	 The selection of algorithms run on a dataset to train the model candidates of an Autopilot job.   Selected algorithms must belong to the list corresponding to the training mode set in AutoMLJobConfig.Mode (ENSEMBLING or HYPERPARAMETER_TUNING). Choose a minimum of 1 algorithm.     In ENSEMBLING mode:   "catboost"   "extra-trees"   "fastai"   "lightgbm"   "linear-learner"   "nn-torch"   "randomforest"   "xgboost"     In HYPERPARAMETER_TUNING mode:   "linear-learner"   "mlp"   "xgboost"
+       auto_ml_algorithms: 	 The selection of algorithms run on a dataset to train the model candidates of an Autopilot job.   Selected algorithms must belong to the list corresponding to the training mode set in AutoMLJobConfig.Mode (ENSEMBLING or HYPERPARAMETER_TUNING). Choose a minimum of 1 algorithm.     In ENSEMBLING mode:   "catboost"   "extra-trees"   "fastai"   "lightgbm"   "linear-learner"   "nn-torch"   "randomforest"   "xgboost"     In HYPERPARAMETER_TUNING mode:   "linear-learner"   "mlp"   "xgboost"
     """
 
-    auto_m_l_algorithms: List[str]
+    auto_ml_algorithms: List[str]
 
 
 class FinalAutoMLJobObjectiveMetric(Base):
@@ -1232,7 +1232,7 @@ class AutoMLCandidate(Base):
         Attributes
        ----------------------
        candidate_name: 	 The name of the candidate.
-       final_auto_m_l_job_objective_metric
+       final_auto_ml_job_objective_metric
        objective_status: 	 The objective's status.
        candidate_steps: 	 Information about the candidate's steps.
        candidate_status: 	 The candidate's status.
@@ -1251,7 +1251,7 @@ class AutoMLCandidate(Base):
     candidate_status: str
     creation_time: datetime.datetime
     last_modified_time: datetime.datetime
-    final_auto_m_l_job_objective_metric: Optional[FinalAutoMLJobObjectiveMetric] = Unassigned()
+    final_auto_ml_job_objective_metric: Optional[FinalAutoMLJobObjectiveMetric] = Unassigned()
     inference_containers: Optional[List[AutoMLContainerDefinition]] = Unassigned()
     end_time: Optional[datetime.datetime] = Unassigned()
     failure_reason: Optional[str] = Unassigned()
@@ -1383,12 +1383,12 @@ class AutoMLJobCompletionCriteria(Base):
        ----------------------
        max_candidates: 	 The maximum number of times a training job is allowed to run. For text and image classification, time-series forecasting, as well as text generation (LLMs fine-tuning) problem types, the supported value is 1. For tabular problem types, the maximum value is 750.
        max_runtime_per_training_job_in_seconds: 	 The maximum time, in seconds, that each training job executed inside hyperparameter tuning is allowed to run as part of a hyperparameter tuning job. For more information, see the StoppingCondition used by the CreateHyperParameterTuningJob action. For job V2s (jobs created by calling CreateAutoMLJobV2), this field controls the runtime of the job candidate. For TextGenerationJobConfig problem types, the maximum time defaults to 72 hours (259200 seconds).
-       max_auto_m_l_job_runtime_in_seconds: 	 The maximum runtime, in seconds, an AutoML job has to complete. If an AutoML job exceeds the maximum runtime, the job is stopped automatically and its processing is ended gracefully. The AutoML job identifies the best model whose training was completed and marks it as the best-performing model. Any unfinished steps of the job, such as automatic one-click Autopilot model deployment, are not completed.
+       max_auto_ml_job_runtime_in_seconds: 	 The maximum runtime, in seconds, an AutoML job has to complete. If an AutoML job exceeds the maximum runtime, the job is stopped automatically and its processing is ended gracefully. The AutoML job identifies the best model whose training was completed and marks it as the best-performing model. Any unfinished steps of the job, such as automatic one-click Autopilot model deployment, are not completed.
     """
 
     max_candidates: Optional[int] = Unassigned()
     max_runtime_per_training_job_in_seconds: Optional[int] = Unassigned()
-    max_auto_m_l_job_runtime_in_seconds: Optional[int] = Unassigned()
+    max_auto_ml_job_runtime_in_seconds: Optional[int] = Unassigned()
 
 
 class VpcConfig(Base):
@@ -1490,10 +1490,10 @@ class AutoMLJobSummary(Base):
 
         Attributes
        ----------------------
-       auto_m_l_job_name: 	 The name of the AutoML job you are requesting.
-       auto_m_l_job_arn: 	 The ARN of the AutoML job.
-       auto_m_l_job_status: 	 The status of the AutoML job.
-       auto_m_l_job_secondary_status: 	 The secondary status of the AutoML job.
+       auto_ml_job_name: 	 The name of the AutoML job you are requesting.
+       auto_ml_job_arn: 	 The ARN of the AutoML job.
+       auto_ml_job_status: 	 The status of the AutoML job.
+       auto_ml_job_secondary_status: 	 The secondary status of the AutoML job.
        creation_time: 	 When the AutoML job was created.
        end_time: 	 The end time of an AutoML job.
        last_modified_time: 	 When the AutoML job was last modified.
@@ -1501,10 +1501,10 @@ class AutoMLJobSummary(Base):
        partial_failure_reasons: 	 The list of reasons for partial failures within an AutoML job.
     """
 
-    auto_m_l_job_name: Union[str, object]
-    auto_m_l_job_arn: str
-    auto_m_l_job_status: str
-    auto_m_l_job_secondary_status: str
+    auto_ml_job_name: str
+    auto_ml_job_arn: str
+    auto_ml_job_status: str
+    auto_ml_job_secondary_status: str
     creation_time: datetime.datetime
     last_modified_time: datetime.datetime
     end_time: Optional[datetime.datetime] = Unassigned()
@@ -1759,14 +1759,14 @@ class AutoMLResolvedAttributes(Base):
 
         Attributes
        ----------------------
-       auto_m_l_job_objective
+       auto_ml_job_objective
        completion_criteria
-       auto_m_l_problem_type_resolved_attributes: 	 Defines the resolved attributes specific to a problem type.
+       auto_ml_problem_type_resolved_attributes: 	 Defines the resolved attributes specific to a problem type.
     """
 
-    auto_m_l_job_objective: Optional[AutoMLJobObjective] = Unassigned()
+    auto_ml_job_objective: Optional[AutoMLJobObjective] = Unassigned()
     completion_criteria: Optional[AutoMLJobCompletionCriteria] = Unassigned()
-    auto_m_l_problem_type_resolved_attributes: Optional[AutoMLProblemTypeResolvedAttributes] = (
+    auto_ml_problem_type_resolved_attributes: Optional[AutoMLProblemTypeResolvedAttributes] = (
         Unassigned()
     )
 
@@ -1855,14 +1855,14 @@ class InferenceSpecification(Base):
        supported_transform_instance_types: 	 A list of the instance types on which a transformation job can be run or on which an endpoint can be deployed. This parameter is required for unversioned models, and optional for versioned models.
        supported_realtime_inference_instance_types: 	 A list of the instance types that are used to generate inferences in real-time. This parameter is required for unversioned models, and optional for versioned models.
        supported_content_types: 	 The supported MIME types for the input data.
-       supported_response_m_i_m_e_types: 	 The supported MIME types for the output data.
+       supported_response_mime_types: 	 The supported MIME types for the output data.
     """
 
     containers: List[ModelPackageContainerDefinition]
     supported_transform_instance_types: Optional[List[str]] = Unassigned()
     supported_realtime_inference_instance_types: Optional[List[str]] = Unassigned()
     supported_content_types: Optional[List[str]] = Unassigned()
-    supported_response_m_i_m_e_types: Optional[List[str]] = Unassigned()
+    supported_response_mime_types: Optional[List[str]] = Unassigned()
 
 
 class BatchDescribeModelPackageSummary(Base):
@@ -2411,7 +2411,7 @@ class ClarifyInferenceConfig(Base):
        features_attribute: 	 Provides the JMESPath expression to extract the features from a model container input in JSON Lines format. For example, if FeaturesAttribute is the JMESPath expression 'myfeatures', it extracts a list of features [1,2,3] from request data '{"myfeatures":[1,2,3]}'.
        content_template: 	 A template string used to format a JSON record into an acceptable model container input. For example, a ContentTemplate string '{"myfeatures":$features}' will format a list of features [1,2,3] into the record string '{"myfeatures":[1,2,3]}'. Required only when the model container input is in JSON Lines format.
        max_record_count: 	 The maximum number of records in a request that the model container can process when querying the model container for the predictions of a synthetic dataset. A record is a unit of input data that inference can be made on, for example, a single line in CSV data. If MaxRecordCount is 1, the model container expects one record per request. A value of 2 or greater means that the model expects batch requests, which can reduce overhead and speed up the inferencing process. If this parameter is not provided, the explainer will tune the record count per request according to the model container's capacity at runtime.
-       max_payload_in_m_b: 	 The maximum payload size (MB) allowed of a request from the explainer to the model container. Defaults to 6 MB.
+       max_payload_in_mb: 	 The maximum payload size (MB) allowed of a request from the explainer to the model container. Defaults to 6 MB.
        probability_index: 	 A zero-based index used to extract a probability value (score) or list from model container output in CSV format. If this value is not provided, the entire model container output will be treated as a probability value (score) or list.  Example for a single class model: If the model container output consists of a string-formatted prediction label followed by its probability: '1,0.6', set ProbabilityIndex to 1 to select the probability value 0.6.  Example for a multiclass model: If the model container output consists of a string-formatted prediction label followed by its probability: '"[\'cat\',\'dog\',\'fish\']","[0.1,0.6,0.3]"', set ProbabilityIndex to 1 to select the probability values [0.1,0.6,0.3].
        label_index: 	 A zero-based index used to extract a label header or list of label headers from model container output in CSV format.  Example for a multiclass model: If the model container output consists of label headers followed by probabilities: '"[\'cat\',\'dog\',\'fish\']","[0.1,0.6,0.3]"', set LabelIndex to 0 to select the label headers ['cat','dog','fish'].
        probability_attribute: 	 A JMESPath expression used to extract the probability (or score) from the model container output if the model container is in JSON Lines format.  Example: If the model container output of a single request is '{"predicted_label":1,"probability":0.6}', then set ProbabilityAttribute to 'probability'.
@@ -2424,7 +2424,7 @@ class ClarifyInferenceConfig(Base):
     features_attribute: Optional[str] = Unassigned()
     content_template: Optional[str] = Unassigned()
     max_record_count: Optional[int] = Unassigned()
-    max_payload_in_m_b: Optional[int] = Unassigned()
+    max_payload_in_mb: Optional[int] = Unassigned()
     probability_index: Optional[int] = Unassigned()
     label_index: Optional[int] = Unassigned()
     probability_attribute: Optional[str] = Unassigned()
@@ -3387,13 +3387,13 @@ class MonitoringClusterConfig(Base):
        ----------------------
        instance_count: 	 The number of ML compute instances to use in the model monitoring job. For distributed processing jobs, specify a value greater than 1. The default value is 1.
        instance_type: 	 The ML compute instance type for the processing job.
-       volume_size_in_g_b: 	 The size of the ML storage volume, in gigabytes, that you want to provision. You must specify sufficient ML storage for your scenario.
+       volume_size_in_gb: 	 The size of the ML storage volume, in gigabytes, that you want to provision. You must specify sufficient ML storage for your scenario.
        volume_kms_key_id: 	 The Key Management Service (KMS) key that Amazon SageMaker uses to encrypt data on the storage volume attached to the ML compute instance(s) that run the model monitoring job.
     """
 
     instance_count: int
     instance_type: str
-    volume_size_in_g_b: int
+    volume_size_in_gb: int
     volume_kms_key_id: Optional[str] = Unassigned()
 
 
@@ -3654,10 +3654,10 @@ class CustomFileSystemConfig(Base):
 
         Attributes
        ----------------------
-       e_f_s_file_system_config: 	 The settings for a custom Amazon EFS file system.
+       efs_file_system_config: 	 The settings for a custom Amazon EFS file system.
     """
 
-    e_f_s_file_system_config: Optional[EFSFileSystemConfig] = Unassigned()
+    efs_file_system_config: Optional[EFSFileSystemConfig] = Unassigned()
 
 
 class UserSettings(Base):
@@ -3861,12 +3861,12 @@ class ProductionVariantServerlessConfig(Base):
 
         Attributes
        ----------------------
-       memory_size_in_m_b: 	 The memory size of your serverless endpoint. Valid values are in 1 GB increments: 1024 MB, 2048 MB, 3072 MB, 4096 MB, 5120 MB, or 6144 MB.
+       memory_size_in_mb: 	 The memory size of your serverless endpoint. Valid values are in 1 GB increments: 1024 MB, 2048 MB, 3072 MB, 4096 MB, 5120 MB, or 6144 MB.
        max_concurrency: 	 The maximum number of concurrent invocations your serverless endpoint can process.
        provisioned_concurrency: 	 The amount of provisioned concurrency to allocate for the serverless endpoint. Should be less than or equal to MaxConcurrency.  This field is not supported for serverless endpoint recommendations for Inference Recommender jobs. For more information about creating an Inference Recommender job, see CreateInferenceRecommendationsJobs.
     """
 
-    memory_size_in_m_b: int
+    memory_size_in_mb: int
     max_concurrency: int
     provisioned_concurrency: Optional[int] = Unassigned()
 
@@ -3916,10 +3916,10 @@ class ProductionVariant(Base):
        accelerator_type: 	 The size of the Elastic Inference (EI) instance to use for the production variant. EI instances provide on-demand GPU computing for inference. For more information, see Using Elastic Inference in Amazon SageMaker.
        core_dump_config: 	 Specifies configuration for a core dump from the model container when the process crashes.
        serverless_config: 	 The serverless configuration for an endpoint. Specifies a serverless endpoint configuration instead of an instance-based endpoint configuration.
-       volume_size_in_g_b: 	 The size, in GB, of the ML storage volume attached to individual inference instance associated with the production variant. Currently only Amazon EBS gp2 storage volumes are supported.
+       volume_size_in_gb: 	 The size, in GB, of the ML storage volume attached to individual inference instance associated with the production variant. Currently only Amazon EBS gp2 storage volumes are supported.
        model_data_download_timeout_in_seconds: 	 The timeout value, in seconds, to download and extract the model that you want to host from Amazon S3 to the individual inference instance associated with this production variant.
        container_startup_health_check_timeout_in_seconds: 	 The timeout value, in seconds, for your inference container to pass health check by SageMaker Hosting. For more information about health check, see How Your Container Should Respond to Health Check (Ping) Requests.
-       enable_s_s_m_access: 	  You can use this parameter to turn on native Amazon Web Services Systems Manager (SSM) access for a production variant behind an endpoint. By default, SSM access is disabled for all production variants behind an endpoint. You can turn on or turn off SSM access for a production variant behind an existing endpoint by creating a new endpoint configuration and calling UpdateEndpoint.
+       enable_ssm_access: 	  You can use this parameter to turn on native Amazon Web Services Systems Manager (SSM) access for a production variant behind an endpoint. By default, SSM access is disabled for all production variants behind an endpoint. You can turn on or turn off SSM access for a production variant behind an existing endpoint by creating a new endpoint configuration and calling UpdateEndpoint.
        managed_instance_scaling: 	 Settings that control the range in the number of instances that the endpoint provisions as it scales up or down to accommodate traffic.
        routing_config: 	 Settings that control how the endpoint routes incoming traffic to the instances that the endpoint hosts.
     """
@@ -3932,10 +3932,10 @@ class ProductionVariant(Base):
     accelerator_type: Optional[str] = Unassigned()
     core_dump_config: Optional[ProductionVariantCoreDumpConfig] = Unassigned()
     serverless_config: Optional[ProductionVariantServerlessConfig] = Unassigned()
-    volume_size_in_g_b: Optional[int] = Unassigned()
+    volume_size_in_gb: Optional[int] = Unassigned()
     model_data_download_timeout_in_seconds: Optional[int] = Unassigned()
     container_startup_health_check_timeout_in_seconds: Optional[int] = Unassigned()
-    enable_s_s_m_access: Optional[bool] = Unassigned()
+    enable_ssm_access: Optional[bool] = Unassigned()
     managed_instance_scaling: Optional[ProductionVariantManagedInstanceScaling] = Unassigned()
     routing_config: Optional[ProductionVariantRoutingConfig] = Unassigned()
 
@@ -4442,12 +4442,12 @@ class HyperParameterTuningInstanceConfig(Base):
        ----------------------
        instance_type: 	 The instance type used for processing of hyperparameter optimization jobs. Choose from general purpose (no GPUs) instance types: ml.m5.xlarge, ml.m5.2xlarge, and ml.m5.4xlarge or compute optimized (no GPUs) instance types: ml.c5.xlarge and ml.c5.2xlarge. For more information about instance types, see instance type descriptions.
        instance_count: 	 The number of instances of the type specified by InstanceType. Choose an instance count larger than 1 for distributed training algorithms. See Step 2: Launch a SageMaker Distributed Training Job Using the SageMaker Python SDK for more information.
-       volume_size_in_g_b: 	 The volume size in GB of the data to be processed for hyperparameter optimization (optional).
+       volume_size_in_gb: 	 The volume size in GB of the data to be processed for hyperparameter optimization (optional).
     """
 
     instance_type: str
     instance_count: int
-    volume_size_in_g_b: int
+    volume_size_in_gb: int
 
 
 class HyperParameterTuningResourceConfig(Base):
@@ -4459,7 +4459,7 @@ class HyperParameterTuningResourceConfig(Base):
        ----------------------
        instance_type: 	 The instance type used to run hyperparameter optimization tuning jobs. See  descriptions of instance types for more information.
        instance_count: 	 The number of compute instances of type InstanceType to use. For distributed training, select a value greater than 1.
-       volume_size_in_g_b: 	 The volume size in GB for the storage volume to be used in processing hyperparameter optimization jobs (optional). These volumes store model artifacts, incremental states and optionally, scratch space for training algorithms. Do not provide a value for this parameter if a value for InstanceConfigs is also specified. Some instance types have a fixed total local storage size. If you select one of these instances for training, VolumeSizeInGB cannot be greater than this total size. For a list of instance types with local instance storage and their sizes, see instance store volumes.  SageMaker supports only the General Purpose SSD (gp2) storage volume type.
+       volume_size_in_gb: 	 The volume size in GB for the storage volume to be used in processing hyperparameter optimization jobs (optional). These volumes store model artifacts, incremental states and optionally, scratch space for training algorithms. Do not provide a value for this parameter if a value for InstanceConfigs is also specified. Some instance types have a fixed total local storage size. If you select one of these instances for training, VolumeSizeInGB cannot be greater than this total size. For a list of instance types with local instance storage and their sizes, see instance store volumes.  SageMaker supports only the General Purpose SSD (gp2) storage volume type.
        volume_kms_key_id: 	 A key used by Amazon Web Services Key Management Service to encrypt data on the storage volume attached to the compute instances used to run the training job. You can use either of the following formats to specify a key. KMS Key ID:  "1234abcd-12ab-34cd-56ef-1234567890ab"  Amazon Resource Name (ARN) of a KMS key:  "arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab"  Some instances use local storage, which use a hardware module to encrypt storage volumes. If you choose one of these instance types, you cannot request a VolumeKmsKeyId. For a list of instance types that use local storage, see instance store volumes. For more information about Amazon Web Services Key Management Service, see KMS encryption for more information.
        allocation_strategy: 	 The strategy that determines the order of preference for resources specified in InstanceConfigs used in hyperparameter optimization.
        instance_configs: 	 A list containing the configuration(s) for one or more resources for processing hyperparameter jobs. These resources include compute instances and storage volumes to use in model training jobs launched by hyperparameter tuning jobs. The AllocationStrategy controls the order in which multiple configurations provided in InstanceConfigs are used.  If you only want to use a single instance configuration inside the HyperParameterTuningResourceConfig API, do not provide a value for InstanceConfigs. Instead, use InstanceType, VolumeSizeInGB and InstanceCount. If you use InstanceConfigs, do not provide values for InstanceType, VolumeSizeInGB or InstanceCount.
@@ -4467,7 +4467,7 @@ class HyperParameterTuningResourceConfig(Base):
 
     instance_type: Optional[str] = Unassigned()
     instance_count: Optional[int] = Unassigned()
-    volume_size_in_g_b: Optional[int] = Unassigned()
+    volume_size_in_gb: Optional[int] = Unassigned()
     volume_kms_key_id: Optional[str] = Unassigned()
     allocation_strategy: Optional[str] = Unassigned()
     instance_configs: Optional[List[HyperParameterTuningInstanceConfig]] = Unassigned()
@@ -4884,7 +4884,7 @@ class RecommendationJobContainerConfig(Base):
        supported_instance_types: 	 A list of the instance types that are used to generate inferences in real-time.
        supported_endpoint_type: 	 The endpoint type to receive recommendations for. By default this is null, and the results of the inference recommendation job return a combined list of both real-time and serverless benchmarks. By specifying a value for this field, you can receive a longer list of benchmarks for the desired endpoint type.
        data_input_config: 	 Specifies the name and shape of the expected data inputs for your trained model with a JSON dictionary form. This field is used for optimizing your model using SageMaker Neo. For more information, see DataInputConfig.
-       supported_response_m_i_m_e_types: 	 The supported MIME types for the output data.
+       supported_response_mime_types: 	 The supported MIME types for the output data.
     """
 
     domain: Optional[str] = Unassigned()
@@ -4896,7 +4896,7 @@ class RecommendationJobContainerConfig(Base):
     supported_instance_types: Optional[List[str]] = Unassigned()
     supported_endpoint_type: Optional[str] = Unassigned()
     data_input_config: Optional[str] = Unassigned()
-    supported_response_m_i_m_e_types: Optional[List[str]] = Unassigned()
+    supported_response_mime_types: Optional[List[str]] = Unassigned()
 
 
 class EndpointInfo(Base):
@@ -5982,13 +5982,13 @@ class ProcessingClusterConfig(Base):
        ----------------------
        instance_count: 	 The number of ML compute instances to use in the processing job. For distributed processing jobs, specify a value greater than 1. The default value is 1.
        instance_type: 	 The ML compute instance type for the processing job.
-       volume_size_in_g_b: 	 The size of the ML storage volume in gigabytes that you want to provision. You must specify sufficient ML storage for your scenario.  Certain Nitro-based instances include local storage with a fixed total size, dependent on the instance type. When using these instances for processing, Amazon SageMaker mounts the local instance storage instead of Amazon EBS gp2 storage. You can't request a VolumeSizeInGB greater than the total size of the local instance storage. For a list of instance types that support local instance storage, including the total size per instance type, see Instance Store Volumes.
+       volume_size_in_gb: 	 The size of the ML storage volume in gigabytes that you want to provision. You must specify sufficient ML storage for your scenario.  Certain Nitro-based instances include local storage with a fixed total size, dependent on the instance type. When using these instances for processing, Amazon SageMaker mounts the local instance storage instead of Amazon EBS gp2 storage. You can't request a VolumeSizeInGB greater than the total size of the local instance storage. For a list of instance types that support local instance storage, including the total size per instance type, see Instance Store Volumes.
        volume_kms_key_id: 	 The Amazon Web Services Key Management Service (Amazon Web Services KMS) key that Amazon SageMaker uses to encrypt data on the storage volume attached to the ML compute instance(s) that run the processing job.   Certain Nitro-based instances include local storage, dependent on the instance type. Local storage volumes are encrypted using a hardware module on the instance. You can't request a VolumeKmsKeyId when using an instance type with local storage. For a list of instance types that support local instance storage, see Instance Store Volumes. For more information about local instance storage encryption, see SSD Instance Store Volumes.
     """
 
     instance_count: int
     instance_type: str
-    volume_size_in_g_b: int
+    volume_size_in_gb: int
     volume_kms_key_id: Optional[str] = Unassigned()
 
 
@@ -6145,10 +6145,10 @@ class CustomFileSystem(Base):
 
         Attributes
        ----------------------
-       e_f_s_file_system: 	 A custom file system in Amazon EFS.
+       efs_file_system: 	 A custom file system in Amazon EFS.
     """
 
-    e_f_s_file_system: Optional[EFSFileSystem] = Unassigned()
+    efs_file_system: Optional[EFSFileSystem] = Unassigned()
 
 
 class SpaceSettings(Base):
@@ -6233,7 +6233,7 @@ class DebugRuleConfiguration(Base):
        s3_output_path: 	 Path to Amazon S3 storage location for rules.
        rule_evaluator_image: 	 The Amazon Elastic Container (ECR) Image for the managed rule evaluation.
        instance_type: 	 The instance type to deploy a custom rule for debugging a training job.
-       volume_size_in_g_b: 	 The size, in GB, of the ML storage volume attached to the processing instance.
+       volume_size_in_gb: 	 The size, in GB, of the ML storage volume attached to the processing instance.
        rule_parameters: 	 Runtime configuration for rule container.
     """
 
@@ -6242,7 +6242,7 @@ class DebugRuleConfiguration(Base):
     local_path: Optional[str] = Unassigned()
     s3_output_path: Optional[str] = Unassigned()
     instance_type: Optional[str] = Unassigned()
-    volume_size_in_g_b: Optional[int] = Unassigned()
+    volume_size_in_gb: Optional[int] = Unassigned()
     rule_parameters: Optional[Dict[str, str]] = Unassigned()
 
 
@@ -6292,7 +6292,7 @@ class ProfilerRuleConfiguration(Base):
        s3_output_path: 	 Path to Amazon S3 storage location for rules.
        rule_evaluator_image: 	 The Amazon Elastic Container Registry Image for the managed rule evaluation.
        instance_type: 	 The instance type to deploy a custom rule for profiling a training job.
-       volume_size_in_g_b: 	 The size, in GB, of the ML storage volume attached to the processing instance.
+       volume_size_in_gb: 	 The size, in GB, of the ML storage volume attached to the processing instance.
        rule_parameters: 	 Runtime configuration for rule container.
     """
 
@@ -6301,7 +6301,7 @@ class ProfilerRuleConfiguration(Base):
     local_path: Optional[str] = Unassigned()
     s3_output_path: Optional[str] = Unassigned()
     instance_type: Optional[str] = Unassigned()
-    volume_size_in_g_b: Optional[int] = Unassigned()
+    volume_size_in_gb: Optional[int] = Unassigned()
     rule_parameters: Optional[Dict[str, str]] = Unassigned()
 
 
@@ -6691,12 +6691,12 @@ class ResolvedAttributes(Base):
 
         Attributes
        ----------------------
-       auto_m_l_job_objective
+       auto_ml_job_objective
        problem_type: 	 The problem type.
        completion_criteria
     """
 
-    auto_m_l_job_objective: Optional[AutoMLJobObjective] = Unassigned()
+    auto_ml_job_objective: Optional[AutoMLJobObjective] = Unassigned()
     problem_type: Optional[str] = Unassigned()
     completion_criteria: Optional[AutoMLJobCompletionCriteria] = Unassigned()
 
@@ -9551,11 +9551,11 @@ class PipelineExecutionStepMetadata(Base):
        condition: 	 The outcome of the condition evaluation that was run by this step execution.
        callback: 	 The URL of the Amazon SQS queue used by this step execution, the pipeline generated token, and a list of output parameters.
        lambda: 	 The Amazon Resource Name (ARN) of the Lambda function that was run by this step execution and a list of output parameters.
-       e_m_r: 	 The configurations and outcomes of an Amazon EMR step execution.
+       emr: 	 The configurations and outcomes of an Amazon EMR step execution.
        quality_check: 	 The configurations and outcomes of the check step execution. This includes:    The type of the check conducted.   The Amazon S3 URIs of baseline constraints and statistics files to be used for the drift check.   The Amazon S3 URIs of newly calculated baseline constraints and statistics.   The model package group name provided.   The Amazon S3 URI of the violation report if violations detected.   The Amazon Resource Name (ARN) of check processing job initiated by the step execution.   The Boolean flags indicating if the drift check is skipped.   If step property BaselineUsedForDriftCheck is set the same as CalculatedBaseline.
        clarify_check: 	 Container for the metadata for a Clarify check step. The configurations and outcomes of the check step execution. This includes:    The type of the check conducted,   The Amazon S3 URIs of baseline constraints and statistics files to be used for the drift check.   The Amazon S3 URIs of newly calculated baseline constraints and statistics.   The model package group name provided.   The Amazon S3 URI of the violation report if violations detected.   The Amazon Resource Name (ARN) of check processing job initiated by the step execution.   The boolean flags indicating if the drift check is skipped.   If step property BaselineUsedForDriftCheck is set the same as CalculatedBaseline.
        fail: 	 The configurations and outcomes of a Fail step execution.
-       auto_m_l_job: 	 The Amazon Resource Name (ARN) of the AutoML job that was run by this step.
+       auto_ml_job: 	 The Amazon Resource Name (ARN) of the AutoML job that was run by this step.
     """
 
     training_job: Optional[TrainingJobStepMetadata] = Unassigned()
@@ -9567,11 +9567,11 @@ class PipelineExecutionStepMetadata(Base):
     condition: Optional[ConditionStepMetadata] = Unassigned()
     callback: Optional[CallbackStepMetadata] = Unassigned()
     # lambda: Optional[LambdaStepMetadata] = Unassigned()
-    e_m_r: Optional[EMRStepMetadata] = Unassigned()
+    emr: Optional[EMRStepMetadata] = Unassigned()
     quality_check: Optional[QualityCheckStepMetadata] = Unassigned()
     clarify_check: Optional[ClarifyCheckStepMetadata] = Unassigned()
     fail: Optional[FailStepMetadata] = Unassigned()
-    auto_m_l_job: Optional[AutoMLJobStepMetadata] = Unassigned()
+    auto_ml_job: Optional[AutoMLJobStepMetadata] = Unassigned()
 
 
 class SelectiveExecutionResult(Base):
@@ -10079,7 +10079,7 @@ class TransformJob(Base):
        model_name: 	 The name of the model associated with the transform job.
        max_concurrent_transforms: 	 The maximum number of parallel requests that can be sent to each instance in a transform job. If MaxConcurrentTransforms is set to 0 or left unset, SageMaker checks the optional execution-parameters to determine the settings for your chosen algorithm. If the execution-parameters endpoint is not enabled, the default value is 1. For built-in algorithms, you don't need to set a value for MaxConcurrentTransforms.
        model_client_config
-       max_payload_in_m_b: 	 The maximum allowed size of the payload, in MB. A payload is the data portion of a record (without metadata). The value in MaxPayloadInMB must be greater than, or equal to, the size of a single record. To estimate the size of a record in MB, divide the size of your dataset by the number of records. To ensure that the records fit within the maximum payload size, we recommend using a slightly larger value. The default value is 6 MB. For cases where the payload might be arbitrarily large and is transmitted using HTTP chunked encoding, set the value to 0. This feature works only in supported algorithms. Currently, SageMaker built-in algorithms do not support HTTP chunked encoding.
+       max_payload_in_mb: 	 The maximum allowed size of the payload, in MB. A payload is the data portion of a record (without metadata). The value in MaxPayloadInMB must be greater than, or equal to, the size of a single record. To estimate the size of a record in MB, divide the size of your dataset by the number of records. To ensure that the records fit within the maximum payload size, we recommend using a slightly larger value. The default value is 6 MB. For cases where the payload might be arbitrarily large and is transmitted using HTTP chunked encoding, set the value to 0. This feature works only in supported algorithms. Currently, SageMaker built-in algorithms do not support HTTP chunked encoding.
        batch_strategy: 	 Specifies the number of records to include in a mini-batch for an HTTP inference request. A record is a single unit of input data that inference can be made on. For example, a single line in a CSV file is a record.
        environment: 	 The environment variables to set in the Docker container. We support up to 16 key and values entries in the map.
        transform_input
@@ -10090,7 +10090,7 @@ class TransformJob(Base):
        transform_start_time: 	 Indicates when the transform job starts on ML instances. You are billed for the time interval between this time and the value of TransformEndTime.
        transform_end_time: 	 Indicates when the transform job has been completed, or has stopped or failed. You are billed for the time interval between this time and the value of TransformStartTime.
        labeling_job_arn: 	 The Amazon Resource Name (ARN) of the labeling job that created the transform job.
-       auto_m_l_job_arn: 	 The Amazon Resource Name (ARN) of the AutoML job that created the transform job.
+       auto_ml_job_arn: 	 The Amazon Resource Name (ARN) of the AutoML job that created the transform job.
        data_processing
        experiment_config
        tags: 	 A list of tags associated with the transform job.
@@ -10103,7 +10103,7 @@ class TransformJob(Base):
     model_name: Optional[Union[str, object]] = Unassigned()
     max_concurrent_transforms: Optional[int] = Unassigned()
     model_client_config: Optional[ModelClientConfig] = Unassigned()
-    max_payload_in_m_b: Optional[int] = Unassigned()
+    max_payload_in_mb: Optional[int] = Unassigned()
     batch_strategy: Optional[str] = Unassigned()
     environment: Optional[Dict[str, str]] = Unassigned()
     transform_input: Optional[TransformInput] = Unassigned()
@@ -10114,7 +10114,7 @@ class TransformJob(Base):
     transform_start_time: Optional[datetime.datetime] = Unassigned()
     transform_end_time: Optional[datetime.datetime] = Unassigned()
     labeling_job_arn: Optional[str] = Unassigned()
-    auto_m_l_job_arn: Optional[str] = Unassigned()
+    auto_ml_job_arn: Optional[str] = Unassigned()
     data_processing: Optional[DataProcessing] = Unassigned()
     experiment_config: Optional[ExperimentConfig] = Unassigned()
     tags: Optional[List[Tag]] = Unassigned()
@@ -10450,7 +10450,7 @@ class ProcessingJob(Base):
        last_modified_time: 	 The time the processing job was last modified.
        creation_time: 	 The time the processing job was created.
        monitoring_schedule_arn: 	 The ARN of a monitoring schedule for an endpoint associated with this processing job.
-       auto_m_l_job_arn: 	 The Amazon Resource Name (ARN) of the AutoML job associated with this processing job.
+       auto_ml_job_arn: 	 The Amazon Resource Name (ARN) of the AutoML job associated with this processing job.
        training_job_arn: 	 The ARN of the training job associated with this processing job.
        tags: 	 An array of key-value pairs. For more information, see Using Cost Allocation Tags in the Amazon Web Services Billing and Cost Management User Guide.
     """
@@ -10474,7 +10474,7 @@ class ProcessingJob(Base):
     last_modified_time: Optional[datetime.datetime] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
     monitoring_schedule_arn: Optional[str] = Unassigned()
-    auto_m_l_job_arn: Optional[str] = Unassigned()
+    auto_ml_job_arn: Optional[str] = Unassigned()
     training_job_arn: Optional[str] = Unassigned()
     tags: Optional[List[Tag]] = Unassigned()
 
@@ -10700,7 +10700,7 @@ class TrainingJob(Base):
        training_job_arn: 	 The Amazon Resource Name (ARN) of the training job.
        tuning_job_arn: 	 The Amazon Resource Name (ARN) of the associated hyperparameter tuning job if the training job was launched by a hyperparameter tuning job.
        labeling_job_arn: 	 The Amazon Resource Name (ARN) of the labeling job.
-       auto_m_l_job_arn: 	 The Amazon Resource Name (ARN) of the job.
+       auto_ml_job_arn: 	 The Amazon Resource Name (ARN) of the job.
        model_artifacts: 	 Information about the Amazon S3 location that is configured for storing model artifacts.
        training_job_status: 	 The status of the training job. Training job statuses are:    InProgress - The training is in progress.    Completed - The training job has completed.    Failed - The training job has failed. To see the reason for the failure, see the FailureReason field in the response to a DescribeTrainingJobResponse call.    Stopping - The training job is stopping.    Stopped - The training job has stopped.   For more detailed information, see SecondaryStatus.
        secondary_status: 	  Provides detailed information about the state of the training job. For detailed information about the secondary status of the training job, see StatusMessage under SecondaryStatusTransition. SageMaker provides primary statuses and secondary statuses that apply to each of them:  InProgress     Starting - Starting the training job.    Downloading - An optional stage for algorithms that support File training input mode. It indicates that data is being downloaded to the ML storage volumes.    Training - Training is in progress.    Uploading - Training is complete and the model artifacts are being uploaded to the S3 location.    Completed     Completed - The training job has completed.    Failed     Failed - The training job has failed. The reason for the failure is returned in the FailureReason field of DescribeTrainingJobResponse.    Stopped     MaxRuntimeExceeded - The job stopped because it exceeded the maximum allowed runtime.    Stopped - The training job has stopped.    Stopping     Stopping - Stopping the training job.      Valid values for SecondaryStatus are subject to change.   We no longer support the following secondary statuses:    LaunchingMLInstances     PreparingTrainingStack     DownloadingTrainingImage
@@ -10740,7 +10740,7 @@ class TrainingJob(Base):
     training_job_arn: Optional[str] = Unassigned()
     tuning_job_arn: Optional[str] = Unassigned()
     labeling_job_arn: Optional[str] = Unassigned()
-    auto_m_l_job_arn: Optional[str] = Unassigned()
+    auto_ml_job_arn: Optional[str] = Unassigned()
     model_artifacts: Optional[ModelArtifacts] = Unassigned()
     training_job_status: Optional[str] = Unassigned()
     secondary_status: Optional[str] = Unassigned()

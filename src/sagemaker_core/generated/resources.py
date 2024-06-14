@@ -1124,48 +1124,48 @@ class AutoMLJob(Base):
      Class representing resource AutoMLJob
     Attributes
     ---------------------
-    auto_m_l_job_name:Returns the name of the AutoML job.
-    auto_m_l_job_arn:Returns the ARN of the AutoML job.
+    auto_ml_job_name:Returns the name of the AutoML job.
+    auto_ml_job_arn:Returns the ARN of the AutoML job.
     input_data_config:Returns the input data configuration for the AutoML job.
     output_data_config:Returns the job's output data config.
     role_arn:The ARN of the IAM role that has read permission to the input data location and write permission to the output data location in Amazon S3.
     creation_time:Returns the creation time of the AutoML job.
     last_modified_time:Returns the job's last modified time.
-    auto_m_l_job_status:Returns the status of the AutoML job.
-    auto_m_l_job_secondary_status:Returns the secondary status of the AutoML job.
-    auto_m_l_job_objective:Returns the job's objective.
+    auto_ml_job_status:Returns the status of the AutoML job.
+    auto_ml_job_secondary_status:Returns the secondary status of the AutoML job.
+    auto_ml_job_objective:Returns the job's objective.
     problem_type:Returns the job's problem type.
-    auto_m_l_job_config:Returns the configuration for the AutoML job.
+    auto_ml_job_config:Returns the configuration for the AutoML job.
     end_time:Returns the end time of the AutoML job.
     failure_reason:Returns the failure reason for an AutoML job, when applicable.
     partial_failure_reasons:Returns a list of reasons for partial failures within an AutoML job.
     best_candidate:The best model candidate selected by SageMaker Autopilot using both the best objective metric and lowest InferenceLatency for an experiment.
     generate_candidate_definitions_only:Indicates whether the output for an AutoML job generates candidate definitions only.
-    auto_m_l_job_artifacts:Returns information on the job's artifacts found in AutoMLJobArtifacts.
+    auto_ml_job_artifacts:Returns information on the job's artifacts found in AutoMLJobArtifacts.
     resolved_attributes:Contains ProblemType, AutoMLJobObjective, and CompletionCriteria. If you do not provide these values, they are inferred.
     model_deploy_config:Indicates whether the model was deployed automatically to an endpoint and the name of that endpoint if deployed automatically.
     model_deploy_result:Provides information about endpoint for the model deployment.
 
     """
 
-    auto_m_l_job_name: str
-    auto_m_l_job_arn: Optional[str] = Unassigned()
+    auto_ml_job_name: str
+    auto_ml_job_arn: Optional[str] = Unassigned()
     input_data_config: Optional[List[AutoMLChannel]] = Unassigned()
     output_data_config: Optional[AutoMLOutputDataConfig] = Unassigned()
     role_arn: Optional[str] = Unassigned()
-    auto_m_l_job_objective: Optional[AutoMLJobObjective] = Unassigned()
+    auto_ml_job_objective: Optional[AutoMLJobObjective] = Unassigned()
     problem_type: Optional[str] = Unassigned()
-    auto_m_l_job_config: Optional[AutoMLJobConfig] = Unassigned()
+    auto_ml_job_config: Optional[AutoMLJobConfig] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
     end_time: Optional[datetime.datetime] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
     failure_reason: Optional[str] = Unassigned()
     partial_failure_reasons: Optional[List[AutoMLPartialFailureReason]] = Unassigned()
     best_candidate: Optional[AutoMLCandidate] = Unassigned()
-    auto_m_l_job_status: Optional[str] = Unassigned()
-    auto_m_l_job_secondary_status: Optional[str] = Unassigned()
+    auto_ml_job_status: Optional[str] = Unassigned()
+    auto_ml_job_secondary_status: Optional[str] = Unassigned()
     generate_candidate_definitions_only: Optional[bool] = Unassigned()
-    auto_m_l_job_artifacts: Optional[AutoMLJobArtifacts] = Unassigned()
+    auto_ml_job_artifacts: Optional[AutoMLJobArtifacts] = Unassigned()
     resolved_attributes: Optional[ResolvedAttributes] = Unassigned()
     model_deploy_config: Optional[ModelDeployConfig] = Unassigned()
     model_deploy_result: Optional[ModelDeployResult] = Unassigned()
@@ -1173,7 +1173,7 @@ class AutoMLJob(Base):
     def get_name(self) -> str:
         attributes = vars(self)
         for attribute, value in attributes.items():
-            if attribute == "name" or attribute == "auto_m_l_job_name":
+            if attribute == "name" or attribute == "auto_ml_job_name":
                 return value
         raise Exception("Name attribute not found for object")
 
@@ -1211,31 +1211,31 @@ class AutoMLJob(Base):
     @populate_inputs_decorator
     def create(
         cls,
-        auto_m_l_job_name: str,
+        auto_ml_job_name: str,
         input_data_config: List[AutoMLChannel],
         output_data_config: AutoMLOutputDataConfig,
         role_arn: str,
         problem_type: Optional[str] = Unassigned(),
-        auto_m_l_job_objective: Optional[AutoMLJobObjective] = Unassigned(),
-        auto_m_l_job_config: Optional[AutoMLJobConfig] = Unassigned(),
+        auto_ml_job_objective: Optional[AutoMLJobObjective] = Unassigned(),
+        auto_ml_job_config: Optional[AutoMLJobConfig] = Unassigned(),
         generate_candidate_definitions_only: Optional[bool] = Unassigned(),
         tags: Optional[List[Tag]] = Unassigned(),
         model_deploy_config: Optional[ModelDeployConfig] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["AutoMLJob"]:
-        logger.debug("Creating auto_m_l_job resource.")
+        logger.debug("Creating auto_ml_job resource.")
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
 
         operation_input_args = {
-            "AutoMLJobName": auto_m_l_job_name,
+            "AutoMLJobName": auto_ml_job_name,
             "InputDataConfig": input_data_config,
             "OutputDataConfig": output_data_config,
             "ProblemType": problem_type,
-            "AutoMLJobObjective": auto_m_l_job_objective,
-            "AutoMLJobConfig": auto_m_l_job_config,
+            "AutoMLJobObjective": auto_ml_job_objective,
+            "AutoMLJobConfig": auto_ml_job_config,
             "RoleArn": role_arn,
             "GenerateCandidateDefinitionsOnly": generate_candidate_definitions_only,
             "Tags": tags,
@@ -1252,40 +1252,40 @@ class AutoMLJob(Base):
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
-        response = client.create_auto_m_l_job(**operation_input_args)
+        response = client.create_auto_ml_job(**operation_input_args)
         logger.debug(f"Response: {response}")
 
-        return cls.get(auto_m_l_job_name=auto_m_l_job_name, session=session, region=region)
+        return cls.get(auto_ml_job_name=auto_ml_job_name, session=session, region=region)
 
     @classmethod
     def get(
         cls,
-        auto_m_l_job_name: str,
+        auto_ml_job_name: str,
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["AutoMLJob"]:
         operation_input_args = {
-            "AutoMLJobName": auto_m_l_job_name,
+            "AutoMLJobName": auto_ml_job_name,
         }
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
-        response = client.describe_auto_m_l_job(**operation_input_args)
+        response = client.describe_auto_ml_job(**operation_input_args)
 
         pprint(response)
 
         # deserialize the response
         transformed_response = transform(response, "DescribeAutoMLJobResponse")
-        auto_m_l_job = cls(**transformed_response)
-        return auto_m_l_job
+        auto_ml_job = cls(**transformed_response)
+        return auto_ml_job
 
     def refresh(self) -> Optional["AutoMLJob"]:
 
         operation_input_args = {
-            "AutoMLJobName": self.auto_m_l_job_name,
+            "AutoMLJobName": self.auto_ml_job_name,
         }
         client = SageMakerClient().client
-        response = client.describe_auto_m_l_job(**operation_input_args)
+        response = client.describe_auto_ml_job(**operation_input_args)
 
         # deserialize response and update self
         transform(response, "DescribeAutoMLJobResponse", self)
@@ -1294,9 +1294,9 @@ class AutoMLJob(Base):
     def stop(self) -> None:
 
         operation_input_args = {
-            "AutoMLJobName": self.auto_m_l_job_name,
+            "AutoMLJobName": self.auto_ml_job_name,
         }
-        self.client.stop_auto_m_l_job(**operation_input_args)
+        self.client.stop_auto_ml_job(**operation_input_args)
 
     def wait(self, poll: int = 5, timeout: Optional[int] = None) -> Optional["AutoMLJob"]:
         terminal_states = ["Completed", "Failed", "Stopped"]
@@ -1304,7 +1304,7 @@ class AutoMLJob(Base):
 
         while True:
             self.refresh()
-            current_status = self.auto_m_l_job_status
+            current_status = self.auto_ml_job_status
 
             if current_status in terminal_states:
 
@@ -1357,7 +1357,7 @@ class AutoMLJob(Base):
 
         return ResourceIterator(
             client=client,
-            list_method="list_auto_m_l_jobs",
+            list_method="list_auto_ml_jobs",
             summaries_key="AutoMLJobSummaries",
             summary_name="AutoMLJobSummary",
             resource_cls=AutoMLJob,
@@ -1375,7 +1375,7 @@ class AutoMLJob(Base):
     ) -> ResourceIterator[AutoMLCandidate]:
 
         operation_input_args = {
-            "AutoMLJobName": self.auto_m_l_job_name,
+            "AutoMLJobName": self.auto_ml_job_name,
             "StatusEquals": status_equals,
             "CandidateNameEquals": candidate_name_equals,
             "SortOrder": sort_order,
@@ -1394,7 +1394,7 @@ class AutoMLJob(Base):
 
         return ResourceIterator(
             client=client,
-            list_method="list_candidates_for_auto_m_l_job",
+            list_method="list_candidates_for_auto_ml_job",
             summaries_key="Candidates",
             summary_name="AutoMLCandidate",
             resource_cls=AutoMLCandidate,
@@ -1408,23 +1408,23 @@ class AutoMLJobV2(Base):
      Class representing resource AutoMLJobV2
     Attributes
     ---------------------
-    auto_m_l_job_name:Returns the name of the AutoML job V2.
-    auto_m_l_job_arn:Returns the Amazon Resource Name (ARN) of the AutoML job V2.
-    auto_m_l_job_input_data_config:Returns an array of channel objects describing the input data and their location.
+    auto_ml_job_name:Returns the name of the AutoML job V2.
+    auto_ml_job_arn:Returns the Amazon Resource Name (ARN) of the AutoML job V2.
+    auto_ml_job_input_data_config:Returns an array of channel objects describing the input data and their location.
     output_data_config:Returns the job's output data config.
     role_arn:The ARN of the IAM role that has read permission to the input data location and write permission to the output data location in Amazon S3.
     creation_time:Returns the creation time of the AutoML job V2.
     last_modified_time:Returns the job's last modified time.
-    auto_m_l_job_status:Returns the status of the AutoML job V2.
-    auto_m_l_job_secondary_status:Returns the secondary status of the AutoML job V2.
-    auto_m_l_job_objective:Returns the job's objective.
-    auto_m_l_problem_type_config:Returns the configuration settings of the problem type set for the AutoML job V2.
-    auto_m_l_problem_type_config_name:Returns the name of the problem type configuration set for the AutoML job V2.
+    auto_ml_job_status:Returns the status of the AutoML job V2.
+    auto_ml_job_secondary_status:Returns the secondary status of the AutoML job V2.
+    auto_ml_job_objective:Returns the job's objective.
+    auto_ml_problem_type_config:Returns the configuration settings of the problem type set for the AutoML job V2.
+    auto_ml_problem_type_config_name:Returns the name of the problem type configuration set for the AutoML job V2.
     end_time:Returns the end time of the AutoML job V2.
     failure_reason:Returns the reason for the failure of the AutoML job V2, when applicable.
     partial_failure_reasons:Returns a list of reasons for partial failures within an AutoML job V2.
     best_candidate:Information about the candidate produced by an AutoML training job V2, including its status, steps, and other properties.
-    auto_m_l_job_artifacts:
+    auto_ml_job_artifacts:
     resolved_attributes:Returns the resolved attributes used by the AutoML job V2.
     model_deploy_config:Indicates whether the model was deployed automatically to an endpoint and the name of that endpoint if deployed automatically.
     model_deploy_result:Provides information about endpoint for the model deployment.
@@ -1433,23 +1433,23 @@ class AutoMLJobV2(Base):
 
     """
 
-    auto_m_l_job_name: str
-    auto_m_l_job_arn: Optional[str] = Unassigned()
-    auto_m_l_job_input_data_config: Optional[List[AutoMLJobChannel]] = Unassigned()
+    auto_ml_job_name: str
+    auto_ml_job_arn: Optional[str] = Unassigned()
+    auto_ml_job_input_data_config: Optional[List[AutoMLJobChannel]] = Unassigned()
     output_data_config: Optional[AutoMLOutputDataConfig] = Unassigned()
     role_arn: Optional[str] = Unassigned()
-    auto_m_l_job_objective: Optional[AutoMLJobObjective] = Unassigned()
-    auto_m_l_problem_type_config: Optional[AutoMLProblemTypeConfig] = Unassigned()
-    auto_m_l_problem_type_config_name: Optional[str] = Unassigned()
+    auto_ml_job_objective: Optional[AutoMLJobObjective] = Unassigned()
+    auto_ml_problem_type_config: Optional[AutoMLProblemTypeConfig] = Unassigned()
+    auto_ml_problem_type_config_name: Optional[str] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
     end_time: Optional[datetime.datetime] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
     failure_reason: Optional[str] = Unassigned()
     partial_failure_reasons: Optional[List[AutoMLPartialFailureReason]] = Unassigned()
     best_candidate: Optional[AutoMLCandidate] = Unassigned()
-    auto_m_l_job_status: Optional[str] = Unassigned()
-    auto_m_l_job_secondary_status: Optional[str] = Unassigned()
-    auto_m_l_job_artifacts: Optional[AutoMLJobArtifacts] = Unassigned()
+    auto_ml_job_status: Optional[str] = Unassigned()
+    auto_ml_job_secondary_status: Optional[str] = Unassigned()
+    auto_ml_job_artifacts: Optional[AutoMLJobArtifacts] = Unassigned()
     resolved_attributes: Optional[AutoMLResolvedAttributes] = Unassigned()
     model_deploy_config: Optional[ModelDeployConfig] = Unassigned()
     model_deploy_result: Optional[ModelDeployResult] = Unassigned()
@@ -1459,7 +1459,7 @@ class AutoMLJobV2(Base):
     def get_name(self) -> str:
         attributes = vars(self)
         for attribute, value in attributes.items():
-            if attribute == "name" or attribute == "auto_m_l_job_v2_name":
+            if attribute == "name" or attribute == "auto_ml_job_v2_name":
                 return value
         raise Exception("Name attribute not found for object")
 
@@ -1498,33 +1498,33 @@ class AutoMLJobV2(Base):
     @populate_inputs_decorator
     def create(
         cls,
-        auto_m_l_job_name: Union[str, object],
-        auto_m_l_job_input_data_config: List[AutoMLJobChannel],
+        auto_ml_job_name: str,
+        auto_ml_job_input_data_config: List[AutoMLJobChannel],
         output_data_config: AutoMLOutputDataConfig,
-        auto_m_l_problem_type_config: AutoMLProblemTypeConfig,
+        auto_ml_problem_type_config: AutoMLProblemTypeConfig,
         role_arn: str,
         tags: Optional[List[Tag]] = Unassigned(),
         security_config: Optional[AutoMLSecurityConfig] = Unassigned(),
-        auto_m_l_job_objective: Optional[AutoMLJobObjective] = Unassigned(),
+        auto_ml_job_objective: Optional[AutoMLJobObjective] = Unassigned(),
         model_deploy_config: Optional[ModelDeployConfig] = Unassigned(),
         data_split_config: Optional[AutoMLDataSplitConfig] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["AutoMLJobV2"]:
-        logger.debug("Creating auto_m_l_job_v2 resource.")
+        logger.debug("Creating auto_ml_job_v2 resource.")
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
 
         operation_input_args = {
-            "AutoMLJobName": auto_m_l_job_name,
-            "AutoMLJobInputDataConfig": auto_m_l_job_input_data_config,
+            "AutoMLJobName": auto_ml_job_name,
+            "AutoMLJobInputDataConfig": auto_ml_job_input_data_config,
             "OutputDataConfig": output_data_config,
-            "AutoMLProblemTypeConfig": auto_m_l_problem_type_config,
+            "AutoMLProblemTypeConfig": auto_ml_problem_type_config,
             "RoleArn": role_arn,
             "Tags": tags,
             "SecurityConfig": security_config,
-            "AutoMLJobObjective": auto_m_l_job_objective,
+            "AutoMLJobObjective": auto_ml_job_objective,
             "ModelDeployConfig": model_deploy_config,
             "DataSplitConfig": data_split_config,
         }
@@ -1539,40 +1539,40 @@ class AutoMLJobV2(Base):
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
-        response = client.create_auto_m_l_job_v2(**operation_input_args)
+        response = client.create_auto_ml_job_v2(**operation_input_args)
         logger.debug(f"Response: {response}")
 
-        return cls.get(auto_m_l_job_name=auto_m_l_job_name, session=session, region=region)
+        return cls.get(auto_ml_job_name=auto_ml_job_name, session=session, region=region)
 
     @classmethod
     def get(
         cls,
-        auto_m_l_job_name: str,
+        auto_ml_job_name: str,
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["AutoMLJobV2"]:
         operation_input_args = {
-            "AutoMLJobName": auto_m_l_job_name,
+            "AutoMLJobName": auto_ml_job_name,
         }
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
-        response = client.describe_auto_m_l_job_v2(**operation_input_args)
+        response = client.describe_auto_ml_job_v2(**operation_input_args)
 
         pprint(response)
 
         # deserialize the response
         transformed_response = transform(response, "DescribeAutoMLJobV2Response")
-        auto_m_l_job_v2 = cls(**transformed_response)
-        return auto_m_l_job_v2
+        auto_ml_job_v2 = cls(**transformed_response)
+        return auto_ml_job_v2
 
     def refresh(self) -> Optional["AutoMLJobV2"]:
 
         operation_input_args = {
-            "AutoMLJobName": self.auto_m_l_job_name,
+            "AutoMLJobName": self.auto_ml_job_name,
         }
         client = SageMakerClient().client
-        response = client.describe_auto_m_l_job_v2(**operation_input_args)
+        response = client.describe_auto_ml_job_v2(**operation_input_args)
 
         # deserialize response and update self
         transform(response, "DescribeAutoMLJobV2Response", self)
@@ -1584,7 +1584,7 @@ class AutoMLJobV2(Base):
 
         while True:
             self.refresh()
-            current_status = self.auto_m_l_job_status
+            current_status = self.auto_ml_job_status
 
             if current_status in terminal_states:
 
@@ -4073,7 +4073,7 @@ class Endpoint(Base):
         accept: Optional[str] = Unassigned(),
         custom_attributes: Optional[str] = Unassigned(),
         inference_id: Optional[str] = Unassigned(),
-        request_t_t_l_seconds: Optional[int] = Unassigned(),
+        request_ttl_seconds: Optional[int] = Unassigned(),
         invocation_timeout_seconds: Optional[int] = Unassigned(),
     ) -> Optional[object]:
         logger.debug(f"Invoking endpoint resource Async.")
@@ -4086,7 +4086,7 @@ class Endpoint(Base):
             "CustomAttributes": custom_attributes,
             "InferenceId": inference_id,
             "InputLocation": input_location,
-            "RequestTTLSeconds": request_t_t_l_seconds,
+            "RequestTTLSeconds": request_ttl_seconds,
             "InvocationTimeoutSeconds": invocation_timeout_seconds,
         }
         logger.debug(f"Input request: {operation_input_args}")
@@ -6343,7 +6343,7 @@ class ImageVersion(Base):
     version:The version number.
     vendor_guidance:The stability of the image version specified by the maintainer.    NOT_PROVIDED: The maintainers did not provide a status for image version stability.    STABLE: The image version is stable.    TO_BE_ARCHIVED: The image version is set to be archived. Custom image versions that are set to be archived are automatically archived after three months.    ARCHIVED: The image version is archived. Archived image versions are not searchable and are no longer actively supported.
     job_type:Indicates SageMaker job type compatibility.    TRAINING: The image version is compatible with SageMaker training jobs.    INFERENCE: The image version is compatible with SageMaker inference jobs.    NOTEBOOK_KERNEL: The image version is compatible with SageMaker notebook kernels.
-    m_l_framework:The machine learning framework vended in the image version.
+    ml_framework:The machine learning framework vended in the image version.
     programming_lang:The supported programming language and its version.
     processor:Indicates CPU or GPU compatibility.    CPU: The image version is compatible with CPU.    GPU: The image version is compatible with GPU.
     horovod:Indicates Horovod compatibility.
@@ -6362,7 +6362,7 @@ class ImageVersion(Base):
     version: Optional[int] = Unassigned()
     vendor_guidance: Optional[str] = Unassigned()
     job_type: Optional[str] = Unassigned()
-    m_l_framework: Optional[str] = Unassigned()
+    ml_framework: Optional[str] = Unassigned()
     programming_lang: Optional[str] = Unassigned()
     processor: Optional[str] = Unassigned()
     horovod: Optional[bool] = Unassigned()
@@ -6384,7 +6384,7 @@ class ImageVersion(Base):
         aliases: Optional[List[str]] = Unassigned(),
         vendor_guidance: Optional[str] = Unassigned(),
         job_type: Optional[str] = Unassigned(),
-        m_l_framework: Optional[str] = Unassigned(),
+        ml_framework: Optional[str] = Unassigned(),
         programming_lang: Optional[str] = Unassigned(),
         processor: Optional[str] = Unassigned(),
         horovod: Optional[bool] = Unassigned(),
@@ -6404,7 +6404,7 @@ class ImageVersion(Base):
             "Aliases": aliases,
             "VendorGuidance": vendor_guidance,
             "JobType": job_type,
-            "MLFramework": m_l_framework,
+            "MLFramework": ml_framework,
             "ProgrammingLang": programming_lang,
             "Processor": processor,
             "Horovod": horovod,
@@ -6475,7 +6475,7 @@ class ImageVersion(Base):
         aliases_to_delete: Optional[List[str]] = Unassigned(),
         vendor_guidance: Optional[str] = Unassigned(),
         job_type: Optional[str] = Unassigned(),
-        m_l_framework: Optional[str] = Unassigned(),
+        ml_framework: Optional[str] = Unassigned(),
         programming_lang: Optional[str] = Unassigned(),
         processor: Optional[str] = Unassigned(),
         horovod: Optional[bool] = Unassigned(),
@@ -6492,7 +6492,7 @@ class ImageVersion(Base):
             "AliasesToDelete": aliases_to_delete,
             "VendorGuidance": vendor_guidance,
             "JobType": job_type,
-            "MLFramework": m_l_framework,
+            "MLFramework": ml_framework,
             "ProgrammingLang": programming_lang,
             "Processor": processor,
             "Horovod": horovod,
@@ -9898,7 +9898,7 @@ class NotebookInstance(Base):
     creation_time:A timestamp. Use this parameter to return the time when the notebook instance was created
     notebook_instance_lifecycle_config_name:Returns the name of a notebook instance lifecycle configuration. For information about notebook instance lifestyle configurations, see Step 2.1: (Optional) Customize a Notebook Instance
     direct_internet_access:Describes whether SageMaker provides internet access to the notebook instance. If this value is set to Disabled, the notebook instance does not have internet access, and cannot connect to SageMaker training and endpoint services. For more information, see Notebook Instances Are Internet-Enabled by Default.
-    volume_size_in_g_b:The size, in GB, of the ML storage volume attached to the notebook instance.
+    volume_size_in_gb:The size, in GB, of the ML storage volume attached to the notebook instance.
     accelerator_types:A list of the Elastic Inference (EI) instance types associated with this notebook instance. Currently only one EI instance type can be associated with a notebook instance. For more information, see Using Elastic Inference in Amazon SageMaker.
     default_code_repository:The Git repository associated with the notebook instance as its default code repository. This can be either the name of a Git repository stored as a resource in your account, or the URL of a Git repository in Amazon Web Services CodeCommit or in any other Git repository. When you open a notebook instance, it opens in the directory that contains this repository. For more information, see Associating Git Repositories with SageMaker Notebook Instances.
     additional_code_repositories:An array of up to three Git repositories associated with the notebook instance. These can be either the names of Git repositories stored as resources in your account, or the URL of Git repositories in Amazon Web Services CodeCommit or in any other Git repository. These repositories are cloned at the same level as the default repository of your notebook instance. For more information, see Associating Git Repositories with SageMaker Notebook Instances.
@@ -9923,7 +9923,7 @@ class NotebookInstance(Base):
     creation_time: Optional[datetime.datetime] = Unassigned()
     notebook_instance_lifecycle_config_name: Optional[str] = Unassigned()
     direct_internet_access: Optional[str] = Unassigned()
-    volume_size_in_g_b: Optional[int] = Unassigned()
+    volume_size_in_gb: Optional[int] = Unassigned()
     accelerator_types: Optional[List[str]] = Unassigned()
     default_code_repository: Optional[str] = Unassigned()
     additional_code_repositories: Optional[List[str]] = Unassigned()
@@ -9970,7 +9970,7 @@ class NotebookInstance(Base):
         tags: Optional[List[Tag]] = Unassigned(),
         lifecycle_config_name: Optional[str] = Unassigned(),
         direct_internet_access: Optional[str] = Unassigned(),
-        volume_size_in_g_b: Optional[int] = Unassigned(),
+        volume_size_in_gb: Optional[int] = Unassigned(),
         accelerator_types: Optional[List[str]] = Unassigned(),
         default_code_repository: Optional[str] = Unassigned(),
         additional_code_repositories: Optional[List[str]] = Unassigned(),
@@ -9997,7 +9997,7 @@ class NotebookInstance(Base):
             "Tags": tags,
             "LifecycleConfigName": lifecycle_config_name,
             "DirectInternetAccess": direct_internet_access,
-            "VolumeSizeInGB": volume_size_in_g_b,
+            "VolumeSizeInGB": volume_size_in_gb,
             "AcceleratorTypes": accelerator_types,
             "DefaultCodeRepository": default_code_repository,
             "AdditionalCodeRepositories": additional_code_repositories,
@@ -10063,7 +10063,7 @@ class NotebookInstance(Base):
         role_arn: Optional[str] = Unassigned(),
         lifecycle_config_name: Optional[str] = Unassigned(),
         disassociate_lifecycle_config: Optional[bool] = Unassigned(),
-        volume_size_in_g_b: Optional[int] = Unassigned(),
+        volume_size_in_gb: Optional[int] = Unassigned(),
         default_code_repository: Optional[str] = Unassigned(),
         additional_code_repositories: Optional[List[str]] = Unassigned(),
         accelerator_types: Optional[List[str]] = Unassigned(),
@@ -10084,7 +10084,7 @@ class NotebookInstance(Base):
             "RoleArn": role_arn,
             "LifecycleConfigName": lifecycle_config_name,
             "DisassociateLifecycleConfig": disassociate_lifecycle_config,
-            "VolumeSizeInGB": volume_size_in_g_b,
+            "VolumeSizeInGB": volume_size_in_gb,
             "DefaultCodeRepository": default_code_repository,
             "AdditionalCodeRepositories": additional_code_repositories,
             "AcceleratorTypes": accelerator_types,
@@ -10966,7 +10966,7 @@ class ProcessingJob(Base):
     processing_start_time:The time at which the processing job started.
     last_modified_time:The time at which the processing job was last modified.
     monitoring_schedule_arn:The ARN of a monitoring schedule for an endpoint associated with this processing job.
-    auto_m_l_job_arn:The ARN of an AutoML job associated with this processing job.
+    auto_ml_job_arn:The ARN of an AutoML job associated with this processing job.
     training_job_arn:The ARN of a training job associated with this processing job.
 
     """
@@ -10990,7 +10990,7 @@ class ProcessingJob(Base):
     last_modified_time: Optional[datetime.datetime] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
     monitoring_schedule_arn: Optional[str] = Unassigned()
-    auto_m_l_job_arn: Optional[str] = Unassigned()
+    auto_ml_job_arn: Optional[str] = Unassigned()
     training_job_arn: Optional[str] = Unassigned()
 
     def get_name(self) -> str:
@@ -11893,7 +11893,7 @@ class TrainingJob(Base):
     creation_time:A timestamp that indicates when the training job was created.
     tuning_job_arn:The Amazon Resource Name (ARN) of the associated hyperparameter tuning job if the training job was launched by a hyperparameter tuning job.
     labeling_job_arn:The Amazon Resource Name (ARN) of the SageMaker Ground Truth labeling job that created the transform or training job.
-    auto_m_l_job_arn:The Amazon Resource Name (ARN) of an AutoML job.
+    auto_ml_job_arn:The Amazon Resource Name (ARN) of an AutoML job.
     failure_reason:If the training job failed, the reason it failed.
     hyper_parameters:Algorithm-specific parameters.
     role_arn:The Amazon Web Services Identity and Access Management (IAM) role configured for the training job.
@@ -11932,7 +11932,7 @@ class TrainingJob(Base):
     training_job_arn: Optional[str] = Unassigned()
     tuning_job_arn: Optional[str] = Unassigned()
     labeling_job_arn: Optional[str] = Unassigned()
-    auto_m_l_job_arn: Optional[str] = Unassigned()
+    auto_ml_job_arn: Optional[str] = Unassigned()
     model_artifacts: Optional[ModelArtifacts] = Unassigned()
     training_job_status: Optional[str] = Unassigned()
     secondary_status: Optional[str] = Unassigned()
@@ -12242,7 +12242,7 @@ class TransformJob(Base):
     failure_reason:If the transform job failed, FailureReason describes why it failed. A transform job creates a log file, which includes error messages, and stores it as an Amazon S3 object. For more information, see Log Amazon SageMaker Events with Amazon CloudWatch.
     max_concurrent_transforms:The maximum number of parallel requests on each instance node that can be launched in a transform job. The default value is 1.
     model_client_config:The timeout and maximum number of retries for processing a transform job invocation.
-    max_payload_in_m_b:The maximum payload size, in MB, used in the transform job.
+    max_payload_in_mb:The maximum payload size, in MB, used in the transform job.
     batch_strategy:Specifies the number of records to include in a mini-batch for an HTTP inference request. A record  is a single unit of input data that inference can be made on. For example, a single line in a CSV file is a record.  To enable the batch strategy, you must set SplitType to Line, RecordIO, or TFRecord.
     environment:The environment variables to set in the Docker container. We support up to 16 key and values entries in the map.
     transform_output:Identifies the Amazon S3 location where you want Amazon SageMaker to save the results from the transform job.
@@ -12250,7 +12250,7 @@ class TransformJob(Base):
     transform_start_time:Indicates when the transform job starts on ML instances. You are billed for the time interval between this time and the value of TransformEndTime.
     transform_end_time:Indicates when the transform job has been completed, or has stopped or failed. You are billed for the time interval between this time and the value of TransformStartTime.
     labeling_job_arn:The Amazon Resource Name (ARN) of the Amazon SageMaker Ground Truth labeling job that created the transform or training job.
-    auto_m_l_job_arn:The Amazon Resource Name (ARN) of the AutoML transform job.
+    auto_ml_job_arn:The Amazon Resource Name (ARN) of the AutoML transform job.
     data_processing:
     experiment_config:
 
@@ -12263,7 +12263,7 @@ class TransformJob(Base):
     model_name: Optional[str] = Unassigned()
     max_concurrent_transforms: Optional[int] = Unassigned()
     model_client_config: Optional[ModelClientConfig] = Unassigned()
-    max_payload_in_m_b: Optional[int] = Unassigned()
+    max_payload_in_mb: Optional[int] = Unassigned()
     batch_strategy: Optional[str] = Unassigned()
     environment: Optional[Dict[str, str]] = Unassigned()
     transform_input: Optional[TransformInput] = Unassigned()
@@ -12274,7 +12274,7 @@ class TransformJob(Base):
     transform_start_time: Optional[datetime.datetime] = Unassigned()
     transform_end_time: Optional[datetime.datetime] = Unassigned()
     labeling_job_arn: Optional[str] = Unassigned()
-    auto_m_l_job_arn: Optional[str] = Unassigned()
+    auto_ml_job_arn: Optional[str] = Unassigned()
     data_processing: Optional[DataProcessing] = Unassigned()
     experiment_config: Optional[ExperimentConfig] = Unassigned()
 
@@ -12326,7 +12326,7 @@ class TransformJob(Base):
         transform_resources: TransformResources,
         max_concurrent_transforms: Optional[int] = Unassigned(),
         model_client_config: Optional[ModelClientConfig] = Unassigned(),
-        max_payload_in_m_b: Optional[int] = Unassigned(),
+        max_payload_in_mb: Optional[int] = Unassigned(),
         batch_strategy: Optional[str] = Unassigned(),
         environment: Optional[Dict[str, str]] = Unassigned(),
         data_capture_config: Optional[BatchDataCaptureConfig] = Unassigned(),
@@ -12346,7 +12346,7 @@ class TransformJob(Base):
             "ModelName": model_name,
             "MaxConcurrentTransforms": max_concurrent_transforms,
             "ModelClientConfig": model_client_config,
-            "MaxPayloadInMB": max_payload_in_m_b,
+            "MaxPayloadInMB": max_payload_in_mb,
             "BatchStrategy": batch_strategy,
             "Environment": environment,
             "TransformInput": transform_input,
