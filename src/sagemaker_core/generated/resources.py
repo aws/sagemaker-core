@@ -733,7 +733,7 @@ class Algorithm(Base):
         status: Literal["Pending", "InProgress", "Completed", "Failed", "Deleting"],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ) -> Optional["Algorithm"]:
+    ):
         """
         Wait for a Algorithm resource.
 
@@ -1096,7 +1096,7 @@ class App(Base):
         status: Literal["Deleted", "Deleting", "Failed", "InService", "Pending"],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ) -> Optional["App"]:
+    ):
         """
         Wait for a App resource.
 
@@ -2901,7 +2901,7 @@ class Cluster(Base):
         ],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ) -> Optional["Cluster"]:
+    ):
         """
         Wait for a Cluster resource.
 
@@ -5570,7 +5570,7 @@ class Domain(Base):
         ],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ) -> Optional["Domain"]:
+    ):
         """
         Wait for a Domain resource.
 
@@ -6625,7 +6625,7 @@ class Endpoint(Base):
         ],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ) -> Optional["Endpoint"]:
+    ):
         """
         Wait for a Endpoint resource.
 
@@ -7969,7 +7969,7 @@ class FeatureGroup(Base):
         status: Literal["Creating", "Created", "CreateFailed", "Deleting", "DeleteFailed"],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ) -> Optional["FeatureGroup"]:
+    ):
         """
         Wait for a FeatureGroup resource.
 
@@ -8494,7 +8494,7 @@ class FlowDefinition(Base):
         status: Literal["Initializing", "Active", "Failed", "Deleting"],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ) -> Optional["FlowDefinition"]:
+    ):
         """
         Wait for a FlowDefinition resource.
 
@@ -8892,7 +8892,7 @@ class Hub(Base):
         ],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ) -> Optional["Hub"]:
+    ):
         """
         Wait for a Hub resource.
 
@@ -9180,7 +9180,7 @@ class HubContent(Base):
         status: Literal["Available", "Importing", "Deleting", "ImportFailed", "DeleteFailed"],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ) -> Optional["HubContent"]:
+    ):
         """
         Wait for a HubContent resource.
 
@@ -9647,7 +9647,7 @@ class HumanTaskUi(Base):
 
     def wait_for_status(
         self, status: Literal["Active", "Deleting"], poll: int = 5, timeout: Optional[int] = None
-    ) -> Optional["HumanTaskUi"]:
+    ):
         """
         Wait for a HumanTaskUi resource.
 
@@ -10503,7 +10503,7 @@ class Image(Base):
         ],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ) -> Optional["Image"]:
+    ):
         """
         Wait for a Image resource.
 
@@ -10948,7 +10948,7 @@ class ImageVersion(Base):
         status: Literal["CREATING", "CREATED", "CREATE_FAILED", "DELETING", "DELETE_FAILED"],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ) -> Optional["ImageVersion"]:
+    ):
         """
         Wait for a ImageVersion resource.
 
@@ -11255,7 +11255,7 @@ class InferenceComponent(Base):
         status: Literal["InService", "Creating", "Updating", "Failed", "Deleting"],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ) -> Optional["InferenceComponent"]:
+    ):
         """
         Wait for a InferenceComponent resource.
 
@@ -11771,7 +11771,7 @@ class InferenceExperiment(Base):
         ],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ) -> Optional["InferenceExperiment"]:
+    ):
         """
         Wait for a InferenceExperiment resource.
 
@@ -13898,7 +13898,7 @@ class ModelCard(Base):
         status: Literal["Draft", "PendingReview", "Approved", "Archived"],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ) -> Optional["ModelCard"]:
+    ):
         """
         Wait for a ModelCard resource.
 
@@ -15144,7 +15144,7 @@ class ModelPackage(Base):
         status: Literal["Pending", "InProgress", "Completed", "Failed", "Deleting"],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ) -> Optional["ModelPackage"]:
+    ):
         """
         Wait for a ModelPackage resource.
 
@@ -15497,7 +15497,7 @@ class ModelPackageGroup(Base):
         status: Literal["Pending", "InProgress", "Completed", "Failed", "Deleting", "DeleteFailed"],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ) -> Optional["ModelPackageGroup"]:
+    ):
         """
         Wait for a ModelPackageGroup resource.
 
@@ -16353,7 +16353,7 @@ class MonitoringSchedule(Base):
         status: Literal["Pending", "Failed", "Scheduled", "Stopped"],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ) -> Optional["MonitoringSchedule"]:
+    ):
         """
         Wait for a MonitoringSchedule resource.
 
@@ -16880,7 +16880,7 @@ class NotebookInstance(Base):
         ],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ) -> Optional["NotebookInstance"]:
+    ):
         """
         Wait for a NotebookInstance resource.
 
@@ -17637,7 +17637,7 @@ class Pipeline(Base):
 
     def wait_for_status(
         self, status: Literal["Active", "Deleting"], poll: int = 5, timeout: Optional[int] = None
-    ) -> Optional["Pipeline"]:
+    ):
         """
         Wait for a Pipeline resource.
 
@@ -17941,7 +17941,7 @@ class PipelineExecution(Base):
         status: Literal["Executing", "Stopping", "Stopped", "Failed", "Succeeded"],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ) -> Optional["PipelineExecution"]:
+    ):
         """
         Wait for a PipelineExecution resource.
 
@@ -18941,7 +18941,7 @@ class Project(Base):
         ],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ) -> Optional["Project"]:
+    ):
         """
         Wait for a Project resource.
 
@@ -19342,7 +19342,7 @@ class Space(Base):
         ],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ) -> Optional["Space"]:
+    ):
         """
         Wait for a Space resource.
 
@@ -21482,7 +21482,7 @@ class TrialComponent(Base):
         status: Literal["InProgress", "Completed", "Failed", "Stopping", "Stopped"],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ) -> Optional["TrialComponent"]:
+    ):
         """
         Wait for a TrialComponent resource.
 
@@ -21983,7 +21983,7 @@ class UserProfile(Base):
         ],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ) -> Optional["UserProfile"]:
+    ):
         """
         Wait for a UserProfile resource.
 
@@ -22361,7 +22361,7 @@ class Workforce(Base):
         status: Literal["Initializing", "Updating", "Deleting", "Failed", "Active"],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ) -> Optional["Workforce"]:
+    ):
         """
         Wait for a Workforce resource.
 

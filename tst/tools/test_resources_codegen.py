@@ -537,7 +537,7 @@ def wait_for_status(
     status: Literal['InService', 'Creating', 'Updating', 'Failed', 'Deleting'],
     poll: int = 5,
     timeout: Optional[int] = None
-) -> Optional["InferenceComponent"]:
+):
     """
     Wait for a InferenceComponent resource.
     
@@ -585,7 +585,7 @@ def wait_for_status(
     status: Literal['Creating', 'Created', 'Updating', 'Running', 'Starting', 'Stopping', 'Completed', 'Cancelled'],
     poll: int = 5,
     timeout: Optional[int] = None
-) -> Optional["InferenceExperiment"]:
+):
     """
     Wait for a InferenceExperiment resource.
     

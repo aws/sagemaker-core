@@ -346,7 +346,7 @@ def wait_for_status(
     status: Literal{resource_states},
     poll: int = 5,
     timeout: Optional[int] = None
-) -> Optional["{resource_name}"]:
+):
     """
     Wait for a {resource_name} resource.
     
