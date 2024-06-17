@@ -12,6 +12,7 @@ class TestConversion(unittest.TestCase):
         self.assertEqual(pascal_to_snake("PascalCase"), "pascal_case")
         self.assertEqual(pascal_to_snake("AnotherExample"), "another_example")
         self.assertEqual(pascal_to_snake("test"), "test")
+        self.assertEqual(pascal_to_snake("AutoMLJob"), "auto_ml_job")
 
 
 class DummyResourceClass:
@@ -230,7 +231,7 @@ def test_deserializer_for_map_type():
     assert inference_container_definitions_def1[1].environment == {"ENV_VAR_2": "ENV_VAR_2_VALUE"}
     # StructA -> map(string, map)
     assert (
-        instance.auto_m_l_problem_type_config.time_series_forecasting_job_config.transformations.filling
+        instance.auto_ml_problem_type_config.time_series_forecasting_job_config.transformations.filling
         == {"map1_key": {"map2_key": "map2_val"}}
     )
 

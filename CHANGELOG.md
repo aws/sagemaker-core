@@ -1,10 +1,11 @@
 # Changelog
 
-## v0.1.2 (2024-06-14)
-
-
 ## v0.1.1 (2024-06-14)
 
+ * Rollback CHANGELOG.md
+ * Rollback VERSION
+ * prepare release v0.1.2
+ * prepare release v0.1.1
  * Add resource class docstring (#37)
  * Create CHANGELOG.md (#39)
 

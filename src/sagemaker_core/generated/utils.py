@@ -13,9 +13,8 @@
 
 import logging
 import os
+import re
 
-import botocore
-import time
 from boto3.session import Session
 from botocore.config import Config
 from typing import TypeVar, Generic, Type
@@ -98,7 +97,8 @@ def pascal_to_snake(pascal_str):
     Returns:
         str: The converted snake_case string.
     """
-    return "".join(["_" + i.lower() if i.isupper() else i for i in pascal_str]).lstrip("_")
+    snake_case = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", pascal_str)
+    return re.sub("([a-z0-9])([A-Z])", r"\1_\2", snake_case).lower()
 
 
 def is_not_primitive(obj):

@@ -449,6 +449,8 @@ def delete(self) -> None:
         'CompilationJobName': self.compilation_job_name,
     }
     client.delete_compilation_job(**operation_input_args)
+    
+    print(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 '''
         assert self.resource_generator.generate_delete_method("CompilationJob") == expected_output
 
@@ -489,7 +491,7 @@ def wait(
     self,
     poll: int = 5,
     timeout: Optional[int] = None
-) -> Optional["TrainingJob"]:
+):
     """
     Wait for a TrainingJob resource.
     
@@ -514,11 +516,12 @@ def wait(
         current_status = self.training_job_status
 
         if current_status in terminal_states:
+            print(f"\\nFinal Resource Status: {current_status}")
             
             if "failed" in current_status.lower():
                 raise FailedStatusError(resource_type="TrainingJob", status=current_status, reason=self.failure_reason)
 
-            return self
+            return
 
         if timeout is not None and time.time() - start_time >= timeout:
             raise TimeoutExceededError(resouce_type="TrainingJob", status=current_status)
@@ -534,7 +537,7 @@ def wait_for_status(
     status: Literal['InService', 'Creating', 'Updating', 'Failed', 'Deleting'],
     poll: int = 5,
     timeout: Optional[int] = None
-) -> Optional["InferenceComponent"]:
+):
     """
     Wait for a InferenceComponent resource.
     
@@ -559,7 +562,8 @@ def wait_for_status(
         current_status = self.inference_component_status
 
         if status == current_status:
-            return self
+            print(f"\\nFinal Resource Status: {current_status}")
+            return
         
         if "failed" in current_status.lower():
             raise FailedStatusError(resource_type="InferenceComponent", status=current_status, reason=self.failure_reason)
@@ -581,7 +585,7 @@ def wait_for_status(
     status: Literal['Creating', 'Created', 'Updating', 'Running', 'Starting', 'Stopping', 'Completed', 'Cancelled'],
     poll: int = 5,
     timeout: Optional[int] = None
-) -> Optional["InferenceExperiment"]:
+):
     """
     Wait for a InferenceExperiment resource.
     
@@ -606,7 +610,8 @@ def wait_for_status(
         current_status = self.status
 
         if status == current_status:
-            return self
+            print(f"\\nFinal Resource Status: {current_status}")
+            return
 
         if timeout is not None and time.time() - start_time >= timeout:
             raise TimeoutExceededError(resouce_type="InferenceExperiment", status=current_status)
@@ -711,7 +716,7 @@ def invoke_async(self,
     accept: Optional[str] = Unassigned(),
     custom_attributes: Optional[str] = Unassigned(),
     inference_id: Optional[str] = Unassigned(),
-    request_t_t_l_seconds: Optional[int] = Unassigned(),
+    request_ttl_seconds: Optional[int] = Unassigned(),
     invocation_timeout_seconds: Optional[int] = Unassigned(),
 ) -> Optional[object]:
     """
@@ -723,7 +728,7 @@ def invoke_async(self,
         accept:The desired MIME type of the inference response from the model container.
         custom_attributes:Provides additional information about a request for an inference submitted to a model hosted at an Amazon SageMaker endpoint. The information is an opaque value that is forwarded verbatim. You could use this value, for example, to provide an ID that you can use to track a request or to provide other metadata that a service endpoint was programmed to process. The value must consist of no more than 1024 visible US-ASCII characters as specified in Section 3.3.6. Field Value Components of the Hypertext Transfer Protocol (HTTP/1.1).  The code in your model is responsible for setting or updating any custom attributes in the response. If your code does not set this value in the response, an empty value is returned. For example, if a custom attribute represents the trace ID, your model can prepend the custom attribute with Trace ID: in your post-processing function.  This feature is currently supported in the Amazon Web Services SDKs but not in the Amazon SageMaker Python SDK. 
         inference_id:The identifier for the inference request. Amazon SageMaker will generate an identifier for you if none is specified. 
-        request_t_t_l_seconds:Maximum age in seconds a request can be in the queue before it is marked as expired. The default is 6 hours, or 21,600 seconds.
+        request_ttl_seconds:Maximum age in seconds a request can be in the queue before it is marked as expired. The default is 6 hours, or 21,600 seconds.
         invocation_timeout_seconds:Maximum amount of time in seconds a request can be processed before it is marked as expired. The default is 15 minutes, or 900 seconds.
     
     
@@ -756,7 +761,7 @@ def invoke_async(self,
         'CustomAttributes': custom_attributes,
         'InferenceId': inference_id,
         'InputLocation': input_location,
-        'RequestTTLSeconds': request_t_t_l_seconds,
+        'RequestTTLSeconds': request_ttl_seconds,
         'InvocationTimeoutSeconds': invocation_timeout_seconds,
     }
     logger.debug(f"Input request: {operation_input_args}")
