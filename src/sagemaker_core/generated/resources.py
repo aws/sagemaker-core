@@ -416,6 +416,8 @@ class Action(Base):
         }
         client.delete_action(**operation_input_args)
 
+        print(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+
     @classmethod
     def get_all(
         cls,
@@ -726,12 +728,14 @@ class Algorithm(Base):
         }
         client.delete_algorithm(**operation_input_args)
 
+        print(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+
     def wait_for_status(
         self,
         status: Literal["Pending", "InProgress", "Completed", "Failed", "Deleting"],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ) -> Optional["Algorithm"]:
+    ):
         """
         Wait for a Algorithm resource.
 
@@ -756,7 +760,8 @@ class Algorithm(Base):
             current_status = self.algorithm_status
 
             if status == current_status:
-                return self
+                print(f"\nFinal Resource Status: {current_status}")
+                return
 
             if "failed" in current_status.lower():
                 raise FailedStatusError(
@@ -1086,12 +1091,14 @@ class App(Base):
         }
         client.delete_app(**operation_input_args)
 
+        print(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+
     def wait_for_status(
         self,
         status: Literal["Deleted", "Deleting", "Failed", "InService", "Pending"],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ) -> Optional["App"]:
+    ):
         """
         Wait for a App resource.
 
@@ -1116,7 +1123,8 @@ class App(Base):
             current_status = self.status
 
             if status == current_status:
-                return self
+                print(f"\nFinal Resource Status: {current_status}")
+                return
 
             if "failed" in current_status.lower():
                 raise FailedStatusError(
@@ -1442,6 +1450,8 @@ class AppImageConfig(Base):
             "AppImageConfigName": self.app_image_config_name,
         }
         client.delete_app_image_config(**operation_input_args)
+
+        print(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
     @classmethod
     def get_all(
@@ -1785,6 +1795,8 @@ class Artifact(Base):
             "Source": self.source,
         }
         client.delete_artifact(**operation_input_args)
+
+        print(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
     @classmethod
     def get_all(
@@ -2139,7 +2151,7 @@ class AutoMLJob(Base):
         }
         client.stop_auto_ml_job(**operation_input_args)
 
-    def wait(self, poll: int = 5, timeout: Optional[int] = None) -> Optional["AutoMLJob"]:
+    def wait(self, poll: int = 5, timeout: Optional[int] = None):
         """
         Wait for a AutoMLJob resource.
 
@@ -2164,13 +2176,14 @@ class AutoMLJob(Base):
             current_status = self.auto_ml_job_status
 
             if current_status in terminal_states:
+                print(f"\nFinal Resource Status: {current_status}")
 
                 if "failed" in current_status.lower():
                     raise FailedStatusError(
                         resource_type="AutoMLJob", status=current_status, reason=self.failure_reason
                     )
 
-                return self
+                return
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="AutoMLJob", status=current_status)
@@ -2564,7 +2577,7 @@ class AutoMLJobV2(Base):
         transform(response, "DescribeAutoMLJobV2Response", self)
         return self
 
-    def wait(self, poll: int = 5, timeout: Optional[int] = None) -> Optional["AutoMLJobV2"]:
+    def wait(self, poll: int = 5, timeout: Optional[int] = None):
         """
         Wait for a AutoMLJobV2 resource.
 
@@ -2589,6 +2602,7 @@ class AutoMLJobV2(Base):
             current_status = self.auto_ml_job_status
 
             if current_status in terminal_states:
+                print(f"\nFinal Resource Status: {current_status}")
 
                 if "failed" in current_status.lower():
                     raise FailedStatusError(
@@ -2597,7 +2611,7 @@ class AutoMLJobV2(Base):
                         reason=self.failure_reason,
                     )
 
-                return self
+                return
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="AutoMLJobV2", status=current_status)
@@ -2874,6 +2888,8 @@ class Cluster(Base):
         }
         client.delete_cluster(**operation_input_args)
 
+        print(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+
     def wait_for_status(
         self,
         status: Literal[
@@ -2887,7 +2903,7 @@ class Cluster(Base):
         ],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ) -> Optional["Cluster"]:
+    ):
         """
         Wait for a Cluster resource.
 
@@ -2912,7 +2928,8 @@ class Cluster(Base):
             current_status = self.cluster_status
 
             if status == current_status:
-                return self
+                print(f"\nFinal Resource Status: {current_status}")
+                return
 
             if "failed" in current_status.lower():
                 raise FailedStatusError(
@@ -3341,6 +3358,8 @@ class CodeRepository(Base):
         }
         client.delete_code_repository(**operation_input_args)
 
+        print(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+
     def get_all(
         self,
         creation_time_after: Optional[datetime.datetime] = Unassigned(),
@@ -3664,6 +3683,8 @@ class CompilationJob(Base):
         }
         client.delete_compilation_job(**operation_input_args)
 
+        print(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+
     def stop(self) -> None:
         """
         Stop a CompilationJob resource
@@ -3690,7 +3711,7 @@ class CompilationJob(Base):
         }
         client.stop_compilation_job(**operation_input_args)
 
-    def wait(self, poll: int = 5, timeout: Optional[int] = None) -> Optional["CompilationJob"]:
+    def wait(self, poll: int = 5, timeout: Optional[int] = None):
         """
         Wait for a CompilationJob resource.
 
@@ -3715,6 +3736,7 @@ class CompilationJob(Base):
             current_status = self.compilation_job_status
 
             if current_status in terminal_states:
+                print(f"\nFinal Resource Status: {current_status}")
 
                 if "failed" in current_status.lower():
                     raise FailedStatusError(
@@ -3723,7 +3745,7 @@ class CompilationJob(Base):
                         reason=self.failure_reason,
                     )
 
-                return self
+                return
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="CompilationJob", status=current_status)
@@ -4075,6 +4097,8 @@ class Context(Base):
         }
         client.delete_context(**operation_input_args)
 
+        print(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+
     @classmethod
     def get_all(
         cls,
@@ -4414,6 +4438,8 @@ class DataQualityJobDefinition(Base):
             "JobDefinitionName": self.job_definition_name,
         }
         client.delete_data_quality_job_definition(**operation_input_args)
+
+        print(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
     @classmethod
     def get_all(
@@ -4961,6 +4987,8 @@ class DeviceFleet(Base):
             "DeviceFleetName": self.device_fleet_name,
         }
         client.delete_device_fleet(**operation_input_args)
+
+        print(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
     @classmethod
     def get_all(
@@ -5529,6 +5557,8 @@ class Domain(Base):
         }
         client.delete_domain(**operation_input_args)
 
+        print(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+
     def wait_for_status(
         self,
         status: Literal[
@@ -5542,7 +5572,7 @@ class Domain(Base):
         ],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ) -> Optional["Domain"]:
+    ):
         """
         Wait for a Domain resource.
 
@@ -5567,7 +5597,8 @@ class Domain(Base):
             current_status = self.status
 
             if status == current_status:
-                return self
+                print(f"\nFinal Resource Status: {current_status}")
+                return
 
             if "failed" in current_status.lower():
                 raise FailedStatusError(
@@ -5831,6 +5862,8 @@ class EdgeDeploymentPlan(Base):
             "EdgeDeploymentPlanName": self.edge_deployment_plan_name,
         }
         client.delete_edge_deployment_plan(**operation_input_args)
+
+        print(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
     @classmethod
     def get_all(
@@ -6160,7 +6193,7 @@ class EdgePackagingJob(Base):
         }
         client.stop_edge_packaging_job(**operation_input_args)
 
-    def wait(self, poll: int = 5, timeout: Optional[int] = None) -> Optional["EdgePackagingJob"]:
+    def wait(self, poll: int = 5, timeout: Optional[int] = None):
         """
         Wait for a EdgePackagingJob resource.
 
@@ -6185,6 +6218,7 @@ class EdgePackagingJob(Base):
             current_status = self.edge_packaging_job_status
 
             if current_status in terminal_states:
+                print(f"\nFinal Resource Status: {current_status}")
 
                 if "failed" in current_status.lower():
                     raise FailedStatusError(
@@ -6193,7 +6227,7 @@ class EdgePackagingJob(Base):
                         reason=self.edge_packaging_job_status_message,
                     )
 
-                return self
+                return
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="EdgePackagingJob", status=current_status)
@@ -6576,6 +6610,8 @@ class Endpoint(Base):
         }
         client.delete_endpoint(**operation_input_args)
 
+        print(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+
     def wait_for_status(
         self,
         status: Literal[
@@ -6591,7 +6627,7 @@ class Endpoint(Base):
         ],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ) -> Optional["Endpoint"]:
+    ):
         """
         Wait for a Endpoint resource.
 
@@ -6616,7 +6652,8 @@ class Endpoint(Base):
             current_status = self.endpoint_status
 
             if status == current_status:
-                return self
+                print(f"\nFinal Resource Status: {current_status}")
+                return
 
             if "failed" in current_status.lower():
                 raise FailedStatusError(
@@ -7213,6 +7250,8 @@ class EndpointConfig(Base):
         }
         client.delete_endpoint_config(**operation_input_args)
 
+        print(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+
     @classmethod
     def get_all(
         cls,
@@ -7534,6 +7573,8 @@ class Experiment(Base):
             "ExperimentName": self.experiment_name,
         }
         client.delete_experiment(**operation_input_args)
+
+        print(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
     @classmethod
     def get_all(
@@ -7923,12 +7964,14 @@ class FeatureGroup(Base):
         }
         client.delete_feature_group(**operation_input_args)
 
+        print(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+
     def wait_for_status(
         self,
         status: Literal["Creating", "Created", "CreateFailed", "Deleting", "DeleteFailed"],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ) -> Optional["FeatureGroup"]:
+    ):
         """
         Wait for a FeatureGroup resource.
 
@@ -7953,7 +7996,8 @@ class FeatureGroup(Base):
             current_status = self.feature_group_status
 
             if status == current_status:
-                return self
+                print(f"\nFinal Resource Status: {current_status}")
+                return
 
             if "failed" in current_status.lower():
                 raise FailedStatusError(
@@ -8445,12 +8489,14 @@ class FlowDefinition(Base):
         }
         client.delete_flow_definition(**operation_input_args)
 
+        print(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+
     def wait_for_status(
         self,
         status: Literal["Initializing", "Active", "Failed", "Deleting"],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ) -> Optional["FlowDefinition"]:
+    ):
         """
         Wait for a FlowDefinition resource.
 
@@ -8475,7 +8521,8 @@ class FlowDefinition(Base):
             current_status = self.flow_definition_status
 
             if status == current_status:
-                return self
+                print(f"\nFinal Resource Status: {current_status}")
+                return
 
             if "failed" in current_status.lower():
                 raise FailedStatusError(
@@ -8832,6 +8879,8 @@ class Hub(Base):
         }
         client.delete_hub(**operation_input_args)
 
+        print(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+
     def wait_for_status(
         self,
         status: Literal[
@@ -8845,7 +8894,7 @@ class Hub(Base):
         ],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ) -> Optional["Hub"]:
+    ):
         """
         Wait for a Hub resource.
 
@@ -8870,7 +8919,8 @@ class Hub(Base):
             current_status = self.hub_status
 
             if status == current_status:
-                return self
+                print(f"\nFinal Resource Status: {current_status}")
+                return
 
             if "failed" in current_status.lower():
                 raise FailedStatusError(
@@ -9125,12 +9175,14 @@ class HubContent(Base):
         }
         client.delete_hub_content(**operation_input_args)
 
+        print(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+
     def wait_for_status(
         self,
         status: Literal["Available", "Importing", "Deleting", "ImportFailed", "DeleteFailed"],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ) -> Optional["HubContent"]:
+    ):
         """
         Wait for a HubContent resource.
 
@@ -9155,7 +9207,8 @@ class HubContent(Base):
             current_status = self.hub_content_status
 
             if status == current_status:
-                return self
+                print(f"\nFinal Resource Status: {current_status}")
+                return
 
             if "failed" in current_status.lower():
                 raise FailedStatusError(
@@ -9592,9 +9645,11 @@ class HumanTaskUi(Base):
         }
         client.delete_human_task_ui(**operation_input_args)
 
+        print(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+
     def wait_for_status(
         self, status: Literal["Active", "Deleting"], poll: int = 5, timeout: Optional[int] = None
-    ) -> Optional["HumanTaskUi"]:
+    ):
         """
         Wait for a HumanTaskUi resource.
 
@@ -9619,7 +9674,8 @@ class HumanTaskUi(Base):
             current_status = self.human_task_ui_status
 
             if status == current_status:
-                return self
+                print(f"\nFinal Resource Status: {current_status}")
+                return
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="HumanTaskUi", status=current_status)
@@ -9958,6 +10014,8 @@ class HyperParameterTuningJob(Base):
         }
         client.delete_hyper_parameter_tuning_job(**operation_input_args)
 
+        print(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+
     def stop(self) -> None:
         """
         Stop a HyperParameterTuningJob resource
@@ -9984,9 +10042,7 @@ class HyperParameterTuningJob(Base):
         }
         client.stop_hyper_parameter_tuning_job(**operation_input_args)
 
-    def wait(
-        self, poll: int = 5, timeout: Optional[int] = None
-    ) -> Optional["HyperParameterTuningJob"]:
+    def wait(self, poll: int = 5, timeout: Optional[int] = None):
         """
         Wait for a HyperParameterTuningJob resource.
 
@@ -10011,6 +10067,7 @@ class HyperParameterTuningJob(Base):
             current_status = self.hyper_parameter_tuning_job_status
 
             if current_status in terminal_states:
+                print(f"\nFinal Resource Status: {current_status}")
 
                 if "failed" in current_status.lower():
                     raise FailedStatusError(
@@ -10019,7 +10076,7 @@ class HyperParameterTuningJob(Base):
                         reason=self.failure_reason,
                     )
 
-                return self
+                return
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(
@@ -10433,6 +10490,8 @@ class Image(Base):
         }
         client.delete_image(**operation_input_args)
 
+        print(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+
     def wait_for_status(
         self,
         status: Literal[
@@ -10446,7 +10505,7 @@ class Image(Base):
         ],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ) -> Optional["Image"]:
+    ):
         """
         Wait for a Image resource.
 
@@ -10471,7 +10530,8 @@ class Image(Base):
             current_status = self.image_status
 
             if status == current_status:
-                return self
+                print(f"\nFinal Resource Status: {current_status}")
+                return
 
             if "failed" in current_status.lower():
                 raise FailedStatusError(
@@ -10883,12 +10943,14 @@ class ImageVersion(Base):
         }
         client.delete_image_version(**operation_input_args)
 
+        print(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+
     def wait_for_status(
         self,
         status: Literal["CREATING", "CREATED", "CREATE_FAILED", "DELETING", "DELETE_FAILED"],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ) -> Optional["ImageVersion"]:
+    ):
         """
         Wait for a ImageVersion resource.
 
@@ -10913,7 +10975,8 @@ class ImageVersion(Base):
             current_status = self.image_version_status
 
             if status == current_status:
-                return self
+                print(f"\nFinal Resource Status: {current_status}")
+                return
 
             if "failed" in current_status.lower():
                 raise FailedStatusError(
@@ -11187,12 +11250,14 @@ class InferenceComponent(Base):
         }
         client.delete_inference_component(**operation_input_args)
 
+        print(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+
     def wait_for_status(
         self,
         status: Literal["InService", "Creating", "Updating", "Failed", "Deleting"],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ) -> Optional["InferenceComponent"]:
+    ):
         """
         Wait for a InferenceComponent resource.
 
@@ -11217,7 +11282,8 @@ class InferenceComponent(Base):
             current_status = self.inference_component_status
 
             if status == current_status:
-                return self
+                print(f"\nFinal Resource Status: {current_status}")
+                return
 
             if "failed" in current_status.lower():
                 raise FailedStatusError(
@@ -11660,6 +11726,8 @@ class InferenceExperiment(Base):
         }
         client.delete_inference_experiment(**operation_input_args)
 
+        print(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+
     def stop(self) -> None:
         """
         Stop a InferenceExperiment resource
@@ -11705,7 +11773,7 @@ class InferenceExperiment(Base):
         ],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ) -> Optional["InferenceExperiment"]:
+    ):
         """
         Wait for a InferenceExperiment resource.
 
@@ -11730,7 +11798,8 @@ class InferenceExperiment(Base):
             current_status = self.status
 
             if status == current_status:
-                return self
+                print(f"\nFinal Resource Status: {current_status}")
+                return
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(
@@ -12071,9 +12140,7 @@ class InferenceRecommendationsJob(Base):
         }
         client.stop_inference_recommendations_job(**operation_input_args)
 
-    def wait(
-        self, poll: int = 5, timeout: Optional[int] = None
-    ) -> Optional["InferenceRecommendationsJob"]:
+    def wait(self, poll: int = 5, timeout: Optional[int] = None):
         """
         Wait for a InferenceRecommendationsJob resource.
 
@@ -12098,6 +12165,7 @@ class InferenceRecommendationsJob(Base):
             current_status = self.status
 
             if current_status in terminal_states:
+                print(f"\nFinal Resource Status: {current_status}")
 
                 if "failed" in current_status.lower():
                     raise FailedStatusError(
@@ -12106,7 +12174,7 @@ class InferenceRecommendationsJob(Base):
                         reason=self.failure_reason,
                     )
 
-                return self
+                return
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(
@@ -12520,7 +12588,7 @@ class LabelingJob(Base):
         }
         client.stop_labeling_job(**operation_input_args)
 
-    def wait(self, poll: int = 5, timeout: Optional[int] = None) -> Optional["LabelingJob"]:
+    def wait(self, poll: int = 5, timeout: Optional[int] = None):
         """
         Wait for a LabelingJob resource.
 
@@ -12545,6 +12613,7 @@ class LabelingJob(Base):
             current_status = self.labeling_job_status
 
             if current_status in terminal_states:
+                print(f"\nFinal Resource Status: {current_status}")
 
                 if "failed" in current_status.lower():
                     raise FailedStatusError(
@@ -12553,7 +12622,7 @@ class LabelingJob(Base):
                         reason=self.failure_reason,
                     )
 
-                return self
+                return
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="LabelingJob", status=current_status)
@@ -13085,6 +13154,8 @@ class Model(Base):
         }
         client.delete_model(**operation_input_args)
 
+        print(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+
     @classmethod
     def get_all(
         cls,
@@ -13463,6 +13534,8 @@ class ModelBiasJobDefinition(Base):
         }
         client.delete_model_bias_job_definition(**operation_input_args)
 
+        print(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+
     @classmethod
     def get_all(
         cls,
@@ -13820,12 +13893,14 @@ class ModelCard(Base):
         }
         client.delete_model_card(**operation_input_args)
 
+        print(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+
     def wait_for_status(
         self,
         status: Literal["Draft", "PendingReview", "Approved", "Archived"],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ) -> Optional["ModelCard"]:
+    ):
         """
         Wait for a ModelCard resource.
 
@@ -13850,7 +13925,8 @@ class ModelCard(Base):
             current_status = self.model_card_status
 
             if status == current_status:
-                return self
+                print(f"\nFinal Resource Status: {current_status}")
+                return
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="ModelCard", status=current_status)
@@ -14186,7 +14262,7 @@ class ModelCardExportJob(Base):
         transform(response, "DescribeModelCardExportJobResponse", self)
         return self
 
-    def wait(self, poll: int = 5, timeout: Optional[int] = None) -> Optional["ModelCardExportJob"]:
+    def wait(self, poll: int = 5, timeout: Optional[int] = None):
         """
         Wait for a ModelCardExportJob resource.
 
@@ -14211,6 +14287,7 @@ class ModelCardExportJob(Base):
             current_status = self.status
 
             if current_status in terminal_states:
+                print(f"\nFinal Resource Status: {current_status}")
 
                 if "failed" in current_status.lower():
                     raise FailedStatusError(
@@ -14219,7 +14296,7 @@ class ModelCardExportJob(Base):
                         reason=self.failure_reason,
                     )
 
-                return self
+                return
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="ModelCardExportJob", status=current_status)
@@ -14576,6 +14653,8 @@ class ModelExplainabilityJobDefinition(Base):
             "JobDefinitionName": self.job_definition_name,
         }
         client.delete_model_explainability_job_definition(**operation_input_args)
+
+        print(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
     @classmethod
     def get_all(
@@ -15060,12 +15139,14 @@ class ModelPackage(Base):
         }
         client.delete_model_package(**operation_input_args)
 
+        print(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+
     def wait_for_status(
         self,
         status: Literal["Pending", "InProgress", "Completed", "Failed", "Deleting"],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ) -> Optional["ModelPackage"]:
+    ):
         """
         Wait for a ModelPackage resource.
 
@@ -15090,7 +15171,8 @@ class ModelPackage(Base):
             current_status = self.model_package_status
 
             if status == current_status:
-                return self
+                print(f"\nFinal Resource Status: {current_status}")
+                return
 
             if "failed" in current_status.lower():
                 raise FailedStatusError(
@@ -15410,12 +15492,14 @@ class ModelPackageGroup(Base):
         }
         client.delete_model_package_group(**operation_input_args)
 
+        print(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+
     def wait_for_status(
         self,
         status: Literal["Pending", "InProgress", "Completed", "Failed", "Deleting", "DeleteFailed"],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ) -> Optional["ModelPackageGroup"]:
+    ):
         """
         Wait for a ModelPackageGroup resource.
 
@@ -15440,7 +15524,8 @@ class ModelPackageGroup(Base):
             current_status = self.model_package_group_status
 
             if status == current_status:
-                return self
+                print(f"\nFinal Resource Status: {current_status}")
+                return
 
             if "failed" in current_status.lower():
                 raise FailedStatusError(
@@ -15869,6 +15954,8 @@ class ModelQualityJobDefinition(Base):
         }
         client.delete_model_quality_job_definition(**operation_input_args)
 
+        print(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+
     @classmethod
     def get_all(
         cls,
@@ -16235,6 +16322,8 @@ class MonitoringSchedule(Base):
         }
         client.delete_monitoring_schedule(**operation_input_args)
 
+        print(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+
     def stop(self) -> None:
         """
         Stop a MonitoringSchedule resource
@@ -16266,7 +16355,7 @@ class MonitoringSchedule(Base):
         status: Literal["Pending", "Failed", "Scheduled", "Stopped"],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ) -> Optional["MonitoringSchedule"]:
+    ):
         """
         Wait for a MonitoringSchedule resource.
 
@@ -16291,7 +16380,8 @@ class MonitoringSchedule(Base):
             current_status = self.monitoring_schedule_status
 
             if status == current_status:
-                return self
+                print(f"\nFinal Resource Status: {current_status}")
+                return
 
             if "failed" in current_status.lower():
                 raise FailedStatusError(
@@ -16758,6 +16848,8 @@ class NotebookInstance(Base):
         }
         client.delete_notebook_instance(**operation_input_args)
 
+        print(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+
     def stop(self) -> None:
         """
         Stop a NotebookInstance resource
@@ -16790,7 +16882,7 @@ class NotebookInstance(Base):
         ],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ) -> Optional["NotebookInstance"]:
+    ):
         """
         Wait for a NotebookInstance resource.
 
@@ -16815,7 +16907,8 @@ class NotebookInstance(Base):
             current_status = self.notebook_instance_status
 
             if status == current_status:
-                return self
+                print(f"\nFinal Resource Status: {current_status}")
+                return
 
             if "failed" in current_status.lower():
                 raise FailedStatusError(
@@ -17160,6 +17253,8 @@ class NotebookInstanceLifecycleConfig(Base):
             "NotebookInstanceLifecycleConfigName": self.notebook_instance_lifecycle_config_name,
         }
         client.delete_notebook_instance_lifecycle_config(**operation_input_args)
+
+        print(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
     @classmethod
     def get_all(
@@ -17540,9 +17635,11 @@ class Pipeline(Base):
         }
         client.delete_pipeline(**operation_input_args)
 
+        print(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+
     def wait_for_status(
         self, status: Literal["Active", "Deleting"], poll: int = 5, timeout: Optional[int] = None
-    ) -> Optional["Pipeline"]:
+    ):
         """
         Wait for a Pipeline resource.
 
@@ -17567,7 +17664,8 @@ class Pipeline(Base):
             current_status = self.pipeline_status
 
             if status == current_status:
-                return self
+                print(f"\nFinal Resource Status: {current_status}")
+                return
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="Pipeline", status=current_status)
@@ -17845,7 +17943,7 @@ class PipelineExecution(Base):
         status: Literal["Executing", "Stopping", "Stopped", "Failed", "Succeeded"],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ) -> Optional["PipelineExecution"]:
+    ):
         """
         Wait for a PipelineExecution resource.
 
@@ -17870,7 +17968,8 @@ class PipelineExecution(Base):
             current_status = self.pipeline_execution_status
 
             if status == current_status:
-                return self
+                print(f"\nFinal Resource Status: {current_status}")
+                return
 
             if "failed" in current_status.lower():
                 raise FailedStatusError(
@@ -18444,7 +18543,7 @@ class ProcessingJob(Base):
         }
         client.stop_processing_job(**operation_input_args)
 
-    def wait(self, poll: int = 5, timeout: Optional[int] = None) -> Optional["ProcessingJob"]:
+    def wait(self, poll: int = 5, timeout: Optional[int] = None):
         """
         Wait for a ProcessingJob resource.
 
@@ -18469,6 +18568,7 @@ class ProcessingJob(Base):
             current_status = self.processing_job_status
 
             if current_status in terminal_states:
+                print(f"\nFinal Resource Status: {current_status}")
 
                 if "failed" in current_status.lower():
                     raise FailedStatusError(
@@ -18477,7 +18577,7 @@ class ProcessingJob(Base):
                         reason=self.failure_reason,
                     )
 
-                return self
+                return
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="ProcessingJob", status=current_status)
@@ -18825,6 +18925,8 @@ class Project(Base):
         }
         client.delete_project(**operation_input_args)
 
+        print(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+
     def wait_for_status(
         self,
         status: Literal[
@@ -18841,7 +18943,7 @@ class Project(Base):
         ],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ) -> Optional["Project"]:
+    ):
         """
         Wait for a Project resource.
 
@@ -18866,7 +18968,8 @@ class Project(Base):
             current_status = self.project_status
 
             if status == current_status:
-                return self
+                print(f"\nFinal Resource Status: {current_status}")
+                return
 
             if "failed" in current_status.lower():
                 raise FailedStatusError(
@@ -19226,6 +19329,8 @@ class Space(Base):
         }
         client.delete_space(**operation_input_args)
 
+        print(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+
     def wait_for_status(
         self,
         status: Literal[
@@ -19239,7 +19344,7 @@ class Space(Base):
         ],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ) -> Optional["Space"]:
+    ):
         """
         Wait for a Space resource.
 
@@ -19264,7 +19369,8 @@ class Space(Base):
             current_status = self.status
 
             if status == current_status:
-                return self
+                print(f"\nFinal Resource Status: {current_status}")
+                return
 
             if "failed" in current_status.lower():
                 raise FailedStatusError(
@@ -19546,6 +19652,8 @@ class StudioLifecycleConfig(Base):
             "StudioLifecycleConfigName": self.studio_lifecycle_config_name,
         }
         client.delete_studio_lifecycle_config(**operation_input_args)
+
+        print(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
     @classmethod
     def get_all(
@@ -20194,7 +20302,7 @@ class TrainingJob(Base):
         }
         client.stop_training_job(**operation_input_args)
 
-    def wait(self, poll: int = 5, timeout: Optional[int] = None) -> Optional["TrainingJob"]:
+    def wait(self, poll: int = 5, timeout: Optional[int] = None):
         """
         Wait for a TrainingJob resource.
 
@@ -20219,6 +20327,7 @@ class TrainingJob(Base):
             current_status = self.training_job_status
 
             if current_status in terminal_states:
+                print(f"\nFinal Resource Status: {current_status}")
 
                 if "failed" in current_status.lower():
                     raise FailedStatusError(
@@ -20227,7 +20336,7 @@ class TrainingJob(Base):
                         reason=self.failure_reason,
                     )
 
-                return self
+                return
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="TrainingJob", status=current_status)
@@ -20608,7 +20717,7 @@ class TransformJob(Base):
         }
         client.stop_transform_job(**operation_input_args)
 
-    def wait(self, poll: int = 5, timeout: Optional[int] = None) -> Optional["TransformJob"]:
+    def wait(self, poll: int = 5, timeout: Optional[int] = None):
         """
         Wait for a TransformJob resource.
 
@@ -20633,6 +20742,7 @@ class TransformJob(Base):
             current_status = self.transform_job_status
 
             if current_status in terminal_states:
+                print(f"\nFinal Resource Status: {current_status}")
 
                 if "failed" in current_status.lower():
                     raise FailedStatusError(
@@ -20641,7 +20751,7 @@ class TransformJob(Base):
                         reason=self.failure_reason,
                     )
 
-                return self
+                return
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="TransformJob", status=current_status)
@@ -20982,6 +21092,8 @@ class Trial(Base):
             "TrialName": self.trial_name,
         }
         client.delete_trial(**operation_input_args)
+
+        print(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
     @classmethod
     def get_all(
@@ -21365,12 +21477,14 @@ class TrialComponent(Base):
         }
         client.delete_trial_component(**operation_input_args)
 
+        print(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+
     def wait_for_status(
         self,
         status: Literal["InProgress", "Completed", "Failed", "Stopping", "Stopped"],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ) -> Optional["TrialComponent"]:
+    ):
         """
         Wait for a TrialComponent resource.
 
@@ -21395,7 +21509,8 @@ class TrialComponent(Base):
             current_status = self.status.primary_status
 
             if status == current_status:
-                return self
+                print(f"\nFinal Resource Status: {current_status}")
+                return
 
             if "failed" in current_status.lower():
                 raise FailedStatusError(
@@ -21855,6 +21970,8 @@ class UserProfile(Base):
         }
         client.delete_user_profile(**operation_input_args)
 
+        print(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+
     def wait_for_status(
         self,
         status: Literal[
@@ -21868,7 +21985,7 @@ class UserProfile(Base):
         ],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ) -> Optional["UserProfile"]:
+    ):
         """
         Wait for a UserProfile resource.
 
@@ -21893,7 +22010,8 @@ class UserProfile(Base):
             current_status = self.status
 
             if status == current_status:
-                return self
+                print(f"\nFinal Resource Status: {current_status}")
+                return
 
             if "failed" in current_status.lower():
                 raise FailedStatusError(
@@ -22238,12 +22356,14 @@ class Workforce(Base):
         }
         client.delete_workforce(**operation_input_args)
 
+        print(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+
     def wait_for_status(
         self,
         status: Literal["Initializing", "Updating", "Deleting", "Failed", "Active"],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ) -> Optional["Workforce"]:
+    ):
         """
         Wait for a Workforce resource.
 
@@ -22268,7 +22388,8 @@ class Workforce(Base):
             current_status = self.workforce.status
 
             if status == current_status:
-                return self
+                print(f"\nFinal Resource Status: {current_status}")
+                return
 
             if "failed" in current_status.lower():
                 raise FailedStatusError(
@@ -22591,6 +22712,8 @@ class Workteam(Base):
             "WorkteamName": self.workteam_name,
         }
         client.delete_workteam(**operation_input_args)
+
+        print(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
     @classmethod
     def get_all(
