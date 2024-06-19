@@ -275,5 +275,33 @@
             "method_type": "object",
             "service_name": "sagemaker"
         }
+    },
+    "Association": {
+        "AddAssociation": {
+            "operation_name": "AddAssociation",
+            "resource_name": "Association",
+            "method_name": "add",
+            "return_type": "None",
+            "method_type": "class",
+            "service_name": "sagemaker"
+        }
+    },
+    "Tag": {
+        "AddTags": {
+            "operation_name": "AddTags",
+            "resource_name": "Tag",
+            "method_name": "add_tags",
+            "return_type": "None",
+            "method_type": "class",
+            "service_name": "sagemaker"
+        },
+        "DeleteTags": {
+            "operation_name": "DeleteTags",
+            "resource_name": "Tag",
+            "method_name": "delete_tags",
+            "return_type": "None",
+            "method_type": "class",
+            "service_name": "sagemaker"
+        }
     }
 }

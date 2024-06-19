@@ -1871,6 +1871,177 @@ class Artifact(Base):
         )
 
 
+class Association(Base):
+    """
+    Class representing resource Association
+
+    Attributes:
+        source_arn:The ARN of the source.
+        destination_arn:The Amazon Resource Name (ARN) of the destination.
+        source_type:The source type.
+        destination_type:The destination type.
+        association_type:The type of the association.
+        source_name:The name of the source.
+        destination_name:The name of the destination.
+        creation_time:When the association was created.
+        created_by:
+
+    """
+
+    source_arn: Optional[str] = Unassigned()
+    destination_arn: Optional[str] = Unassigned()
+    source_type: Optional[str] = Unassigned()
+    destination_type: Optional[str] = Unassigned()
+    association_type: Optional[str] = Unassigned()
+    source_name: Optional[str] = Unassigned()
+    destination_name: Optional[str] = Unassigned()
+    creation_time: Optional[datetime.datetime] = Unassigned()
+    created_by: Optional[UserContext] = Unassigned()
+
+    def get_name(self) -> str:
+        attributes = vars(self)
+        for attribute, value in attributes.items():
+            if attribute == "name" or attribute == "association_name":
+                return value
+        raise Exception("Name attribute not found for object")
+
+    def delete(self) -> None:
+        """
+        Delete a Association resource
+
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceNotFound: Resource being access is not found.
+        """
+
+        client = SageMakerClient().client
+
+        operation_input_args = {
+            "SourceArn": self.source_arn,
+            "DestinationArn": self.destination_arn,
+        }
+        client.delete_association(**operation_input_args)
+
+        print(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+
+    @classmethod
+    def get_all(
+        cls,
+        source_arn: Optional[str] = Unassigned(),
+        destination_arn: Optional[str] = Unassigned(),
+        source_type: Optional[str] = Unassigned(),
+        destination_type: Optional[str] = Unassigned(),
+        association_type: Optional[str] = Unassigned(),
+        created_after: Optional[datetime.datetime] = Unassigned(),
+        created_before: Optional[datetime.datetime] = Unassigned(),
+        sort_by: Optional[str] = Unassigned(),
+        sort_order: Optional[str] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> ResourceIterator["Association"]:
+        """
+        Get all Association resources
+
+        Parameters:
+            source_arn:A filter that returns only associations with the specified source ARN.
+            destination_arn:A filter that returns only associations with the specified destination Amazon Resource Name (ARN).
+            source_type:A filter that returns only associations with the specified source type.
+            destination_type:A filter that returns only associations with the specified destination type.
+            association_type:A filter that returns only associations of the specified type.
+            created_after:A filter that returns only associations created on or after the specified time.
+            created_before:A filter that returns only associations created on or before the specified time.
+            sort_by:The property used to sort results. The default value is CreationTime.
+            sort_order:The sort order. The default value is Descending.
+            next_token:If the previous call to ListAssociations didn't return the full set of associations, the call returns a token for getting the next set of associations.
+            max_results:The maximum number of associations to return in the response. The default value is 10.
+            session: Boto3 session.
+            region: Region name.
+
+        Returns:
+            Iterator for listed Association resources.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceNotFound: Resource being access is not found.
+        """
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
+        operation_input_args = {
+            "SourceArn": source_arn,
+            "DestinationArn": destination_arn,
+            "SourceType": source_type,
+            "DestinationType": destination_type,
+            "AssociationType": association_type,
+            "CreatedAfter": created_after,
+            "CreatedBefore": created_before,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
+        }
+
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
+
+        return ResourceIterator(
+            client=client,
+            list_method="list_associations",
+            summaries_key="AssociationSummaries",
+            summary_name="AssociationSummary",
+            resource_cls=Association,
+            list_method_kwargs=operation_input_args,
+        )
+
+    def add(
+        self,
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> None:
+        """
+        Creates an association between the source and the destination.
+
+
+        """
+
+        operation_input_args = {
+            "SourceArn": self.source_arn,
+            "DestinationArn": self.destination_arn,
+            "AssociationType": self.association_type,
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
+        logger.debug(f"Calling add_association API")
+        response = client.add_association(**operation_input_args)
+        logger.debug(f"Response: {response}")
+
+
 class AutoMLJob(Base):
     """
     Class representing resource AutoMLJob
@@ -9308,84 +9479,6 @@ class HubContent(Base):
             hub_content_name=hub_content_name,
             session=session,
             region=region,
-        )
-
-    @classmethod
-    def get_all(
-        cls,
-        hub_name: str,
-        hub_content_type: str,
-        name_contains: Optional[str] = Unassigned(),
-        max_schema_version: Optional[str] = Unassigned(),
-        creation_time_before: Optional[datetime.datetime] = Unassigned(),
-        creation_time_after: Optional[datetime.datetime] = Unassigned(),
-        sort_by: Optional[str] = Unassigned(),
-        sort_order: Optional[str] = Unassigned(),
-        session: Optional[Session] = None,
-        region: Optional[str] = None,
-    ) -> ResourceIterator["HubContent"]:
-        """
-        Get all HubContent resources
-
-        Parameters:
-            hub_name:The name of the hub to list the contents of.
-            hub_content_type:The type of hub content to list.
-            name_contains:Only list hub content if the name contains the specified string.
-            max_schema_version:The upper bound of the hub content schema verion.
-            creation_time_before:Only list hub content that was created before the time specified.
-            creation_time_after:Only list hub content that was created after the time specified.
-            sort_by:Sort hub content versions by either name or creation time.
-            sort_order:Sort hubs by ascending or descending order.
-            max_results:The maximum amount of hub content to list.
-            next_token:If the response to a previous ListHubContents request was truncated, the response includes a NextToken. To retrieve the next set of hub content, use the token in the next request.
-            session: Boto3 session.
-            region: Region name.
-
-        Returns:
-            Iterator for listed HubContent resources.
-
-        Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
-                The error message and error code can be parsed from the exception as follows:
-
-                ```
-                try:
-                    # AWS service call here
-                except botocore.exceptions.ClientError as e:
-                    error_message = e.response['Error']['Message']
-                    error_code = e.response['Error']['Code']
-                ```
-            ResourceNotFound: Resource being access is not found.
-        """
-
-        client = SageMakerClient(
-            session=session, region_name=region, service_name="sagemaker"
-        ).client
-
-        operation_input_args = {
-            "HubName": hub_name,
-            "HubContentType": hub_content_type,
-            "NameContains": name_contains,
-            "MaxSchemaVersion": max_schema_version,
-            "CreationTimeBefore": creation_time_before,
-            "CreationTimeAfter": creation_time_after,
-            "SortBy": sort_by,
-            "SortOrder": sort_order,
-        }
-
-        operation_input_args = {
-            k: v
-            for k, v in operation_input_args.items()
-            if v is not None and not isinstance(v, Unassigned)
-        }
-
-        return ResourceIterator(
-            client=client,
-            list_method="list_hub_contents",
-            summaries_key="HubContentSummaries",
-            summary_name="HubContentInfo",
-            resource_cls=HubContent,
-            list_method_kwargs=operation_input_args,
         )
 
     def get_all_versions(
@@ -19883,6 +19976,149 @@ class SubscribedWorkteam(Base):
             resource_cls=SubscribedWorkteam,
             list_method_kwargs=operation_input_args,
         )
+
+
+class Tag(Base):
+    """
+    Class representing resource Tag
+
+    Attributes:
+        key:The tag key. Tag keys must be unique per resource.
+        value:The tag value.
+
+    """
+
+    key: str
+    value: str
+
+    def get_name(self) -> str:
+        attributes = vars(self)
+        for attribute, value in attributes.items():
+            if attribute == "name" or attribute == "tag_name":
+                return value
+        raise Exception("Name attribute not found for object")
+
+    @classmethod
+    def get_all(
+        cls,
+        resource_arn: str,
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> ResourceIterator["Tag"]:
+        """
+        Get all Tag resources
+
+        Parameters:
+            resource_arn:The Amazon Resource Name (ARN) of the resource whose tags you want to retrieve.
+            next_token: If the response to the previous ListTags request is truncated, SageMaker returns this token. To retrieve the next set of tags, use it in the subsequent request.
+            max_results:Maximum number of tags to return.
+            session: Boto3 session.
+            region: Region name.
+
+        Returns:
+            Iterator for listed Tag resources.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+        """
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
+        operation_input_args = {
+            "ResourceArn": resource_arn,
+        }
+
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
+
+        return ResourceIterator(
+            client=client,
+            list_method="list_tags",
+            summaries_key="Tags",
+            summary_name="Tag",
+            resource_cls=Tag,
+            list_method_kwargs=operation_input_args,
+        )
+
+    def add_tags(
+        self,
+        resource_arn: str,
+        tags: List[Tag],
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> None:
+        """
+        Adds or overwrites one or more tags for the specified SageMaker resource.
+
+        Parameters:
+            resource_arn:The Amazon Resource Name (ARN) of the resource that you want to tag.
+            tags:An array of key-value pairs. You can use tags to categorize your Amazon Web Services resources in different ways, for example, by purpose, owner, or environment. For more information, see Tagging Amazon Web Services Resources.
+            session: Boto3 session.
+            region: Region name.
+
+
+        """
+
+        operation_input_args = {
+            "ResourceArn": resource_arn,
+            "Tags": tags,
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
+        logger.debug(f"Calling add_tags API")
+        response = client.add_tags(**operation_input_args)
+        logger.debug(f"Response: {response}")
+
+    def delete_tags(
+        self,
+        resource_arn: str,
+        tag_keys: List[str],
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> None:
+        """
+        Deletes the specified tags from an SageMaker resource.
+
+        Parameters:
+            resource_arn:The Amazon Resource Name (ARN) of the resource whose tags you want to delete.
+            tag_keys:An array or one or more tag keys to delete.
+            session: Boto3 session.
+            region: Region name.
+
+
+        """
+
+        operation_input_args = {
+            "ResourceArn": resource_arn,
+            "TagKeys": tag_keys,
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
+        logger.debug(f"Calling delete_tags API")
+        response = client.delete_tags(**operation_input_args)
+        logger.debug(f"Response: {response}")
 
 
 class TrainingJob(Base):
