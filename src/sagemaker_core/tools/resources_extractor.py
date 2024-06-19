@@ -99,9 +99,9 @@ class ResourcesExtractor:
                 self.resource_methods[resource_name] = dict()
             for operation_name, operation in resource_operations.items():
                 self.actions_under_resource.update(operation_name)
-                self.resource_methods[operation["resource_name"]][operation["method_name"]] = (
-                    Method(**operation)
-                )
+                method = Method(**operation)
+                method.get_docstring_title(self.operations[operation_name])
+                self.resource_methods[resource_name][operation["method_name"]] = method
                 self.actions.remove(operation_name)
 
     def _filter_actions_for_resources(self, resources):

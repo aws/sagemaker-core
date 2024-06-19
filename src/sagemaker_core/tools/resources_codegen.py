@@ -1385,7 +1385,7 @@ class ResourcesCodeGen:
         )
 
         # generate docstring
-        docstring = f"Perform {method.operation_name} on a {method.resource_name} resource.\n\n"
+        docstring = f"{method.docstring_title}\n\n"
         if _get_shape_attr_documentation_string:
             docstring += f"Parameters:\n"
             docstring += _get_shape_attr_documentation_string
@@ -1489,7 +1489,7 @@ class ResourcesCodeGen:
         )
 
         # generate docstring
-        docstring = f"Perform {method.operation_name} on a {method.resource_name} resource.\n\n"
+        docstring = f"{method.docstring_title}\n\n"
         if _get_shape_attr_documentation_string:
             docstring += f"Parameters:\n"
             docstring += _get_shape_attr_documentation_string

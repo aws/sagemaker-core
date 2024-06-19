@@ -1042,7 +1042,7 @@ def get_node(
     region: Optional[str] = None,
 ) -> Optional[ClusterNodeDetails]:
     """
-    Perform DescribeClusterNode on a Cluster resource.
+    Retrieves information of an instance (also called a node interchangeably) of a SageMaker HyperPod cluster.
     
     Parameters:
         node_id:The ID of the instance.
@@ -1078,6 +1078,7 @@ def get_node(
                 "service_name": "sagemaker",
             }
         )
+        method.get_docstring_title(self.resource_generator.operations["DescribeClusterNode"])
         assert self.resource_generator.generate_method(method, ["cluster_name"]) == expected_output
 
     def test_update_weights_and_capacities(self):
@@ -1090,7 +1091,7 @@ def update_weights_and_capacities(
     region: Optional[str] = None,
 ) -> None:
     """
-    Perform UpdateEndpointWeightsAndCapacities on a Endpoint resource.
+    Updates variant weight of one or more variants associated with an existing endpoint, or capacity of one variant associated with an existing endpoint.
     
     Parameters:
         endpoint_name:The name of an existing SageMaker endpoint.
@@ -1124,6 +1125,9 @@ def update_weights_and_capacities(
                 "service_name": "sagemaker",
             }
         )
+        method.get_docstring_title(
+            self.resource_generator.operations["UpdateEndpointWeightsAndCapacities"]
+        )
         assert (
             self.resource_generator.generate_method(method, ["desired_weights_and_capacities"])
             == expected_output
@@ -1140,7 +1144,7 @@ def get_all_training_jobs(
     region: Optional[str] = None,
 ) -> ResourceIterator[HyperParameterTrainingJobSummary]:
     """
-    Perform ListTrainingJobsForHyperParameterTuningJob on a HyperParameterTuningJob resource.
+    Gets a list of TrainingJobSummary objects that describe the training jobs that a hyperparameter tuning job launched.
     
     Parameters:
         next_token:If the result of the previous ListTrainingJobsForHyperParameterTuningJob request was truncated, the response includes a NextToken. To retrieve the next set of training jobs, use the token in the next request.
@@ -1185,6 +1189,9 @@ def get_all_training_jobs(
                 "method_type": "object",
                 "service_name": "sagemaker",
             }
+        )
+        method.get_docstring_title(
+            self.resource_generator.operations["ListTrainingJobsForHyperParameterTuningJob"]
         )
         assert (
             self.resource_generator.generate_method(method, ["hyper_parameter_tuning_job_name"])
