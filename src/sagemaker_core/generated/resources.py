@@ -3360,8 +3360,9 @@ class CodeRepository(Base):
 
         print(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
+    @classmethod
     def get_all(
-        self,
+        cls,
         creation_time_after: Optional[datetime.datetime] = Unassigned(),
         creation_time_before: Optional[datetime.datetime] = Unassigned(),
         last_modified_time_after: Optional[datetime.datetime] = Unassigned(),
