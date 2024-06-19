@@ -2277,7 +2277,7 @@ class AutoMLJob(Base):
         region: Optional[str] = None,
     ) -> ResourceIterator[AutoMLCandidate]:
         """
-        Perform ListCandidatesForAutoMLJob on a AutoMLJob resource.
+        List the candidates created for the job.
 
         Parameters:
             status_equals:List the candidates for the job and filter by status.
@@ -3016,7 +3016,7 @@ class Cluster(Base):
         region: Optional[str] = None,
     ) -> Optional[ClusterNodeDetails]:
         """
-        Perform DescribeClusterNode on a Cluster resource.
+        Retrieves information of an instance (also called a node interchangeably) of a SageMaker HyperPod cluster.
 
         Parameters:
             node_id:The ID of the instance.
@@ -3054,7 +3054,7 @@ class Cluster(Base):
         region: Optional[str] = None,
     ) -> ResourceIterator[ClusterNodeDetails]:
         """
-        Perform ListClusterNodes on a Cluster resource.
+        Retrieves the list of instances (also called nodes interchangeably) in a SageMaker HyperPod cluster.
 
         Parameters:
             creation_time_after:A filter that returns nodes in a SageMaker HyperPod cluster created after the specified time. Timestamps are formatted according to the ISO 8601 standard.  Acceptable formats include:    YYYY-MM-DDThh:mm:ss.sssTZD (UTC), for example, 2014-10-01T20:30:00.000Z     YYYY-MM-DDThh:mm:ss.sssTZD (with offset), for example, 2014-10-01T12:30:00.000-08:00     YYYY-MM-DD, for example, 2014-10-01    Unix time in seconds, for example, 1412195400. This is also referred to as Unix Epoch time and represents the number of seconds since midnight, January 1, 1970 UTC.   For more information about the timestamp format, see Timestamp in the Amazon Web Services Command Line Interface User Guide.
@@ -3104,7 +3104,7 @@ class Cluster(Base):
         region: Optional[str] = None,
     ) -> None:
         """
-        Perform UpdateClusterSoftware on a Cluster resource.
+        Updates the platform software of a SageMaker HyperPod cluster for security patching.
 
 
         """
@@ -3360,8 +3360,9 @@ class CodeRepository(Base):
 
         print(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
+    @classmethod
     def get_all(
-        self,
+        cls,
         creation_time_after: Optional[datetime.datetime] = Unassigned(),
         creation_time_before: Optional[datetime.datetime] = Unassigned(),
         last_modified_time_after: Optional[datetime.datetime] = Unassigned(),
@@ -3373,7 +3374,7 @@ class CodeRepository(Base):
         region: Optional[str] = None,
     ) -> ResourceIterator["CodeRepository"]:
         """
-        Perform ListCodeRepositories on a CodeRepository resource.
+        Gets a list of the Git repositories in your account.
 
         Parameters:
             creation_time_after:A filter that returns only Git repositories that were created after the specified time.
@@ -5071,7 +5072,7 @@ class DeviceFleet(Base):
         region: Optional[str] = None,
     ) -> None:
         """
-        Perform DeregisterDevices on a DeviceFleet resource.
+        Deregisters the specified devices.
 
         Parameters:
             device_names:The unique IDs of the devices.
@@ -5101,7 +5102,7 @@ class DeviceFleet(Base):
         region: Optional[str] = None,
     ) -> Optional[GetDeviceFleetReportResponse]:
         """
-        Perform GetDeviceFleetReport on a DeviceFleet resource.
+        Describes a fleet.
 
 
         """
@@ -5130,7 +5131,7 @@ class DeviceFleet(Base):
         region: Optional[str] = None,
     ) -> None:
         """
-        Perform RegisterDevices on a DeviceFleet resource.
+        Register devices.
 
         Parameters:
             devices:A list of devices to register with SageMaker Edge Manager.
@@ -5163,7 +5164,7 @@ class DeviceFleet(Base):
         region: Optional[str] = None,
     ) -> None:
         """
-        Perform UpdateDevices on a DeviceFleet resource.
+        Updates one or more devices in a fleet.
 
         Parameters:
             devices:List of devices to register with Edge Manager agent.
@@ -6964,7 +6965,7 @@ class Endpoint(Base):
         region: Optional[str] = None,
     ) -> None:
         """
-        Perform UpdateEndpointWeightsAndCapacities on a Endpoint resource.
+        Updates variant weight of one or more variants associated with an existing endpoint, or capacity of one variant associated with an existing endpoint.
 
         Parameters:
             desired_weights_and_capacities:An object that provides new capacity and weight values for a variant.
@@ -9400,7 +9401,7 @@ class HubContent(Base):
         region: Optional[str] = None,
     ) -> ResourceIterator["HubContent"]:
         """
-        Perform ListHubContentVersions on a HubContent resource.
+        List hub content versions.
 
         Parameters:
             min_version:The lower bound of the hub content versions to list.
@@ -10171,7 +10172,7 @@ class HyperParameterTuningJob(Base):
         region: Optional[str] = None,
     ) -> ResourceIterator[HyperParameterTrainingJobSummary]:
         """
-        Perform ListTrainingJobsForHyperParameterTuningJob on a HyperParameterTuningJob resource.
+        Gets a list of TrainingJobSummary objects that describe the training jobs that a hyperparameter tuning job launched.
 
         Parameters:
             next_token:If the result of the previous ListTrainingJobsForHyperParameterTuningJob request was truncated, the response includes a NextToken. To retrieve the next set of training jobs, use the token in the next request.
@@ -11387,7 +11388,7 @@ class InferenceComponent(Base):
         region: Optional[str] = None,
     ) -> None:
         """
-        Perform UpdateInferenceComponentRuntimeConfig on a InferenceComponent resource.
+        Runtime settings for a model that is deployed with an inference component.
 
         Parameters:
             desired_runtime_config:Runtime settings for a model that is deployed with an inference component.
@@ -12273,7 +12274,7 @@ class InferenceRecommendationsJob(Base):
         region: Optional[str] = None,
     ) -> ResourceIterator[InferenceRecommendationsJobStep]:
         """
-        Perform ListInferenceRecommendationsJobSteps on a InferenceRecommendationsJob resource.
+        Returns a list of the subtasks for an Inference Recommender job.
 
         Parameters:
             step_type:A filter to return details about the specified type of subtask.  BENCHMARK: Evaluate the performance of your model on different instance types.
@@ -12888,7 +12889,7 @@ class LineageGroup(Base):
         region: Optional[str] = None,
     ) -> Optional[GetLineageGroupPolicyResponse]:
         """
-        Perform GetLineageGroupPolicy on a LineageGroup resource.
+        The resource policy for the lineage group.
 
 
         """
@@ -13231,7 +13232,7 @@ class Model(Base):
         region: Optional[str] = None,
     ) -> ResourceIterator[ModelMetadataSummary]:
         """
-        Perform ListModelMetadata on a Model resource.
+        Lists the domain, framework, task, and model name of standard machine learning models found in common model zoos.
 
         Parameters:
             search_expression:One or more filters that searches for the specified resource or resources in a search. All resource objects that satisfy the expression's condition are included in the search results. Specify the Framework, FrameworkVersion, Domain or Task to filter supported. Filter names and values are case-sensitive.
@@ -14014,7 +14015,7 @@ class ModelCard(Base):
         region: Optional[str] = None,
     ) -> ResourceIterator[ModelCardVersionSummary]:
         """
-        Perform ListModelCardVersions on a ModelCard resource.
+        List existing versions of an Amazon SageMaker Model Card.
 
         Parameters:
             creation_time_after:Only list model card versions that were created after the time specified.
@@ -15268,7 +15269,7 @@ class ModelPackage(Base):
         region: Optional[str] = None,
     ) -> Optional[BatchDescribeModelPackageOutput]:
         """
-        Perform BatchDescribeModelPackage on a ModelPackage resource.
+        This action batch describes a list of versioned model packages.
 
         Parameters:
             model_package_arn_list:The list of Amazon Resource Name (ARN) of the model package groups.
@@ -15611,7 +15612,7 @@ class ModelPackageGroup(Base):
         region: Optional[str] = None,
     ) -> Optional[str]:
         """
-        Perform GetModelPackageGroupPolicy on a ModelPackageGroup resource.
+        Gets a resource policy that manages access for a model group.
 
 
         """
@@ -15637,7 +15638,7 @@ class ModelPackageGroup(Base):
         region: Optional[str] = None,
     ) -> None:
         """
-        Perform DeleteModelPackageGroupPolicy on a ModelPackageGroup resource.
+        Deletes a model group resource policy.
 
 
         """
@@ -15662,7 +15663,7 @@ class ModelPackageGroup(Base):
         region: Optional[str] = None,
     ) -> None:
         """
-        Perform PutModelPackageGroupPolicy on a ModelPackageGroup resource.
+        Adds a resouce policy to control access to a model group.
 
         Parameters:
             resource_policy:The resource policy for the model group.
@@ -18058,7 +18059,7 @@ class PipelineExecution(Base):
         region: Optional[str] = None,
     ) -> Optional[DescribePipelineDefinitionForExecutionResponse]:
         """
-        Perform DescribePipelineDefinitionForExecution on a PipelineExecution resource.
+        Describes the details of an execution's pipeline definition.
 
 
         """
@@ -18086,7 +18087,7 @@ class PipelineExecution(Base):
         region: Optional[str] = None,
     ) -> ResourceIterator[PipelineExecutionStep]:
         """
-        Perform ListPipelineExecutionSteps on a PipelineExecution resource.
+        Gets a list of PipeLineExecutionStep objects.
 
         Parameters:
             next_token:If the result of the previous ListPipelineExecutionSteps request was truncated, the response includes a NextToken. To retrieve the next set of pipeline execution steps, use the token in the next request.
@@ -18128,7 +18129,7 @@ class PipelineExecution(Base):
         region: Optional[str] = None,
     ) -> ResourceIterator[Parameter]:
         """
-        Perform ListPipelineParametersForExecution on a PipelineExecution resource.
+        Gets a list of parameters for a pipeline execution.
 
         Parameters:
             next_token:If the result of the previous ListPipelineParametersForExecution request was truncated, the response includes a NextToken. To retrieve the next set of parameters, use the token in the next request.
@@ -18169,7 +18170,7 @@ class PipelineExecution(Base):
         region: Optional[str] = None,
     ) -> None:
         """
-        Perform RetryPipelineExecution on a PipelineExecution resource.
+        Retry the execution of the pipeline.
 
         Parameters:
             client_request_token:A unique, case-sensitive identifier that you provide to ensure the idempotency of the operation. An idempotent operation completes no more than once.
@@ -18202,7 +18203,7 @@ class PipelineExecution(Base):
         region: Optional[str] = None,
     ) -> None:
         """
-        Perform SendPipelineExecutionStepFailure on a PipelineExecution resource.
+        Notifies the pipeline that the execution of a callback step failed, along with a message describing why.
 
         Parameters:
             callback_token:The pipeline generated token from the Amazon SQS queue.
@@ -18237,7 +18238,7 @@ class PipelineExecution(Base):
         region: Optional[str] = None,
     ) -> None:
         """
-        Perform SendPipelineExecutionStepSuccess on a PipelineExecution resource.
+        Notifies the pipeline that the execution of a callback step succeeded and provides a list of the step's output parameters.
 
         Parameters:
             callback_token:The pipeline generated token from the Amazon SQS queue.
@@ -21604,7 +21605,7 @@ class TrialComponent(Base):
         region: Optional[str] = None,
     ) -> None:
         """
-        Perform AssociateTrialComponent on a TrialComponent resource.
+        Associates a trial component with a trial.
 
         Parameters:
             trial_name:The name of the trial to associate with.
@@ -21635,7 +21636,7 @@ class TrialComponent(Base):
         region: Optional[str] = None,
     ) -> None:
         """
-        Perform DisassociateTrialComponent on a TrialComponent resource.
+        Disassociates a trial component from a trial.
 
         Parameters:
             trial_name:The name of the trial to disassociate from.
@@ -22789,7 +22790,7 @@ class Workteam(Base):
         region: Optional[str] = None,
     ) -> ResourceIterator[LabelingJob]:
         """
-        Perform ListLabelingJobsForWorkteam on a Workteam resource.
+        Gets a list of labeling jobs assigned to a specified work team.
 
         Parameters:
             workteam_arn:The Amazon Resource Name (ARN) of the work team for which you want to see labeling jobs for.

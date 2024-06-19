@@ -1327,7 +1327,7 @@ class ResourcesCodeGen:
             return self.generate_additional_get_all_method(method, resource_attributes)
         operation_metadata = self.operations[method.operation_name]
         operation_input_shape_name = operation_metadata["input"]["shape"]
-        if method.method_type == MethodType.CLASS:
+        if method.method_type == MethodType.CLASS.value:
             decorator = "@classmethod"
             method_args = add_indent("cls,\n", 4)
             method_args += self._generate_method_args(operation_input_shape_name)
@@ -1385,7 +1385,7 @@ class ResourcesCodeGen:
         )
 
         # generate docstring
-        docstring = f"Perform {method.operation_name} on a {method.resource_name} resource.\n\n"
+        docstring = f"{method.docstring_title}\n\n"
         if _get_shape_attr_documentation_string:
             docstring += f"Parameters:\n"
             docstring += _get_shape_attr_documentation_string
@@ -1419,7 +1419,7 @@ class ResourcesCodeGen:
         operation_metadata = self.operations[method.operation_name]
         operation_input_shape_name = operation_metadata["input"]["shape"]
         exclude_list = ["next_token", "max_results"]
-        if method.method_type == MethodType.CLASS:
+        if method.method_type == MethodType.CLASS.value:
             decorator = "@classmethod"
             method_args = add_indent("cls,\n", 4)
             method_args += self._generate_method_args(operation_input_shape_name, exclude_list)
@@ -1489,7 +1489,7 @@ class ResourcesCodeGen:
         )
 
         # generate docstring
-        docstring = f"Perform {method.operation_name} on a {method.resource_name} resource.\n\n"
+        docstring = f"{method.docstring_title}\n\n"
         if _get_shape_attr_documentation_string:
             docstring += f"Parameters:\n"
             docstring += _get_shape_attr_documentation_string
