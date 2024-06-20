@@ -9293,7 +9293,7 @@ class MonitoringAlertHistorySummary(Base):
     """
 
     monitoring_schedule_name: Union[str, object]
-    monitoring_alert_name: str
+    monitoring_alert_name: Union[str, object]
     creation_time: datetime.datetime
     alert_status: str
 
@@ -9340,7 +9340,7 @@ class MonitoringAlertSummary(Base):
        actions: 	 A list of alert actions taken in response to an alert going into InAlert status.
     """
 
-    monitoring_alert_name: str
+    monitoring_alert_name: Union[str, object]
     creation_time: datetime.datetime
     last_modified_time: datetime.datetime
     alert_status: str

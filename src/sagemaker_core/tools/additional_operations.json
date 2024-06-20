@@ -303,5 +303,15 @@
             "method_type": "class",
             "service_name": "sagemaker"
         }
+    },
+    "MonitoringAlert": {
+        "ListMonitoringAlertHistory": {
+            "operation_name": "ListMonitoringAlertHistory",
+            "resource_name": "MonitoringAlert",
+            "method_name": "list_history",
+            "return_type": "MonitoringAlertHistorySummary",
+            "method_type": "object",
+            "service_name": "sagemaker"
+        }
     }
 }

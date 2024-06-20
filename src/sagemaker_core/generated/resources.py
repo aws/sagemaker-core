@@ -16125,6 +16125,200 @@ class ModelQualityJobDefinition(Base):
         )
 
 
+class MonitoringAlert(Base):
+    """
+    Class representing resource MonitoringAlert
+
+    Attributes:
+        monitoring_alert_name:The name of a monitoring alert.
+        creation_time:A timestamp that indicates when a monitor alert was created.
+        last_modified_time:A timestamp that indicates when a monitor alert was last updated.
+        alert_status:The current status of an alert.
+        datapoints_to_alert:Within EvaluationPeriod, how many execution failures will raise an alert.
+        evaluation_period:The number of most recent monitoring executions to consider when evaluating alert status.
+        actions:A list of alert actions taken in response to an alert going into InAlert status.
+
+    """
+
+    monitoring_alert_name: str
+    creation_time: datetime.datetime
+    last_modified_time: datetime.datetime
+    alert_status: str
+    datapoints_to_alert: int
+    evaluation_period: int
+    actions: MonitoringAlertActions
+
+    def get_name(self) -> str:
+        attributes = vars(self)
+        for attribute, value in attributes.items():
+            if attribute == "name" or attribute == "monitoring_alert_name":
+                return value
+        raise Exception("Name attribute not found for object")
+
+    def update(
+        self,
+        monitoring_schedule_name: str,
+        datapoints_to_alert: int,
+        evaluation_period: int,
+    ) -> Optional["MonitoringAlert"]:
+        """
+        Update a MonitoringAlert resource
+
+        Parameters:
+            monitoring_schedule_name:The name of a monitoring schedule.
+
+        Returns:
+            The MonitoringAlert resource.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceLimitExceeded: You have exceeded an SageMaker resource limit. For example, you might have too many training jobs created.
+            ResourceNotFound: Resource being access is not found.
+        """
+
+        logger.debug("Updating monitoring_alert resource.")
+        client = SageMakerClient().client
+
+        operation_input_args = {
+            "MonitoringScheduleName": monitoring_schedule_name,
+            "MonitoringAlertName": self.monitoring_alert_name,
+            "DatapointsToAlert": datapoints_to_alert,
+            "EvaluationPeriod": evaluation_period,
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = MonitoringAlert._serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+
+        # create the resource
+        response = client.update_monitoring_alert(**operation_input_args)
+        logger.debug(f"Response: {response}")
+        self.refresh()
+
+        return self
+
+    @classmethod
+    def get_all(
+        cls,
+        monitoring_schedule_name: str,
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> ResourceIterator["MonitoringAlert"]:
+        """
+        Get all MonitoringAlert resources
+
+        Parameters:
+            monitoring_schedule_name:The name of a monitoring schedule.
+            next_token:If the result of the previous ListMonitoringAlerts request was truncated, the response includes a NextToken. To retrieve the next set of alerts in the history, use the token in the next request.
+            max_results:The maximum number of results to display. The default is 100.
+            session: Boto3 session.
+            region: Region name.
+
+        Returns:
+            Iterator for listed MonitoringAlert resources.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceNotFound: Resource being access is not found.
+        """
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
+        operation_input_args = {
+            "MonitoringScheduleName": monitoring_schedule_name,
+        }
+
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
+
+        return ResourceIterator(
+            client=client,
+            list_method="list_monitoring_alerts",
+            summaries_key="MonitoringAlertSummaries",
+            summary_name="MonitoringAlertSummary",
+            resource_cls=MonitoringAlert,
+            list_method_kwargs=operation_input_args,
+        )
+
+    def list_history(
+        self,
+        monitoring_schedule_name: Optional[str] = Unassigned(),
+        sort_by: Optional[str] = Unassigned(),
+        sort_order: Optional[str] = Unassigned(),
+        next_token: Optional[str] = Unassigned(),
+        max_results: Optional[int] = Unassigned(),
+        creation_time_before: Optional[datetime.datetime] = Unassigned(),
+        creation_time_after: Optional[datetime.datetime] = Unassigned(),
+        status_equals: Optional[str] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional[MonitoringAlertHistorySummary]:
+        """
+        Gets a list of past alerts in a model monitoring schedule.
+
+        Parameters:
+            monitoring_schedule_name:The name of a monitoring schedule.
+            sort_by:The field used to sort results. The default is CreationTime.
+            sort_order:The sort order, whether Ascending or Descending, of the alert history. The default is Descending.
+            next_token:If the result of the previous ListMonitoringAlertHistory request was truncated, the response includes a NextToken. To retrieve the next set of alerts in the history, use the token in the next request.
+            max_results:The maximum number of results to display. The default is 100.
+            creation_time_before:A filter that returns only alerts created on or before the specified time.
+            creation_time_after:A filter that returns only alerts created on or after the specified time.
+            status_equals:A filter that retrieves only alerts with a specific status.
+            session: Boto3 session.
+            region: Region name.
+
+
+        """
+
+        operation_input_args = {
+            "MonitoringScheduleName": monitoring_schedule_name,
+            "MonitoringAlertName": self.monitoring_alert_name,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
+            "NextToken": next_token,
+            "MaxResults": max_results,
+            "CreationTimeBefore": creation_time_before,
+            "CreationTimeAfter": creation_time_after,
+            "StatusEquals": status_equals,
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
+        logger.debug(f"Calling list_monitoring_alert_history API")
+        response = client.list_monitoring_alert_history(**operation_input_args)
+        logger.debug(f"Response: {response}")
+
+        transformed_response = transform(response, "ListMonitoringAlertHistoryResponse")
+        return MonitoringAlertHistorySummary(**transformed_response)
+
+
 class MonitoringSchedule(Base):
     """
     Class representing resource MonitoringSchedule
