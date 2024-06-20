@@ -246,7 +246,7 @@ def update(
 
     return self
 '''
-        class_attributes = self.resource_generator._get_class_attributes("Endpoint")
+        class_attributes = self.resource_generator._get_class_attributes("Endpoint", ["get"])
         resource_attributes = list(class_attributes[0].keys())
         assert (
             self.resource_generator.generate_update_method(
@@ -313,7 +313,7 @@ def update(
 
     return self
 '''
-        class_attributes = self.resource_generator._get_class_attributes("Endpoint")
+        class_attributes = self.resource_generator._get_class_attributes("Endpoint", ["get"])
         resource_attributes = list(class_attributes[0].keys())
         assert (
             self.resource_generator.generate_update_method(
