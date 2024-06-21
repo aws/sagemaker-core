@@ -115,7 +115,7 @@ class ResourcesTest(unittest.TestCase):
         for key, val in inspect.signature(shape_cls).parameters.items():
             attribute_type = str(val.annotation)
             if "Optional" not in attribute_type:
-                if "List[str]" in attribute_type:
+                if "List[str]" in attribute_type and 'utils.Unassigned' not in str(val):
                     params[key] = ["Random-String"]
                 elif "List" in attribute_type:
                     params[key] = []
