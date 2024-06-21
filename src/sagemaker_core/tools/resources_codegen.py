@@ -522,8 +522,67 @@ class ResourcesCodeGen:
                 self.shapes_extractor.fetch_shape_members_and_doc_strings(summary_name)
             )
             return class_attributes, class_attributes_string, attributes_and_documentation
+        elif "create" in class_methods:
+            # Get the operation and shape for the 'create' method
+            create_operation = self.operations["Create" + resource_name]
+            create_operation_input_shape = create_operation["input"]["shape"]
+            create_operation_output_shape = create_operation["output"]["shape"] if "output" in create_operation else None
+
+            class_attributes, class_attributes_string = self._get_resource_members_and_string_body(resource_name, create_operation_input_shape, create_operation_output_shape)
+            attributes_and_documentation = self._get_resouce_attributes_and_documentation(create_operation_input_shape, create_operation_output_shape)
+            return class_attributes, class_attributes_string, attributes_and_documentation
         else:
             return None
+
+    def _get_resource_members_and_string_body(self, resource_name:str, input_shape, output_shape):
+        input_members = self.shapes_extractor.generate_shape_members(input_shape)
+        if output_shape:
+            output_members = self.shapes_extractor.generate_shape_members(output_shape)
+            resource_members = {**input_members, **output_members}
+        else:
+            resource_members = input_members
+        # bring the required members in front
+        ordered_members = {attr: value for attr, value in resource_members.items() if not value.startswith("Optional")}
+        ordered_members.update(resource_members)
+
+        resource_name_snake_case = pascal_to_snake(resource_name)
+        resource_names = [row["resource_name"] for _, row in self.resources_plan.iterrows()]
+        init_data_body = ""
+        for attr, value in ordered_members.items():
+            if (
+                resource_names
+                and attr.endswith("name")
+                and attr[: -len("_name")] != resource_name_snake_case
+                and attr != "name"
+                and snake_to_pascal(attr[: -len("_name")]) in resource_names
+            ):
+                if value.startswith("Optional"):
+                    init_data_body += f"{attr}: Optional[Union[str, object]] = Unassigned()\n"
+                else:
+                    init_data_body += f"{attr}: Union[str, object]\n"
+            elif attr == "lambda":
+                init_data_body += f"# {attr}: {value}\n"
+            else:
+                init_data_body += f"{attr}: {value}\n"
+        return ordered_members, init_data_body
+
+    def _get_resouce_attributes_and_documentation(self, input_shape, output_shape):
+        input_members = self.shapes[input_shape]["members"]
+        required_args = set(self.shapes[input_shape].get("required", []))
+        if output_shape:
+            output_members = self.shapes[output_shape]["members"]
+            members = {**input_members, **output_members}
+            required_args.update(self.shapes[output_shape].get("required", []))
+        else:
+            members = input_members
+        # bring the required members in front
+        ordered_members = {key: members[key] for key in required_args if key in members}
+        ordered_members.update(members)
+        shape_members_and_docstrings = {}
+        for member_name, member_attrs in ordered_members.items():
+            member_shape_documentation = member_attrs.get("documentation")
+            shape_members_and_docstrings[member_name] = member_shape_documentation
+        return shape_members_and_docstrings
 
     def _get_shape_attr_documentation_string(
         self, attributes_and_documentation, exclude_resource_attrs=None
