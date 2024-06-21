@@ -119,12 +119,12 @@ class ResourcesTest(unittest.TestCase):
                     params[key] = ["Random-String"]
                 elif "List" in attribute_type:
                     params[key] = []
+                elif "bool" in attribute_type:
+                    params[key] = False
                 elif "str" in attribute_type:
                     params[key] = "Random-String"
                 elif "int" in attribute_type or "float" in attribute_type:
                     params[key] = 0
-                elif "bool" in attribute_type:
-                    params[key] = False
                 else:
                     shape = attribute_type.split(".")[-1]
                     params[key] = self._generate_test_shape(
