@@ -929,7 +929,7 @@ def get_all(
             ```
     """
 
-    client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
+    client = Base.get_sagemaker_client(session=session, region_name=region, service_name="sagemaker")
         
     operation_input_args = {
         'SortOrder': sort_order,
@@ -971,7 +971,7 @@ def get_all(
         Iterator for listed Domain resources.
 
     """
-    client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
+    client = Base.get_sagemaker_client(session=session, region_name=region, service_name="sagemaker")
 
     return ResourceIterator(
         client=client,
@@ -1028,7 +1028,7 @@ def get_all(
             ```
     """
 
-    client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
+    client = Base.get_sagemaker_client(session=session, region_name=region, service_name="sagemaker")
         
     operation_input_args = {
         'EndpointName': endpoint_name,
