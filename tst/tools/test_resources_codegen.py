@@ -68,7 +68,7 @@ def create(
     """
 
     logger.debug("Creating compilation_job resource.")
-    client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+    client =Base.get_sagemaker_client(session=session, region_name=region, service_name='sagemaker')
 
     operation_input_args = {
         'CompilationJobName': compilation_job_name,
@@ -224,7 +224,7 @@ def update(
     """
 
     logger.debug("Updating endpoint resource.")
-    client = SageMakerClient().client
+    client = Base.get_sagemaker_client()
 
     operation_input_args = {
         'EndpointName': self.endpoint_name,
@@ -291,7 +291,7 @@ def update(
     """
 
     logger.debug("Updating endpoint resource.")
-    client = SageMakerClient().client
+    client = Base.get_sagemaker_client()
 
     operation_input_args = {
         'EndpointName': self.endpoint_name,
@@ -371,7 +371,7 @@ def get(
         'AppType': app_type,
         'AppName': app_name,
     }
-    client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+    client = Base.get_sagemaker_client(session=session, region_name=region, service_name='sagemaker')
     response = client.describe_app(**operation_input_args)
 
     pprint(response)
@@ -385,7 +385,10 @@ def get(
 
     def test_generate_refresh_method(self):
         expected_output = '''
-def refresh(self) -> Optional["App"]:
+def refresh(
+    self,
+    
+    ) -> Optional["App"]:
     """
     Refresh a App resource
     
@@ -413,18 +416,34 @@ def refresh(self) -> Optional["App"]:
         'AppType': self.app_type,
         'AppName': self.app_name,
     }
-    client = SageMakerClient().client
+    client = Base.get_sagemaker_client()
     response = client.describe_app(**operation_input_args)
 
     # deserialize response and update self
     transform(response, 'DescribeAppResponse', self)
     return self
 '''
-        assert self.resource_generator.generate_refresh_method("App") == expected_output
+        assert (
+            self.resource_generator.generate_refresh_method(
+                "App",
+                resource_attributes=[
+                    "app_name",
+                    "domain_id",
+                    "user_profile_name",
+                    "space_name",
+                    "app_type",
+                    "app_name",
+                ],
+            )
+            == expected_output
+        )
 
     def test_generate_delete_method(self):
         expected_output = '''
-def delete(self) -> None:
+def delete(
+    self,
+
+    ) -> None:
     """
     Delete a CompilationJob resource
     
@@ -443,7 +462,7 @@ def delete(self) -> None:
         ResourceNotFound: Resource being access is not found.
     """
 
-    client = SageMakerClient().client
+    client = Base.get_sagemaker_client()
 
     operation_input_args = {
         'CompilationJobName': self.compilation_job_name,
@@ -452,7 +471,12 @@ def delete(self) -> None:
     
     print(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 '''
-        assert self.resource_generator.generate_delete_method("CompilationJob") == expected_output
+        assert (
+            self.resource_generator.generate_delete_method(
+                "CompilationJob", resource_attributes=["compilation_job_name"]
+            )
+            == expected_output
+        )
 
     # create a unit test for generate_stop_method
     def test_generate_stop_method(self):

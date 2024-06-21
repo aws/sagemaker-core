@@ -1246,24 +1246,13 @@ class ResourcesCodeGen:
         resource_operation_input_shape_name = operation_metadata["input"]["shape"]
         resource_operation_output_shape_name = operation_metadata["output"]["shape"]
 
-        required_members = self.shapes[resource_operation_input_shape_name]["required"]
-
-        # Exclude any required attributes that are already present as resource attributes and are also identifiers
-        exclude_required_attributes = []
-        for member in required_members:
-            snake_member = convert_to_snake_case(member)
-            if snake_member in kwargs["resource_attributes"] and any(
-                id in snake_member for id in ["name", "arn", "id"]
-            ):
-                exclude_required_attributes.append(snake_member)
-
         # Generate the arguments for the 'refresh' method
         refresh_args = self._generate_method_args(
-            resource_operation_input_shape_name, exclude_required_attributes
+            resource_operation_input_shape_name, kwargs["resource_attributes"]
         )
 
         operation_input_args = self._generate_operation_input_necessary_args(
-            operation_metadata, exclude_required_attributes
+            operation_metadata, kwargs["resource_attributes"]
         )
 
         operation = convert_to_snake_case(operation_name)
@@ -1304,23 +1293,13 @@ class ResourcesCodeGen:
         describe_resource_operation_input_shape_name = self.operations[describe_operation_name][
             "input"
         ]["shape"]
-        required_members = self.shapes[describe_resource_operation_input_shape_name]["required"]
-
-        # Exclude any required attributes that are already present as resource attributes and are also identifiers
-        exclude_required_attributes = []
-        for member in required_members:
-            snake_member = convert_to_snake_case(member)
-            if snake_member in kwargs["resource_attributes"] and any(
-                id in snake_member for id in ["name", "arn", "id"]
-            ):
-                exclude_required_attributes.append(snake_member)
 
         # Generate the arguments for the 'update' method
         delete_args = self._generate_method_args(
-            resource_operation_input_shape_name, exclude_required_attributes
+            resource_operation_input_shape_name, kwargs["resource_attributes"]
         )
         operation_input_args = self._generate_operation_input_necessary_args(
-            operation_metadata, exclude_required_attributes
+            operation_metadata, kwargs["resource_attributes"]
         )
 
         operation = convert_to_snake_case(operation_name)
