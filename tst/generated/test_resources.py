@@ -103,11 +103,15 @@ class ResourcesTest(unittest.TestCase):
                     params[key] = []
                 else:
                     shape = attribute_type.split(".")[-1]
-                    params[key] = self._generate_test_shape(self.SHAPE_CLASSES_BY_SHAPE_NAME.get(shape))
+                    params[key] = self._generate_test_shape(
+                        self.SHAPE_CLASSES_BY_SHAPE_NAME.get(shape)
+                    )
         return params
 
     def _generate_test_shape(self, shape_cls):
         params = {}
+        if shape_cls == None:
+            return None
         for key, val in inspect.signature(shape_cls).parameters.items():
             attribute_type = str(val)
             if "Optional" not in attribute_type:
