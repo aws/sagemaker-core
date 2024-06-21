@@ -333,7 +333,7 @@ class ResourcesCodeGen:
         # Initialize an empty string for the resource class
         resource_class = ""
 
-        # Check if 'get' or 'get_all' is in the class methods
+        # _get_class_attributes will return value only if the resource has get or get_all method
         if class_attribute_info := self._get_class_attributes(resource_name, class_methods):
             class_attributes, class_attributes_string, attributes_and_documentation = (
                 class_attribute_info
@@ -465,10 +465,14 @@ class ResourcesCodeGen:
 
         Args:
             resource_name (str): The name of the resource.
-            class_methods (list): The class methods.
+            class_methods (list): The class methods of the resource. Now it can only get the class
+                attributes if the resource has get or get_all method.
 
         Returns:
-            tuple[dict, str]: The class attributes and the formatted class attributes string.
+            tuple:
+                class_attributes: The class attributes and the formatted class attributes string.
+                class_attributes_string: The code string of the class attributes
+                attributes_and_documentation: A dict of doc strings of the class attributes
         """
         if "get" in class_methods:
             # Get the operation and shape for the 'get' method
@@ -532,9 +536,9 @@ class ResourcesCodeGen:
                 continue
             else:
                 if documentation == None:
-                    documentation_string += f"{attribute_snake}:\n"
+                    documentation_string += f"{attribute_snake}: \n"
                 else:
-                    documentation_string += f"{attribute_snake}:{documentation}\n"
+                    documentation_string += f"{attribute_snake}: {documentation}\n"
         documentation_string = add_indent(documentation_string)
         return remove_html_tags(documentation_string)
 
