@@ -113,7 +113,7 @@ class ResourcesTest(unittest.TestCase):
         if shape_cls == None:
             return None
         for key, val in inspect.signature(shape_cls).parameters.items():
-            attribute_type = str(val)
+            attribute_type = str(val.annotation)
             if "Optional" not in attribute_type:
                 if "List[str]" in attribute_type:
                     params[key] = ["Random-String"]
@@ -126,7 +126,7 @@ class ResourcesTest(unittest.TestCase):
                 elif "int" in attribute_type or "float" in attribute_type:
                     params[key] = 0
                 else:
-                    shape = attribute_type.split(".")[-1]
+                    shape =  str(val).split(".")[-1]
                     params[key] = self._generate_test_shape(
                         self.SHAPE_CLASSES_BY_SHAPE_NAME.get(shape)
                     )
