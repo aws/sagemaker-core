@@ -109,6 +109,10 @@ def is_not_str_dict(obj):
     return not isinstance(obj, dict) or not all(isinstance(k, str) for k in obj.keys())
 
 
+def is_primitive_list(obj):
+    return all(not is_not_primitive(s) for s in obj)
+
+
 class Unassigned:
     """A custom type used to signify an undefined optional argument."""
 

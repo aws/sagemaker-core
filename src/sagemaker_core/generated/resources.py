@@ -16,6 +16,7 @@ import logging
 import datetime
 import time
 import os
+import functools
 from pprint import pprint
 from pydantic import validate_call
 from typing import Dict, List, Literal, Optional, Union
@@ -31,6 +32,7 @@ from sagemaker_core.generated.utils import (
     is_not_primitive,
     is_not_str_dict,
     is_snake_case,
+    is_primitive_list,
 )
 from sagemaker_core.generated.intelligent_defaults_helper import (
     load_default_configs_for_resource_name,
@@ -46,6 +48,12 @@ logger = logging.getLogger(__name__)
 
 class Base(BaseModel):
     model_config = ConfigDict(protected_namespaces=(), validate_assignment=True)
+
+    @classmethod
+    def get_sagemaker_client(cls, session=None, region_name=None, service_name="sagemaker"):
+        return SageMakerClient(
+            session=session, region_name=region_name, service_name=service_name
+        ).client
 
     @classmethod
     def _serialize(cls, value: any) -> any:
@@ -115,7 +123,9 @@ class Base(BaseModel):
             ):
                 if value and value != Unassigned() and type(value) != str:
                     updated_args[arg] = value.get_name()
-            elif isinstance(value, list):
+            elif is_primitive_list(value):
+                continue
+            elif isinstance(value, list) and value != []:
                 updated_args[arg] = [
                     Base.populate_chained_attributes(
                         resource_name=type(list_item).__name__,
@@ -174,10 +184,19 @@ class Action(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "action_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == "name" or attribute == "action_name":
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object action")
+        return None
 
     @classmethod
     def create(
@@ -229,9 +248,9 @@ class Action(Base):
         """
 
         logger.debug("Creating action resource.")
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
 
         operation_input_args = {
             "ActionName": action_name,
@@ -294,9 +313,9 @@ class Action(Base):
         operation_input_args = {
             "ActionName": action_name,
         }
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
         response = client.describe_action(**operation_input_args)
 
         pprint(response)
@@ -306,7 +325,9 @@ class Action(Base):
         action = cls(**transformed_response)
         return action
 
-    def refresh(self) -> Optional["Action"]:
+    def refresh(
+        self,
+    ) -> Optional["Action"]:
         """
         Refresh a Action resource
 
@@ -330,7 +351,7 @@ class Action(Base):
         operation_input_args = {
             "ActionName": self.action_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_action(**operation_input_args)
 
         # deserialize response and update self
@@ -369,7 +390,7 @@ class Action(Base):
         """
 
         logger.debug("Updating action resource.")
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
             "ActionName": self.action_name,
@@ -390,7 +411,9 @@ class Action(Base):
 
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a Action resource
 
@@ -409,7 +432,7 @@ class Action(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
             "ActionName": self.action_name,
@@ -524,12 +547,22 @@ class Algorithm(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "algorithm_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == "name" or attribute == "algorithm_name":
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object algorithm")
+        return None
 
     def populate_inputs_decorator(create_func):
+        @functools.wraps(create_func)
         def wrapper(*args, **kwargs):
             config_schema_for_resource = {
                 "training_specification": {
@@ -597,9 +630,9 @@ class Algorithm(Base):
         """
 
         logger.debug("Creating algorithm resource.")
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
 
         operation_input_args = {
             "AlgorithmName": algorithm_name,
@@ -660,9 +693,9 @@ class Algorithm(Base):
         operation_input_args = {
             "AlgorithmName": algorithm_name,
         }
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
         response = client.describe_algorithm(**operation_input_args)
 
         pprint(response)
@@ -672,7 +705,9 @@ class Algorithm(Base):
         algorithm = cls(**transformed_response)
         return algorithm
 
-    def refresh(self) -> Optional["Algorithm"]:
+    def refresh(
+        self,
+    ) -> Optional["Algorithm"]:
         """
         Refresh a Algorithm resource
 
@@ -695,14 +730,16 @@ class Algorithm(Base):
         operation_input_args = {
             "AlgorithmName": self.algorithm_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_algorithm(**operation_input_args)
 
         # deserialize response and update self
         transform(response, "DescribeAlgorithmOutput", self)
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a Algorithm resource
 
@@ -721,7 +758,7 @@ class Algorithm(Base):
             ConflictException: There was a conflict when you attempted to modify a SageMaker entity such as an Experiment or Artifact.
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
             "AlgorithmName": self.algorithm_name,
@@ -877,10 +914,19 @@ class App(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "app_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == "name" or attribute == "app_name":
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object app")
+        return None
 
     @classmethod
     def create(
@@ -931,9 +977,9 @@ class App(Base):
         """
 
         logger.debug("Creating app resource.")
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
 
         operation_input_args = {
             "DomainId": domain_id,
@@ -1013,9 +1059,9 @@ class App(Base):
             "AppType": app_type,
             "AppName": app_name,
         }
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
         response = client.describe_app(**operation_input_args)
 
         pprint(response)
@@ -1025,7 +1071,12 @@ class App(Base):
         app = cls(**transformed_response)
         return app
 
-    def refresh(self) -> Optional["App"]:
+    def refresh(
+        self,
+        app_type: str,
+        user_profile_name: Optional[str] = Unassigned(),
+        space_name: Optional[str] = Unassigned(),
+    ) -> Optional["App"]:
         """
         Refresh a App resource
 
@@ -1048,19 +1099,24 @@ class App(Base):
 
         operation_input_args = {
             "DomainId": self.domain_id,
-            "UserProfileName": self.user_profile_name,
-            "SpaceName": self.space_name,
-            "AppType": self.app_type,
+            "UserProfileName": user_profile_name,
+            "SpaceName": space_name,
+            "AppType": app_type,
             "AppName": self.app_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_app(**operation_input_args)
 
         # deserialize response and update self
         transform(response, "DescribeAppResponse", self)
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+        app_type: str,
+        user_profile_name: Optional[str] = Unassigned(),
+        space_name: Optional[str] = Unassigned(),
+    ) -> None:
         """
         Delete a App resource
 
@@ -1080,13 +1136,13 @@ class App(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
             "DomainId": self.domain_id,
-            "UserProfileName": self.user_profile_name,
-            "SpaceName": self.space_name,
-            "AppType": self.app_type,
+            "UserProfileName": user_profile_name,
+            "SpaceName": space_name,
+            "AppType": app_type,
             "AppName": self.app_name,
         }
         client.delete_app(**operation_input_args)
@@ -1228,10 +1284,19 @@ class AppImageConfig(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "app_image_config_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == "name" or attribute == "app_image_config_name":
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object app_image_config")
+        return None
 
     @classmethod
     def create(
@@ -1275,9 +1340,9 @@ class AppImageConfig(Base):
         """
 
         logger.debug("Creating app_image_config resource.")
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
 
         operation_input_args = {
             "AppImageConfigName": app_image_config_name,
@@ -1336,9 +1401,9 @@ class AppImageConfig(Base):
         operation_input_args = {
             "AppImageConfigName": app_image_config_name,
         }
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
         response = client.describe_app_image_config(**operation_input_args)
 
         pprint(response)
@@ -1348,7 +1413,9 @@ class AppImageConfig(Base):
         app_image_config = cls(**transformed_response)
         return app_image_config
 
-    def refresh(self) -> Optional["AppImageConfig"]:
+    def refresh(
+        self,
+    ) -> Optional["AppImageConfig"]:
         """
         Refresh a AppImageConfig resource
 
@@ -1372,7 +1439,7 @@ class AppImageConfig(Base):
         operation_input_args = {
             "AppImageConfigName": self.app_image_config_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_app_image_config(**operation_input_args)
 
         # deserialize response and update self
@@ -1406,7 +1473,7 @@ class AppImageConfig(Base):
         """
 
         logger.debug("Updating app_image_config resource.")
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
             "AppImageConfigName": self.app_image_config_name,
@@ -1425,7 +1492,9 @@ class AppImageConfig(Base):
 
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a AppImageConfig resource
 
@@ -1444,7 +1513,7 @@ class AppImageConfig(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
             "AppImageConfigName": self.app_image_config_name,
@@ -1561,10 +1630,19 @@ class Artifact(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "artifact_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == "name" or attribute == "artifact_name":
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object artifact")
+        return None
 
     @classmethod
     def create(
@@ -1612,9 +1690,9 @@ class Artifact(Base):
         """
 
         logger.debug("Creating artifact resource.")
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
 
         operation_input_args = {
             "ArtifactName": artifact_name,
@@ -1675,9 +1753,9 @@ class Artifact(Base):
         operation_input_args = {
             "ArtifactArn": artifact_arn,
         }
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
         response = client.describe_artifact(**operation_input_args)
 
         pprint(response)
@@ -1687,7 +1765,9 @@ class Artifact(Base):
         artifact = cls(**transformed_response)
         return artifact
 
-    def refresh(self) -> Optional["Artifact"]:
+    def refresh(
+        self,
+    ) -> Optional["Artifact"]:
         """
         Refresh a Artifact resource
 
@@ -1711,7 +1791,7 @@ class Artifact(Base):
         operation_input_args = {
             "ArtifactArn": self.artifact_arn,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_artifact(**operation_input_args)
 
         # deserialize response and update self
@@ -1749,7 +1829,7 @@ class Artifact(Base):
         """
 
         logger.debug("Updating artifact resource.")
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
             "ArtifactArn": self.artifact_arn,
@@ -1769,7 +1849,10 @@ class Artifact(Base):
 
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+        source: Optional[ArtifactSource] = Unassigned(),
+    ) -> None:
         """
         Delete a Artifact resource
 
@@ -1788,11 +1871,11 @@ class Artifact(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
             "ArtifactArn": self.artifact_arn,
-            "Source": self.source,
+            "Source": source,
         }
         client.delete_artifact(**operation_input_args)
 
@@ -1924,12 +2007,22 @@ class AutoMLJob(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "auto_ml_job_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == "name" or attribute == "auto_ml_job_name":
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object auto_ml_job")
+        return None
 
     def populate_inputs_decorator(create_func):
+        @functools.wraps(create_func)
         def wrapper(*args, **kwargs):
             config_schema_for_resource = {
                 "output_data_config": {
@@ -1937,7 +2030,7 @@ class AutoMLJob(Base):
                     "kms_key_id": {"type": "string"},
                 },
                 "role_arn": {"type": "string"},
-                "auto_ml_job_config": {
+                "auto_m_l_job_config": {
                     "security_config": {
                         "volume_kms_key_id": {"type": "string"},
                         "vpc_config": {
@@ -2015,9 +2108,9 @@ class AutoMLJob(Base):
         """
 
         logger.debug("Creating auto_ml_job resource.")
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
 
         operation_input_args = {
             "AutoMLJobName": auto_ml_job_name,
@@ -2082,9 +2175,9 @@ class AutoMLJob(Base):
         operation_input_args = {
             "AutoMLJobName": auto_ml_job_name,
         }
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
         response = client.describe_auto_ml_job(**operation_input_args)
 
         pprint(response)
@@ -2094,7 +2187,9 @@ class AutoMLJob(Base):
         auto_ml_job = cls(**transformed_response)
         return auto_ml_job
 
-    def refresh(self) -> Optional["AutoMLJob"]:
+    def refresh(
+        self,
+    ) -> Optional["AutoMLJob"]:
         """
         Refresh a AutoMLJob resource
 
@@ -2118,7 +2213,7 @@ class AutoMLJob(Base):
         operation_input_args = {
             "AutoMLJobName": self.auto_ml_job_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_auto_ml_job(**operation_input_args)
 
         # deserialize response and update self
@@ -2375,12 +2470,22 @@ class AutoMLJobV2(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "auto_ml_job_v2_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == "name" or attribute == "auto_ml_job_v2_name":
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object auto_ml_job_v2")
+        return None
 
     def populate_inputs_decorator(create_func):
+        @functools.wraps(create_func)
         def wrapper(*args, **kwargs):
             config_schema_for_resource = {
                 "output_data_config": {
@@ -2388,7 +2493,7 @@ class AutoMLJobV2(Base):
                     "kms_key_id": {"type": "string"},
                 },
                 "role_arn": {"type": "string"},
-                "auto_ml_problem_type_config": {
+                "auto_m_l_problem_type_config": {
                     "time_series_forecasting_job_config": {
                         "feature_specification_s3_uri": {"type": "string"}
                     },
@@ -2467,9 +2572,9 @@ class AutoMLJobV2(Base):
         """
 
         logger.debug("Creating auto_ml_job_v2 resource.")
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
 
         operation_input_args = {
             "AutoMLJobName": auto_ml_job_name,
@@ -2534,9 +2639,9 @@ class AutoMLJobV2(Base):
         operation_input_args = {
             "AutoMLJobName": auto_ml_job_name,
         }
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
         response = client.describe_auto_ml_job_v2(**operation_input_args)
 
         pprint(response)
@@ -2546,7 +2651,9 @@ class AutoMLJobV2(Base):
         auto_ml_job_v2 = cls(**transformed_response)
         return auto_ml_job_v2
 
-    def refresh(self) -> Optional["AutoMLJobV2"]:
+    def refresh(
+        self,
+    ) -> Optional["AutoMLJobV2"]:
         """
         Refresh a AutoMLJobV2 resource
 
@@ -2570,7 +2677,7 @@ class AutoMLJobV2(Base):
         operation_input_args = {
             "AutoMLJobName": self.auto_ml_job_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_auto_ml_job_v2(**operation_input_args)
 
         # deserialize response and update self
@@ -2644,12 +2751,22 @@ class Cluster(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "cluster_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == "name" or attribute == "cluster_name":
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object cluster")
+        return None
 
     def populate_inputs_decorator(create_func):
+        @functools.wraps(create_func)
         def wrapper(*args, **kwargs):
             config_schema_for_resource = {
                 "vpc_config": {
@@ -2710,9 +2827,9 @@ class Cluster(Base):
         """
 
         logger.debug("Creating cluster resource.")
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
 
         operation_input_args = {
             "ClusterName": cluster_name,
@@ -2771,9 +2888,9 @@ class Cluster(Base):
         operation_input_args = {
             "ClusterName": cluster_name,
         }
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
         response = client.describe_cluster(**operation_input_args)
 
         pprint(response)
@@ -2783,7 +2900,9 @@ class Cluster(Base):
         cluster = cls(**transformed_response)
         return cluster
 
-    def refresh(self) -> Optional["Cluster"]:
+    def refresh(
+        self,
+    ) -> Optional["Cluster"]:
         """
         Refresh a Cluster resource
 
@@ -2807,7 +2926,7 @@ class Cluster(Base):
         operation_input_args = {
             "ClusterName": self.cluster_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_cluster(**operation_input_args)
 
         # deserialize response and update self
@@ -2843,7 +2962,7 @@ class Cluster(Base):
         """
 
         logger.debug("Updating cluster resource.")
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
             "ClusterName": self.cluster_name,
@@ -2861,7 +2980,9 @@ class Cluster(Base):
 
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a Cluster resource
 
@@ -2881,7 +3002,7 @@ class Cluster(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
             "ClusterName": self.cluster_name,
@@ -3144,10 +3265,19 @@ class CodeRepository(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "code_repository_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == "name" or attribute == "code_repository_name":
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object code_repository")
+        return None
 
     @classmethod
     def create(
@@ -3188,9 +3318,9 @@ class CodeRepository(Base):
         """
 
         logger.debug("Creating code_repository resource.")
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
 
         operation_input_args = {
             "CodeRepositoryName": code_repository_name,
@@ -3247,9 +3377,9 @@ class CodeRepository(Base):
         operation_input_args = {
             "CodeRepositoryName": code_repository_name,
         }
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
         response = client.describe_code_repository(**operation_input_args)
 
         pprint(response)
@@ -3259,7 +3389,9 @@ class CodeRepository(Base):
         code_repository = cls(**transformed_response)
         return code_repository
 
-    def refresh(self) -> Optional["CodeRepository"]:
+    def refresh(
+        self,
+    ) -> Optional["CodeRepository"]:
         """
         Refresh a CodeRepository resource
 
@@ -3282,7 +3414,7 @@ class CodeRepository(Base):
         operation_input_args = {
             "CodeRepositoryName": self.code_repository_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_code_repository(**operation_input_args)
 
         # deserialize response and update self
@@ -3315,7 +3447,7 @@ class CodeRepository(Base):
         """
 
         logger.debug("Updating code_repository resource.")
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
             "CodeRepositoryName": self.code_repository_name,
@@ -3333,7 +3465,9 @@ class CodeRepository(Base):
 
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a CodeRepository resource
 
@@ -3351,7 +3485,7 @@ class CodeRepository(Base):
                 ```
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
             "CodeRepositoryName": self.code_repository_name,
@@ -3469,12 +3603,22 @@ class CompilationJob(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "compilation_job_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == "name" or attribute == "compilation_job_name":
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object compilation_job")
+        return None
 
     def populate_inputs_decorator(create_func):
+        @functools.wraps(create_func)
         def wrapper(*args, **kwargs):
             config_schema_for_resource = {
                 "model_artifacts": {"s3_model_artifacts": {"type": "string"}},
@@ -3550,9 +3694,9 @@ class CompilationJob(Base):
         """
 
         logger.debug("Creating compilation_job resource.")
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
 
         operation_input_args = {
             "CompilationJobName": compilation_job_name,
@@ -3615,9 +3759,9 @@ class CompilationJob(Base):
         operation_input_args = {
             "CompilationJobName": compilation_job_name,
         }
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
         response = client.describe_compilation_job(**operation_input_args)
 
         pprint(response)
@@ -3627,7 +3771,9 @@ class CompilationJob(Base):
         compilation_job = cls(**transformed_response)
         return compilation_job
 
-    def refresh(self) -> Optional["CompilationJob"]:
+    def refresh(
+        self,
+    ) -> Optional["CompilationJob"]:
         """
         Refresh a CompilationJob resource
 
@@ -3651,14 +3797,16 @@ class CompilationJob(Base):
         operation_input_args = {
             "CompilationJobName": self.compilation_job_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_compilation_job(**operation_input_args)
 
         # deserialize response and update self
         transform(response, "DescribeCompilationJobResponse", self)
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a CompilationJob resource
 
@@ -3677,7 +3825,7 @@ class CompilationJob(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
             "CompilationJobName": self.compilation_job_name,
@@ -3864,10 +4012,19 @@ class Context(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "context_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == "name" or attribute == "context_name":
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object context")
+        return None
 
     @classmethod
     def create(
@@ -3915,9 +4072,9 @@ class Context(Base):
         """
 
         logger.debug("Creating context resource.")
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
 
         operation_input_args = {
             "ContextName": context_name,
@@ -3978,9 +4135,9 @@ class Context(Base):
         operation_input_args = {
             "ContextName": context_name,
         }
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
         response = client.describe_context(**operation_input_args)
 
         pprint(response)
@@ -3990,7 +4147,9 @@ class Context(Base):
         context = cls(**transformed_response)
         return context
 
-    def refresh(self) -> Optional["Context"]:
+    def refresh(
+        self,
+    ) -> Optional["Context"]:
         """
         Refresh a Context resource
 
@@ -4014,7 +4173,7 @@ class Context(Base):
         operation_input_args = {
             "ContextName": self.context_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_context(**operation_input_args)
 
         # deserialize response and update self
@@ -4052,7 +4211,7 @@ class Context(Base):
         """
 
         logger.debug("Updating context resource.")
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
             "ContextName": self.context_name,
@@ -4072,7 +4231,9 @@ class Context(Base):
 
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a Context resource
 
@@ -4091,7 +4252,7 @@ class Context(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
             "ContextName": self.context_name,
@@ -4206,12 +4367,22 @@ class DataQualityJobDefinition(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "data_quality_job_definition_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == "name" or attribute == "data_quality_job_definition_name":
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object data_quality_job_definition")
+        return None
 
     def populate_inputs_decorator(create_func):
+        @functools.wraps(create_func)
         def wrapper(*args, **kwargs):
             config_schema_for_resource = {
                 "data_quality_job_input": {
@@ -4304,9 +4475,9 @@ class DataQualityJobDefinition(Base):
         """
 
         logger.debug("Creating data_quality_job_definition resource.")
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
 
         operation_input_args = {
             "JobDefinitionName": job_definition_name,
@@ -4371,9 +4542,9 @@ class DataQualityJobDefinition(Base):
         operation_input_args = {
             "JobDefinitionName": job_definition_name,
         }
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
         response = client.describe_data_quality_job_definition(**operation_input_args)
 
         pprint(response)
@@ -4383,7 +4554,9 @@ class DataQualityJobDefinition(Base):
         data_quality_job_definition = cls(**transformed_response)
         return data_quality_job_definition
 
-    def refresh(self) -> Optional["DataQualityJobDefinition"]:
+    def refresh(
+        self,
+    ) -> Optional["DataQualityJobDefinition"]:
         """
         Refresh a DataQualityJobDefinition resource
 
@@ -4407,14 +4580,16 @@ class DataQualityJobDefinition(Base):
         operation_input_args = {
             "JobDefinitionName": self.job_definition_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_data_quality_job_definition(**operation_input_args)
 
         # deserialize response and update self
         transform(response, "DescribeDataQualityJobDefinitionResponse", self)
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a DataQualityJobDefinition resource
 
@@ -4433,7 +4608,7 @@ class DataQualityJobDefinition(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
             "JobDefinitionName": self.job_definition_name,
@@ -4551,10 +4726,19 @@ class Device(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "device_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == "name" or attribute == "device_name":
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object device")
+        return None
 
     @classmethod
     def get(
@@ -4597,9 +4781,9 @@ class Device(Base):
             "DeviceName": device_name,
             "DeviceFleetName": device_fleet_name,
         }
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
         response = client.describe_device(**operation_input_args)
 
         pprint(response)
@@ -4609,7 +4793,10 @@ class Device(Base):
         device = cls(**transformed_response)
         return device
 
-    def refresh(self) -> Optional["Device"]:
+    def refresh(
+        self,
+        next_token: Optional[str] = Unassigned(),
+    ) -> Optional["Device"]:
         """
         Refresh a Device resource
 
@@ -4631,11 +4818,11 @@ class Device(Base):
         """
 
         operation_input_args = {
-            "NextToken": self.next_token,
+            "NextToken": next_token,
             "DeviceName": self.device_name,
             "DeviceFleetName": self.device_fleet_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_device(**operation_input_args)
 
         # deserialize response and update self
@@ -4732,12 +4919,22 @@ class DeviceFleet(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "device_fleet_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == "name" or attribute == "device_fleet_name":
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object device_fleet")
+        return None
 
     def populate_inputs_decorator(create_func):
+        @functools.wraps(create_func)
         def wrapper(*args, **kwargs):
             config_schema_for_resource = {
                 "output_config": {
@@ -4804,9 +5001,9 @@ class DeviceFleet(Base):
         """
 
         logger.debug("Creating device_fleet resource.")
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
 
         operation_input_args = {
             "DeviceFleetName": device_fleet_name,
@@ -4867,9 +5064,9 @@ class DeviceFleet(Base):
         operation_input_args = {
             "DeviceFleetName": device_fleet_name,
         }
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
         response = client.describe_device_fleet(**operation_input_args)
 
         pprint(response)
@@ -4879,7 +5076,9 @@ class DeviceFleet(Base):
         device_fleet = cls(**transformed_response)
         return device_fleet
 
-    def refresh(self) -> Optional["DeviceFleet"]:
+    def refresh(
+        self,
+    ) -> Optional["DeviceFleet"]:
         """
         Refresh a DeviceFleet resource
 
@@ -4903,7 +5102,7 @@ class DeviceFleet(Base):
         operation_input_args = {
             "DeviceFleetName": self.device_fleet_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_device_fleet(**operation_input_args)
 
         # deserialize response and update self
@@ -4942,7 +5141,7 @@ class DeviceFleet(Base):
         """
 
         logger.debug("Updating device_fleet resource.")
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
             "DeviceFleetName": self.device_fleet_name,
@@ -4963,7 +5162,9 @@ class DeviceFleet(Base):
 
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a DeviceFleet resource
 
@@ -4982,7 +5183,7 @@ class DeviceFleet(Base):
             ResourceInUse: Resource being accessed is in use.
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
             "DeviceFleetName": self.device_fleet_name,
@@ -5244,12 +5445,22 @@ class Domain(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "domain_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == "name" or attribute == "domain_name":
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object domain")
+        return None
 
     def populate_inputs_decorator(create_func):
+        @functools.wraps(create_func)
         def wrapper(*args, **kwargs):
             config_schema_for_resource = {
                 "security_group_id_for_domain_boundary": {"type": "string"},
@@ -5359,9 +5570,9 @@ class Domain(Base):
         """
 
         logger.debug("Creating domain resource.")
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
 
         operation_input_args = {
             "DomainName": domain_name,
@@ -5428,9 +5639,9 @@ class Domain(Base):
         operation_input_args = {
             "DomainId": domain_id,
         }
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
         response = client.describe_domain(**operation_input_args)
 
         pprint(response)
@@ -5440,7 +5651,9 @@ class Domain(Base):
         domain = cls(**transformed_response)
         return domain
 
-    def refresh(self) -> Optional["Domain"]:
+    def refresh(
+        self,
+    ) -> Optional["Domain"]:
         """
         Refresh a Domain resource
 
@@ -5464,7 +5677,7 @@ class Domain(Base):
         operation_input_args = {
             "DomainId": self.domain_id,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_domain(**operation_input_args)
 
         # deserialize response and update self
@@ -5507,7 +5720,7 @@ class Domain(Base):
         """
 
         logger.debug("Updating domain resource.")
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
             "DomainId": self.domain_id,
@@ -5530,7 +5743,10 @@ class Domain(Base):
 
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+        retention_policy: Optional[RetentionPolicy] = Unassigned(),
+    ) -> None:
         """
         Delete a Domain resource
 
@@ -5550,11 +5766,11 @@ class Domain(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
             "DomainId": self.domain_id,
-            "RetentionPolicy": self.retention_policy,
+            "RetentionPolicy": retention_policy,
         }
         client.delete_domain(**operation_input_args)
 
@@ -5674,10 +5890,19 @@ class EdgeDeploymentPlan(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "edge_deployment_plan_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == "name" or attribute == "edge_deployment_plan_name":
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object edge_deployment_plan")
+        return None
 
     @classmethod
     def create(
@@ -5723,9 +5948,9 @@ class EdgeDeploymentPlan(Base):
         """
 
         logger.debug("Creating edge_deployment_plan resource.")
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
 
         operation_input_args = {
             "EdgeDeploymentPlanName": edge_deployment_plan_name,
@@ -5793,9 +6018,9 @@ class EdgeDeploymentPlan(Base):
             "NextToken": next_token,
             "MaxResults": max_results,
         }
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
         response = client.describe_edge_deployment_plan(**operation_input_args)
 
         pprint(response)
@@ -5805,7 +6030,11 @@ class EdgeDeploymentPlan(Base):
         edge_deployment_plan = cls(**transformed_response)
         return edge_deployment_plan
 
-    def refresh(self) -> Optional["EdgeDeploymentPlan"]:
+    def refresh(
+        self,
+        next_token: Optional[str] = Unassigned(),
+        max_results: Optional[int] = Unassigned(),
+    ) -> Optional["EdgeDeploymentPlan"]:
         """
         Refresh a EdgeDeploymentPlan resource
 
@@ -5828,17 +6057,19 @@ class EdgeDeploymentPlan(Base):
 
         operation_input_args = {
             "EdgeDeploymentPlanName": self.edge_deployment_plan_name,
-            "NextToken": self.next_token,
-            "MaxResults": self.max_results,
+            "NextToken": next_token,
+            "MaxResults": max_results,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_edge_deployment_plan(**operation_input_args)
 
         # deserialize response and update self
         transform(response, "DescribeEdgeDeploymentPlanResponse", self)
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a EdgeDeploymentPlan resource
 
@@ -5857,7 +6088,7 @@ class EdgeDeploymentPlan(Base):
             ResourceInUse: Resource being accessed is in use.
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
             "EdgeDeploymentPlanName": self.edge_deployment_plan_name,
@@ -5985,12 +6216,22 @@ class EdgePackagingJob(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "edge_packaging_job_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == "name" or attribute == "edge_packaging_job_name":
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object edge_packaging_job")
+        return None
 
     def populate_inputs_decorator(create_func):
+        @functools.wraps(create_func)
         def wrapper(*args, **kwargs):
             config_schema_for_resource = {
                 "role_arn": {"type": "string"},
@@ -6059,9 +6300,9 @@ class EdgePackagingJob(Base):
         """
 
         logger.debug("Creating edge_packaging_job resource.")
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
 
         operation_input_args = {
             "EdgePackagingJobName": edge_packaging_job_name,
@@ -6126,9 +6367,9 @@ class EdgePackagingJob(Base):
         operation_input_args = {
             "EdgePackagingJobName": edge_packaging_job_name,
         }
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
         response = client.describe_edge_packaging_job(**operation_input_args)
 
         pprint(response)
@@ -6138,7 +6379,9 @@ class EdgePackagingJob(Base):
         edge_packaging_job = cls(**transformed_response)
         return edge_packaging_job
 
-    def refresh(self) -> Optional["EdgePackagingJob"]:
+    def refresh(
+        self,
+    ) -> Optional["EdgePackagingJob"]:
         """
         Refresh a EdgePackagingJob resource
 
@@ -6162,7 +6405,7 @@ class EdgePackagingJob(Base):
         operation_input_args = {
             "EdgePackagingJobName": self.edge_packaging_job_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_edge_packaging_job(**operation_input_args)
 
         # deserialize response and update self
@@ -6355,12 +6598,22 @@ class Endpoint(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "endpoint_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == "name" or attribute == "endpoint_name":
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object endpoint")
+        return None
 
     def populate_inputs_decorator(create_func):
+        @functools.wraps(create_func)
         def wrapper(*args, **kwargs):
             config_schema_for_resource = {
                 "data_capture_config": {
@@ -6427,9 +6680,9 @@ class Endpoint(Base):
         """
 
         logger.debug("Creating endpoint resource.")
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
 
         operation_input_args = {
             "EndpointName": endpoint_name,
@@ -6487,9 +6740,9 @@ class Endpoint(Base):
         operation_input_args = {
             "EndpointName": endpoint_name,
         }
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
         response = client.describe_endpoint(**operation_input_args)
 
         pprint(response)
@@ -6499,7 +6752,9 @@ class Endpoint(Base):
         endpoint = cls(**transformed_response)
         return endpoint
 
-    def refresh(self) -> Optional["Endpoint"]:
+    def refresh(
+        self,
+    ) -> Optional["Endpoint"]:
         """
         Refresh a Endpoint resource
 
@@ -6522,7 +6777,7 @@ class Endpoint(Base):
         operation_input_args = {
             "EndpointName": self.endpoint_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_endpoint(**operation_input_args)
 
         # deserialize response and update self
@@ -6564,7 +6819,7 @@ class Endpoint(Base):
         """
 
         logger.debug("Updating endpoint resource.")
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
             "EndpointName": self.endpoint_name,
@@ -6586,7 +6841,9 @@ class Endpoint(Base):
 
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a Endpoint resource
 
@@ -6604,7 +6861,7 @@ class Endpoint(Base):
                 ```
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
             "EndpointName": self.endpoint_name,
@@ -7025,12 +7282,22 @@ class EndpointConfig(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "endpoint_config_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == "name" or attribute == "endpoint_config_name":
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object endpoint_config")
+        return None
 
     def populate_inputs_decorator(create_func):
+        @functools.wraps(create_func)
         def wrapper(*args, **kwargs):
             config_schema_for_resource = {
                 "data_capture_config": {
@@ -7117,9 +7384,9 @@ class EndpointConfig(Base):
         """
 
         logger.debug("Creating endpoint_config resource.")
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
 
         operation_input_args = {
             "EndpointConfigName": endpoint_config_name,
@@ -7184,9 +7451,9 @@ class EndpointConfig(Base):
         operation_input_args = {
             "EndpointConfigName": endpoint_config_name,
         }
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
         response = client.describe_endpoint_config(**operation_input_args)
 
         pprint(response)
@@ -7196,7 +7463,9 @@ class EndpointConfig(Base):
         endpoint_config = cls(**transformed_response)
         return endpoint_config
 
-    def refresh(self) -> Optional["EndpointConfig"]:
+    def refresh(
+        self,
+    ) -> Optional["EndpointConfig"]:
         """
         Refresh a EndpointConfig resource
 
@@ -7219,14 +7488,16 @@ class EndpointConfig(Base):
         operation_input_args = {
             "EndpointConfigName": self.endpoint_config_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_endpoint_config(**operation_input_args)
 
         # deserialize response and update self
         transform(response, "DescribeEndpointConfigOutput", self)
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a EndpointConfig resource
 
@@ -7244,7 +7515,7 @@ class EndpointConfig(Base):
                 ```
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
             "EndpointConfigName": self.endpoint_config_name,
@@ -7351,10 +7622,19 @@ class Experiment(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "experiment_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == "name" or attribute == "experiment_name":
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object experiment")
+        return None
 
     @classmethod
     def create(
@@ -7398,9 +7678,9 @@ class Experiment(Base):
         """
 
         logger.debug("Creating experiment resource.")
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
 
         operation_input_args = {
             "ExperimentName": experiment_name,
@@ -7459,9 +7739,9 @@ class Experiment(Base):
         operation_input_args = {
             "ExperimentName": experiment_name,
         }
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
         response = client.describe_experiment(**operation_input_args)
 
         pprint(response)
@@ -7471,7 +7751,9 @@ class Experiment(Base):
         experiment = cls(**transformed_response)
         return experiment
 
-    def refresh(self) -> Optional["Experiment"]:
+    def refresh(
+        self,
+    ) -> Optional["Experiment"]:
         """
         Refresh a Experiment resource
 
@@ -7495,7 +7777,7 @@ class Experiment(Base):
         operation_input_args = {
             "ExperimentName": self.experiment_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_experiment(**operation_input_args)
 
         # deserialize response and update self
@@ -7530,7 +7812,7 @@ class Experiment(Base):
         """
 
         logger.debug("Updating experiment resource.")
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
             "ExperimentName": self.experiment_name,
@@ -7549,7 +7831,9 @@ class Experiment(Base):
 
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a Experiment resource
 
@@ -7568,7 +7852,7 @@ class Experiment(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
             "ExperimentName": self.experiment_name,
@@ -7690,12 +7974,22 @@ class FeatureGroup(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "feature_group_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == "name" or attribute == "feature_group_name":
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object feature_group")
+        return None
 
     def populate_inputs_decorator(create_func):
+        @functools.wraps(create_func)
         def wrapper(*args, **kwargs):
             config_schema_for_resource = {
                 "online_store_config": {"security_config": {"kms_key_id": {"type": "string"}}},
@@ -7773,9 +8067,9 @@ class FeatureGroup(Base):
         """
 
         logger.debug("Creating feature_group resource.")
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
 
         operation_input_args = {
             "FeatureGroupName": feature_group_name,
@@ -7843,9 +8137,9 @@ class FeatureGroup(Base):
             "FeatureGroupName": feature_group_name,
             "NextToken": next_token,
         }
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
         response = client.describe_feature_group(**operation_input_args)
 
         pprint(response)
@@ -7855,7 +8149,10 @@ class FeatureGroup(Base):
         feature_group = cls(**transformed_response)
         return feature_group
 
-    def refresh(self) -> Optional["FeatureGroup"]:
+    def refresh(
+        self,
+        next_token: Optional[str] = Unassigned(),
+    ) -> Optional["FeatureGroup"]:
         """
         Refresh a FeatureGroup resource
 
@@ -7878,9 +8175,9 @@ class FeatureGroup(Base):
 
         operation_input_args = {
             "FeatureGroupName": self.feature_group_name,
-            "NextToken": self.next_token,
+            "NextToken": next_token,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_feature_group(**operation_input_args)
 
         # deserialize response and update self
@@ -7919,7 +8216,7 @@ class FeatureGroup(Base):
         """
 
         logger.debug("Updating feature_group resource.")
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
             "FeatureGroupName": self.feature_group_name,
@@ -7939,7 +8236,9 @@ class FeatureGroup(Base):
 
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a FeatureGroup resource
 
@@ -7958,7 +8257,7 @@ class FeatureGroup(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
             "FeatureGroupName": self.feature_group_name,
@@ -8112,10 +8411,19 @@ class FeatureMetadata(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "feature_metadata_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == "name" or attribute == "feature_metadata_name":
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object feature_metadata")
+        return None
 
     @classmethod
     def get(
@@ -8155,9 +8463,9 @@ class FeatureMetadata(Base):
             "FeatureGroupName": feature_group_name,
             "FeatureName": feature_name,
         }
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
         response = client.describe_feature_metadata(**operation_input_args)
 
         pprint(response)
@@ -8167,7 +8475,9 @@ class FeatureMetadata(Base):
         feature_metadata = cls(**transformed_response)
         return feature_metadata
 
-    def refresh(self) -> Optional["FeatureMetadata"]:
+    def refresh(
+        self,
+    ) -> Optional["FeatureMetadata"]:
         """
         Refresh a FeatureMetadata resource
 
@@ -8192,7 +8502,7 @@ class FeatureMetadata(Base):
             "FeatureGroupName": self.feature_group_name,
             "FeatureName": self.feature_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_feature_metadata(**operation_input_args)
 
         # deserialize response and update self
@@ -8230,7 +8540,7 @@ class FeatureMetadata(Base):
         """
 
         logger.debug("Updating feature_metadata resource.")
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
             "FeatureGroupName": self.feature_group_name,
@@ -8283,12 +8593,22 @@ class FlowDefinition(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "flow_definition_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == "name" or attribute == "flow_definition_name":
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object flow_definition")
+        return None
 
     def populate_inputs_decorator(create_func):
+        @functools.wraps(create_func)
         def wrapper(*args, **kwargs):
             config_schema_for_resource = {
                 "output_config": {
@@ -8356,9 +8676,9 @@ class FlowDefinition(Base):
         """
 
         logger.debug("Creating flow_definition resource.")
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
 
         operation_input_args = {
             "FlowDefinitionName": flow_definition_name,
@@ -8420,9 +8740,9 @@ class FlowDefinition(Base):
         operation_input_args = {
             "FlowDefinitionName": flow_definition_name,
         }
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
         response = client.describe_flow_definition(**operation_input_args)
 
         pprint(response)
@@ -8432,7 +8752,9 @@ class FlowDefinition(Base):
         flow_definition = cls(**transformed_response)
         return flow_definition
 
-    def refresh(self) -> Optional["FlowDefinition"]:
+    def refresh(
+        self,
+    ) -> Optional["FlowDefinition"]:
         """
         Refresh a FlowDefinition resource
 
@@ -8456,14 +8778,16 @@ class FlowDefinition(Base):
         operation_input_args = {
             "FlowDefinitionName": self.flow_definition_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_flow_definition(**operation_input_args)
 
         # deserialize response and update self
         transform(response, "DescribeFlowDefinitionResponse", self)
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a FlowDefinition resource
 
@@ -8483,7 +8807,7 @@ class FlowDefinition(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
             "FlowDefinitionName": self.flow_definition_name,
@@ -8631,12 +8955,22 @@ class Hub(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "hub_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == "name" or attribute == "hub_name":
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object hub")
+        return None
 
     def populate_inputs_decorator(create_func):
+        @functools.wraps(create_func)
         def wrapper(*args, **kwargs):
             config_schema_for_resource = {
                 "s3_storage_config": {"s3_output_path": {"type": "string"}}
@@ -8698,9 +9032,9 @@ class Hub(Base):
         """
 
         logger.debug("Creating hub resource.")
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
 
         operation_input_args = {
             "HubName": hub_name,
@@ -8761,9 +9095,9 @@ class Hub(Base):
         operation_input_args = {
             "HubName": hub_name,
         }
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
         response = client.describe_hub(**operation_input_args)
 
         pprint(response)
@@ -8773,7 +9107,9 @@ class Hub(Base):
         hub = cls(**transformed_response)
         return hub
 
-    def refresh(self) -> Optional["Hub"]:
+    def refresh(
+        self,
+    ) -> Optional["Hub"]:
         """
         Refresh a Hub resource
 
@@ -8797,7 +9133,7 @@ class Hub(Base):
         operation_input_args = {
             "HubName": self.hub_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_hub(**operation_input_args)
 
         # deserialize response and update self
@@ -8833,7 +9169,7 @@ class Hub(Base):
         """
 
         logger.debug("Updating hub resource.")
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
             "HubName": self.hub_name,
@@ -8853,7 +9189,9 @@ class Hub(Base):
 
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a Hub resource
 
@@ -8873,7 +9211,7 @@ class Hub(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
             "HubName": self.hub_name,
@@ -9051,10 +9389,19 @@ class HubContent(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "hub_content_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == "name" or attribute == "hub_content_name":
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object hub_content")
+        return None
 
     @classmethod
     def get(
@@ -9100,9 +9447,9 @@ class HubContent(Base):
             "HubContentName": hub_content_name,
             "HubContentVersion": hub_content_version,
         }
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
         response = client.describe_hub_content(**operation_input_args)
 
         pprint(response)
@@ -9112,7 +9459,11 @@ class HubContent(Base):
         hub_content = cls(**transformed_response)
         return hub_content
 
-    def refresh(self) -> Optional["HubContent"]:
+    def refresh(
+        self,
+        hub_content_type: str,
+        hub_content_version: Optional[str] = Unassigned(),
+    ) -> Optional["HubContent"]:
         """
         Refresh a HubContent resource
 
@@ -9135,18 +9486,22 @@ class HubContent(Base):
 
         operation_input_args = {
             "HubName": self.hub_name,
-            "HubContentType": self.hub_content_type,
+            "HubContentType": hub_content_type,
             "HubContentName": self.hub_content_name,
-            "HubContentVersion": self.hub_content_version,
+            "HubContentVersion": hub_content_version,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_hub_content(**operation_input_args)
 
         # deserialize response and update self
         transform(response, "DescribeHubContentResponse", self)
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+        hub_content_type: str,
+        hub_content_version: str,
+    ) -> None:
         """
         Delete a HubContent resource
 
@@ -9166,13 +9521,13 @@ class HubContent(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
             "HubName": self.hub_name,
-            "HubContentType": self.hub_content_type,
+            "HubContentType": hub_content_type,
             "HubContentName": self.hub_content_name,
-            "HubContentVersion": self.hub_content_version,
+            "HubContentVersion": hub_content_version,
         }
         client.delete_hub_content(**operation_input_args)
 
@@ -9471,10 +9826,19 @@ class HumanTaskUi(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "human_task_ui_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == "name" or attribute == "human_task_ui_name":
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object human_task_ui")
+        return None
 
     @classmethod
     def create(
@@ -9517,9 +9881,9 @@ class HumanTaskUi(Base):
         """
 
         logger.debug("Creating human_task_ui resource.")
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
 
         operation_input_args = {
             "HumanTaskUiName": human_task_ui_name,
@@ -9577,9 +9941,9 @@ class HumanTaskUi(Base):
         operation_input_args = {
             "HumanTaskUiName": human_task_ui_name,
         }
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
         response = client.describe_human_task_ui(**operation_input_args)
 
         pprint(response)
@@ -9589,7 +9953,9 @@ class HumanTaskUi(Base):
         human_task_ui = cls(**transformed_response)
         return human_task_ui
 
-    def refresh(self) -> Optional["HumanTaskUi"]:
+    def refresh(
+        self,
+    ) -> Optional["HumanTaskUi"]:
         """
         Refresh a HumanTaskUi resource
 
@@ -9613,14 +9979,16 @@ class HumanTaskUi(Base):
         operation_input_args = {
             "HumanTaskUiName": self.human_task_ui_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_human_task_ui(**operation_input_args)
 
         # deserialize response and update self
         transform(response, "DescribeHumanTaskUiResponse", self)
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a HumanTaskUi resource
 
@@ -9639,7 +10007,7 @@ class HumanTaskUi(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
             "HumanTaskUiName": self.human_task_ui_name,
@@ -9793,12 +10161,22 @@ class HyperParameterTuningJob(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "hyper_parameter_tuning_job_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == "name" or attribute == "hyper_parameter_tuning_job_name":
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object hyper_parameter_tuning_job")
+        return None
 
     def populate_inputs_decorator(create_func):
+        @functools.wraps(create_func)
         def wrapper(*args, **kwargs):
             config_schema_for_resource = {
                 "training_job_definition": {
@@ -9879,9 +10257,9 @@ class HyperParameterTuningJob(Base):
         """
 
         logger.debug("Creating hyper_parameter_tuning_job resource.")
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
 
         operation_input_args = {
             "HyperParameterTuningJobName": hyper_parameter_tuning_job_name,
@@ -9947,9 +10325,9 @@ class HyperParameterTuningJob(Base):
         operation_input_args = {
             "HyperParameterTuningJobName": hyper_parameter_tuning_job_name,
         }
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
         response = client.describe_hyper_parameter_tuning_job(**operation_input_args)
 
         pprint(response)
@@ -9959,7 +10337,9 @@ class HyperParameterTuningJob(Base):
         hyper_parameter_tuning_job = cls(**transformed_response)
         return hyper_parameter_tuning_job
 
-    def refresh(self) -> Optional["HyperParameterTuningJob"]:
+    def refresh(
+        self,
+    ) -> Optional["HyperParameterTuningJob"]:
         """
         Refresh a HyperParameterTuningJob resource
 
@@ -9983,14 +10363,16 @@ class HyperParameterTuningJob(Base):
         operation_input_args = {
             "HyperParameterTuningJobName": self.hyper_parameter_tuning_job_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_hyper_parameter_tuning_job(**operation_input_args)
 
         # deserialize response and update self
         transform(response, "DescribeHyperParameterTuningJobResponse", self)
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a HyperParameterTuningJob resource
 
@@ -10008,7 +10390,7 @@ class HyperParameterTuningJob(Base):
                 ```
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
             "HyperParameterTuningJobName": self.hyper_parameter_tuning_job_name,
@@ -10242,12 +10624,22 @@ class Image(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "image_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == "name" or attribute == "image_name":
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object image")
+        return None
 
     def populate_inputs_decorator(create_func):
+        @functools.wraps(create_func)
         def wrapper(*args, **kwargs):
             config_schema_for_resource = {"role_arn": {"type": "string"}}
             return create_func(
@@ -10305,9 +10697,9 @@ class Image(Base):
         """
 
         logger.debug("Creating image resource.")
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
 
         operation_input_args = {
             "Description": description,
@@ -10367,9 +10759,9 @@ class Image(Base):
         operation_input_args = {
             "ImageName": image_name,
         }
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
         response = client.describe_image(**operation_input_args)
 
         pprint(response)
@@ -10379,7 +10771,9 @@ class Image(Base):
         image = cls(**transformed_response)
         return image
 
-    def refresh(self) -> Optional["Image"]:
+    def refresh(
+        self,
+    ) -> Optional["Image"]:
         """
         Refresh a Image resource
 
@@ -10403,7 +10797,7 @@ class Image(Base):
         operation_input_args = {
             "ImageName": self.image_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_image(**operation_input_args)
 
         # deserialize response and update self
@@ -10443,7 +10837,7 @@ class Image(Base):
         """
 
         logger.debug("Updating image resource.")
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
             "DeleteProperties": delete_properties,
@@ -10464,7 +10858,9 @@ class Image(Base):
 
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a Image resource
 
@@ -10484,7 +10880,7 @@ class Image(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
             "ImageName": self.image_name,
@@ -10643,6 +11039,7 @@ class ImageVersion(Base):
 
     """
 
+    image_name: str
     base_image: Optional[str] = Unassigned()
     container_image: Optional[str] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
@@ -10662,10 +11059,19 @@ class ImageVersion(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "image_version_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == "name" or attribute == "image_version_name":
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object image_version")
+        return None
 
     @classmethod
     def create(
@@ -10725,9 +11131,9 @@ class ImageVersion(Base):
         """
 
         logger.debug("Creating image_version resource.")
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
 
         operation_input_args = {
             "BaseImage": base_image,
@@ -10799,9 +11205,9 @@ class ImageVersion(Base):
             "Version": version,
             "Alias": alias,
         }
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
         response = client.describe_image_version(**operation_input_args)
 
         pprint(response)
@@ -10811,7 +11217,11 @@ class ImageVersion(Base):
         image_version = cls(**transformed_response)
         return image_version
 
-    def refresh(self) -> Optional["ImageVersion"]:
+    def refresh(
+        self,
+        version: Optional[int] = Unassigned(),
+        alias: Optional[str] = Unassigned(),
+    ) -> Optional["ImageVersion"]:
         """
         Refresh a ImageVersion resource
 
@@ -10834,10 +11244,10 @@ class ImageVersion(Base):
 
         operation_input_args = {
             "ImageName": self.image_name,
-            "Version": self.version,
-            "Alias": self.alias,
+            "Version": version,
+            "Alias": alias,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_image_version(**operation_input_args)
 
         # deserialize response and update self
@@ -10846,7 +11256,6 @@ class ImageVersion(Base):
 
     def update(
         self,
-        image_name: str,
         alias: Optional[str] = Unassigned(),
         version: Optional[int] = Unassigned(),
         aliases_to_add: Optional[List[str]] = Unassigned(),
@@ -10863,7 +11272,6 @@ class ImageVersion(Base):
         Update a ImageVersion resource
 
         Parameters:
-            image_name:The name of the image.
             alias:The alias of the image version.
             aliases_to_add:A list of aliases to add.
             aliases_to_delete:A list of aliases to delete.
@@ -10887,10 +11295,10 @@ class ImageVersion(Base):
         """
 
         logger.debug("Updating image_version resource.")
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
-            "ImageName": image_name,
+            "ImageName": self.image_name,
             "Alias": alias,
             "Version": version,
             "AliasesToAdd": aliases_to_add,
@@ -10915,7 +11323,11 @@ class ImageVersion(Base):
 
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+        version: Optional[int] = Unassigned(),
+        alias: Optional[str] = Unassigned(),
+    ) -> None:
         """
         Delete a ImageVersion resource
 
@@ -10935,12 +11347,12 @@ class ImageVersion(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
             "ImageName": self.image_name,
-            "Version": self.version,
-            "Alias": self.alias,
+            "Version": version,
+            "Alias": alias,
         }
         client.delete_image_version(**operation_input_args)
 
@@ -11023,10 +11435,19 @@ class InferenceComponent(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "inference_component_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == "name" or attribute == "inference_component_name":
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object inference_component")
+        return None
 
     @classmethod
     def create(
@@ -11074,9 +11495,9 @@ class InferenceComponent(Base):
         """
 
         logger.debug("Creating inference_component resource.")
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
 
         operation_input_args = {
             "InferenceComponentName": inference_component_name,
@@ -11138,9 +11559,9 @@ class InferenceComponent(Base):
         operation_input_args = {
             "InferenceComponentName": inference_component_name,
         }
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
         response = client.describe_inference_component(**operation_input_args)
 
         pprint(response)
@@ -11150,7 +11571,9 @@ class InferenceComponent(Base):
         inference_component = cls(**transformed_response)
         return inference_component
 
-    def refresh(self) -> Optional["InferenceComponent"]:
+    def refresh(
+        self,
+    ) -> Optional["InferenceComponent"]:
         """
         Refresh a InferenceComponent resource
 
@@ -11173,7 +11596,7 @@ class InferenceComponent(Base):
         operation_input_args = {
             "InferenceComponentName": self.inference_component_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_inference_component(**operation_input_args)
 
         # deserialize response and update self
@@ -11207,7 +11630,7 @@ class InferenceComponent(Base):
         """
 
         logger.debug("Updating inference_component resource.")
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
             "InferenceComponentName": self.inference_component_name,
@@ -11226,7 +11649,9 @@ class InferenceComponent(Base):
 
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a InferenceComponent resource
 
@@ -11244,7 +11669,7 @@ class InferenceComponent(Base):
                 ```
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
             "InferenceComponentName": self.inference_component_name,
@@ -11456,12 +11881,22 @@ class InferenceExperiment(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "inference_experiment_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == "name" or attribute == "inference_experiment_name":
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object inference_experiment")
+        return None
 
     def populate_inputs_decorator(create_func):
+        @functools.wraps(create_func)
         def wrapper(*args, **kwargs):
             config_schema_for_resource = {
                 "role_arn": {"type": "string"},
@@ -11535,9 +11970,9 @@ class InferenceExperiment(Base):
         """
 
         logger.debug("Creating inference_experiment resource.")
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
 
         operation_input_args = {
             "Name": name,
@@ -11603,9 +12038,9 @@ class InferenceExperiment(Base):
         operation_input_args = {
             "Name": name,
         }
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
         response = client.describe_inference_experiment(**operation_input_args)
 
         pprint(response)
@@ -11615,7 +12050,9 @@ class InferenceExperiment(Base):
         inference_experiment = cls(**transformed_response)
         return inference_experiment
 
-    def refresh(self) -> Optional["InferenceExperiment"]:
+    def refresh(
+        self,
+    ) -> Optional["InferenceExperiment"]:
         """
         Refresh a InferenceExperiment resource
 
@@ -11639,7 +12076,7 @@ class InferenceExperiment(Base):
         operation_input_args = {
             "Name": self.name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_inference_experiment(**operation_input_args)
 
         # deserialize response and update self
@@ -11678,7 +12115,7 @@ class InferenceExperiment(Base):
         """
 
         logger.debug("Updating inference_experiment resource.")
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
             "Name": self.name,
@@ -11700,7 +12137,9 @@ class InferenceExperiment(Base):
 
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a InferenceExperiment resource
 
@@ -11720,7 +12159,7 @@ class InferenceExperiment(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
             "Name": self.name,
@@ -11929,12 +12368,22 @@ class InferenceRecommendationsJob(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "inference_recommendations_job_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == "name" or attribute == "inference_recommendations_job_name":
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object inference_recommendations_job")
+        return None
 
     def populate_inputs_decorator(create_func):
+        @functools.wraps(create_func)
         def wrapper(*args, **kwargs):
             config_schema_for_resource = {
                 "role_arn": {"type": "string"},
@@ -12007,9 +12456,9 @@ class InferenceRecommendationsJob(Base):
         """
 
         logger.debug("Creating inference_recommendations_job resource.")
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
 
         operation_input_args = {
             "JobName": job_name,
@@ -12072,9 +12521,9 @@ class InferenceRecommendationsJob(Base):
         operation_input_args = {
             "JobName": job_name,
         }
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
         response = client.describe_inference_recommendations_job(**operation_input_args)
 
         pprint(response)
@@ -12084,7 +12533,9 @@ class InferenceRecommendationsJob(Base):
         inference_recommendations_job = cls(**transformed_response)
         return inference_recommendations_job
 
-    def refresh(self) -> Optional["InferenceRecommendationsJob"]:
+    def refresh(
+        self,
+    ) -> Optional["InferenceRecommendationsJob"]:
         """
         Refresh a InferenceRecommendationsJob resource
 
@@ -12108,7 +12559,7 @@ class InferenceRecommendationsJob(Base):
         operation_input_args = {
             "JobName": self.job_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_inference_recommendations_job(**operation_input_args)
 
         # deserialize response and update self
@@ -12359,12 +12810,22 @@ class LabelingJob(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "labeling_job_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == "name" or attribute == "labeling_job_name":
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object labeling_job")
+        return None
 
     def populate_inputs_decorator(create_func):
+        @functools.wraps(create_func)
         def wrapper(*args, **kwargs):
             config_schema_for_resource = {
                 "input_config": {
@@ -12453,9 +12914,9 @@ class LabelingJob(Base):
         """
 
         logger.debug("Creating labeling_job resource.")
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
 
         operation_input_args = {
             "LabelingJobName": labeling_job_name,
@@ -12520,9 +12981,9 @@ class LabelingJob(Base):
         operation_input_args = {
             "LabelingJobName": labeling_job_name,
         }
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
         response = client.describe_labeling_job(**operation_input_args)
 
         pprint(response)
@@ -12532,7 +12993,9 @@ class LabelingJob(Base):
         labeling_job = cls(**transformed_response)
         return labeling_job
 
-    def refresh(self) -> Optional["LabelingJob"]:
+    def refresh(
+        self,
+    ) -> Optional["LabelingJob"]:
         """
         Refresh a LabelingJob resource
 
@@ -12556,7 +13019,7 @@ class LabelingJob(Base):
         operation_input_args = {
             "LabelingJobName": self.labeling_job_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_labeling_job(**operation_input_args)
 
         # deserialize response and update self
@@ -12735,10 +13198,19 @@ class LineageGroup(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "lineage_group_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == "name" or attribute == "lineage_group_name":
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object lineage_group")
+        return None
 
     @classmethod
     def get(
@@ -12775,9 +13247,9 @@ class LineageGroup(Base):
         operation_input_args = {
             "LineageGroupName": lineage_group_name,
         }
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
         response = client.describe_lineage_group(**operation_input_args)
 
         pprint(response)
@@ -12787,7 +13259,9 @@ class LineageGroup(Base):
         lineage_group = cls(**transformed_response)
         return lineage_group
 
-    def refresh(self) -> Optional["LineageGroup"]:
+    def refresh(
+        self,
+    ) -> Optional["LineageGroup"]:
         """
         Refresh a LineageGroup resource
 
@@ -12811,7 +13285,7 @@ class LineageGroup(Base):
         operation_input_args = {
             "LineageGroupName": self.lineage_group_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_lineage_group(**operation_input_args)
 
         # deserialize response and update self
@@ -12942,12 +13416,22 @@ class Model(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "model_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == "name" or attribute == "model_name":
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object model")
+        return None
 
     def populate_inputs_decorator(create_func):
+        @functools.wraps(create_func)
         def wrapper(*args, **kwargs):
             config_schema_for_resource = {
                 "primary_container": {
@@ -13024,9 +13508,9 @@ class Model(Base):
         """
 
         logger.debug("Creating model resource.")
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
 
         operation_input_args = {
             "ModelName": model_name,
@@ -13088,9 +13572,9 @@ class Model(Base):
         operation_input_args = {
             "ModelName": model_name,
         }
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
         response = client.describe_model(**operation_input_args)
 
         pprint(response)
@@ -13100,7 +13584,9 @@ class Model(Base):
         model = cls(**transformed_response)
         return model
 
-    def refresh(self) -> Optional["Model"]:
+    def refresh(
+        self,
+    ) -> Optional["Model"]:
         """
         Refresh a Model resource
 
@@ -13123,14 +13609,16 @@ class Model(Base):
         operation_input_args = {
             "ModelName": self.model_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_model(**operation_input_args)
 
         # deserialize response and update self
         transform(response, "DescribeModelOutput", self)
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a Model resource
 
@@ -13148,7 +13636,7 @@ class Model(Base):
                 ```
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
             "ModelName": self.model_name,
@@ -13301,12 +13789,22 @@ class ModelBiasJobDefinition(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "model_bias_job_definition_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == "name" or attribute == "model_bias_job_definition_name":
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object model_bias_job_definition")
+        return None
 
     def populate_inputs_decorator(create_func):
+        @functools.wraps(create_func)
         def wrapper(*args, **kwargs):
             config_schema_for_resource = {
                 "model_bias_job_input": {
@@ -13399,9 +13897,9 @@ class ModelBiasJobDefinition(Base):
         """
 
         logger.debug("Creating model_bias_job_definition resource.")
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
 
         operation_input_args = {
             "JobDefinitionName": job_definition_name,
@@ -13466,9 +13964,9 @@ class ModelBiasJobDefinition(Base):
         operation_input_args = {
             "JobDefinitionName": job_definition_name,
         }
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
         response = client.describe_model_bias_job_definition(**operation_input_args)
 
         pprint(response)
@@ -13478,7 +13976,9 @@ class ModelBiasJobDefinition(Base):
         model_bias_job_definition = cls(**transformed_response)
         return model_bias_job_definition
 
-    def refresh(self) -> Optional["ModelBiasJobDefinition"]:
+    def refresh(
+        self,
+    ) -> Optional["ModelBiasJobDefinition"]:
         """
         Refresh a ModelBiasJobDefinition resource
 
@@ -13502,14 +14002,16 @@ class ModelBiasJobDefinition(Base):
         operation_input_args = {
             "JobDefinitionName": self.job_definition_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_model_bias_job_definition(**operation_input_args)
 
         # deserialize response and update self
         transform(response, "DescribeModelBiasJobDefinitionResponse", self)
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a ModelBiasJobDefinition resource
 
@@ -13528,7 +14030,7 @@ class ModelBiasJobDefinition(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
             "JobDefinitionName": self.job_definition_name,
@@ -13646,12 +14148,22 @@ class ModelCard(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "model_card_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == "name" or attribute == "model_card_name":
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object model_card")
+        return None
 
     def populate_inputs_decorator(create_func):
+        @functools.wraps(create_func)
         def wrapper(*args, **kwargs):
             config_schema_for_resource = {"security_config": {"kms_key_id": {"type": "string"}}}
             return create_func(
@@ -13709,9 +14221,9 @@ class ModelCard(Base):
         """
 
         logger.debug("Creating model_card resource.")
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
 
         operation_input_args = {
             "ModelCardName": model_card_name,
@@ -13774,9 +14286,9 @@ class ModelCard(Base):
             "ModelCardName": model_card_name,
             "ModelCardVersion": model_card_version,
         }
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
         response = client.describe_model_card(**operation_input_args)
 
         pprint(response)
@@ -13786,7 +14298,10 @@ class ModelCard(Base):
         model_card = cls(**transformed_response)
         return model_card
 
-    def refresh(self) -> Optional["ModelCard"]:
+    def refresh(
+        self,
+        model_card_version: Optional[int] = Unassigned(),
+    ) -> Optional["ModelCard"]:
         """
         Refresh a ModelCard resource
 
@@ -13809,9 +14324,9 @@ class ModelCard(Base):
 
         operation_input_args = {
             "ModelCardName": self.model_card_name,
-            "ModelCardVersion": self.model_card_version,
+            "ModelCardVersion": model_card_version,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_model_card(**operation_input_args)
 
         # deserialize response and update self
@@ -13848,7 +14363,7 @@ class ModelCard(Base):
         """
 
         logger.debug("Updating model_card resource.")
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
             "ModelCardName": self.model_card_name,
@@ -13867,7 +14382,9 @@ class ModelCard(Base):
 
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a ModelCard resource
 
@@ -13887,7 +14404,7 @@ class ModelCard(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
             "ModelCardName": self.model_card_name,
@@ -14090,12 +14607,22 @@ class ModelCardExportJob(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "model_card_export_job_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == "name" or attribute == "model_card_export_job_name":
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object model_card_export_job")
+        return None
 
     def populate_inputs_decorator(create_func):
+        @functools.wraps(create_func)
         def wrapper(*args, **kwargs):
             config_schema_for_resource = {
                 "output_config": {"s3_output_path": {"type": "string"}},
@@ -14155,9 +14682,9 @@ class ModelCardExportJob(Base):
         """
 
         logger.debug("Creating model_card_export_job resource.")
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
 
         operation_input_args = {
             "ModelCardName": model_card_name,
@@ -14220,9 +14747,9 @@ class ModelCardExportJob(Base):
         operation_input_args = {
             "ModelCardExportJobArn": model_card_export_job_arn,
         }
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
         response = client.describe_model_card_export_job(**operation_input_args)
 
         pprint(response)
@@ -14232,7 +14759,9 @@ class ModelCardExportJob(Base):
         model_card_export_job = cls(**transformed_response)
         return model_card_export_job
 
-    def refresh(self) -> Optional["ModelCardExportJob"]:
+    def refresh(
+        self,
+    ) -> Optional["ModelCardExportJob"]:
         """
         Refresh a ModelCardExportJob resource
 
@@ -14256,7 +14785,7 @@ class ModelCardExportJob(Base):
         operation_input_args = {
             "ModelCardExportJobArn": self.model_card_export_job_arn,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_model_card_export_job(**operation_input_args)
 
         # deserialize response and update self
@@ -14417,12 +14946,22 @@ class ModelExplainabilityJobDefinition(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "model_explainability_job_definition_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == "name" or attribute == "model_explainability_job_definition_name":
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object model_explainability_job_definition")
+        return None
 
     def populate_inputs_decorator(create_func):
+        @functools.wraps(create_func)
         def wrapper(*args, **kwargs):
             config_schema_for_resource = {
                 "model_explainability_job_input": {
@@ -14516,9 +15055,9 @@ class ModelExplainabilityJobDefinition(Base):
         """
 
         logger.debug("Creating model_explainability_job_definition resource.")
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
 
         operation_input_args = {
             "JobDefinitionName": job_definition_name,
@@ -14584,9 +15123,9 @@ class ModelExplainabilityJobDefinition(Base):
         operation_input_args = {
             "JobDefinitionName": job_definition_name,
         }
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
         response = client.describe_model_explainability_job_definition(**operation_input_args)
 
         pprint(response)
@@ -14598,7 +15137,9 @@ class ModelExplainabilityJobDefinition(Base):
         model_explainability_job_definition = cls(**transformed_response)
         return model_explainability_job_definition
 
-    def refresh(self) -> Optional["ModelExplainabilityJobDefinition"]:
+    def refresh(
+        self,
+    ) -> Optional["ModelExplainabilityJobDefinition"]:
         """
         Refresh a ModelExplainabilityJobDefinition resource
 
@@ -14622,14 +15163,16 @@ class ModelExplainabilityJobDefinition(Base):
         operation_input_args = {
             "JobDefinitionName": self.job_definition_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_model_explainability_job_definition(**operation_input_args)
 
         # deserialize response and update self
         transform(response, "DescribeModelExplainabilityJobDefinitionResponse", self)
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a ModelExplainabilityJobDefinition resource
 
@@ -14648,7 +15191,7 @@ class ModelExplainabilityJobDefinition(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
             "JobDefinitionName": self.job_definition_name,
@@ -14800,12 +15343,22 @@ class ModelPackage(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "model_package_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == "name" or attribute == "model_package_name":
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object model_package")
+        return None
 
     def populate_inputs_decorator(create_func):
+        @functools.wraps(create_func)
         def wrapper(*args, **kwargs):
             config_schema_for_resource = {
                 "validation_specification": {"validation_role": {"type": "string"}},
@@ -14932,9 +15485,9 @@ class ModelPackage(Base):
         """
 
         logger.debug("Creating model_package resource.")
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
 
         operation_input_args = {
             "ModelPackageName": model_package_name,
@@ -15010,9 +15563,9 @@ class ModelPackage(Base):
         operation_input_args = {
             "ModelPackageName": model_package_name,
         }
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
         response = client.describe_model_package(**operation_input_args)
 
         pprint(response)
@@ -15022,7 +15575,9 @@ class ModelPackage(Base):
         model_package = cls(**transformed_response)
         return model_package
 
-    def refresh(self) -> Optional["ModelPackage"]:
+    def refresh(
+        self,
+    ) -> Optional["ModelPackage"]:
         """
         Refresh a ModelPackage resource
 
@@ -15045,7 +15600,7 @@ class ModelPackage(Base):
         operation_input_args = {
             "ModelPackageName": self.model_package_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_model_package(**operation_input_args)
 
         # deserialize response and update self
@@ -15090,7 +15645,7 @@ class ModelPackage(Base):
         """
 
         logger.debug("Updating model_package resource.")
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
             "ModelPackageArn": self.model_package_arn,
@@ -15114,7 +15669,9 @@ class ModelPackage(Base):
 
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a ModelPackage resource
 
@@ -15133,7 +15690,7 @@ class ModelPackage(Base):
             ConflictException: There was a conflict when you attempted to modify a SageMaker entity such as an Experiment or Artifact.
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
             "ModelPackageName": self.model_package_name,
@@ -15319,10 +15876,19 @@ class ModelPackageGroup(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "model_package_group_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == "name" or attribute == "model_package_group_name":
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object model_package_group")
+        return None
 
     @classmethod
     def create(
@@ -15364,9 +15930,9 @@ class ModelPackageGroup(Base):
         """
 
         logger.debug("Creating model_package_group resource.")
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
 
         operation_input_args = {
             "ModelPackageGroupName": model_package_group_name,
@@ -15425,9 +15991,9 @@ class ModelPackageGroup(Base):
         operation_input_args = {
             "ModelPackageGroupName": model_package_group_name,
         }
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
         response = client.describe_model_package_group(**operation_input_args)
 
         pprint(response)
@@ -15437,7 +16003,9 @@ class ModelPackageGroup(Base):
         model_package_group = cls(**transformed_response)
         return model_package_group
 
-    def refresh(self) -> Optional["ModelPackageGroup"]:
+    def refresh(
+        self,
+    ) -> Optional["ModelPackageGroup"]:
         """
         Refresh a ModelPackageGroup resource
 
@@ -15460,14 +16028,16 @@ class ModelPackageGroup(Base):
         operation_input_args = {
             "ModelPackageGroupName": self.model_package_group_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_model_package_group(**operation_input_args)
 
         # deserialize response and update self
         transform(response, "DescribeModelPackageGroupOutput", self)
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a ModelPackageGroup resource
 
@@ -15486,7 +16056,7 @@ class ModelPackageGroup(Base):
             ConflictException: There was a conflict when you attempted to modify a SageMaker entity such as an Experiment or Artifact.
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
             "ModelPackageGroupName": self.model_package_group_name,
@@ -15721,12 +16291,22 @@ class ModelQualityJobDefinition(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "model_quality_job_definition_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == "name" or attribute == "model_quality_job_definition_name":
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object model_quality_job_definition")
+        return None
 
     def populate_inputs_decorator(create_func):
+        @functools.wraps(create_func)
         def wrapper(*args, **kwargs):
             config_schema_for_resource = {
                 "model_quality_job_input": {
@@ -15819,9 +16399,9 @@ class ModelQualityJobDefinition(Base):
         """
 
         logger.debug("Creating model_quality_job_definition resource.")
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
 
         operation_input_args = {
             "JobDefinitionName": job_definition_name,
@@ -15886,9 +16466,9 @@ class ModelQualityJobDefinition(Base):
         operation_input_args = {
             "JobDefinitionName": job_definition_name,
         }
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
         response = client.describe_model_quality_job_definition(**operation_input_args)
 
         pprint(response)
@@ -15898,7 +16478,9 @@ class ModelQualityJobDefinition(Base):
         model_quality_job_definition = cls(**transformed_response)
         return model_quality_job_definition
 
-    def refresh(self) -> Optional["ModelQualityJobDefinition"]:
+    def refresh(
+        self,
+    ) -> Optional["ModelQualityJobDefinition"]:
         """
         Refresh a ModelQualityJobDefinition resource
 
@@ -15922,14 +16504,16 @@ class ModelQualityJobDefinition(Base):
         operation_input_args = {
             "JobDefinitionName": self.job_definition_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_model_quality_job_definition(**operation_input_args)
 
         # deserialize response and update self
         transform(response, "DescribeModelQualityJobDefinitionResponse", self)
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a ModelQualityJobDefinition resource
 
@@ -15948,7 +16532,7 @@ class ModelQualityJobDefinition(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
             "JobDefinitionName": self.job_definition_name,
@@ -16064,12 +16648,22 @@ class MonitoringSchedule(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "monitoring_schedule_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == "name" or attribute == "monitoring_schedule_name":
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object monitoring_schedule")
+        return None
 
     def populate_inputs_decorator(create_func):
+        @functools.wraps(create_func)
         def wrapper(*args, **kwargs):
             config_schema_for_resource = {
                 "monitoring_schedule_config": {
@@ -16146,9 +16740,9 @@ class MonitoringSchedule(Base):
         """
 
         logger.debug("Creating monitoring_schedule resource.")
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
 
         operation_input_args = {
             "MonitoringScheduleName": monitoring_schedule_name,
@@ -16208,9 +16802,9 @@ class MonitoringSchedule(Base):
         operation_input_args = {
             "MonitoringScheduleName": monitoring_schedule_name,
         }
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
         response = client.describe_monitoring_schedule(**operation_input_args)
 
         pprint(response)
@@ -16220,7 +16814,9 @@ class MonitoringSchedule(Base):
         monitoring_schedule = cls(**transformed_response)
         return monitoring_schedule
 
-    def refresh(self) -> Optional["MonitoringSchedule"]:
+    def refresh(
+        self,
+    ) -> Optional["MonitoringSchedule"]:
         """
         Refresh a MonitoringSchedule resource
 
@@ -16244,7 +16840,7 @@ class MonitoringSchedule(Base):
         operation_input_args = {
             "MonitoringScheduleName": self.monitoring_schedule_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_monitoring_schedule(**operation_input_args)
 
         # deserialize response and update self
@@ -16279,7 +16875,7 @@ class MonitoringSchedule(Base):
         """
 
         logger.debug("Updating monitoring_schedule resource.")
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
             "MonitoringScheduleName": self.monitoring_schedule_name,
@@ -16297,7 +16893,9 @@ class MonitoringSchedule(Base):
 
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a MonitoringSchedule resource
 
@@ -16316,7 +16914,7 @@ class MonitoringSchedule(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
             "MonitoringScheduleName": self.monitoring_schedule_name,
@@ -16540,12 +17138,22 @@ class NotebookInstance(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "notebook_instance_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == "name" or attribute == "notebook_instance_name":
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object notebook_instance")
+        return None
 
     def populate_inputs_decorator(create_func):
+        @functools.wraps(create_func)
         def wrapper(*args, **kwargs):
             config_schema_for_resource = {
                 "subnet_id": {"type": "string"},
@@ -16631,9 +17239,9 @@ class NotebookInstance(Base):
         """
 
         logger.debug("Creating notebook_instance resource.")
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
 
         operation_input_args = {
             "NotebookInstanceName": notebook_instance_name,
@@ -16705,9 +17313,9 @@ class NotebookInstance(Base):
         operation_input_args = {
             "NotebookInstanceName": notebook_instance_name,
         }
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
         response = client.describe_notebook_instance(**operation_input_args)
 
         pprint(response)
@@ -16717,7 +17325,9 @@ class NotebookInstance(Base):
         notebook_instance = cls(**transformed_response)
         return notebook_instance
 
-    def refresh(self) -> Optional["NotebookInstance"]:
+    def refresh(
+        self,
+    ) -> Optional["NotebookInstance"]:
         """
         Refresh a NotebookInstance resource
 
@@ -16740,7 +17350,7 @@ class NotebookInstance(Base):
         operation_input_args = {
             "NotebookInstanceName": self.notebook_instance_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_notebook_instance(**operation_input_args)
 
         # deserialize response and update self
@@ -16794,7 +17404,7 @@ class NotebookInstance(Base):
         """
 
         logger.debug("Updating notebook_instance resource.")
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
             "NotebookInstanceName": self.notebook_instance_name,
@@ -16824,7 +17434,9 @@ class NotebookInstance(Base):
 
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a NotebookInstance resource
 
@@ -16842,7 +17454,7 @@ class NotebookInstance(Base):
                 ```
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
             "NotebookInstanceName": self.notebook_instance_name,
@@ -17033,10 +17645,19 @@ class NotebookInstanceLifecycleConfig(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "notebook_instance_lifecycle_config_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == "name" or attribute == "notebook_instance_lifecycle_config_name":
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object notebook_instance_lifecycle_config")
+        return None
 
     @classmethod
     def create(
@@ -17078,9 +17699,9 @@ class NotebookInstanceLifecycleConfig(Base):
         """
 
         logger.debug("Creating notebook_instance_lifecycle_config resource.")
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
 
         operation_input_args = {
             "NotebookInstanceLifecycleConfigName": notebook_instance_lifecycle_config_name,
@@ -17142,9 +17763,9 @@ class NotebookInstanceLifecycleConfig(Base):
         operation_input_args = {
             "NotebookInstanceLifecycleConfigName": notebook_instance_lifecycle_config_name,
         }
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
         response = client.describe_notebook_instance_lifecycle_config(**operation_input_args)
 
         pprint(response)
@@ -17154,7 +17775,9 @@ class NotebookInstanceLifecycleConfig(Base):
         notebook_instance_lifecycle_config = cls(**transformed_response)
         return notebook_instance_lifecycle_config
 
-    def refresh(self) -> Optional["NotebookInstanceLifecycleConfig"]:
+    def refresh(
+        self,
+    ) -> Optional["NotebookInstanceLifecycleConfig"]:
         """
         Refresh a NotebookInstanceLifecycleConfig resource
 
@@ -17177,7 +17800,7 @@ class NotebookInstanceLifecycleConfig(Base):
         operation_input_args = {
             "NotebookInstanceLifecycleConfigName": self.notebook_instance_lifecycle_config_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_notebook_instance_lifecycle_config(**operation_input_args)
 
         # deserialize response and update self
@@ -17211,7 +17834,7 @@ class NotebookInstanceLifecycleConfig(Base):
         """
 
         logger.debug("Updating notebook_instance_lifecycle_config resource.")
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
             "NotebookInstanceLifecycleConfigName": self.notebook_instance_lifecycle_config_name,
@@ -17230,7 +17853,9 @@ class NotebookInstanceLifecycleConfig(Base):
 
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a NotebookInstanceLifecycleConfig resource
 
@@ -17248,7 +17873,7 @@ class NotebookInstanceLifecycleConfig(Base):
                 ```
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
             "NotebookInstanceLifecycleConfigName": self.notebook_instance_lifecycle_config_name,
@@ -17369,12 +17994,22 @@ class Pipeline(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "pipeline_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == "name" or attribute == "pipeline_name":
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object pipeline")
+        return None
 
     def populate_inputs_decorator(create_func):
+        @functools.wraps(create_func)
         def wrapper(*args, **kwargs):
             config_schema_for_resource = {"role_arn": {"type": "string"}}
             return create_func(
@@ -17441,9 +18076,9 @@ class Pipeline(Base):
         """
 
         logger.debug("Creating pipeline resource.")
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
 
         operation_input_args = {
             "PipelineName": pipeline_name,
@@ -17507,9 +18142,9 @@ class Pipeline(Base):
         operation_input_args = {
             "PipelineName": pipeline_name,
         }
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
         response = client.describe_pipeline(**operation_input_args)
 
         pprint(response)
@@ -17519,7 +18154,9 @@ class Pipeline(Base):
         pipeline = cls(**transformed_response)
         return pipeline
 
-    def refresh(self) -> Optional["Pipeline"]:
+    def refresh(
+        self,
+    ) -> Optional["Pipeline"]:
         """
         Refresh a Pipeline resource
 
@@ -17543,7 +18180,7 @@ class Pipeline(Base):
         operation_input_args = {
             "PipelineName": self.pipeline_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_pipeline(**operation_input_args)
 
         # deserialize response and update self
@@ -17585,7 +18222,7 @@ class Pipeline(Base):
         """
 
         logger.debug("Updating pipeline resource.")
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
             "PipelineName": self.pipeline_name,
@@ -17608,7 +18245,10 @@ class Pipeline(Base):
 
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+        client_request_token: str,
+    ) -> None:
         """
         Delete a Pipeline resource
 
@@ -17628,11 +18268,11 @@ class Pipeline(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
             "PipelineName": self.pipeline_name,
-            "ClientRequestToken": self.client_request_token,
+            "ClientRequestToken": client_request_token,
         }
         client.delete_pipeline(**operation_input_args)
 
@@ -17779,10 +18419,19 @@ class PipelineExecution(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "pipeline_execution_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == "name" or attribute == "pipeline_execution_name":
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object pipeline_execution")
+        return None
 
     @classmethod
     def get(
@@ -17819,9 +18468,9 @@ class PipelineExecution(Base):
         operation_input_args = {
             "PipelineExecutionArn": pipeline_execution_arn,
         }
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
         response = client.describe_pipeline_execution(**operation_input_args)
 
         pprint(response)
@@ -17831,7 +18480,9 @@ class PipelineExecution(Base):
         pipeline_execution = cls(**transformed_response)
         return pipeline_execution
 
-    def refresh(self) -> Optional["PipelineExecution"]:
+    def refresh(
+        self,
+    ) -> Optional["PipelineExecution"]:
         """
         Refresh a PipelineExecution resource
 
@@ -17855,7 +18506,7 @@ class PipelineExecution(Base):
         operation_input_args = {
             "PipelineExecutionArn": self.pipeline_execution_arn,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_pipeline_execution(**operation_input_args)
 
         # deserialize response and update self
@@ -17891,7 +18542,7 @@ class PipelineExecution(Base):
         """
 
         logger.debug("Updating pipeline_execution resource.")
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
             "PipelineExecutionArn": self.pipeline_execution_arn,
@@ -18319,12 +18970,22 @@ class ProcessingJob(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "processing_job_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == "name" or attribute == "processing_job_name":
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object processing_job")
+        return None
 
     def populate_inputs_decorator(create_func):
+        @functools.wraps(create_func)
         def wrapper(*args, **kwargs):
             config_schema_for_resource = {
                 "processing_resources": {
@@ -18407,9 +19068,9 @@ class ProcessingJob(Base):
         """
 
         logger.debug("Creating processing_job resource.")
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
 
         operation_input_args = {
             "ProcessingInputs": processing_inputs,
@@ -18475,9 +19136,9 @@ class ProcessingJob(Base):
         operation_input_args = {
             "ProcessingJobName": processing_job_name,
         }
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
         response = client.describe_processing_job(**operation_input_args)
 
         pprint(response)
@@ -18487,7 +19148,9 @@ class ProcessingJob(Base):
         processing_job = cls(**transformed_response)
         return processing_job
 
-    def refresh(self) -> Optional["ProcessingJob"]:
+    def refresh(
+        self,
+    ) -> Optional["ProcessingJob"]:
         """
         Refresh a ProcessingJob resource
 
@@ -18511,7 +19174,7 @@ class ProcessingJob(Base):
         operation_input_args = {
             "ProcessingJobName": self.processing_job_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_processing_job(**operation_input_args)
 
         # deserialize response and update self
@@ -18698,10 +19361,19 @@ class Project(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "project_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == "name" or attribute == "project_name":
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object project")
+        return None
 
     @classmethod
     def create(
@@ -18745,9 +19417,9 @@ class Project(Base):
         """
 
         logger.debug("Creating project resource.")
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
 
         operation_input_args = {
             "ProjectName": project_name,
@@ -18805,9 +19477,9 @@ class Project(Base):
         operation_input_args = {
             "ProjectName": project_name,
         }
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
         response = client.describe_project(**operation_input_args)
 
         pprint(response)
@@ -18817,7 +19489,9 @@ class Project(Base):
         project = cls(**transformed_response)
         return project
 
-    def refresh(self) -> Optional["Project"]:
+    def refresh(
+        self,
+    ) -> Optional["Project"]:
         """
         Refresh a Project resource
 
@@ -18840,7 +19514,7 @@ class Project(Base):
         operation_input_args = {
             "ProjectName": self.project_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_project(**operation_input_args)
 
         # deserialize response and update self
@@ -18880,7 +19554,7 @@ class Project(Base):
         """
 
         logger.debug("Updating project resource.")
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
             "ProjectName": self.project_name,
@@ -18900,7 +19574,9 @@ class Project(Base):
 
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a Project resource
 
@@ -18919,7 +19595,7 @@ class Project(Base):
             ConflictException: There was a conflict when you attempted to modify a SageMaker entity such as an Experiment or Artifact.
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
             "ProjectName": self.project_name,
@@ -19088,10 +19764,19 @@ class Space(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "space_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == "name" or attribute == "space_name":
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object space")
+        return None
 
     @classmethod
     def create(
@@ -19142,9 +19827,9 @@ class Space(Base):
         """
 
         logger.debug("Creating space resource.")
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
 
         operation_input_args = {
             "DomainId": domain_id,
@@ -19209,9 +19894,9 @@ class Space(Base):
             "DomainId": domain_id,
             "SpaceName": space_name,
         }
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
         response = client.describe_space(**operation_input_args)
 
         pprint(response)
@@ -19221,7 +19906,9 @@ class Space(Base):
         space = cls(**transformed_response)
         return space
 
-    def refresh(self) -> Optional["Space"]:
+    def refresh(
+        self,
+    ) -> Optional["Space"]:
         """
         Refresh a Space resource
 
@@ -19246,7 +19933,7 @@ class Space(Base):
             "DomainId": self.domain_id,
             "SpaceName": self.space_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_space(**operation_input_args)
 
         # deserialize response and update self
@@ -19282,7 +19969,7 @@ class Space(Base):
         """
 
         logger.debug("Updating space resource.")
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
             "DomainId": self.domain_id,
@@ -19302,7 +19989,9 @@ class Space(Base):
 
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a Space resource
 
@@ -19322,7 +20011,7 @@ class Space(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
             "DomainId": self.domain_id,
@@ -19472,10 +20161,19 @@ class StudioLifecycleConfig(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "studio_lifecycle_config_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == "name" or attribute == "studio_lifecycle_config_name":
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object studio_lifecycle_config")
+        return None
 
     @classmethod
     def create(
@@ -19519,9 +20217,9 @@ class StudioLifecycleConfig(Base):
         """
 
         logger.debug("Creating studio_lifecycle_config resource.")
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
 
         operation_input_args = {
             "StudioLifecycleConfigName": studio_lifecycle_config_name,
@@ -19584,9 +20282,9 @@ class StudioLifecycleConfig(Base):
         operation_input_args = {
             "StudioLifecycleConfigName": studio_lifecycle_config_name,
         }
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
         response = client.describe_studio_lifecycle_config(**operation_input_args)
 
         pprint(response)
@@ -19596,7 +20294,9 @@ class StudioLifecycleConfig(Base):
         studio_lifecycle_config = cls(**transformed_response)
         return studio_lifecycle_config
 
-    def refresh(self) -> Optional["StudioLifecycleConfig"]:
+    def refresh(
+        self,
+    ) -> Optional["StudioLifecycleConfig"]:
         """
         Refresh a StudioLifecycleConfig resource
 
@@ -19620,14 +20320,16 @@ class StudioLifecycleConfig(Base):
         operation_input_args = {
             "StudioLifecycleConfigName": self.studio_lifecycle_config_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_studio_lifecycle_config(**operation_input_args)
 
         # deserialize response and update self
         transform(response, "DescribeStudioLifecycleConfigResponse", self)
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a StudioLifecycleConfig resource
 
@@ -19647,7 +20349,7 @@ class StudioLifecycleConfig(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
             "StudioLifecycleConfigName": self.studio_lifecycle_config_name,
@@ -19748,10 +20450,19 @@ class SubscribedWorkteam(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "subscribed_workteam_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == "name" or attribute == "subscribed_workteam_name":
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object subscribed_workteam")
+        return None
 
     @classmethod
     def get(
@@ -19787,9 +20498,9 @@ class SubscribedWorkteam(Base):
         operation_input_args = {
             "WorkteamArn": workteam_arn,
         }
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
         response = client.describe_subscribed_workteam(**operation_input_args)
 
         pprint(response)
@@ -19799,7 +20510,10 @@ class SubscribedWorkteam(Base):
         subscribed_workteam = cls(**transformed_response)
         return subscribed_workteam
 
-    def refresh(self) -> Optional["SubscribedWorkteam"]:
+    def refresh(
+        self,
+        workteam_arn: str,
+    ) -> Optional["SubscribedWorkteam"]:
         """
         Refresh a SubscribedWorkteam resource
 
@@ -19820,9 +20534,9 @@ class SubscribedWorkteam(Base):
         """
 
         operation_input_args = {
-            "WorkteamArn": self.workteam_arn,
+            "WorkteamArn": workteam_arn,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_subscribed_workteam(**operation_input_args)
 
         # deserialize response and update self
@@ -19983,12 +20697,22 @@ class TrainingJob(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "training_job_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == "name" or attribute == "training_job_name":
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object training_job")
+        return None
 
     def populate_inputs_decorator(create_func):
+        @functools.wraps(create_func)
         def wrapper(*args, **kwargs):
             config_schema_for_resource = {
                 "model_artifacts": {"s3_model_artifacts": {"type": "string"}},
@@ -20101,9 +20825,9 @@ class TrainingJob(Base):
         """
 
         logger.debug("Creating training_job resource.")
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
 
         operation_input_args = {
             "TrainingJobName": training_job_name,
@@ -20182,9 +20906,9 @@ class TrainingJob(Base):
         operation_input_args = {
             "TrainingJobName": training_job_name,
         }
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
         response = client.describe_training_job(**operation_input_args)
 
         pprint(response)
@@ -20194,7 +20918,9 @@ class TrainingJob(Base):
         training_job = cls(**transformed_response)
         return training_job
 
-    def refresh(self) -> Optional["TrainingJob"]:
+    def refresh(
+        self,
+    ) -> Optional["TrainingJob"]:
         """
         Refresh a TrainingJob resource
 
@@ -20218,7 +20944,7 @@ class TrainingJob(Base):
         operation_input_args = {
             "TrainingJobName": self.training_job_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_training_job(**operation_input_args)
 
         # deserialize response and update self
@@ -20256,7 +20982,7 @@ class TrainingJob(Base):
         """
 
         logger.debug("Updating training_job resource.")
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
             "TrainingJobName": self.training_job_name,
@@ -20478,12 +21204,22 @@ class TransformJob(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "transform_job_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == "name" or attribute == "transform_job_name":
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object transform_job")
+        return None
 
     def populate_inputs_decorator(create_func):
+        @functools.wraps(create_func)
         def wrapper(*args, **kwargs):
             config_schema_for_resource = {
                 "transform_input": {
@@ -20578,9 +21314,9 @@ class TransformJob(Base):
         """
 
         logger.debug("Creating transform_job resource.")
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
 
         operation_input_args = {
             "TransformJobName": transform_job_name,
@@ -20649,9 +21385,9 @@ class TransformJob(Base):
         operation_input_args = {
             "TransformJobName": transform_job_name,
         }
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
         response = client.describe_transform_job(**operation_input_args)
 
         pprint(response)
@@ -20661,7 +21397,9 @@ class TransformJob(Base):
         transform_job = cls(**transformed_response)
         return transform_job
 
-    def refresh(self) -> Optional["TransformJob"]:
+    def refresh(
+        self,
+    ) -> Optional["TransformJob"]:
         """
         Refresh a TransformJob resource
 
@@ -20685,7 +21423,7 @@ class TransformJob(Base):
         operation_input_args = {
             "TransformJobName": self.transform_job_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_transform_job(**operation_input_args)
 
         # deserialize response and update self
@@ -20868,10 +21606,19 @@ class Trial(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "trial_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == "name" or attribute == "trial_name":
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object trial")
+        return None
 
     @classmethod
     def create(
@@ -20918,9 +21665,9 @@ class Trial(Base):
         """
 
         logger.debug("Creating trial resource.")
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
 
         operation_input_args = {
             "TrialName": trial_name,
@@ -20980,9 +21727,9 @@ class Trial(Base):
         operation_input_args = {
             "TrialName": trial_name,
         }
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
         response = client.describe_trial(**operation_input_args)
 
         pprint(response)
@@ -20992,7 +21739,9 @@ class Trial(Base):
         trial = cls(**transformed_response)
         return trial
 
-    def refresh(self) -> Optional["Trial"]:
+    def refresh(
+        self,
+    ) -> Optional["Trial"]:
         """
         Refresh a Trial resource
 
@@ -21016,7 +21765,7 @@ class Trial(Base):
         operation_input_args = {
             "TrialName": self.trial_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_trial(**operation_input_args)
 
         # deserialize response and update self
@@ -21050,7 +21799,7 @@ class Trial(Base):
         """
 
         logger.debug("Updating trial resource.")
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
             "TrialName": self.trial_name,
@@ -21068,7 +21817,9 @@ class Trial(Base):
 
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a Trial resource
 
@@ -21087,7 +21838,7 @@ class Trial(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
             "TrialName": self.trial_name,
@@ -21216,10 +21967,19 @@ class TrialComponent(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "trial_component_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == "name" or attribute == "trial_component_name":
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object trial_component")
+        return None
 
     @classmethod
     def create(
@@ -21275,9 +22035,9 @@ class TrialComponent(Base):
         """
 
         logger.debug("Creating trial_component resource.")
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
 
         operation_input_args = {
             "TrialComponentName": trial_component_name,
@@ -21342,9 +22102,9 @@ class TrialComponent(Base):
         operation_input_args = {
             "TrialComponentName": trial_component_name,
         }
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
         response = client.describe_trial_component(**operation_input_args)
 
         pprint(response)
@@ -21354,7 +22114,9 @@ class TrialComponent(Base):
         trial_component = cls(**transformed_response)
         return trial_component
 
-    def refresh(self) -> Optional["TrialComponent"]:
+    def refresh(
+        self,
+    ) -> Optional["TrialComponent"]:
         """
         Refresh a TrialComponent resource
 
@@ -21378,7 +22140,7 @@ class TrialComponent(Base):
         operation_input_args = {
             "TrialComponentName": self.trial_component_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_trial_component(**operation_input_args)
 
         # deserialize response and update self
@@ -21425,7 +22187,7 @@ class TrialComponent(Base):
         """
 
         logger.debug("Updating trial_component resource.")
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
             "TrialComponentName": self.trial_component_name,
@@ -21452,7 +22214,9 @@ class TrialComponent(Base):
 
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a TrialComponent resource
 
@@ -21471,7 +22235,7 @@ class TrialComponent(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
             "TrialComponentName": self.trial_component_name,
@@ -21694,12 +22458,22 @@ class UserProfile(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "user_profile_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == "name" or attribute == "user_profile_name":
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object user_profile")
+        return None
 
     def populate_inputs_decorator(create_func):
+        @functools.wraps(create_func)
         def wrapper(*args, **kwargs):
             config_schema_for_resource = {
                 "user_settings": {
@@ -21781,9 +22555,9 @@ class UserProfile(Base):
         """
 
         logger.debug("Creating user_profile resource.")
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
 
         operation_input_args = {
             "DomainId": domain_id,
@@ -21850,9 +22624,9 @@ class UserProfile(Base):
             "DomainId": domain_id,
             "UserProfileName": user_profile_name,
         }
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
         response = client.describe_user_profile(**operation_input_args)
 
         pprint(response)
@@ -21862,7 +22636,9 @@ class UserProfile(Base):
         user_profile = cls(**transformed_response)
         return user_profile
 
-    def refresh(self) -> Optional["UserProfile"]:
+    def refresh(
+        self,
+    ) -> Optional["UserProfile"]:
         """
         Refresh a UserProfile resource
 
@@ -21888,7 +22664,7 @@ class UserProfile(Base):
             "DomainId": self.domain_id,
             "UserProfileName": self.user_profile_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_user_profile(**operation_input_args)
 
         # deserialize response and update self
@@ -21924,7 +22700,7 @@ class UserProfile(Base):
         """
 
         logger.debug("Updating user_profile resource.")
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
             "DomainId": self.domain_id,
@@ -21943,7 +22719,9 @@ class UserProfile(Base):
 
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a UserProfile resource
 
@@ -21963,7 +22741,7 @@ class UserProfile(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
             "DomainId": self.domain_id,
@@ -22099,16 +22877,27 @@ class Workforce(Base):
 
     """
 
+    workforce_name: str
     workforce: Optional[Workforce] = Unassigned()
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "workforce_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == "name" or attribute == "workforce_name":
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object workforce")
+        return None
 
     def populate_inputs_decorator(create_func):
+        @functools.wraps(create_func)
         def wrapper(*args, **kwargs):
             config_schema_for_resource = {
                 "workforce": {
@@ -22173,9 +22962,9 @@ class Workforce(Base):
         """
 
         logger.debug("Creating workforce resource.")
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
 
         operation_input_args = {
             "CognitoConfig": cognito_config,
@@ -22235,9 +23024,9 @@ class Workforce(Base):
         operation_input_args = {
             "WorkforceName": workforce_name,
         }
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
         response = client.describe_workforce(**operation_input_args)
 
         pprint(response)
@@ -22247,7 +23036,9 @@ class Workforce(Base):
         workforce = cls(**transformed_response)
         return workforce
 
-    def refresh(self) -> Optional["Workforce"]:
+    def refresh(
+        self,
+    ) -> Optional["Workforce"]:
         """
         Refresh a Workforce resource
 
@@ -22270,7 +23061,7 @@ class Workforce(Base):
         operation_input_args = {
             "WorkforceName": self.workforce_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_workforce(**operation_input_args)
 
         # deserialize response and update self
@@ -22280,7 +23071,6 @@ class Workforce(Base):
     @populate_inputs_decorator
     def update(
         self,
-        workforce_name: str,
         source_ip_config: Optional[SourceIpConfig] = Unassigned(),
         oidc_config: Optional[OidcConfig] = Unassigned(),
         workforce_vpc_config: Optional[WorkforceVpcConfigRequest] = Unassigned(),
@@ -22289,7 +23079,6 @@ class Workforce(Base):
         Update a Workforce resource
 
         Parameters:
-            workforce_name:The name of the private workforce that you want to update. You can find your workforce name by using the ListWorkforces operation.
             source_ip_config:A list of one to ten worker IP address ranges (CIDRs) that can be used to access tasks assigned to this workforce. Maximum: Ten CIDR values
             oidc_config:Use this parameter to update your OIDC Identity Provider (IdP) configuration for a workforce made using your own IdP.
             workforce_vpc_config:Use this parameter to update your VPC configuration for a workforce.
@@ -22312,10 +23101,10 @@ class Workforce(Base):
         """
 
         logger.debug("Updating workforce resource.")
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
-            "WorkforceName": workforce_name,
+            "WorkforceName": self.workforce_name,
             "SourceIpConfig": source_ip_config,
             "OidcConfig": oidc_config,
             "WorkforceVpcConfig": workforce_vpc_config,
@@ -22332,7 +23121,9 @@ class Workforce(Base):
 
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a Workforce resource
 
@@ -22350,7 +23141,7 @@ class Workforce(Base):
                 ```
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
             "WorkforceName": self.workforce_name,
@@ -22474,14 +23265,24 @@ class Workteam(Base):
 
     """
 
+    workteam_name: str
     workteam: Optional[Workteam] = Unassigned()
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "workteam_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == "name" or attribute == "workteam_name":
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object workteam")
+        return None
 
     @classmethod
     def create(
@@ -22530,9 +23331,9 @@ class Workteam(Base):
         """
 
         logger.debug("Creating workteam resource.")
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
 
         operation_input_args = {
             "WorkteamName": workteam_name,
@@ -22592,9 +23393,9 @@ class Workteam(Base):
         operation_input_args = {
             "WorkteamName": workteam_name,
         }
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
         response = client.describe_workteam(**operation_input_args)
 
         pprint(response)
@@ -22604,7 +23405,9 @@ class Workteam(Base):
         workteam = cls(**transformed_response)
         return workteam
 
-    def refresh(self) -> Optional["Workteam"]:
+    def refresh(
+        self,
+    ) -> Optional["Workteam"]:
         """
         Refresh a Workteam resource
 
@@ -22627,7 +23430,7 @@ class Workteam(Base):
         operation_input_args = {
             "WorkteamName": self.workteam_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_workteam(**operation_input_args)
 
         # deserialize response and update self
@@ -22636,7 +23439,6 @@ class Workteam(Base):
 
     def update(
         self,
-        workteam_name: str,
         member_definitions: Optional[List[MemberDefinition]] = Unassigned(),
         description: Optional[str] = Unassigned(),
         notification_configuration: Optional[NotificationConfiguration] = Unassigned(),
@@ -22645,7 +23447,6 @@ class Workteam(Base):
         Update a Workteam resource
 
         Parameters:
-            workteam_name:The name of the work team to update.
             member_definitions:A list of MemberDefinition objects that contains objects that identify the workers that make up the work team.  Workforces can be created using Amazon Cognito or your own OIDC Identity Provider (IdP). For private workforces created using Amazon Cognito use CognitoMemberDefinition. For workforces created using your own OIDC identity provider (IdP) use OidcMemberDefinition. You should not provide input for both of these parameters in a single request. For workforces created using Amazon Cognito, private work teams correspond to Amazon Cognito user groups within the user pool used to create a workforce. All of the CognitoMemberDefinition objects that make up the member definition must have the same ClientId and UserPool values. To add a Amazon Cognito user group to an existing worker pool, see Adding groups to a User Pool. For more information about user pools, see Amazon Cognito User Pools. For workforces created using your own OIDC IdP, specify the user groups that you want to include in your private work team in OidcMemberDefinition by listing those groups in Groups. Be aware that user groups that are already in the work team must also be listed in Groups when you make this request to remain on the work team. If you do not include these user groups, they will no longer be associated with the work team you update.
             description:An updated description for the work team.
             notification_configuration:Configures SNS topic notifications for available or expiring work items
@@ -22668,10 +23469,10 @@ class Workteam(Base):
         """
 
         logger.debug("Updating workteam resource.")
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
-            "WorkteamName": workteam_name,
+            "WorkteamName": self.workteam_name,
             "MemberDefinitions": member_definitions,
             "Description": description,
             "NotificationConfiguration": notification_configuration,
@@ -22688,7 +23489,9 @@ class Workteam(Base):
 
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a Workteam resource
 
@@ -22707,7 +23510,7 @@ class Workteam(Base):
             ResourceLimitExceeded: You have exceeded an SageMaker resource limit. For example, you might have too many training jobs created.
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
             "WorkteamName": self.workteam_name,

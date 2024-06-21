@@ -176,12 +176,14 @@ class ResourcesCodeGen:
             "import datetime",
             "import time",
             "import os",
+            "import functools",
             "from pprint import pprint",
             "from pydantic import validate_call",
             "from typing import Dict, List, Literal, Optional, Union\n"
             "from boto3.session import Session",
             "from sagemaker_core.code_injection.codec import transform",
-            "from sagemaker_core.generated.utils import SageMakerClient, SageMakerRuntimeClient, ResourceIterator, Unassigned, snake_to_pascal, pascal_to_snake, is_not_primitive, is_not_str_dict, is_snake_case",
+            "from sagemaker_core.generated.utils import SageMakerClient, SageMakerRuntimeClient, ResourceIterator,"
+            " Unassigned, snake_to_pascal, pascal_to_snake, is_not_primitive, is_not_str_dict, is_snake_case, is_primitive_list",
             "from sagemaker_core.generated.intelligent_defaults_helper import load_default_configs_for_resource_name, get_config_value",
             "from sagemaker_core.generated.shapes import *",
             "from sagemaker_core.generated.exceptions import *",
@@ -392,7 +394,9 @@ class ResourcesCodeGen:
 
             resource_class += add_indent(get_method, 4)
 
-            if refresh_method := self._evaluate_method(resource_name, "refresh", object_methods):
+            if refresh_method := self._evaluate_method(
+                resource_name, "refresh", object_methods, resource_attributes=resource_attributes
+            ):
                 resource_class += add_indent(refresh_method, 4)
 
             if update_method := self._evaluate_method(
@@ -404,7 +408,9 @@ class ResourcesCodeGen:
             ):
                 resource_class += add_indent(update_method, 4)
 
-            if delete_method := self._evaluate_method(resource_name, "delete", object_methods):
+            if delete_method := self._evaluate_method(
+                resource_name, "delete", object_methods, resource_attributes=resource_attributes
+            ):
                 resource_class += add_indent(delete_method, 4)
 
             if stop_method := self._evaluate_method(resource_name, "stop", object_methods):
@@ -462,7 +468,7 @@ class ResourcesCodeGen:
         # Return the class definition
         return resource_class
 
-    def _get_class_attributes(self, resource_name: str) -> tuple:
+    def _get_class_attributes(self, resource_name: str) -> list:
         """Get the class attributes for a resource.
 
         Args:
@@ -485,7 +491,19 @@ class ResourcesCodeGen:
         class_attributes = self.shapes_extractor.generate_data_shape_members_and_string_body(
             shape=get_operation_shape, required_override=tuple(required_attributes)
         )
-        return class_attributes
+
+        class_attributes_list = list(class_attributes)
+        if resource_name == "ImageVersion":
+            class_attributes_list[0]["image_name"] = "str"
+            class_attributes_list[1] = "image_name: str\n" + class_attributes_list[1]
+        if resource_name == "Workteam":
+            class_attributes_list[0]["workteam_name"] = "str"
+            class_attributes_list[1] = "workteam_name: str\n" + class_attributes_list[1]
+        if resource_name == "Workforce":
+            class_attributes_list[0]["workforce_name"] = "str"
+            class_attributes_list[1] = "workforce_name: str\n" + class_attributes_list[1]
+
+        return class_attributes_list
 
     def _get_shape_attr_documentation_string(
         self, attributes_and_documentation, exclude_resource_attrs=None
@@ -1214,7 +1232,7 @@ class ResourcesCodeGen:
         )
         return formatted_method
 
-    def generate_refresh_method(self, resource_name: str) -> str:
+    def generate_refresh_method(self, resource_name: str, **kwargs) -> str:
         """Auto-Generate 'refresh' object Method [describe API] for a resource.
 
         Args:
@@ -1225,10 +1243,27 @@ class ResourcesCodeGen:
         """
         operation_name = "Describe" + resource_name
         operation_metadata = self.operations[operation_name]
+        resource_operation_input_shape_name = operation_metadata["input"]["shape"]
         resource_operation_output_shape_name = operation_metadata["output"]["shape"]
 
-        operation_input_args = self._generate_operation_input_args(
-            operation_metadata, is_class_method=False
+        required_members = self.shapes[resource_operation_input_shape_name]["required"]
+
+        # Exclude any required attributes that are already present as resource attributes and are also identifiers
+        exclude_required_attributes = []
+        for member in required_members:
+            snake_member = convert_to_snake_case(member)
+            if snake_member in kwargs["resource_attributes"] and any(
+                id in snake_member for id in ["name", "arn", "id"]
+            ):
+                exclude_required_attributes.append(snake_member)
+
+        # Generate the arguments for the 'refresh' method
+        refresh_args = self._generate_method_args(
+            resource_operation_input_shape_name, exclude_required_attributes
+        )
+
+        operation_input_args = self._generate_operation_input_necessary_args(
+            operation_metadata, exclude_required_attributes
         )
 
         operation = convert_to_snake_case(operation_name)
@@ -1246,12 +1281,13 @@ class ResourcesCodeGen:
             docstring=docstring,
             resource_name=resource_name,
             operation_input_args=operation_input_args,
+            refresh_args=refresh_args,
             operation=operation,
             describe_operation_output_shape=resource_operation_output_shape_name,
         )
         return formatted_method
 
-    def generate_delete_method(self, resource_name: str) -> str:
+    def generate_delete_method(self, resource_name: str, **kwargs) -> str:
         """Auto-Generate 'delete' object Method [delete API] for a resource.
 
         Args:
@@ -1262,9 +1298,29 @@ class ResourcesCodeGen:
         """
         operation_name = "Delete" + resource_name
         operation_metadata = self.operations[operation_name]
+        resource_operation_input_shape_name = operation_metadata["input"]["shape"]
 
-        operation_input_args = self._generate_operation_input_args(
-            operation_metadata, is_class_method=False
+        describe_operation_name = "Describe" + resource_name
+        describe_resource_operation_input_shape_name = self.operations[describe_operation_name][
+            "input"
+        ]["shape"]
+        required_members = self.shapes[describe_resource_operation_input_shape_name]["required"]
+
+        # Exclude any required attributes that are already present as resource attributes and are also identifiers
+        exclude_required_attributes = []
+        for member in required_members:
+            snake_member = convert_to_snake_case(member)
+            if snake_member in kwargs["resource_attributes"] and any(
+                id in snake_member for id in ["name", "arn", "id"]
+            ):
+                exclude_required_attributes.append(snake_member)
+
+        # Generate the arguments for the 'update' method
+        delete_args = self._generate_method_args(
+            resource_operation_input_shape_name, exclude_required_attributes
+        )
+        operation_input_args = self._generate_operation_input_necessary_args(
+            operation_metadata, exclude_required_attributes
         )
 
         operation = convert_to_snake_case(operation_name)
@@ -1281,6 +1337,7 @@ class ResourcesCodeGen:
         formatted_method = DELETE_METHOD_TEMPLATE.format(
             docstring=docstring,
             resource_name=resource_name,
+            delete_args=delete_args,
             operation_input_args=operation_input_args,
             operation=operation,
         )
