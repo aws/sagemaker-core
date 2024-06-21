@@ -92,7 +92,7 @@ class ResourcesTest(unittest.TestCase):
         params = {}
         for key, val in inspect.signature(func).parameters.items():
             attribute_type = str(val)
-            if "Optional" not in attribute_type and key != "self":
+            if "Optional" not in attribute_type and key != "self" and 'utils.Unassigned' not in attribute_type:
                 if "str" in attribute_type:
                     params[key] = "Random-String"
                 elif "int" in attribute_type or "float" in attribute_type:
