@@ -430,7 +430,7 @@ def get_all(
     region: Optional[str] = None,
 ) -> ResourceIterator["{resource}"]:
 {docstring}
-    client = SageMakerClient(session=session, region_name=region, service_name="{service_name}").client
+    client = Base.get_sagemaker_client(session=session, region_name=region, service_name="{service_name}").client
         
     operation_input_args = {{
 {operation_input_args}
@@ -461,7 +461,7 @@ def get_all(
         Iterator for listed {resource} resources.
 
     """
-    client = SageMakerClient(session=session, region_name=region, service_name="{service_name}").client
+    client = Base.get_sagemaker_client(session=session, region_name=region, service_name="{service_name}").client
 {custom_key_mapping}
     return ResourceIterator(
 {resource_iterator_args}
