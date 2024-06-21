@@ -487,7 +487,7 @@ SERIALIZE_INPUT_TEMPLATE = """
     logger.debug(f"Input request: {{operation_input_args}}")"""
 
 INITIALIZE_CLIENT_TEMPLATE = """
-    client = SageMakerClient(session=session, region_name=region, service_name='{service_name}').client"""
+    client = Base.get_sagemaker_client(session=session, region_name=region, service_name='{service_name}')"""
 
 CALL_OPERATION_API_TEMPLATE = """
     logger.debug(f"Calling {operation} API")
