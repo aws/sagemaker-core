@@ -1083,7 +1083,7 @@ def get_node(
     }
     logger.debug(f"Input request: {operation_input_args}")
 
-    client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+    client = Base.get_sagemaker_client(session=session, region_name=region, service_name='sagemaker')
 
     logger.debug(f"Calling describe_cluster_node API")
     response = client.describe_cluster_node(**operation_input_args)
@@ -1132,7 +1132,7 @@ def update_weights_and_capacities(
     }
     logger.debug(f"Input request: {operation_input_args}")
 
-    client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+    client = Base.get_sagemaker_client(session=session, region_name=region, service_name='sagemaker')
 
     logger.debug(f"Calling update_endpoint_weights_and_capacities API")
     response = client.update_endpoint_weights_and_capacities(**operation_input_args)
@@ -1192,7 +1192,7 @@ def get_all_training_jobs(
     operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
     logger.debug(f"Input request: {operation_input_args}")
 
-    client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+    client = Base.get_sagemaker_client(session=session, region_name=region, service_name='sagemaker')
 
 
     return ResourceIterator(

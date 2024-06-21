@@ -123,6 +123,8 @@ class ResourcesTest(unittest.TestCase):
                     params[key] = ["Random-String"]
                 elif "List" in attribute_type:
                     params[key] = []
+                elif "Dict" in attribute_type:
+                    params[key] = {}
                 elif "bool" in attribute_type:
                     params[key] = False
                 elif "str" in attribute_type:
