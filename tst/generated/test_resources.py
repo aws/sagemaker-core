@@ -39,7 +39,7 @@ class ResourcesTest(unittest.TestCase):
                     )
                     cls.get(**self._get_required_parameters_for_function(cls.get))
                 if hasattr(cls, "get_all") and callable(cls.get_all):
-                    function_name = f"describe_{name.lower()}"
+                    function_name = f"list_{name.lower()}s"
                     mocked_method = MagicMock()
                     setattr(mock_get_sagemaker_client, function_name, mocked_method)
                     mock_transform.return_value = self.MOCK_RESOURCES_RESPONSE_BY_RESOURCE_NAME.get(
