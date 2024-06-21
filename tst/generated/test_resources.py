@@ -123,6 +123,6 @@ class ResourcesTest(unittest.TestCase):
                     params[key] = False
                 else:
                     shape = attribute_type.split(".")[-1]
-                    params[key] = self._generate_test_shape(self.SHAPE_CLASSES_BY_SHAPE_NAME[shape])
+                    params[key] = self._generate_test_shape(self.SHAPE_CLASSES_BY_SHAPE_NAME.get(shape))
 
         return shape_cls(**params)
