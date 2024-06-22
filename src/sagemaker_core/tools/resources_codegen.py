@@ -493,6 +493,9 @@ class ResourcesCodeGen:
         )
 
         class_attributes_list = list(class_attributes)
+        # Some resources are configured in the service.json inconsistently.
+        # These resources take in the main identifier in the create and get methods , but is not present in the describe response output
+        # Hence for consistent behaviour of functions such as refresh and delete, the identifiers are hardcoded
         if resource_name == "ImageVersion":
             class_attributes_list[0]["image_name"] = "str"
             class_attributes_list[1] = "image_name: str\n" + class_attributes_list[1]
@@ -1288,11 +1291,6 @@ class ResourcesCodeGen:
         operation_name = "Delete" + resource_name
         operation_metadata = self.operations[operation_name]
         resource_operation_input_shape_name = operation_metadata["input"]["shape"]
-
-        describe_operation_name = "Describe" + resource_name
-        describe_resource_operation_input_shape_name = self.operations[describe_operation_name][
-            "input"
-        ]["shape"]
 
         # Generate the arguments for the 'update' method
         delete_args = self._generate_method_args(
