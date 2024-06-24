@@ -35,14 +35,14 @@ def create(
     Create a CompilationJob resource
     
     Parameters:
-        compilation_job_name:A name for the model compilation job. The name must be unique within the Amazon Web Services Region and within your Amazon Web Services account. 
-        role_arn:The Amazon Resource Name (ARN) of an IAM role that enables Amazon SageMaker to perform tasks on your behalf.  During model compilation, Amazon SageMaker needs your permission to:   Read input data from an S3 bucket   Write model artifacts to an S3 bucket   Write logs to Amazon CloudWatch Logs   Publish metrics to Amazon CloudWatch   You grant permissions for all of these tasks to an IAM role. To pass this role to Amazon SageMaker, the caller of this API must have the iam:PassRole permission. For more information, see Amazon SageMaker Roles. 
-        output_config:Provides information about the output location for the compiled model and the target device the model runs on.
-        stopping_condition:Specifies a limit to how long a model compilation job can run. When the job reaches the time limit, Amazon SageMaker ends the compilation job. Use this API to cap model training costs.
-        model_package_version_arn:The Amazon Resource Name (ARN) of a versioned model package. Provide either a ModelPackageVersionArn or an InputConfig object in the request syntax. The presence of both objects in the CreateCompilationJob request will return an exception.
-        input_config:Provides information about the location of input model artifacts, the name and shape of the expected data inputs, and the framework in which the model was trained.
-        vpc_config:A VpcConfig object that specifies the VPC that you want your compilation job to connect to. Control access to your models by configuring the VPC. For more information, see Protect Compilation Jobs by Using an Amazon Virtual Private Cloud.
-        tags:An array of key-value pairs. You can use tags to categorize your Amazon Web Services resources in different ways, for example, by purpose, owner, or environment. For more information, see Tagging Amazon Web Services Resources.
+        compilation_job_name: A name for the model compilation job. The name must be unique within the Amazon Web Services Region and within your Amazon Web Services account. 
+        role_arn: The Amazon Resource Name (ARN) of an IAM role that enables Amazon SageMaker to perform tasks on your behalf.  During model compilation, Amazon SageMaker needs your permission to:   Read input data from an S3 bucket   Write model artifacts to an S3 bucket   Write logs to Amazon CloudWatch Logs   Publish metrics to Amazon CloudWatch   You grant permissions for all of these tasks to an IAM role. To pass this role to Amazon SageMaker, the caller of this API must have the iam:PassRole permission. For more information, see Amazon SageMaker Roles. 
+        output_config: Provides information about the output location for the compiled model and the target device the model runs on.
+        stopping_condition: Specifies a limit to how long a model compilation job can run. When the job reaches the time limit, Amazon SageMaker ends the compilation job. Use this API to cap model training costs.
+        model_package_version_arn: The Amazon Resource Name (ARN) of a versioned model package. Provide either a ModelPackageVersionArn or an InputConfig object in the request syntax. The presence of both objects in the CreateCompilationJob request will return an exception.
+        input_config: Provides information about the location of input model artifacts, the name and shape of the expected data inputs, and the framework in which the model was trained.
+        vpc_config: A VpcConfig object that specifies the VPC that you want your compilation job to connect to. Control access to your models by configuring the VPC. For more information, see Protect Compilation Jobs by Using an Amazon Virtual Private Cloud.
+        tags: An array of key-value pairs. You can use tags to categorize your Amazon Web Services resources in different ways, for example, by purpose, owner, or environment. For more information, see Tagging Amazon Web Services Resources.
         session: Boto3 session.
         region: Region name.
         
@@ -124,17 +124,17 @@ def load(
     Import a HubContent resource
     
     Parameters:
-        hub_content_name:The name of the hub content to import.
-        hub_content_type:The type of hub content to import.
-        document_schema_version:The version of the hub content schema to import.
-        hub_name:The name of the hub to import content into.
-        hub_content_document:The hub content document that describes information about the hub content such as type, associated containers, scripts, and more.
-        hub_content_version:The version of the hub content to import.
-        hub_content_display_name:The display name of the hub content to import.
-        hub_content_description:A description of the hub content to import.
-        hub_content_markdown:A string that provides a description of the hub content. This string can include links, tables, and standard markdown formating.
-        hub_content_search_keywords:The searchable keywords of the hub content.
-        tags:Any tags associated with the hub content.
+        hub_content_name: The name of the hub content to import.
+        hub_content_type: The type of hub content to import.
+        document_schema_version: The version of the hub content schema to import.
+        hub_name: The name of the hub to import content into.
+        hub_content_document: The hub content document that describes information about the hub content such as type, associated containers, scripts, and more.
+        hub_content_version: The version of the hub content to import.
+        hub_content_display_name: The display name of the hub content to import.
+        hub_content_description: A description of the hub content to import.
+        hub_content_markdown: A string that provides a description of the hub content. This string can include links, tables, and standard markdown formating.
+        hub_content_search_keywords: The searchable keywords of the hub content.
+        tags: Any tags associated with the hub content.
         session: Boto3 session.
         region: Region name.
         
@@ -201,10 +201,10 @@ def update(
     Update a Endpoint resource
     
     Parameters:
-        retain_all_variant_properties:When updating endpoint resources, enables or disables the retention of variant properties, such as the instance count or the variant weight. To retain the variant properties of an endpoint when updating it, set RetainAllVariantProperties to true. To use the variant properties specified in a new EndpointConfig call when updating an endpoint, set RetainAllVariantProperties to false. The default is false.
-        exclude_retained_variant_properties:When you are updating endpoint resources with RetainAllVariantProperties, whose value is set to true, ExcludeRetainedVariantProperties specifies the list of type VariantProperty to override with the values provided by EndpointConfig. If you don't specify a value for ExcludeRetainedVariantProperties, no variant properties are overridden. 
-        deployment_config:The deployment configuration for an endpoint, which contains the desired deployment strategy and rollback configurations.
-        retain_deployment_config:Specifies whether to reuse the last deployment configuration. The default value is false (the configuration is not reused).
+        retain_all_variant_properties: When updating endpoint resources, enables or disables the retention of variant properties, such as the instance count or the variant weight. To retain the variant properties of an endpoint when updating it, set RetainAllVariantProperties to true. To use the variant properties specified in a new EndpointConfig call when updating an endpoint, set RetainAllVariantProperties to false. The default is false.
+        exclude_retained_variant_properties: When you are updating endpoint resources with RetainAllVariantProperties, whose value is set to true, ExcludeRetainedVariantProperties specifies the list of type VariantProperty to override with the values provided by EndpointConfig. If you don't specify a value for ExcludeRetainedVariantProperties, no variant properties are overridden. 
+        deployment_config: The deployment configuration for an endpoint, which contains the desired deployment strategy and rollback configurations.
+        retain_deployment_config: Specifies whether to reuse the last deployment configuration. The default value is false (the configuration is not reused).
     
     Returns:
         The Endpoint resource.
@@ -246,7 +246,7 @@ def update(
 
     return self
 '''
-        class_attributes = self.resource_generator._get_class_attributes("Endpoint")
+        class_attributes = self.resource_generator._get_class_attributes("Endpoint", ["get"])
         resource_attributes = list(class_attributes[0].keys())
         assert (
             self.resource_generator.generate_update_method(
@@ -268,10 +268,10 @@ def update(
     Update a Endpoint resource
     
     Parameters:
-        retain_all_variant_properties:When updating endpoint resources, enables or disables the retention of variant properties, such as the instance count or the variant weight. To retain the variant properties of an endpoint when updating it, set RetainAllVariantProperties to true. To use the variant properties specified in a new EndpointConfig call when updating an endpoint, set RetainAllVariantProperties to false. The default is false.
-        exclude_retained_variant_properties:When you are updating endpoint resources with RetainAllVariantProperties, whose value is set to true, ExcludeRetainedVariantProperties specifies the list of type VariantProperty to override with the values provided by EndpointConfig. If you don't specify a value for ExcludeRetainedVariantProperties, no variant properties are overridden. 
-        deployment_config:The deployment configuration for an endpoint, which contains the desired deployment strategy and rollback configurations.
-        retain_deployment_config:Specifies whether to reuse the last deployment configuration. The default value is false (the configuration is not reused).
+        retain_all_variant_properties: When updating endpoint resources, enables or disables the retention of variant properties, such as the instance count or the variant weight. To retain the variant properties of an endpoint when updating it, set RetainAllVariantProperties to true. To use the variant properties specified in a new EndpointConfig call when updating an endpoint, set RetainAllVariantProperties to false. The default is false.
+        exclude_retained_variant_properties: When you are updating endpoint resources with RetainAllVariantProperties, whose value is set to true, ExcludeRetainedVariantProperties specifies the list of type VariantProperty to override with the values provided by EndpointConfig. If you don't specify a value for ExcludeRetainedVariantProperties, no variant properties are overridden. 
+        deployment_config: The deployment configuration for an endpoint, which contains the desired deployment strategy and rollback configurations.
+        retain_deployment_config: Specifies whether to reuse the last deployment configuration. The default value is false (the configuration is not reused).
     
     Returns:
         The Endpoint resource.
@@ -313,7 +313,7 @@ def update(
 
     return self
 '''
-        class_attributes = self.resource_generator._get_class_attributes("Endpoint")
+        class_attributes = self.resource_generator._get_class_attributes("Endpoint", ["get"])
         resource_attributes = list(class_attributes[0].keys())
         assert (
             self.resource_generator.generate_update_method(
@@ -339,11 +339,11 @@ def get(
     Get a App resource
     
     Parameters:
-        domain_id:The domain ID.
-        app_type:The type of app.
-        app_name:The name of the app.
-        user_profile_name:The user profile name. If this value is not set, then SpaceName must be set.
-        space_name:The name of the space.
+        domain_id: The domain ID.
+        app_type: The type of app.
+        app_name: The name of the app.
+        user_profile_name: The user profile name. If this value is not set, then SpaceName must be set.
+        space_name: The name of the space.
         session: Boto3 session.
         region: Region name.
         
@@ -665,16 +665,16 @@ def invoke(self,
     Invoke a Endpoint resource
     
     Parameters:
-        body:Provides input data, in the format specified in the ContentType request header. Amazon SageMaker passes all of the data in the body to the model.  For information about the format of the request body, see Common Data Formats-Inference.
-        content_type:The MIME type of the input data in the request body.
-        accept:The desired MIME type of the inference response from the model container.
-        custom_attributes:Provides additional information about a request for an inference submitted to a model hosted at an Amazon SageMaker endpoint. The information is an opaque value that is forwarded verbatim. You could use this value, for example, to provide an ID that you can use to track a request or to provide other metadata that a service endpoint was programmed to process. The value must consist of no more than 1024 visible US-ASCII characters as specified in Section 3.3.6. Field Value Components of the Hypertext Transfer Protocol (HTTP/1.1).  The code in your model is responsible for setting or updating any custom attributes in the response. If your code does not set this value in the response, an empty value is returned. For example, if a custom attribute represents the trace ID, your model can prepend the custom attribute with Trace ID: in your post-processing function.  This feature is currently supported in the Amazon Web Services SDKs but not in the Amazon SageMaker Python SDK. 
-        target_model:The model to request for inference when invoking a multi-model endpoint.
-        target_variant:Specify the production variant to send the inference request to when invoking an endpoint that is running two or more variants. Note that this parameter overrides the default behavior for the endpoint, which is to distribute the invocation traffic based on the variant weights. For information about how to use variant targeting to perform a/b testing, see Test models in production 
-        target_container_hostname:If the endpoint hosts multiple containers and is configured to use direct invocation, this parameter specifies the host name of the container to invoke.
-        inference_id:If you provide a value, it is added to the captured data when you enable data capture on the endpoint. For information about data capture, see Capture Data.
-        enable_explanations:An optional JMESPath expression used to override the EnableExplanations parameter of the ClarifyExplainerConfig API. See the EnableExplanations section in the developer guide for more information. 
-        inference_component_name:If the endpoint hosts one or more inference components, this parameter specifies the name of inference component to invoke.
+        body: Provides input data, in the format specified in the ContentType request header. Amazon SageMaker passes all of the data in the body to the model.  For information about the format of the request body, see Common Data Formats-Inference.
+        content_type: The MIME type of the input data in the request body.
+        accept: The desired MIME type of the inference response from the model container.
+        custom_attributes: Provides additional information about a request for an inference submitted to a model hosted at an Amazon SageMaker endpoint. The information is an opaque value that is forwarded verbatim. You could use this value, for example, to provide an ID that you can use to track a request or to provide other metadata that a service endpoint was programmed to process. The value must consist of no more than 1024 visible US-ASCII characters as specified in Section 3.3.6. Field Value Components of the Hypertext Transfer Protocol (HTTP/1.1).  The code in your model is responsible for setting or updating any custom attributes in the response. If your code does not set this value in the response, an empty value is returned. For example, if a custom attribute represents the trace ID, your model can prepend the custom attribute with Trace ID: in your post-processing function.  This feature is currently supported in the Amazon Web Services SDKs but not in the Amazon SageMaker Python SDK. 
+        target_model: The model to request for inference when invoking a multi-model endpoint.
+        target_variant: Specify the production variant to send the inference request to when invoking an endpoint that is running two or more variants. Note that this parameter overrides the default behavior for the endpoint, which is to distribute the invocation traffic based on the variant weights. For information about how to use variant targeting to perform a/b testing, see Test models in production 
+        target_container_hostname: If the endpoint hosts multiple containers and is configured to use direct invocation, this parameter specifies the host name of the container to invoke.
+        inference_id: If you provide a value, it is added to the captured data when you enable data capture on the endpoint. For information about data capture, see Capture Data.
+        enable_explanations: An optional JMESPath expression used to override the EnableExplanations parameter of the ClarifyExplainerConfig API. See the EnableExplanations section in the developer guide for more information. 
+        inference_component_name: If the endpoint hosts one or more inference components, this parameter specifies the name of inference component to invoke.
     
     
     Returns:
@@ -747,13 +747,13 @@ def invoke_async(self,
     Invoke Async a Endpoint resource
     
     Parameters:
-        input_location:The Amazon S3 URI where the inference request payload is stored.
-        content_type:The MIME type of the input data in the request body.
-        accept:The desired MIME type of the inference response from the model container.
-        custom_attributes:Provides additional information about a request for an inference submitted to a model hosted at an Amazon SageMaker endpoint. The information is an opaque value that is forwarded verbatim. You could use this value, for example, to provide an ID that you can use to track a request or to provide other metadata that a service endpoint was programmed to process. The value must consist of no more than 1024 visible US-ASCII characters as specified in Section 3.3.6. Field Value Components of the Hypertext Transfer Protocol (HTTP/1.1).  The code in your model is responsible for setting or updating any custom attributes in the response. If your code does not set this value in the response, an empty value is returned. For example, if a custom attribute represents the trace ID, your model can prepend the custom attribute with Trace ID: in your post-processing function.  This feature is currently supported in the Amazon Web Services SDKs but not in the Amazon SageMaker Python SDK. 
-        inference_id:The identifier for the inference request. Amazon SageMaker will generate an identifier for you if none is specified. 
-        request_ttl_seconds:Maximum age in seconds a request can be in the queue before it is marked as expired. The default is 6 hours, or 21,600 seconds.
-        invocation_timeout_seconds:Maximum amount of time in seconds a request can be processed before it is marked as expired. The default is 15 minutes, or 900 seconds.
+        input_location: The Amazon S3 URI where the inference request payload is stored.
+        content_type: The MIME type of the input data in the request body.
+        accept: The desired MIME type of the inference response from the model container.
+        custom_attributes: Provides additional information about a request for an inference submitted to a model hosted at an Amazon SageMaker endpoint. The information is an opaque value that is forwarded verbatim. You could use this value, for example, to provide an ID that you can use to track a request or to provide other metadata that a service endpoint was programmed to process. The value must consist of no more than 1024 visible US-ASCII characters as specified in Section 3.3.6. Field Value Components of the Hypertext Transfer Protocol (HTTP/1.1).  The code in your model is responsible for setting or updating any custom attributes in the response. If your code does not set this value in the response, an empty value is returned. For example, if a custom attribute represents the trace ID, your model can prepend the custom attribute with Trace ID: in your post-processing function.  This feature is currently supported in the Amazon Web Services SDKs but not in the Amazon SageMaker Python SDK. 
+        inference_id: The identifier for the inference request. Amazon SageMaker will generate an identifier for you if none is specified. 
+        request_ttl_seconds: Maximum age in seconds a request can be in the queue before it is marked as expired. The default is 6 hours, or 21,600 seconds.
+        invocation_timeout_seconds: Maximum amount of time in seconds a request can be processed before it is marked as expired. The default is 15 minutes, or 900 seconds.
     
     
     Returns:
@@ -822,14 +822,14 @@ def invoke_with_response_stream(self,
     Invoke with response stream a Endpoint resource
     
     Parameters:
-        body:Provides input data, in the format specified in the ContentType request header. Amazon SageMaker passes all of the data in the body to the model.  For information about the format of the request body, see Common Data Formats-Inference.
-        content_type:The MIME type of the input data in the request body.
-        accept:The desired MIME type of the inference response from the model container.
-        custom_attributes:Provides additional information about a request for an inference submitted to a model hosted at an Amazon SageMaker endpoint. The information is an opaque value that is forwarded verbatim. You could use this value, for example, to provide an ID that you can use to track a request or to provide other metadata that a service endpoint was programmed to process. The value must consist of no more than 1024 visible US-ASCII characters as specified in Section 3.3.6. Field Value Components of the Hypertext Transfer Protocol (HTTP/1.1).  The code in your model is responsible for setting or updating any custom attributes in the response. If your code does not set this value in the response, an empty value is returned. For example, if a custom attribute represents the trace ID, your model can prepend the custom attribute with Trace ID: in your post-processing function.  This feature is currently supported in the Amazon Web Services SDKs but not in the Amazon SageMaker Python SDK. 
-        target_variant:Specify the production variant to send the inference request to when invoking an endpoint that is running two or more variants. Note that this parameter overrides the default behavior for the endpoint, which is to distribute the invocation traffic based on the variant weights. For information about how to use variant targeting to perform a/b testing, see Test models in production 
-        target_container_hostname:If the endpoint hosts multiple containers and is configured to use direct invocation, this parameter specifies the host name of the container to invoke.
-        inference_id:An identifier that you assign to your request.
-        inference_component_name:If the endpoint hosts one or more inference components, this parameter specifies the name of inference component to invoke for a streaming response.
+        body: Provides input data, in the format specified in the ContentType request header. Amazon SageMaker passes all of the data in the body to the model.  For information about the format of the request body, see Common Data Formats-Inference.
+        content_type: The MIME type of the input data in the request body.
+        accept: The desired MIME type of the inference response from the model container.
+        custom_attributes: Provides additional information about a request for an inference submitted to a model hosted at an Amazon SageMaker endpoint. The information is an opaque value that is forwarded verbatim. You could use this value, for example, to provide an ID that you can use to track a request or to provide other metadata that a service endpoint was programmed to process. The value must consist of no more than 1024 visible US-ASCII characters as specified in Section 3.3.6. Field Value Components of the Hypertext Transfer Protocol (HTTP/1.1).  The code in your model is responsible for setting or updating any custom attributes in the response. If your code does not set this value in the response, an empty value is returned. For example, if a custom attribute represents the trace ID, your model can prepend the custom attribute with Trace ID: in your post-processing function.  This feature is currently supported in the Amazon Web Services SDKs but not in the Amazon SageMaker Python SDK. 
+        target_variant: Specify the production variant to send the inference request to when invoking an endpoint that is running two or more variants. Note that this parameter overrides the default behavior for the endpoint, which is to distribute the invocation traffic based on the variant weights. For information about how to use variant targeting to perform a/b testing, see Test models in production 
+        target_container_hostname: If the endpoint hosts multiple containers and is configured to use direct invocation, this parameter specifies the host name of the container to invoke.
+        inference_id: An identifier that you assign to your request.
+        inference_component_name: If the endpoint hosts one or more inference components, this parameter specifies the name of inference component to invoke for a streaming response.
     
     
     Returns:
@@ -903,13 +903,13 @@ def get_all(
     Get all App resources
     
     Parameters:
-        next_token:If the previous response was truncated, you will receive this token. Use it in your next request to receive the next set of results.
-        max_results:The total number of items to return in the response. If the total number of items available is more than the value specified, a NextToken is provided in the response. To resume pagination, provide the NextToken value in the as part of a subsequent call. The default value is 10.
-        sort_order:The sort order for the results. The default is Ascending.
-        sort_by:The parameter by which to sort the results. The default is CreationTime.
-        domain_id_equals:A parameter to search for the domain ID.
-        user_profile_name_equals:A parameter to search by user profile name. If SpaceNameEquals is set, then this value cannot be set.
-        space_name_equals:A parameter to search by space name. If UserProfileNameEquals is set, then this value cannot be set.
+        next_token: If the previous response was truncated, you will receive this token. Use it in your next request to receive the next set of results.
+        max_results: The total number of items to return in the response. If the total number of items available is more than the value specified, a NextToken is provided in the response. To resume pagination, provide the NextToken value in the as part of a subsequent call. The default value is 10.
+        sort_order: The sort order for the results. The default is Ascending.
+        sort_by: The parameter by which to sort the results. The default is CreationTime.
+        domain_id_equals: A parameter to search for the domain ID.
+        user_profile_name_equals: A parameter to search by user profile name. If SpaceNameEquals is set, then this value cannot be set.
+        space_name_equals: A parameter to search by space name. If UserProfileNameEquals is set, then this value cannot be set.
         session: Boto3 session.
         region: Region name.
         
@@ -1001,14 +1001,14 @@ def get_all(
     Get all DataQualityJobDefinition resources
     
     Parameters:
-        endpoint_name:A filter that lists the data quality job definitions associated with the specified endpoint.
-        sort_by:The field to sort results by. The default is CreationTime.
-        sort_order:Whether to sort the results in Ascending or Descending order. The default is Descending.
-        next_token:If the result of the previous ListDataQualityJobDefinitions request was truncated, the response includes a NextToken. To retrieve the next set of transform jobs, use the token in the next request.&gt;
-        max_results:The maximum number of data quality monitoring job definitions to return in the response.
-        name_contains:A string in the data quality monitoring job definition name. This filter returns only data quality monitoring job definitions whose name contains the specified string.
-        creation_time_before:A filter that returns only data quality monitoring job definitions created before the specified time.
-        creation_time_after:A filter that returns only data quality monitoring job definitions created after the specified time.
+        endpoint_name: A filter that lists the data quality job definitions associated with the specified endpoint.
+        sort_by: The field to sort results by. The default is CreationTime.
+        sort_order: Whether to sort the results in Ascending or Descending order. The default is Descending.
+        next_token: If the result of the previous ListDataQualityJobDefinitions request was truncated, the response includes a NextToken. To retrieve the next set of transform jobs, use the token in the next request.&gt;
+        max_results: The maximum number of data quality monitoring job definitions to return in the response.
+        name_contains: A string in the data quality monitoring job definition name. This filter returns only data quality monitoring job definitions whose name contains the specified string.
+        creation_time_before: A filter that returns only data quality monitoring job definitions created before the specified time.
+        creation_time_after: A filter that returns only data quality monitoring job definitions created after the specified time.
         session: Boto3 session.
         region: Region name.
         
@@ -1069,7 +1069,7 @@ def get_node(
     Retrieves information of an instance (also called a node interchangeably) of a SageMaker HyperPod cluster.
     
     Parameters:
-        node_id:The ID of the instance.
+        node_id: The ID of the instance.
         session: Boto3 session.
         region: Region name.
         
@@ -1118,7 +1118,7 @@ def update_weights_and_capacities(
     Updates variant weight of one or more variants associated with an existing endpoint, or capacity of one variant associated with an existing endpoint.
     
     Parameters:
-        endpoint_name:The name of an existing SageMaker endpoint.
+        endpoint_name: The name of an existing SageMaker endpoint.
         session: Boto3 session.
         region: Region name.
         
@@ -1171,11 +1171,11 @@ def get_all_training_jobs(
     Gets a list of TrainingJobSummary objects that describe the training jobs that a hyperparameter tuning job launched.
     
     Parameters:
-        next_token:If the result of the previous ListTrainingJobsForHyperParameterTuningJob request was truncated, the response includes a NextToken. To retrieve the next set of training jobs, use the token in the next request.
-        max_results:The maximum number of training jobs to return. The default value is 10.
-        status_equals:A filter that returns only training jobs with the specified status.
-        sort_by:The field to sort results by. The default is Name. If the value of this field is FinalObjectiveMetricValue, any training jobs that did not return an objective metric are not listed.
-        sort_order:The sort order for results. The default is Ascending.
+        next_token: If the result of the previous ListTrainingJobsForHyperParameterTuningJob request was truncated, the response includes a NextToken. To retrieve the next set of training jobs, use the token in the next request.
+        max_results: The maximum number of training jobs to return. The default value is 10.
+        status_equals: A filter that returns only training jobs with the specified status.
+        sort_by: The field to sort results by. The default is Name. If the value of this field is FinalObjectiveMetricValue, any training jobs that did not return an objective metric are not listed.
+        sort_order: The sort order for results. The default is Ascending.
         session: Boto3 session.
         region: Region name.
         
