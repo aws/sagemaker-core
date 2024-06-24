@@ -1,5 +1,6 @@
 import importlib, inspect
 import unittest
+from unittest import mock
 from unittest.mock import patch, MagicMock
 
 from sagemaker_core.generated.resources import Base, Action
@@ -37,10 +38,11 @@ class ResourcesTest(unittest.TestCase):
                 self.SHAPE_CLASSES_BY_SHAPE_NAME[shape_name] = shape_cls
 
     @patch("sagemaker_core.generated.resources.transform")
-    def test_resources(self, mock_transform):
+    @patch("boto3.session.Session")
+    def test_resources(self,session,  mock_transform):
         report = {"Create": 0, "Update": 0, "Get": 0, "Get_all": 0, "Refresh": 0, "Delete": 0}
         resources = set()
-        client = SageMakerClient().client
+        client = SageMakerClient(session=session).client
         for name, cls in inspect.getmembers(
             importlib.import_module("sagemaker_core.generated.resources"), inspect.isclass
         ):
