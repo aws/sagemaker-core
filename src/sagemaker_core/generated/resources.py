@@ -1,4 +1,3 @@
-
 # Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"). You
@@ -22,8 +21,21 @@ from pydantic import validate_call
 from typing import Dict, List, Literal, Optional, Union
 from boto3.session import Session
 from sagemaker_core.code_injection.codec import transform
-from sagemaker_core.generated.utils import SageMakerClient, SageMakerRuntimeClient, ResourceIterator, Unassigned, snake_to_pascal, pascal_to_snake, is_not_primitive, is_not_str_dict, is_snake_case
-from sagemaker_core.generated.intelligent_defaults_helper import load_default_configs_for_resource_name, get_config_value
+from sagemaker_core.generated.utils import (
+    SageMakerClient,
+    SageMakerRuntimeClient,
+    ResourceIterator,
+    Unassigned,
+    snake_to_pascal,
+    pascal_to_snake,
+    is_not_primitive,
+    is_not_str_dict,
+    is_snake_case,
+)
+from sagemaker_core.generated.intelligent_defaults_helper import (
+    load_default_configs_for_resource_name,
+    get_config_value,
+)
 from sagemaker_core.generated.shapes import *
 from sagemaker_core.generated.exceptions import *
 
@@ -34,7 +46,7 @@ logger = logging.getLogger(__name__)
 
 class Base(BaseModel):
     model_config = ConfigDict(protected_namespaces=(), validate_assignment=True)
-    
+
     @classmethod
     def _serialize(cls, value: any) -> any:
         if isinstance(value, Unassigned):
@@ -43,7 +55,7 @@ class Base(BaseModel):
             return cls._serialize_list(value)
         elif isinstance(value, Dict):
             return cls._serialize_dict(value)
-        elif hasattr(value, 'serialize'):
+        elif hasattr(value, "serialize"):
             return value.serialize()
         else:
             return value
@@ -64,25 +76,30 @@ class Base(BaseModel):
                 key = snake_to_pascal(k) if is_snake_case(k) else k
                 serialized_dict.update({key[0].upper() + key[1:]: serialize_result})
         return serialized_dict
-    
+
     @staticmethod
-    def get_updated_kwargs_with_configured_attributes(config_schema_for_resource: dict, resource_name: str, **kwargs):
+    def get_updated_kwargs_with_configured_attributes(
+        config_schema_for_resource: dict, resource_name: str, **kwargs
+    ):
         try:
             for configurable_attribute in config_schema_for_resource:
                 if kwargs.get(configurable_attribute) is None:
-                    resource_defaults = load_default_configs_for_resource_name(resource_name=resource_name)
-                    global_defaults = load_default_configs_for_resource_name(resource_name="GlobalDefaults")
+                    resource_defaults = load_default_configs_for_resource_name(
+                        resource_name=resource_name
+                    )
+                    global_defaults = load_default_configs_for_resource_name(
+                        resource_name="GlobalDefaults"
+                    )
                     formatted_attribute = pascal_to_snake(configurable_attribute)
-                    if config_value := get_config_value(formatted_attribute,
-                     resource_defaults,
-                     global_defaults):
+                    if config_value := get_config_value(
+                        formatted_attribute, resource_defaults, global_defaults
+                    ):
                         kwargs[formatted_attribute] = config_value
         except BaseException as e:
             logger.info("Could not load Default Configs. Continuing.", exc_info=True)
             # Continue with existing kwargs if no default configs found
-        return kwargs 
-        
-    
+        return kwargs
+
     @staticmethod
     def populate_chained_attributes(resource_name: str, operation_input_args: dict) -> dict:
         resource_name_in_snake_case = pascal_to_snake(resource_name)
@@ -91,33 +108,39 @@ class Base(BaseModel):
             arg_snake = pascal_to_snake(arg)
             if value == Unassigned() or value == None or not value:
                 continue
-            if arg_snake.endswith('name') and arg_snake[
-                                              :-len('_name')] != resource_name_in_snake_case and arg_snake != 'name':
+            if (
+                arg_snake.endswith("name")
+                and arg_snake[: -len("_name")] != resource_name_in_snake_case
+                and arg_snake != "name"
+            ):
                 if value and value != Unassigned() and type(value) != str:
                     updated_args[arg] = value.get_name()
             elif isinstance(value, list):
                 updated_args[arg] = [
-                    Base.populate_chained_attributes(resource_name=type(list_item).__name__,
-                                                     operation_input_args={
-                                                         snake_to_pascal(k): v
-                                                         for k, v in Base._get_items(list_item)
-                                                     })
+                    Base.populate_chained_attributes(
+                        resource_name=type(list_item).__name__,
+                        operation_input_args={
+                            snake_to_pascal(k): v for k, v in Base._get_items(list_item)
+                        },
+                    )
                     for list_item in value
                 ]
             elif is_not_primitive(value) and is_not_str_dict(value):
                 obj_dict = {snake_to_pascal(k): v for k, v in Base._get_items(value)}
-                updated_args[arg] = Base.populate_chained_attributes(resource_name=type(value).__name__, operation_input_args=obj_dict)
+                updated_args[arg] = Base.populate_chained_attributes(
+                    resource_name=type(value).__name__, operation_input_args=obj_dict
+                )
         return updated_args
 
     @staticmethod
     def _get_items(object):
         return object.items() if type(object) == dict else object.__dict__.items()
 
-        
+
 class Action(Base):
     """
     Class representing resource Action
-    
+
     Attributes:
         action_name: The name of the action.
         action_arn: The Amazon Resource Name (ARN) of the action.
@@ -131,14 +154,10 @@ class Action(Base):
         last_modified_time: When the action was last modified.
         last_modified_by:
         metadata_properties:
-<<<<<<< HEAD
         lineage_group_arn: The Amazon Resource Name (ARN) of the lineage group.
 
-=======
-        lineage_group_arn:The Amazon Resource Name (ARN) of the lineage group.
-    
->>>>>>> d6a2f6c (Create resource from Create method)
     """
+
     action_name: str
     action_arn: Optional[str] = Unassigned()
     source: Optional[ActionSource] = Unassigned()
@@ -152,14 +171,14 @@ class Action(Base):
     last_modified_by: Optional[UserContext] = Unassigned()
     metadata_properties: Optional[MetadataProperties] = Unassigned()
     lineage_group_arn: Optional[str] = Unassigned()
-    
+
     def get_name(self) -> str:
         attributes = vars(self)
         for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'action_name':
+            if attribute == "name" or attribute == "action_name":
                 return value
         raise Exception("Name attribute not found for object")
-    
+
     @classmethod
     def create(
         cls,
@@ -176,7 +195,7 @@ class Action(Base):
     ) -> Optional["Action"]:
         """
         Create a Action resource
-        
+
         Parameters:
             action_name: The name of the action. Must be unique to your account in an Amazon Web Services Region.
             source: The source type, ID, and URI.
@@ -188,14 +207,14 @@ class Action(Base):
             tags: A list of tags to apply to the action.
             session: Boto3 session.
             region: Region name.
-            
+
         Returns:
             The Action resource.
-        
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -208,34 +227,38 @@ class Action(Base):
             LocalConfigNotFoundError: Raised when a configuration file is not found in local file system
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
         """
-    
+
         logger.debug("Creating action resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
-    
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
         operation_input_args = {
-            'ActionName': action_name,
-            'Source': source,
-            'ActionType': action_type,
-            'Description': description,
-            'Status': status,
-            'Properties': properties,
-            'MetadataProperties': metadata_properties,
-            'Tags': tags,
+            "ActionName": action_name,
+            "Source": source,
+            "ActionType": action_type,
+            "Description": description,
+            "Status": status,
+            "Properties": properties,
+            "MetadataProperties": metadata_properties,
+            "Tags": tags,
         }
-        
-        operation_input_args = Base.populate_chained_attributes(resource_name='Action', operation_input_args=operation_input_args)
-            
+
+        operation_input_args = Base.populate_chained_attributes(
+            resource_name="Action", operation_input_args=operation_input_args
+        )
+
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
-    
+
         # create the resource
         response = client.create_action(**operation_input_args)
         logger.debug(f"Response: {response}")
-    
+
         return cls.get(action_name=action_name, session=session, region=region)
-    
+
     @classmethod
     def get(
         cls,
@@ -245,19 +268,19 @@ class Action(Base):
     ) -> Optional["Action"]:
         """
         Get a Action resource
-        
+
         Parameters:
             action_name: The name of the action to describe.
             session: Boto3 session.
             region: Region name.
-            
+
         Returns:
             The Action resource.
-        
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -267,31 +290,33 @@ class Action(Base):
                 ```
             ResourceNotFound: Resource being access is not found.
         """
-    
+
         operation_input_args = {
-            'ActionName': action_name,
+            "ActionName": action_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
         response = client.describe_action(**operation_input_args)
-    
+
         pprint(response)
-    
+
         # deserialize the response
-        transformed_response = transform(response, 'DescribeActionResponse')
+        transformed_response = transform(response, "DescribeActionResponse")
         action = cls(**transformed_response)
         return action
-    
+
     def refresh(self) -> Optional["Action"]:
         """
         Refresh a Action resource
-        
+
         Returns:
             The Action resource.
-        
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -301,17 +326,17 @@ class Action(Base):
                 ```
             ResourceNotFound: Resource being access is not found.
         """
-    
+
         operation_input_args = {
-            'ActionName': self.action_name,
+            "ActionName": self.action_name,
         }
         client = SageMakerClient().client
         response = client.describe_action(**operation_input_args)
-    
+
         # deserialize response and update self
-        transform(response, 'DescribeActionResponse', self)
+        transform(response, "DescribeActionResponse", self)
         return self
-    
+
     def update(
         self,
         description: Optional[str] = Unassigned(),
@@ -321,22 +346,17 @@ class Action(Base):
     ) -> Optional["Action"]:
         """
         Update a Action resource
-        
+
         Parameters:
-<<<<<<< HEAD
             properties_to_remove: A list of properties to remove.
 
-=======
-            properties_to_remove:A list of properties to remove.
-        
->>>>>>> d6a2f6c (Create resource from Create method)
         Returns:
             The Action resource.
-        
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -347,38 +367,38 @@ class Action(Base):
             ConflictException: There was a conflict when you attempted to modify a SageMaker entity such as an Experiment or Artifact.
             ResourceNotFound: Resource being access is not found.
         """
-    
+
         logger.debug("Updating action resource.")
         client = SageMakerClient().client
-    
+
         operation_input_args = {
-            'ActionName': self.action_name,
-            'Description': description,
-            'Status': status,
-            'Properties': properties,
-            'PropertiesToRemove': properties_to_remove,
+            "ActionName": self.action_name,
+            "Description": description,
+            "Status": status,
+            "Properties": properties,
+            "PropertiesToRemove": properties_to_remove,
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = Action._serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
-    
+
         # create the resource
         response = client.update_action(**operation_input_args)
         logger.debug(f"Response: {response}")
         self.refresh()
-    
+
         return self
-    
+
     def delete(self) -> None:
         """
         Delete a Action resource
-        
-        
+
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -388,16 +408,16 @@ class Action(Base):
                 ```
             ResourceNotFound: Resource being access is not found.
         """
-    
+
         client = SageMakerClient().client
-    
+
         operation_input_args = {
-            'ActionName': self.action_name,
+            "ActionName": self.action_name,
         }
         client.delete_action(**operation_input_args)
-        
+
         print(f"Deleting {self.__class__.__name__} - {self.get_name()}")
-    
+
     @classmethod
     def get_all(
         cls,
@@ -412,7 +432,7 @@ class Action(Base):
     ) -> ResourceIterator["Action"]:
         """
         Get all Action resources
-        
+
         Parameters:
             source_uri: A filter that returns only actions with the specified source URI.
             action_type: A filter that returns only actions of the specified type.
@@ -424,14 +444,14 @@ class Action(Base):
             max_results: The maximum number of actions to return in the response. The default value is 10.
             session: Boto3 session.
             region: Region name.
-            
+
         Returns:
             Iterator for listed Action resources.
-        
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -441,36 +461,41 @@ class Action(Base):
                 ```
             ResourceNotFound: Resource being access is not found.
         """
-    
-        client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
-            
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
         operation_input_args = {
-            'SourceUri': source_uri,
-            'ActionType': action_type,
-            'CreatedAfter': created_after,
-            'CreatedBefore': created_before,
-            'SortBy': sort_by,
-            'SortOrder': sort_order,
+            "SourceUri": source_uri,
+            "ActionType": action_type,
+            "CreatedAfter": created_after,
+            "CreatedBefore": created_before,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
         }
-    
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
-        
+
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
+
         return ResourceIterator(
             client=client,
-            list_method='list_actions',
-            summaries_key='ActionSummaries',
-            summary_name='ActionSummary',
+            list_method="list_actions",
+            summaries_key="ActionSummaries",
+            summary_name="ActionSummary",
             resource_cls=Action,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
 
 
 class Algorithm(Base):
     """
     Class representing resource Algorithm
-    
+
     Attributes:
-<<<<<<< HEAD
         algorithm_name: The name of the algorithm being described.
         algorithm_arn: The Amazon Resource Name (ARN) of the algorithm.
         creation_time: A timestamp specifying when the algorithm was created.
@@ -483,21 +508,8 @@ class Algorithm(Base):
         product_id: The product identifier of the algorithm.
         certify_for_marketplace: Whether the algorithm is certified to be listed in Amazon Web Services Marketplace.
 
-=======
-        algorithm_name:The name of the algorithm being described.
-        algorithm_arn:The Amazon Resource Name (ARN) of the algorithm.
-        creation_time:A timestamp specifying when the algorithm was created.
-        training_specification:Details about training jobs run by this algorithm.
-        algorithm_status:The current status of the algorithm.
-        algorithm_status_details:Details about the current status of the algorithm.
-        algorithm_description:A brief summary about the algorithm.
-        inference_specification:Details about inference jobs that the algorithm runs.
-        validation_specification:Details about configurations for one or more training jobs that SageMaker runs to test the algorithm.
-        product_id:The product identifier of the algorithm.
-        certify_for_marketplace:Whether the algorithm is certified to be listed in Amazon Web Services Marketplace.
-    
->>>>>>> d6a2f6c (Create resource from Create method)
     """
+
     algorithm_name: str
     algorithm_arn: Optional[str] = Unassigned()
     algorithm_description: Optional[str] = Unassigned()
@@ -509,38 +521,34 @@ class Algorithm(Base):
     algorithm_status_details: Optional[AlgorithmStatusDetails] = Unassigned()
     product_id: Optional[str] = Unassigned()
     certify_for_marketplace: Optional[bool] = Unassigned()
-    
+
     def get_name(self) -> str:
         attributes = vars(self)
         for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'algorithm_name':
+            if attribute == "name" or attribute == "algorithm_name":
                 return value
         raise Exception("Name attribute not found for object")
 
-    
     def populate_inputs_decorator(create_func):
         def wrapper(*args, **kwargs):
-            config_schema_for_resource = \
-        {
-          "training_specification": {
-            "additional_s3_data_source": {
-              "s3_data_type": {
-                "type": "string"
-              },
-              "s3_uri": {
-                "type": "string"
-              }
+            config_schema_for_resource = {
+                "training_specification": {
+                    "additional_s3_data_source": {
+                        "s3_data_type": {"type": "string"},
+                        "s3_uri": {"type": "string"},
+                    }
+                },
+                "validation_specification": {"validation_role": {"type": "string"}},
             }
-          },
-          "validation_specification": {
-            "validation_role": {
-              "type": "string"
-            }
-          }
-        }
-            return create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "Algorithm", **kwargs))
+            return create_func(
+                *args,
+                **Base.get_updated_kwargs_with_configured_attributes(
+                    config_schema_for_resource, "Algorithm", **kwargs
+                ),
+            )
+
         return wrapper
-    
+
     @classmethod
     @populate_inputs_decorator
     def create(
@@ -557,9 +565,8 @@ class Algorithm(Base):
     ) -> Optional["Algorithm"]:
         """
         Create a Algorithm resource
-        
+
         Parameters:
-<<<<<<< HEAD
             algorithm_name: The name of the algorithm.
             training_specification: Specifies details about training jobs run by this algorithm, including the following:   The Amazon ECR path of the container and the version digest of the algorithm.   The hyperparameters that the algorithm supports.   The instance types that the algorithm supports for training.   Whether the algorithm supports distributed training.   The metrics that the algorithm emits to Amazon CloudWatch.   Which metrics that the algorithm emits can be used as the objective metric for hyperparameter tuning jobs.   The input channels that the algorithm supports for training data. For example, an algorithm might support train, validation, and test channels.
             algorithm_description: A description of the algorithm.
@@ -567,25 +574,16 @@ class Algorithm(Base):
             validation_specification: Specifies configurations for one or more training jobs and that SageMaker runs to test the algorithm's training code and, optionally, one or more batch transform jobs that SageMaker runs to test the algorithm's inference code.
             certify_for_marketplace: Whether to certify the algorithm so that it can be listed in Amazon Web Services Marketplace.
             tags: An array of key-value pairs. You can use tags to categorize your Amazon Web Services resources in different ways, for example, by purpose, owner, or environment. For more information, see Tagging Amazon Web Services Resources.
-=======
-            algorithm_name:The name of the algorithm.
-            training_specification:Specifies details about training jobs run by this algorithm, including the following:   The Amazon ECR path of the container and the version digest of the algorithm.   The hyperparameters that the algorithm supports.   The instance types that the algorithm supports for training.   Whether the algorithm supports distributed training.   The metrics that the algorithm emits to Amazon CloudWatch.   Which metrics that the algorithm emits can be used as the objective metric for hyperparameter tuning jobs.   The input channels that the algorithm supports for training data. For example, an algorithm might support train, validation, and test channels.  
-            algorithm_description:A description of the algorithm.
-            inference_specification:Specifies details about inference jobs that the algorithm runs, including the following:   The Amazon ECR paths of containers that contain the inference code and model artifacts.   The instance types that the algorithm supports for transform jobs and real-time endpoints used for inference.   The input and output content formats that the algorithm supports for inference.  
-            validation_specification:Specifies configurations for one or more training jobs and that SageMaker runs to test the algorithm's training code and, optionally, one or more batch transform jobs that SageMaker runs to test the algorithm's inference code.
-            certify_for_marketplace:Whether to certify the algorithm so that it can be listed in Amazon Web Services Marketplace.
-            tags:An array of key-value pairs. You can use tags to categorize your Amazon Web Services resources in different ways, for example, by purpose, owner, or environment. For more information, see Tagging Amazon Web Services Resources.
->>>>>>> d6a2f6c (Create resource from Create method)
             session: Boto3 session.
             region: Region name.
-            
+
         Returns:
             The Algorithm resource.
-        
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -597,33 +595,37 @@ class Algorithm(Base):
             LocalConfigNotFoundError: Raised when a configuration file is not found in local file system
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
         """
-    
+
         logger.debug("Creating algorithm resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
-    
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
         operation_input_args = {
-            'AlgorithmName': algorithm_name,
-            'AlgorithmDescription': algorithm_description,
-            'TrainingSpecification': training_specification,
-            'InferenceSpecification': inference_specification,
-            'ValidationSpecification': validation_specification,
-            'CertifyForMarketplace': certify_for_marketplace,
-            'Tags': tags,
+            "AlgorithmName": algorithm_name,
+            "AlgorithmDescription": algorithm_description,
+            "TrainingSpecification": training_specification,
+            "InferenceSpecification": inference_specification,
+            "ValidationSpecification": validation_specification,
+            "CertifyForMarketplace": certify_for_marketplace,
+            "Tags": tags,
         }
-        
-        operation_input_args = Base.populate_chained_attributes(resource_name='Algorithm', operation_input_args=operation_input_args)
-            
+
+        operation_input_args = Base.populate_chained_attributes(
+            resource_name="Algorithm", operation_input_args=operation_input_args
+        )
+
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
-    
+
         # create the resource
         response = client.create_algorithm(**operation_input_args)
         logger.debug(f"Response: {response}")
-    
+
         return cls.get(algorithm_name=algorithm_name, session=session, region=region)
-    
+
     @classmethod
     def get(
         cls,
@@ -633,19 +635,19 @@ class Algorithm(Base):
     ) -> Optional["Algorithm"]:
         """
         Get a Algorithm resource
-        
+
         Parameters:
             algorithm_name: The name of the algorithm to describe.
             session: Boto3 session.
             region: Region name.
-            
+
         Returns:
             The Algorithm resource.
-        
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -654,31 +656,33 @@ class Algorithm(Base):
                     error_code = e.response['Error']['Code']
                 ```
         """
-    
+
         operation_input_args = {
-            'AlgorithmName': algorithm_name,
+            "AlgorithmName": algorithm_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
         response = client.describe_algorithm(**operation_input_args)
-    
+
         pprint(response)
-    
+
         # deserialize the response
-        transformed_response = transform(response, 'DescribeAlgorithmOutput')
+        transformed_response = transform(response, "DescribeAlgorithmOutput")
         algorithm = cls(**transformed_response)
         return algorithm
-    
+
     def refresh(self) -> Optional["Algorithm"]:
         """
         Refresh a Algorithm resource
-        
+
         Returns:
             The Algorithm resource.
-        
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -687,26 +691,26 @@ class Algorithm(Base):
                     error_code = e.response['Error']['Code']
                 ```
         """
-    
+
         operation_input_args = {
-            'AlgorithmName': self.algorithm_name,
+            "AlgorithmName": self.algorithm_name,
         }
         client = SageMakerClient().client
         response = client.describe_algorithm(**operation_input_args)
-    
+
         # deserialize response and update self
-        transform(response, 'DescribeAlgorithmOutput', self)
+        transform(response, "DescribeAlgorithmOutput", self)
         return self
-    
+
     def delete(self) -> None:
         """
         Delete a Algorithm resource
-        
-        
+
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -716,57 +720,59 @@ class Algorithm(Base):
                 ```
             ConflictException: There was a conflict when you attempted to modify a SageMaker entity such as an Experiment or Artifact.
         """
-    
+
         client = SageMakerClient().client
-    
+
         operation_input_args = {
-            'AlgorithmName': self.algorithm_name,
+            "AlgorithmName": self.algorithm_name,
         }
         client.delete_algorithm(**operation_input_args)
-        
+
         print(f"Deleting {self.__class__.__name__} - {self.get_name()}")
-    
+
     def wait_for_status(
         self,
-        status: Literal['Pending', 'InProgress', 'Completed', 'Failed', 'Deleting'],
+        status: Literal["Pending", "InProgress", "Completed", "Failed", "Deleting"],
         poll: int = 5,
-        timeout: Optional[int] = None
+        timeout: Optional[int] = None,
     ):
         """
         Wait for a Algorithm resource.
-        
+
         Parameters:
             status: The status to wait for.
             poll: The number of seconds to wait between each poll.
             timeout: The maximum number of seconds to wait before timing out.
-        
+
         Returns:
             The Algorithm resource.
-        
+
         Raises:
             TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
             FailedStatusError:   If the resource reaches a failed state.
             WaiterError: Raised when an error occurs while waiting.
-        
+
         """
         start_time = time.time()
-    
+
         while True:
             self.refresh()
             current_status = self.algorithm_status
-    
+
             if status == current_status:
                 print(f"\nFinal Resource Status: {current_status}")
                 return
-            
+
             if "failed" in current_status.lower():
-                raise FailedStatusError(resource_type="Algorithm", status=current_status, reason='(Unknown)')
-    
+                raise FailedStatusError(
+                    resource_type="Algorithm", status=current_status, reason="(Unknown)"
+                )
+
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="Algorithm", status=current_status)
             print("-", end="")
             time.sleep(poll)
-    
+
     @classmethod
     def get_all(
         cls,
@@ -780,7 +786,7 @@ class Algorithm(Base):
     ) -> ResourceIterator["Algorithm"]:
         """
         Get all Algorithm resources
-        
+
         Parameters:
             creation_time_after: A filter that returns only algorithms created after the specified time (timestamp).
             creation_time_before: A filter that returns only algorithms created before the specified time (timestamp).
@@ -791,14 +797,14 @@ class Algorithm(Base):
             sort_order: The sort order for the results. The default is Ascending.
             session: Boto3 session.
             region: Region name.
-            
+
         Returns:
             Iterator for listed Algorithm resources.
-        
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -807,35 +813,40 @@ class Algorithm(Base):
                     error_code = e.response['Error']['Code']
                 ```
         """
-    
-        client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
-            
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
         operation_input_args = {
-            'CreationTimeAfter': creation_time_after,
-            'CreationTimeBefore': creation_time_before,
-            'NameContains': name_contains,
-            'SortBy': sort_by,
-            'SortOrder': sort_order,
+            "CreationTimeAfter": creation_time_after,
+            "CreationTimeBefore": creation_time_before,
+            "NameContains": name_contains,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
         }
-    
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
-        
+
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
+
         return ResourceIterator(
             client=client,
-            list_method='list_algorithms',
-            summaries_key='AlgorithmSummaryList',
-            summary_name='AlgorithmSummary',
+            list_method="list_algorithms",
+            summaries_key="AlgorithmSummaryList",
+            summary_name="AlgorithmSummary",
             resource_cls=Algorithm,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
 
 
 class App(Base):
     """
     Class representing resource App
-    
+
     Attributes:
-<<<<<<< HEAD
         app_arn: The Amazon Resource Name (ARN) of the app.
         app_type: The type of app.
         app_name: The name of the app.
@@ -849,22 +860,8 @@ class App(Base):
         failure_reason: The failure reason.
         resource_spec: The instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance.
 
-=======
-        app_arn:The Amazon Resource Name (ARN) of the app.
-        app_type:The type of app.
-        app_name:The name of the app.
-        domain_id:The domain ID.
-        user_profile_name:The user profile name.
-        space_name:The name of the space. If this value is not set, then UserProfileName must be set.
-        status:The status.
-        last_health_check_timestamp:The timestamp of the last health check.
-        last_user_activity_timestamp:The timestamp of the last user's activity. LastUserActivityTimestamp is also updated when SageMaker performs health checks without user activity. As a result, this value is set to the same value as LastHealthCheckTimestamp.
-        creation_time:The creation time of the application.  After an application has been shut down for 24 hours, SageMaker deletes all metadata for the application. To be considered an update and retain application metadata, applications must be restarted within 24 hours after the previous application has been shut down. After this time window, creation of an application is considered a new application rather than an update of the previous application. 
-        failure_reason:The failure reason.
-        resource_spec:The instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance.
-    
->>>>>>> d6a2f6c (Create resource from Create method)
     """
+
     domain_id: str
     app_type: str
     app_name: str
@@ -877,14 +874,14 @@ class App(Base):
     creation_time: Optional[datetime.datetime] = Unassigned()
     failure_reason: Optional[str] = Unassigned()
     resource_spec: Optional[ResourceSpec] = Unassigned()
-    
+
     def get_name(self) -> str:
         attributes = vars(self)
         for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'app_name':
+            if attribute == "name" or attribute == "app_name":
                 return value
         raise Exception("Name attribute not found for object")
-    
+
     @classmethod
     def create(
         cls,
@@ -900,9 +897,8 @@ class App(Base):
     ) -> Optional["App"]:
         """
         Create a App resource
-        
+
         Parameters:
-<<<<<<< HEAD
             domain_id: The domain ID.
             app_type: The type of app.
             app_name: The name of the app.
@@ -910,25 +906,16 @@ class App(Base):
             space_name: The name of the space. If this value is not set, then UserProfileName must be set.
             tags: Each tag consists of a key and an optional value. Tag keys must be unique per resource.
             resource_spec: The instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance.  The value of InstanceType passed as part of the ResourceSpec in the CreateApp call overrides the value passed as part of the ResourceSpec configured for the user profile or the domain. If InstanceType is not specified in any of those three ResourceSpec values for a KernelGateway app, the CreateApp call fails with a request validation error.
-=======
-            domain_id:The domain ID.
-            app_type:The type of app.
-            app_name:The name of the app.
-            user_profile_name:The user profile name. If this value is not set, then SpaceName must be set.
-            space_name:The name of the space. If this value is not set, then UserProfileName must be set.
-            tags:Each tag consists of a key and an optional value. Tag keys must be unique per resource.
-            resource_spec:The instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance.  The value of InstanceType passed as part of the ResourceSpec in the CreateApp call overrides the value passed as part of the ResourceSpec configured for the user profile or the domain. If InstanceType is not specified in any of those three ResourceSpec values for a KernelGateway app, the CreateApp call fails with a request validation error. 
->>>>>>> d6a2f6c (Create resource from Create method)
             session: Boto3 session.
             region: Region name.
-            
+
         Returns:
             The App resource.
-        
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -942,33 +929,43 @@ class App(Base):
             LocalConfigNotFoundError: Raised when a configuration file is not found in local file system
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
         """
-    
+
         logger.debug("Creating app resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
-    
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
         operation_input_args = {
-            'DomainId': domain_id,
-            'UserProfileName': user_profile_name,
-            'SpaceName': space_name,
-            'AppType': app_type,
-            'AppName': app_name,
-            'Tags': tags,
-            'ResourceSpec': resource_spec,
+            "DomainId": domain_id,
+            "UserProfileName": user_profile_name,
+            "SpaceName": space_name,
+            "AppType": app_type,
+            "AppName": app_name,
+            "Tags": tags,
+            "ResourceSpec": resource_spec,
         }
-        
-        operation_input_args = Base.populate_chained_attributes(resource_name='App', operation_input_args=operation_input_args)
-            
+
+        operation_input_args = Base.populate_chained_attributes(
+            resource_name="App", operation_input_args=operation_input_args
+        )
+
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
-    
+
         # create the resource
         response = client.create_app(**operation_input_args)
         logger.debug(f"Response: {response}")
-    
-        return cls.get(domain_id=domain_id, app_type=app_type, app_name=app_name, session=session, region=region)
-    
+
+        return cls.get(
+            domain_id=domain_id,
+            app_type=app_type,
+            app_name=app_name,
+            session=session,
+            region=region,
+        )
+
     @classmethod
     def get(
         cls,
@@ -982,7 +979,7 @@ class App(Base):
     ) -> Optional["App"]:
         """
         Get a App resource
-        
+
         Parameters:
             domain_id: The domain ID.
             app_type: The type of app.
@@ -991,14 +988,14 @@ class App(Base):
             space_name: The name of the space.
             session: Boto3 session.
             region: Region name.
-            
+
         Returns:
             The App resource.
-        
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -1008,35 +1005,37 @@ class App(Base):
                 ```
             ResourceNotFound: Resource being access is not found.
         """
-    
+
         operation_input_args = {
-            'DomainId': domain_id,
-            'UserProfileName': user_profile_name,
-            'SpaceName': space_name,
-            'AppType': app_type,
-            'AppName': app_name,
+            "DomainId": domain_id,
+            "UserProfileName": user_profile_name,
+            "SpaceName": space_name,
+            "AppType": app_type,
+            "AppName": app_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
         response = client.describe_app(**operation_input_args)
-    
+
         pprint(response)
-    
+
         # deserialize the response
-        transformed_response = transform(response, 'DescribeAppResponse')
+        transformed_response = transform(response, "DescribeAppResponse")
         app = cls(**transformed_response)
         return app
-    
+
     def refresh(self) -> Optional["App"]:
         """
         Refresh a App resource
-        
+
         Returns:
             The App resource.
-        
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -1046,30 +1045,30 @@ class App(Base):
                 ```
             ResourceNotFound: Resource being access is not found.
         """
-    
+
         operation_input_args = {
-            'DomainId': self.domain_id,
-            'UserProfileName': self.user_profile_name,
-            'SpaceName': self.space_name,
-            'AppType': self.app_type,
-            'AppName': self.app_name,
+            "DomainId": self.domain_id,
+            "UserProfileName": self.user_profile_name,
+            "SpaceName": self.space_name,
+            "AppType": self.app_type,
+            "AppName": self.app_name,
         }
         client = SageMakerClient().client
         response = client.describe_app(**operation_input_args)
-    
+
         # deserialize response and update self
-        transform(response, 'DescribeAppResponse', self)
+        transform(response, "DescribeAppResponse", self)
         return self
-    
+
     def delete(self) -> None:
         """
         Delete a App resource
-        
-        
+
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -1080,61 +1079,63 @@ class App(Base):
             ResourceInUse: Resource being accessed is in use.
             ResourceNotFound: Resource being access is not found.
         """
-    
+
         client = SageMakerClient().client
-    
+
         operation_input_args = {
-            'DomainId': self.domain_id,
-            'UserProfileName': self.user_profile_name,
-            'SpaceName': self.space_name,
-            'AppType': self.app_type,
-            'AppName': self.app_name,
+            "DomainId": self.domain_id,
+            "UserProfileName": self.user_profile_name,
+            "SpaceName": self.space_name,
+            "AppType": self.app_type,
+            "AppName": self.app_name,
         }
         client.delete_app(**operation_input_args)
-        
+
         print(f"Deleting {self.__class__.__name__} - {self.get_name()}")
-    
+
     def wait_for_status(
         self,
-        status: Literal['Deleted', 'Deleting', 'Failed', 'InService', 'Pending'],
+        status: Literal["Deleted", "Deleting", "Failed", "InService", "Pending"],
         poll: int = 5,
-        timeout: Optional[int] = None
+        timeout: Optional[int] = None,
     ):
         """
         Wait for a App resource.
-        
+
         Parameters:
             status: The status to wait for.
             poll: The number of seconds to wait between each poll.
             timeout: The maximum number of seconds to wait before timing out.
-        
+
         Returns:
             The App resource.
-        
+
         Raises:
             TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
             FailedStatusError:   If the resource reaches a failed state.
             WaiterError: Raised when an error occurs while waiting.
-        
+
         """
         start_time = time.time()
-    
+
         while True:
             self.refresh()
             current_status = self.status
-    
+
             if status == current_status:
                 print(f"\nFinal Resource Status: {current_status}")
                 return
-            
+
             if "failed" in current_status.lower():
-                raise FailedStatusError(resource_type="App", status=current_status, reason=self.failure_reason)
-    
+                raise FailedStatusError(
+                    resource_type="App", status=current_status, reason=self.failure_reason
+                )
+
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="App", status=current_status)
             print("-", end="")
             time.sleep(poll)
-    
+
     @classmethod
     def get_all(
         cls,
@@ -1148,7 +1149,7 @@ class App(Base):
     ) -> ResourceIterator["App"]:
         """
         Get all App resources
-        
+
         Parameters:
             next_token: If the previous response was truncated, you will receive this token. Use it in your next request to receive the next set of results.
             max_results: The total number of items to return in the response. If the total number of items available is more than the value specified, a NextToken is provided in the response. To resume pagination, provide the NextToken value in the as part of a subsequent call. The default value is 10.
@@ -1159,14 +1160,14 @@ class App(Base):
             space_name_equals: A parameter to search by space name. If UserProfileNameEquals is set, then this value cannot be set.
             session: Boto3 session.
             region: Region name.
-            
+
         Returns:
             Iterator for listed App resources.
-        
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -1175,35 +1176,40 @@ class App(Base):
                     error_code = e.response['Error']['Code']
                 ```
         """
-    
-        client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
-            
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
         operation_input_args = {
-            'SortOrder': sort_order,
-            'SortBy': sort_by,
-            'DomainIdEquals': domain_id_equals,
-            'UserProfileNameEquals': user_profile_name_equals,
-            'SpaceNameEquals': space_name_equals,
+            "SortOrder": sort_order,
+            "SortBy": sort_by,
+            "DomainIdEquals": domain_id_equals,
+            "UserProfileNameEquals": user_profile_name_equals,
+            "SpaceNameEquals": space_name_equals,
         }
-    
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
-        
+
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
+
         return ResourceIterator(
             client=client,
-            list_method='list_apps',
-            summaries_key='Apps',
-            summary_name='AppDetails',
+            list_method="list_apps",
+            summaries_key="Apps",
+            summary_name="AppDetails",
             resource_cls=App,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
 
 
 class AppImageConfig(Base):
     """
     Class representing resource AppImageConfig
-    
+
     Attributes:
-<<<<<<< HEAD
         app_image_config_arn: The ARN of the AppImageConfig.
         app_image_config_name: The name of the AppImageConfig.
         creation_time: When the AppImageConfig was created.
@@ -1211,30 +1217,22 @@ class AppImageConfig(Base):
         kernel_gateway_image_config: The configuration of a KernelGateway app.
         jupyter_lab_app_image_config: The configuration of the JupyterLab app.
 
-=======
-        app_image_config_arn:The ARN of the AppImageConfig.
-        app_image_config_name:The name of the AppImageConfig.
-        creation_time:When the AppImageConfig was created.
-        last_modified_time:When the AppImageConfig was last modified.
-        kernel_gateway_image_config:The configuration of a KernelGateway app.
-        jupyter_lab_app_image_config:The configuration of the JupyterLab app.
-    
->>>>>>> d6a2f6c (Create resource from Create method)
     """
+
     app_image_config_name: str
     app_image_config_arn: Optional[str] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
     kernel_gateway_image_config: Optional[KernelGatewayImageConfig] = Unassigned()
     jupyter_lab_app_image_config: Optional[JupyterLabAppImageConfig] = Unassigned()
-    
+
     def get_name(self) -> str:
         attributes = vars(self)
         for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'app_image_config_name':
+            if attribute == "name" or attribute == "app_image_config_name":
                 return value
         raise Exception("Name attribute not found for object")
-    
+
     @classmethod
     def create(
         cls,
@@ -1247,7 +1245,7 @@ class AppImageConfig(Base):
     ) -> Optional["AppImageConfig"]:
         """
         Create a AppImageConfig resource
-        
+
         Parameters:
             app_image_config_name: The name of the AppImageConfig. Must be unique to your account.
             tags: A list of tags to apply to the AppImageConfig.
@@ -1255,14 +1253,14 @@ class AppImageConfig(Base):
             jupyter_lab_app_image_config: The JupyterLabAppImageConfig. You can only specify one image kernel in the AppImageConfig API. This kernel is shown to users before the image starts. After the image runs, all kernels are visible in JupyterLab.
             session: Boto3 session.
             region: Region name.
-            
+
         Returns:
             The AppImageConfig resource.
-        
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -1275,30 +1273,34 @@ class AppImageConfig(Base):
             LocalConfigNotFoundError: Raised when a configuration file is not found in local file system
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
         """
-    
+
         logger.debug("Creating app_image_config resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
-    
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
         operation_input_args = {
-            'AppImageConfigName': app_image_config_name,
-            'Tags': tags,
-            'KernelGatewayImageConfig': kernel_gateway_image_config,
-            'JupyterLabAppImageConfig': jupyter_lab_app_image_config,
+            "AppImageConfigName": app_image_config_name,
+            "Tags": tags,
+            "KernelGatewayImageConfig": kernel_gateway_image_config,
+            "JupyterLabAppImageConfig": jupyter_lab_app_image_config,
         }
-        
-        operation_input_args = Base.populate_chained_attributes(resource_name='AppImageConfig', operation_input_args=operation_input_args)
-            
+
+        operation_input_args = Base.populate_chained_attributes(
+            resource_name="AppImageConfig", operation_input_args=operation_input_args
+        )
+
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
-    
+
         # create the resource
         response = client.create_app_image_config(**operation_input_args)
         logger.debug(f"Response: {response}")
-    
+
         return cls.get(app_image_config_name=app_image_config_name, session=session, region=region)
-    
+
     @classmethod
     def get(
         cls,
@@ -1308,19 +1310,19 @@ class AppImageConfig(Base):
     ) -> Optional["AppImageConfig"]:
         """
         Get a AppImageConfig resource
-        
+
         Parameters:
             app_image_config_name: The name of the AppImageConfig to describe.
             session: Boto3 session.
             region: Region name.
-            
+
         Returns:
             The AppImageConfig resource.
-        
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -1330,31 +1332,33 @@ class AppImageConfig(Base):
                 ```
             ResourceNotFound: Resource being access is not found.
         """
-    
+
         operation_input_args = {
-            'AppImageConfigName': app_image_config_name,
+            "AppImageConfigName": app_image_config_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
         response = client.describe_app_image_config(**operation_input_args)
-    
+
         pprint(response)
-    
+
         # deserialize the response
-        transformed_response = transform(response, 'DescribeAppImageConfigResponse')
+        transformed_response = transform(response, "DescribeAppImageConfigResponse")
         app_image_config = cls(**transformed_response)
         return app_image_config
-    
+
     def refresh(self) -> Optional["AppImageConfig"]:
         """
         Refresh a AppImageConfig resource
-        
+
         Returns:
             The AppImageConfig resource.
-        
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -1364,17 +1368,17 @@ class AppImageConfig(Base):
                 ```
             ResourceNotFound: Resource being access is not found.
         """
-    
+
         operation_input_args = {
-            'AppImageConfigName': self.app_image_config_name,
+            "AppImageConfigName": self.app_image_config_name,
         }
         client = SageMakerClient().client
         response = client.describe_app_image_config(**operation_input_args)
-    
+
         # deserialize response and update self
-        transform(response, 'DescribeAppImageConfigResponse', self)
+        transform(response, "DescribeAppImageConfigResponse", self)
         return self
-    
+
     def update(
         self,
         kernel_gateway_image_config: Optional[KernelGatewayImageConfig] = Unassigned(),
@@ -1382,15 +1386,15 @@ class AppImageConfig(Base):
     ) -> Optional["AppImageConfig"]:
         """
         Update a AppImageConfig resource
-        
-        
+
+
         Returns:
             The AppImageConfig resource.
-        
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -1400,36 +1404,36 @@ class AppImageConfig(Base):
                 ```
             ResourceNotFound: Resource being access is not found.
         """
-    
+
         logger.debug("Updating app_image_config resource.")
         client = SageMakerClient().client
-    
+
         operation_input_args = {
-            'AppImageConfigName': self.app_image_config_name,
-            'KernelGatewayImageConfig': kernel_gateway_image_config,
-            'JupyterLabAppImageConfig': jupyter_lab_app_image_config,
+            "AppImageConfigName": self.app_image_config_name,
+            "KernelGatewayImageConfig": kernel_gateway_image_config,
+            "JupyterLabAppImageConfig": jupyter_lab_app_image_config,
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = AppImageConfig._serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
-    
+
         # create the resource
         response = client.update_app_image_config(**operation_input_args)
         logger.debug(f"Response: {response}")
         self.refresh()
-    
+
         return self
-    
+
     def delete(self) -> None:
         """
         Delete a AppImageConfig resource
-        
-        
+
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -1439,16 +1443,16 @@ class AppImageConfig(Base):
                 ```
             ResourceNotFound: Resource being access is not found.
         """
-    
+
         client = SageMakerClient().client
-    
+
         operation_input_args = {
-            'AppImageConfigName': self.app_image_config_name,
+            "AppImageConfigName": self.app_image_config_name,
         }
         client.delete_app_image_config(**operation_input_args)
-        
+
         print(f"Deleting {self.__class__.__name__} - {self.get_name()}")
-    
+
     @classmethod
     def get_all(
         cls,
@@ -1464,7 +1468,7 @@ class AppImageConfig(Base):
     ) -> ResourceIterator["AppImageConfig"]:
         """
         Get all AppImageConfig resources
-        
+
         Parameters:
             max_results: The total number of items to return in the response. If the total number of items available is more than the value specified, a NextToken is provided in the response. To resume pagination, provide the NextToken value in the as part of a subsequent call. The default value is 10.
             next_token: If the previous call to ListImages didn't return the full set of AppImageConfigs, the call returns a token for getting the next set of AppImageConfigs.
@@ -1477,14 +1481,14 @@ class AppImageConfig(Base):
             sort_order: The sort order. The default value is Descending.
             session: Boto3 session.
             region: Region name.
-            
+
         Returns:
             Iterator for listed AppImageConfig resources.
-        
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -1493,35 +1497,41 @@ class AppImageConfig(Base):
                     error_code = e.response['Error']['Code']
                 ```
         """
-    
-        client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
-            
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
         operation_input_args = {
-            'NameContains': name_contains,
-            'CreationTimeBefore': creation_time_before,
-            'CreationTimeAfter': creation_time_after,
-            'ModifiedTimeBefore': modified_time_before,
-            'ModifiedTimeAfter': modified_time_after,
-            'SortBy': sort_by,
-            'SortOrder': sort_order,
+            "NameContains": name_contains,
+            "CreationTimeBefore": creation_time_before,
+            "CreationTimeAfter": creation_time_after,
+            "ModifiedTimeBefore": modified_time_before,
+            "ModifiedTimeAfter": modified_time_after,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
         }
-    
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
-        
+
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
+
         return ResourceIterator(
             client=client,
-            list_method='list_app_image_configs',
-            summaries_key='AppImageConfigs',
-            summary_name='AppImageConfigDetails',
+            list_method="list_app_image_configs",
+            summaries_key="AppImageConfigs",
+            summary_name="AppImageConfigDetails",
             resource_cls=AppImageConfig,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
 
 
 class Artifact(Base):
     """
     Class representing resource Artifact
-    
+
     Attributes:
         artifact_name: The name of the artifact.
         artifact_arn: The Amazon Resource Name (ARN) of the artifact.
@@ -1533,14 +1543,10 @@ class Artifact(Base):
         last_modified_time: When the artifact was last modified.
         last_modified_by:
         metadata_properties:
-<<<<<<< HEAD
         lineage_group_arn: The Amazon Resource Name (ARN) of the lineage group.
 
-=======
-        lineage_group_arn:The Amazon Resource Name (ARN) of the lineage group.
-    
->>>>>>> d6a2f6c (Create resource from Create method)
     """
+
     artifact_arn: str
     artifact_name: Optional[str] = Unassigned()
     source: Optional[ArtifactSource] = Unassigned()
@@ -1552,14 +1558,14 @@ class Artifact(Base):
     last_modified_by: Optional[UserContext] = Unassigned()
     metadata_properties: Optional[MetadataProperties] = Unassigned()
     lineage_group_arn: Optional[str] = Unassigned()
-    
+
     def get_name(self) -> str:
         attributes = vars(self)
         for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'artifact_name':
+            if attribute == "name" or attribute == "artifact_name":
                 return value
         raise Exception("Name attribute not found for object")
-    
+
     @classmethod
     def create(
         cls,
@@ -1574,7 +1580,7 @@ class Artifact(Base):
     ) -> Optional["Artifact"]:
         """
         Create a Artifact resource
-        
+
         Parameters:
             source: The ID, ID type, and URI of the source.
             artifact_type: The artifact type.
@@ -1584,14 +1590,14 @@ class Artifact(Base):
             tags: A list of tags to apply to the artifact.
             session: Boto3 session.
             region: Region name.
-            
+
         Returns:
             The Artifact resource.
-        
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -1604,32 +1610,36 @@ class Artifact(Base):
             LocalConfigNotFoundError: Raised when a configuration file is not found in local file system
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
         """
-    
+
         logger.debug("Creating artifact resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
-    
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
         operation_input_args = {
-            'ArtifactName': artifact_name,
-            'Source': source,
-            'ArtifactType': artifact_type,
-            'Properties': properties,
-            'MetadataProperties': metadata_properties,
-            'Tags': tags,
+            "ArtifactName": artifact_name,
+            "Source": source,
+            "ArtifactType": artifact_type,
+            "Properties": properties,
+            "MetadataProperties": metadata_properties,
+            "Tags": tags,
         }
-        
-        operation_input_args = Base.populate_chained_attributes(resource_name='Artifact', operation_input_args=operation_input_args)
-            
+
+        operation_input_args = Base.populate_chained_attributes(
+            resource_name="Artifact", operation_input_args=operation_input_args
+        )
+
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
-    
+
         # create the resource
         response = client.create_artifact(**operation_input_args)
         logger.debug(f"Response: {response}")
-    
-        return cls.get(artifact_arn=response['ArtifactArn'], session=session, region=region)
-    
+
+        return cls.get(artifact_arn=response["ArtifactArn"], session=session, region=region)
+
     @classmethod
     def get(
         cls,
@@ -1639,19 +1649,19 @@ class Artifact(Base):
     ) -> Optional["Artifact"]:
         """
         Get a Artifact resource
-        
+
         Parameters:
             artifact_arn: The Amazon Resource Name (ARN) of the artifact to describe.
             session: Boto3 session.
             region: Region name.
-            
+
         Returns:
             The Artifact resource.
-        
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -1661,31 +1671,33 @@ class Artifact(Base):
                 ```
             ResourceNotFound: Resource being access is not found.
         """
-    
+
         operation_input_args = {
-            'ArtifactArn': artifact_arn,
+            "ArtifactArn": artifact_arn,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
         response = client.describe_artifact(**operation_input_args)
-    
+
         pprint(response)
-    
+
         # deserialize the response
-        transformed_response = transform(response, 'DescribeArtifactResponse')
+        transformed_response = transform(response, "DescribeArtifactResponse")
         artifact = cls(**transformed_response)
         return artifact
-    
+
     def refresh(self) -> Optional["Artifact"]:
         """
         Refresh a Artifact resource
-        
+
         Returns:
             The Artifact resource.
-        
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -1695,17 +1707,17 @@ class Artifact(Base):
                 ```
             ResourceNotFound: Resource being access is not found.
         """
-    
+
         operation_input_args = {
-            'ArtifactArn': self.artifact_arn,
+            "ArtifactArn": self.artifact_arn,
         }
         client = SageMakerClient().client
         response = client.describe_artifact(**operation_input_args)
-    
+
         # deserialize response and update self
-        transform(response, 'DescribeArtifactResponse', self)
+        transform(response, "DescribeArtifactResponse", self)
         return self
-    
+
     def update(
         self,
         artifact_name: Optional[str] = Unassigned(),
@@ -1714,22 +1726,17 @@ class Artifact(Base):
     ) -> Optional["Artifact"]:
         """
         Update a Artifact resource
-        
+
         Parameters:
-<<<<<<< HEAD
             properties_to_remove: A list of properties to remove.
 
-=======
-            properties_to_remove:A list of properties to remove.
-        
->>>>>>> d6a2f6c (Create resource from Create method)
         Returns:
             The Artifact resource.
-        
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -1740,37 +1747,37 @@ class Artifact(Base):
             ConflictException: There was a conflict when you attempted to modify a SageMaker entity such as an Experiment or Artifact.
             ResourceNotFound: Resource being access is not found.
         """
-    
+
         logger.debug("Updating artifact resource.")
         client = SageMakerClient().client
-    
+
         operation_input_args = {
-            'ArtifactArn': self.artifact_arn,
-            'ArtifactName': artifact_name,
-            'Properties': properties,
-            'PropertiesToRemove': properties_to_remove,
+            "ArtifactArn": self.artifact_arn,
+            "ArtifactName": artifact_name,
+            "Properties": properties,
+            "PropertiesToRemove": properties_to_remove,
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = Artifact._serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
-    
+
         # create the resource
         response = client.update_artifact(**operation_input_args)
         logger.debug(f"Response: {response}")
         self.refresh()
-    
+
         return self
-    
+
     def delete(self) -> None:
         """
         Delete a Artifact resource
-        
-        
+
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -1780,17 +1787,17 @@ class Artifact(Base):
                 ```
             ResourceNotFound: Resource being access is not found.
         """
-    
+
         client = SageMakerClient().client
-    
+
         operation_input_args = {
-            'ArtifactArn': self.artifact_arn,
-            'Source': self.source,
+            "ArtifactArn": self.artifact_arn,
+            "Source": self.source,
         }
         client.delete_artifact(**operation_input_args)
-        
+
         print(f"Deleting {self.__class__.__name__} - {self.get_name()}")
-    
+
     @classmethod
     def get_all(
         cls,
@@ -1805,7 +1812,7 @@ class Artifact(Base):
     ) -> ResourceIterator["Artifact"]:
         """
         Get all Artifact resources
-        
+
         Parameters:
             source_uri: A filter that returns only artifacts with the specified source URI.
             artifact_type: A filter that returns only artifacts of the specified type.
@@ -1817,14 +1824,14 @@ class Artifact(Base):
             max_results: The maximum number of artifacts to return in the response. The default value is 10.
             session: Boto3 session.
             region: Region name.
-            
+
         Returns:
             Iterator for listed Artifact resources.
-        
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -1834,34 +1841,40 @@ class Artifact(Base):
                 ```
             ResourceNotFound: Resource being access is not found.
         """
-    
-        client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
-            
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
         operation_input_args = {
-            'SourceUri': source_uri,
-            'ArtifactType': artifact_type,
-            'CreatedAfter': created_after,
-            'CreatedBefore': created_before,
-            'SortBy': sort_by,
-            'SortOrder': sort_order,
+            "SourceUri": source_uri,
+            "ArtifactType": artifact_type,
+            "CreatedAfter": created_after,
+            "CreatedBefore": created_before,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
         }
-    
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
-        
+
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
+
         return ResourceIterator(
             client=client,
-            list_method='list_artifacts',
-            summaries_key='ArtifactSummaries',
-            summary_name='ArtifactSummary',
+            list_method="list_artifacts",
+            summaries_key="ArtifactSummaries",
+            summary_name="ArtifactSummary",
             resource_cls=Artifact,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
 
 
 class Association(Base):
     """
     Class representing resource Association
-    
+
     Attributes:
         source_arn: The ARN of the source.
         destination_arn: The Amazon Resource Name (ARN) of the destination.
@@ -1872,8 +1885,9 @@ class Association(Base):
         destination_name: The name of the destination.
         creation_time: When the association was created.
         created_by:
-    
+
     """
+
     source_arn: Optional[str] = Unassigned()
     destination_arn: Optional[str] = Unassigned()
     source_type: Optional[str] = Unassigned()
@@ -1883,23 +1897,23 @@ class Association(Base):
     destination_name: Optional[str] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
     created_by: Optional[UserContext] = Unassigned()
-    
+
     def get_name(self) -> str:
         attributes = vars(self)
         for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'association_name':
+            if attribute == "name" or attribute == "association_name":
                 return value
         raise Exception("Name attribute not found for object")
-    
+
     def delete(self) -> None:
         """
         Delete a Association resource
-        
-        
+
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -1909,17 +1923,17 @@ class Association(Base):
                 ```
             ResourceNotFound: Resource being access is not found.
         """
-    
+
         client = SageMakerClient().client
-    
+
         operation_input_args = {
-            'SourceArn': self.source_arn,
-            'DestinationArn': self.destination_arn,
+            "SourceArn": self.source_arn,
+            "DestinationArn": self.destination_arn,
         }
         client.delete_association(**operation_input_args)
-        
+
         print(f"Deleting {self.__class__.__name__} - {self.get_name()}")
-    
+
     @classmethod
     def get_all(
         cls,
@@ -1937,7 +1951,7 @@ class Association(Base):
     ) -> ResourceIterator["Association"]:
         """
         Get all Association resources
-        
+
         Parameters:
             source_arn: A filter that returns only associations with the specified source ARN.
             destination_arn: A filter that returns only associations with the specified destination Amazon Resource Name (ARN).
@@ -1952,14 +1966,14 @@ class Association(Base):
             max_results: The maximum number of associations to return in the response. The default value is 10.
             session: Boto3 session.
             region: Region name.
-            
+
         Returns:
             Iterator for listed Association resources.
-        
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -1969,67 +1983,81 @@ class Association(Base):
                 ```
             ResourceNotFound: Resource being access is not found.
         """
-    
-        client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
-            
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
         operation_input_args = {
-            'SourceArn': source_arn,
-            'DestinationArn': destination_arn,
-            'SourceType': source_type,
-            'DestinationType': destination_type,
-            'AssociationType': association_type,
-            'CreatedAfter': created_after,
-            'CreatedBefore': created_before,
-            'SortBy': sort_by,
-            'SortOrder': sort_order,
+            "SourceArn": source_arn,
+            "DestinationArn": destination_arn,
+            "SourceType": source_type,
+            "DestinationType": destination_type,
+            "AssociationType": association_type,
+            "CreatedAfter": created_after,
+            "CreatedBefore": created_before,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
         }
-    
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
-        
+
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
+
         return ResourceIterator(
             client=client,
-            list_method='list_associations',
-            summaries_key='AssociationSummaries',
-            summary_name='AssociationSummary',
+            list_method="list_associations",
+            summaries_key="AssociationSummaries",
+            summary_name="AssociationSummary",
             resource_cls=Association,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
-    
-    
+
+    @classmethod
     def add(
-        self,
-    
+        cls,
+        source_arn: str,
+        destination_arn: str,
+        association_type: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> None:
         """
         Creates an association between the source and the destination.
-        
-        
+
+        Parameters:
+            source_arn: The ARN of the source.
+            destination_arn: The Amazon Resource Name (ARN) of the destination.
+            association_type: The type of association. The following are suggested uses for each type. Amazon SageMaker places no restrictions on their use.   ContributedTo - The source contributed to the destination or had a part in enabling the destination. For example, the training data contributed to the training job.   AssociatedWith - The source is connected to the destination. For example, an approval workflow is associated with a model deployment.   DerivedFrom - The destination is a modification of the source. For example, a digest output of a channel input for a processing job is derived from the original inputs.   Produced - The source generated the destination. For example, a training job produced a model artifact.
+            session: Boto3 session.
+            region: Region name.
+
+
         """
-    
-    
+
         operation_input_args = {
-            'SourceArn': self.source_arn,
-            'DestinationArn': self.destination_arn,
-            'AssociationType': self.association_type,
+            "SourceArn": source_arn,
+            "DestinationArn": destination_arn,
+            "AssociationType": association_type,
         }
         logger.debug(f"Input request: {operation_input_args}")
-    
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
-    
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
         logger.debug(f"Calling add_association API")
         response = client.add_association(**operation_input_args)
         logger.debug(f"Response: {response}")
-    
 
 
 class AutoMLJob(Base):
     """
     Class representing resource AutoMLJob
-    
+
     Attributes:
-<<<<<<< HEAD
         auto_ml_job_name: Returns the name of the AutoML job.
         auto_ml_job_arn: Returns the ARN of the AutoML job.
         input_data_config: Returns the input data configuration for the AutoML job.
@@ -2052,31 +2080,8 @@ class AutoMLJob(Base):
         model_deploy_config: Indicates whether the model was deployed automatically to an endpoint and the name of that endpoint if deployed automatically.
         model_deploy_result: Provides information about endpoint for the model deployment.
 
-=======
-        auto_ml_job_name:Returns the name of the AutoML job.
-        auto_ml_job_arn:Returns the ARN of the AutoML job.
-        input_data_config:Returns the input data configuration for the AutoML job.
-        output_data_config:Returns the job's output data config.
-        role_arn:The ARN of the IAM role that has read permission to the input data location and write permission to the output data location in Amazon S3.
-        creation_time:Returns the creation time of the AutoML job.
-        last_modified_time:Returns the job's last modified time.
-        auto_ml_job_status:Returns the status of the AutoML job.
-        auto_ml_job_secondary_status:Returns the secondary status of the AutoML job.
-        auto_ml_job_objective:Returns the job's objective.
-        problem_type:Returns the job's problem type.
-        auto_ml_job_config:Returns the configuration for the AutoML job.
-        end_time:Returns the end time of the AutoML job.
-        failure_reason:Returns the failure reason for an AutoML job, when applicable.
-        partial_failure_reasons:Returns a list of reasons for partial failures within an AutoML job.
-        best_candidate:The best model candidate selected by SageMaker Autopilot using both the best objective metric and lowest InferenceLatency for an experiment.
-        generate_candidate_definitions_only:Indicates whether the output for an AutoML job generates candidate definitions only.
-        auto_ml_job_artifacts:Returns information on the job's artifacts found in AutoMLJobArtifacts.
-        resolved_attributes:Contains ProblemType, AutoMLJobObjective, and CompletionCriteria. If you do not provide these values, they are inferred.
-        model_deploy_config:Indicates whether the model was deployed automatically to an endpoint and the name of that endpoint if deployed automatically.
-        model_deploy_result:Provides information about endpoint for the model deployment.
-    
->>>>>>> d6a2f6c (Create resource from Create method)
     """
+
     auto_ml_job_name: str
     auto_ml_job_arn: Optional[str] = Unassigned()
     input_data_config: Optional[List[AutoMLChannel]] = Unassigned()
@@ -2098,60 +2103,44 @@ class AutoMLJob(Base):
     resolved_attributes: Optional[ResolvedAttributes] = Unassigned()
     model_deploy_config: Optional[ModelDeployConfig] = Unassigned()
     model_deploy_result: Optional[ModelDeployResult] = Unassigned()
-    
+
     def get_name(self) -> str:
         attributes = vars(self)
         for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'auto_ml_job_name':
+            if attribute == "name" or attribute == "auto_ml_job_name":
                 return value
         raise Exception("Name attribute not found for object")
 
-    
     def populate_inputs_decorator(create_func):
         def wrapper(*args, **kwargs):
-            config_schema_for_resource = \
-        {
-          "output_data_config": {
-            "s3_output_path": {
-              "type": "string"
-            },
-            "kms_key_id": {
-              "type": "string"
-            }
-          },
-          "role_arn": {
-            "type": "string"
-          },
-          "auto_ml_job_config": {
-            "security_config": {
-              "volume_kms_key_id": {
-                "type": "string"
-              },
-              "vpc_config": {
-                "security_group_ids": {
-                  "type": "array",
-                  "items": {
-                    "type": "string"
-                  }
+            config_schema_for_resource = {
+                "output_data_config": {
+                    "s3_output_path": {"type": "string"},
+                    "kms_key_id": {"type": "string"},
                 },
-                "subnets": {
-                  "type": "array",
-                  "items": {
-                    "type": "string"
-                  }
-                }
-              }
-            },
-            "candidate_generation_config": {
-              "feature_specification_s3_uri": {
-                "type": "string"
-              }
+                "role_arn": {"type": "string"},
+                "auto_ml_job_config": {
+                    "security_config": {
+                        "volume_kms_key_id": {"type": "string"},
+                        "vpc_config": {
+                            "security_group_ids": {"type": "array", "items": {"type": "string"}},
+                            "subnets": {"type": "array", "items": {"type": "string"}},
+                        },
+                    },
+                    "candidate_generation_config": {
+                        "feature_specification_s3_uri": {"type": "string"}
+                    },
+                },
             }
-          }
-        }
-            return create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "AutoMLJob", **kwargs))
+            return create_func(
+                *args,
+                **Base.get_updated_kwargs_with_configured_attributes(
+                    config_schema_for_resource, "AutoMLJob", **kwargs
+                ),
+            )
+
         return wrapper
-    
+
     @classmethod
     @populate_inputs_decorator
     def create(
@@ -2171,7 +2160,7 @@ class AutoMLJob(Base):
     ) -> Optional["AutoMLJob"]:
         """
         Create a AutoMLJob resource
-        
+
         Parameters:
             auto_ml_job_name: Identifies an Autopilot job. The name must be unique to your account and is case insensitive.
             input_data_config: An array of channel objects that describes the input data and its location. Each channel is a named input source. Similar to InputDataConfig supported by HyperParameterTrainingJobDefinition. Format(s) supported: CSV, Parquet. A minimum of 500 rows is required for the training dataset. There is not a minimum number of rows required for the validation dataset.
@@ -2185,14 +2174,14 @@ class AutoMLJob(Base):
             model_deploy_config: Specifies how to generate the endpoint name for an automatic one-click Autopilot model deployment.
             session: Boto3 session.
             region: Region name.
-            
+
         Returns:
             The AutoMLJob resource.
-        
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -2206,36 +2195,40 @@ class AutoMLJob(Base):
             LocalConfigNotFoundError: Raised when a configuration file is not found in local file system
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
         """
-    
+
         logger.debug("Creating auto_ml_job resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
-    
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
         operation_input_args = {
-            'AutoMLJobName': auto_ml_job_name,
-            'InputDataConfig': input_data_config,
-            'OutputDataConfig': output_data_config,
-            'ProblemType': problem_type,
-            'AutoMLJobObjective': auto_ml_job_objective,
-            'AutoMLJobConfig': auto_ml_job_config,
-            'RoleArn': role_arn,
-            'GenerateCandidateDefinitionsOnly': generate_candidate_definitions_only,
-            'Tags': tags,
-            'ModelDeployConfig': model_deploy_config,
+            "AutoMLJobName": auto_ml_job_name,
+            "InputDataConfig": input_data_config,
+            "OutputDataConfig": output_data_config,
+            "ProblemType": problem_type,
+            "AutoMLJobObjective": auto_ml_job_objective,
+            "AutoMLJobConfig": auto_ml_job_config,
+            "RoleArn": role_arn,
+            "GenerateCandidateDefinitionsOnly": generate_candidate_definitions_only,
+            "Tags": tags,
+            "ModelDeployConfig": model_deploy_config,
         }
-        
-        operation_input_args = Base.populate_chained_attributes(resource_name='AutoMLJob', operation_input_args=operation_input_args)
-            
+
+        operation_input_args = Base.populate_chained_attributes(
+            resource_name="AutoMLJob", operation_input_args=operation_input_args
+        )
+
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
-    
+
         # create the resource
         response = client.create_auto_ml_job(**operation_input_args)
         logger.debug(f"Response: {response}")
-    
+
         return cls.get(auto_ml_job_name=auto_ml_job_name, session=session, region=region)
-    
+
     @classmethod
     def get(
         cls,
@@ -2245,19 +2238,19 @@ class AutoMLJob(Base):
     ) -> Optional["AutoMLJob"]:
         """
         Get a AutoMLJob resource
-        
+
         Parameters:
             auto_ml_job_name: Requests information about an AutoML job using its unique name.
             session: Boto3 session.
             region: Region name.
-            
+
         Returns:
             The AutoMLJob resource.
-        
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -2267,31 +2260,33 @@ class AutoMLJob(Base):
                 ```
             ResourceNotFound: Resource being access is not found.
         """
-    
+
         operation_input_args = {
-            'AutoMLJobName': auto_ml_job_name,
+            "AutoMLJobName": auto_ml_job_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
         response = client.describe_auto_ml_job(**operation_input_args)
-    
+
         pprint(response)
-    
+
         # deserialize the response
-        transformed_response = transform(response, 'DescribeAutoMLJobResponse')
+        transformed_response = transform(response, "DescribeAutoMLJobResponse")
         auto_ml_job = cls(**transformed_response)
         return auto_ml_job
-    
+
     def refresh(self) -> Optional["AutoMLJob"]:
         """
         Refresh a AutoMLJob resource
-        
+
         Returns:
             The AutoMLJob resource.
-        
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -2301,26 +2296,26 @@ class AutoMLJob(Base):
                 ```
             ResourceNotFound: Resource being access is not found.
         """
-    
+
         operation_input_args = {
-            'AutoMLJobName': self.auto_ml_job_name,
+            "AutoMLJobName": self.auto_ml_job_name,
         }
         client = SageMakerClient().client
         response = client.describe_auto_ml_job(**operation_input_args)
-    
+
         # deserialize response and update self
-        transform(response, 'DescribeAutoMLJobResponse', self)
+        transform(response, "DescribeAutoMLJobResponse", self)
         return self
-    
+
     def stop(self) -> None:
         """
         Stop a AutoMLJob resource
-        
-        
+
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -2330,55 +2325,53 @@ class AutoMLJob(Base):
                 ```
             ResourceNotFound: Resource being access is not found.
         """
-    
+
         client = SageMakerClient().client
-    
+
         operation_input_args = {
-            'AutoMLJobName': self.auto_ml_job_name,
+            "AutoMLJobName": self.auto_ml_job_name,
         }
         client.stop_auto_ml_job(**operation_input_args)
-    
-    def wait(
-        self,
-        poll: int = 5,
-        timeout: Optional[int] = None
-    ):
+
+    def wait(self, poll: int = 5, timeout: Optional[int] = None):
         """
         Wait for a AutoMLJob resource.
-        
+
         Parameters:
             poll: The number of seconds to wait between each poll.
             timeout: The maximum number of seconds to wait before timing out.
-        
+
         Returns:
             The AutoMLJob resource.
-        
+
         Raises:
             TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
             FailedStatusError:   If the resource reaches a failed state.
             WaiterError: Raised when an error occurs while waiting.
-        
+
         """
-        terminal_states = ['Completed', 'Failed', 'Stopped']
+        terminal_states = ["Completed", "Failed", "Stopped"]
         start_time = time.time()
-    
+
         while True:
             self.refresh()
             current_status = self.auto_ml_job_status
-    
+
             if current_status in terminal_states:
                 print(f"\nFinal Resource Status: {current_status}")
-                
+
                 if "failed" in current_status.lower():
-                    raise FailedStatusError(resource_type="AutoMLJob", status=current_status, reason=self.failure_reason)
-    
+                    raise FailedStatusError(
+                        resource_type="AutoMLJob", status=current_status, reason=self.failure_reason
+                    )
+
                 return
-    
+
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="AutoMLJob", status=current_status)
             print("-", end="")
             time.sleep(poll)
-    
+
     @classmethod
     def get_all(
         cls,
@@ -2395,7 +2388,7 @@ class AutoMLJob(Base):
     ) -> ResourceIterator["AutoMLJob"]:
         """
         Get all AutoMLJob resources
-        
+
         Parameters:
             creation_time_after: Request a list of jobs, using a filter for time.
             creation_time_before: Request a list of jobs, using a filter for time.
@@ -2409,14 +2402,14 @@ class AutoMLJob(Base):
             next_token: If the previous response was truncated, you receive this token. Use it in your next request to receive the next set of results.
             session: Boto3 session.
             region: Region name.
-            
+
         Returns:
             Iterator for listed AutoMLJob resources.
-        
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -2425,43 +2418,49 @@ class AutoMLJob(Base):
                     error_code = e.response['Error']['Code']
                 ```
         """
-    
-        client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
-            
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
         operation_input_args = {
-            'CreationTimeAfter': creation_time_after,
-            'CreationTimeBefore': creation_time_before,
-            'LastModifiedTimeAfter': last_modified_time_after,
-            'LastModifiedTimeBefore': last_modified_time_before,
-            'NameContains': name_contains,
-            'StatusEquals': status_equals,
-            'SortOrder': sort_order,
-            'SortBy': sort_by,
+            "CreationTimeAfter": creation_time_after,
+            "CreationTimeBefore": creation_time_before,
+            "LastModifiedTimeAfter": last_modified_time_after,
+            "LastModifiedTimeBefore": last_modified_time_before,
+            "NameContains": name_contains,
+            "StatusEquals": status_equals,
+            "SortOrder": sort_order,
+            "SortBy": sort_by,
         }
-    
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
-        
+
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
+
         return ResourceIterator(
             client=client,
-            list_method='list_auto_ml_jobs',
-            summaries_key='AutoMLJobSummaries',
-            summary_name='AutoMLJobSummary',
+            list_method="list_auto_ml_jobs",
+            summaries_key="AutoMLJobSummaries",
+            summary_name="AutoMLJobSummary",
             resource_cls=AutoMLJob,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
-    
-    
+
     def get_all_candidates(
         self,
         status_equals: Optional[str] = Unassigned(),
         candidate_name_equals: Optional[str] = Unassigned(),
         sort_order: Optional[str] = Unassigned(),
-        sort_by: Optional[str] = Unassigned(),    session: Optional[Session] = None,
+        sort_by: Optional[str] = Unassigned(),
+        session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> ResourceIterator[AutoMLCandidate]:
         """
         List the candidates created for the job.
-        
+
         Parameters:
             status_equals: List the candidates for the job and filter by status.
             candidate_name_equals: List the candidates for the job and filter by candidate name.
@@ -2471,38 +2470,42 @@ class AutoMLJob(Base):
             next_token: If the previous response was truncated, you receive this token. Use it in your next request to receive the next set of results.
             session: Boto3 session.
             region: Region name.
-            
-        
+
+
         """
-    
-    
+
         operation_input_args = {
-            'AutoMLJobName': self.auto_ml_job_name,
-            'StatusEquals': status_equals,
-            'CandidateNameEquals': candidate_name_equals,
-            'SortOrder': sort_order,
-            'SortBy': sort_by,
+            "AutoMLJobName": self.auto_ml_job_name,
+            "StatusEquals": status_equals,
+            "CandidateNameEquals": candidate_name_equals,
+            "SortOrder": sort_order,
+            "SortBy": sort_by,
         }
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
         logger.debug(f"Input request: {operation_input_args}")
-    
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
-    
-    
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
         return ResourceIterator(
             client=client,
-            list_method='list_candidates_for_auto_ml_job',
-            summaries_key='Candidates',
-            summary_name='AutoMLCandidate',
+            list_method="list_candidates_for_auto_ml_job",
+            summaries_key="Candidates",
+            summary_name="AutoMLCandidate",
             resource_cls=AutoMLCandidate,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
 
 
 class AutoMLJobV2(Base):
     """
     Class representing resource AutoMLJobV2
-    
+
     Attributes:
         auto_ml_job_name: Returns the name of the AutoML job V2.
         auto_ml_job_arn: Returns the Amazon Resource Name (ARN) of the AutoML job V2.
@@ -2521,22 +2524,14 @@ class AutoMLJobV2(Base):
         partial_failure_reasons: Returns a list of reasons for partial failures within an AutoML job V2.
         best_candidate: Information about the candidate produced by an AutoML training job V2, including its status, steps, and other properties.
         auto_ml_job_artifacts:
-<<<<<<< HEAD
         resolved_attributes: Returns the resolved attributes used by the AutoML job V2.
         model_deploy_config: Indicates whether the model was deployed automatically to an endpoint and the name of that endpoint if deployed automatically.
         model_deploy_result: Provides information about endpoint for the model deployment.
         data_split_config: Returns the configuration settings of how the data are split into train and validation datasets.
         security_config: Returns the security configuration for traffic encryption or Amazon VPC settings.
 
-=======
-        resolved_attributes:Returns the resolved attributes used by the AutoML job V2.
-        model_deploy_config:Indicates whether the model was deployed automatically to an endpoint and the name of that endpoint if deployed automatically.
-        model_deploy_result:Provides information about endpoint for the model deployment.
-        data_split_config:Returns the configuration settings of how the data are split into train and validation datasets.
-        security_config:Returns the security configuration for traffic encryption or Amazon VPC settings.
-    
->>>>>>> d6a2f6c (Create resource from Create method)
     """
+
     auto_ml_job_name: str
     auto_ml_job_arn: Optional[str] = Unassigned()
     auto_ml_job_input_data_config: Optional[List[AutoMLJobChannel]] = Unassigned()
@@ -2559,65 +2554,45 @@ class AutoMLJobV2(Base):
     model_deploy_result: Optional[ModelDeployResult] = Unassigned()
     data_split_config: Optional[AutoMLDataSplitConfig] = Unassigned()
     security_config: Optional[AutoMLSecurityConfig] = Unassigned()
-    
+
     def get_name(self) -> str:
         attributes = vars(self)
         for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'auto_ml_job_v2_name':
+            if attribute == "name" or attribute == "auto_ml_job_v2_name":
                 return value
         raise Exception("Name attribute not found for object")
 
-    
     def populate_inputs_decorator(create_func):
         def wrapper(*args, **kwargs):
-            config_schema_for_resource = \
-        {
-          "output_data_config": {
-            "s3_output_path": {
-              "type": "string"
-            },
-            "kms_key_id": {
-              "type": "string"
+            config_schema_for_resource = {
+                "output_data_config": {
+                    "s3_output_path": {"type": "string"},
+                    "kms_key_id": {"type": "string"},
+                },
+                "role_arn": {"type": "string"},
+                "auto_ml_problem_type_config": {
+                    "time_series_forecasting_job_config": {
+                        "feature_specification_s3_uri": {"type": "string"}
+                    },
+                    "tabular_job_config": {"feature_specification_s3_uri": {"type": "string"}},
+                },
+                "security_config": {
+                    "volume_kms_key_id": {"type": "string"},
+                    "vpc_config": {
+                        "security_group_ids": {"type": "array", "items": {"type": "string"}},
+                        "subnets": {"type": "array", "items": {"type": "string"}},
+                    },
+                },
             }
-          },
-          "role_arn": {
-            "type": "string"
-          },
-          "auto_ml_problem_type_config": {
-            "time_series_forecasting_job_config": {
-              "feature_specification_s3_uri": {
-                "type": "string"
-              }
-            },
-            "tabular_job_config": {
-              "feature_specification_s3_uri": {
-                "type": "string"
-              }
-            }
-          },
-          "security_config": {
-            "volume_kms_key_id": {
-              "type": "string"
-            },
-            "vpc_config": {
-              "security_group_ids": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
-              },
-              "subnets": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
-              }
-            }
-          }
-        }
-            return create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "AutoMLJobV2", **kwargs))
+            return create_func(
+                *args,
+                **Base.get_updated_kwargs_with_configured_attributes(
+                    config_schema_for_resource, "AutoMLJobV2", **kwargs
+                ),
+            )
+
         return wrapper
-    
+
     @classmethod
     @populate_inputs_decorator
     def create(
@@ -2637,9 +2612,8 @@ class AutoMLJobV2(Base):
     ) -> Optional["AutoMLJobV2"]:
         """
         Create a AutoMLJobV2 resource
-        
+
         Parameters:
-<<<<<<< HEAD
             auto_ml_job_name: Identifies an Autopilot job. The name must be unique to your account and is case insensitive.
             auto_ml_job_input_data_config: An array of channel objects describing the input data and their location. Each channel is a named input source. Similar to the InputDataConfig attribute in the CreateAutoMLJob input parameters. The supported formats depend on the problem type:   For tabular problem types: S3Prefix, ManifestFile.   For image classification: S3Prefix, ManifestFile, AugmentedManifestFile.   For text classification: S3Prefix.   For time-series forecasting: S3Prefix.   For text generation (LLMs fine-tuning): S3Prefix.
             output_data_config: Provides information about encryption and the Amazon S3 output path needed to store artifacts from an AutoML job.
@@ -2650,28 +2624,16 @@ class AutoMLJobV2(Base):
             auto_ml_job_objective: Specifies a metric to minimize or maximize as the objective of a job. If not specified, the default objective metric depends on the problem type. For the list of default values per problem type, see AutoMLJobObjective.    For tabular problem types: You must either provide both the AutoMLJobObjective and indicate the type of supervised learning problem in AutoMLProblemTypeConfig (TabularJobConfig.ProblemType), or none at all.   For text generation problem types (LLMs fine-tuning): Fine-tuning language models in Autopilot does not require setting the AutoMLJobObjective field. Autopilot fine-tunes LLMs without requiring multiple candidates to be trained and evaluated. Instead, using your dataset, Autopilot directly fine-tunes your target model to enhance a default objective metric, the cross-entropy loss. After fine-tuning a language model, you can evaluate the quality of its generated text using different metrics. For a list of the available metrics, see Metrics for fine-tuning LLMs in Autopilot.
             model_deploy_config: Specifies how to generate the endpoint name for an automatic one-click Autopilot model deployment.
             data_split_config: This structure specifies how to split the data into train and validation datasets. The validation and training datasets must contain the same headers. For jobs created by calling CreateAutoMLJob, the validation dataset must be less than 2 GB in size.  This attribute must not be set for the time-series forecasting problem type, as Autopilot automatically splits the input dataset into training and validation sets.
-=======
-            auto_ml_job_name:Identifies an Autopilot job. The name must be unique to your account and is case insensitive.
-            auto_ml_job_input_data_config:An array of channel objects describing the input data and their location. Each channel is a named input source. Similar to the InputDataConfig attribute in the CreateAutoMLJob input parameters. The supported formats depend on the problem type:   For tabular problem types: S3Prefix, ManifestFile.   For image classification: S3Prefix, ManifestFile, AugmentedManifestFile.   For text classification: S3Prefix.   For time-series forecasting: S3Prefix.   For text generation (LLMs fine-tuning): S3Prefix.  
-            output_data_config:Provides information about encryption and the Amazon S3 output path needed to store artifacts from an AutoML job.
-            auto_ml_problem_type_config:Defines the configuration settings of one of the supported problem types.
-            role_arn:The ARN of the role that is used to access the data.
-            tags:An array of key-value pairs. You can use tags to categorize your Amazon Web Services resources in different ways, such as by purpose, owner, or environment. For more information, see Tagging Amazon Web ServicesResources. Tag keys must be unique per resource.
-            security_config:The security configuration for traffic encryption or Amazon VPC settings.
-            auto_ml_job_objective:Specifies a metric to minimize or maximize as the objective of a job. If not specified, the default objective metric depends on the problem type. For the list of default values per problem type, see AutoMLJobObjective.    For tabular problem types: You must either provide both the AutoMLJobObjective and indicate the type of supervised learning problem in AutoMLProblemTypeConfig (TabularJobConfig.ProblemType), or none at all.   For text generation problem types (LLMs fine-tuning): Fine-tuning language models in Autopilot does not require setting the AutoMLJobObjective field. Autopilot fine-tunes LLMs without requiring multiple candidates to be trained and evaluated. Instead, using your dataset, Autopilot directly fine-tunes your target model to enhance a default objective metric, the cross-entropy loss. After fine-tuning a language model, you can evaluate the quality of its generated text using different metrics. For a list of the available metrics, see Metrics for fine-tuning LLMs in Autopilot.   
-            model_deploy_config:Specifies how to generate the endpoint name for an automatic one-click Autopilot model deployment.
-            data_split_config:This structure specifies how to split the data into train and validation datasets. The validation and training datasets must contain the same headers. For jobs created by calling CreateAutoMLJob, the validation dataset must be less than 2 GB in size.  This attribute must not be set for the time-series forecasting problem type, as Autopilot automatically splits the input dataset into training and validation sets. 
->>>>>>> d6a2f6c (Create resource from Create method)
             session: Boto3 session.
             region: Region name.
-            
+
         Returns:
             The AutoMLJobV2 resource.
-        
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -2685,36 +2647,40 @@ class AutoMLJobV2(Base):
             LocalConfigNotFoundError: Raised when a configuration file is not found in local file system
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
         """
-    
+
         logger.debug("Creating auto_ml_job_v2 resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
-    
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
         operation_input_args = {
-            'AutoMLJobName': auto_ml_job_name,
-            'AutoMLJobInputDataConfig': auto_ml_job_input_data_config,
-            'OutputDataConfig': output_data_config,
-            'AutoMLProblemTypeConfig': auto_ml_problem_type_config,
-            'RoleArn': role_arn,
-            'Tags': tags,
-            'SecurityConfig': security_config,
-            'AutoMLJobObjective': auto_ml_job_objective,
-            'ModelDeployConfig': model_deploy_config,
-            'DataSplitConfig': data_split_config,
+            "AutoMLJobName": auto_ml_job_name,
+            "AutoMLJobInputDataConfig": auto_ml_job_input_data_config,
+            "OutputDataConfig": output_data_config,
+            "AutoMLProblemTypeConfig": auto_ml_problem_type_config,
+            "RoleArn": role_arn,
+            "Tags": tags,
+            "SecurityConfig": security_config,
+            "AutoMLJobObjective": auto_ml_job_objective,
+            "ModelDeployConfig": model_deploy_config,
+            "DataSplitConfig": data_split_config,
         }
-        
-        operation_input_args = Base.populate_chained_attributes(resource_name='AutoMLJobV2', operation_input_args=operation_input_args)
-            
+
+        operation_input_args = Base.populate_chained_attributes(
+            resource_name="AutoMLJobV2", operation_input_args=operation_input_args
+        )
+
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
-    
+
         # create the resource
         response = client.create_auto_ml_job_v2(**operation_input_args)
         logger.debug(f"Response: {response}")
-    
+
         return cls.get(auto_ml_job_name=auto_ml_job_name, session=session, region=region)
-    
+
     @classmethod
     def get(
         cls,
@@ -2724,19 +2690,19 @@ class AutoMLJobV2(Base):
     ) -> Optional["AutoMLJobV2"]:
         """
         Get a AutoMLJobV2 resource
-        
+
         Parameters:
             auto_ml_job_name: Requests information about an AutoML job V2 using its unique name.
             session: Boto3 session.
             region: Region name.
-            
+
         Returns:
             The AutoMLJobV2 resource.
-        
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -2746,31 +2712,33 @@ class AutoMLJobV2(Base):
                 ```
             ResourceNotFound: Resource being access is not found.
         """
-    
+
         operation_input_args = {
-            'AutoMLJobName': auto_ml_job_name,
+            "AutoMLJobName": auto_ml_job_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
         response = client.describe_auto_ml_job_v2(**operation_input_args)
-    
+
         pprint(response)
-    
+
         # deserialize the response
-        transformed_response = transform(response, 'DescribeAutoMLJobV2Response')
+        transformed_response = transform(response, "DescribeAutoMLJobV2Response")
         auto_ml_job_v2 = cls(**transformed_response)
         return auto_ml_job_v2
-    
+
     def refresh(self) -> Optional["AutoMLJobV2"]:
         """
         Refresh a AutoMLJobV2 resource
-        
+
         Returns:
             The AutoMLJobV2 resource.
-        
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -2780,53 +2748,53 @@ class AutoMLJobV2(Base):
                 ```
             ResourceNotFound: Resource being access is not found.
         """
-    
+
         operation_input_args = {
-            'AutoMLJobName': self.auto_ml_job_name,
+            "AutoMLJobName": self.auto_ml_job_name,
         }
         client = SageMakerClient().client
         response = client.describe_auto_ml_job_v2(**operation_input_args)
-    
+
         # deserialize response and update self
-        transform(response, 'DescribeAutoMLJobV2Response', self)
+        transform(response, "DescribeAutoMLJobV2Response", self)
         return self
-    
-    def wait(
-        self,
-        poll: int = 5,
-        timeout: Optional[int] = None
-    ):
+
+    def wait(self, poll: int = 5, timeout: Optional[int] = None):
         """
         Wait for a AutoMLJobV2 resource.
-        
+
         Parameters:
             poll: The number of seconds to wait between each poll.
             timeout: The maximum number of seconds to wait before timing out.
-        
+
         Returns:
             The AutoMLJobV2 resource.
-        
+
         Raises:
             TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
             FailedStatusError:   If the resource reaches a failed state.
             WaiterError: Raised when an error occurs while waiting.
-        
+
         """
-        terminal_states = ['Completed', 'Failed', 'Stopped']
+        terminal_states = ["Completed", "Failed", "Stopped"]
         start_time = time.time()
-    
+
         while True:
             self.refresh()
             current_status = self.auto_ml_job_status
-    
+
             if current_status in terminal_states:
                 print(f"\nFinal Resource Status: {current_status}")
-                
+
                 if "failed" in current_status.lower():
-                    raise FailedStatusError(resource_type="AutoMLJobV2", status=current_status, reason=self.failure_reason)
-    
+                    raise FailedStatusError(
+                        resource_type="AutoMLJobV2",
+                        status=current_status,
+                        reason=self.failure_reason,
+                    )
+
                 return
-    
+
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="AutoMLJobV2", status=current_status)
             print("-", end="")
@@ -2836,7 +2804,7 @@ class AutoMLJobV2(Base):
 class Cluster(Base):
     """
     Class representing resource Cluster
-    
+
     Attributes:
         cluster_arn: The Amazon Resource Name (ARN) of the SageMaker HyperPod cluster.
         cluster_status: The status of the SageMaker HyperPod cluster.
@@ -2845,8 +2813,9 @@ class Cluster(Base):
         creation_time: The time when the SageMaker Cluster is created.
         failure_message: The failure message of the SageMaker HyperPod cluster.
         vpc_config:
-    
+
     """
+
     cluster_name: str
     cluster_arn: Optional[str] = Unassigned()
     cluster_status: Optional[str] = Unassigned()
@@ -2854,37 +2823,31 @@ class Cluster(Base):
     failure_message: Optional[str] = Unassigned()
     instance_groups: Optional[List[ClusterInstanceGroupDetails]] = Unassigned()
     vpc_config: Optional[VpcConfig] = Unassigned()
-    
+
     def get_name(self) -> str:
         attributes = vars(self)
         for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'cluster_name':
+            if attribute == "name" or attribute == "cluster_name":
                 return value
         raise Exception("Name attribute not found for object")
 
-    
     def populate_inputs_decorator(create_func):
         def wrapper(*args, **kwargs):
-            config_schema_for_resource = \
-        {
-          "vpc_config": {
-            "security_group_ids": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            "subnets": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
+            config_schema_for_resource = {
+                "vpc_config": {
+                    "security_group_ids": {"type": "array", "items": {"type": "string"}},
+                    "subnets": {"type": "array", "items": {"type": "string"}},
+                }
             }
-          }
-        }
-            return create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "Cluster", **kwargs))
+            return create_func(
+                *args,
+                **Base.get_updated_kwargs_with_configured_attributes(
+                    config_schema_for_resource, "Cluster", **kwargs
+                ),
+            )
+
         return wrapper
-    
+
     @classmethod
     @populate_inputs_decorator
     def create(
@@ -2898,7 +2861,7 @@ class Cluster(Base):
     ) -> Optional["Cluster"]:
         """
         Create a Cluster resource
-        
+
         Parameters:
             cluster_name: The name for the new SageMaker HyperPod cluster.
             instance_groups: The instance groups to be created in the SageMaker HyperPod cluster.
@@ -2906,14 +2869,14 @@ class Cluster(Base):
             tags: Custom tags for managing the SageMaker HyperPod cluster as an Amazon Web Services resource. You can add tags to your cluster in the same way you add them in other Amazon Web Services services that support tagging. To learn more about tagging Amazon Web Services resources in general, see Tagging Amazon Web Services Resources User Guide.
             session: Boto3 session.
             region: Region name.
-            
+
         Returns:
             The Cluster resource.
-        
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -2927,30 +2890,34 @@ class Cluster(Base):
             LocalConfigNotFoundError: Raised when a configuration file is not found in local file system
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
         """
-    
+
         logger.debug("Creating cluster resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
-    
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
         operation_input_args = {
-            'ClusterName': cluster_name,
-            'InstanceGroups': instance_groups,
-            'VpcConfig': vpc_config,
-            'Tags': tags,
+            "ClusterName": cluster_name,
+            "InstanceGroups": instance_groups,
+            "VpcConfig": vpc_config,
+            "Tags": tags,
         }
-        
-        operation_input_args = Base.populate_chained_attributes(resource_name='Cluster', operation_input_args=operation_input_args)
-            
+
+        operation_input_args = Base.populate_chained_attributes(
+            resource_name="Cluster", operation_input_args=operation_input_args
+        )
+
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
-    
+
         # create the resource
         response = client.create_cluster(**operation_input_args)
         logger.debug(f"Response: {response}")
-    
+
         return cls.get(cluster_name=cluster_name, session=session, region=region)
-    
+
     @classmethod
     def get(
         cls,
@@ -2960,19 +2927,19 @@ class Cluster(Base):
     ) -> Optional["Cluster"]:
         """
         Get a Cluster resource
-        
+
         Parameters:
             cluster_name: The string name or the Amazon Resource Name (ARN) of the SageMaker HyperPod cluster.
             session: Boto3 session.
             region: Region name.
-            
+
         Returns:
             The Cluster resource.
-        
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -2982,31 +2949,33 @@ class Cluster(Base):
                 ```
             ResourceNotFound: Resource being access is not found.
         """
-    
+
         operation_input_args = {
-            'ClusterName': cluster_name,
+            "ClusterName": cluster_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
         response = client.describe_cluster(**operation_input_args)
-    
+
         pprint(response)
-    
+
         # deserialize the response
-        transformed_response = transform(response, 'DescribeClusterResponse')
+        transformed_response = transform(response, "DescribeClusterResponse")
         cluster = cls(**transformed_response)
         return cluster
-    
+
     def refresh(self) -> Optional["Cluster"]:
         """
         Refresh a Cluster resource
-        
+
         Returns:
             The Cluster resource.
-        
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -3016,17 +2985,17 @@ class Cluster(Base):
                 ```
             ResourceNotFound: Resource being access is not found.
         """
-    
+
         operation_input_args = {
-            'ClusterName': self.cluster_name,
+            "ClusterName": self.cluster_name,
         }
         client = SageMakerClient().client
         response = client.describe_cluster(**operation_input_args)
-    
+
         # deserialize response and update self
-        transform(response, 'DescribeClusterResponse', self)
+        transform(response, "DescribeClusterResponse", self)
         return self
-    
+
     @populate_inputs_decorator
     def update(
         self,
@@ -3034,15 +3003,15 @@ class Cluster(Base):
     ) -> Optional["Cluster"]:
         """
         Update a Cluster resource
-        
-        
+
+
         Returns:
             The Cluster resource.
-        
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -3054,35 +3023,35 @@ class Cluster(Base):
             ResourceLimitExceeded: You have exceeded an SageMaker resource limit. For example, you might have too many training jobs created.
             ResourceNotFound: Resource being access is not found.
         """
-    
+
         logger.debug("Updating cluster resource.")
         client = SageMakerClient().client
-    
+
         operation_input_args = {
-            'ClusterName': self.cluster_name,
-            'InstanceGroups': instance_groups,
+            "ClusterName": self.cluster_name,
+            "InstanceGroups": instance_groups,
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = Cluster._serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
-    
+
         # create the resource
         response = client.update_cluster(**operation_input_args)
         logger.debug(f"Response: {response}")
         self.refresh()
-    
+
         return self
-    
+
     def delete(self) -> None:
         """
         Delete a Cluster resource
-        
-        
+
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -3093,57 +3062,67 @@ class Cluster(Base):
             ConflictException: There was a conflict when you attempted to modify a SageMaker entity such as an Experiment or Artifact.
             ResourceNotFound: Resource being access is not found.
         """
-    
+
         client = SageMakerClient().client
-    
+
         operation_input_args = {
-            'ClusterName': self.cluster_name,
+            "ClusterName": self.cluster_name,
         }
         client.delete_cluster(**operation_input_args)
-        
+
         print(f"Deleting {self.__class__.__name__} - {self.get_name()}")
-    
+
     def wait_for_status(
         self,
-        status: Literal['Creating', 'Deleting', 'Failed', 'InService', 'RollingBack', 'SystemUpdating', 'Updating'],
+        status: Literal[
+            "Creating",
+            "Deleting",
+            "Failed",
+            "InService",
+            "RollingBack",
+            "SystemUpdating",
+            "Updating",
+        ],
         poll: int = 5,
-        timeout: Optional[int] = None
+        timeout: Optional[int] = None,
     ):
         """
         Wait for a Cluster resource.
-        
+
         Parameters:
             status: The status to wait for.
             poll: The number of seconds to wait between each poll.
             timeout: The maximum number of seconds to wait before timing out.
-        
+
         Returns:
             The Cluster resource.
-        
+
         Raises:
             TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
             FailedStatusError:   If the resource reaches a failed state.
             WaiterError: Raised when an error occurs while waiting.
-        
+
         """
         start_time = time.time()
-    
+
         while True:
             self.refresh()
             current_status = self.cluster_status
-    
+
             if status == current_status:
                 print(f"\nFinal Resource Status: {current_status}")
                 return
-            
+
             if "failed" in current_status.lower():
-                raise FailedStatusError(resource_type="Cluster", status=current_status, reason='(Unknown)')
-    
+                raise FailedStatusError(
+                    resource_type="Cluster", status=current_status, reason="(Unknown)"
+                )
+
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="Cluster", status=current_status)
             print("-", end="")
             time.sleep(poll)
-    
+
     @classmethod
     def get_all(
         cls,
@@ -3157,7 +3136,7 @@ class Cluster(Base):
     ) -> ResourceIterator["Cluster"]:
         """
         Get all Cluster resources
-        
+
         Parameters:
             creation_time_after: Set a start time for the time range during which you want to list SageMaker HyperPod clusters. Timestamps are formatted according to the ISO 8601 standard.  Acceptable formats include:    YYYY-MM-DDThh:mm:ss.sssTZD (UTC), for example, 2014-10-01T20:30:00.000Z     YYYY-MM-DDThh:mm:ss.sssTZD (with offset), for example, 2014-10-01T12:30:00.000-08:00     YYYY-MM-DD, for example, 2014-10-01    Unix time in seconds, for example, 1412195400. This is also referred to as Unix Epoch time and represents the number of seconds since midnight, January 1, 1970 UTC.   For more information about the timestamp format, see Timestamp in the Amazon Web Services Command Line Interface User Guide.
             creation_time_before: Set an end time for the time range during which you want to list SageMaker HyperPod clusters. A filter that returns nodes in a SageMaker HyperPod cluster created before the specified time. The acceptable formats are the same as the timestamp formats for CreationTimeAfter. For more information about the timestamp format, see Timestamp in the Amazon Web Services Command Line Interface User Guide.
@@ -3168,14 +3147,14 @@ class Cluster(Base):
             sort_order: The sort order for results. The default value is Ascending.
             session: Boto3 session.
             region: Region name.
-            
+
         Returns:
             Iterator for listed Cluster resources.
-        
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -3184,29 +3163,34 @@ class Cluster(Base):
                     error_code = e.response['Error']['Code']
                 ```
         """
-    
-        client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
-            
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
         operation_input_args = {
-            'CreationTimeAfter': creation_time_after,
-            'CreationTimeBefore': creation_time_before,
-            'NameContains': name_contains,
-            'SortBy': sort_by,
-            'SortOrder': sort_order,
+            "CreationTimeAfter": creation_time_after,
+            "CreationTimeBefore": creation_time_before,
+            "NameContains": name_contains,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
         }
-    
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
-        
+
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
+
         return ResourceIterator(
             client=client,
-            list_method='list_clusters',
-            summaries_key='ClusterSummaries',
-            summary_name='ClusterSummary',
+            list_method="list_clusters",
+            summaries_key="ClusterSummaries",
+            summary_name="ClusterSummary",
             resource_cls=Cluster,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
-    
-    
+
     def get_node(
         self,
         node_id: str,
@@ -3215,44 +3199,45 @@ class Cluster(Base):
     ) -> Optional[ClusterNodeDetails]:
         """
         Retrieves information of an instance (also called a node interchangeably) of a SageMaker HyperPod cluster.
-        
+
         Parameters:
             node_id: The ID of the instance.
             session: Boto3 session.
             region: Region name.
-            
-        
+
+
         """
-    
-    
+
         operation_input_args = {
-            'ClusterName': self.cluster_name,
-            'NodeId': node_id,
+            "ClusterName": self.cluster_name,
+            "NodeId": node_id,
         }
         logger.debug(f"Input request: {operation_input_args}")
-    
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
-    
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
         logger.debug(f"Calling describe_cluster_node API")
         response = client.describe_cluster_node(**operation_input_args)
         logger.debug(f"Response: {response}")
-    
-        transformed_response = transform(response, 'DescribeClusterNodeResponse')
+
+        transformed_response = transform(response, "DescribeClusterNodeResponse")
         return ClusterNodeDetails(**transformed_response)
-    
-    
+
     def get_all_nodes(
         self,
         creation_time_after: Optional[datetime.datetime] = Unassigned(),
         creation_time_before: Optional[datetime.datetime] = Unassigned(),
         instance_group_name_contains: Optional[str] = Unassigned(),
         sort_by: Optional[str] = Unassigned(),
-        sort_order: Optional[str] = Unassigned(),    session: Optional[Session] = None,
+        sort_order: Optional[str] = Unassigned(),
+        session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> ResourceIterator[ClusterNodeDetails]:
         """
         Retrieves the list of instances (also called nodes interchangeably) in a SageMaker HyperPod cluster.
-        
+
         Parameters:
             creation_time_after: A filter that returns nodes in a SageMaker HyperPod cluster created after the specified time. Timestamps are formatted according to the ISO 8601 standard.  Acceptable formats include:    YYYY-MM-DDThh:mm:ss.sssTZD (UTC), for example, 2014-10-01T20:30:00.000Z     YYYY-MM-DDThh:mm:ss.sssTZD (with offset), for example, 2014-10-01T12:30:00.000-08:00     YYYY-MM-DD, for example, 2014-10-01    Unix time in seconds, for example, 1412195400. This is also referred to as Unix Epoch time and represents the number of seconds since midnight, January 1, 1970 UTC.   For more information about the timestamp format, see Timestamp in the Amazon Web Services Command Line Interface User Guide.
             creation_time_before: A filter that returns nodes in a SageMaker HyperPod cluster created before the specified time. The acceptable formats are the same as the timestamp formats for CreationTimeAfter. For more information about the timestamp format, see Timestamp in the Amazon Web Services Command Line Interface User Guide.
@@ -3263,95 +3248,89 @@ class Cluster(Base):
             sort_order: The sort order for results. The default value is Ascending.
             session: Boto3 session.
             region: Region name.
-            
-        
+
+
         """
-    
-    
+
         operation_input_args = {
-            'ClusterName': self.cluster_name,
-            'CreationTimeAfter': creation_time_after,
-            'CreationTimeBefore': creation_time_before,
-            'InstanceGroupNameContains': instance_group_name_contains,
-            'SortBy': sort_by,
-            'SortOrder': sort_order,
+            "ClusterName": self.cluster_name,
+            "CreationTimeAfter": creation_time_after,
+            "CreationTimeBefore": creation_time_before,
+            "InstanceGroupNameContains": instance_group_name_contains,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
         }
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
         logger.debug(f"Input request: {operation_input_args}")
-    
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
-    
-    
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
         return ResourceIterator(
             client=client,
-            list_method='list_cluster_nodes',
-            summaries_key='ClusterNodeSummaries',
-            summary_name='ClusterNodeSummary',
+            list_method="list_cluster_nodes",
+            summaries_key="ClusterNodeSummaries",
+            summary_name="ClusterNodeSummary",
             resource_cls=ClusterNodeDetails,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
-    
-    
+
     def update_software(
         self,
-    
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> None:
         """
         Updates the platform software of a SageMaker HyperPod cluster for security patching.
-        
-        
+
+
         """
-    
-    
+
         operation_input_args = {
-            'ClusterName': self.cluster_name,
+            "ClusterName": self.cluster_name,
         }
         logger.debug(f"Input request: {operation_input_args}")
-    
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
-    
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
         logger.debug(f"Calling update_cluster_software API")
         response = client.update_cluster_software(**operation_input_args)
         logger.debug(f"Response: {response}")
-    
 
 
 class CodeRepository(Base):
     """
     Class representing resource CodeRepository
-    
+
     Attributes:
-<<<<<<< HEAD
         code_repository_name: The name of the Git repository.
         code_repository_arn: The Amazon Resource Name (ARN) of the Git repository.
         creation_time: The date and time that the repository was created.
         last_modified_time: The date and time that the repository was last changed.
         git_config: Configuration details about the repository, including the URL where the repository is located, the default branch, and the Amazon Resource Name (ARN) of the Amazon Web Services Secrets Manager secret that contains the credentials used to access the repository.
 
-=======
-        code_repository_name:The name of the Git repository.
-        code_repository_arn:The Amazon Resource Name (ARN) of the Git repository.
-        creation_time:The date and time that the repository was created.
-        last_modified_time:The date and time that the repository was last changed.
-        git_config:Configuration details about the repository, including the URL where the repository is located, the default branch, and the Amazon Resource Name (ARN) of the Amazon Web Services Secrets Manager secret that contains the credentials used to access the repository.
-    
->>>>>>> d6a2f6c (Create resource from Create method)
     """
+
     code_repository_name: str
     code_repository_arn: Optional[str] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
     git_config: Optional[GitConfig] = Unassigned()
-    
+
     def get_name(self) -> str:
         attributes = vars(self)
         for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'code_repository_name':
+            if attribute == "name" or attribute == "code_repository_name":
                 return value
         raise Exception("Name attribute not found for object")
-    
+
     @classmethod
     def create(
         cls,
@@ -3363,21 +3342,21 @@ class CodeRepository(Base):
     ) -> Optional["CodeRepository"]:
         """
         Create a CodeRepository resource
-        
+
         Parameters:
             code_repository_name: The name of the Git repository. The name must have 1 to 63 characters. Valid characters are a-z, A-Z, 0-9, and - (hyphen).
             git_config: Specifies details about the repository, including the URL where the repository is located, the default branch, and credentials to use to access the repository.
             tags: An array of key-value pairs. You can use tags to categorize your Amazon Web Services resources in different ways, for example, by purpose, owner, or environment. For more information, see Tagging Amazon Web Services Resources.
             session: Boto3 session.
             region: Region name.
-            
+
         Returns:
             The CodeRepository resource.
-        
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -3389,29 +3368,33 @@ class CodeRepository(Base):
             LocalConfigNotFoundError: Raised when a configuration file is not found in local file system
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
         """
-    
+
         logger.debug("Creating code_repository resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
-    
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
         operation_input_args = {
-            'CodeRepositoryName': code_repository_name,
-            'GitConfig': git_config,
-            'Tags': tags,
+            "CodeRepositoryName": code_repository_name,
+            "GitConfig": git_config,
+            "Tags": tags,
         }
-        
-        operation_input_args = Base.populate_chained_attributes(resource_name='CodeRepository', operation_input_args=operation_input_args)
-            
+
+        operation_input_args = Base.populate_chained_attributes(
+            resource_name="CodeRepository", operation_input_args=operation_input_args
+        )
+
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
-    
+
         # create the resource
         response = client.create_code_repository(**operation_input_args)
         logger.debug(f"Response: {response}")
-    
+
         return cls.get(code_repository_name=code_repository_name, session=session, region=region)
-    
+
     @classmethod
     def get(
         cls,
@@ -3421,19 +3404,19 @@ class CodeRepository(Base):
     ) -> Optional["CodeRepository"]:
         """
         Get a CodeRepository resource
-        
+
         Parameters:
             code_repository_name: The name of the Git repository to describe.
             session: Boto3 session.
             region: Region name.
-            
+
         Returns:
             The CodeRepository resource.
-        
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -3442,31 +3425,33 @@ class CodeRepository(Base):
                     error_code = e.response['Error']['Code']
                 ```
         """
-    
+
         operation_input_args = {
-            'CodeRepositoryName': code_repository_name,
+            "CodeRepositoryName": code_repository_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
         response = client.describe_code_repository(**operation_input_args)
-    
+
         pprint(response)
-    
+
         # deserialize the response
-        transformed_response = transform(response, 'DescribeCodeRepositoryOutput')
+        transformed_response = transform(response, "DescribeCodeRepositoryOutput")
         code_repository = cls(**transformed_response)
         return code_repository
-    
+
     def refresh(self) -> Optional["CodeRepository"]:
         """
         Refresh a CodeRepository resource
-        
+
         Returns:
             The CodeRepository resource.
-        
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -3475,32 +3460,32 @@ class CodeRepository(Base):
                     error_code = e.response['Error']['Code']
                 ```
         """
-    
+
         operation_input_args = {
-            'CodeRepositoryName': self.code_repository_name,
+            "CodeRepositoryName": self.code_repository_name,
         }
         client = SageMakerClient().client
         response = client.describe_code_repository(**operation_input_args)
-    
+
         # deserialize response and update self
-        transform(response, 'DescribeCodeRepositoryOutput', self)
+        transform(response, "DescribeCodeRepositoryOutput", self)
         return self
-    
+
     def update(
         self,
         git_config: Optional[GitConfigForUpdate] = Unassigned(),
     ) -> Optional["CodeRepository"]:
         """
         Update a CodeRepository resource
-        
-        
+
+
         Returns:
             The CodeRepository resource.
-        
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -3510,35 +3495,35 @@ class CodeRepository(Base):
                 ```
             ConflictException: There was a conflict when you attempted to modify a SageMaker entity such as an Experiment or Artifact.
         """
-    
+
         logger.debug("Updating code_repository resource.")
         client = SageMakerClient().client
-    
+
         operation_input_args = {
-            'CodeRepositoryName': self.code_repository_name,
-            'GitConfig': git_config,
+            "CodeRepositoryName": self.code_repository_name,
+            "GitConfig": git_config,
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = CodeRepository._serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
-    
+
         # create the resource
         response = client.update_code_repository(**operation_input_args)
         logger.debug(f"Response: {response}")
         self.refresh()
-    
+
         return self
-    
+
     def delete(self) -> None:
         """
         Delete a CodeRepository resource
-        
-        
+
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -3547,22 +3532,17 @@ class CodeRepository(Base):
                     error_code = e.response['Error']['Code']
                 ```
         """
-    
+
         client = SageMakerClient().client
-    
+
         operation_input_args = {
-            'CodeRepositoryName': self.code_repository_name,
+            "CodeRepositoryName": self.code_repository_name,
         }
         client.delete_code_repository(**operation_input_args)
-        
+
         print(f"Deleting {self.__class__.__name__} - {self.get_name()}")
-<<<<<<< HEAD
 
     @classmethod
-=======
-    
-    
->>>>>>> d6a2f6c (Create resource from Create method)
     def get_all(
         cls,
         creation_time_after: Optional[datetime.datetime] = Unassigned(),
@@ -3571,12 +3551,13 @@ class CodeRepository(Base):
         last_modified_time_before: Optional[datetime.datetime] = Unassigned(),
         name_contains: Optional[str] = Unassigned(),
         sort_by: Optional[str] = Unassigned(),
-        sort_order: Optional[str] = Unassigned(),    session: Optional[Session] = None,
+        sort_order: Optional[str] = Unassigned(),
+        session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> ResourceIterator["CodeRepository"]:
         """
         Gets a list of the Git repositories in your account.
-        
+
         Parameters:
             creation_time_after: A filter that returns only Git repositories that were created after the specified time.
             creation_time_before: A filter that returns only Git repositories that were created before the specified time.
@@ -3589,42 +3570,45 @@ class CodeRepository(Base):
             sort_order: The sort order for results. The default is Ascending.
             session: Boto3 session.
             region: Region name.
-            
-        
+
+
         """
-    
-    
+
         operation_input_args = {
-            'CreationTimeAfter': creation_time_after,
-            'CreationTimeBefore': creation_time_before,
-            'LastModifiedTimeAfter': last_modified_time_after,
-            'LastModifiedTimeBefore': last_modified_time_before,
-            'NameContains': name_contains,
-            'SortBy': sort_by,
-            'SortOrder': sort_order,
+            "CreationTimeAfter": creation_time_after,
+            "CreationTimeBefore": creation_time_before,
+            "LastModifiedTimeAfter": last_modified_time_after,
+            "LastModifiedTimeBefore": last_modified_time_before,
+            "NameContains": name_contains,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
         }
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
         logger.debug(f"Input request: {operation_input_args}")
-    
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
-    
-    
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
         return ResourceIterator(
             client=client,
-            list_method='list_code_repositories',
-            summaries_key='CodeRepositorySummaryList',
-            summary_name='CodeRepositorySummary',
+            list_method="list_code_repositories",
+            summaries_key="CodeRepositorySummaryList",
+            summary_name="CodeRepositorySummary",
             resource_cls=CodeRepository,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
 
 
 class CompilationJob(Base):
     """
     Class representing resource CompilationJob
-    
+
     Attributes:
-<<<<<<< HEAD
         compilation_job_name: The name of the model compilation job.
         compilation_job_arn: The Amazon Resource Name (ARN) of the model compilation job.
         compilation_job_status: The status of the model compilation job.
@@ -3644,28 +3628,8 @@ class CompilationJob(Base):
         vpc_config: A VpcConfig object that specifies the VPC that you want your compilation job to connect to. Control access to your models by configuring the VPC. For more information, see Protect Compilation Jobs by Using an Amazon Virtual Private Cloud.
         derived_information: Information that SageMaker Neo automatically derived about the model.
 
-=======
-        compilation_job_name:The name of the model compilation job.
-        compilation_job_arn:The Amazon Resource Name (ARN) of the model compilation job.
-        compilation_job_status:The status of the model compilation job.
-        stopping_condition:Specifies a limit to how long a model compilation job can run. When the job reaches the time limit, Amazon SageMaker ends the compilation job. Use this API to cap model training costs.
-        creation_time:The time that the model compilation job was created.
-        last_modified_time:The time that the status of the model compilation job was last modified.
-        failure_reason:If a model compilation job failed, the reason it failed. 
-        model_artifacts:Information about the location in Amazon S3 that has been configured for storing the model artifacts used in the compilation job.
-        role_arn:The Amazon Resource Name (ARN) of an IAM role that Amazon SageMaker assumes to perform the model compilation job.
-        input_config:Information about the location in Amazon S3 of the input model artifacts, the name and shape of the expected data inputs, and the framework in which the model was trained.
-        output_config:Information about the output location for the compiled model and the target device that the model runs on.
-        compilation_start_time:The time when the model compilation job started the CompilationJob instances.  You are billed for the time between this timestamp and the timestamp in the CompilationEndTime field. In Amazon CloudWatch Logs, the start time might be later than this time. That's because it takes time to download the compilation job, which depends on the size of the compilation job container. 
-        compilation_end_time:The time when the model compilation job on a compilation job instance ended. For a successful or stopped job, this is when the job's model artifacts have finished uploading. For a failed job, this is when Amazon SageMaker detected that the job failed. 
-        inference_image:The inference image to use when compiling a model. Specify an image only if the target device is a cloud instance.
-        model_package_version_arn:The Amazon Resource Name (ARN) of the versioned model package that was provided to SageMaker Neo when you initiated a compilation job.
-        model_digests:Provides a BLAKE2 hash value that identifies the compiled model artifacts in Amazon S3.
-        vpc_config:A VpcConfig object that specifies the VPC that you want your compilation job to connect to. Control access to your models by configuring the VPC. For more information, see Protect Compilation Jobs by Using an Amazon Virtual Private Cloud.
-        derived_information:Information that SageMaker Neo automatically derived about the model.
-    
->>>>>>> d6a2f6c (Create resource from Create method)
     """
+
     compilation_job_name: str
     compilation_job_arn: Optional[str] = Unassigned()
     compilation_job_status: Optional[str] = Unassigned()
@@ -3684,58 +3648,38 @@ class CompilationJob(Base):
     output_config: Optional[OutputConfig] = Unassigned()
     vpc_config: Optional[NeoVpcConfig] = Unassigned()
     derived_information: Optional[DerivedInformation] = Unassigned()
-    
+
     def get_name(self) -> str:
         attributes = vars(self)
         for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'compilation_job_name':
+            if attribute == "name" or attribute == "compilation_job_name":
                 return value
         raise Exception("Name attribute not found for object")
 
-    
     def populate_inputs_decorator(create_func):
         def wrapper(*args, **kwargs):
-            config_schema_for_resource = \
-        {
-          "model_artifacts": {
-            "s3_model_artifacts": {
-              "type": "string"
+            config_schema_for_resource = {
+                "model_artifacts": {"s3_model_artifacts": {"type": "string"}},
+                "role_arn": {"type": "string"},
+                "input_config": {"s3_uri": {"type": "string"}},
+                "output_config": {
+                    "s3_output_location": {"type": "string"},
+                    "kms_key_id": {"type": "string"},
+                },
+                "vpc_config": {
+                    "security_group_ids": {"type": "array", "items": {"type": "string"}},
+                    "subnets": {"type": "array", "items": {"type": "string"}},
+                },
             }
-          },
-          "role_arn": {
-            "type": "string"
-          },
-          "input_config": {
-            "s3_uri": {
-              "type": "string"
-            }
-          },
-          "output_config": {
-            "s3_output_location": {
-              "type": "string"
-            },
-            "kms_key_id": {
-              "type": "string"
-            }
-          },
-          "vpc_config": {
-            "security_group_ids": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            "subnets": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
-          }
-        }
-            return create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "CompilationJob", **kwargs))
+            return create_func(
+                *args,
+                **Base.get_updated_kwargs_with_configured_attributes(
+                    config_schema_for_resource, "CompilationJob", **kwargs
+                ),
+            )
+
         return wrapper
-    
+
     @classmethod
     @populate_inputs_decorator
     def create(
@@ -3753,9 +3697,8 @@ class CompilationJob(Base):
     ) -> Optional["CompilationJob"]:
         """
         Create a CompilationJob resource
-        
+
         Parameters:
-<<<<<<< HEAD
             compilation_job_name: A name for the model compilation job. The name must be unique within the Amazon Web Services Region and within your Amazon Web Services account.
             role_arn: The Amazon Resource Name (ARN) of an IAM role that enables Amazon SageMaker to perform tasks on your behalf.  During model compilation, Amazon SageMaker needs your permission to:   Read input data from an S3 bucket   Write model artifacts to an S3 bucket   Write logs to Amazon CloudWatch Logs   Publish metrics to Amazon CloudWatch   You grant permissions for all of these tasks to an IAM role. To pass this role to Amazon SageMaker, the caller of this API must have the iam:PassRole permission. For more information, see Amazon SageMaker Roles.
             output_config: Provides information about the output location for the compiled model and the target device the model runs on.
@@ -3764,26 +3707,16 @@ class CompilationJob(Base):
             input_config: Provides information about the location of input model artifacts, the name and shape of the expected data inputs, and the framework in which the model was trained.
             vpc_config: A VpcConfig object that specifies the VPC that you want your compilation job to connect to. Control access to your models by configuring the VPC. For more information, see Protect Compilation Jobs by Using an Amazon Virtual Private Cloud.
             tags: An array of key-value pairs. You can use tags to categorize your Amazon Web Services resources in different ways, for example, by purpose, owner, or environment. For more information, see Tagging Amazon Web Services Resources.
-=======
-            compilation_job_name:A name for the model compilation job. The name must be unique within the Amazon Web Services Region and within your Amazon Web Services account. 
-            role_arn:The Amazon Resource Name (ARN) of an IAM role that enables Amazon SageMaker to perform tasks on your behalf.  During model compilation, Amazon SageMaker needs your permission to:   Read input data from an S3 bucket   Write model artifacts to an S3 bucket   Write logs to Amazon CloudWatch Logs   Publish metrics to Amazon CloudWatch   You grant permissions for all of these tasks to an IAM role. To pass this role to Amazon SageMaker, the caller of this API must have the iam:PassRole permission. For more information, see Amazon SageMaker Roles. 
-            output_config:Provides information about the output location for the compiled model and the target device the model runs on.
-            stopping_condition:Specifies a limit to how long a model compilation job can run. When the job reaches the time limit, Amazon SageMaker ends the compilation job. Use this API to cap model training costs.
-            model_package_version_arn:The Amazon Resource Name (ARN) of a versioned model package. Provide either a ModelPackageVersionArn or an InputConfig object in the request syntax. The presence of both objects in the CreateCompilationJob request will return an exception.
-            input_config:Provides information about the location of input model artifacts, the name and shape of the expected data inputs, and the framework in which the model was trained.
-            vpc_config:A VpcConfig object that specifies the VPC that you want your compilation job to connect to. Control access to your models by configuring the VPC. For more information, see Protect Compilation Jobs by Using an Amazon Virtual Private Cloud.
-            tags:An array of key-value pairs. You can use tags to categorize your Amazon Web Services resources in different ways, for example, by purpose, owner, or environment. For more information, see Tagging Amazon Web Services Resources.
->>>>>>> d6a2f6c (Create resource from Create method)
             session: Boto3 session.
             region: Region name.
-            
+
         Returns:
             The CompilationJob resource.
-        
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -3797,34 +3730,38 @@ class CompilationJob(Base):
             LocalConfigNotFoundError: Raised when a configuration file is not found in local file system
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
         """
-    
+
         logger.debug("Creating compilation_job resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
-    
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
         operation_input_args = {
-            'CompilationJobName': compilation_job_name,
-            'RoleArn': role_arn,
-            'ModelPackageVersionArn': model_package_version_arn,
-            'InputConfig': input_config,
-            'OutputConfig': output_config,
-            'VpcConfig': vpc_config,
-            'StoppingCondition': stopping_condition,
-            'Tags': tags,
+            "CompilationJobName": compilation_job_name,
+            "RoleArn": role_arn,
+            "ModelPackageVersionArn": model_package_version_arn,
+            "InputConfig": input_config,
+            "OutputConfig": output_config,
+            "VpcConfig": vpc_config,
+            "StoppingCondition": stopping_condition,
+            "Tags": tags,
         }
-        
-        operation_input_args = Base.populate_chained_attributes(resource_name='CompilationJob', operation_input_args=operation_input_args)
-            
+
+        operation_input_args = Base.populate_chained_attributes(
+            resource_name="CompilationJob", operation_input_args=operation_input_args
+        )
+
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
-    
+
         # create the resource
         response = client.create_compilation_job(**operation_input_args)
         logger.debug(f"Response: {response}")
-    
+
         return cls.get(compilation_job_name=compilation_job_name, session=session, region=region)
-    
+
     @classmethod
     def get(
         cls,
@@ -3834,19 +3771,19 @@ class CompilationJob(Base):
     ) -> Optional["CompilationJob"]:
         """
         Get a CompilationJob resource
-        
+
         Parameters:
             compilation_job_name: The name of the model compilation job that you want information about.
             session: Boto3 session.
             region: Region name.
-            
+
         Returns:
             The CompilationJob resource.
-        
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -3856,31 +3793,33 @@ class CompilationJob(Base):
                 ```
             ResourceNotFound: Resource being access is not found.
         """
-    
+
         operation_input_args = {
-            'CompilationJobName': compilation_job_name,
+            "CompilationJobName": compilation_job_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
         response = client.describe_compilation_job(**operation_input_args)
-    
+
         pprint(response)
-    
+
         # deserialize the response
-        transformed_response = transform(response, 'DescribeCompilationJobResponse')
+        transformed_response = transform(response, "DescribeCompilationJobResponse")
         compilation_job = cls(**transformed_response)
         return compilation_job
-    
+
     def refresh(self) -> Optional["CompilationJob"]:
         """
         Refresh a CompilationJob resource
-        
+
         Returns:
             The CompilationJob resource.
-        
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -3890,26 +3829,26 @@ class CompilationJob(Base):
                 ```
             ResourceNotFound: Resource being access is not found.
         """
-    
+
         operation_input_args = {
-            'CompilationJobName': self.compilation_job_name,
+            "CompilationJobName": self.compilation_job_name,
         }
         client = SageMakerClient().client
         response = client.describe_compilation_job(**operation_input_args)
-    
+
         # deserialize response and update self
-        transform(response, 'DescribeCompilationJobResponse', self)
+        transform(response, "DescribeCompilationJobResponse", self)
         return self
-    
+
     def delete(self) -> None:
         """
         Delete a CompilationJob resource
-        
-        
+
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -3919,25 +3858,25 @@ class CompilationJob(Base):
                 ```
             ResourceNotFound: Resource being access is not found.
         """
-    
+
         client = SageMakerClient().client
-    
+
         operation_input_args = {
-            'CompilationJobName': self.compilation_job_name,
+            "CompilationJobName": self.compilation_job_name,
         }
         client.delete_compilation_job(**operation_input_args)
-        
+
         print(f"Deleting {self.__class__.__name__} - {self.get_name()}")
-    
+
     def stop(self) -> None:
         """
         Stop a CompilationJob resource
-        
-        
+
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -3947,55 +3886,55 @@ class CompilationJob(Base):
                 ```
             ResourceNotFound: Resource being access is not found.
         """
-    
+
         client = SageMakerClient().client
-    
+
         operation_input_args = {
-            'CompilationJobName': self.compilation_job_name,
+            "CompilationJobName": self.compilation_job_name,
         }
         client.stop_compilation_job(**operation_input_args)
-    
-    def wait(
-        self,
-        poll: int = 5,
-        timeout: Optional[int] = None
-    ):
+
+    def wait(self, poll: int = 5, timeout: Optional[int] = None):
         """
         Wait for a CompilationJob resource.
-        
+
         Parameters:
             poll: The number of seconds to wait between each poll.
             timeout: The maximum number of seconds to wait before timing out.
-        
+
         Returns:
             The CompilationJob resource.
-        
+
         Raises:
             TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
             FailedStatusError:   If the resource reaches a failed state.
             WaiterError: Raised when an error occurs while waiting.
-        
+
         """
-        terminal_states = ['COMPLETED', 'FAILED', 'STOPPED']
+        terminal_states = ["COMPLETED", "FAILED", "STOPPED"]
         start_time = time.time()
-    
+
         while True:
             self.refresh()
             current_status = self.compilation_job_status
-    
+
             if current_status in terminal_states:
                 print(f"\nFinal Resource Status: {current_status}")
-                
+
                 if "failed" in current_status.lower():
-                    raise FailedStatusError(resource_type="CompilationJob", status=current_status, reason=self.failure_reason)
-    
+                    raise FailedStatusError(
+                        resource_type="CompilationJob",
+                        status=current_status,
+                        reason=self.failure_reason,
+                    )
+
                 return
-    
+
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="CompilationJob", status=current_status)
             print("-", end="")
             time.sleep(poll)
-    
+
     @classmethod
     def get_all(
         cls,
@@ -4012,9 +3951,8 @@ class CompilationJob(Base):
     ) -> ResourceIterator["CompilationJob"]:
         """
         Get all CompilationJob resources
-        
+
         Parameters:
-<<<<<<< HEAD
             next_token: If the result of the previous ListCompilationJobs request was truncated, the response includes a NextToken. To retrieve the next set of model compilation jobs, use the token in the next request.
             max_results: The maximum number of model compilation jobs to return in the response.
             creation_time_after: A filter that returns the model compilation jobs that were created after a specified time.
@@ -4025,28 +3963,16 @@ class CompilationJob(Base):
             status_equals: A filter that retrieves model compilation jobs with a specific CompilationJobStatus status.
             sort_by: The field by which to sort results. The default is CreationTime.
             sort_order: The sort order for results. The default is Ascending.
-=======
-            next_token:If the result of the previous ListCompilationJobs request was truncated, the response includes a NextToken. To retrieve the next set of model compilation jobs, use the token in the next request.
-            max_results:The maximum number of model compilation jobs to return in the response.
-            creation_time_after:A filter that returns the model compilation jobs that were created after a specified time. 
-            creation_time_before:A filter that returns the model compilation jobs that were created before a specified time.
-            last_modified_time_after:A filter that returns the model compilation jobs that were modified after a specified time.
-            last_modified_time_before:A filter that returns the model compilation jobs that were modified before a specified time.
-            name_contains:A filter that returns the model compilation jobs whose name contains a specified string.
-            status_equals:A filter that retrieves model compilation jobs with a specific CompilationJobStatus status.
-            sort_by:The field by which to sort results. The default is CreationTime.
-            sort_order:The sort order for results. The default is Ascending.
->>>>>>> d6a2f6c (Create resource from Create method)
             session: Boto3 session.
             region: Region name.
-            
+
         Returns:
             Iterator for listed CompilationJob resources.
-        
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -4055,36 +3981,42 @@ class CompilationJob(Base):
                     error_code = e.response['Error']['Code']
                 ```
         """
-    
-        client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
-            
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
         operation_input_args = {
-            'CreationTimeAfter': creation_time_after,
-            'CreationTimeBefore': creation_time_before,
-            'LastModifiedTimeAfter': last_modified_time_after,
-            'LastModifiedTimeBefore': last_modified_time_before,
-            'NameContains': name_contains,
-            'StatusEquals': status_equals,
-            'SortBy': sort_by,
-            'SortOrder': sort_order,
+            "CreationTimeAfter": creation_time_after,
+            "CreationTimeBefore": creation_time_before,
+            "LastModifiedTimeAfter": last_modified_time_after,
+            "LastModifiedTimeBefore": last_modified_time_before,
+            "NameContains": name_contains,
+            "StatusEquals": status_equals,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
         }
-    
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
-        
+
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
+
         return ResourceIterator(
             client=client,
-            list_method='list_compilation_jobs',
-            summaries_key='CompilationJobSummaries',
-            summary_name='CompilationJobSummary',
+            list_method="list_compilation_jobs",
+            summaries_key="CompilationJobSummaries",
+            summary_name="CompilationJobSummary",
             resource_cls=CompilationJob,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
 
 
 class Context(Base):
     """
     Class representing resource Context
-    
+
     Attributes:
         context_name: The name of the context.
         context_arn: The Amazon Resource Name (ARN) of the context.
@@ -4096,14 +4028,10 @@ class Context(Base):
         created_by:
         last_modified_time: When the context was last modified.
         last_modified_by:
-<<<<<<< HEAD
         lineage_group_arn: The Amazon Resource Name (ARN) of the lineage group.
 
-=======
-        lineage_group_arn:The Amazon Resource Name (ARN) of the lineage group.
-    
->>>>>>> d6a2f6c (Create resource from Create method)
     """
+
     context_name: str
     context_arn: Optional[str] = Unassigned()
     source: Optional[ContextSource] = Unassigned()
@@ -4115,14 +4043,14 @@ class Context(Base):
     last_modified_time: Optional[datetime.datetime] = Unassigned()
     last_modified_by: Optional[UserContext] = Unassigned()
     lineage_group_arn: Optional[str] = Unassigned()
-    
+
     def get_name(self) -> str:
         attributes = vars(self)
         for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'context_name':
+            if attribute == "name" or attribute == "context_name":
                 return value
         raise Exception("Name attribute not found for object")
-    
+
     @classmethod
     def create(
         cls,
@@ -4137,7 +4065,7 @@ class Context(Base):
     ) -> Optional["Context"]:
         """
         Create a Context resource
-        
+
         Parameters:
             context_name: The name of the context. Must be unique to your account in an Amazon Web Services Region.
             source: The source type, ID, and URI.
@@ -4147,14 +4075,14 @@ class Context(Base):
             tags: A list of tags to apply to the context.
             session: Boto3 session.
             region: Region name.
-            
+
         Returns:
             The Context resource.
-        
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -4167,32 +4095,36 @@ class Context(Base):
             LocalConfigNotFoundError: Raised when a configuration file is not found in local file system
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
         """
-    
+
         logger.debug("Creating context resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
-    
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
         operation_input_args = {
-            'ContextName': context_name,
-            'Source': source,
-            'ContextType': context_type,
-            'Description': description,
-            'Properties': properties,
-            'Tags': tags,
+            "ContextName": context_name,
+            "Source": source,
+            "ContextType": context_type,
+            "Description": description,
+            "Properties": properties,
+            "Tags": tags,
         }
-        
-        operation_input_args = Base.populate_chained_attributes(resource_name='Context', operation_input_args=operation_input_args)
-            
+
+        operation_input_args = Base.populate_chained_attributes(
+            resource_name="Context", operation_input_args=operation_input_args
+        )
+
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
-    
+
         # create the resource
         response = client.create_context(**operation_input_args)
         logger.debug(f"Response: {response}")
-    
+
         return cls.get(context_name=context_name, session=session, region=region)
-    
+
     @classmethod
     def get(
         cls,
@@ -4202,19 +4134,19 @@ class Context(Base):
     ) -> Optional["Context"]:
         """
         Get a Context resource
-        
+
         Parameters:
             context_name: The name of the context to describe.
             session: Boto3 session.
             region: Region name.
-            
+
         Returns:
             The Context resource.
-        
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -4224,31 +4156,33 @@ class Context(Base):
                 ```
             ResourceNotFound: Resource being access is not found.
         """
-    
+
         operation_input_args = {
-            'ContextName': context_name,
+            "ContextName": context_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
         response = client.describe_context(**operation_input_args)
-    
+
         pprint(response)
-    
+
         # deserialize the response
-        transformed_response = transform(response, 'DescribeContextResponse')
+        transformed_response = transform(response, "DescribeContextResponse")
         context = cls(**transformed_response)
         return context
-    
+
     def refresh(self) -> Optional["Context"]:
         """
         Refresh a Context resource
-        
+
         Returns:
             The Context resource.
-        
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -4258,17 +4192,17 @@ class Context(Base):
                 ```
             ResourceNotFound: Resource being access is not found.
         """
-    
+
         operation_input_args = {
-            'ContextName': self.context_name,
+            "ContextName": self.context_name,
         }
         client = SageMakerClient().client
         response = client.describe_context(**operation_input_args)
-    
+
         # deserialize response and update self
-        transform(response, 'DescribeContextResponse', self)
+        transform(response, "DescribeContextResponse", self)
         return self
-    
+
     def update(
         self,
         description: Optional[str] = Unassigned(),
@@ -4277,22 +4211,17 @@ class Context(Base):
     ) -> Optional["Context"]:
         """
         Update a Context resource
-        
+
         Parameters:
-<<<<<<< HEAD
             properties_to_remove: A list of properties to remove.
 
-=======
-            properties_to_remove:A list of properties to remove.
-        
->>>>>>> d6a2f6c (Create resource from Create method)
         Returns:
             The Context resource.
-        
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -4303,37 +4232,37 @@ class Context(Base):
             ConflictException: There was a conflict when you attempted to modify a SageMaker entity such as an Experiment or Artifact.
             ResourceNotFound: Resource being access is not found.
         """
-    
+
         logger.debug("Updating context resource.")
         client = SageMakerClient().client
-    
+
         operation_input_args = {
-            'ContextName': self.context_name,
-            'Description': description,
-            'Properties': properties,
-            'PropertiesToRemove': properties_to_remove,
+            "ContextName": self.context_name,
+            "Description": description,
+            "Properties": properties,
+            "PropertiesToRemove": properties_to_remove,
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = Context._serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
-    
+
         # create the resource
         response = client.update_context(**operation_input_args)
         logger.debug(f"Response: {response}")
         self.refresh()
-    
+
         return self
-    
+
     def delete(self) -> None:
         """
         Delete a Context resource
-        
-        
+
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -4343,16 +4272,16 @@ class Context(Base):
                 ```
             ResourceNotFound: Resource being access is not found.
         """
-    
+
         client = SageMakerClient().client
-    
+
         operation_input_args = {
-            'ContextName': self.context_name,
+            "ContextName": self.context_name,
         }
         client.delete_context(**operation_input_args)
-        
+
         print(f"Deleting {self.__class__.__name__} - {self.get_name()}")
-    
+
     @classmethod
     def get_all(
         cls,
@@ -4367,7 +4296,7 @@ class Context(Base):
     ) -> ResourceIterator["Context"]:
         """
         Get all Context resources
-        
+
         Parameters:
             source_uri: A filter that returns only contexts with the specified source URI.
             context_type: A filter that returns only contexts of the specified type.
@@ -4379,14 +4308,14 @@ class Context(Base):
             max_results: The maximum number of contexts to return in the response. The default value is 10.
             session: Boto3 session.
             region: Region name.
-            
+
         Returns:
             Iterator for listed Context resources.
-        
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -4396,34 +4325,40 @@ class Context(Base):
                 ```
             ResourceNotFound: Resource being access is not found.
         """
-    
-        client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
-            
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
         operation_input_args = {
-            'SourceUri': source_uri,
-            'ContextType': context_type,
-            'CreatedAfter': created_after,
-            'CreatedBefore': created_before,
-            'SortBy': sort_by,
-            'SortOrder': sort_order,
+            "SourceUri": source_uri,
+            "ContextType": context_type,
+            "CreatedAfter": created_after,
+            "CreatedBefore": created_before,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
         }
-    
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
-        
+
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
+
         return ResourceIterator(
             client=client,
-            list_method='list_contexts',
-            summaries_key='ContextSummaries',
-            summary_name='ContextSummary',
+            list_method="list_contexts",
+            summaries_key="ContextSummaries",
+            summary_name="ContextSummary",
             resource_cls=Context,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
 
 
 class DataQualityJobDefinition(Base):
     """
     Class representing resource DataQualityJobDefinition
-    
+
     Attributes:
         job_definition_arn: The Amazon Resource Name (ARN) of the data quality monitoring job definition.
         job_definition_name: The name of the data quality monitoring job definition.
@@ -4436,8 +4371,9 @@ class DataQualityJobDefinition(Base):
         data_quality_baseline_config: The constraints and baselines for the data quality monitoring job definition.
         network_config: The networking configuration for the data quality monitoring job.
         stopping_condition:
-    
+
     """
+
     job_definition_name: str
     job_definition_arn: Optional[str] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
@@ -4449,87 +4385,51 @@ class DataQualityJobDefinition(Base):
     network_config: Optional[MonitoringNetworkConfig] = Unassigned()
     role_arn: Optional[str] = Unassigned()
     stopping_condition: Optional[MonitoringStoppingCondition] = Unassigned()
-    
+
     def get_name(self) -> str:
         attributes = vars(self)
         for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'data_quality_job_definition_name':
+            if attribute == "name" or attribute == "data_quality_job_definition_name":
                 return value
         raise Exception("Name attribute not found for object")
 
-    
     def populate_inputs_decorator(create_func):
         def wrapper(*args, **kwargs):
-            config_schema_for_resource = \
-        {
-          "data_quality_job_input": {
-            "endpoint_input": {
-              "s3_input_mode": {
-                "type": "string"
-              },
-              "s3_data_distribution_type": {
-                "type": "string"
-              }
-            },
-            "batch_transform_input": {
-              "data_captured_destination_s3_uri": {
-                "type": "string"
-              },
-              "s3_input_mode": {
-                "type": "string"
-              },
-              "s3_data_distribution_type": {
-                "type": "string"
-              }
+            config_schema_for_resource = {
+                "data_quality_job_input": {
+                    "endpoint_input": {
+                        "s3_input_mode": {"type": "string"},
+                        "s3_data_distribution_type": {"type": "string"},
+                    },
+                    "batch_transform_input": {
+                        "data_captured_destination_s3_uri": {"type": "string"},
+                        "s3_input_mode": {"type": "string"},
+                        "s3_data_distribution_type": {"type": "string"},
+                    },
+                },
+                "data_quality_job_output_config": {"kms_key_id": {"type": "string"}},
+                "job_resources": {"cluster_config": {"volume_kms_key_id": {"type": "string"}}},
+                "role_arn": {"type": "string"},
+                "data_quality_baseline_config": {
+                    "constraints_resource": {"s3_uri": {"type": "string"}},
+                    "statistics_resource": {"s3_uri": {"type": "string"}},
+                },
+                "network_config": {
+                    "vpc_config": {
+                        "security_group_ids": {"type": "array", "items": {"type": "string"}},
+                        "subnets": {"type": "array", "items": {"type": "string"}},
+                    }
+                },
             }
-          },
-          "data_quality_job_output_config": {
-            "kms_key_id": {
-              "type": "string"
-            }
-          },
-          "job_resources": {
-            "cluster_config": {
-              "volume_kms_key_id": {
-                "type": "string"
-              }
-            }
-          },
-          "role_arn": {
-            "type": "string"
-          },
-          "data_quality_baseline_config": {
-            "constraints_resource": {
-              "s3_uri": {
-                "type": "string"
-              }
-            },
-            "statistics_resource": {
-              "s3_uri": {
-                "type": "string"
-              }
-            }
-          },
-          "network_config": {
-            "vpc_config": {
-              "security_group_ids": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
-              },
-              "subnets": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
-              }
-            }
-          }
-        }
-            return create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "DataQualityJobDefinition", **kwargs))
+            return create_func(
+                *args,
+                **Base.get_updated_kwargs_with_configured_attributes(
+                    config_schema_for_resource, "DataQualityJobDefinition", **kwargs
+                ),
+            )
+
         return wrapper
-    
+
     @classmethod
     @populate_inputs_decorator
     def create(
@@ -4549,7 +4449,7 @@ class DataQualityJobDefinition(Base):
     ) -> Optional["DataQualityJobDefinition"]:
         """
         Create a DataQualityJobDefinition resource
-        
+
         Parameters:
             job_definition_name: The name for the monitoring job definition.
             data_quality_app_specification: Specifies the container that runs the monitoring job.
@@ -4563,14 +4463,14 @@ class DataQualityJobDefinition(Base):
             tags: (Optional) An array of key-value pairs. For more information, see  Using Cost Allocation Tags in the Amazon Web Services Billing and Cost Management User Guide.
             session: Boto3 session.
             region: Region name.
-            
+
         Returns:
             The DataQualityJobDefinition resource.
-        
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -4584,36 +4484,40 @@ class DataQualityJobDefinition(Base):
             LocalConfigNotFoundError: Raised when a configuration file is not found in local file system
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
         """
-    
+
         logger.debug("Creating data_quality_job_definition resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
-    
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
         operation_input_args = {
-            'JobDefinitionName': job_definition_name,
-            'DataQualityBaselineConfig': data_quality_baseline_config,
-            'DataQualityAppSpecification': data_quality_app_specification,
-            'DataQualityJobInput': data_quality_job_input,
-            'DataQualityJobOutputConfig': data_quality_job_output_config,
-            'JobResources': job_resources,
-            'NetworkConfig': network_config,
-            'RoleArn': role_arn,
-            'StoppingCondition': stopping_condition,
-            'Tags': tags,
+            "JobDefinitionName": job_definition_name,
+            "DataQualityBaselineConfig": data_quality_baseline_config,
+            "DataQualityAppSpecification": data_quality_app_specification,
+            "DataQualityJobInput": data_quality_job_input,
+            "DataQualityJobOutputConfig": data_quality_job_output_config,
+            "JobResources": job_resources,
+            "NetworkConfig": network_config,
+            "RoleArn": role_arn,
+            "StoppingCondition": stopping_condition,
+            "Tags": tags,
         }
-        
-        operation_input_args = Base.populate_chained_attributes(resource_name='DataQualityJobDefinition', operation_input_args=operation_input_args)
-            
+
+        operation_input_args = Base.populate_chained_attributes(
+            resource_name="DataQualityJobDefinition", operation_input_args=operation_input_args
+        )
+
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
-    
+
         # create the resource
         response = client.create_data_quality_job_definition(**operation_input_args)
         logger.debug(f"Response: {response}")
-    
+
         return cls.get(job_definition_name=job_definition_name, session=session, region=region)
-    
+
     @classmethod
     def get(
         cls,
@@ -4623,19 +4527,19 @@ class DataQualityJobDefinition(Base):
     ) -> Optional["DataQualityJobDefinition"]:
         """
         Get a DataQualityJobDefinition resource
-        
+
         Parameters:
             job_definition_name: The name of the data quality monitoring job definition to describe.
             session: Boto3 session.
             region: Region name.
-            
+
         Returns:
             The DataQualityJobDefinition resource.
-        
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -4645,31 +4549,33 @@ class DataQualityJobDefinition(Base):
                 ```
             ResourceNotFound: Resource being access is not found.
         """
-    
+
         operation_input_args = {
-            'JobDefinitionName': job_definition_name,
+            "JobDefinitionName": job_definition_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
         response = client.describe_data_quality_job_definition(**operation_input_args)
-    
+
         pprint(response)
-    
+
         # deserialize the response
-        transformed_response = transform(response, 'DescribeDataQualityJobDefinitionResponse')
+        transformed_response = transform(response, "DescribeDataQualityJobDefinitionResponse")
         data_quality_job_definition = cls(**transformed_response)
         return data_quality_job_definition
-    
+
     def refresh(self) -> Optional["DataQualityJobDefinition"]:
         """
         Refresh a DataQualityJobDefinition resource
-        
+
         Returns:
             The DataQualityJobDefinition resource.
-        
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -4679,26 +4585,26 @@ class DataQualityJobDefinition(Base):
                 ```
             ResourceNotFound: Resource being access is not found.
         """
-    
+
         operation_input_args = {
-            'JobDefinitionName': self.job_definition_name,
+            "JobDefinitionName": self.job_definition_name,
         }
         client = SageMakerClient().client
         response = client.describe_data_quality_job_definition(**operation_input_args)
-    
+
         # deserialize response and update self
-        transform(response, 'DescribeDataQualityJobDefinitionResponse', self)
+        transform(response, "DescribeDataQualityJobDefinitionResponse", self)
         return self
-    
+
     def delete(self) -> None:
         """
         Delete a DataQualityJobDefinition resource
-        
-        
+
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -4708,16 +4614,16 @@ class DataQualityJobDefinition(Base):
                 ```
             ResourceNotFound: Resource being access is not found.
         """
-    
+
         client = SageMakerClient().client
-    
+
         operation_input_args = {
-            'JobDefinitionName': self.job_definition_name,
+            "JobDefinitionName": self.job_definition_name,
         }
         client.delete_data_quality_job_definition(**operation_input_args)
-        
+
         print(f"Deleting {self.__class__.__name__} - {self.get_name()}")
-    
+
     @classmethod
     def get_all(
         cls,
@@ -4732,7 +4638,7 @@ class DataQualityJobDefinition(Base):
     ) -> ResourceIterator["DataQualityJobDefinition"]:
         """
         Get all DataQualityJobDefinition resources
-        
+
         Parameters:
             endpoint_name: A filter that lists the data quality job definitions associated with the specified endpoint.
             sort_by: The field to sort results by. The default is CreationTime.
@@ -4744,14 +4650,14 @@ class DataQualityJobDefinition(Base):
             creation_time_after: A filter that returns only data quality monitoring job definitions created after the specified time.
             session: Boto3 session.
             region: Region name.
-            
+
         Returns:
             Iterator for listed DataQualityJobDefinition resources.
-        
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -4760,37 +4666,45 @@ class DataQualityJobDefinition(Base):
                     error_code = e.response['Error']['Code']
                 ```
         """
-    
-        client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
-            
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
         operation_input_args = {
-            'EndpointName': endpoint_name,
-            'SortBy': sort_by,
-            'SortOrder': sort_order,
-            'NameContains': name_contains,
-            'CreationTimeBefore': creation_time_before,
-            'CreationTimeAfter': creation_time_after,
+            "EndpointName": endpoint_name,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
+            "NameContains": name_contains,
+            "CreationTimeBefore": creation_time_before,
+            "CreationTimeAfter": creation_time_after,
         }
-        custom_key_mapping = {"monitoring_job_definition_name": "job_definition_name", "monitoring_job_definition_arn": "job_definition_arn"}
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
-        
+        custom_key_mapping = {
+            "monitoring_job_definition_name": "job_definition_name",
+            "monitoring_job_definition_arn": "job_definition_arn",
+        }
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
+
         return ResourceIterator(
             client=client,
-            list_method='list_data_quality_job_definitions',
-            summaries_key='JobDefinitionSummaries',
-            summary_name='MonitoringJobDefinitionSummary',
+            list_method="list_data_quality_job_definitions",
+            summaries_key="JobDefinitionSummaries",
+            summary_name="MonitoringJobDefinitionSummary",
             resource_cls=DataQualityJobDefinition,
             custom_key_mapping=custom_key_mapping,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
 
 
 class Device(Base):
     """
     Class representing resource Device
-    
+
     Attributes:
-<<<<<<< HEAD
         device_name: The unique identifier of the device.
         device_fleet_name: The name of the fleet the device belongs to.
         registration_time: The timestamp of the last registration or de-reregistration.
@@ -4803,21 +4717,8 @@ class Device(Base):
         next_token: The response from the last list when returning a list large enough to need tokening.
         agent_version: Edge Manager agent version.
 
-=======
-        device_name:The unique identifier of the device.
-        device_fleet_name:The name of the fleet the device belongs to.
-        registration_time:The timestamp of the last registration or de-reregistration.
-        device_arn:The Amazon Resource Name (ARN) of the device.
-        description:A description of the device.
-        iot_thing_name:The Amazon Web Services Internet of Things (IoT) object thing name associated with the device.
-        latest_heartbeat:The last heartbeat received from the device.
-        models:Models on the device.
-        max_models:The maximum number of models.
-        next_token:The response from the last list when returning a list large enough to need tokening.
-        agent_version:Edge Manager agent version.
-    
->>>>>>> d6a2f6c (Create resource from Create method)
     """
+
     device_name: str
     device_fleet_name: str
     device_arn: Optional[str] = Unassigned()
@@ -4829,14 +4730,14 @@ class Device(Base):
     max_models: Optional[int] = Unassigned()
     next_token: Optional[str] = Unassigned()
     agent_version: Optional[str] = Unassigned()
-    
+
     def get_name(self) -> str:
         attributes = vars(self)
         for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'device_name':
+            if attribute == "name" or attribute == "device_name":
                 return value
         raise Exception("Name attribute not found for object")
-    
+
     @classmethod
     def get(
         cls,
@@ -4848,21 +4749,21 @@ class Device(Base):
     ) -> Optional["Device"]:
         """
         Get a Device resource
-        
+
         Parameters:
             device_name: The unique ID of the device.
             device_fleet_name: The name of the fleet the devices belong to.
             next_token: Next token of device description.
             session: Boto3 session.
             region: Region name.
-            
+
         Returns:
             The Device resource.
-        
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -4872,33 +4773,35 @@ class Device(Base):
                 ```
             ResourceNotFound: Resource being access is not found.
         """
-    
+
         operation_input_args = {
-            'NextToken': next_token,
-            'DeviceName': device_name,
-            'DeviceFleetName': device_fleet_name,
+            "NextToken": next_token,
+            "DeviceName": device_name,
+            "DeviceFleetName": device_fleet_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
         response = client.describe_device(**operation_input_args)
-    
+
         pprint(response)
-    
+
         # deserialize the response
-        transformed_response = transform(response, 'DescribeDeviceResponse')
+        transformed_response = transform(response, "DescribeDeviceResponse")
         device = cls(**transformed_response)
         return device
-    
+
     def refresh(self) -> Optional["Device"]:
         """
         Refresh a Device resource
-        
+
         Returns:
             The Device resource.
-        
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -4908,19 +4811,19 @@ class Device(Base):
                 ```
             ResourceNotFound: Resource being access is not found.
         """
-    
+
         operation_input_args = {
-            'NextToken': self.next_token,
-            'DeviceName': self.device_name,
-            'DeviceFleetName': self.device_fleet_name,
+            "NextToken": self.next_token,
+            "DeviceName": self.device_name,
+            "DeviceFleetName": self.device_fleet_name,
         }
         client = SageMakerClient().client
         response = client.describe_device(**operation_input_args)
-    
+
         # deserialize response and update self
-        transform(response, 'DescribeDeviceResponse', self)
+        transform(response, "DescribeDeviceResponse", self)
         return self
-    
+
     @classmethod
     def get_all(
         cls,
@@ -4932,7 +4835,7 @@ class Device(Base):
     ) -> ResourceIterator["Device"]:
         """
         Get all Device resources
-        
+
         Parameters:
             next_token: The response from the last list when returning a list large enough to need tokening.
             max_results: Maximum number of results to select.
@@ -4941,14 +4844,14 @@ class Device(Base):
             device_fleet_name: Filter for fleets containing this name in their device fleet name.
             session: Boto3 session.
             region: Region name.
-            
+
         Returns:
             Iterator for listed Device resources.
-        
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -4957,33 +4860,38 @@ class Device(Base):
                     error_code = e.response['Error']['Code']
                 ```
         """
-    
-        client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
-            
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
         operation_input_args = {
-            'LatestHeartbeatAfter': latest_heartbeat_after,
-            'ModelName': model_name,
-            'DeviceFleetName': device_fleet_name,
+            "LatestHeartbeatAfter": latest_heartbeat_after,
+            "ModelName": model_name,
+            "DeviceFleetName": device_fleet_name,
         }
-    
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
-        
+
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
+
         return ResourceIterator(
             client=client,
-            list_method='list_devices',
-            summaries_key='DeviceSummaries',
-            summary_name='DeviceSummary',
+            list_method="list_devices",
+            summaries_key="DeviceSummaries",
+            summary_name="DeviceSummary",
             resource_cls=Device,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
 
 
 class DeviceFleet(Base):
     """
     Class representing resource DeviceFleet
-    
+
     Attributes:
-<<<<<<< HEAD
         device_fleet_name: The name of the fleet.
         device_fleet_arn: The The Amazon Resource Name (ARN) of the fleet.
         output_config: The output configuration for storing sampled data.
@@ -4993,18 +4901,8 @@ class DeviceFleet(Base):
         role_arn: The Amazon Resource Name (ARN) that has access to Amazon Web Services Internet of Things (IoT).
         iot_role_alias: The Amazon Resource Name (ARN) alias created in Amazon Web Services Internet of Things (IoT).
 
-=======
-        device_fleet_name:The name of the fleet.
-        device_fleet_arn:The The Amazon Resource Name (ARN) of the fleet.
-        output_config:The output configuration for storing sampled data.
-        creation_time:Timestamp of when the device fleet was created.
-        last_modified_time:Timestamp of when the device fleet was last updated.
-        description:A description of the fleet.
-        role_arn:The Amazon Resource Name (ARN) that has access to Amazon Web Services Internet of Things (IoT).
-        iot_role_alias:The Amazon Resource Name (ARN) alias created in Amazon Web Services Internet of Things (IoT).
-    
->>>>>>> d6a2f6c (Create resource from Create method)
     """
+
     device_fleet_name: str
     device_fleet_arn: Optional[str] = Unassigned()
     output_config: Optional[EdgeOutputConfig] = Unassigned()
@@ -5013,37 +4911,33 @@ class DeviceFleet(Base):
     last_modified_time: Optional[datetime.datetime] = Unassigned()
     role_arn: Optional[str] = Unassigned()
     iot_role_alias: Optional[str] = Unassigned()
-    
+
     def get_name(self) -> str:
         attributes = vars(self)
         for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'device_fleet_name':
+            if attribute == "name" or attribute == "device_fleet_name":
                 return value
         raise Exception("Name attribute not found for object")
 
-    
     def populate_inputs_decorator(create_func):
         def wrapper(*args, **kwargs):
-            config_schema_for_resource = \
-        {
-          "output_config": {
-            "s3_output_location": {
-              "type": "string"
-            },
-            "kms_key_id": {
-              "type": "string"
+            config_schema_for_resource = {
+                "output_config": {
+                    "s3_output_location": {"type": "string"},
+                    "kms_key_id": {"type": "string"},
+                },
+                "role_arn": {"type": "string"},
+                "iot_role_alias": {"type": "string"},
             }
-          },
-          "role_arn": {
-            "type": "string"
-          },
-          "iot_role_alias": {
-            "type": "string"
-          }
-        }
-            return create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "DeviceFleet", **kwargs))
+            return create_func(
+                *args,
+                **Base.get_updated_kwargs_with_configured_attributes(
+                    config_schema_for_resource, "DeviceFleet", **kwargs
+                ),
+            )
+
         return wrapper
-    
+
     @classmethod
     @populate_inputs_decorator
     def create(
@@ -5059,7 +4953,7 @@ class DeviceFleet(Base):
     ) -> Optional["DeviceFleet"]:
         """
         Create a DeviceFleet resource
-        
+
         Parameters:
             device_fleet_name: The name of the fleet that the device belongs to.
             output_config: The output configuration for storing sample data collected by the fleet.
@@ -5069,14 +4963,14 @@ class DeviceFleet(Base):
             enable_iot_role_alias: Whether to create an Amazon Web Services IoT Role Alias during device fleet creation. The name of the role alias generated will match this pattern: "SageMakerEdge-{DeviceFleetName}". For example, if your device fleet is called "demo-fleet", the name of the role alias will be "SageMakerEdge-demo-fleet".
             session: Boto3 session.
             region: Region name.
-            
+
         Returns:
             The DeviceFleet resource.
-        
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -5090,32 +4984,36 @@ class DeviceFleet(Base):
             LocalConfigNotFoundError: Raised when a configuration file is not found in local file system
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
         """
-    
+
         logger.debug("Creating device_fleet resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
-    
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
         operation_input_args = {
-            'DeviceFleetName': device_fleet_name,
-            'RoleArn': role_arn,
-            'Description': description,
-            'OutputConfig': output_config,
-            'Tags': tags,
-            'EnableIotRoleAlias': enable_iot_role_alias,
+            "DeviceFleetName": device_fleet_name,
+            "RoleArn": role_arn,
+            "Description": description,
+            "OutputConfig": output_config,
+            "Tags": tags,
+            "EnableIotRoleAlias": enable_iot_role_alias,
         }
-        
-        operation_input_args = Base.populate_chained_attributes(resource_name='DeviceFleet', operation_input_args=operation_input_args)
-            
+
+        operation_input_args = Base.populate_chained_attributes(
+            resource_name="DeviceFleet", operation_input_args=operation_input_args
+        )
+
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
-    
+
         # create the resource
         response = client.create_device_fleet(**operation_input_args)
         logger.debug(f"Response: {response}")
-    
+
         return cls.get(device_fleet_name=device_fleet_name, session=session, region=region)
-    
+
     @classmethod
     def get(
         cls,
@@ -5125,19 +5023,19 @@ class DeviceFleet(Base):
     ) -> Optional["DeviceFleet"]:
         """
         Get a DeviceFleet resource
-        
+
         Parameters:
             device_fleet_name: The name of the fleet.
             session: Boto3 session.
             region: Region name.
-            
+
         Returns:
             The DeviceFleet resource.
-        
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -5147,31 +5045,33 @@ class DeviceFleet(Base):
                 ```
             ResourceNotFound: Resource being access is not found.
         """
-    
+
         operation_input_args = {
-            'DeviceFleetName': device_fleet_name,
+            "DeviceFleetName": device_fleet_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
         response = client.describe_device_fleet(**operation_input_args)
-    
+
         pprint(response)
-    
+
         # deserialize the response
-        transformed_response = transform(response, 'DescribeDeviceFleetResponse')
+        transformed_response = transform(response, "DescribeDeviceFleetResponse")
         device_fleet = cls(**transformed_response)
         return device_fleet
-    
+
     def refresh(self) -> Optional["DeviceFleet"]:
         """
         Refresh a DeviceFleet resource
-        
+
         Returns:
             The DeviceFleet resource.
-        
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -5181,17 +5081,17 @@ class DeviceFleet(Base):
                 ```
             ResourceNotFound: Resource being access is not found.
         """
-    
+
         operation_input_args = {
-            'DeviceFleetName': self.device_fleet_name,
+            "DeviceFleetName": self.device_fleet_name,
         }
         client = SageMakerClient().client
         response = client.describe_device_fleet(**operation_input_args)
-    
+
         # deserialize response and update self
-        transform(response, 'DescribeDeviceFleetResponse', self)
+        transform(response, "DescribeDeviceFleetResponse", self)
         return self
-    
+
     @populate_inputs_decorator
     def update(
         self,
@@ -5202,22 +5102,17 @@ class DeviceFleet(Base):
     ) -> Optional["DeviceFleet"]:
         """
         Update a DeviceFleet resource
-        
+
         Parameters:
-<<<<<<< HEAD
             enable_iot_role_alias: Whether to create an Amazon Web Services IoT Role Alias during device fleet creation. The name of the role alias generated will match this pattern: "SageMakerEdge-{DeviceFleetName}". For example, if your device fleet is called "demo-fleet", the name of the role alias will be "SageMakerEdge-demo-fleet".
 
-=======
-            enable_iot_role_alias:Whether to create an Amazon Web Services IoT Role Alias during device fleet creation. The name of the role alias generated will match this pattern: "SageMakerEdge-{DeviceFleetName}". For example, if your device fleet is called "demo-fleet", the name of the role alias will be "SageMakerEdge-demo-fleet".
-        
->>>>>>> d6a2f6c (Create resource from Create method)
         Returns:
             The DeviceFleet resource.
-        
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -5227,38 +5122,38 @@ class DeviceFleet(Base):
                 ```
             ResourceInUse: Resource being accessed is in use.
         """
-    
+
         logger.debug("Updating device_fleet resource.")
         client = SageMakerClient().client
-    
+
         operation_input_args = {
-            'DeviceFleetName': self.device_fleet_name,
-            'RoleArn': role_arn,
-            'Description': description,
-            'OutputConfig': output_config,
-            'EnableIotRoleAlias': enable_iot_role_alias,
+            "DeviceFleetName": self.device_fleet_name,
+            "RoleArn": role_arn,
+            "Description": description,
+            "OutputConfig": output_config,
+            "EnableIotRoleAlias": enable_iot_role_alias,
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = DeviceFleet._serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
-    
+
         # create the resource
         response = client.update_device_fleet(**operation_input_args)
         logger.debug(f"Response: {response}")
         self.refresh()
-    
+
         return self
-    
+
     def delete(self) -> None:
         """
         Delete a DeviceFleet resource
-        
-        
+
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -5268,16 +5163,16 @@ class DeviceFleet(Base):
                 ```
             ResourceInUse: Resource being accessed is in use.
         """
-    
+
         client = SageMakerClient().client
-    
+
         operation_input_args = {
-            'DeviceFleetName': self.device_fleet_name,
+            "DeviceFleetName": self.device_fleet_name,
         }
         client.delete_device_fleet(**operation_input_args)
-        
+
         print(f"Deleting {self.__class__.__name__} - {self.get_name()}")
-    
+
     @classmethod
     def get_all(
         cls,
@@ -5293,7 +5188,7 @@ class DeviceFleet(Base):
     ) -> ResourceIterator["DeviceFleet"]:
         """
         Get all DeviceFleet resources
-        
+
         Parameters:
             next_token: The response from the last list when returning a list large enough to need tokening.
             max_results: The maximum number of results to select.
@@ -5306,14 +5201,14 @@ class DeviceFleet(Base):
             sort_order: What direction to sort in.
             session: Boto3 session.
             region: Region name.
-            
+
         Returns:
             Iterator for listed DeviceFleet resources.
-        
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -5322,31 +5217,36 @@ class DeviceFleet(Base):
                     error_code = e.response['Error']['Code']
                 ```
         """
-    
-        client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
-            
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
         operation_input_args = {
-            'CreationTimeAfter': creation_time_after,
-            'CreationTimeBefore': creation_time_before,
-            'LastModifiedTimeAfter': last_modified_time_after,
-            'LastModifiedTimeBefore': last_modified_time_before,
-            'NameContains': name_contains,
-            'SortBy': sort_by,
-            'SortOrder': sort_order,
+            "CreationTimeAfter": creation_time_after,
+            "CreationTimeBefore": creation_time_before,
+            "LastModifiedTimeAfter": last_modified_time_after,
+            "LastModifiedTimeBefore": last_modified_time_before,
+            "NameContains": name_contains,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
         }
-    
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
-        
+
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
+
         return ResourceIterator(
             client=client,
-            list_method='list_device_fleets',
-            summaries_key='DeviceFleetSummaries',
-            summary_name='DeviceFleetSummary',
+            list_method="list_device_fleets",
+            summaries_key="DeviceFleetSummaries",
+            summary_name="DeviceFleetSummary",
             resource_cls=DeviceFleet,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
-    
-    
+
     def deregister_devices(
         self,
         device_names: List[str],
@@ -5355,58 +5255,56 @@ class DeviceFleet(Base):
     ) -> None:
         """
         Deregisters the specified devices.
-        
+
         Parameters:
             device_names: The unique IDs of the devices.
             session: Boto3 session.
             region: Region name.
-            
-        
+
+
         """
-    
-    
+
         operation_input_args = {
-            'DeviceFleetName': self.device_fleet_name,
-            'DeviceNames': device_names,
+            "DeviceFleetName": self.device_fleet_name,
+            "DeviceNames": device_names,
         }
         logger.debug(f"Input request: {operation_input_args}")
-    
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
-    
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
         logger.debug(f"Calling deregister_devices API")
         response = client.deregister_devices(**operation_input_args)
         logger.debug(f"Response: {response}")
-    
-    
-    
+
     def get_report(
         self,
-    
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[GetDeviceFleetReportResponse]:
         """
         Describes a fleet.
-        
-        
+
+
         """
-    
-    
+
         operation_input_args = {
-            'DeviceFleetName': self.device_fleet_name,
+            "DeviceFleetName": self.device_fleet_name,
         }
         logger.debug(f"Input request: {operation_input_args}")
-    
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
-    
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
         logger.debug(f"Calling get_device_fleet_report API")
         response = client.get_device_fleet_report(**operation_input_args)
         logger.debug(f"Response: {response}")
-    
-        transformed_response = transform(response, 'GetDeviceFleetReportResponse')
+
+        transformed_response = transform(response, "GetDeviceFleetReportResponse")
         return GetDeviceFleetReportResponse(**transformed_response)
-    
-    
+
     def register_devices(
         self,
         devices: List[Device],
@@ -5416,32 +5314,31 @@ class DeviceFleet(Base):
     ) -> None:
         """
         Register devices.
-        
+
         Parameters:
             devices: A list of devices to register with SageMaker Edge Manager.
             tags: The tags associated with devices.
             session: Boto3 session.
             region: Region name.
-            
-        
+
+
         """
-    
-    
+
         operation_input_args = {
-            'DeviceFleetName': self.device_fleet_name,
-            'Devices': devices,
-            'Tags': tags,
+            "DeviceFleetName": self.device_fleet_name,
+            "Devices": devices,
+            "Tags": tags,
         }
         logger.debug(f"Input request: {operation_input_args}")
-    
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
-    
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
         logger.debug(f"Calling register_devices API")
         response = client.register_devices(**operation_input_args)
         logger.debug(f"Response: {response}")
-    
-    
-    
+
     def update_devices(
         self,
         devices: List[Device],
@@ -5450,36 +5347,35 @@ class DeviceFleet(Base):
     ) -> None:
         """
         Updates one or more devices in a fleet.
-        
+
         Parameters:
             devices: List of devices to register with Edge Manager agent.
             session: Boto3 session.
             region: Region name.
-            
-        
+
+
         """
-    
-    
+
         operation_input_args = {
-            'DeviceFleetName': self.device_fleet_name,
-            'Devices': devices,
+            "DeviceFleetName": self.device_fleet_name,
+            "Devices": devices,
         }
         logger.debug(f"Input request: {operation_input_args}")
-    
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
-    
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
         logger.debug(f"Calling update_devices API")
         response = client.update_devices(**operation_input_args)
         logger.debug(f"Response: {response}")
-    
 
 
 class Domain(Base):
     """
     Class representing resource Domain
-    
+
     Attributes:
-<<<<<<< HEAD
         domain_arn: The domain's Amazon Resource Name (ARN).
         domain_id: The domain ID.
         domain_name: The domain name.
@@ -5503,32 +5399,8 @@ class Domain(Base):
         app_security_group_management: The entity that creates and manages the required security groups for inter-app communication in VPCOnly mode. Required when CreateDomain.AppNetworkAccessType is VPCOnly and DomainSettings.RStudioServerProDomainSettings.DomainExecutionRoleArn is provided.
         default_space_settings: The default settings used to create a space.
 
-=======
-        domain_arn:The domain's Amazon Resource Name (ARN).
-        domain_id:The domain ID.
-        domain_name:The domain name.
-        home_efs_file_system_id:The ID of the Amazon Elastic File System managed by this Domain.
-        single_sign_on_managed_application_instance_id:The IAM Identity Center managed application instance ID.
-        single_sign_on_application_arn:The ARN of the application managed by SageMaker in IAM Identity Center. This value is only returned for domains created after October 1, 2023.
-        status:The status.
-        creation_time:The creation time.
-        last_modified_time:The last modified time.
-        failure_reason:The failure reason.
-        security_group_id_for_domain_boundary:The ID of the security group that authorizes traffic between the RSessionGateway apps and the RStudioServerPro app.
-        auth_mode:The domain's authentication mode.
-        default_user_settings:Settings which are applied to UserProfiles in this domain if settings are not explicitly specified in a given UserProfile. 
-        domain_settings:A collection of Domain settings.
-        app_network_access_type:Specifies the VPC used for non-EFS traffic. The default value is PublicInternetOnly.    PublicInternetOnly - Non-EFS traffic is through a VPC managed by Amazon SageMaker, which allows direct internet access    VpcOnly - All traffic is through the specified VPC and subnets  
-        home_efs_file_system_kms_key_id:Use KmsKeyId.
-        subnet_ids:The VPC subnets that the domain uses for communication.
-        url:The domain's URL.
-        vpc_id:The ID of the Amazon Virtual Private Cloud (VPC) that the domain uses for communication.
-        kms_key_id:The Amazon Web Services KMS customer managed key used to encrypt the EFS volume attached to the domain.
-        app_security_group_management:The entity that creates and manages the required security groups for inter-app communication in VPCOnly mode. Required when CreateDomain.AppNetworkAccessType is VPCOnly and DomainSettings.RStudioServerProDomainSettings.DomainExecutionRoleArn is provided.
-        default_space_settings:The default settings used to create a space.
-    
->>>>>>> d6a2f6c (Create resource from Create method)
     """
+
     domain_id: str
     domain_arn: Optional[str] = Unassigned()
     domain_name: Optional[str] = Unassigned()
@@ -5551,112 +5423,64 @@ class Domain(Base):
     kms_key_id: Optional[str] = Unassigned()
     app_security_group_management: Optional[str] = Unassigned()
     default_space_settings: Optional[DefaultSpaceSettings] = Unassigned()
-    
+
     def get_name(self) -> str:
         attributes = vars(self)
         for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'domain_name':
+            if attribute == "name" or attribute == "domain_name":
                 return value
         raise Exception("Name attribute not found for object")
 
-    
     def populate_inputs_decorator(create_func):
         def wrapper(*args, **kwargs):
-            config_schema_for_resource = \
-        {
-          "security_group_id_for_domain_boundary": {
-            "type": "string"
-          },
-          "default_user_settings": {
-            "execution_role": {
-              "type": "string"
-            },
-            "security_groups": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            "sharing_settings": {
-              "s3_output_path": {
-                "type": "string"
-              },
-              "s3_kms_key_id": {
-                "type": "string"
-              }
-            },
-            "canvas_app_settings": {
-              "time_series_forecasting_settings": {
-                "amazon_forecast_role_arn": {
-                  "type": "string"
-                }
-              },
-              "model_register_settings": {
-                "cross_account_model_register_role_arn": {
-                  "type": "string"
-                }
-              },
-              "workspace_settings": {
-                "s3_artifact_path": {
-                  "type": "string"
+            config_schema_for_resource = {
+                "security_group_id_for_domain_boundary": {"type": "string"},
+                "default_user_settings": {
+                    "execution_role": {"type": "string"},
+                    "security_groups": {"type": "array", "items": {"type": "string"}},
+                    "sharing_settings": {
+                        "s3_output_path": {"type": "string"},
+                        "s3_kms_key_id": {"type": "string"},
+                    },
+                    "canvas_app_settings": {
+                        "time_series_forecasting_settings": {
+                            "amazon_forecast_role_arn": {"type": "string"}
+                        },
+                        "model_register_settings": {
+                            "cross_account_model_register_role_arn": {"type": "string"}
+                        },
+                        "workspace_settings": {
+                            "s3_artifact_path": {"type": "string"},
+                            "s3_kms_key_id": {"type": "string"},
+                        },
+                        "generative_ai_settings": {"amazon_bedrock_role_arn": {"type": "string"}},
+                    },
                 },
-                "s3_kms_key_id": {
-                  "type": "string"
-                }
-              },
-              "generative_ai_settings": {
-                "amazon_bedrock_role_arn": {
-                  "type": "string"
-                }
-              }
+                "domain_settings": {
+                    "security_group_ids": {"type": "array", "items": {"type": "string"}},
+                    "r_studio_server_pro_domain_settings": {
+                        "domain_execution_role_arn": {"type": "string"}
+                    },
+                    "execution_role_identity_config": {"type": "string"},
+                },
+                "home_efs_file_system_kms_key_id": {"type": "string"},
+                "subnet_ids": {"type": "array", "items": {"type": "string"}},
+                "kms_key_id": {"type": "string"},
+                "app_security_group_management": {"type": "string"},
+                "default_space_settings": {
+                    "execution_role": {"type": "string"},
+                    "security_groups": {"type": "array", "items": {"type": "string"}},
+                },
             }
-          },
-          "domain_settings": {
-            "security_group_ids": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            "r_studio_server_pro_domain_settings": {
-              "domain_execution_role_arn": {
-                "type": "string"
-              }
-            },
-            "execution_role_identity_config": {
-              "type": "string"
-            }
-          },
-          "home_efs_file_system_kms_key_id": {
-            "type": "string"
-          },
-          "subnet_ids": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "kms_key_id": {
-            "type": "string"
-          },
-          "app_security_group_management": {
-            "type": "string"
-          },
-          "default_space_settings": {
-            "execution_role": {
-              "type": "string"
-            },
-            "security_groups": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
-          }
-        }
-            return create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "Domain", **kwargs))
+            return create_func(
+                *args,
+                **Base.get_updated_kwargs_with_configured_attributes(
+                    config_schema_for_resource, "Domain", **kwargs
+                ),
+            )
+
         return wrapper
-    
+
     @classmethod
     @populate_inputs_decorator
     def create(
@@ -5678,9 +5502,8 @@ class Domain(Base):
     ) -> Optional["Domain"]:
         """
         Create a Domain resource
-        
+
         Parameters:
-<<<<<<< HEAD
             domain_name: A name for the domain.
             auth_mode: The mode of authentication that members use to access the domain.
             default_user_settings: The default settings to use to create a user profile when UserSettings isn't specified in the call to the CreateUserProfile API.  SecurityGroups is aggregated when specified in both calls. For all other settings in UserSettings, the values specified in CreateUserProfile take precedence over those specified in CreateDomain.
@@ -5693,30 +5516,16 @@ class Domain(Base):
             kms_key_id: SageMaker uses Amazon Web Services KMS to encrypt EFS and EBS volumes attached to the domain with an Amazon Web Services managed key by default. For more control, specify a customer managed key.
             app_security_group_management: The entity that creates and manages the required security groups for inter-app communication in VPCOnly mode. Required when CreateDomain.AppNetworkAccessType is VPCOnly and DomainSettings.RStudioServerProDomainSettings.DomainExecutionRoleArn is provided. If setting up the domain for use with RStudio, this value must be set to Service.
             default_space_settings: The default settings used to create a space.
-=======
-            domain_name:A name for the domain.
-            auth_mode:The mode of authentication that members use to access the domain.
-            default_user_settings:The default settings to use to create a user profile when UserSettings isn't specified in the call to the CreateUserProfile API.  SecurityGroups is aggregated when specified in both calls. For all other settings in UserSettings, the values specified in CreateUserProfile take precedence over those specified in CreateDomain.
-            subnet_ids:The VPC subnets that the domain uses for communication.
-            vpc_id:The ID of the Amazon Virtual Private Cloud (VPC) that the domain uses for communication.
-            domain_settings:A collection of Domain settings.
-            tags:Tags to associated with the Domain. Each tag consists of a key and an optional value. Tag keys must be unique per resource. Tags are searchable using the Search API. Tags that you specify for the Domain are also added to all Apps that the Domain launches.
-            app_network_access_type:Specifies the VPC used for non-EFS traffic. The default value is PublicInternetOnly.    PublicInternetOnly - Non-EFS traffic is through a VPC managed by Amazon SageMaker, which allows direct internet access    VpcOnly - All traffic is through the specified VPC and subnets  
-            home_efs_file_system_kms_key_id:Use KmsKeyId.
-            kms_key_id:SageMaker uses Amazon Web Services KMS to encrypt EFS and EBS volumes attached to the domain with an Amazon Web Services managed key by default. For more control, specify a customer managed key.
-            app_security_group_management:The entity that creates and manages the required security groups for inter-app communication in VPCOnly mode. Required when CreateDomain.AppNetworkAccessType is VPCOnly and DomainSettings.RStudioServerProDomainSettings.DomainExecutionRoleArn is provided. If setting up the domain for use with RStudio, this value must be set to Service.
-            default_space_settings:The default settings used to create a space.
->>>>>>> d6a2f6c (Create resource from Create method)
             session: Boto3 session.
             region: Region name.
-            
+
         Returns:
             The Domain resource.
-        
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -5730,38 +5539,42 @@ class Domain(Base):
             LocalConfigNotFoundError: Raised when a configuration file is not found in local file system
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
         """
-    
+
         logger.debug("Creating domain resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
-    
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
         operation_input_args = {
-            'DomainName': domain_name,
-            'AuthMode': auth_mode,
-            'DefaultUserSettings': default_user_settings,
-            'DomainSettings': domain_settings,
-            'SubnetIds': subnet_ids,
-            'VpcId': vpc_id,
-            'Tags': tags,
-            'AppNetworkAccessType': app_network_access_type,
-            'HomeEfsFileSystemKmsKeyId': home_efs_file_system_kms_key_id,
-            'KmsKeyId': kms_key_id,
-            'AppSecurityGroupManagement': app_security_group_management,
-            'DefaultSpaceSettings': default_space_settings,
+            "DomainName": domain_name,
+            "AuthMode": auth_mode,
+            "DefaultUserSettings": default_user_settings,
+            "DomainSettings": domain_settings,
+            "SubnetIds": subnet_ids,
+            "VpcId": vpc_id,
+            "Tags": tags,
+            "AppNetworkAccessType": app_network_access_type,
+            "HomeEfsFileSystemKmsKeyId": home_efs_file_system_kms_key_id,
+            "KmsKeyId": kms_key_id,
+            "AppSecurityGroupManagement": app_security_group_management,
+            "DefaultSpaceSettings": default_space_settings,
         }
-        
-        operation_input_args = Base.populate_chained_attributes(resource_name='Domain', operation_input_args=operation_input_args)
-            
+
+        operation_input_args = Base.populate_chained_attributes(
+            resource_name="Domain", operation_input_args=operation_input_args
+        )
+
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
-    
+
         # create the resource
         response = client.create_domain(**operation_input_args)
         logger.debug(f"Response: {response}")
-    
-        return cls.get(domain_id=response['DomainId'], session=session, region=region)
-    
+
+        return cls.get(domain_id=response["DomainId"], session=session, region=region)
+
     @classmethod
     def get(
         cls,
@@ -5771,19 +5584,19 @@ class Domain(Base):
     ) -> Optional["Domain"]:
         """
         Get a Domain resource
-        
+
         Parameters:
             domain_id: The domain ID.
             session: Boto3 session.
             region: Region name.
-            
+
         Returns:
             The Domain resource.
-        
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -5793,31 +5606,33 @@ class Domain(Base):
                 ```
             ResourceNotFound: Resource being access is not found.
         """
-    
+
         operation_input_args = {
-            'DomainId': domain_id,
+            "DomainId": domain_id,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
         response = client.describe_domain(**operation_input_args)
-    
+
         pprint(response)
-    
+
         # deserialize the response
-        transformed_response = transform(response, 'DescribeDomainResponse')
+        transformed_response = transform(response, "DescribeDomainResponse")
         domain = cls(**transformed_response)
         return domain
-    
+
     def refresh(self) -> Optional["Domain"]:
         """
         Refresh a Domain resource
-        
+
         Returns:
             The Domain resource.
-        
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -5827,17 +5642,17 @@ class Domain(Base):
                 ```
             ResourceNotFound: Resource being access is not found.
         """
-    
+
         operation_input_args = {
-            'DomainId': self.domain_id,
+            "DomainId": self.domain_id,
         }
         client = SageMakerClient().client
         response = client.describe_domain(**operation_input_args)
-    
+
         # deserialize response and update self
-        transform(response, 'DescribeDomainResponse', self)
+        transform(response, "DescribeDomainResponse", self)
         return self
-    
+
     @populate_inputs_decorator
     def update(
         self,
@@ -5850,22 +5665,17 @@ class Domain(Base):
     ) -> Optional["Domain"]:
         """
         Update a Domain resource
-        
+
         Parameters:
-<<<<<<< HEAD
             domain_settings_for_update: A collection of DomainSettings configuration values to update.
 
-=======
-            domain_settings_for_update:A collection of DomainSettings configuration values to update.
-        
->>>>>>> d6a2f6c (Create resource from Create method)
         Returns:
             The Domain resource.
-        
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -5877,40 +5687,40 @@ class Domain(Base):
             ResourceLimitExceeded: You have exceeded an SageMaker resource limit. For example, you might have too many training jobs created.
             ResourceNotFound: Resource being access is not found.
         """
-    
+
         logger.debug("Updating domain resource.")
         client = SageMakerClient().client
-    
+
         operation_input_args = {
-            'DomainId': self.domain_id,
-            'DefaultUserSettings': default_user_settings,
-            'DomainSettingsForUpdate': domain_settings_for_update,
-            'AppSecurityGroupManagement': app_security_group_management,
-            'DefaultSpaceSettings': default_space_settings,
-            'SubnetIds': subnet_ids,
-            'AppNetworkAccessType': app_network_access_type,
+            "DomainId": self.domain_id,
+            "DefaultUserSettings": default_user_settings,
+            "DomainSettingsForUpdate": domain_settings_for_update,
+            "AppSecurityGroupManagement": app_security_group_management,
+            "DefaultSpaceSettings": default_space_settings,
+            "SubnetIds": subnet_ids,
+            "AppNetworkAccessType": app_network_access_type,
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = Domain._serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
-    
+
         # create the resource
         response = client.update_domain(**operation_input_args)
         logger.debug(f"Response: {response}")
         self.refresh()
-    
+
         return self
-    
+
     def delete(self) -> None:
         """
         Delete a Domain resource
-        
-        
+
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -5921,58 +5731,68 @@ class Domain(Base):
             ResourceInUse: Resource being accessed is in use.
             ResourceNotFound: Resource being access is not found.
         """
-    
+
         client = SageMakerClient().client
-    
+
         operation_input_args = {
-            'DomainId': self.domain_id,
-            'RetentionPolicy': self.retention_policy,
+            "DomainId": self.domain_id,
+            "RetentionPolicy": self.retention_policy,
         }
         client.delete_domain(**operation_input_args)
-        
+
         print(f"Deleting {self.__class__.__name__} - {self.get_name()}")
-    
+
     def wait_for_status(
         self,
-        status: Literal['Deleting', 'Failed', 'InService', 'Pending', 'Updating', 'Update_Failed', 'Delete_Failed'],
+        status: Literal[
+            "Deleting",
+            "Failed",
+            "InService",
+            "Pending",
+            "Updating",
+            "Update_Failed",
+            "Delete_Failed",
+        ],
         poll: int = 5,
-        timeout: Optional[int] = None
+        timeout: Optional[int] = None,
     ):
         """
         Wait for a Domain resource.
-        
+
         Parameters:
             status: The status to wait for.
             poll: The number of seconds to wait between each poll.
             timeout: The maximum number of seconds to wait before timing out.
-        
+
         Returns:
             The Domain resource.
-        
+
         Raises:
             TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
             FailedStatusError:   If the resource reaches a failed state.
             WaiterError: Raised when an error occurs while waiting.
-        
+
         """
         start_time = time.time()
-    
+
         while True:
             self.refresh()
             current_status = self.status
-    
+
             if status == current_status:
                 print(f"\nFinal Resource Status: {current_status}")
                 return
-            
+
             if "failed" in current_status.lower():
-                raise FailedStatusError(resource_type="Domain", status=current_status, reason=self.failure_reason)
-    
+                raise FailedStatusError(
+                    resource_type="Domain", status=current_status, reason=self.failure_reason
+                )
+
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="Domain", status=current_status)
             print("-", end="")
             time.sleep(poll)
-    
+
     @classmethod
     def get_all(
         cls,
@@ -5981,32 +5801,33 @@ class Domain(Base):
     ) -> ResourceIterator["Domain"]:
         """
         Get all Domain resources.
-        
+
         Parameters:
             session: Boto3 session.
             region: Region name.
-    
+
         Returns:
             Iterator for listed Domain resources.
-    
+
         """
-        client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
-    
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
         return ResourceIterator(
             client=client,
-            list_method='list_domains',
-            summaries_key='Domains',
-            summary_name='DomainDetails',
-            resource_cls=Domain
+            list_method="list_domains",
+            summaries_key="Domains",
+            summary_name="DomainDetails",
+            resource_cls=Domain,
         )
 
 
 class EdgeDeploymentPlan(Base):
     """
     Class representing resource EdgeDeploymentPlan
-    
+
     Attributes:
-<<<<<<< HEAD
         edge_deployment_plan_arn: The ARN of edge deployment plan.
         edge_deployment_plan_name: The name of the edge deployment plan.
         model_configs: List of models associated with the edge deployment plan.
@@ -6019,21 +5840,8 @@ class EdgeDeploymentPlan(Base):
         creation_time: The time when the edge deployment plan was created.
         last_modified_time: The time when the edge deployment plan was last updated.
 
-=======
-        edge_deployment_plan_arn:The ARN of edge deployment plan.
-        edge_deployment_plan_name:The name of the edge deployment plan.
-        model_configs:List of models associated with the edge deployment plan.
-        device_fleet_name:The device fleet used for this edge deployment plan.
-        stages:List of stages in the edge deployment plan.
-        edge_deployment_success:The number of edge devices with the successful deployment.
-        edge_deployment_pending:The number of edge devices yet to pick up deployment, or in progress.
-        edge_deployment_failed:The number of edge devices that failed the deployment.
-        next_token:Token to use when calling the next set of stages in the edge deployment plan.
-        creation_time:The time when the edge deployment plan was created.
-        last_modified_time:The time when the edge deployment plan was last updated.
-    
->>>>>>> d6a2f6c (Create resource from Create method)
     """
+
     edge_deployment_plan_name: str
     edge_deployment_plan_arn: Optional[str] = Unassigned()
     model_configs: Optional[List[EdgeDeploymentModelConfig]] = Unassigned()
@@ -6045,14 +5853,14 @@ class EdgeDeploymentPlan(Base):
     next_token: Optional[str] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
-    
+
     def get_name(self) -> str:
         attributes = vars(self)
         for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'edge_deployment_plan_name':
+            if attribute == "name" or attribute == "edge_deployment_plan_name":
                 return value
         raise Exception("Name attribute not found for object")
-    
+
     @classmethod
     def create(
         cls,
@@ -6066,7 +5874,7 @@ class EdgeDeploymentPlan(Base):
     ) -> Optional["EdgeDeploymentPlan"]:
         """
         Create a EdgeDeploymentPlan resource
-        
+
         Parameters:
             edge_deployment_plan_name: The name of the edge deployment plan.
             model_configs: List of models associated with the edge deployment plan.
@@ -6075,14 +5883,14 @@ class EdgeDeploymentPlan(Base):
             tags: List of tags with which to tag the edge deployment plan.
             session: Boto3 session.
             region: Region name.
-            
+
         Returns:
             The EdgeDeploymentPlan resource.
-        
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -6095,31 +5903,37 @@ class EdgeDeploymentPlan(Base):
             LocalConfigNotFoundError: Raised when a configuration file is not found in local file system
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
         """
-    
+
         logger.debug("Creating edge_deployment_plan resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
-    
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
         operation_input_args = {
-            'EdgeDeploymentPlanName': edge_deployment_plan_name,
-            'ModelConfigs': model_configs,
-            'DeviceFleetName': device_fleet_name,
-            'Stages': stages,
-            'Tags': tags,
+            "EdgeDeploymentPlanName": edge_deployment_plan_name,
+            "ModelConfigs": model_configs,
+            "DeviceFleetName": device_fleet_name,
+            "Stages": stages,
+            "Tags": tags,
         }
-        
-        operation_input_args = Base.populate_chained_attributes(resource_name='EdgeDeploymentPlan', operation_input_args=operation_input_args)
-            
+
+        operation_input_args = Base.populate_chained_attributes(
+            resource_name="EdgeDeploymentPlan", operation_input_args=operation_input_args
+        )
+
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = cls._serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
-    
+
         # create the resource
         response = client.create_edge_deployment_plan(**operation_input_args)
         logger.debug(f"Response: {response}")
-    
-        return cls.get(edge_deployment_plan_name=edge_deployment_plan_name, session=session, region=region)
-    
+
+        return cls.get(
+            edge_deployment_plan_name=edge_deployment_plan_name, session=session, region=region
+        )
+
     @classmethod
     def get(
         cls,
@@ -6131,21 +5945,21 @@ class EdgeDeploymentPlan(Base):
     ) -> Optional["EdgeDeploymentPlan"]:
         """
         Get a EdgeDeploymentPlan resource
-        
+
         Parameters:
             edge_deployment_plan_name: The name of the deployment plan to describe.
             next_token: If the edge deployment plan has enough stages to require tokening, then this is the response from the last list of stages returned.
             max_results: The maximum number of results to select (50 by default).
             session: Boto3 session.
             region: Region name.
-            
+
         Returns:
             The EdgeDeploymentPlan resource.
-        
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -6155,33 +5969,35 @@ class EdgeDeploymentPlan(Base):
                 ```
             ResourceNotFound: Resource being access is not found.
         """
-    
+
         operation_input_args = {
-            'EdgeDeploymentPlanName': edge_deployment_plan_name,
-            'NextToken': next_token,
-            'MaxResults': max_results,
+            "EdgeDeploymentPlanName": edge_deployment_plan_name,
+            "NextToken": next_token,
+            "MaxResults": max_results,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
         response = client.describe_edge_deployment_plan(**operation_input_args)
-    
+
         pprint(response)
-    
+
         # deserialize the response
-        transformed_response = transform(response, 'DescribeEdgeDeploymentPlanResponse')
+        transformed_response = transform(response, "DescribeEdgeDeploymentPlanResponse")
         edge_deployment_plan = cls(**transformed_response)
         return edge_deployment_plan
-    
+
     def refresh(self) -> Optional["EdgeDeploymentPlan"]:
         """
         Refresh a EdgeDeploymentPlan resource
-        
+
         Returns:
             The EdgeDeploymentPlan resource.
-        
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -6191,28 +6007,28 @@ class EdgeDeploymentPlan(Base):
                 ```
             ResourceNotFound: Resource being access is not found.
         """
-    
+
         operation_input_args = {
-            'EdgeDeploymentPlanName': self.edge_deployment_plan_name,
-            'NextToken': self.next_token,
-            'MaxResults': self.max_results,
+            "EdgeDeploymentPlanName": self.edge_deployment_plan_name,
+            "NextToken": self.next_token,
+            "MaxResults": self.max_results,
         }
         client = SageMakerClient().client
         response = client.describe_edge_deployment_plan(**operation_input_args)
-    
+
         # deserialize response and update self
-        transform(response, 'DescribeEdgeDeploymentPlanResponse', self)
+        transform(response, "DescribeEdgeDeploymentPlanResponse", self)
         return self
-    
+
     def delete(self) -> None:
         """
         Delete a EdgeDeploymentPlan resource
-        
-        
+
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -6222,16 +6038,16 @@ class EdgeDeploymentPlan(Base):
                 ```
             ResourceInUse: Resource being accessed is in use.
         """
-    
+
         client = SageMakerClient().client
-    
+
         operation_input_args = {
-            'EdgeDeploymentPlanName': self.edge_deployment_plan_name,
+            "EdgeDeploymentPlanName": self.edge_deployment_plan_name,
         }
         client.delete_edge_deployment_plan(**operation_input_args)
-        
+
         print(f"Deleting {self.__class__.__name__} - {self.get_name()}")
-    
+
     @classmethod
     def get_all(
         cls,
@@ -6248,7 +6064,7 @@ class EdgeDeploymentPlan(Base):
     ) -> ResourceIterator["EdgeDeploymentPlan"]:
         """
         Get all EdgeDeploymentPlan resources
-        
+
         Parameters:
             next_token: The response from the last list when returning a list large enough to need tokening.
             max_results: The maximum number of results to select (50 by default).
@@ -6262,14 +6078,14 @@ class EdgeDeploymentPlan(Base):
             sort_order: The direction of the sorting (ascending or descending).
             session: Boto3 session.
             region: Region name.
-            
+
         Returns:
             Iterator for listed EdgeDeploymentPlan resources.
-        
+
         Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-            
+
                 ```
                 try:
                     # AWS service call here
@@ -6278,33 +6094,164 @@ class EdgeDeploymentPlan(Base):
                     error_code = e.response['Error']['Code']
                 ```
         """
-    
-        client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
-            
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
         operation_input_args = {
-            'CreationTimeAfter': creation_time_after,
-            'CreationTimeBefore': creation_time_before,
-            'LastModifiedTimeAfter': last_modified_time_after,
-            'LastModifiedTimeBefore': last_modified_time_before,
-            'NameContains': name_contains,
-            'DeviceFleetNameContains': device_fleet_name_contains,
-            'SortBy': sort_by,
-            'SortOrder': sort_order,
+            "CreationTimeAfter": creation_time_after,
+            "CreationTimeBefore": creation_time_before,
+            "LastModifiedTimeAfter": last_modified_time_after,
+            "LastModifiedTimeBefore": last_modified_time_before,
+            "NameContains": name_contains,
+            "DeviceFleetNameContains": device_fleet_name_contains,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
         }
-    
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
-        
+
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
+
         return ResourceIterator(
             client=client,
-            list_method='list_edge_deployment_plans',
-            summaries_key='EdgeDeploymentPlanSummaries',
-            summary_name='EdgeDeploymentPlanSummary',
+            list_method="list_edge_deployment_plans",
+            summaries_key="EdgeDeploymentPlanSummaries",
+            summary_name="EdgeDeploymentPlanSummary",
             resource_cls=EdgeDeploymentPlan,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
 
 
-<<<<<<< HEAD
+class EdgeDeploymentStage(Base):
+    """
+    Class representing resource EdgeDeploymentStage
+
+    Attributes:
+        edge_deployment_plan_name: The name of the edge deployment plan.
+        stages: List of stages to be added to the edge deployment plan.
+
+    """
+
+    edge_deployment_plan_name: Union[str, object]
+    stages: List[DeploymentStage]
+
+    def get_name(self) -> str:
+        attributes = vars(self)
+        for attribute, value in attributes.items():
+            if attribute == "name" or attribute == "edge_deployment_stage_name":
+                return value
+        raise Exception("Name attribute not found for object")
+
+    @class_method
+    def create(
+        edge_deployment_plan_name: Union[str, object],
+        stages: List[DeploymentStage],
+    ) -> Optional["resource_name"]:
+        """
+        Create a EdgeDeploymentStage resource
+
+        Parameters:
+            edge_deployment_plan_name: The name of the edge deployment plan.
+            stages: List of stages to be added to the edge deployment plan.
+            session: Boto3 session.
+            region: Region name.
+
+        Returns:
+            The EdgeDeploymentStage resource.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceLimitExceeded: You have exceeded an SageMaker resource limit. For example, you might have too many training jobs created.
+            ConfigSchemaValidationError: Raised when a configuration file does not adhere to the schema
+            LocalConfigNotFoundError: Raised when a configuration file is not found in local file system
+            S3ConfigNotFoundError: Raised when a configuration file is not found in S3
+        """
+
+        operation_input_args = {
+            "EdgeDeploymentPlanName": edge_deployment_plan_name,
+            "Stages": stages,
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
+        logger.debug(f"Calling create_edge_deployment_stage API")
+        response = client.create_edge_deployment_stage(**operation_input_args)
+        logger.debug(f"Response: {response}")
+
+        return cls(**operation_input_args)
+
+    def delete(self) -> None:
+        """
+        Delete a EdgeDeploymentStage resource
+
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceInUse: Resource being accessed is in use.
+        """
+
+        client = SageMakerClient().client
+
+        operation_input_args = {
+            "EdgeDeploymentPlanName": self.edge_deployment_plan_name,
+            "StageName": self.stage_name,
+        }
+        client.delete_edge_deployment_stage(**operation_input_args)
+
+        print(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+
+    def stop(self) -> None:
+        """
+        Stop a EdgeDeploymentStage resource
+
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+        """
+
+        client = SageMakerClient().client
+
+        operation_input_args = {
+            "EdgeDeploymentPlanName": self.edge_deployment_plan_name,
+            "StageName": self.stage_name,
+        }
+        client.stop_edge_deployment_stage(**operation_input_args)
+
+
 class EdgePackagingJob(Base):
     """
     Class representing resource EdgePackagingJob
@@ -18743,6 +18690,173 @@ class PipelineExecution(Base):
         logger.debug(f"Response: {response}")
 
 
+class PresignedDomainUrl(Base):
+    """
+    Class representing resource PresignedDomainUrl
+
+    Attributes:
+        user_profile_name: The name of the UserProfile to sign-in as.
+        domain_id: The domain ID.
+        session_expiration_duration_in_seconds: The session expiration duration in seconds. This value defaults to 43200.
+        expires_in_seconds: The number of seconds until the pre-signed URL expires. This value defaults to 300.
+        space_name: The name of the space.
+        landing_uri: The landing page that the user is directed to when accessing the presigned URL. Using this value, users can access Studio or Studio Classic, even if it is not the default experience for the domain. The supported values are:    studio::relative/path: Directs users to the relative path in Studio.    app:JupyterServer:relative/path: Directs users to the relative path in the Studio Classic application.    app:JupyterLab:relative/path: Directs users to the relative path in the JupyterLab application.    app:RStudioServerPro:relative/path: Directs users to the relative path in the RStudio application.    app:CodeEditor:relative/path: Directs users to the relative path in the Code Editor, based on Code-OSS, Visual Studio Code - Open Source application.    app:Canvas:relative/path: Directs users to the relative path in the Canvas application.
+        authorized_url: The presigned URL.
+
+    """
+
+    domain_id: str
+    user_profile_name: Union[str, object]
+    session_expiration_duration_in_seconds: Optional[int] = Unassigned()
+    expires_in_seconds: Optional[int] = Unassigned()
+    space_name: Optional[Union[str, object]] = Unassigned()
+    landing_uri: Optional[str] = Unassigned()
+    authorized_url: Optional[str] = Unassigned()
+
+    def get_name(self) -> str:
+        attributes = vars(self)
+        for attribute, value in attributes.items():
+            if attribute == "name" or attribute == "presigned_domain_url_name":
+                return value
+        raise Exception("Name attribute not found for object")
+
+    @class_method
+    def create(
+        domain_id: str,
+        user_profile_name: Union[str, object],
+        session_expiration_duration_in_seconds: Optional[int] = Unassigned(),
+        expires_in_seconds: Optional[int] = Unassigned(),
+        space_name: Optional[Union[str, object]] = Unassigned(),
+        landing_uri: Optional[str] = Unassigned(),
+    ) -> Optional["resource_name"]:
+        """
+        Create a PresignedDomainUrl resource
+
+        Parameters:
+            domain_id: The domain ID.
+            user_profile_name: The name of the UserProfile to sign-in as.
+            session_expiration_duration_in_seconds: The session expiration duration in seconds. This value defaults to 43200.
+            expires_in_seconds: The number of seconds until the pre-signed URL expires. This value defaults to 300.
+            space_name: The name of the space.
+            landing_uri: The landing page that the user is directed to when accessing the presigned URL. Using this value, users can access Studio or Studio Classic, even if it is not the default experience for the domain. The supported values are:    studio::relative/path: Directs users to the relative path in Studio.    app:JupyterServer:relative/path: Directs users to the relative path in the Studio Classic application.    app:JupyterLab:relative/path: Directs users to the relative path in the JupyterLab application.    app:RStudioServerPro:relative/path: Directs users to the relative path in the RStudio application.    app:CodeEditor:relative/path: Directs users to the relative path in the Code Editor, based on Code-OSS, Visual Studio Code - Open Source application.    app:Canvas:relative/path: Directs users to the relative path in the Canvas application.
+            session: Boto3 session.
+            region: Region name.
+
+        Returns:
+            The PresignedDomainUrl resource.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceNotFound: Resource being access is not found.
+            ConfigSchemaValidationError: Raised when a configuration file does not adhere to the schema
+            LocalConfigNotFoundError: Raised when a configuration file is not found in local file system
+            S3ConfigNotFoundError: Raised when a configuration file is not found in S3
+        """
+
+        operation_input_args = {
+            "DomainId": domain_id,
+            "UserProfileName": user_profile_name,
+            "SessionExpirationDurationInSeconds": session_expiration_duration_in_seconds,
+            "ExpiresInSeconds": expires_in_seconds,
+            "SpaceName": space_name,
+            "LandingUri": landing_uri,
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
+        logger.debug(f"Calling create_presigned_domain_url API")
+        response = client.create_presigned_domain_url(**operation_input_args)
+        logger.debug(f"Response: {response}")
+
+        transformed_response = transform(response, "CreatePresignedDomainUrlResponse")
+        return cls(**operation_input_args, **transformed_response)
+
+
+class PresignedNotebookInstanceUrl(Base):
+    """
+    Class representing resource PresignedNotebookInstanceUrl
+
+    Attributes:
+        notebook_instance_name: The name of the notebook instance.
+        session_expiration_duration_in_seconds: The duration of the session, in seconds. The default is 12 hours.
+        authorized_url: A JSON object that contains the URL string.
+
+    """
+
+    notebook_instance_name: Union[str, object]
+    session_expiration_duration_in_seconds: Optional[int] = Unassigned()
+    authorized_url: Optional[str] = Unassigned()
+
+    def get_name(self) -> str:
+        attributes = vars(self)
+        for attribute, value in attributes.items():
+            if attribute == "name" or attribute == "presigned_notebook_instance_url_name":
+                return value
+        raise Exception("Name attribute not found for object")
+
+    @class_method
+    def create(
+        notebook_instance_name: Union[str, object],
+        session_expiration_duration_in_seconds: Optional[int] = Unassigned(),
+    ) -> Optional["resource_name"]:
+        """
+        Create a PresignedNotebookInstanceUrl resource
+
+        Parameters:
+            notebook_instance_name: The name of the notebook instance.
+            session_expiration_duration_in_seconds: The duration of the session, in seconds. The default is 12 hours.
+            session: Boto3 session.
+            region: Region name.
+
+        Returns:
+            The PresignedNotebookInstanceUrl resource.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ConfigSchemaValidationError: Raised when a configuration file does not adhere to the schema
+            LocalConfigNotFoundError: Raised when a configuration file is not found in local file system
+            S3ConfigNotFoundError: Raised when a configuration file is not found in S3
+        """
+
+        operation_input_args = {
+            "NotebookInstanceName": notebook_instance_name,
+            "SessionExpirationDurationInSeconds": session_expiration_duration_in_seconds,
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
+        logger.debug(f"Calling create_presigned_notebook_instance_url API")
+        response = client.create_presigned_notebook_instance_url(**operation_input_args)
+        logger.debug(f"Response: {response}")
+
+        transformed_response = transform(response, "CreatePresignedNotebookInstanceUrlOutput")
+        return cls(**operation_input_args, **transformed_response)
+
+
 class ProcessingJob(Base):
     """
     Class representing resource ProcessingJob
@@ -20439,8 +20553,9 @@ class Tag(Base):
             list_method_kwargs=operation_input_args,
         )
 
+    @classmethod
     def add_tags(
-        self,
+        cls,
         resource_arn: str,
         tags: List[Tag],
         session: Optional[Session] = None,
@@ -20472,8 +20587,9 @@ class Tag(Base):
         response = client.add_tags(**operation_input_args)
         logger.debug(f"Response: {response}")
 
+    @classmethod
     def delete_tags(
-        self,
+        cls,
         resource_arn: str,
         tag_keys: List[str],
         session: Optional[Session] = None,
@@ -23454,5 +23570,3 @@ class Workteam(Base):
             resource_cls=LabelingJob,
             list_method_kwargs=operation_input_args,
         )
-=======
->>>>>>> d6a2f6c (Create resource from Create method)

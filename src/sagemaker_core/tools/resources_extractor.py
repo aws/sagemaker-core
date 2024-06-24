@@ -137,12 +137,12 @@ class ResourcesExtractor:
             None
         """
         self.actions = set(self.operations.keys())
+        log.info(f"Total actions - {len(self.actions)}")
 
         # Filter out additional operations and resources first
         self.resources = set()
         self._filter_additional_operations()
 
-        log.info(f"Total actions - {len(self.actions)}")
         self.create_resources = set(
             [key[len("Create") :] for key in self.actions if key.startswith("Create")]
         )
