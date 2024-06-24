@@ -2,6 +2,12 @@ import importlib, inspect
 import unittest
 from unittest.mock import patch, MagicMock
 
+from sagemaker_core.generated.resources import Base, Action
+
+from sagemaker_core.code_injection.codec import pascal_to_snake, snake_to_pascal
+
+from sagemaker_core.generated.utils import SageMakerClient
+
 
 class ResourcesTest(unittest.TestCase):
     MOCK_RESOURCES_RESPONSE_BY_RESOURCE_NAME = {}
@@ -31,85 +37,163 @@ class ResourcesTest(unittest.TestCase):
                 self.SHAPE_CLASSES_BY_SHAPE_NAME[shape_name] = shape_cls
 
     @patch("sagemaker_core.generated.resources.transform")
-    @patch("sagemaker_core.generated.resources.Base.get_sagemaker_client")
-    def test_resources(self, mock_get_sagemaker_client, mock_transform):
-        report = {
-            "Create": 0,
-            "Update": 0,
-            "Get": 0,
-            "Get_all": 0,
-            "Refresh": 0,
-            "Delete": 0
-        }
+    def test_resources(self, mock_transform):
+        report = {"Create": 0, "Update": 0, "Get": 0, "Get_all": 0, "Refresh": 0, "Delete": 0}
         resources = set()
+        client = SageMakerClient().client
         for name, cls in inspect.getmembers(
             importlib.import_module("sagemaker_core.generated.resources"), inspect.isclass
         ):
             if cls.__module__ == "sagemaker_core.generated.resources":
+                print_string = f"Running the following tests for resource {name}: "
                 resources.add(name)
                 if hasattr(cls, "get") and callable(cls.get):
-                    function_name = f"describe_{name.lower()}"
-                    mocked_method = MagicMock()
-                    setattr(mock_get_sagemaker_client, function_name, mocked_method)
-                    mock_transform.return_value = self.MOCK_RESOURCES_RESPONSE_BY_RESOURCE_NAME.get(
-                        name
-                    )
-                    cls.get(**self._get_required_parameters_for_function(cls.get))
-                    report["Get"]=report["Get"]+1
+                    function_name = f"describe_{pascal_to_snake(name)}"
+                    input_args = self._get_required_parameters_for_function(cls.get)
+                    pascal_input_args = self._convert_dict_keys_into_pascal_case(input_args)
+                    with patch.object(
+                        client, function_name, return_value=pascal_input_args
+                    ) as mock_method:
+                        mock_transform.return_value = (
+                            self.MOCK_RESOURCES_RESPONSE_BY_RESOURCE_NAME.get(name)
+                        )
+                        input_args = self._get_required_parameters_for_function(cls.get)
+                        pascal_input_args = self._convert_dict_keys_into_pascal_case(input_args)
+                        cls.get(**input_args)
+                        mock_method.assert_called_once()
+                        self.assertDictContainsSubset(pascal_input_args, mock_method.call_args[1])
+                    report["Get"] = report["Get"] + 1
+                    print_string = print_string + " Get"
+
                 if hasattr(cls, "get_all") and callable(cls.get_all):
-                    function_name = f"list_{name.lower()}s"
-                    mocked_method = MagicMock()
-                    setattr(mock_get_sagemaker_client, function_name, mocked_method)
-                    mock_transform.return_value = self.MOCK_RESOURCES_RESPONSE_BY_RESOURCE_NAME.get(
-                        name
+                    function_name = self._get_function_name_for_list(pascal_to_snake(name))
+                    get_function_name = f"describe_{pascal_to_snake(name)}"
+                    summary = self._convert_dict_keys_into_pascal_case(
+                        self._get_required_parameters_for_function(cls.get)
                     )
-                    cls.get_all(**self._get_required_parameters_for_function(cls.get_all))
+                    if (
+                        name == "DataQualityJobDefinition"
+                        or name == "ModelBiasJobDefinition"
+                        or name == "ModelQualityJobDefinition"
+                        or name == "ModelExplainabilityJobDefinition"
+                    ):
+                        custom_key_mapping = {
+                            "JobDefinitionName": "MonitoringJobDefinitionName",
+                            "JobDefinitionArn": "MonitoringJobDefinitionArn",
+                        }
+                        summary = {custom_key_mapping.get(k, k): v for k, v in summary.items()}
+                    summary_response = {
+                        f"{name}Summaries": [summary],
+                        "JobDefinitionSummaries": [summary],
+                        f"{name}SummaryList": [summary],
+                        f"{name}s": [summary],
+                    }
+                    with patch.object(
+                        client, function_name, return_value=summary_response
+                    ) as mock_method:
+                        mock_transform.return_value = (
+                            self.MOCK_RESOURCES_RESPONSE_BY_RESOURCE_NAME.get(name)
+                        )
+                        with patch.object(
+                            client, get_function_name, return_value={}
+                        ) as mock_get_method:
+                            input_args = self._get_required_parameters_for_function(cls.get_all)
+                            pascal_input_args = self._convert_dict_keys_into_pascal_case(input_args)
+                            cls.get_all(**input_args).__next__()
+                            mock_method.assert_called_once()
+                            mock_get_method.assert_called_once()
+                            self.assertDictContainsSubset(
+                                pascal_input_args, mock_method.call_args[1]
+                            )
                     report["Get_all"] = report["Get_all"] + 1
+                    print_string = print_string + " Get_All"
+
                 if hasattr(cls, "refresh") and callable(cls.refresh):
-                    function_name = f"refresh_{name.lower()}"
-                    mocked_method = MagicMock()
-                    setattr(mock_get_sagemaker_client, function_name, mocked_method)
+                    function_name = f"describe_{pascal_to_snake(name)}"
                     mock_transform.return_value = self.MOCK_RESOURCES_RESPONSE_BY_RESOURCE_NAME.get(
                         name
                     )
-                    class_instance = cls(**self._get_required_parameters_for_function(cls.get))
-                    class_instance.refresh(
-                        **self._get_required_parameters_for_function(cls.refresh)
-                    )
+                    with patch.object(client, function_name, return_value={}) as mock_method:
+                        class_instance = cls(**self._get_required_parameters_for_function(cls.get))
+                        input_args = self._get_required_parameters_for_function(cls.refresh)
+                        pascal_input_args = self._convert_dict_keys_into_pascal_case(input_args)
+                        class_instance.refresh(**input_args)
+                        mock_method.assert_called_once()
+                        self.assertDictContainsSubset(pascal_input_args, mock_method.call_args[1])
                     report["Refresh"] = report["Refresh"] + 1
+                    print_string = print_string + " Refresh"
+
                 if hasattr(cls, "delete") and callable(cls.delete):
-                    function_name = f"delete_{name.lower()}"
-                    mocked_method = MagicMock()
-                    setattr(mock_get_sagemaker_client, function_name, mocked_method)
+                    function_name = f"delete_{pascal_to_snake(name)}"
                     mock_transform.return_value = self.MOCK_RESOURCES_RESPONSE_BY_RESOURCE_NAME.get(
                         name
                     )
-                    class_instance = cls(**self._get_required_parameters_for_function(cls.get))
-                    class_instance.delete(**self._get_required_parameters_for_function(cls.delete))
+                    with patch.object(client, function_name, return_value={}) as mock_method:
+                        class_instance = cls(**self._get_required_parameters_for_function(cls.get))
+                        input_args = self._get_required_parameters_for_function(cls.delete)
+                        pascal_input_args = self._convert_dict_keys_into_pascal_case(input_args)
+                        class_instance.delete(**input_args)
+                        mock_method.assert_called_once()
+                        self.assertDictContainsSubset(pascal_input_args, mock_method.call_args[1])
                     report["Delete"] = report["Delete"] + 1
+                    print_string = print_string + " Delete"
+
                 if hasattr(cls, "create") and callable(cls.create):
-                    get_function_name = f"describe_{name.lower()}"
-                    create_function_name = f"create_{name.lower()}"
-                    mocked_method = MagicMock()
-                    setattr(mock_get_sagemaker_client, create_function_name, mocked_method)
-                    setattr(mock_get_sagemaker_client, get_function_name, mocked_method)
-                    mock_transform.return_value = self.MOCK_RESOURCES_RESPONSE_BY_RESOURCE_NAME.get(
-                        name
-                    )
-                    cls.create(**self._get_required_parameters_for_function(cls.create))
+                    get_function_name = f"describe_{pascal_to_snake(name)}"
+                    create_function_name = f"create_{pascal_to_snake(name)}"
+                    input_args = self._get_required_parameters_for_function(cls.create)
+                    pascal_input_args = self._convert_dict_keys_into_pascal_case(input_args)
+                    with patch.object(
+                        client,
+                        create_function_name,
+                        return_value=self._convert_dict_keys_into_pascal_case(
+                            self._get_required_parameters_for_function(cls.get)
+                        ),
+                    ) as mock_create_method:
+                        with patch.object(
+                            client, get_function_name, return_value={}
+                        ) as mock_get_method:
+                            cls.create(**input_args)
+                            mock_create_method.assert_called_once()
+                            mock_get_method.assert_called_once()
+                            self.assertDictContainsSubset(
+                                Base._serialize(
+                                    Base.populate_chained_attributes(
+                                        operation_input_args=pascal_input_args, resource_name=name
+                                    )
+                                ),
+                                mock_create_method.call_args[1],
+                            )
                     report["Create"] = report["Create"] + 1
+                    print_string = print_string + " Create"
+
                 if hasattr(cls, "update") and callable(cls.update):
-                    get_function_name = f"describe_{name.lower()}"
-                    create_function_name = f"update_{name.lower()}"
-                    mocked_method = MagicMock()
-                    setattr(mock_get_sagemaker_client, create_function_name, mocked_method)
-                    setattr(mock_get_sagemaker_client, get_function_name, mocked_method)
-                    mock_transform.return_value = self.MOCK_RESOURCES_RESPONSE_BY_RESOURCE_NAME.get(
-                        name
-                    )
-                    class_instance = cls(**self._get_required_parameters_for_function(cls.get))
-                    class_instance.update(**self._get_required_parameters_for_function(cls.update))
+                    get_function_name = f"describe_{pascal_to_snake(name)}"
+                    update_function_name = f"update_{pascal_to_snake(name)}"
+                    with patch.object(
+                        client,
+                        update_function_name,
+                        return_value=self._convert_dict_keys_into_pascal_case(
+                            self._get_required_parameters_for_function(cls.get)
+                        ),
+                    ) as mock_update_method:
+                        with patch.object(
+                            client, get_function_name, return_value={}
+                        ) as mock_get_method:
+                            input_args = self._get_required_parameters_for_function(cls.update)
+                            pascal_input_args = self._convert_dict_keys_into_pascal_case(input_args)
+                            class_instance = cls(
+                                **self._get_required_parameters_for_function(cls.get)
+                            )
+                            class_instance.update(**input_args)
+                            mock_update_method.assert_called_once()
+                            mock_get_method.assert_called_once()
+                            self.assertDictContainsSubset(
+                                Base._serialize(pascal_input_args), mock_update_method.call_args[1]
+                            )
                     report["Update"] = report["Update"] + 1
+                    print_string = print_string + " Update"
+                print(print_string)
 
         total_tests = sum(report.values())
 
@@ -118,6 +202,19 @@ class ResourcesTest(unittest.TestCase):
 
         for method, count in report.items():
             print(f"Total Tests Executed for {method} = {count}")
+
+    def _get_function_name_for_list(self, resource_name):
+        if resource_name == "code_repository":
+            return "list_code_repositories"
+        return f"list_{resource_name}s"
+
+    def _convert_dict_keys_into_pascal_case(self, input_args: dict):
+        return {self._convert(key): val for key, val in input_args.items()}
+
+    def _convert(self, string: str):
+        if string == "auto_ml_job_name":
+            return "AutoMLJobName"
+        return snake_to_pascal(string)
 
     def _get_required_parameters_for_function(self, func) -> dict:
         params = {}

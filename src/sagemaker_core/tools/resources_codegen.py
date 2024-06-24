@@ -505,6 +505,16 @@ class ResourcesCodeGen:
         if resource_name == "Workforce":
             class_attributes_list[0]["workforce_name"] = "str"
             class_attributes_list[1] = "workforce_name: str\n" + class_attributes_list[1]
+        if resource_name == "SubscribedWorkteam":
+            class_attributes_list[0]["workteam_arn"] = "str"
+            class_attributes_list[1] = "workteam_arn: str\n" + class_attributes_list[1]
+
+        if resource_name == "HubContent":
+            class_attributes_list[0]["hub_name"] = "Optional[str] = Unassigned()"
+            class_attributes_list[1] = class_attributes_list[1].replace("hub_name: str", "")
+            class_attributes_list[1] = (
+                class_attributes_list[1] + "hub_name: Optional[str] = Unassigned()"
+            )
 
         return class_attributes_list
 

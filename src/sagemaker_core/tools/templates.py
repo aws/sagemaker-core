@@ -407,7 +407,7 @@ def delete(
     }}
     client.{operation}(**operation_input_args)
     
-    print(f"Deleting {{self.__class__.__name__}} - {{self.get_name()}}")
+    logger.info(f"Deleting {{self.__class__.__name__}} - {{self.get_name()}}")
 """
 
 STOP_METHOD_TEMPLATE = """
