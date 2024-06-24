@@ -469,7 +469,7 @@ def delete(
     }
     client.delete_compilation_job(**operation_input_args)
     
-    print(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+    logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 '''
         assert (
             self.resource_generator.generate_delete_method(
