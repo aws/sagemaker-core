@@ -512,9 +512,7 @@ class ResourcesCodeGen:
         if resource_name == "HubContent":
             class_attributes_list[0]["hub_name"] = "Optional[str] = Unassigned()"
             class_attributes_list[1] = class_attributes_list[1].replace("hub_name: str", "")
-            class_attributes_list[1] = (
-                class_attributes_list[1] + "hub_name: Optional[str] = Unassigned()"
-            )
+            class_attributes_list[1] = class_attributes_list[1] + "hub_name: Optional[str] = Unassigned()"
 
         return class_attributes_list
 
