@@ -588,7 +588,7 @@ class ResourcesCodeGen:
         else:
             members = input_members
         # bring the required members in front
-        ordered_members = {key: members[key] for key in required_args if key in members}
+        ordered_members = {key: members[key] for key in members if key in required_args}
         ordered_members.update(members)
         shape_members_and_docstrings = {}
         for member_name, member_attrs in ordered_members.items():
