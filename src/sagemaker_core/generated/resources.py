@@ -6125,64 +6125,26 @@ class EdgeDeploymentPlan(Base):
             list_method_kwargs=operation_input_args,
         )
 
-
-class EdgeDeploymentStage(Base):
-    """
-    Class representing resource EdgeDeploymentStage
-
-    Attributes:
-        edge_deployment_plan_name: The name of the edge deployment plan.
-        stages: List of stages to be added to the edge deployment plan.
-
-    """
-
-    edge_deployment_plan_name: Union[str, object]
-    stages: List[DeploymentStage]
-
-    def get_name(self) -> str:
-        attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == "name" or attribute == "edge_deployment_stage_name":
-                return value
-        raise Exception("Name attribute not found for object")
-
-    @class_method
-    def create(
-        edge_deployment_plan_name: Union[str, object],
-        stages: List[DeploymentStage],
-    ) -> Optional["resource_name"]:
+    def create_stage(
+        self,
+        stage_name: str,
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> None:
         """
-        Create a EdgeDeploymentStage resource
+        Stops a stage in an edge deployment plan.
 
         Parameters:
-            edge_deployment_plan_name: The name of the edge deployment plan.
-            stages: List of stages to be added to the edge deployment plan.
+            stage_name: The name of the stage to stop.
             session: Boto3 session.
             region: Region name.
 
-        Returns:
-            The EdgeDeploymentStage resource.
 
-        Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
-                The error message and error code can be parsed from the exception as follows:
-
-                ```
-                try:
-                    # AWS service call here
-                except botocore.exceptions.ClientError as e:
-                    error_message = e.response['Error']['Message']
-                    error_code = e.response['Error']['Code']
-                ```
-            ResourceLimitExceeded: You have exceeded an SageMaker resource limit. For example, you might have too many training jobs created.
-            ConfigSchemaValidationError: Raised when a configuration file does not adhere to the schema
-            LocalConfigNotFoundError: Raised when a configuration file is not found in local file system
-            S3ConfigNotFoundError: Raised when a configuration file is not found in S3
         """
 
         operation_input_args = {
-            "EdgeDeploymentPlanName": edge_deployment_plan_name,
-            "Stages": stages,
+            "EdgeDeploymentPlanName": self.edge_deployment_plan_name,
+            "StageName": stage_name,
         }
         logger.debug(f"Input request: {operation_input_args}")
 
@@ -6190,66 +6152,9 @@ class EdgeDeploymentStage(Base):
             session=session, region_name=region, service_name="sagemaker"
         ).client
 
-        logger.debug(f"Calling create_edge_deployment_stage API")
-        response = client.create_edge_deployment_stage(**operation_input_args)
+        logger.debug(f"Calling stop_edge_deployment_stage API")
+        response = client.stop_edge_deployment_stage(**operation_input_args)
         logger.debug(f"Response: {response}")
-
-        return cls(**operation_input_args)
-
-    def delete(self) -> None:
-        """
-        Delete a EdgeDeploymentStage resource
-
-
-        Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
-                The error message and error code can be parsed from the exception as follows:
-
-                ```
-                try:
-                    # AWS service call here
-                except botocore.exceptions.ClientError as e:
-                    error_message = e.response['Error']['Message']
-                    error_code = e.response['Error']['Code']
-                ```
-            ResourceInUse: Resource being accessed is in use.
-        """
-
-        client = SageMakerClient().client
-
-        operation_input_args = {
-            "EdgeDeploymentPlanName": self.edge_deployment_plan_name,
-            "StageName": self.stage_name,
-        }
-        client.delete_edge_deployment_stage(**operation_input_args)
-
-        print(f"Deleting {self.__class__.__name__} - {self.get_name()}")
-
-    def stop(self) -> None:
-        """
-        Stop a EdgeDeploymentStage resource
-
-
-        Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
-                The error message and error code can be parsed from the exception as follows:
-
-                ```
-                try:
-                    # AWS service call here
-                except botocore.exceptions.ClientError as e:
-                    error_message = e.response['Error']['Message']
-                    error_code = e.response['Error']['Code']
-                ```
-        """
-
-        client = SageMakerClient().client
-
-        operation_input_args = {
-            "EdgeDeploymentPlanName": self.edge_deployment_plan_name,
-            "StageName": self.stage_name,
-        }
-        client.stop_edge_deployment_stage(**operation_input_args)
 
 
 class EdgePackagingJob(Base):
@@ -18695,8 +18600,8 @@ class PresignedDomainUrl(Base):
     Class representing resource PresignedDomainUrl
 
     Attributes:
-        user_profile_name: The name of the UserProfile to sign-in as.
         domain_id: The domain ID.
+        user_profile_name: The name of the UserProfile to sign-in as.
         session_expiration_duration_in_seconds: The session expiration duration in seconds. This value defaults to 43200.
         expires_in_seconds: The number of seconds until the pre-signed URL expires. This value defaults to 300.
         space_name: The name of the space.
@@ -18720,8 +18625,9 @@ class PresignedDomainUrl(Base):
                 return value
         raise Exception("Name attribute not found for object")
 
-    @class_method
+    @classmethod
     def create(
+        cls,
         domain_id: str,
         user_profile_name: Union[str, object],
         session_expiration_duration_in_seconds: Optional[int] = Unassigned(),
@@ -18806,8 +18712,9 @@ class PresignedNotebookInstanceUrl(Base):
                 return value
         raise Exception("Name attribute not found for object")
 
-    @class_method
+    @classmethod
     def create(
+        cls,
         notebook_instance_name: Union[str, object],
         session_expiration_duration_in_seconds: Optional[int] = Unassigned(),
     ) -> Optional["resource_name"]:

@@ -853,6 +853,7 @@ class ResourcesCodeGen:
         )
 
         if "Describe" + resource_name in self.operations:
+            # If the resource has Describe method, call Describe API and return its value
             get_args = self._generate_get_args(resource_name, operation_input_shape_name)
 
             # Format the method using the CREATE_METHOD_TEMPLATE
@@ -881,7 +882,9 @@ class ResourcesCodeGen:
             # Return the formatted method
             return formatted_method
         else:
-            decorator = "@class_method"
+            # If the resource does not have Describe method, return a instance with
+            # the input and output of Create method
+            decorator = "@classmethod"
             serialize_operation_input = SERIALIZE_INPUT_TEMPLATE.format(
                 operation_input_args=operation_input_args
             )
@@ -900,7 +903,7 @@ class ResourcesCodeGen:
                 docstring=docstring,
                 decorator=decorator,
                 method_name="create",
-                method_args=create_args,
+                method_args=add_indent("cls,\n", 4) + create_args,
                 return_type='Optional["resource_name"]',
                 serialize_operation_input=serialize_operation_input,
                 initialize_client=initialize_client,

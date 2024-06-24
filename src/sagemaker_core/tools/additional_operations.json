@@ -313,5 +313,39 @@
             "method_type": "object",
             "service_name": "sagemaker"
         }
+    },
+    "EdgeDeploymentPlan": {
+        "CreateEdgeDeploymentStage": {
+            "operation_name": "CreateEdgeDeploymentStage",
+            "resource_name": "EdgeDeploymentPlan",
+            "method_name": "create_stage",
+            "return_type": "None",
+            "method_type": "object",
+            "service_name": "sagemaker"
+        },
+        "DeleteEdgeDeploymentStage": {
+            "operation_name": "DeleteEdgeDeploymentStage",
+            "resource_name": "EdgeDeploymentPlan",
+            "method_name": "create_stage",
+            "return_type": "None",
+            "method_type": "object",
+            "service_name": "sagemaker"
+        },
+        "StartEdgeDeploymentStage": {
+            "operation_name": "StartEdgeDeploymentStage",
+            "resource_name": "EdgeDeploymentPlan",
+            "method_name": "create_stage",
+            "return_type": "None",
+            "method_type": "object",
+            "service_name": "sagemaker"
+        },
+        "StopEdgeDeploymentStage": {
+            "operation_name": "StopEdgeDeploymentStage",
+            "resource_name": "EdgeDeploymentPlan",
+            "method_name": "create_stage",
+            "return_type": "None",
+            "method_type": "object",
+            "service_name": "sagemaker"
+        }
     }
 }
