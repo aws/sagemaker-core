@@ -335,24 +335,20 @@ class ResourcesCodeGen:
         # Initialize an empty string for the resource class
         resource_class = ""
 
-        # Check if 'get' is in the class methods
-        if self._is_get_in_class_methods(class_methods):
+        # _get_class_attributes will return value only if the resource has get or get_all method
+        if class_attribute_info := self._get_class_attributes(resource_name, class_methods):
+            class_attributes, class_attributes_string, attributes_and_documentation = (
+                class_attribute_info
+            )
             # Start defining the class
             resource_class = f"class {resource_name}(Base):\n"
 
-            class_attributes = self._get_class_attributes(resource_name)
-            class_attributes_string = class_attributes[1]
-            get_operation = self.operations["Describe" + resource_name]
-            get_operation_shape = get_operation["output"]["shape"]
-            attributes_and_documentation = (
-                self.shapes_extractor.fetch_shape_members_and_doc_strings(get_operation_shape)
-            )
             class_documentation_string = f"Class representing resource {resource_name}\n\n"
             class_documentation_string += f"Attributes:\n"
             class_documentation_string += self._get_shape_attr_documentation_string(
                 attributes_and_documentation
             )
-            resource_attributes = list(class_attributes[0].keys())
+            resource_attributes = list(class_attributes.keys())
 
             defaults_decorator_method = ""
             # Check if 'create' is in the class methods
@@ -362,13 +358,10 @@ class ResourcesCodeGen:
                 ):
                     defaults_decorator_method = self.generate_defaults_decorator(
                         resource_name=resource_name,
-                        class_attributes=class_attributes[0],
+                        class_attributes=class_attributes,
                         config_schema_for_resource=config_schema_for_resource,
                     )
             needs_defaults_decorator = defaults_decorator_method != ""
-
-            # Generate the 'get' method
-            get_method = self.generate_get_method(resource_name)
 
             # Add the class attributes and methods to the class definition
             resource_class += add_indent(f'"""\n{class_documentation_string}\n"""\n', 4)
@@ -392,7 +385,12 @@ class ResourcesCodeGen:
             ):
                 resource_class += add_indent(create_method, 4)
 
-            resource_class += add_indent(get_method, 4)
+            if get_method := self._evaluate_method(
+                resource_name,
+                "get",
+                class_methods,
+            ):
+                resource_class += add_indent(get_method, 4)
 
             if refresh_method := self._evaluate_method(
                 resource_name, "refresh", object_methods, resource_attributes=resource_attributes
@@ -455,9 +453,9 @@ class ResourcesCodeGen:
                 resource_class += add_indent(list_method, 4)
 
         else:
-            # If there's no 'get' method, log a message
-            # TODO: Handle the resources without 'get' differently
-            log.warning(f"Resource {resource_name} does not have a GET method")
+            # If there's no 'get' or 'list' method, log a message
+            # TODO: Handle the resources without 'get' or 'list' differently
+            log.warning(f"Resource {resource_name} does not have a GET or LIST method")
 
         if resource_name in self.resource_methods:
             # TODO: use resource_methods for all methods
@@ -468,55 +466,91 @@ class ResourcesCodeGen:
         # Return the class definition
         return resource_class
 
-    def _get_class_attributes(self, resource_name: str) -> list:
+    def _get_class_attributes(self, resource_name: str, class_methods: list) -> tuple:
         """Get the class attributes for a resource.
 
         Args:
             resource_name (str): The name of the resource.
+            class_methods (list): The class methods of the resource. Now it can only get the class
+                attributes if the resource has get or get_all method.
 
         Returns:
-            tuple[dict, str]: The class attributes and the formatted class attributes string.
+            tuple:
+                class_attributes: The class attributes and the formatted class attributes string.
+                class_attributes_string: The code string of the class attributes
+                attributes_and_documentation: A dict of doc strings of the class attributes
         """
+        if "get" in class_methods:
+            # Get the operation and shape for the 'get' method
+            get_operation = self.operations["Describe" + resource_name]
+            get_operation_shape = get_operation["output"]["shape"]
 
-        # Get the operation and shape for the 'get' method
-        get_operation = self.operations["Describe" + resource_name]
-        get_operation_shape = get_operation["output"]["shape"]
+            # Use 'get' operation input as the required class attributes.
+            # These are the mimumum identifing attributes for a resource object (ie, required for refresh())
+            get_operation_input_shape = get_operation["input"]["shape"]
+            required_attributes = self.shapes[get_operation_input_shape].get("required", [])
 
-        # Use 'get' operation input as the required class attributes.
-        # These are the mimumum identifing attributes for a resource object (ie, required for refresh())
-        get_operation_input_shape = get_operation["input"]["shape"]
-        required_attributes = self.shapes[get_operation_input_shape].get("required", [])
+            # Generate the class attributes based on the shape
+            class_attributes, class_attributes_string = (
+                self.shapes_extractor.generate_data_shape_members_and_string_body(
+                    shape=get_operation_shape, required_override=tuple(required_attributes)
+                )
+            )
+            attributes_and_documentation = (
+                self.shapes_extractor.fetch_shape_members_and_doc_strings(get_operation_shape)
+            )
+            return class_attributes, class_attributes_string, attributes_and_documentation
+        elif "get_all" in class_methods:
+            # Get the operation and shape for the 'get_all' method
+            list_operation = self.operations["List" + resource_name + "s"]
+            list_operation_output_shape = list_operation["output"]["shape"]
+            list_operation_output_members = self.shapes[list_operation_output_shape]["members"]
 
+            # Use the object shape of 'get_all' operation output as the required class attributes.
+            filtered_list_operation_output_members = next(
+                {key: value}
+                for key, value in list_operation_output_members.items()
+                if key != "NextToken"
+            )
+
+        summaries_key = next(iter(filtered_list_operation_output_members))
+            summaries_shape_name = filtered_list_operation_output_members[summaries_key]["shape"]
+            summary_name = self.shapes[summaries_shape_name]["member"]["shape"]
+            required_attributes = self.shapes[summary_name].get("required", [])
         # Generate the class attributes based on the shape
-        class_attributes = self.shapes_extractor.generate_data_shape_members_and_string_body(
-            shape=get_operation_shape, required_override=tuple(required_attributes)
+        class_attributes, class_attributes_string = (
+                self.shapes_extractor.generate_data_shape_members_and_string_body(
+                    shape=summary_name, required_override=tuple(required_attributes)
+                )
+            )
+        attributes_and_documentation = (
+            self.shapes_extractor.fetch_shape_members_and_doc_strings(summary_name)
         )
 
-        class_attributes_list = list(class_attributes)
         # Some resources are configured in the service.json inconsistently.
         # These resources take in the main identifier in the create and get methods , but is not present in the describe response output
         # Hence for consistent behaviour of functions such as refresh and delete, the identifiers are hardcoded
         if resource_name == "ImageVersion":
-            class_attributes_list[0]["image_name"] = "str"
-            class_attributes_list[1] = "image_name: str\n" + class_attributes_list[1]
+            class_attributes["image_name"] = "str"
+            class_attributes_string = "image_name: str\n" + class_attributes_list[1]
         if resource_name == "Workteam":
-            class_attributes_list[0]["workteam_name"] = "str"
-            class_attributes_list[1] = "workteam_name: str\n" + class_attributes_list[1]
+            class_attributes["workteam_name"] = "str"
+            class_attributes_string = "workteam_name: str\n" + class_attributes_list[1]
         if resource_name == "Workforce":
-            class_attributes_list[0]["workforce_name"] = "str"
-            class_attributes_list[1] = "workforce_name: str\n" + class_attributes_list[1]
+            class_attributes["workforce_name"] = "str"
+            class_attributes_string = "workforce_name: str\n" + class_attributes_list[1]
         if resource_name == "SubscribedWorkteam":
-            class_attributes_list[0]["workteam_arn"] = "str"
-            class_attributes_list[1] = "workteam_arn: str\n" + class_attributes_list[1]
+            class_attributes["workteam_arn"] = "str"
+            cclass_attributes_string = "workteam_arn: str\n" + class_attributes_list[1]
 
         if resource_name == "HubContent":
-            class_attributes_list[0]["hub_name"] = "Optional[str] = Unassigned()"
-            class_attributes_list[1] = class_attributes_list[1].replace("hub_name: str", "")
-            class_attributes_list[1] = (
-                class_attributes_list[1] + "hub_name: Optional[str] = Unassigned()"
+            class_attributes["hub_name"] = "Optional[str] = Unassigned()"
+            class_attributes_string = class_attributes_list[1].replace("hub_name: str", "")
+            class_attributes_string = (
+                class_attributes_string + "hub_name: Optional[str] = Unassigned()"
             )
 
-        return class_attributes_list
+        return class_attributes, class_attributes_string, attributes_and_documentation
 
     def _get_shape_attr_documentation_string(
         self, attributes_and_documentation, exclude_resource_attrs=None
@@ -529,9 +563,9 @@ class ResourcesCodeGen:
                 continue
             else:
                 if documentation == None:
-                    documentation_string += f"{attribute_snake}:\n"
+                    documentation_string += f"{attribute_snake}: \n"
                 else:
-                    documentation_string += f"{attribute_snake}:{documentation}\n"
+                    documentation_string += f"{attribute_snake}: {documentation}\n"
         documentation_string = add_indent(documentation_string)
         return remove_html_tags(documentation_string)
 
@@ -1673,12 +1707,17 @@ class ResourcesCodeGen:
         summary_name = self.shapes[summaries_shape_name]["member"]["shape"]
         summary_members = self.shapes[summary_name]["members"].keys()
 
-        get_operation = self.operations["Describe" + resource_name]
-        get_operation_input_shape = get_operation["input"]["shape"]
-        get_operation_required_input = self.shapes[get_operation_input_shape].get("required", [])
+        if "Describe" + resource_name in self.operations:
+            get_operation = self.operations["Describe" + resource_name]
+            get_operation_input_shape = get_operation["input"]["shape"]
+            get_operation_required_input = self.shapes[get_operation_input_shape].get(
+                "required", []
+            )
+        else:
+            get_operation_required_input = []
 
         custom_key_mapping_str = ""
-        if all(member not in summary_members for member in get_operation_required_input):
+        if any(member not in summary_members for member in get_operation_required_input):
             if "MonitoringJobDefinitionSummary" == summary_name:
                 custom_key_mapping = {
                     "monitoring_job_definition_name": "job_definition_name",
