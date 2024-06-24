@@ -65,48 +65,48 @@ class ResourcesTest(unittest.TestCase):
                     report["Get"] = report["Get"] + 1
                     print_string = print_string + " Get"
 
-                if hasattr(cls, "get_all") and callable(cls.get_all):
-                    function_name = self._get_function_name_for_list(pascal_to_snake(name))
-                    get_function_name = f"describe_{pascal_to_snake(name)}"
-                    summary = self._convert_dict_keys_into_pascal_case(
-                        self._get_required_parameters_for_function(cls.get)
-                    )
-                    if (
-                        name == "DataQualityJobDefinition"
-                        or name == "ModelBiasJobDefinition"
-                        or name == "ModelQualityJobDefinition"
-                        or name == "ModelExplainabilityJobDefinition"
-                    ):
-                        custom_key_mapping = {
-                            "JobDefinitionName": "MonitoringJobDefinitionName",
-                            "JobDefinitionArn": "MonitoringJobDefinitionArn",
-                        }
-                        summary = {custom_key_mapping.get(k, k): v for k, v in summary.items()}
-                    summary_response = {
-                        f"{name}Summaries": [summary],
-                        "JobDefinitionSummaries": [summary],
-                        f"{name}SummaryList": [summary],
-                        f"{name}s": [summary],
-                    }
-                    with patch.object(
-                        client, function_name, return_value=summary_response
-                    ) as mock_method:
-                        mock_transform.return_value = (
-                            self.MOCK_RESOURCES_RESPONSE_BY_RESOURCE_NAME.get(name)
+                    if hasattr(cls, "get_all") and callable(cls.get_all):
+                        function_name = self._get_function_name_for_list(pascal_to_snake(name))
+                        get_function_name = f"describe_{pascal_to_snake(name)}"
+                        summary = self._convert_dict_keys_into_pascal_case(
+                            self._get_required_parameters_for_function(cls.get)
                         )
+                        if (
+                            name == "DataQualityJobDefinition"
+                            or name == "ModelBiasJobDefinition"
+                            or name == "ModelQualityJobDefinition"
+                            or name == "ModelExplainabilityJobDefinition"
+                        ):
+                            custom_key_mapping = {
+                                "JobDefinitionName": "MonitoringJobDefinitionName",
+                                "JobDefinitionArn": "MonitoringJobDefinitionArn",
+                            }
+                            summary = {custom_key_mapping.get(k, k): v for k, v in summary.items()}
+                        summary_response = {
+                            f"{name}Summaries": [summary],
+                            "JobDefinitionSummaries": [summary],
+                            f"{name}SummaryList": [summary],
+                            f"{name}s": [summary],
+                        }
                         with patch.object(
-                            client, get_function_name, return_value={}
-                        ) as mock_get_method:
-                            input_args = self._get_required_parameters_for_function(cls.get_all)
-                            pascal_input_args = self._convert_dict_keys_into_pascal_case(input_args)
-                            cls.get_all(**input_args).__next__()
-                            mock_method.assert_called_once()
-                            mock_get_method.assert_called_once()
-                            self.assertDictContainsSubset(
-                                pascal_input_args, mock_method.call_args[1]
+                            client, function_name, return_value=summary_response
+                        ) as mock_method:
+                            mock_transform.return_value = (
+                                self.MOCK_RESOURCES_RESPONSE_BY_RESOURCE_NAME.get(name)
                             )
-                    report["Get_all"] = report["Get_all"] + 1
-                    print_string = print_string + " Get_All"
+                            with patch.object(
+                                client, get_function_name, return_value={}
+                            ) as mock_get_method:
+                                input_args = self._get_required_parameters_for_function(cls.get_all)
+                                pascal_input_args = self._convert_dict_keys_into_pascal_case(input_args)
+                                cls.get_all(**input_args).__next__()
+                                mock_method.assert_called_once()
+                                mock_get_method.assert_called_once()
+                                self.assertDictContainsSubset(
+                                    pascal_input_args, mock_method.call_args[1]
+                                )
+                        report["Get_all"] = report["Get_all"] + 1
+                        print_string = print_string + " Get_All"
 
                 if hasattr(cls, "refresh") and callable(cls.refresh):
                     function_name = f"describe_{pascal_to_snake(name)}"
@@ -123,76 +123,76 @@ class ResourcesTest(unittest.TestCase):
                     report["Refresh"] = report["Refresh"] + 1
                     print_string = print_string + " Refresh"
 
-                if hasattr(cls, "delete") and callable(cls.delete):
-                    function_name = f"delete_{pascal_to_snake(name)}"
-                    mock_transform.return_value = self.MOCK_RESOURCES_RESPONSE_BY_RESOURCE_NAME.get(
-                        name
-                    )
-                    with patch.object(client, function_name, return_value={}) as mock_method:
-                        class_instance = cls(**self._get_required_parameters_for_function(cls.get))
-                        input_args = self._get_required_parameters_for_function(cls.delete)
-                        pascal_input_args = self._convert_dict_keys_into_pascal_case(input_args)
-                        class_instance.delete(**input_args)
-                        mock_method.assert_called_once()
-                        self.assertDictContainsSubset(pascal_input_args, mock_method.call_args[1])
-                    report["Delete"] = report["Delete"] + 1
-                    print_string = print_string + " Delete"
-
-                if hasattr(cls, "create") and callable(cls.create):
-                    get_function_name = f"describe_{pascal_to_snake(name)}"
-                    create_function_name = f"create_{pascal_to_snake(name)}"
-                    input_args = self._get_required_parameters_for_function(cls.create)
-                    pascal_input_args = self._convert_dict_keys_into_pascal_case(input_args)
-                    with patch.object(
-                        client,
-                        create_function_name,
-                        return_value=self._convert_dict_keys_into_pascal_case(
-                            self._get_required_parameters_for_function(cls.get)
-                        ),
-                    ) as mock_create_method:
-                        with patch.object(
-                            client, get_function_name, return_value={}
-                        ) as mock_get_method:
-                            cls.create(**input_args)
-                            mock_create_method.assert_called_once()
-                            mock_get_method.assert_called_once()
-                            self.assertDictContainsSubset(
-                                Base._serialize(
-                                    Base.populate_chained_attributes(
-                                        operation_input_args=pascal_input_args, resource_name=name
-                                    )
-                                ),
-                                mock_create_method.call_args[1],
-                            )
-                    report["Create"] = report["Create"] + 1
-                    print_string = print_string + " Create"
-
-                if hasattr(cls, "update") and callable(cls.update):
-                    get_function_name = f"describe_{pascal_to_snake(name)}"
-                    update_function_name = f"update_{pascal_to_snake(name)}"
-                    with patch.object(
-                        client,
-                        update_function_name,
-                        return_value=self._convert_dict_keys_into_pascal_case(
-                            self._get_required_parameters_for_function(cls.get)
-                        ),
-                    ) as mock_update_method:
-                        with patch.object(
-                            client, get_function_name, return_value={}
-                        ) as mock_get_method:
-                            input_args = self._get_required_parameters_for_function(cls.update)
+                    if hasattr(cls, "delete") and callable(cls.delete):
+                        function_name = f"delete_{pascal_to_snake(name)}"
+                        mock_transform.return_value = self.MOCK_RESOURCES_RESPONSE_BY_RESOURCE_NAME.get(
+                            name
+                        )
+                        with patch.object(client, function_name, return_value={}) as mock_method:
+                            class_instance = cls(**self._get_required_parameters_for_function(cls.get))
+                            input_args = self._get_required_parameters_for_function(cls.delete)
                             pascal_input_args = self._convert_dict_keys_into_pascal_case(input_args)
-                            class_instance = cls(
-                                **self._get_required_parameters_for_function(cls.get)
-                            )
-                            class_instance.update(**input_args)
-                            mock_update_method.assert_called_once()
-                            mock_get_method.assert_called_once()
-                            self.assertDictContainsSubset(
-                                Base._serialize(pascal_input_args), mock_update_method.call_args[1]
-                            )
-                    report["Update"] = report["Update"] + 1
-                    print_string = print_string + " Update"
+                            class_instance.delete(**input_args)
+                            mock_method.assert_called_once()
+                            self.assertDictContainsSubset(pascal_input_args, mock_method.call_args[1])
+                        report["Delete"] = report["Delete"] + 1
+                        print_string = print_string + " Delete"
+
+                    if hasattr(cls, "create") and callable(cls.create):
+                        get_function_name = f"describe_{pascal_to_snake(name)}"
+                        create_function_name = f"create_{pascal_to_snake(name)}"
+                        input_args = self._get_required_parameters_for_function(cls.create)
+                        pascal_input_args = self._convert_dict_keys_into_pascal_case(input_args)
+                        with patch.object(
+                            client,
+                            create_function_name,
+                            return_value=self._convert_dict_keys_into_pascal_case(
+                                self._get_required_parameters_for_function(cls.get)
+                            ),
+                        ) as mock_create_method:
+                            with patch.object(
+                                client, get_function_name, return_value={}
+                            ) as mock_get_method:
+                                cls.create(**input_args)
+                                mock_create_method.assert_called_once()
+                                mock_get_method.assert_called_once()
+                                self.assertDictContainsSubset(
+                                    Base._serialize(
+                                        Base.populate_chained_attributes(
+                                            operation_input_args=pascal_input_args, resource_name=name
+                                        )
+                                    ),
+                                    mock_create_method.call_args[1],
+                                )
+                        report["Create"] = report["Create"] + 1
+                        print_string = print_string + " Create"
+
+                    if hasattr(cls, "update") and callable(cls.update):
+                        get_function_name = f"describe_{pascal_to_snake(name)}"
+                        update_function_name = f"update_{pascal_to_snake(name)}"
+                        with patch.object(
+                            client,
+                            update_function_name,
+                            return_value=self._convert_dict_keys_into_pascal_case(
+                                self._get_required_parameters_for_function(cls.get)
+                            ),
+                        ) as mock_update_method:
+                            with patch.object(
+                                client, get_function_name, return_value={}
+                            ) as mock_get_method:
+                                input_args = self._get_required_parameters_for_function(cls.update)
+                                pascal_input_args = self._convert_dict_keys_into_pascal_case(input_args)
+                                class_instance = cls(
+                                    **self._get_required_parameters_for_function(cls.get)
+                                )
+                                class_instance.update(**input_args)
+                                mock_update_method.assert_called_once()
+                                mock_get_method.assert_called_once()
+                                self.assertDictContainsSubset(
+                                    Base._serialize(pascal_input_args), mock_update_method.call_args[1]
+                                )
+                        report["Update"] = report["Update"] + 1
+                        print_string = print_string + " Update"
                 print(print_string)
 
         total_tests = sum(report.values())

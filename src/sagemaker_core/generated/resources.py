@@ -16,13 +16,28 @@ import logging
 import datetime
 import time
 import os
+import functools
 from pprint import pprint
 from pydantic import validate_call
 from typing import Dict, List, Literal, Optional, Union
 from boto3.session import Session
 from sagemaker_core.code_injection.codec import transform
-from sagemaker_core.generated.utils import SageMakerClient, SageMakerRuntimeClient, ResourceIterator, Unassigned, snake_to_pascal, pascal_to_snake, is_not_primitive, is_not_str_dict
-from sagemaker_core.generated.intelligent_defaults_helper import load_default_configs_for_resource_name, get_config_value
+from sagemaker_core.generated.utils import (
+    SageMakerClient,
+    SageMakerRuntimeClient,
+    ResourceIterator,
+    Unassigned,
+    snake_to_pascal,
+    pascal_to_snake,
+    is_not_primitive,
+    is_not_str_dict,
+    is_snake_case,
+    is_primitive_list,
+)
+from sagemaker_core.generated.intelligent_defaults_helper import (
+    load_default_configs_for_resource_name,
+    get_config_value,
+)
 from sagemaker_core.generated.shapes import *
 from sagemaker_core.generated.exceptions import *
 
@@ -48,7 +63,7 @@ class Base(BaseModel):
             return cls._serialize_list(value)
         elif isinstance(value, Dict):
             return cls._serialize_dict(value)
-        elif hasattr(value, 'serialize'):
+        elif hasattr(value, "serialize"):
             return value.serialize()
         else:
             return value
@@ -66,26 +81,32 @@ class Base(BaseModel):
         serialized_dict = {}
         for k, v in value.items():
             if serialize_result := cls._serialize(v):
-                serialized_dict.update({k: serialize_result})
+                key = snake_to_pascal(k) if is_snake_case(k) else k
+                serialized_dict.update({key[0].upper() + key[1:]: serialize_result})
         return serialized_dict
 
     @staticmethod
-    def get_updated_kwargs_with_configured_attributes(config_schema_for_resource: dict, resource_name: str, **kwargs):
+    def get_updated_kwargs_with_configured_attributes(
+        config_schema_for_resource: dict, resource_name: str, **kwargs
+    ):
         try:
             for configurable_attribute in config_schema_for_resource:
                 if kwargs.get(configurable_attribute) is None:
-                    resource_defaults = load_default_configs_for_resource_name(resource_name=resource_name)
-                    global_defaults = load_default_configs_for_resource_name(resource_name="GlobalDefaults")
+                    resource_defaults = load_default_configs_for_resource_name(
+                        resource_name=resource_name
+                    )
+                    global_defaults = load_default_configs_for_resource_name(
+                        resource_name="GlobalDefaults"
+                    )
                     formatted_attribute = pascal_to_snake(configurable_attribute)
-                    if config_value := get_config_value(formatted_attribute,
-                     resource_defaults,
-                     global_defaults):
+                    if config_value := get_config_value(
+                        formatted_attribute, resource_defaults, global_defaults
+                    ):
                         kwargs[formatted_attribute] = config_value
         except BaseException as e:
             logger.info("Could not load Default Configs. Continuing.", exc_info=True)
             # Continue with existing kwargs if no default configs found
         return kwargs
-
 
     @staticmethod
     def populate_chained_attributes(resource_name: str, operation_input_args: dict) -> dict:
@@ -95,22 +116,30 @@ class Base(BaseModel):
             arg_snake = pascal_to_snake(arg)
             if value == Unassigned() or value == None or not value:
                 continue
-            if arg_snake.endswith('name') and arg_snake[
-                                              :-len('_name')] != resource_name_in_snake_case and arg_snake != 'name':
+            if (
+                arg_snake.endswith("name")
+                and arg_snake[: -len("_name")] != resource_name_in_snake_case
+                and arg_snake != "name"
+            ):
                 if value and value != Unassigned() and type(value) != str:
                     updated_args[arg] = value.get_name()
-            elif isinstance(value, list):
+            elif is_primitive_list(value):
+                continue
+            elif isinstance(value, list) and value != []:
                 updated_args[arg] = [
-                    Base.populate_chained_attributes(resource_name=type(list_item).__name__,
-                                                     operation_input_args={
-                                                         snake_to_pascal(k): v
-                                                         for k, v in Base._get_items(list_item)
-                                                     })
+                    Base.populate_chained_attributes(
+                        resource_name=type(list_item).__name__,
+                        operation_input_args={
+                            snake_to_pascal(k): v for k, v in Base._get_items(list_item)
+                        },
+                    )
                     for list_item in value
                 ]
             elif is_not_primitive(value) and is_not_str_dict(value):
                 obj_dict = {snake_to_pascal(k): v for k, v in Base._get_items(value)}
-                updated_args[arg] = Base.populate_chained_attributes(resource_name=type(value).__name__, operation_input_args=obj_dict)
+                updated_args[arg] = Base.populate_chained_attributes(
+                    resource_name=type(value).__name__, operation_input_args=obj_dict
+                )
         return updated_args
 
     @staticmethod
@@ -135,9 +164,10 @@ class Action(Base):
         last_modified_time: When the action was last modified.
         last_modified_by:
         metadata_properties:
-        lineage_group_arn:The Amazon Resource Name (ARN) of the lineage group.
+        lineage_group_arn: The Amazon Resource Name (ARN) of the lineage group.
 
     """
+
     action_name: str
     action_arn: Optional[str] = Unassigned()
     source: Optional[ActionSource] = Unassigned()
@@ -154,10 +184,19 @@ class Action(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "action_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'action_name':
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object action")
+        return None
 
     @classmethod
     def create(
@@ -209,20 +248,24 @@ class Action(Base):
         """
 
         logger.debug("Creating action resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'ActionName': action_name,
-            'Source': source,
-            'ActionType': action_type,
-            'Description': description,
-            'Status': status,
-            'Properties': properties,
-            'MetadataProperties': metadata_properties,
-            'Tags': tags,
+            "ActionName": action_name,
+            "Source": source,
+            "ActionType": action_type,
+            "Description": description,
+            "Status": status,
+            "Properties": properties,
+            "MetadataProperties": metadata_properties,
+            "Tags": tags,
         }
 
-        operation_input_args = Base.populate_chained_attributes(resource_name='Action', operation_input_args=operation_input_args)
+        operation_input_args = Base.populate_chained_attributes(
+            resource_name="Action", operation_input_args=operation_input_args
+        )
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -268,19 +311,23 @@ class Action(Base):
         """
 
         operation_input_args = {
-            'ActionName': action_name,
+            "ActionName": action_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
         response = client.describe_action(**operation_input_args)
 
         pprint(response)
 
         # deserialize the response
-        transformed_response = transform(response, 'DescribeActionResponse')
+        transformed_response = transform(response, "DescribeActionResponse")
         action = cls(**transformed_response)
         return action
 
-    def refresh(self) -> Optional["Action"]:
+    def refresh(
+        self,
+    ) -> Optional["Action"]:
         """
         Refresh a Action resource
 
@@ -302,13 +349,13 @@ class Action(Base):
         """
 
         operation_input_args = {
-            'ActionName': self.action_name,
+            "ActionName": self.action_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_action(**operation_input_args)
 
         # deserialize response and update self
-        transform(response, 'DescribeActionResponse', self)
+        transform(response, "DescribeActionResponse", self)
         return self
 
     def update(
@@ -322,7 +369,7 @@ class Action(Base):
         Update a Action resource
 
         Parameters:
-            properties_to_remove:A list of properties to remove.
+            properties_to_remove: A list of properties to remove.
 
         Returns:
             The Action resource.
@@ -343,14 +390,14 @@ class Action(Base):
         """
 
         logger.debug("Updating action resource.")
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
-            'ActionName': self.action_name,
-            'Description': description,
-            'Status': status,
-            'Properties': properties,
-            'PropertiesToRemove': properties_to_remove,
+            "ActionName": self.action_name,
+            "Description": description,
+            "Status": status,
+            "Properties": properties,
+            "PropertiesToRemove": properties_to_remove,
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -364,7 +411,9 @@ class Action(Base):
 
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a Action resource
 
@@ -383,12 +432,14 @@ class Action(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
-            'ActionName': self.action_name,
+            "ActionName": self.action_name,
         }
         client.delete_action(**operation_input_args)
+
+        logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
     @classmethod
     def get_all(
@@ -434,26 +485,32 @@ class Action(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'SourceUri': source_uri,
-            'ActionType': action_type,
-            'CreatedAfter': created_after,
-            'CreatedBefore': created_before,
-            'SortBy': sort_by,
-            'SortOrder': sort_order,
+            "SourceUri": source_uri,
+            "ActionType": action_type,
+            "CreatedAfter": created_after,
+            "CreatedBefore": created_before,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
         }
 
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
 
         return ResourceIterator(
             client=client,
-            list_method='list_actions',
-            summaries_key='ActionSummaries',
-            summary_name='ActionSummary',
+            list_method="list_actions",
+            summaries_key="ActionSummaries",
+            summary_name="ActionSummary",
             resource_cls=Action,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
 
 
@@ -462,19 +519,20 @@ class Algorithm(Base):
     Class representing resource Algorithm
 
     Attributes:
-        algorithm_name:The name of the algorithm being described.
-        algorithm_arn:The Amazon Resource Name (ARN) of the algorithm.
-        creation_time:A timestamp specifying when the algorithm was created.
-        training_specification:Details about training jobs run by this algorithm.
-        algorithm_status:The current status of the algorithm.
-        algorithm_status_details:Details about the current status of the algorithm.
-        algorithm_description:A brief summary about the algorithm.
-        inference_specification:Details about inference jobs that the algorithm runs.
-        validation_specification:Details about configurations for one or more training jobs that SageMaker runs to test the algorithm.
-        product_id:The product identifier of the algorithm.
-        certify_for_marketplace:Whether the algorithm is certified to be listed in Amazon Web Services Marketplace.
+        algorithm_name: The name of the algorithm being described.
+        algorithm_arn: The Amazon Resource Name (ARN) of the algorithm.
+        creation_time: A timestamp specifying when the algorithm was created.
+        training_specification: Details about training jobs run by this algorithm.
+        algorithm_status: The current status of the algorithm.
+        algorithm_status_details: Details about the current status of the algorithm.
+        algorithm_description: A brief summary about the algorithm.
+        inference_specification: Details about inference jobs that the algorithm runs.
+        validation_specification: Details about configurations for one or more training jobs that SageMaker runs to test the algorithm.
+        product_id: The product identifier of the algorithm.
+        certify_for_marketplace: Whether the algorithm is certified to be listed in Amazon Web Services Marketplace.
 
     """
+
     algorithm_name: str
     algorithm_arn: Optional[str] = Unassigned()
     algorithm_description: Optional[str] = Unassigned()
@@ -489,33 +547,39 @@ class Algorithm(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'algorithm_name':
-                return value
-        raise Exception("Name attribute not found for object")
+        resource_name = "algorithm_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
 
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
+        for attribute, value in attributes.items():
+            if attribute == "name" or attribute in attribute_name_candidates:
+                return value
+        logger.error("Name attribute not found for object algorithm")
+        return None
 
     def populate_inputs_decorator(create_func):
+        @functools.wraps(create_func)
         def wrapper(*args, **kwargs):
-            config_schema_for_resource = \
-        {
-          "training_specification": {
-            "additional_s3_data_source": {
-              "s3_data_type": {
-                "type": "string"
-              },
-              "s3_uri": {
-                "type": "string"
-              }
+            config_schema_for_resource = {
+                "training_specification": {
+                    "additional_s3_data_source": {
+                        "s3_data_type": {"type": "string"},
+                        "s3_uri": {"type": "string"},
+                    }
+                },
+                "validation_specification": {"validation_role": {"type": "string"}},
             }
-          },
-          "validation_specification": {
-            "validation_role": {
-              "type": "string"
-            }
-          }
-        }
-            return create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "Algorithm", **kwargs))
+            return create_func(
+                *args,
+                **Base.get_updated_kwargs_with_configured_attributes(
+                    config_schema_for_resource, "Algorithm", **kwargs
+                ),
+            )
+
         return wrapper
 
     @classmethod
@@ -536,13 +600,13 @@ class Algorithm(Base):
         Create a Algorithm resource
 
         Parameters:
-            algorithm_name:The name of the algorithm.
-            training_specification:Specifies details about training jobs run by this algorithm, including the following:   The Amazon ECR path of the container and the version digest of the algorithm.   The hyperparameters that the algorithm supports.   The instance types that the algorithm supports for training.   Whether the algorithm supports distributed training.   The metrics that the algorithm emits to Amazon CloudWatch.   Which metrics that the algorithm emits can be used as the objective metric for hyperparameter tuning jobs.   The input channels that the algorithm supports for training data. For example, an algorithm might support train, validation, and test channels.
-            algorithm_description:A description of the algorithm.
-            inference_specification:Specifies details about inference jobs that the algorithm runs, including the following:   The Amazon ECR paths of containers that contain the inference code and model artifacts.   The instance types that the algorithm supports for transform jobs and real-time endpoints used for inference.   The input and output content formats that the algorithm supports for inference.
-            validation_specification:Specifies configurations for one or more training jobs and that SageMaker runs to test the algorithm's training code and, optionally, one or more batch transform jobs that SageMaker runs to test the algorithm's inference code.
-            certify_for_marketplace:Whether to certify the algorithm so that it can be listed in Amazon Web Services Marketplace.
-            tags:An array of key-value pairs. You can use tags to categorize your Amazon Web Services resources in different ways, for example, by purpose, owner, or environment. For more information, see Tagging Amazon Web Services Resources.
+            algorithm_name: The name of the algorithm.
+            training_specification: Specifies details about training jobs run by this algorithm, including the following:   The Amazon ECR path of the container and the version digest of the algorithm.   The hyperparameters that the algorithm supports.   The instance types that the algorithm supports for training.   Whether the algorithm supports distributed training.   The metrics that the algorithm emits to Amazon CloudWatch.   Which metrics that the algorithm emits can be used as the objective metric for hyperparameter tuning jobs.   The input channels that the algorithm supports for training data. For example, an algorithm might support train, validation, and test channels.
+            algorithm_description: A description of the algorithm.
+            inference_specification: Specifies details about inference jobs that the algorithm runs, including the following:   The Amazon ECR paths of containers that contain the inference code and model artifacts.   The instance types that the algorithm supports for transform jobs and real-time endpoints used for inference.   The input and output content formats that the algorithm supports for inference.
+            validation_specification: Specifies configurations for one or more training jobs and that SageMaker runs to test the algorithm's training code and, optionally, one or more batch transform jobs that SageMaker runs to test the algorithm's inference code.
+            certify_for_marketplace: Whether to certify the algorithm so that it can be listed in Amazon Web Services Marketplace.
+            tags: An array of key-value pairs. You can use tags to categorize your Amazon Web Services resources in different ways, for example, by purpose, owner, or environment. For more information, see Tagging Amazon Web Services Resources.
             session: Boto3 session.
             region: Region name.
 
@@ -566,19 +630,23 @@ class Algorithm(Base):
         """
 
         logger.debug("Creating algorithm resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'AlgorithmName': algorithm_name,
-            'AlgorithmDescription': algorithm_description,
-            'TrainingSpecification': training_specification,
-            'InferenceSpecification': inference_specification,
-            'ValidationSpecification': validation_specification,
-            'CertifyForMarketplace': certify_for_marketplace,
-            'Tags': tags,
+            "AlgorithmName": algorithm_name,
+            "AlgorithmDescription": algorithm_description,
+            "TrainingSpecification": training_specification,
+            "InferenceSpecification": inference_specification,
+            "ValidationSpecification": validation_specification,
+            "CertifyForMarketplace": certify_for_marketplace,
+            "Tags": tags,
         }
 
-        operation_input_args = Base.populate_chained_attributes(resource_name='Algorithm', operation_input_args=operation_input_args)
+        operation_input_args = Base.populate_chained_attributes(
+            resource_name="Algorithm", operation_input_args=operation_input_args
+        )
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -623,19 +691,23 @@ class Algorithm(Base):
         """
 
         operation_input_args = {
-            'AlgorithmName': algorithm_name,
+            "AlgorithmName": algorithm_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
         response = client.describe_algorithm(**operation_input_args)
 
         pprint(response)
 
         # deserialize the response
-        transformed_response = transform(response, 'DescribeAlgorithmOutput')
+        transformed_response = transform(response, "DescribeAlgorithmOutput")
         algorithm = cls(**transformed_response)
         return algorithm
 
-    def refresh(self) -> Optional["Algorithm"]:
+    def refresh(
+        self,
+    ) -> Optional["Algorithm"]:
         """
         Refresh a Algorithm resource
 
@@ -656,16 +728,18 @@ class Algorithm(Base):
         """
 
         operation_input_args = {
-            'AlgorithmName': self.algorithm_name,
+            "AlgorithmName": self.algorithm_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_algorithm(**operation_input_args)
 
         # deserialize response and update self
-        transform(response, 'DescribeAlgorithmOutput', self)
+        transform(response, "DescribeAlgorithmOutput", self)
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a Algorithm resource
 
@@ -684,19 +758,21 @@ class Algorithm(Base):
             ConflictException: There was a conflict when you attempted to modify a SageMaker entity such as an Experiment or Artifact.
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
-            'AlgorithmName': self.algorithm_name,
+            "AlgorithmName": self.algorithm_name,
         }
         client.delete_algorithm(**operation_input_args)
 
+        logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+
     def wait_for_status(
         self,
-        status: Literal['Pending', 'InProgress', 'Completed', 'Failed', 'Deleting'],
+        status: Literal["Pending", "InProgress", "Completed", "Failed", "Deleting"],
         poll: int = 5,
-        timeout: Optional[int] = None
-    ) -> Optional["Algorithm"]:
+        timeout: Optional[int] = None,
+    ):
         """
         Wait for a Algorithm resource.
 
@@ -721,10 +797,13 @@ class Algorithm(Base):
             current_status = self.algorithm_status
 
             if status == current_status:
-                return self
+                print(f"\nFinal Resource Status: {current_status}")
+                return
 
             if "failed" in current_status.lower():
-                raise FailedStatusError(resource_type="Algorithm", status=current_status, reason='(Unknown)')
+                raise FailedStatusError(
+                    resource_type="Algorithm", status=current_status, reason="(Unknown)"
+                )
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="Algorithm", status=current_status)
@@ -772,25 +851,31 @@ class Algorithm(Base):
                 ```
         """
 
-        client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'CreationTimeAfter': creation_time_after,
-            'CreationTimeBefore': creation_time_before,
-            'NameContains': name_contains,
-            'SortBy': sort_by,
-            'SortOrder': sort_order,
+            "CreationTimeAfter": creation_time_after,
+            "CreationTimeBefore": creation_time_before,
+            "NameContains": name_contains,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
         }
 
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
 
         return ResourceIterator(
             client=client,
-            list_method='list_algorithms',
-            summaries_key='AlgorithmSummaryList',
-            summary_name='AlgorithmSummary',
+            list_method="list_algorithms",
+            summaries_key="AlgorithmSummaryList",
+            summary_name="AlgorithmSummary",
             resource_cls=Algorithm,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
 
 
@@ -799,20 +884,21 @@ class App(Base):
     Class representing resource App
 
     Attributes:
-        app_arn:The Amazon Resource Name (ARN) of the app.
-        app_type:The type of app.
-        app_name:The name of the app.
-        domain_id:The domain ID.
-        user_profile_name:The user profile name.
-        space_name:The name of the space. If this value is not set, then UserProfileName must be set.
-        status:The status.
-        last_health_check_timestamp:The timestamp of the last health check.
-        last_user_activity_timestamp:The timestamp of the last user's activity. LastUserActivityTimestamp is also updated when SageMaker performs health checks without user activity. As a result, this value is set to the same value as LastHealthCheckTimestamp.
-        creation_time:The creation time of the application.  After an application has been shut down for 24 hours, SageMaker deletes all metadata for the application. To be considered an update and retain application metadata, applications must be restarted within 24 hours after the previous application has been shut down. After this time window, creation of an application is considered a new application rather than an update of the previous application.
-        failure_reason:The failure reason.
-        resource_spec:The instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance.
+        app_arn: The Amazon Resource Name (ARN) of the app.
+        app_type: The type of app.
+        app_name: The name of the app.
+        domain_id: The domain ID.
+        user_profile_name: The user profile name.
+        space_name: The name of the space. If this value is not set, then UserProfileName must be set.
+        status: The status.
+        last_health_check_timestamp: The timestamp of the last health check.
+        last_user_activity_timestamp: The timestamp of the last user's activity. LastUserActivityTimestamp is also updated when SageMaker performs health checks without user activity. As a result, this value is set to the same value as LastHealthCheckTimestamp.
+        creation_time: The creation time of the application.  After an application has been shut down for 24 hours, SageMaker deletes all metadata for the application. To be considered an update and retain application metadata, applications must be restarted within 24 hours after the previous application has been shut down. After this time window, creation of an application is considered a new application rather than an update of the previous application.
+        failure_reason: The failure reason.
+        resource_spec: The instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance.
 
     """
+
     domain_id: str
     app_type: str
     app_name: str
@@ -828,10 +914,19 @@ class App(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "app_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'app_name':
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object app")
+        return None
 
     @classmethod
     def create(
@@ -850,13 +945,13 @@ class App(Base):
         Create a App resource
 
         Parameters:
-            domain_id:The domain ID.
-            app_type:The type of app.
-            app_name:The name of the app.
-            user_profile_name:The user profile name. If this value is not set, then SpaceName must be set.
-            space_name:The name of the space. If this value is not set, then UserProfileName must be set.
-            tags:Each tag consists of a key and an optional value. Tag keys must be unique per resource.
-            resource_spec:The instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance.  The value of InstanceType passed as part of the ResourceSpec in the CreateApp call overrides the value passed as part of the ResourceSpec configured for the user profile or the domain. If InstanceType is not specified in any of those three ResourceSpec values for a KernelGateway app, the CreateApp call fails with a request validation error.
+            domain_id: The domain ID.
+            app_type: The type of app.
+            app_name: The name of the app.
+            user_profile_name: The user profile name. If this value is not set, then SpaceName must be set.
+            space_name: The name of the space. If this value is not set, then UserProfileName must be set.
+            tags: Each tag consists of a key and an optional value. Tag keys must be unique per resource.
+            resource_spec: The instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance.  The value of InstanceType passed as part of the ResourceSpec in the CreateApp call overrides the value passed as part of the ResourceSpec configured for the user profile or the domain. If InstanceType is not specified in any of those three ResourceSpec values for a KernelGateway app, the CreateApp call fails with a request validation error.
             session: Boto3 session.
             region: Region name.
 
@@ -882,19 +977,23 @@ class App(Base):
         """
 
         logger.debug("Creating app resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'DomainId': domain_id,
-            'UserProfileName': user_profile_name,
-            'SpaceName': space_name,
-            'AppType': app_type,
-            'AppName': app_name,
-            'Tags': tags,
-            'ResourceSpec': resource_spec,
+            "DomainId": domain_id,
+            "UserProfileName": user_profile_name,
+            "SpaceName": space_name,
+            "AppType": app_type,
+            "AppName": app_name,
+            "Tags": tags,
+            "ResourceSpec": resource_spec,
         }
 
-        operation_input_args = Base.populate_chained_attributes(resource_name='App', operation_input_args=operation_input_args)
+        operation_input_args = Base.populate_chained_attributes(
+            resource_name="App", operation_input_args=operation_input_args
+        )
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -905,7 +1004,13 @@ class App(Base):
         response = client.create_app(**operation_input_args)
         logger.debug(f"Response: {response}")
 
-        return cls.get(domain_id=domain_id, app_type=app_type, app_name=app_name, session=session, region=region)
+        return cls.get(
+            domain_id=domain_id,
+            app_type=app_type,
+            app_name=app_name,
+            session=session,
+            region=region,
+        )
 
     @classmethod
     def get(
@@ -948,23 +1053,27 @@ class App(Base):
         """
 
         operation_input_args = {
-            'DomainId': domain_id,
-            'UserProfileName': user_profile_name,
-            'SpaceName': space_name,
-            'AppType': app_type,
-            'AppName': app_name,
+            "DomainId": domain_id,
+            "UserProfileName": user_profile_name,
+            "SpaceName": space_name,
+            "AppType": app_type,
+            "AppName": app_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
         response = client.describe_app(**operation_input_args)
 
         pprint(response)
 
         # deserialize the response
-        transformed_response = transform(response, 'DescribeAppResponse')
+        transformed_response = transform(response, "DescribeAppResponse")
         app = cls(**transformed_response)
         return app
 
-    def refresh(self) -> Optional["App"]:
+    def refresh(
+        self,
+    ) -> Optional["App"]:
         """
         Refresh a App resource
 
@@ -986,20 +1095,22 @@ class App(Base):
         """
 
         operation_input_args = {
-            'DomainId': self.domain_id,
-            'UserProfileName': self.user_profile_name,
-            'SpaceName': self.space_name,
-            'AppType': self.app_type,
-            'AppName': self.app_name,
+            "DomainId": self.domain_id,
+            "UserProfileName": self.user_profile_name,
+            "SpaceName": self.space_name,
+            "AppType": self.app_type,
+            "AppName": self.app_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_app(**operation_input_args)
 
         # deserialize response and update self
-        transform(response, 'DescribeAppResponse', self)
+        transform(response, "DescribeAppResponse", self)
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a App resource
 
@@ -1019,23 +1130,25 @@ class App(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
-            'DomainId': self.domain_id,
-            'UserProfileName': self.user_profile_name,
-            'SpaceName': self.space_name,
-            'AppType': self.app_type,
-            'AppName': self.app_name,
+            "DomainId": self.domain_id,
+            "UserProfileName": self.user_profile_name,
+            "SpaceName": self.space_name,
+            "AppType": self.app_type,
+            "AppName": self.app_name,
         }
         client.delete_app(**operation_input_args)
 
+        logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+
     def wait_for_status(
         self,
-        status: Literal['Deleted', 'Deleting', 'Failed', 'InService', 'Pending'],
+        status: Literal["Deleted", "Deleting", "Failed", "InService", "Pending"],
         poll: int = 5,
-        timeout: Optional[int] = None
-    ) -> Optional["App"]:
+        timeout: Optional[int] = None,
+    ):
         """
         Wait for a App resource.
 
@@ -1060,10 +1173,13 @@ class App(Base):
             current_status = self.status
 
             if status == current_status:
-                return self
+                print(f"\nFinal Resource Status: {current_status}")
+                return
 
             if "failed" in current_status.lower():
-                raise FailedStatusError(resource_type="App", status=current_status, reason=self.failure_reason)
+                raise FailedStatusError(
+                    resource_type="App", status=current_status, reason=self.failure_reason
+                )
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="App", status=current_status)
@@ -1111,25 +1227,31 @@ class App(Base):
                 ```
         """
 
-        client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'SortOrder': sort_order,
-            'SortBy': sort_by,
-            'DomainIdEquals': domain_id_equals,
-            'UserProfileNameEquals': user_profile_name_equals,
-            'SpaceNameEquals': space_name_equals,
+            "SortOrder": sort_order,
+            "SortBy": sort_by,
+            "DomainIdEquals": domain_id_equals,
+            "UserProfileNameEquals": user_profile_name_equals,
+            "SpaceNameEquals": space_name_equals,
         }
 
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
 
         return ResourceIterator(
             client=client,
-            list_method='list_apps',
-            summaries_key='Apps',
-            summary_name='AppDetails',
+            list_method="list_apps",
+            summaries_key="Apps",
+            summary_name="AppDetails",
             resource_cls=App,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
 
 
@@ -1138,14 +1260,15 @@ class AppImageConfig(Base):
     Class representing resource AppImageConfig
 
     Attributes:
-        app_image_config_arn:The ARN of the AppImageConfig.
-        app_image_config_name:The name of the AppImageConfig.
-        creation_time:When the AppImageConfig was created.
-        last_modified_time:When the AppImageConfig was last modified.
-        kernel_gateway_image_config:The configuration of a KernelGateway app.
-        jupyter_lab_app_image_config:The configuration of the JupyterLab app.
+        app_image_config_arn: The ARN of the AppImageConfig.
+        app_image_config_name: The name of the AppImageConfig.
+        creation_time: When the AppImageConfig was created.
+        last_modified_time: When the AppImageConfig was last modified.
+        kernel_gateway_image_config: The configuration of a KernelGateway app.
+        jupyter_lab_app_image_config: The configuration of the JupyterLab app.
 
     """
+
     app_image_config_name: str
     app_image_config_arn: Optional[str] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
@@ -1155,10 +1278,19 @@ class AppImageConfig(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "app_image_config_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'app_image_config_name':
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object app_image_config")
+        return None
 
     @classmethod
     def create(
@@ -1202,16 +1334,20 @@ class AppImageConfig(Base):
         """
 
         logger.debug("Creating app_image_config resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'AppImageConfigName': app_image_config_name,
-            'Tags': tags,
-            'KernelGatewayImageConfig': kernel_gateway_image_config,
-            'JupyterLabAppImageConfig': jupyter_lab_app_image_config,
+            "AppImageConfigName": app_image_config_name,
+            "Tags": tags,
+            "KernelGatewayImageConfig": kernel_gateway_image_config,
+            "JupyterLabAppImageConfig": jupyter_lab_app_image_config,
         }
 
-        operation_input_args = Base.populate_chained_attributes(resource_name='AppImageConfig', operation_input_args=operation_input_args)
+        operation_input_args = Base.populate_chained_attributes(
+            resource_name="AppImageConfig", operation_input_args=operation_input_args
+        )
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -1257,19 +1393,23 @@ class AppImageConfig(Base):
         """
 
         operation_input_args = {
-            'AppImageConfigName': app_image_config_name,
+            "AppImageConfigName": app_image_config_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
         response = client.describe_app_image_config(**operation_input_args)
 
         pprint(response)
 
         # deserialize the response
-        transformed_response = transform(response, 'DescribeAppImageConfigResponse')
+        transformed_response = transform(response, "DescribeAppImageConfigResponse")
         app_image_config = cls(**transformed_response)
         return app_image_config
 
-    def refresh(self) -> Optional["AppImageConfig"]:
+    def refresh(
+        self,
+    ) -> Optional["AppImageConfig"]:
         """
         Refresh a AppImageConfig resource
 
@@ -1291,13 +1431,13 @@ class AppImageConfig(Base):
         """
 
         operation_input_args = {
-            'AppImageConfigName': self.app_image_config_name,
+            "AppImageConfigName": self.app_image_config_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_app_image_config(**operation_input_args)
 
         # deserialize response and update self
-        transform(response, 'DescribeAppImageConfigResponse', self)
+        transform(response, "DescribeAppImageConfigResponse", self)
         return self
 
     def update(
@@ -1327,12 +1467,12 @@ class AppImageConfig(Base):
         """
 
         logger.debug("Updating app_image_config resource.")
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
-            'AppImageConfigName': self.app_image_config_name,
-            'KernelGatewayImageConfig': kernel_gateway_image_config,
-            'JupyterLabAppImageConfig': jupyter_lab_app_image_config,
+            "AppImageConfigName": self.app_image_config_name,
+            "KernelGatewayImageConfig": kernel_gateway_image_config,
+            "JupyterLabAppImageConfig": jupyter_lab_app_image_config,
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -1346,7 +1486,9 @@ class AppImageConfig(Base):
 
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a AppImageConfig resource
 
@@ -1365,12 +1507,14 @@ class AppImageConfig(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
-            'AppImageConfigName': self.app_image_config_name,
+            "AppImageConfigName": self.app_image_config_name,
         }
         client.delete_app_image_config(**operation_input_args)
+
+        logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
     @classmethod
     def get_all(
@@ -1417,27 +1561,33 @@ class AppImageConfig(Base):
                 ```
         """
 
-        client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'NameContains': name_contains,
-            'CreationTimeBefore': creation_time_before,
-            'CreationTimeAfter': creation_time_after,
-            'ModifiedTimeBefore': modified_time_before,
-            'ModifiedTimeAfter': modified_time_after,
-            'SortBy': sort_by,
-            'SortOrder': sort_order,
+            "NameContains": name_contains,
+            "CreationTimeBefore": creation_time_before,
+            "CreationTimeAfter": creation_time_after,
+            "ModifiedTimeBefore": modified_time_before,
+            "ModifiedTimeAfter": modified_time_after,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
         }
 
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
 
         return ResourceIterator(
             client=client,
-            list_method='list_app_image_configs',
-            summaries_key='AppImageConfigs',
-            summary_name='AppImageConfigDetails',
+            list_method="list_app_image_configs",
+            summaries_key="AppImageConfigs",
+            summary_name="AppImageConfigDetails",
             resource_cls=AppImageConfig,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
 
 
@@ -1456,9 +1606,10 @@ class Artifact(Base):
         last_modified_time: When the artifact was last modified.
         last_modified_by:
         metadata_properties:
-        lineage_group_arn:The Amazon Resource Name (ARN) of the lineage group.
+        lineage_group_arn: The Amazon Resource Name (ARN) of the lineage group.
 
     """
+
     artifact_arn: str
     artifact_name: Optional[str] = Unassigned()
     source: Optional[ArtifactSource] = Unassigned()
@@ -1473,10 +1624,19 @@ class Artifact(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "artifact_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'artifact_name':
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object artifact")
+        return None
 
     @classmethod
     def create(
@@ -1524,18 +1684,22 @@ class Artifact(Base):
         """
 
         logger.debug("Creating artifact resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'ArtifactName': artifact_name,
-            'Source': source,
-            'ArtifactType': artifact_type,
-            'Properties': properties,
-            'MetadataProperties': metadata_properties,
-            'Tags': tags,
+            "ArtifactName": artifact_name,
+            "Source": source,
+            "ArtifactType": artifact_type,
+            "Properties": properties,
+            "MetadataProperties": metadata_properties,
+            "Tags": tags,
         }
 
-        operation_input_args = Base.populate_chained_attributes(resource_name='Artifact', operation_input_args=operation_input_args)
+        operation_input_args = Base.populate_chained_attributes(
+            resource_name="Artifact", operation_input_args=operation_input_args
+        )
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -1546,7 +1710,7 @@ class Artifact(Base):
         response = client.create_artifact(**operation_input_args)
         logger.debug(f"Response: {response}")
 
-        return cls.get(artifact_arn=response['ArtifactArn'], session=session, region=region)
+        return cls.get(artifact_arn=response["ArtifactArn"], session=session, region=region)
 
     @classmethod
     def get(
@@ -1581,19 +1745,23 @@ class Artifact(Base):
         """
 
         operation_input_args = {
-            'ArtifactArn': artifact_arn,
+            "ArtifactArn": artifact_arn,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
         response = client.describe_artifact(**operation_input_args)
 
         pprint(response)
 
         # deserialize the response
-        transformed_response = transform(response, 'DescribeArtifactResponse')
+        transformed_response = transform(response, "DescribeArtifactResponse")
         artifact = cls(**transformed_response)
         return artifact
 
-    def refresh(self) -> Optional["Artifact"]:
+    def refresh(
+        self,
+    ) -> Optional["Artifact"]:
         """
         Refresh a Artifact resource
 
@@ -1615,13 +1783,13 @@ class Artifact(Base):
         """
 
         operation_input_args = {
-            'ArtifactArn': self.artifact_arn,
+            "ArtifactArn": self.artifact_arn,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_artifact(**operation_input_args)
 
         # deserialize response and update self
-        transform(response, 'DescribeArtifactResponse', self)
+        transform(response, "DescribeArtifactResponse", self)
         return self
 
     def update(
@@ -1634,7 +1802,7 @@ class Artifact(Base):
         Update a Artifact resource
 
         Parameters:
-            properties_to_remove:A list of properties to remove.
+            properties_to_remove: A list of properties to remove.
 
         Returns:
             The Artifact resource.
@@ -1655,13 +1823,13 @@ class Artifact(Base):
         """
 
         logger.debug("Updating artifact resource.")
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
-            'ArtifactArn': self.artifact_arn,
-            'ArtifactName': artifact_name,
-            'Properties': properties,
-            'PropertiesToRemove': properties_to_remove,
+            "ArtifactArn": self.artifact_arn,
+            "ArtifactName": artifact_name,
+            "Properties": properties,
+            "PropertiesToRemove": properties_to_remove,
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -1675,7 +1843,9 @@ class Artifact(Base):
 
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a Artifact resource
 
@@ -1694,13 +1864,15 @@ class Artifact(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
-            'ArtifactArn': self.artifact_arn,
-            'Source': self.source,
+            "ArtifactArn": self.artifact_arn,
+            "Source": self.source,
         }
         client.delete_artifact(**operation_input_args)
+
+        logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
     @classmethod
     def get_all(
@@ -1746,26 +1918,32 @@ class Artifact(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'SourceUri': source_uri,
-            'ArtifactType': artifact_type,
-            'CreatedAfter': created_after,
-            'CreatedBefore': created_before,
-            'SortBy': sort_by,
-            'SortOrder': sort_order,
+            "SourceUri": source_uri,
+            "ArtifactType": artifact_type,
+            "CreatedAfter": created_after,
+            "CreatedBefore": created_before,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
         }
 
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
 
         return ResourceIterator(
             client=client,
-            list_method='list_artifacts',
-            summaries_key='ArtifactSummaries',
-            summary_name='ArtifactSummary',
+            list_method="list_artifacts",
+            summaries_key="ArtifactSummaries",
+            summary_name="ArtifactSummary",
             resource_cls=Artifact,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
 
 
@@ -1798,12 +1976,23 @@ class Association(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == "name" or attribute == "association_name":
-                return value
-        raise Exception("Name attribute not found for object")
+        resource_name = "association_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
 
-    def delete(self) -> None:
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
+        for attribute, value in attributes.items():
+            if attribute == "name" or attribute in attribute_name_candidates:
+                return value
+        logger.error("Name attribute not found for object association")
+        return None
+
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a Association resource
 
@@ -1822,7 +2011,7 @@ class Association(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
             "SourceArn": self.source_arn,
@@ -1830,7 +2019,7 @@ class Association(Base):
         }
         client.delete_association(**operation_input_args)
 
-        print(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+        logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
     @classmethod
     def get_all(
@@ -1882,9 +2071,9 @@ class Association(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
 
         operation_input_args = {
             "SourceArn": source_arn,
@@ -1913,27 +2102,38 @@ class Association(Base):
             list_method_kwargs=operation_input_args,
         )
 
+    @classmethod
     def add(
-        self,
+        cls,
+        source_arn: str,
+        destination_arn: str,
+        association_type: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> None:
         """
         Creates an association between the source and the destination.
 
+        Parameters:
+            source_arn: The ARN of the source.
+            destination_arn: The Amazon Resource Name (ARN) of the destination.
+            association_type: The type of association. The following are suggested uses for each type. Amazon SageMaker places no restrictions on their use.   ContributedTo - The source contributed to the destination or had a part in enabling the destination. For example, the training data contributed to the training job.   AssociatedWith - The source is connected to the destination. For example, an approval workflow is associated with a model deployment.   DerivedFrom - The destination is a modification of the source. For example, a digest output of a channel input for a processing job is derived from the original inputs.   Produced - The source generated the destination. For example, a training job produced a model artifact.
+            session: Boto3 session.
+            region: Region name.
+
 
         """
 
         operation_input_args = {
-            "SourceArn": self.source_arn,
-            "DestinationArn": self.destination_arn,
-            "AssociationType": self.association_type,
+            "SourceArn": source_arn,
+            "DestinationArn": destination_arn,
+            "AssociationType": association_type,
         }
         logger.debug(f"Input request: {operation_input_args}")
 
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
 
         logger.debug(f"Calling add_association API")
         response = client.add_association(**operation_input_args)
@@ -1945,115 +2145,110 @@ class AutoMLJob(Base):
     Class representing resource AutoMLJob
 
     Attributes:
-        auto_ml_job_name:Returns the name of the AutoML job.
-        auto_ml_job_arn:Returns the ARN of the AutoML job.
-        input_data_config:Returns the input data configuration for the AutoML job.
-        output_data_config:Returns the job's output data config.
-        role_arn:The ARN of the IAM role that has read permission to the input data location and write permission to the output data location in Amazon S3.
-        creation_time:Returns the creation time of the AutoML job.
-        last_modified_time:Returns the job's last modified time.
-        auto_ml_job_status:Returns the status of the AutoML job.
-        auto_ml_job_secondary_status:Returns the secondary status of the AutoML job.
-        auto_ml_job_objective:Returns the job's objective.
-        problem_type:Returns the job's problem type.
-        auto_ml_job_config:Returns the configuration for the AutoML job.
-        end_time:Returns the end time of the AutoML job.
-        failure_reason:Returns the failure reason for an AutoML job, when applicable.
-        partial_failure_reasons:Returns a list of reasons for partial failures within an AutoML job.
-        best_candidate:The best model candidate selected by SageMaker Autopilot using both the best objective metric and lowest InferenceLatency for an experiment.
-        generate_candidate_definitions_only:Indicates whether the output for an AutoML job generates candidate definitions only.
-        auto_ml_job_artifacts:Returns information on the job's artifacts found in AutoMLJobArtifacts.
-        resolved_attributes:Contains ProblemType, AutoMLJobObjective, and CompletionCriteria. If you do not provide these values, they are inferred.
-        model_deploy_config:Indicates whether the model was deployed automatically to an endpoint and the name of that endpoint if deployed automatically.
-        model_deploy_result:Provides information about endpoint for the model deployment.
+        auto_ml_job_name: Returns the name of the AutoML job.
+        auto_ml_job_arn: Returns the ARN of the AutoML job.
+        input_data_config: Returns the input data configuration for the AutoML job.
+        output_data_config: Returns the job's output data config.
+        role_arn: The ARN of the IAM role that has read permission to the input data location and write permission to the output data location in Amazon S3.
+        creation_time: Returns the creation time of the AutoML job.
+        last_modified_time: Returns the job's last modified time.
+        auto_ml_job_status: Returns the status of the AutoML job.
+        auto_ml_job_secondary_status: Returns the secondary status of the AutoML job.
+        auto_ml_job_objective: Returns the job's objective.
+        problem_type: Returns the job's problem type.
+        auto_ml_job_config: Returns the configuration for the AutoML job.
+        end_time: Returns the end time of the AutoML job.
+        failure_reason: Returns the failure reason for an AutoML job, when applicable.
+        partial_failure_reasons: Returns a list of reasons for partial failures within an AutoML job.
+        best_candidate: The best model candidate selected by SageMaker Autopilot using both the best objective metric and lowest InferenceLatency for an experiment.
+        generate_candidate_definitions_only: Indicates whether the output for an AutoML job generates candidate definitions only.
+        auto_ml_job_artifacts: Returns information on the job's artifacts found in AutoMLJobArtifacts.
+        resolved_attributes: Contains ProblemType, AutoMLJobObjective, and CompletionCriteria. If you do not provide these values, they are inferred.
+        model_deploy_config: Indicates whether the model was deployed automatically to an endpoint and the name of that endpoint if deployed automatically.
+        model_deploy_result: Provides information about endpoint for the model deployment.
 
     """
-    auto_m_l_job_name: str
-    auto_m_l_job_arn: Optional[str] = Unassigned()
+
+    auto_ml_job_name: str
+    auto_ml_job_arn: Optional[str] = Unassigned()
     input_data_config: Optional[List[AutoMLChannel]] = Unassigned()
     output_data_config: Optional[AutoMLOutputDataConfig] = Unassigned()
     role_arn: Optional[str] = Unassigned()
-    auto_m_l_job_objective: Optional[AutoMLJobObjective] = Unassigned()
+    auto_ml_job_objective: Optional[AutoMLJobObjective] = Unassigned()
     problem_type: Optional[str] = Unassigned()
-    auto_m_l_job_config: Optional[AutoMLJobConfig] = Unassigned()
+    auto_ml_job_config: Optional[AutoMLJobConfig] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
     end_time: Optional[datetime.datetime] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
     failure_reason: Optional[str] = Unassigned()
     partial_failure_reasons: Optional[List[AutoMLPartialFailureReason]] = Unassigned()
     best_candidate: Optional[AutoMLCandidate] = Unassigned()
-    auto_m_l_job_status: Optional[str] = Unassigned()
-    auto_m_l_job_secondary_status: Optional[str] = Unassigned()
+    auto_ml_job_status: Optional[str] = Unassigned()
+    auto_ml_job_secondary_status: Optional[str] = Unassigned()
     generate_candidate_definitions_only: Optional[bool] = Unassigned()
-    auto_m_l_job_artifacts: Optional[AutoMLJobArtifacts] = Unassigned()
+    auto_ml_job_artifacts: Optional[AutoMLJobArtifacts] = Unassigned()
     resolved_attributes: Optional[ResolvedAttributes] = Unassigned()
     model_deploy_config: Optional[ModelDeployConfig] = Unassigned()
     model_deploy_result: Optional[ModelDeployResult] = Unassigned()
 
     def get_name(self) -> str:
         attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'auto_m_l_job_name':
-                return value
-        raise Exception("Name attribute not found for object")
+        resource_name = "auto_ml_job_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
 
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
+        for attribute, value in attributes.items():
+            if attribute == "name" or attribute in attribute_name_candidates:
+                return value
+        logger.error("Name attribute not found for object auto_ml_job")
+        return None
 
     def populate_inputs_decorator(create_func):
+        @functools.wraps(create_func)
         def wrapper(*args, **kwargs):
-            config_schema_for_resource = \
-        {
-          "output_data_config": {
-            "s3_output_path": {
-              "type": "string"
-            },
-            "kms_key_id": {
-              "type": "string"
-            }
-          },
-          "role_arn": {
-            "type": "string"
-          },
-          "auto_m_l_job_config": {
-            "security_config": {
-              "volume_kms_key_id": {
-                "type": "string"
-              },
-              "vpc_config": {
-                "security_group_ids": {
-                  "type": "array",
-                  "items": {
-                    "type": "string"
-                  }
+            config_schema_for_resource = {
+                "output_data_config": {
+                    "s3_output_path": {"type": "string"},
+                    "kms_key_id": {"type": "string"},
                 },
-                "subnets": {
-                  "type": "array",
-                  "items": {
-                    "type": "string"
-                  }
-                }
-              }
-            },
-            "candidate_generation_config": {
-              "feature_specification_s3_uri": {
-                "type": "string"
-              }
+                "role_arn": {"type": "string"},
+                "auto_ml_job_config": {
+                    "security_config": {
+                        "volume_kms_key_id": {"type": "string"},
+                        "vpc_config": {
+                            "security_group_ids": {"type": "array", "items": {"type": "string"}},
+                            "subnets": {"type": "array", "items": {"type": "string"}},
+                        },
+                    },
+                    "candidate_generation_config": {
+                        "feature_specification_s3_uri": {"type": "string"}
+                    },
+                },
             }
-          }
-        }
-            return create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "AutoMLJob", **kwargs))
+            return create_func(
+                *args,
+                **Base.get_updated_kwargs_with_configured_attributes(
+                    config_schema_for_resource, "AutoMLJob", **kwargs
+                ),
+            )
+
         return wrapper
 
     @classmethod
     @populate_inputs_decorator
     def create(
         cls,
-        auto_m_l_job_name: str,
+        auto_ml_job_name: str,
         input_data_config: List[AutoMLChannel],
         output_data_config: AutoMLOutputDataConfig,
         role_arn: str,
         problem_type: Optional[str] = Unassigned(),
-        auto_m_l_job_objective: Optional[AutoMLJobObjective] = Unassigned(),
-        auto_m_l_job_config: Optional[AutoMLJobConfig] = Unassigned(),
+        auto_ml_job_objective: Optional[AutoMLJobObjective] = Unassigned(),
+        auto_ml_job_config: Optional[AutoMLJobConfig] = Unassigned(),
         generate_candidate_definitions_only: Optional[bool] = Unassigned(),
         tags: Optional[List[Tag]] = Unassigned(),
         model_deploy_config: Optional[ModelDeployConfig] = Unassigned(),
@@ -2064,16 +2259,16 @@ class AutoMLJob(Base):
         Create a AutoMLJob resource
 
         Parameters:
-            auto_ml_job_name:Identifies an Autopilot job. The name must be unique to your account and is case insensitive.
-            input_data_config:An array of channel objects that describes the input data and its location. Each channel is a named input source. Similar to InputDataConfig supported by HyperParameterTrainingJobDefinition. Format(s) supported: CSV, Parquet. A minimum of 500 rows is required for the training dataset. There is not a minimum number of rows required for the validation dataset.
-            output_data_config:Provides information about encryption and the Amazon S3 output path needed to store artifacts from an AutoML job. Format(s) supported: CSV.
-            role_arn:The ARN of the role that is used to access the data.
-            problem_type:Defines the type of supervised learning problem available for the candidates. For more information, see  SageMaker Autopilot problem types.
-            auto_ml_job_objective:Specifies a metric to minimize or maximize as the objective of a job. If not specified, the default objective metric depends on the problem type. See AutoMLJobObjective for the default values.
-            auto_ml_job_config:A collection of settings used to configure an AutoML job.
-            generate_candidate_definitions_only:Generates possible candidates without training the models. A candidate is a combination of data preprocessors, algorithms, and algorithm parameter settings.
-            tags:An array of key-value pairs. You can use tags to categorize your Amazon Web Services resources in different ways, for example, by purpose, owner, or environment. For more information, see Tagging Amazon Web ServicesResources. Tag keys must be unique per resource.
-            model_deploy_config:Specifies how to generate the endpoint name for an automatic one-click Autopilot model deployment.
+            auto_ml_job_name: Identifies an Autopilot job. The name must be unique to your account and is case insensitive.
+            input_data_config: An array of channel objects that describes the input data and its location. Each channel is a named input source. Similar to InputDataConfig supported by HyperParameterTrainingJobDefinition. Format(s) supported: CSV, Parquet. A minimum of 500 rows is required for the training dataset. There is not a minimum number of rows required for the validation dataset.
+            output_data_config: Provides information about encryption and the Amazon S3 output path needed to store artifacts from an AutoML job. Format(s) supported: CSV.
+            role_arn: The ARN of the role that is used to access the data.
+            problem_type: Defines the type of supervised learning problem available for the candidates. For more information, see  SageMaker Autopilot problem types.
+            auto_ml_job_objective: Specifies a metric to minimize or maximize as the objective of a job. If not specified, the default objective metric depends on the problem type. See AutoMLJobObjective for the default values.
+            auto_ml_job_config: A collection of settings used to configure an AutoML job.
+            generate_candidate_definitions_only: Generates possible candidates without training the models. A candidate is a combination of data preprocessors, algorithms, and algorithm parameter settings.
+            tags: An array of key-value pairs. You can use tags to categorize your Amazon Web Services resources in different ways, for example, by purpose, owner, or environment. For more information, see Tagging Amazon Web ServicesResources. Tag keys must be unique per resource.
+            model_deploy_config: Specifies how to generate the endpoint name for an automatic one-click Autopilot model deployment.
             session: Boto3 session.
             region: Region name.
 
@@ -2098,23 +2293,27 @@ class AutoMLJob(Base):
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
         """
 
-        logger.debug("Creating auto_m_l_job resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        logger.debug("Creating auto_ml_job resource.")
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'AutoMLJobName': auto_m_l_job_name,
-            'InputDataConfig': input_data_config,
-            'OutputDataConfig': output_data_config,
-            'ProblemType': problem_type,
-            'AutoMLJobObjective': auto_m_l_job_objective,
-            'AutoMLJobConfig': auto_m_l_job_config,
-            'RoleArn': role_arn,
-            'GenerateCandidateDefinitionsOnly': generate_candidate_definitions_only,
-            'Tags': tags,
-            'ModelDeployConfig': model_deploy_config,
+            "AutoMLJobName": auto_ml_job_name,
+            "InputDataConfig": input_data_config,
+            "OutputDataConfig": output_data_config,
+            "ProblemType": problem_type,
+            "AutoMLJobObjective": auto_ml_job_objective,
+            "AutoMLJobConfig": auto_ml_job_config,
+            "RoleArn": role_arn,
+            "GenerateCandidateDefinitionsOnly": generate_candidate_definitions_only,
+            "Tags": tags,
+            "ModelDeployConfig": model_deploy_config,
         }
 
-        operation_input_args = Base.populate_chained_attributes(resource_name='AutoMLJob', operation_input_args=operation_input_args)
+        operation_input_args = Base.populate_chained_attributes(
+            resource_name="AutoMLJob", operation_input_args=operation_input_args
+        )
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -2122,15 +2321,15 @@ class AutoMLJob(Base):
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
-        response = client.create_auto_m_l_job(**operation_input_args)
+        response = client.create_auto_ml_job(**operation_input_args)
         logger.debug(f"Response: {response}")
 
-        return cls.get(auto_m_l_job_name=auto_m_l_job_name, session=session, region=region)
+        return cls.get(auto_ml_job_name=auto_ml_job_name, session=session, region=region)
 
     @classmethod
     def get(
         cls,
-        auto_m_l_job_name: str,
+        auto_ml_job_name: str,
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["AutoMLJob"]:
@@ -2138,7 +2337,7 @@ class AutoMLJob(Base):
         Get a AutoMLJob resource
 
         Parameters:
-            auto_ml_job_name:Requests information about an AutoML job using its unique name.
+            auto_ml_job_name: Requests information about an AutoML job using its unique name.
             session: Boto3 session.
             region: Region name.
 
@@ -2160,19 +2359,23 @@ class AutoMLJob(Base):
         """
 
         operation_input_args = {
-            'AutoMLJobName': auto_m_l_job_name,
+            "AutoMLJobName": auto_ml_job_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
-        response = client.describe_auto_m_l_job(**operation_input_args)
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
+        response = client.describe_auto_ml_job(**operation_input_args)
 
         pprint(response)
 
         # deserialize the response
-        transformed_response = transform(response, 'DescribeAutoMLJobResponse')
-        auto_m_l_job = cls(**transformed_response)
-        return auto_m_l_job
+        transformed_response = transform(response, "DescribeAutoMLJobResponse")
+        auto_ml_job = cls(**transformed_response)
+        return auto_ml_job
 
-    def refresh(self) -> Optional["AutoMLJob"]:
+    def refresh(
+        self,
+    ) -> Optional["AutoMLJob"]:
         """
         Refresh a AutoMLJob resource
 
@@ -2194,13 +2397,13 @@ class AutoMLJob(Base):
         """
 
         operation_input_args = {
-            'AutoMLJobName': self.auto_m_l_job_name,
+            "AutoMLJobName": self.auto_ml_job_name,
         }
-        client = SageMakerClient().client
-        response = client.describe_auto_m_l_job(**operation_input_args)
+        client = Base.get_sagemaker_client()
+        response = client.describe_auto_ml_job(**operation_input_args)
 
         # deserialize response and update self
-        transform(response, 'DescribeAutoMLJobResponse', self)
+        transform(response, "DescribeAutoMLJobResponse", self)
         return self
 
     def stop(self) -> None:
@@ -2225,15 +2428,11 @@ class AutoMLJob(Base):
         client = SageMakerClient().client
 
         operation_input_args = {
-            'AutoMLJobName': self.auto_m_l_job_name,
+            "AutoMLJobName": self.auto_ml_job_name,
         }
-        client.stop_auto_m_l_job(**operation_input_args)
+        client.stop_auto_ml_job(**operation_input_args)
 
-    def wait(
-        self,
-        poll: int = 5,
-        timeout: Optional[int] = None
-    ) -> Optional["AutoMLJob"]:
+    def wait(self, poll: int = 5, timeout: Optional[int] = None):
         """
         Wait for a AutoMLJob resource.
 
@@ -2250,19 +2449,22 @@ class AutoMLJob(Base):
             WaiterError: Raised when an error occurs while waiting.
 
         """
-        terminal_states = ['Completed', 'Failed', 'Stopped']
+        terminal_states = ["Completed", "Failed", "Stopped"]
         start_time = time.time()
 
         while True:
             self.refresh()
-            current_status = self.auto_m_l_job_status
+            current_status = self.auto_ml_job_status
 
             if current_status in terminal_states:
+                print(f"\nFinal Resource Status: {current_status}")
 
                 if "failed" in current_status.lower():
-                    raise FailedStatusError(resource_type="AutoMLJob", status=current_status, reason=self.failure_reason)
+                    raise FailedStatusError(
+                        resource_type="AutoMLJob", status=current_status, reason=self.failure_reason
+                    )
 
-                return self
+                return
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="AutoMLJob", status=current_status)
@@ -2316,41 +2518,47 @@ class AutoMLJob(Base):
                 ```
         """
 
-        client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'CreationTimeAfter': creation_time_after,
-            'CreationTimeBefore': creation_time_before,
-            'LastModifiedTimeAfter': last_modified_time_after,
-            'LastModifiedTimeBefore': last_modified_time_before,
-            'NameContains': name_contains,
-            'StatusEquals': status_equals,
-            'SortOrder': sort_order,
-            'SortBy': sort_by,
+            "CreationTimeAfter": creation_time_after,
+            "CreationTimeBefore": creation_time_before,
+            "LastModifiedTimeAfter": last_modified_time_after,
+            "LastModifiedTimeBefore": last_modified_time_before,
+            "NameContains": name_contains,
+            "StatusEquals": status_equals,
+            "SortOrder": sort_order,
+            "SortBy": sort_by,
         }
 
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
 
         return ResourceIterator(
             client=client,
-            list_method='list_auto_m_l_jobs',
-            summaries_key='AutoMLJobSummaries',
-            summary_name='AutoMLJobSummary',
+            list_method="list_auto_ml_jobs",
+            summaries_key="AutoMLJobSummaries",
+            summary_name="AutoMLJobSummary",
             resource_cls=AutoMLJob,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
-
 
     def get_all_candidates(
         self,
         status_equals: Optional[str] = Unassigned(),
         candidate_name_equals: Optional[str] = Unassigned(),
         sort_order: Optional[str] = Unassigned(),
-        sort_by: Optional[str] = Unassigned(),    session: Optional[Session] = None,
+        sort_by: Optional[str] = Unassigned(),
+        session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> ResourceIterator[AutoMLCandidate]:
         """
-        Perform ListCandidatesForAutoMLJob on a AutoMLJob resource.
+        List the candidates created for the job.
 
         Parameters:
             status_equals: List the candidates for the job and filter by status.
@@ -2365,27 +2573,31 @@ class AutoMLJob(Base):
 
         """
 
-
         operation_input_args = {
-            'AutoMLJobName': self.auto_m_l_job_name,
-            'StatusEquals': status_equals,
-            'CandidateNameEquals': candidate_name_equals,
-            'SortOrder': sort_order,
-            'SortBy': sort_by,
+            "AutoMLJobName": self.auto_ml_job_name,
+            "StatusEquals": status_equals,
+            "CandidateNameEquals": candidate_name_equals,
+            "SortOrder": sort_order,
+            "SortBy": sort_by,
         }
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
         logger.debug(f"Input request: {operation_input_args}")
 
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
-
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         return ResourceIterator(
             client=client,
-            list_method='list_candidates_for_auto_m_l_job',
-            summaries_key='Candidates',
-            summary_name='AutoMLCandidate',
+            list_method="list_candidates_for_auto_ml_job",
+            summaries_key="Candidates",
+            summary_name="AutoMLCandidate",
             resource_cls=AutoMLCandidate,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
 
 
@@ -2394,47 +2606,48 @@ class AutoMLJobV2(Base):
     Class representing resource AutoMLJobV2
 
     Attributes:
-        auto_ml_job_name:Returns the name of the AutoML job V2.
-        auto_ml_job_arn:Returns the Amazon Resource Name (ARN) of the AutoML job V2.
-        auto_ml_job_input_data_config:Returns an array of channel objects describing the input data and their location.
-        output_data_config:Returns the job's output data config.
-        role_arn:The ARN of the IAM role that has read permission to the input data location and write permission to the output data location in Amazon S3.
-        creation_time:Returns the creation time of the AutoML job V2.
-        last_modified_time:Returns the job's last modified time.
-        auto_ml_job_status:Returns the status of the AutoML job V2.
-        auto_ml_job_secondary_status:Returns the secondary status of the AutoML job V2.
-        auto_ml_job_objective:Returns the job's objective.
-        auto_ml_problem_type_config:Returns the configuration settings of the problem type set for the AutoML job V2.
-        auto_ml_problem_type_config_name:Returns the name of the problem type configuration set for the AutoML job V2.
-        end_time:Returns the end time of the AutoML job V2.
-        failure_reason:Returns the reason for the failure of the AutoML job V2, when applicable.
-        partial_failure_reasons:Returns a list of reasons for partial failures within an AutoML job V2.
-        best_candidate:Information about the candidate produced by an AutoML training job V2, including its status, steps, and other properties.
+        auto_ml_job_name: Returns the name of the AutoML job V2.
+        auto_ml_job_arn: Returns the Amazon Resource Name (ARN) of the AutoML job V2.
+        auto_ml_job_input_data_config: Returns an array of channel objects describing the input data and their location.
+        output_data_config: Returns the job's output data config.
+        role_arn: The ARN of the IAM role that has read permission to the input data location and write permission to the output data location in Amazon S3.
+        creation_time: Returns the creation time of the AutoML job V2.
+        last_modified_time: Returns the job's last modified time.
+        auto_ml_job_status: Returns the status of the AutoML job V2.
+        auto_ml_job_secondary_status: Returns the secondary status of the AutoML job V2.
+        auto_ml_job_objective: Returns the job's objective.
+        auto_ml_problem_type_config: Returns the configuration settings of the problem type set for the AutoML job V2.
+        auto_ml_problem_type_config_name: Returns the name of the problem type configuration set for the AutoML job V2.
+        end_time: Returns the end time of the AutoML job V2.
+        failure_reason: Returns the reason for the failure of the AutoML job V2, when applicable.
+        partial_failure_reasons: Returns a list of reasons for partial failures within an AutoML job V2.
+        best_candidate: Information about the candidate produced by an AutoML training job V2, including its status, steps, and other properties.
         auto_ml_job_artifacts:
-        resolved_attributes:Returns the resolved attributes used by the AutoML job V2.
-        model_deploy_config:Indicates whether the model was deployed automatically to an endpoint and the name of that endpoint if deployed automatically.
-        model_deploy_result:Provides information about endpoint for the model deployment.
-        data_split_config:Returns the configuration settings of how the data are split into train and validation datasets.
-        security_config:Returns the security configuration for traffic encryption or Amazon VPC settings.
+        resolved_attributes: Returns the resolved attributes used by the AutoML job V2.
+        model_deploy_config: Indicates whether the model was deployed automatically to an endpoint and the name of that endpoint if deployed automatically.
+        model_deploy_result: Provides information about endpoint for the model deployment.
+        data_split_config: Returns the configuration settings of how the data are split into train and validation datasets.
+        security_config: Returns the security configuration for traffic encryption or Amazon VPC settings.
 
     """
-    auto_m_l_job_name: str
-    auto_m_l_job_arn: Optional[str] = Unassigned()
-    auto_m_l_job_input_data_config: Optional[List[AutoMLJobChannel]] = Unassigned()
+
+    auto_ml_job_name: str
+    auto_ml_job_arn: Optional[str] = Unassigned()
+    auto_ml_job_input_data_config: Optional[List[AutoMLJobChannel]] = Unassigned()
     output_data_config: Optional[AutoMLOutputDataConfig] = Unassigned()
     role_arn: Optional[str] = Unassigned()
-    auto_m_l_job_objective: Optional[AutoMLJobObjective] = Unassigned()
-    auto_m_l_problem_type_config: Optional[AutoMLProblemTypeConfig] = Unassigned()
-    auto_m_l_problem_type_config_name: Optional[str] = Unassigned()
+    auto_ml_job_objective: Optional[AutoMLJobObjective] = Unassigned()
+    auto_ml_problem_type_config: Optional[AutoMLProblemTypeConfig] = Unassigned()
+    auto_ml_problem_type_config_name: Optional[str] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
     end_time: Optional[datetime.datetime] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
     failure_reason: Optional[str] = Unassigned()
     partial_failure_reasons: Optional[List[AutoMLPartialFailureReason]] = Unassigned()
     best_candidate: Optional[AutoMLCandidate] = Unassigned()
-    auto_m_l_job_status: Optional[str] = Unassigned()
-    auto_m_l_job_secondary_status: Optional[str] = Unassigned()
-    auto_m_l_job_artifacts: Optional[AutoMLJobArtifacts] = Unassigned()
+    auto_ml_job_status: Optional[str] = Unassigned()
+    auto_ml_job_secondary_status: Optional[str] = Unassigned()
+    auto_ml_job_artifacts: Optional[AutoMLJobArtifacts] = Unassigned()
     resolved_attributes: Optional[AutoMLResolvedAttributes] = Unassigned()
     model_deploy_config: Optional[ModelDeployConfig] = Unassigned()
     model_deploy_result: Optional[ModelDeployResult] = Unassigned()
@@ -2443,74 +2656,64 @@ class AutoMLJobV2(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'auto_m_l_job_v2_name':
-                return value
-        raise Exception("Name attribute not found for object")
+        resource_name = "auto_ml_job_v2_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
 
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
+        for attribute, value in attributes.items():
+            if attribute == "name" or attribute in attribute_name_candidates:
+                return value
+        logger.error("Name attribute not found for object auto_ml_job_v2")
+        return None
 
     def populate_inputs_decorator(create_func):
+        @functools.wraps(create_func)
         def wrapper(*args, **kwargs):
-            config_schema_for_resource = \
-        {
-          "output_data_config": {
-            "s3_output_path": {
-              "type": "string"
-            },
-            "kms_key_id": {
-              "type": "string"
+            config_schema_for_resource = {
+                "output_data_config": {
+                    "s3_output_path": {"type": "string"},
+                    "kms_key_id": {"type": "string"},
+                },
+                "role_arn": {"type": "string"},
+                "auto_ml_problem_type_config": {
+                    "time_series_forecasting_job_config": {
+                        "feature_specification_s3_uri": {"type": "string"}
+                    },
+                    "tabular_job_config": {"feature_specification_s3_uri": {"type": "string"}},
+                },
+                "security_config": {
+                    "volume_kms_key_id": {"type": "string"},
+                    "vpc_config": {
+                        "security_group_ids": {"type": "array", "items": {"type": "string"}},
+                        "subnets": {"type": "array", "items": {"type": "string"}},
+                    },
+                },
             }
-          },
-          "role_arn": {
-            "type": "string"
-          },
-          "auto_m_l_problem_type_config": {
-            "time_series_forecasting_job_config": {
-              "feature_specification_s3_uri": {
-                "type": "string"
-              }
-            },
-            "tabular_job_config": {
-              "feature_specification_s3_uri": {
-                "type": "string"
-              }
-            }
-          },
-          "security_config": {
-            "volume_kms_key_id": {
-              "type": "string"
-            },
-            "vpc_config": {
-              "security_group_ids": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
-              },
-              "subnets": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
-              }
-            }
-          }
-        }
-            return create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "AutoMLJobV2", **kwargs))
+            return create_func(
+                *args,
+                **Base.get_updated_kwargs_with_configured_attributes(
+                    config_schema_for_resource, "AutoMLJobV2", **kwargs
+                ),
+            )
+
         return wrapper
 
     @classmethod
     @populate_inputs_decorator
     def create(
         cls,
-        auto_m_l_job_name: Union[str, object],
-        auto_m_l_job_input_data_config: List[AutoMLJobChannel],
+        auto_ml_job_name: str,
+        auto_ml_job_input_data_config: List[AutoMLJobChannel],
         output_data_config: AutoMLOutputDataConfig,
-        auto_m_l_problem_type_config: AutoMLProblemTypeConfig,
+        auto_ml_problem_type_config: AutoMLProblemTypeConfig,
         role_arn: str,
         tags: Optional[List[Tag]] = Unassigned(),
         security_config: Optional[AutoMLSecurityConfig] = Unassigned(),
-        auto_m_l_job_objective: Optional[AutoMLJobObjective] = Unassigned(),
+        auto_ml_job_objective: Optional[AutoMLJobObjective] = Unassigned(),
         model_deploy_config: Optional[ModelDeployConfig] = Unassigned(),
         data_split_config: Optional[AutoMLDataSplitConfig] = Unassigned(),
         session: Optional[Session] = None,
@@ -2520,16 +2723,16 @@ class AutoMLJobV2(Base):
         Create a AutoMLJobV2 resource
 
         Parameters:
-            auto_ml_job_name:Identifies an Autopilot job. The name must be unique to your account and is case insensitive.
-            auto_ml_job_input_data_config:An array of channel objects describing the input data and their location. Each channel is a named input source. Similar to the InputDataConfig attribute in the CreateAutoMLJob input parameters. The supported formats depend on the problem type:   For tabular problem types: S3Prefix, ManifestFile.   For image classification: S3Prefix, ManifestFile, AugmentedManifestFile.   For text classification: S3Prefix.   For time-series forecasting: S3Prefix.   For text generation (LLMs fine-tuning): S3Prefix.
-            output_data_config:Provides information about encryption and the Amazon S3 output path needed to store artifacts from an AutoML job.
-            auto_ml_problem_type_config:Defines the configuration settings of one of the supported problem types.
-            role_arn:The ARN of the role that is used to access the data.
-            tags:An array of key-value pairs. You can use tags to categorize your Amazon Web Services resources in different ways, such as by purpose, owner, or environment. For more information, see Tagging Amazon Web ServicesResources. Tag keys must be unique per resource.
-            security_config:The security configuration for traffic encryption or Amazon VPC settings.
-            auto_ml_job_objective:Specifies a metric to minimize or maximize as the objective of a job. If not specified, the default objective metric depends on the problem type. For the list of default values per problem type, see AutoMLJobObjective.    For tabular problem types: You must either provide both the AutoMLJobObjective and indicate the type of supervised learning problem in AutoMLProblemTypeConfig (TabularJobConfig.ProblemType), or none at all.   For text generation problem types (LLMs fine-tuning): Fine-tuning language models in Autopilot does not require setting the AutoMLJobObjective field. Autopilot fine-tunes LLMs without requiring multiple candidates to be trained and evaluated. Instead, using your dataset, Autopilot directly fine-tunes your target model to enhance a default objective metric, the cross-entropy loss. After fine-tuning a language model, you can evaluate the quality of its generated text using different metrics. For a list of the available metrics, see Metrics for fine-tuning LLMs in Autopilot.
-            model_deploy_config:Specifies how to generate the endpoint name for an automatic one-click Autopilot model deployment.
-            data_split_config:This structure specifies how to split the data into train and validation datasets. The validation and training datasets must contain the same headers. For jobs created by calling CreateAutoMLJob, the validation dataset must be less than 2 GB in size.  This attribute must not be set for the time-series forecasting problem type, as Autopilot automatically splits the input dataset into training and validation sets.
+            auto_ml_job_name: Identifies an Autopilot job. The name must be unique to your account and is case insensitive.
+            auto_ml_job_input_data_config: An array of channel objects describing the input data and their location. Each channel is a named input source. Similar to the InputDataConfig attribute in the CreateAutoMLJob input parameters. The supported formats depend on the problem type:   For tabular problem types: S3Prefix, ManifestFile.   For image classification: S3Prefix, ManifestFile, AugmentedManifestFile.   For text classification: S3Prefix.   For time-series forecasting: S3Prefix.   For text generation (LLMs fine-tuning): S3Prefix.
+            output_data_config: Provides information about encryption and the Amazon S3 output path needed to store artifacts from an AutoML job.
+            auto_ml_problem_type_config: Defines the configuration settings of one of the supported problem types.
+            role_arn: The ARN of the role that is used to access the data.
+            tags: An array of key-value pairs. You can use tags to categorize your Amazon Web Services resources in different ways, such as by purpose, owner, or environment. For more information, see Tagging Amazon Web ServicesResources. Tag keys must be unique per resource.
+            security_config: The security configuration for traffic encryption or Amazon VPC settings.
+            auto_ml_job_objective: Specifies a metric to minimize or maximize as the objective of a job. If not specified, the default objective metric depends on the problem type. For the list of default values per problem type, see AutoMLJobObjective.    For tabular problem types: You must either provide both the AutoMLJobObjective and indicate the type of supervised learning problem in AutoMLProblemTypeConfig (TabularJobConfig.ProblemType), or none at all.   For text generation problem types (LLMs fine-tuning): Fine-tuning language models in Autopilot does not require setting the AutoMLJobObjective field. Autopilot fine-tunes LLMs without requiring multiple candidates to be trained and evaluated. Instead, using your dataset, Autopilot directly fine-tunes your target model to enhance a default objective metric, the cross-entropy loss. After fine-tuning a language model, you can evaluate the quality of its generated text using different metrics. For a list of the available metrics, see Metrics for fine-tuning LLMs in Autopilot.
+            model_deploy_config: Specifies how to generate the endpoint name for an automatic one-click Autopilot model deployment.
+            data_split_config: This structure specifies how to split the data into train and validation datasets. The validation and training datasets must contain the same headers. For jobs created by calling CreateAutoMLJob, the validation dataset must be less than 2 GB in size.  This attribute must not be set for the time-series forecasting problem type, as Autopilot automatically splits the input dataset into training and validation sets.
             session: Boto3 session.
             region: Region name.
 
@@ -2554,23 +2757,27 @@ class AutoMLJobV2(Base):
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
         """
 
-        logger.debug("Creating auto_m_l_job_v2 resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        logger.debug("Creating auto_ml_job_v2 resource.")
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'AutoMLJobName': auto_m_l_job_name,
-            'AutoMLJobInputDataConfig': auto_m_l_job_input_data_config,
-            'OutputDataConfig': output_data_config,
-            'AutoMLProblemTypeConfig': auto_m_l_problem_type_config,
-            'RoleArn': role_arn,
-            'Tags': tags,
-            'SecurityConfig': security_config,
-            'AutoMLJobObjective': auto_m_l_job_objective,
-            'ModelDeployConfig': model_deploy_config,
-            'DataSplitConfig': data_split_config,
+            "AutoMLJobName": auto_ml_job_name,
+            "AutoMLJobInputDataConfig": auto_ml_job_input_data_config,
+            "OutputDataConfig": output_data_config,
+            "AutoMLProblemTypeConfig": auto_ml_problem_type_config,
+            "RoleArn": role_arn,
+            "Tags": tags,
+            "SecurityConfig": security_config,
+            "AutoMLJobObjective": auto_ml_job_objective,
+            "ModelDeployConfig": model_deploy_config,
+            "DataSplitConfig": data_split_config,
         }
 
-        operation_input_args = Base.populate_chained_attributes(resource_name='AutoMLJobV2', operation_input_args=operation_input_args)
+        operation_input_args = Base.populate_chained_attributes(
+            resource_name="AutoMLJobV2", operation_input_args=operation_input_args
+        )
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -2578,15 +2785,15 @@ class AutoMLJobV2(Base):
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
-        response = client.create_auto_m_l_job_v2(**operation_input_args)
+        response = client.create_auto_ml_job_v2(**operation_input_args)
         logger.debug(f"Response: {response}")
 
-        return cls.get(auto_m_l_job_name=auto_m_l_job_name, session=session, region=region)
+        return cls.get(auto_ml_job_name=auto_ml_job_name, session=session, region=region)
 
     @classmethod
     def get(
         cls,
-        auto_m_l_job_name: str,
+        auto_ml_job_name: str,
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["AutoMLJobV2"]:
@@ -2594,7 +2801,7 @@ class AutoMLJobV2(Base):
         Get a AutoMLJobV2 resource
 
         Parameters:
-            auto_ml_job_name:Requests information about an AutoML job V2 using its unique name.
+            auto_ml_job_name: Requests information about an AutoML job V2 using its unique name.
             session: Boto3 session.
             region: Region name.
 
@@ -2616,19 +2823,23 @@ class AutoMLJobV2(Base):
         """
 
         operation_input_args = {
-            'AutoMLJobName': auto_m_l_job_name,
+            "AutoMLJobName": auto_ml_job_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
-        response = client.describe_auto_m_l_job_v2(**operation_input_args)
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
+        response = client.describe_auto_ml_job_v2(**operation_input_args)
 
         pprint(response)
 
         # deserialize the response
-        transformed_response = transform(response, 'DescribeAutoMLJobV2Response')
-        auto_m_l_job_v2 = cls(**transformed_response)
-        return auto_m_l_job_v2
+        transformed_response = transform(response, "DescribeAutoMLJobV2Response")
+        auto_ml_job_v2 = cls(**transformed_response)
+        return auto_ml_job_v2
 
-    def refresh(self) -> Optional["AutoMLJobV2"]:
+    def refresh(
+        self,
+    ) -> Optional["AutoMLJobV2"]:
         """
         Refresh a AutoMLJobV2 resource
 
@@ -2650,20 +2861,16 @@ class AutoMLJobV2(Base):
         """
 
         operation_input_args = {
-            'AutoMLJobName': self.auto_m_l_job_name,
+            "AutoMLJobName": self.auto_ml_job_name,
         }
-        client = SageMakerClient().client
-        response = client.describe_auto_m_l_job_v2(**operation_input_args)
+        client = Base.get_sagemaker_client()
+        response = client.describe_auto_ml_job_v2(**operation_input_args)
 
         # deserialize response and update self
-        transform(response, 'DescribeAutoMLJobV2Response', self)
+        transform(response, "DescribeAutoMLJobV2Response", self)
         return self
 
-    def wait(
-        self,
-        poll: int = 5,
-        timeout: Optional[int] = None
-    ) -> Optional["AutoMLJobV2"]:
+    def wait(self, poll: int = 5, timeout: Optional[int] = None):
         """
         Wait for a AutoMLJobV2 resource.
 
@@ -2680,19 +2887,24 @@ class AutoMLJobV2(Base):
             WaiterError: Raised when an error occurs while waiting.
 
         """
-        terminal_states = ['Completed', 'Failed', 'Stopped']
+        terminal_states = ["Completed", "Failed", "Stopped"]
         start_time = time.time()
 
         while True:
             self.refresh()
-            current_status = self.auto_m_l_job_status
+            current_status = self.auto_ml_job_status
 
             if current_status in terminal_states:
+                print(f"\nFinal Resource Status: {current_status}")
 
                 if "failed" in current_status.lower():
-                    raise FailedStatusError(resource_type="AutoMLJobV2", status=current_status, reason=self.failure_reason)
+                    raise FailedStatusError(
+                        resource_type="AutoMLJobV2",
+                        status=current_status,
+                        reason=self.failure_reason,
+                    )
 
-                return self
+                return
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="AutoMLJobV2", status=current_status)
@@ -2714,6 +2926,7 @@ class Cluster(Base):
         vpc_config:
 
     """
+
     cluster_name: str
     cluster_arn: Optional[str] = Unassigned()
     cluster_status: Optional[str] = Unassigned()
@@ -2724,32 +2937,36 @@ class Cluster(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'cluster_name':
-                return value
-        raise Exception("Name attribute not found for object")
+        resource_name = "cluster_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
 
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
+        for attribute, value in attributes.items():
+            if attribute == "name" or attribute in attribute_name_candidates:
+                return value
+        logger.error("Name attribute not found for object cluster")
+        return None
 
     def populate_inputs_decorator(create_func):
+        @functools.wraps(create_func)
         def wrapper(*args, **kwargs):
-            config_schema_for_resource = \
-        {
-          "vpc_config": {
-            "security_group_ids": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            "subnets": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
+            config_schema_for_resource = {
+                "vpc_config": {
+                    "security_group_ids": {"type": "array", "items": {"type": "string"}},
+                    "subnets": {"type": "array", "items": {"type": "string"}},
+                }
             }
-          }
-        }
-            return create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "Cluster", **kwargs))
+            return create_func(
+                *args,
+                **Base.get_updated_kwargs_with_configured_attributes(
+                    config_schema_for_resource, "Cluster", **kwargs
+                ),
+            )
+
         return wrapper
 
     @classmethod
@@ -2796,16 +3013,20 @@ class Cluster(Base):
         """
 
         logger.debug("Creating cluster resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'ClusterName': cluster_name,
-            'InstanceGroups': instance_groups,
-            'VpcConfig': vpc_config,
-            'Tags': tags,
+            "ClusterName": cluster_name,
+            "InstanceGroups": instance_groups,
+            "VpcConfig": vpc_config,
+            "Tags": tags,
         }
 
-        operation_input_args = Base.populate_chained_attributes(resource_name='Cluster', operation_input_args=operation_input_args)
+        operation_input_args = Base.populate_chained_attributes(
+            resource_name="Cluster", operation_input_args=operation_input_args
+        )
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -2851,19 +3072,23 @@ class Cluster(Base):
         """
 
         operation_input_args = {
-            'ClusterName': cluster_name,
+            "ClusterName": cluster_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
         response = client.describe_cluster(**operation_input_args)
 
         pprint(response)
 
         # deserialize the response
-        transformed_response = transform(response, 'DescribeClusterResponse')
+        transformed_response = transform(response, "DescribeClusterResponse")
         cluster = cls(**transformed_response)
         return cluster
 
-    def refresh(self) -> Optional["Cluster"]:
+    def refresh(
+        self,
+    ) -> Optional["Cluster"]:
         """
         Refresh a Cluster resource
 
@@ -2885,13 +3110,13 @@ class Cluster(Base):
         """
 
         operation_input_args = {
-            'ClusterName': self.cluster_name,
+            "ClusterName": self.cluster_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_cluster(**operation_input_args)
 
         # deserialize response and update self
-        transform(response, 'DescribeClusterResponse', self)
+        transform(response, "DescribeClusterResponse", self)
         return self
 
     @populate_inputs_decorator
@@ -2923,11 +3148,11 @@ class Cluster(Base):
         """
 
         logger.debug("Updating cluster resource.")
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
-            'ClusterName': self.cluster_name,
-            'InstanceGroups': instance_groups,
+            "ClusterName": self.cluster_name,
+            "InstanceGroups": instance_groups,
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -2941,7 +3166,9 @@ class Cluster(Base):
 
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a Cluster resource
 
@@ -2961,19 +3188,29 @@ class Cluster(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
-            'ClusterName': self.cluster_name,
+            "ClusterName": self.cluster_name,
         }
         client.delete_cluster(**operation_input_args)
 
+        logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+
     def wait_for_status(
         self,
-        status: Literal['Creating', 'Deleting', 'Failed', 'InService', 'RollingBack', 'SystemUpdating', 'Updating'],
+        status: Literal[
+            "Creating",
+            "Deleting",
+            "Failed",
+            "InService",
+            "RollingBack",
+            "SystemUpdating",
+            "Updating",
+        ],
         poll: int = 5,
-        timeout: Optional[int] = None
-    ) -> Optional["Cluster"]:
+        timeout: Optional[int] = None,
+    ):
         """
         Wait for a Cluster resource.
 
@@ -2998,10 +3235,13 @@ class Cluster(Base):
             current_status = self.cluster_status
 
             if status == current_status:
-                return self
+                print(f"\nFinal Resource Status: {current_status}")
+                return
 
             if "failed" in current_status.lower():
-                raise FailedStatusError(resource_type="Cluster", status=current_status, reason='(Unknown)')
+                raise FailedStatusError(
+                    resource_type="Cluster", status=current_status, reason="(Unknown)"
+                )
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="Cluster", status=current_status)
@@ -3049,27 +3289,32 @@ class Cluster(Base):
                 ```
         """
 
-        client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'CreationTimeAfter': creation_time_after,
-            'CreationTimeBefore': creation_time_before,
-            'NameContains': name_contains,
-            'SortBy': sort_by,
-            'SortOrder': sort_order,
+            "CreationTimeAfter": creation_time_after,
+            "CreationTimeBefore": creation_time_before,
+            "NameContains": name_contains,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
         }
 
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
 
         return ResourceIterator(
             client=client,
-            list_method='list_clusters',
-            summaries_key='ClusterSummaries',
-            summary_name='ClusterSummary',
+            list_method="list_clusters",
+            summaries_key="ClusterSummaries",
+            summary_name="ClusterSummary",
             resource_cls=Cluster,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
-
 
     def get_node(
         self,
@@ -3078,7 +3323,7 @@ class Cluster(Base):
         region: Optional[str] = None,
     ) -> Optional[ClusterNodeDetails]:
         """
-        Perform DescribeClusterNode on a Cluster resource.
+        Retrieves information of an instance (also called a node interchangeably) of a SageMaker HyperPod cluster.
 
         Parameters:
             node_id: The ID of the instance.
@@ -3088,22 +3333,22 @@ class Cluster(Base):
 
         """
 
-
         operation_input_args = {
-            'ClusterName': self.cluster_name,
-            'NodeId': node_id,
+            "ClusterName": self.cluster_name,
+            "NodeId": node_id,
         }
         logger.debug(f"Input request: {operation_input_args}")
 
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         logger.debug(f"Calling describe_cluster_node API")
         response = client.describe_cluster_node(**operation_input_args)
         logger.debug(f"Response: {response}")
 
-        transformed_response = transform(response, 'DescribeClusterNodeResponse')
+        transformed_response = transform(response, "DescribeClusterNodeResponse")
         return ClusterNodeDetails(**transformed_response)
-
 
     def get_all_nodes(
         self,
@@ -3111,11 +3356,12 @@ class Cluster(Base):
         creation_time_before: Optional[datetime.datetime] = Unassigned(),
         instance_group_name_contains: Optional[str] = Unassigned(),
         sort_by: Optional[str] = Unassigned(),
-        sort_order: Optional[str] = Unassigned(),    session: Optional[Session] = None,
+        sort_order: Optional[str] = Unassigned(),
+        session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> ResourceIterator[ClusterNodeDetails]:
         """
-        Perform ListClusterNodes on a Cluster resource.
+        Retrieves the list of instances (also called nodes interchangeably) in a SageMaker HyperPod cluster.
 
         Parameters:
             creation_time_after: A filter that returns nodes in a SageMaker HyperPod cluster created after the specified time. Timestamps are formatted according to the ISO 8601 standard.  Acceptable formats include:    YYYY-MM-DDThh:mm:ss.sssTZD (UTC), for example, 2014-10-01T20:30:00.000Z     YYYY-MM-DDThh:mm:ss.sssTZD (with offset), for example, 2014-10-01T12:30:00.000-08:00     YYYY-MM-DD, for example, 2014-10-01    Unix time in seconds, for example, 1412195400. This is also referred to as Unix Epoch time and represents the number of seconds since midnight, January 1, 1970 UTC.   For more information about the timestamp format, see Timestamp in the Amazon Web Services Command Line Interface User Guide.
@@ -3131,55 +3377,57 @@ class Cluster(Base):
 
         """
 
-
         operation_input_args = {
-            'ClusterName': self.cluster_name,
-            'CreationTimeAfter': creation_time_after,
-            'CreationTimeBefore': creation_time_before,
-            'InstanceGroupNameContains': instance_group_name_contains,
-            'SortBy': sort_by,
-            'SortOrder': sort_order,
+            "ClusterName": self.cluster_name,
+            "CreationTimeAfter": creation_time_after,
+            "CreationTimeBefore": creation_time_before,
+            "InstanceGroupNameContains": instance_group_name_contains,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
         }
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
         logger.debug(f"Input request: {operation_input_args}")
 
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
-
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         return ResourceIterator(
             client=client,
-            list_method='list_cluster_nodes',
-            summaries_key='ClusterNodeSummaries',
-            summary_name='ClusterNodeSummary',
+            list_method="list_cluster_nodes",
+            summaries_key="ClusterNodeSummaries",
+            summary_name="ClusterNodeSummary",
             resource_cls=ClusterNodeDetails,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
-
 
     def update_software(
         self,
-
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> None:
         """
-        Perform UpdateClusterSoftware on a Cluster resource.
+        Updates the platform software of a SageMaker HyperPod cluster for security patching.
 
 
         """
 
-
         operation_input_args = {
-            'ClusterName': self.cluster_name,
+            "ClusterName": self.cluster_name,
         }
         logger.debug(f"Input request: {operation_input_args}")
 
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         logger.debug(f"Calling update_cluster_software API")
         response = client.update_cluster_software(**operation_input_args)
         logger.debug(f"Response: {response}")
-
 
 
 class CodeRepository(Base):
@@ -3187,13 +3435,14 @@ class CodeRepository(Base):
     Class representing resource CodeRepository
 
     Attributes:
-        code_repository_name:The name of the Git repository.
-        code_repository_arn:The Amazon Resource Name (ARN) of the Git repository.
-        creation_time:The date and time that the repository was created.
-        last_modified_time:The date and time that the repository was last changed.
-        git_config:Configuration details about the repository, including the URL where the repository is located, the default branch, and the Amazon Resource Name (ARN) of the Amazon Web Services Secrets Manager secret that contains the credentials used to access the repository.
+        code_repository_name: The name of the Git repository.
+        code_repository_arn: The Amazon Resource Name (ARN) of the Git repository.
+        creation_time: The date and time that the repository was created.
+        last_modified_time: The date and time that the repository was last changed.
+        git_config: Configuration details about the repository, including the URL where the repository is located, the default branch, and the Amazon Resource Name (ARN) of the Amazon Web Services Secrets Manager secret that contains the credentials used to access the repository.
 
     """
+
     code_repository_name: str
     code_repository_arn: Optional[str] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
@@ -3202,10 +3451,19 @@ class CodeRepository(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "code_repository_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'code_repository_name':
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object code_repository")
+        return None
 
     @classmethod
     def create(
@@ -3246,15 +3504,19 @@ class CodeRepository(Base):
         """
 
         logger.debug("Creating code_repository resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'CodeRepositoryName': code_repository_name,
-            'GitConfig': git_config,
-            'Tags': tags,
+            "CodeRepositoryName": code_repository_name,
+            "GitConfig": git_config,
+            "Tags": tags,
         }
 
-        operation_input_args = Base.populate_chained_attributes(resource_name='CodeRepository', operation_input_args=operation_input_args)
+        operation_input_args = Base.populate_chained_attributes(
+            resource_name="CodeRepository", operation_input_args=operation_input_args
+        )
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -3299,19 +3561,23 @@ class CodeRepository(Base):
         """
 
         operation_input_args = {
-            'CodeRepositoryName': code_repository_name,
+            "CodeRepositoryName": code_repository_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
         response = client.describe_code_repository(**operation_input_args)
 
         pprint(response)
 
         # deserialize the response
-        transformed_response = transform(response, 'DescribeCodeRepositoryOutput')
+        transformed_response = transform(response, "DescribeCodeRepositoryOutput")
         code_repository = cls(**transformed_response)
         return code_repository
 
-    def refresh(self) -> Optional["CodeRepository"]:
+    def refresh(
+        self,
+    ) -> Optional["CodeRepository"]:
         """
         Refresh a CodeRepository resource
 
@@ -3332,13 +3598,13 @@ class CodeRepository(Base):
         """
 
         operation_input_args = {
-            'CodeRepositoryName': self.code_repository_name,
+            "CodeRepositoryName": self.code_repository_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_code_repository(**operation_input_args)
 
         # deserialize response and update self
-        transform(response, 'DescribeCodeRepositoryOutput', self)
+        transform(response, "DescribeCodeRepositoryOutput", self)
         return self
 
     def update(
@@ -3367,11 +3633,11 @@ class CodeRepository(Base):
         """
 
         logger.debug("Updating code_repository resource.")
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
-            'CodeRepositoryName': self.code_repository_name,
-            'GitConfig': git_config,
+            "CodeRepositoryName": self.code_repository_name,
+            "GitConfig": git_config,
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -3385,7 +3651,9 @@ class CodeRepository(Base):
 
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a CodeRepository resource
 
@@ -3403,27 +3671,30 @@ class CodeRepository(Base):
                 ```
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
-            'CodeRepositoryName': self.code_repository_name,
+            "CodeRepositoryName": self.code_repository_name,
         }
         client.delete_code_repository(**operation_input_args)
 
+        logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
+    @classmethod
     def get_all(
-        self,
+        cls,
         creation_time_after: Optional[datetime.datetime] = Unassigned(),
         creation_time_before: Optional[datetime.datetime] = Unassigned(),
         last_modified_time_after: Optional[datetime.datetime] = Unassigned(),
         last_modified_time_before: Optional[datetime.datetime] = Unassigned(),
         name_contains: Optional[str] = Unassigned(),
         sort_by: Optional[str] = Unassigned(),
-        sort_order: Optional[str] = Unassigned(),    session: Optional[Session] = None,
+        sort_order: Optional[str] = Unassigned(),
+        session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> ResourceIterator["CodeRepository"]:
         """
-        Perform ListCodeRepositories on a CodeRepository resource.
+        Gets a list of the Git repositories in your account.
 
         Parameters:
             creation_time_after: A filter that returns only Git repositories that were created after the specified time.
@@ -3441,29 +3712,33 @@ class CodeRepository(Base):
 
         """
 
-
         operation_input_args = {
-            'CreationTimeAfter': creation_time_after,
-            'CreationTimeBefore': creation_time_before,
-            'LastModifiedTimeAfter': last_modified_time_after,
-            'LastModifiedTimeBefore': last_modified_time_before,
-            'NameContains': name_contains,
-            'SortBy': sort_by,
-            'SortOrder': sort_order,
+            "CreationTimeAfter": creation_time_after,
+            "CreationTimeBefore": creation_time_before,
+            "LastModifiedTimeAfter": last_modified_time_after,
+            "LastModifiedTimeBefore": last_modified_time_before,
+            "NameContains": name_contains,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
         }
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
         logger.debug(f"Input request: {operation_input_args}")
 
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
-
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         return ResourceIterator(
             client=client,
-            list_method='list_code_repositories',
-            summaries_key='CodeRepositorySummaryList',
-            summary_name='CodeRepositorySummary',
+            list_method="list_code_repositories",
+            summaries_key="CodeRepositorySummaryList",
+            summary_name="CodeRepositorySummary",
             resource_cls=CodeRepository,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
 
 
@@ -3472,26 +3747,27 @@ class CompilationJob(Base):
     Class representing resource CompilationJob
 
     Attributes:
-        compilation_job_name:The name of the model compilation job.
-        compilation_job_arn:The Amazon Resource Name (ARN) of the model compilation job.
-        compilation_job_status:The status of the model compilation job.
-        stopping_condition:Specifies a limit to how long a model compilation job can run. When the job reaches the time limit, Amazon SageMaker ends the compilation job. Use this API to cap model training costs.
-        creation_time:The time that the model compilation job was created.
-        last_modified_time:The time that the status of the model compilation job was last modified.
-        failure_reason:If a model compilation job failed, the reason it failed.
-        model_artifacts:Information about the location in Amazon S3 that has been configured for storing the model artifacts used in the compilation job.
-        role_arn:The Amazon Resource Name (ARN) of an IAM role that Amazon SageMaker assumes to perform the model compilation job.
-        input_config:Information about the location in Amazon S3 of the input model artifacts, the name and shape of the expected data inputs, and the framework in which the model was trained.
-        output_config:Information about the output location for the compiled model and the target device that the model runs on.
-        compilation_start_time:The time when the model compilation job started the CompilationJob instances.  You are billed for the time between this timestamp and the timestamp in the CompilationEndTime field. In Amazon CloudWatch Logs, the start time might be later than this time. That's because it takes time to download the compilation job, which depends on the size of the compilation job container.
-        compilation_end_time:The time when the model compilation job on a compilation job instance ended. For a successful or stopped job, this is when the job's model artifacts have finished uploading. For a failed job, this is when Amazon SageMaker detected that the job failed.
-        inference_image:The inference image to use when compiling a model. Specify an image only if the target device is a cloud instance.
-        model_package_version_arn:The Amazon Resource Name (ARN) of the versioned model package that was provided to SageMaker Neo when you initiated a compilation job.
-        model_digests:Provides a BLAKE2 hash value that identifies the compiled model artifacts in Amazon S3.
-        vpc_config:A VpcConfig object that specifies the VPC that you want your compilation job to connect to. Control access to your models by configuring the VPC. For more information, see Protect Compilation Jobs by Using an Amazon Virtual Private Cloud.
-        derived_information:Information that SageMaker Neo automatically derived about the model.
+        compilation_job_name: The name of the model compilation job.
+        compilation_job_arn: The Amazon Resource Name (ARN) of the model compilation job.
+        compilation_job_status: The status of the model compilation job.
+        stopping_condition: Specifies a limit to how long a model compilation job can run. When the job reaches the time limit, Amazon SageMaker ends the compilation job. Use this API to cap model training costs.
+        creation_time: The time that the model compilation job was created.
+        last_modified_time: The time that the status of the model compilation job was last modified.
+        failure_reason: If a model compilation job failed, the reason it failed.
+        model_artifacts: Information about the location in Amazon S3 that has been configured for storing the model artifacts used in the compilation job.
+        role_arn: The Amazon Resource Name (ARN) of an IAM role that Amazon SageMaker assumes to perform the model compilation job.
+        input_config: Information about the location in Amazon S3 of the input model artifacts, the name and shape of the expected data inputs, and the framework in which the model was trained.
+        output_config: Information about the output location for the compiled model and the target device that the model runs on.
+        compilation_start_time: The time when the model compilation job started the CompilationJob instances.  You are billed for the time between this timestamp and the timestamp in the CompilationEndTime field. In Amazon CloudWatch Logs, the start time might be later than this time. That's because it takes time to download the compilation job, which depends on the size of the compilation job container.
+        compilation_end_time: The time when the model compilation job on a compilation job instance ended. For a successful or stopped job, this is when the job's model artifacts have finished uploading. For a failed job, this is when Amazon SageMaker detected that the job failed.
+        inference_image: The inference image to use when compiling a model. Specify an image only if the target device is a cloud instance.
+        model_package_version_arn: The Amazon Resource Name (ARN) of the versioned model package that was provided to SageMaker Neo when you initiated a compilation job.
+        model_digests: Provides a BLAKE2 hash value that identifies the compiled model artifacts in Amazon S3.
+        vpc_config: A VpcConfig object that specifies the VPC that you want your compilation job to connect to. Control access to your models by configuring the VPC. For more information, see Protect Compilation Jobs by Using an Amazon Virtual Private Cloud.
+        derived_information: Information that SageMaker Neo automatically derived about the model.
 
     """
+
     compilation_job_name: str
     compilation_job_arn: Optional[str] = Unassigned()
     compilation_job_status: Optional[str] = Unassigned()
@@ -3513,53 +3789,43 @@ class CompilationJob(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'compilation_job_name':
-                return value
-        raise Exception("Name attribute not found for object")
+        resource_name = "compilation_job_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
 
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
+        for attribute, value in attributes.items():
+            if attribute == "name" or attribute in attribute_name_candidates:
+                return value
+        logger.error("Name attribute not found for object compilation_job")
+        return None
 
     def populate_inputs_decorator(create_func):
+        @functools.wraps(create_func)
         def wrapper(*args, **kwargs):
-            config_schema_for_resource = \
-        {
-          "model_artifacts": {
-            "s3_model_artifacts": {
-              "type": "string"
+            config_schema_for_resource = {
+                "model_artifacts": {"s3_model_artifacts": {"type": "string"}},
+                "role_arn": {"type": "string"},
+                "input_config": {"s3_uri": {"type": "string"}},
+                "output_config": {
+                    "s3_output_location": {"type": "string"},
+                    "kms_key_id": {"type": "string"},
+                },
+                "vpc_config": {
+                    "security_group_ids": {"type": "array", "items": {"type": "string"}},
+                    "subnets": {"type": "array", "items": {"type": "string"}},
+                },
             }
-          },
-          "role_arn": {
-            "type": "string"
-          },
-          "input_config": {
-            "s3_uri": {
-              "type": "string"
-            }
-          },
-          "output_config": {
-            "s3_output_location": {
-              "type": "string"
-            },
-            "kms_key_id": {
-              "type": "string"
-            }
-          },
-          "vpc_config": {
-            "security_group_ids": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            "subnets": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
-          }
-        }
-            return create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "CompilationJob", **kwargs))
+            return create_func(
+                *args,
+                **Base.get_updated_kwargs_with_configured_attributes(
+                    config_schema_for_resource, "CompilationJob", **kwargs
+                ),
+            )
+
         return wrapper
 
     @classmethod
@@ -3581,14 +3847,14 @@ class CompilationJob(Base):
         Create a CompilationJob resource
 
         Parameters:
-            compilation_job_name:A name for the model compilation job. The name must be unique within the Amazon Web Services Region and within your Amazon Web Services account.
-            role_arn:The Amazon Resource Name (ARN) of an IAM role that enables Amazon SageMaker to perform tasks on your behalf.  During model compilation, Amazon SageMaker needs your permission to:   Read input data from an S3 bucket   Write model artifacts to an S3 bucket   Write logs to Amazon CloudWatch Logs   Publish metrics to Amazon CloudWatch   You grant permissions for all of these tasks to an IAM role. To pass this role to Amazon SageMaker, the caller of this API must have the iam:PassRole permission. For more information, see Amazon SageMaker Roles.
-            output_config:Provides information about the output location for the compiled model and the target device the model runs on.
-            stopping_condition:Specifies a limit to how long a model compilation job can run. When the job reaches the time limit, Amazon SageMaker ends the compilation job. Use this API to cap model training costs.
-            model_package_version_arn:The Amazon Resource Name (ARN) of a versioned model package. Provide either a ModelPackageVersionArn or an InputConfig object in the request syntax. The presence of both objects in the CreateCompilationJob request will return an exception.
-            input_config:Provides information about the location of input model artifacts, the name and shape of the expected data inputs, and the framework in which the model was trained.
-            vpc_config:A VpcConfig object that specifies the VPC that you want your compilation job to connect to. Control access to your models by configuring the VPC. For more information, see Protect Compilation Jobs by Using an Amazon Virtual Private Cloud.
-            tags:An array of key-value pairs. You can use tags to categorize your Amazon Web Services resources in different ways, for example, by purpose, owner, or environment. For more information, see Tagging Amazon Web Services Resources.
+            compilation_job_name: A name for the model compilation job. The name must be unique within the Amazon Web Services Region and within your Amazon Web Services account.
+            role_arn: The Amazon Resource Name (ARN) of an IAM role that enables Amazon SageMaker to perform tasks on your behalf.  During model compilation, Amazon SageMaker needs your permission to:   Read input data from an S3 bucket   Write model artifacts to an S3 bucket   Write logs to Amazon CloudWatch Logs   Publish metrics to Amazon CloudWatch   You grant permissions for all of these tasks to an IAM role. To pass this role to Amazon SageMaker, the caller of this API must have the iam:PassRole permission. For more information, see Amazon SageMaker Roles.
+            output_config: Provides information about the output location for the compiled model and the target device the model runs on.
+            stopping_condition: Specifies a limit to how long a model compilation job can run. When the job reaches the time limit, Amazon SageMaker ends the compilation job. Use this API to cap model training costs.
+            model_package_version_arn: The Amazon Resource Name (ARN) of a versioned model package. Provide either a ModelPackageVersionArn or an InputConfig object in the request syntax. The presence of both objects in the CreateCompilationJob request will return an exception.
+            input_config: Provides information about the location of input model artifacts, the name and shape of the expected data inputs, and the framework in which the model was trained.
+            vpc_config: A VpcConfig object that specifies the VPC that you want your compilation job to connect to. Control access to your models by configuring the VPC. For more information, see Protect Compilation Jobs by Using an Amazon Virtual Private Cloud.
+            tags: An array of key-value pairs. You can use tags to categorize your Amazon Web Services resources in different ways, for example, by purpose, owner, or environment. For more information, see Tagging Amazon Web Services Resources.
             session: Boto3 session.
             region: Region name.
 
@@ -3614,20 +3880,24 @@ class CompilationJob(Base):
         """
 
         logger.debug("Creating compilation_job resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'CompilationJobName': compilation_job_name,
-            'RoleArn': role_arn,
-            'ModelPackageVersionArn': model_package_version_arn,
-            'InputConfig': input_config,
-            'OutputConfig': output_config,
-            'VpcConfig': vpc_config,
-            'StoppingCondition': stopping_condition,
-            'Tags': tags,
+            "CompilationJobName": compilation_job_name,
+            "RoleArn": role_arn,
+            "ModelPackageVersionArn": model_package_version_arn,
+            "InputConfig": input_config,
+            "OutputConfig": output_config,
+            "VpcConfig": vpc_config,
+            "StoppingCondition": stopping_condition,
+            "Tags": tags,
         }
 
-        operation_input_args = Base.populate_chained_attributes(resource_name='CompilationJob', operation_input_args=operation_input_args)
+        operation_input_args = Base.populate_chained_attributes(
+            resource_name="CompilationJob", operation_input_args=operation_input_args
+        )
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -3673,19 +3943,23 @@ class CompilationJob(Base):
         """
 
         operation_input_args = {
-            'CompilationJobName': compilation_job_name,
+            "CompilationJobName": compilation_job_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
         response = client.describe_compilation_job(**operation_input_args)
 
         pprint(response)
 
         # deserialize the response
-        transformed_response = transform(response, 'DescribeCompilationJobResponse')
+        transformed_response = transform(response, "DescribeCompilationJobResponse")
         compilation_job = cls(**transformed_response)
         return compilation_job
 
-    def refresh(self) -> Optional["CompilationJob"]:
+    def refresh(
+        self,
+    ) -> Optional["CompilationJob"]:
         """
         Refresh a CompilationJob resource
 
@@ -3707,16 +3981,18 @@ class CompilationJob(Base):
         """
 
         operation_input_args = {
-            'CompilationJobName': self.compilation_job_name,
+            "CompilationJobName": self.compilation_job_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_compilation_job(**operation_input_args)
 
         # deserialize response and update self
-        transform(response, 'DescribeCompilationJobResponse', self)
+        transform(response, "DescribeCompilationJobResponse", self)
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a CompilationJob resource
 
@@ -3735,12 +4011,14 @@ class CompilationJob(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
-            'CompilationJobName': self.compilation_job_name,
+            "CompilationJobName": self.compilation_job_name,
         }
         client.delete_compilation_job(**operation_input_args)
+
+        logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
     def stop(self) -> None:
         """
@@ -3764,15 +4042,11 @@ class CompilationJob(Base):
         client = SageMakerClient().client
 
         operation_input_args = {
-            'CompilationJobName': self.compilation_job_name,
+            "CompilationJobName": self.compilation_job_name,
         }
         client.stop_compilation_job(**operation_input_args)
 
-    def wait(
-        self,
-        poll: int = 5,
-        timeout: Optional[int] = None
-    ) -> Optional["CompilationJob"]:
+    def wait(self, poll: int = 5, timeout: Optional[int] = None):
         """
         Wait for a CompilationJob resource.
 
@@ -3789,7 +4063,7 @@ class CompilationJob(Base):
             WaiterError: Raised when an error occurs while waiting.
 
         """
-        terminal_states = ['COMPLETED', 'FAILED', 'STOPPED']
+        terminal_states = ["COMPLETED", "FAILED", "STOPPED"]
         start_time = time.time()
 
         while True:
@@ -3797,11 +4071,16 @@ class CompilationJob(Base):
             current_status = self.compilation_job_status
 
             if current_status in terminal_states:
+                print(f"\nFinal Resource Status: {current_status}")
 
                 if "failed" in current_status.lower():
-                    raise FailedStatusError(resource_type="CompilationJob", status=current_status, reason=self.failure_reason)
+                    raise FailedStatusError(
+                        resource_type="CompilationJob",
+                        status=current_status,
+                        reason=self.failure_reason,
+                    )
 
-                return self
+                return
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="CompilationJob", status=current_status)
@@ -3826,16 +4105,16 @@ class CompilationJob(Base):
         Get all CompilationJob resources
 
         Parameters:
-            next_token:If the result of the previous ListCompilationJobs request was truncated, the response includes a NextToken. To retrieve the next set of model compilation jobs, use the token in the next request.
-            max_results:The maximum number of model compilation jobs to return in the response.
-            creation_time_after:A filter that returns the model compilation jobs that were created after a specified time.
-            creation_time_before:A filter that returns the model compilation jobs that were created before a specified time.
-            last_modified_time_after:A filter that returns the model compilation jobs that were modified after a specified time.
-            last_modified_time_before:A filter that returns the model compilation jobs that were modified before a specified time.
-            name_contains:A filter that returns the model compilation jobs whose name contains a specified string.
-            status_equals:A filter that retrieves model compilation jobs with a specific CompilationJobStatus status.
-            sort_by:The field by which to sort results. The default is CreationTime.
-            sort_order:The sort order for results. The default is Ascending.
+            next_token: If the result of the previous ListCompilationJobs request was truncated, the response includes a NextToken. To retrieve the next set of model compilation jobs, use the token in the next request.
+            max_results: The maximum number of model compilation jobs to return in the response.
+            creation_time_after: A filter that returns the model compilation jobs that were created after a specified time.
+            creation_time_before: A filter that returns the model compilation jobs that were created before a specified time.
+            last_modified_time_after: A filter that returns the model compilation jobs that were modified after a specified time.
+            last_modified_time_before: A filter that returns the model compilation jobs that were modified before a specified time.
+            name_contains: A filter that returns the model compilation jobs whose name contains a specified string.
+            status_equals: A filter that retrieves model compilation jobs with a specific CompilationJobStatus status.
+            sort_by: The field by which to sort results. The default is CreationTime.
+            sort_order: The sort order for results. The default is Ascending.
             session: Boto3 session.
             region: Region name.
 
@@ -3855,28 +4134,34 @@ class CompilationJob(Base):
                 ```
         """
 
-        client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'CreationTimeAfter': creation_time_after,
-            'CreationTimeBefore': creation_time_before,
-            'LastModifiedTimeAfter': last_modified_time_after,
-            'LastModifiedTimeBefore': last_modified_time_before,
-            'NameContains': name_contains,
-            'StatusEquals': status_equals,
-            'SortBy': sort_by,
-            'SortOrder': sort_order,
+            "CreationTimeAfter": creation_time_after,
+            "CreationTimeBefore": creation_time_before,
+            "LastModifiedTimeAfter": last_modified_time_after,
+            "LastModifiedTimeBefore": last_modified_time_before,
+            "NameContains": name_contains,
+            "StatusEquals": status_equals,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
         }
 
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
 
         return ResourceIterator(
             client=client,
-            list_method='list_compilation_jobs',
-            summaries_key='CompilationJobSummaries',
-            summary_name='CompilationJobSummary',
+            list_method="list_compilation_jobs",
+            summaries_key="CompilationJobSummaries",
+            summary_name="CompilationJobSummary",
             resource_cls=CompilationJob,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
 
 
@@ -3895,9 +4180,10 @@ class Context(Base):
         created_by:
         last_modified_time: When the context was last modified.
         last_modified_by:
-        lineage_group_arn:The Amazon Resource Name (ARN) of the lineage group.
+        lineage_group_arn: The Amazon Resource Name (ARN) of the lineage group.
 
     """
+
     context_name: str
     context_arn: Optional[str] = Unassigned()
     source: Optional[ContextSource] = Unassigned()
@@ -3912,10 +4198,19 @@ class Context(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "context_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'context_name':
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object context")
+        return None
 
     @classmethod
     def create(
@@ -3963,18 +4258,22 @@ class Context(Base):
         """
 
         logger.debug("Creating context resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'ContextName': context_name,
-            'Source': source,
-            'ContextType': context_type,
-            'Description': description,
-            'Properties': properties,
-            'Tags': tags,
+            "ContextName": context_name,
+            "Source": source,
+            "ContextType": context_type,
+            "Description": description,
+            "Properties": properties,
+            "Tags": tags,
         }
 
-        operation_input_args = Base.populate_chained_attributes(resource_name='Context', operation_input_args=operation_input_args)
+        operation_input_args = Base.populate_chained_attributes(
+            resource_name="Context", operation_input_args=operation_input_args
+        )
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -4020,19 +4319,23 @@ class Context(Base):
         """
 
         operation_input_args = {
-            'ContextName': context_name,
+            "ContextName": context_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
         response = client.describe_context(**operation_input_args)
 
         pprint(response)
 
         # deserialize the response
-        transformed_response = transform(response, 'DescribeContextResponse')
+        transformed_response = transform(response, "DescribeContextResponse")
         context = cls(**transformed_response)
         return context
 
-    def refresh(self) -> Optional["Context"]:
+    def refresh(
+        self,
+    ) -> Optional["Context"]:
         """
         Refresh a Context resource
 
@@ -4054,13 +4357,13 @@ class Context(Base):
         """
 
         operation_input_args = {
-            'ContextName': self.context_name,
+            "ContextName": self.context_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_context(**operation_input_args)
 
         # deserialize response and update self
-        transform(response, 'DescribeContextResponse', self)
+        transform(response, "DescribeContextResponse", self)
         return self
 
     def update(
@@ -4073,7 +4376,7 @@ class Context(Base):
         Update a Context resource
 
         Parameters:
-            properties_to_remove:A list of properties to remove.
+            properties_to_remove: A list of properties to remove.
 
         Returns:
             The Context resource.
@@ -4094,13 +4397,13 @@ class Context(Base):
         """
 
         logger.debug("Updating context resource.")
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
-            'ContextName': self.context_name,
-            'Description': description,
-            'Properties': properties,
-            'PropertiesToRemove': properties_to_remove,
+            "ContextName": self.context_name,
+            "Description": description,
+            "Properties": properties,
+            "PropertiesToRemove": properties_to_remove,
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -4114,7 +4417,9 @@ class Context(Base):
 
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a Context resource
 
@@ -4133,12 +4438,14 @@ class Context(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
-            'ContextName': self.context_name,
+            "ContextName": self.context_name,
         }
         client.delete_context(**operation_input_args)
+
+        logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
     @classmethod
     def get_all(
@@ -4184,26 +4491,32 @@ class Context(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'SourceUri': source_uri,
-            'ContextType': context_type,
-            'CreatedAfter': created_after,
-            'CreatedBefore': created_before,
-            'SortBy': sort_by,
-            'SortOrder': sort_order,
+            "SourceUri": source_uri,
+            "ContextType": context_type,
+            "CreatedAfter": created_after,
+            "CreatedBefore": created_before,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
         }
 
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
 
         return ResourceIterator(
             client=client,
-            list_method='list_contexts',
-            summaries_key='ContextSummaries',
-            summary_name='ContextSummary',
+            list_method="list_contexts",
+            summaries_key="ContextSummaries",
+            summary_name="ContextSummary",
             resource_cls=Context,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
 
 
@@ -4225,6 +4538,7 @@ class DataQualityJobDefinition(Base):
         stopping_condition:
 
     """
+
     job_definition_name: str
     job_definition_arn: Optional[str] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
@@ -4239,82 +4553,56 @@ class DataQualityJobDefinition(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'data_quality_job_definition_name':
-                return value
-        raise Exception("Name attribute not found for object")
+        resource_name = "data_quality_job_definition_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
 
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
+        for attribute, value in attributes.items():
+            if attribute == "name" or attribute in attribute_name_candidates:
+                return value
+        logger.error("Name attribute not found for object data_quality_job_definition")
+        return None
 
     def populate_inputs_decorator(create_func):
+        @functools.wraps(create_func)
         def wrapper(*args, **kwargs):
-            config_schema_for_resource = \
-        {
-          "data_quality_job_input": {
-            "endpoint_input": {
-              "s3_input_mode": {
-                "type": "string"
-              },
-              "s3_data_distribution_type": {
-                "type": "string"
-              }
-            },
-            "batch_transform_input": {
-              "data_captured_destination_s3_uri": {
-                "type": "string"
-              },
-              "s3_input_mode": {
-                "type": "string"
-              },
-              "s3_data_distribution_type": {
-                "type": "string"
-              }
+            config_schema_for_resource = {
+                "data_quality_job_input": {
+                    "endpoint_input": {
+                        "s3_input_mode": {"type": "string"},
+                        "s3_data_distribution_type": {"type": "string"},
+                    },
+                    "batch_transform_input": {
+                        "data_captured_destination_s3_uri": {"type": "string"},
+                        "s3_input_mode": {"type": "string"},
+                        "s3_data_distribution_type": {"type": "string"},
+                    },
+                },
+                "data_quality_job_output_config": {"kms_key_id": {"type": "string"}},
+                "job_resources": {"cluster_config": {"volume_kms_key_id": {"type": "string"}}},
+                "role_arn": {"type": "string"},
+                "data_quality_baseline_config": {
+                    "constraints_resource": {"s3_uri": {"type": "string"}},
+                    "statistics_resource": {"s3_uri": {"type": "string"}},
+                },
+                "network_config": {
+                    "vpc_config": {
+                        "security_group_ids": {"type": "array", "items": {"type": "string"}},
+                        "subnets": {"type": "array", "items": {"type": "string"}},
+                    }
+                },
             }
-          },
-          "data_quality_job_output_config": {
-            "kms_key_id": {
-              "type": "string"
-            }
-          },
-          "job_resources": {
-            "cluster_config": {
-              "volume_kms_key_id": {
-                "type": "string"
-              }
-            }
-          },
-          "role_arn": {
-            "type": "string"
-          },
-          "data_quality_baseline_config": {
-            "constraints_resource": {
-              "s3_uri": {
-                "type": "string"
-              }
-            },
-            "statistics_resource": {
-              "s3_uri": {
-                "type": "string"
-              }
-            }
-          },
-          "network_config": {
-            "vpc_config": {
-              "security_group_ids": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
-              },
-              "subnets": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
-              }
-            }
-          }
-        }
-            return create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "DataQualityJobDefinition", **kwargs))
+            return create_func(
+                *args,
+                **Base.get_updated_kwargs_with_configured_attributes(
+                    config_schema_for_resource, "DataQualityJobDefinition", **kwargs
+                ),
+            )
+
         return wrapper
 
     @classmethod
@@ -4373,22 +4661,26 @@ class DataQualityJobDefinition(Base):
         """
 
         logger.debug("Creating data_quality_job_definition resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'JobDefinitionName': job_definition_name,
-            'DataQualityBaselineConfig': data_quality_baseline_config,
-            'DataQualityAppSpecification': data_quality_app_specification,
-            'DataQualityJobInput': data_quality_job_input,
-            'DataQualityJobOutputConfig': data_quality_job_output_config,
-            'JobResources': job_resources,
-            'NetworkConfig': network_config,
-            'RoleArn': role_arn,
-            'StoppingCondition': stopping_condition,
-            'Tags': tags,
+            "JobDefinitionName": job_definition_name,
+            "DataQualityBaselineConfig": data_quality_baseline_config,
+            "DataQualityAppSpecification": data_quality_app_specification,
+            "DataQualityJobInput": data_quality_job_input,
+            "DataQualityJobOutputConfig": data_quality_job_output_config,
+            "JobResources": job_resources,
+            "NetworkConfig": network_config,
+            "RoleArn": role_arn,
+            "StoppingCondition": stopping_condition,
+            "Tags": tags,
         }
 
-        operation_input_args = Base.populate_chained_attributes(resource_name='DataQualityJobDefinition', operation_input_args=operation_input_args)
+        operation_input_args = Base.populate_chained_attributes(
+            resource_name="DataQualityJobDefinition", operation_input_args=operation_input_args
+        )
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -4434,19 +4726,23 @@ class DataQualityJobDefinition(Base):
         """
 
         operation_input_args = {
-            'JobDefinitionName': job_definition_name,
+            "JobDefinitionName": job_definition_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
         response = client.describe_data_quality_job_definition(**operation_input_args)
 
         pprint(response)
 
         # deserialize the response
-        transformed_response = transform(response, 'DescribeDataQualityJobDefinitionResponse')
+        transformed_response = transform(response, "DescribeDataQualityJobDefinitionResponse")
         data_quality_job_definition = cls(**transformed_response)
         return data_quality_job_definition
 
-    def refresh(self) -> Optional["DataQualityJobDefinition"]:
+    def refresh(
+        self,
+    ) -> Optional["DataQualityJobDefinition"]:
         """
         Refresh a DataQualityJobDefinition resource
 
@@ -4468,16 +4764,18 @@ class DataQualityJobDefinition(Base):
         """
 
         operation_input_args = {
-            'JobDefinitionName': self.job_definition_name,
+            "JobDefinitionName": self.job_definition_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_data_quality_job_definition(**operation_input_args)
 
         # deserialize response and update self
-        transform(response, 'DescribeDataQualityJobDefinitionResponse', self)
+        transform(response, "DescribeDataQualityJobDefinitionResponse", self)
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a DataQualityJobDefinition resource
 
@@ -4496,12 +4794,14 @@ class DataQualityJobDefinition(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
-            'JobDefinitionName': self.job_definition_name,
+            "JobDefinitionName": self.job_definition_name,
         }
         client.delete_data_quality_job_definition(**operation_input_args)
+
+        logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
     @classmethod
     def get_all(
@@ -4546,27 +4846,36 @@ class DataQualityJobDefinition(Base):
                 ```
         """
 
-        client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'EndpointName': endpoint_name,
-            'SortBy': sort_by,
-            'SortOrder': sort_order,
-            'NameContains': name_contains,
-            'CreationTimeBefore': creation_time_before,
-            'CreationTimeAfter': creation_time_after,
+            "EndpointName": endpoint_name,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
+            "NameContains": name_contains,
+            "CreationTimeBefore": creation_time_before,
+            "CreationTimeAfter": creation_time_after,
         }
-        custom_key_mapping = {"monitoring_job_definition_name": "job_definition_name", "monitoring_job_definition_arn": "job_definition_arn"}
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
+        custom_key_mapping = {
+            "monitoring_job_definition_name": "job_definition_name",
+            "monitoring_job_definition_arn": "job_definition_arn",
+        }
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
 
         return ResourceIterator(
             client=client,
-            list_method='list_data_quality_job_definitions',
-            summaries_key='JobDefinitionSummaries',
-            summary_name='MonitoringJobDefinitionSummary',
+            list_method="list_data_quality_job_definitions",
+            summaries_key="JobDefinitionSummaries",
+            summary_name="MonitoringJobDefinitionSummary",
             resource_cls=DataQualityJobDefinition,
             custom_key_mapping=custom_key_mapping,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
 
 
@@ -4575,19 +4884,20 @@ class Device(Base):
     Class representing resource Device
 
     Attributes:
-        device_name:The unique identifier of the device.
-        device_fleet_name:The name of the fleet the device belongs to.
-        registration_time:The timestamp of the last registration or de-reregistration.
-        device_arn:The Amazon Resource Name (ARN) of the device.
-        description:A description of the device.
-        iot_thing_name:The Amazon Web Services Internet of Things (IoT) object thing name associated with the device.
-        latest_heartbeat:The last heartbeat received from the device.
-        models:Models on the device.
-        max_models:The maximum number of models.
-        next_token:The response from the last list when returning a list large enough to need tokening.
-        agent_version:Edge Manager agent version.
+        device_name: The unique identifier of the device.
+        device_fleet_name: The name of the fleet the device belongs to.
+        registration_time: The timestamp of the last registration or de-reregistration.
+        device_arn: The Amazon Resource Name (ARN) of the device.
+        description: A description of the device.
+        iot_thing_name: The Amazon Web Services Internet of Things (IoT) object thing name associated with the device.
+        latest_heartbeat: The last heartbeat received from the device.
+        models: Models on the device.
+        max_models: The maximum number of models.
+        next_token: The response from the last list when returning a list large enough to need tokening.
+        agent_version: Edge Manager agent version.
 
     """
+
     device_name: str
     device_fleet_name: str
     device_arn: Optional[str] = Unassigned()
@@ -4602,10 +4912,19 @@ class Device(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "device_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'device_name':
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object device")
+        return None
 
     @classmethod
     def get(
@@ -4644,21 +4963,25 @@ class Device(Base):
         """
 
         operation_input_args = {
-            'NextToken': next_token,
-            'DeviceName': device_name,
-            'DeviceFleetName': device_fleet_name,
+            "NextToken": next_token,
+            "DeviceName": device_name,
+            "DeviceFleetName": device_fleet_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
         response = client.describe_device(**operation_input_args)
 
         pprint(response)
 
         # deserialize the response
-        transformed_response = transform(response, 'DescribeDeviceResponse')
+        transformed_response = transform(response, "DescribeDeviceResponse")
         device = cls(**transformed_response)
         return device
 
-    def refresh(self) -> Optional["Device"]:
+    def refresh(
+        self,
+    ) -> Optional["Device"]:
         """
         Refresh a Device resource
 
@@ -4680,15 +5003,15 @@ class Device(Base):
         """
 
         operation_input_args = {
-            'NextToken': self.next_token,
-            'DeviceName': self.device_name,
-            'DeviceFleetName': self.device_fleet_name,
+            "NextToken": self.next_token,
+            "DeviceName": self.device_name,
+            "DeviceFleetName": self.device_fleet_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_device(**operation_input_args)
 
         # deserialize response and update self
-        transform(response, 'DescribeDeviceResponse', self)
+        transform(response, "DescribeDeviceResponse", self)
         return self
 
     @classmethod
@@ -4728,23 +5051,29 @@ class Device(Base):
                 ```
         """
 
-        client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'LatestHeartbeatAfter': latest_heartbeat_after,
-            'ModelName': model_name,
-            'DeviceFleetName': device_fleet_name,
+            "LatestHeartbeatAfter": latest_heartbeat_after,
+            "ModelName": model_name,
+            "DeviceFleetName": device_fleet_name,
         }
 
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
 
         return ResourceIterator(
             client=client,
-            list_method='list_devices',
-            summaries_key='DeviceSummaries',
-            summary_name='DeviceSummary',
+            list_method="list_devices",
+            summaries_key="DeviceSummaries",
+            summary_name="DeviceSummary",
             resource_cls=Device,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
 
 
@@ -4753,16 +5082,17 @@ class DeviceFleet(Base):
     Class representing resource DeviceFleet
 
     Attributes:
-        device_fleet_name:The name of the fleet.
-        device_fleet_arn:The The Amazon Resource Name (ARN) of the fleet.
-        output_config:The output configuration for storing sampled data.
-        creation_time:Timestamp of when the device fleet was created.
-        last_modified_time:Timestamp of when the device fleet was last updated.
-        description:A description of the fleet.
-        role_arn:The Amazon Resource Name (ARN) that has access to Amazon Web Services Internet of Things (IoT).
-        iot_role_alias:The Amazon Resource Name (ARN) alias created in Amazon Web Services Internet of Things (IoT).
+        device_fleet_name: The name of the fleet.
+        device_fleet_arn: The The Amazon Resource Name (ARN) of the fleet.
+        output_config: The output configuration for storing sampled data.
+        creation_time: Timestamp of when the device fleet was created.
+        last_modified_time: Timestamp of when the device fleet was last updated.
+        description: A description of the fleet.
+        role_arn: The Amazon Resource Name (ARN) that has access to Amazon Web Services Internet of Things (IoT).
+        iot_role_alias: The Amazon Resource Name (ARN) alias created in Amazon Web Services Internet of Things (IoT).
 
     """
+
     device_fleet_name: str
     device_fleet_arn: Optional[str] = Unassigned()
     output_config: Optional[EdgeOutputConfig] = Unassigned()
@@ -4774,32 +5104,38 @@ class DeviceFleet(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'device_fleet_name':
-                return value
-        raise Exception("Name attribute not found for object")
+        resource_name = "device_fleet_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
 
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
+        for attribute, value in attributes.items():
+            if attribute == "name" or attribute in attribute_name_candidates:
+                return value
+        logger.error("Name attribute not found for object device_fleet")
+        return None
 
     def populate_inputs_decorator(create_func):
+        @functools.wraps(create_func)
         def wrapper(*args, **kwargs):
-            config_schema_for_resource = \
-        {
-          "output_config": {
-            "s3_output_location": {
-              "type": "string"
-            },
-            "kms_key_id": {
-              "type": "string"
+            config_schema_for_resource = {
+                "output_config": {
+                    "s3_output_location": {"type": "string"},
+                    "kms_key_id": {"type": "string"},
+                },
+                "role_arn": {"type": "string"},
+                "iot_role_alias": {"type": "string"},
             }
-          },
-          "role_arn": {
-            "type": "string"
-          },
-          "iot_role_alias": {
-            "type": "string"
-          }
-        }
-            return create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "DeviceFleet", **kwargs))
+            return create_func(
+                *args,
+                **Base.get_updated_kwargs_with_configured_attributes(
+                    config_schema_for_resource, "DeviceFleet", **kwargs
+                ),
+            )
+
         return wrapper
 
     @classmethod
@@ -4850,18 +5186,22 @@ class DeviceFleet(Base):
         """
 
         logger.debug("Creating device_fleet resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'DeviceFleetName': device_fleet_name,
-            'RoleArn': role_arn,
-            'Description': description,
-            'OutputConfig': output_config,
-            'Tags': tags,
-            'EnableIotRoleAlias': enable_iot_role_alias,
+            "DeviceFleetName": device_fleet_name,
+            "RoleArn": role_arn,
+            "Description": description,
+            "OutputConfig": output_config,
+            "Tags": tags,
+            "EnableIotRoleAlias": enable_iot_role_alias,
         }
 
-        operation_input_args = Base.populate_chained_attributes(resource_name='DeviceFleet', operation_input_args=operation_input_args)
+        operation_input_args = Base.populate_chained_attributes(
+            resource_name="DeviceFleet", operation_input_args=operation_input_args
+        )
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -4907,19 +5247,23 @@ class DeviceFleet(Base):
         """
 
         operation_input_args = {
-            'DeviceFleetName': device_fleet_name,
+            "DeviceFleetName": device_fleet_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
         response = client.describe_device_fleet(**operation_input_args)
 
         pprint(response)
 
         # deserialize the response
-        transformed_response = transform(response, 'DescribeDeviceFleetResponse')
+        transformed_response = transform(response, "DescribeDeviceFleetResponse")
         device_fleet = cls(**transformed_response)
         return device_fleet
 
-    def refresh(self) -> Optional["DeviceFleet"]:
+    def refresh(
+        self,
+    ) -> Optional["DeviceFleet"]:
         """
         Refresh a DeviceFleet resource
 
@@ -4941,13 +5285,13 @@ class DeviceFleet(Base):
         """
 
         operation_input_args = {
-            'DeviceFleetName': self.device_fleet_name,
+            "DeviceFleetName": self.device_fleet_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_device_fleet(**operation_input_args)
 
         # deserialize response and update self
-        transform(response, 'DescribeDeviceFleetResponse', self)
+        transform(response, "DescribeDeviceFleetResponse", self)
         return self
 
     @populate_inputs_decorator
@@ -4962,7 +5306,7 @@ class DeviceFleet(Base):
         Update a DeviceFleet resource
 
         Parameters:
-            enable_iot_role_alias:Whether to create an Amazon Web Services IoT Role Alias during device fleet creation. The name of the role alias generated will match this pattern: "SageMakerEdge-{DeviceFleetName}". For example, if your device fleet is called "demo-fleet", the name of the role alias will be "SageMakerEdge-demo-fleet".
+            enable_iot_role_alias: Whether to create an Amazon Web Services IoT Role Alias during device fleet creation. The name of the role alias generated will match this pattern: "SageMakerEdge-{DeviceFleetName}". For example, if your device fleet is called "demo-fleet", the name of the role alias will be "SageMakerEdge-demo-fleet".
 
         Returns:
             The DeviceFleet resource.
@@ -4982,14 +5326,14 @@ class DeviceFleet(Base):
         """
 
         logger.debug("Updating device_fleet resource.")
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
-            'DeviceFleetName': self.device_fleet_name,
-            'RoleArn': role_arn,
-            'Description': description,
-            'OutputConfig': output_config,
-            'EnableIotRoleAlias': enable_iot_role_alias,
+            "DeviceFleetName": self.device_fleet_name,
+            "RoleArn": role_arn,
+            "Description": description,
+            "OutputConfig": output_config,
+            "EnableIotRoleAlias": enable_iot_role_alias,
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -5003,7 +5347,9 @@ class DeviceFleet(Base):
 
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a DeviceFleet resource
 
@@ -5022,12 +5368,14 @@ class DeviceFleet(Base):
             ResourceInUse: Resource being accessed is in use.
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
-            'DeviceFleetName': self.device_fleet_name,
+            "DeviceFleetName": self.device_fleet_name,
         }
         client.delete_device_fleet(**operation_input_args)
+
+        logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
     @classmethod
     def get_all(
@@ -5074,29 +5422,34 @@ class DeviceFleet(Base):
                 ```
         """
 
-        client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'CreationTimeAfter': creation_time_after,
-            'CreationTimeBefore': creation_time_before,
-            'LastModifiedTimeAfter': last_modified_time_after,
-            'LastModifiedTimeBefore': last_modified_time_before,
-            'NameContains': name_contains,
-            'SortBy': sort_by,
-            'SortOrder': sort_order,
+            "CreationTimeAfter": creation_time_after,
+            "CreationTimeBefore": creation_time_before,
+            "LastModifiedTimeAfter": last_modified_time_after,
+            "LastModifiedTimeBefore": last_modified_time_before,
+            "NameContains": name_contains,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
         }
 
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
 
         return ResourceIterator(
             client=client,
-            list_method='list_device_fleets',
-            summaries_key='DeviceFleetSummaries',
-            summary_name='DeviceFleetSummary',
+            list_method="list_device_fleets",
+            summaries_key="DeviceFleetSummaries",
+            summary_name="DeviceFleetSummary",
             resource_cls=DeviceFleet,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
-
 
     def deregister_devices(
         self,
@@ -5105,7 +5458,7 @@ class DeviceFleet(Base):
         region: Optional[str] = None,
     ) -> None:
         """
-        Perform DeregisterDevices on a DeviceFleet resource.
+        Deregisters the specified devices.
 
         Parameters:
             device_names: The unique IDs of the devices.
@@ -5115,48 +5468,46 @@ class DeviceFleet(Base):
 
         """
 
-
         operation_input_args = {
-            'DeviceFleetName': self.device_fleet_name,
-            'DeviceNames': device_names,
+            "DeviceFleetName": self.device_fleet_name,
+            "DeviceNames": device_names,
         }
         logger.debug(f"Input request: {operation_input_args}")
 
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         logger.debug(f"Calling deregister_devices API")
         response = client.deregister_devices(**operation_input_args)
         logger.debug(f"Response: {response}")
 
-
-
     def get_report(
         self,
-
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[GetDeviceFleetReportResponse]:
         """
-        Perform GetDeviceFleetReport on a DeviceFleet resource.
+        Describes a fleet.
 
 
         """
 
-
         operation_input_args = {
-            'DeviceFleetName': self.device_fleet_name,
+            "DeviceFleetName": self.device_fleet_name,
         }
         logger.debug(f"Input request: {operation_input_args}")
 
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         logger.debug(f"Calling get_device_fleet_report API")
         response = client.get_device_fleet_report(**operation_input_args)
         logger.debug(f"Response: {response}")
 
-        transformed_response = transform(response, 'GetDeviceFleetReportResponse')
+        transformed_response = transform(response, "GetDeviceFleetReportResponse")
         return GetDeviceFleetReportResponse(**transformed_response)
-
 
     def register_devices(
         self,
@@ -5166,7 +5517,7 @@ class DeviceFleet(Base):
         region: Optional[str] = None,
     ) -> None:
         """
-        Perform RegisterDevices on a DeviceFleet resource.
+        Register devices.
 
         Parameters:
             devices: A list of devices to register with SageMaker Edge Manager.
@@ -5177,21 +5528,20 @@ class DeviceFleet(Base):
 
         """
 
-
         operation_input_args = {
-            'DeviceFleetName': self.device_fleet_name,
-            'Devices': devices,
-            'Tags': tags,
+            "DeviceFleetName": self.device_fleet_name,
+            "Devices": devices,
+            "Tags": tags,
         }
         logger.debug(f"Input request: {operation_input_args}")
 
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         logger.debug(f"Calling register_devices API")
         response = client.register_devices(**operation_input_args)
         logger.debug(f"Response: {response}")
-
-
 
     def update_devices(
         self,
@@ -5200,7 +5550,7 @@ class DeviceFleet(Base):
         region: Optional[str] = None,
     ) -> None:
         """
-        Perform UpdateDevices on a DeviceFleet resource.
+        Updates one or more devices in a fleet.
 
         Parameters:
             devices: List of devices to register with Edge Manager agent.
@@ -5210,19 +5560,19 @@ class DeviceFleet(Base):
 
         """
 
-
         operation_input_args = {
-            'DeviceFleetName': self.device_fleet_name,
-            'Devices': devices,
+            "DeviceFleetName": self.device_fleet_name,
+            "Devices": devices,
         }
         logger.debug(f"Input request: {operation_input_args}")
 
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         logger.debug(f"Calling update_devices API")
         response = client.update_devices(**operation_input_args)
         logger.debug(f"Response: {response}")
-
 
 
 class Domain(Base):
@@ -5230,30 +5580,31 @@ class Domain(Base):
     Class representing resource Domain
 
     Attributes:
-        domain_arn:The domain's Amazon Resource Name (ARN).
-        domain_id:The domain ID.
-        domain_name:The domain name.
-        home_efs_file_system_id:The ID of the Amazon Elastic File System managed by this Domain.
-        single_sign_on_managed_application_instance_id:The IAM Identity Center managed application instance ID.
-        single_sign_on_application_arn:The ARN of the application managed by SageMaker in IAM Identity Center. This value is only returned for domains created after October 1, 2023.
-        status:The status.
-        creation_time:The creation time.
-        last_modified_time:The last modified time.
-        failure_reason:The failure reason.
-        security_group_id_for_domain_boundary:The ID of the security group that authorizes traffic between the RSessionGateway apps and the RStudioServerPro app.
-        auth_mode:The domain's authentication mode.
-        default_user_settings:Settings which are applied to UserProfiles in this domain if settings are not explicitly specified in a given UserProfile.
-        domain_settings:A collection of Domain settings.
-        app_network_access_type:Specifies the VPC used for non-EFS traffic. The default value is PublicInternetOnly.    PublicInternetOnly - Non-EFS traffic is through a VPC managed by Amazon SageMaker, which allows direct internet access    VpcOnly - All traffic is through the specified VPC and subnets
-        home_efs_file_system_kms_key_id:Use KmsKeyId.
-        subnet_ids:The VPC subnets that the domain uses for communication.
-        url:The domain's URL.
-        vpc_id:The ID of the Amazon Virtual Private Cloud (VPC) that the domain uses for communication.
-        kms_key_id:The Amazon Web Services KMS customer managed key used to encrypt the EFS volume attached to the domain.
-        app_security_group_management:The entity that creates and manages the required security groups for inter-app communication in VPCOnly mode. Required when CreateDomain.AppNetworkAccessType is VPCOnly and DomainSettings.RStudioServerProDomainSettings.DomainExecutionRoleArn is provided.
-        default_space_settings:The default settings used to create a space.
+        domain_arn: The domain's Amazon Resource Name (ARN).
+        domain_id: The domain ID.
+        domain_name: The domain name.
+        home_efs_file_system_id: The ID of the Amazon Elastic File System managed by this Domain.
+        single_sign_on_managed_application_instance_id: The IAM Identity Center managed application instance ID.
+        single_sign_on_application_arn: The ARN of the application managed by SageMaker in IAM Identity Center. This value is only returned for domains created after October 1, 2023.
+        status: The status.
+        creation_time: The creation time.
+        last_modified_time: The last modified time.
+        failure_reason: The failure reason.
+        security_group_id_for_domain_boundary: The ID of the security group that authorizes traffic between the RSessionGateway apps and the RStudioServerPro app.
+        auth_mode: The domain's authentication mode.
+        default_user_settings: Settings which are applied to UserProfiles in this domain if settings are not explicitly specified in a given UserProfile.
+        domain_settings: A collection of Domain settings.
+        app_network_access_type: Specifies the VPC used for non-EFS traffic. The default value is PublicInternetOnly.    PublicInternetOnly - Non-EFS traffic is through a VPC managed by Amazon SageMaker, which allows direct internet access    VpcOnly - All traffic is through the specified VPC and subnets
+        home_efs_file_system_kms_key_id: Use KmsKeyId.
+        subnet_ids: The VPC subnets that the domain uses for communication.
+        url: The domain's URL.
+        vpc_id: The ID of the Amazon Virtual Private Cloud (VPC) that the domain uses for communication.
+        kms_key_id: The Amazon Web Services KMS customer managed key used to encrypt the EFS volume attached to the domain.
+        app_security_group_management: The entity that creates and manages the required security groups for inter-app communication in VPCOnly mode. Required when CreateDomain.AppNetworkAccessType is VPCOnly and DomainSettings.RStudioServerProDomainSettings.DomainExecutionRoleArn is provided.
+        default_space_settings: The default settings used to create a space.
 
     """
+
     domain_id: str
     domain_arn: Optional[str] = Unassigned()
     domain_name: Optional[str] = Unassigned()
@@ -5279,107 +5630,69 @@ class Domain(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'domain_name':
-                return value
-        raise Exception("Name attribute not found for object")
+        resource_name = "domain_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
 
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
+        for attribute, value in attributes.items():
+            if attribute == "name" or attribute in attribute_name_candidates:
+                return value
+        logger.error("Name attribute not found for object domain")
+        return None
 
     def populate_inputs_decorator(create_func):
+        @functools.wraps(create_func)
         def wrapper(*args, **kwargs):
-            config_schema_for_resource = \
-        {
-          "security_group_id_for_domain_boundary": {
-            "type": "string"
-          },
-          "default_user_settings": {
-            "execution_role": {
-              "type": "string"
-            },
-            "security_groups": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            "sharing_settings": {
-              "s3_output_path": {
-                "type": "string"
-              },
-              "s3_kms_key_id": {
-                "type": "string"
-              }
-            },
-            "canvas_app_settings": {
-              "time_series_forecasting_settings": {
-                "amazon_forecast_role_arn": {
-                  "type": "string"
-                }
-              },
-              "model_register_settings": {
-                "cross_account_model_register_role_arn": {
-                  "type": "string"
-                }
-              },
-              "workspace_settings": {
-                "s3_artifact_path": {
-                  "type": "string"
+            config_schema_for_resource = {
+                "security_group_id_for_domain_boundary": {"type": "string"},
+                "default_user_settings": {
+                    "execution_role": {"type": "string"},
+                    "security_groups": {"type": "array", "items": {"type": "string"}},
+                    "sharing_settings": {
+                        "s3_output_path": {"type": "string"},
+                        "s3_kms_key_id": {"type": "string"},
+                    },
+                    "canvas_app_settings": {
+                        "time_series_forecasting_settings": {
+                            "amazon_forecast_role_arn": {"type": "string"}
+                        },
+                        "model_register_settings": {
+                            "cross_account_model_register_role_arn": {"type": "string"}
+                        },
+                        "workspace_settings": {
+                            "s3_artifact_path": {"type": "string"},
+                            "s3_kms_key_id": {"type": "string"},
+                        },
+                        "generative_ai_settings": {"amazon_bedrock_role_arn": {"type": "string"}},
+                    },
                 },
-                "s3_kms_key_id": {
-                  "type": "string"
-                }
-              },
-              "generative_ai_settings": {
-                "amazon_bedrock_role_arn": {
-                  "type": "string"
-                }
-              }
+                "domain_settings": {
+                    "security_group_ids": {"type": "array", "items": {"type": "string"}},
+                    "r_studio_server_pro_domain_settings": {
+                        "domain_execution_role_arn": {"type": "string"}
+                    },
+                    "execution_role_identity_config": {"type": "string"},
+                },
+                "home_efs_file_system_kms_key_id": {"type": "string"},
+                "subnet_ids": {"type": "array", "items": {"type": "string"}},
+                "kms_key_id": {"type": "string"},
+                "app_security_group_management": {"type": "string"},
+                "default_space_settings": {
+                    "execution_role": {"type": "string"},
+                    "security_groups": {"type": "array", "items": {"type": "string"}},
+                },
             }
-          },
-          "domain_settings": {
-            "security_group_ids": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            "r_studio_server_pro_domain_settings": {
-              "domain_execution_role_arn": {
-                "type": "string"
-              }
-            },
-            "execution_role_identity_config": {
-              "type": "string"
-            }
-          },
-          "home_efs_file_system_kms_key_id": {
-            "type": "string"
-          },
-          "subnet_ids": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "kms_key_id": {
-            "type": "string"
-          },
-          "app_security_group_management": {
-            "type": "string"
-          },
-          "default_space_settings": {
-            "execution_role": {
-              "type": "string"
-            },
-            "security_groups": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
-          }
-        }
-            return create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "Domain", **kwargs))
+            return create_func(
+                *args,
+                **Base.get_updated_kwargs_with_configured_attributes(
+                    config_schema_for_resource, "Domain", **kwargs
+                ),
+            )
+
         return wrapper
 
     @classmethod
@@ -5405,18 +5718,18 @@ class Domain(Base):
         Create a Domain resource
 
         Parameters:
-            domain_name:A name for the domain.
-            auth_mode:The mode of authentication that members use to access the domain.
-            default_user_settings:The default settings to use to create a user profile when UserSettings isn't specified in the call to the CreateUserProfile API.  SecurityGroups is aggregated when specified in both calls. For all other settings in UserSettings, the values specified in CreateUserProfile take precedence over those specified in CreateDomain.
-            subnet_ids:The VPC subnets that the domain uses for communication.
-            vpc_id:The ID of the Amazon Virtual Private Cloud (VPC) that the domain uses for communication.
-            domain_settings:A collection of Domain settings.
-            tags:Tags to associated with the Domain. Each tag consists of a key and an optional value. Tag keys must be unique per resource. Tags are searchable using the Search API. Tags that you specify for the Domain are also added to all Apps that the Domain launches.
-            app_network_access_type:Specifies the VPC used for non-EFS traffic. The default value is PublicInternetOnly.    PublicInternetOnly - Non-EFS traffic is through a VPC managed by Amazon SageMaker, which allows direct internet access    VpcOnly - All traffic is through the specified VPC and subnets
-            home_efs_file_system_kms_key_id:Use KmsKeyId.
-            kms_key_id:SageMaker uses Amazon Web Services KMS to encrypt EFS and EBS volumes attached to the domain with an Amazon Web Services managed key by default. For more control, specify a customer managed key.
-            app_security_group_management:The entity that creates and manages the required security groups for inter-app communication in VPCOnly mode. Required when CreateDomain.AppNetworkAccessType is VPCOnly and DomainSettings.RStudioServerProDomainSettings.DomainExecutionRoleArn is provided. If setting up the domain for use with RStudio, this value must be set to Service.
-            default_space_settings:The default settings used to create a space.
+            domain_name: A name for the domain.
+            auth_mode: The mode of authentication that members use to access the domain.
+            default_user_settings: The default settings to use to create a user profile when UserSettings isn't specified in the call to the CreateUserProfile API.  SecurityGroups is aggregated when specified in both calls. For all other settings in UserSettings, the values specified in CreateUserProfile take precedence over those specified in CreateDomain.
+            subnet_ids: The VPC subnets that the domain uses for communication.
+            vpc_id: The ID of the Amazon Virtual Private Cloud (VPC) that the domain uses for communication.
+            domain_settings: A collection of Domain settings.
+            tags: Tags to associated with the Domain. Each tag consists of a key and an optional value. Tag keys must be unique per resource. Tags are searchable using the Search API. Tags that you specify for the Domain are also added to all Apps that the Domain launches.
+            app_network_access_type: Specifies the VPC used for non-EFS traffic. The default value is PublicInternetOnly.    PublicInternetOnly - Non-EFS traffic is through a VPC managed by Amazon SageMaker, which allows direct internet access    VpcOnly - All traffic is through the specified VPC and subnets
+            home_efs_file_system_kms_key_id: Use KmsKeyId.
+            kms_key_id: SageMaker uses Amazon Web Services KMS to encrypt EFS and EBS volumes attached to the domain with an Amazon Web Services managed key by default. For more control, specify a customer managed key.
+            app_security_group_management: The entity that creates and manages the required security groups for inter-app communication in VPCOnly mode. Required when CreateDomain.AppNetworkAccessType is VPCOnly and DomainSettings.RStudioServerProDomainSettings.DomainExecutionRoleArn is provided. If setting up the domain for use with RStudio, this value must be set to Service.
+            default_space_settings: The default settings used to create a space.
             session: Boto3 session.
             region: Region name.
 
@@ -5442,24 +5755,28 @@ class Domain(Base):
         """
 
         logger.debug("Creating domain resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'DomainName': domain_name,
-            'AuthMode': auth_mode,
-            'DefaultUserSettings': default_user_settings,
-            'DomainSettings': domain_settings,
-            'SubnetIds': subnet_ids,
-            'VpcId': vpc_id,
-            'Tags': tags,
-            'AppNetworkAccessType': app_network_access_type,
-            'HomeEfsFileSystemKmsKeyId': home_efs_file_system_kms_key_id,
-            'KmsKeyId': kms_key_id,
-            'AppSecurityGroupManagement': app_security_group_management,
-            'DefaultSpaceSettings': default_space_settings,
+            "DomainName": domain_name,
+            "AuthMode": auth_mode,
+            "DefaultUserSettings": default_user_settings,
+            "DomainSettings": domain_settings,
+            "SubnetIds": subnet_ids,
+            "VpcId": vpc_id,
+            "Tags": tags,
+            "AppNetworkAccessType": app_network_access_type,
+            "HomeEfsFileSystemKmsKeyId": home_efs_file_system_kms_key_id,
+            "KmsKeyId": kms_key_id,
+            "AppSecurityGroupManagement": app_security_group_management,
+            "DefaultSpaceSettings": default_space_settings,
         }
 
-        operation_input_args = Base.populate_chained_attributes(resource_name='Domain', operation_input_args=operation_input_args)
+        operation_input_args = Base.populate_chained_attributes(
+            resource_name="Domain", operation_input_args=operation_input_args
+        )
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -5470,7 +5787,7 @@ class Domain(Base):
         response = client.create_domain(**operation_input_args)
         logger.debug(f"Response: {response}")
 
-        return cls.get(domain_id=response['DomainId'], session=session, region=region)
+        return cls.get(domain_id=response["DomainId"], session=session, region=region)
 
     @classmethod
     def get(
@@ -5505,19 +5822,23 @@ class Domain(Base):
         """
 
         operation_input_args = {
-            'DomainId': domain_id,
+            "DomainId": domain_id,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
         response = client.describe_domain(**operation_input_args)
 
         pprint(response)
 
         # deserialize the response
-        transformed_response = transform(response, 'DescribeDomainResponse')
+        transformed_response = transform(response, "DescribeDomainResponse")
         domain = cls(**transformed_response)
         return domain
 
-    def refresh(self) -> Optional["Domain"]:
+    def refresh(
+        self,
+    ) -> Optional["Domain"]:
         """
         Refresh a Domain resource
 
@@ -5539,13 +5860,13 @@ class Domain(Base):
         """
 
         operation_input_args = {
-            'DomainId': self.domain_id,
+            "DomainId": self.domain_id,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_domain(**operation_input_args)
 
         # deserialize response and update self
-        transform(response, 'DescribeDomainResponse', self)
+        transform(response, "DescribeDomainResponse", self)
         return self
 
     @populate_inputs_decorator
@@ -5562,7 +5883,7 @@ class Domain(Base):
         Update a Domain resource
 
         Parameters:
-            domain_settings_for_update:A collection of DomainSettings configuration values to update.
+            domain_settings_for_update: A collection of DomainSettings configuration values to update.
 
         Returns:
             The Domain resource.
@@ -5584,16 +5905,16 @@ class Domain(Base):
         """
 
         logger.debug("Updating domain resource.")
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
-            'DomainId': self.domain_id,
-            'DefaultUserSettings': default_user_settings,
-            'DomainSettingsForUpdate': domain_settings_for_update,
-            'AppSecurityGroupManagement': app_security_group_management,
-            'DefaultSpaceSettings': default_space_settings,
-            'SubnetIds': subnet_ids,
-            'AppNetworkAccessType': app_network_access_type,
+            "DomainId": self.domain_id,
+            "DefaultUserSettings": default_user_settings,
+            "DomainSettingsForUpdate": domain_settings_for_update,
+            "AppSecurityGroupManagement": app_security_group_management,
+            "DefaultSpaceSettings": default_space_settings,
+            "SubnetIds": subnet_ids,
+            "AppNetworkAccessType": app_network_access_type,
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -5607,7 +5928,10 @@ class Domain(Base):
 
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+        retention_policy: Optional[RetentionPolicy] = Unassigned(),
+    ) -> None:
         """
         Delete a Domain resource
 
@@ -5627,20 +5951,30 @@ class Domain(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
-            'DomainId': self.domain_id,
-            'RetentionPolicy': self.retention_policy,
+            "DomainId": self.domain_id,
+            "RetentionPolicy": retention_policy,
         }
         client.delete_domain(**operation_input_args)
 
+        logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+
     def wait_for_status(
         self,
-        status: Literal['Deleting', 'Failed', 'InService', 'Pending', 'Updating', 'Update_Failed', 'Delete_Failed'],
+        status: Literal[
+            "Deleting",
+            "Failed",
+            "InService",
+            "Pending",
+            "Updating",
+            "Update_Failed",
+            "Delete_Failed",
+        ],
         poll: int = 5,
-        timeout: Optional[int] = None
-    ) -> Optional["Domain"]:
+        timeout: Optional[int] = None,
+    ):
         """
         Wait for a Domain resource.
 
@@ -5665,10 +5999,13 @@ class Domain(Base):
             current_status = self.status
 
             if status == current_status:
-                return self
+                print(f"\nFinal Resource Status: {current_status}")
+                return
 
             if "failed" in current_status.lower():
-                raise FailedStatusError(resource_type="Domain", status=current_status, reason=self.failure_reason)
+                raise FailedStatusError(
+                    resource_type="Domain", status=current_status, reason=self.failure_reason
+                )
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="Domain", status=current_status)
@@ -5692,14 +6029,16 @@ class Domain(Base):
             Iterator for listed Domain resources.
 
         """
-        client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         return ResourceIterator(
             client=client,
-            list_method='list_domains',
-            summaries_key='Domains',
-            summary_name='DomainDetails',
-            resource_cls=Domain
+            list_method="list_domains",
+            summaries_key="Domains",
+            summary_name="DomainDetails",
+            resource_cls=Domain,
         )
 
 
@@ -5708,19 +6047,20 @@ class EdgeDeploymentPlan(Base):
     Class representing resource EdgeDeploymentPlan
 
     Attributes:
-        edge_deployment_plan_arn:The ARN of edge deployment plan.
-        edge_deployment_plan_name:The name of the edge deployment plan.
-        model_configs:List of models associated with the edge deployment plan.
-        device_fleet_name:The device fleet used for this edge deployment plan.
-        stages:List of stages in the edge deployment plan.
-        edge_deployment_success:The number of edge devices with the successful deployment.
-        edge_deployment_pending:The number of edge devices yet to pick up deployment, or in progress.
-        edge_deployment_failed:The number of edge devices that failed the deployment.
-        next_token:Token to use when calling the next set of stages in the edge deployment plan.
-        creation_time:The time when the edge deployment plan was created.
-        last_modified_time:The time when the edge deployment plan was last updated.
+        edge_deployment_plan_arn: The ARN of edge deployment plan.
+        edge_deployment_plan_name: The name of the edge deployment plan.
+        model_configs: List of models associated with the edge deployment plan.
+        device_fleet_name: The device fleet used for this edge deployment plan.
+        stages: List of stages in the edge deployment plan.
+        edge_deployment_success: The number of edge devices with the successful deployment.
+        edge_deployment_pending: The number of edge devices yet to pick up deployment, or in progress.
+        edge_deployment_failed: The number of edge devices that failed the deployment.
+        next_token: Token to use when calling the next set of stages in the edge deployment plan.
+        creation_time: The time when the edge deployment plan was created.
+        last_modified_time: The time when the edge deployment plan was last updated.
 
     """
+
     edge_deployment_plan_name: str
     edge_deployment_plan_arn: Optional[str] = Unassigned()
     model_configs: Optional[List[EdgeDeploymentModelConfig]] = Unassigned()
@@ -5735,10 +6075,19 @@ class EdgeDeploymentPlan(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "edge_deployment_plan_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'edge_deployment_plan_name':
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object edge_deployment_plan")
+        return None
 
     @classmethod
     def create(
@@ -5784,17 +6133,21 @@ class EdgeDeploymentPlan(Base):
         """
 
         logger.debug("Creating edge_deployment_plan resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'EdgeDeploymentPlanName': edge_deployment_plan_name,
-            'ModelConfigs': model_configs,
-            'DeviceFleetName': device_fleet_name,
-            'Stages': stages,
-            'Tags': tags,
+            "EdgeDeploymentPlanName": edge_deployment_plan_name,
+            "ModelConfigs": model_configs,
+            "DeviceFleetName": device_fleet_name,
+            "Stages": stages,
+            "Tags": tags,
         }
 
-        operation_input_args = Base.populate_chained_attributes(resource_name='EdgeDeploymentPlan', operation_input_args=operation_input_args)
+        operation_input_args = Base.populate_chained_attributes(
+            resource_name="EdgeDeploymentPlan", operation_input_args=operation_input_args
+        )
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -5805,7 +6158,9 @@ class EdgeDeploymentPlan(Base):
         response = client.create_edge_deployment_plan(**operation_input_args)
         logger.debug(f"Response: {response}")
 
-        return cls.get(edge_deployment_plan_name=edge_deployment_plan_name, session=session, region=region)
+        return cls.get(
+            edge_deployment_plan_name=edge_deployment_plan_name, session=session, region=region
+        )
 
     @classmethod
     def get(
@@ -5844,21 +6199,26 @@ class EdgeDeploymentPlan(Base):
         """
 
         operation_input_args = {
-            'EdgeDeploymentPlanName': edge_deployment_plan_name,
-            'NextToken': next_token,
-            'MaxResults': max_results,
+            "EdgeDeploymentPlanName": edge_deployment_plan_name,
+            "NextToken": next_token,
+            "MaxResults": max_results,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
         response = client.describe_edge_deployment_plan(**operation_input_args)
 
         pprint(response)
 
         # deserialize the response
-        transformed_response = transform(response, 'DescribeEdgeDeploymentPlanResponse')
+        transformed_response = transform(response, "DescribeEdgeDeploymentPlanResponse")
         edge_deployment_plan = cls(**transformed_response)
         return edge_deployment_plan
 
-    def refresh(self) -> Optional["EdgeDeploymentPlan"]:
+    def refresh(
+        self,
+        max_results: Optional[int] = Unassigned(),
+    ) -> Optional["EdgeDeploymentPlan"]:
         """
         Refresh a EdgeDeploymentPlan resource
 
@@ -5880,18 +6240,20 @@ class EdgeDeploymentPlan(Base):
         """
 
         operation_input_args = {
-            'EdgeDeploymentPlanName': self.edge_deployment_plan_name,
-            'NextToken': self.next_token,
-            'MaxResults': self.max_results,
+            "EdgeDeploymentPlanName": self.edge_deployment_plan_name,
+            "NextToken": self.next_token,
+            "MaxResults": max_results,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_edge_deployment_plan(**operation_input_args)
 
         # deserialize response and update self
-        transform(response, 'DescribeEdgeDeploymentPlanResponse', self)
+        transform(response, "DescribeEdgeDeploymentPlanResponse", self)
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a EdgeDeploymentPlan resource
 
@@ -5910,12 +6272,14 @@ class EdgeDeploymentPlan(Base):
             ResourceInUse: Resource being accessed is in use.
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
-            'EdgeDeploymentPlanName': self.edge_deployment_plan_name,
+            "EdgeDeploymentPlanName": self.edge_deployment_plan_name,
         }
         client.delete_edge_deployment_plan(**operation_input_args)
+
+        logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
     @classmethod
     def get_all(
@@ -5964,28 +6328,34 @@ class EdgeDeploymentPlan(Base):
                 ```
         """
 
-        client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'CreationTimeAfter': creation_time_after,
-            'CreationTimeBefore': creation_time_before,
-            'LastModifiedTimeAfter': last_modified_time_after,
-            'LastModifiedTimeBefore': last_modified_time_before,
-            'NameContains': name_contains,
-            'DeviceFleetNameContains': device_fleet_name_contains,
-            'SortBy': sort_by,
-            'SortOrder': sort_order,
+            "CreationTimeAfter": creation_time_after,
+            "CreationTimeBefore": creation_time_before,
+            "LastModifiedTimeAfter": last_modified_time_after,
+            "LastModifiedTimeBefore": last_modified_time_before,
+            "NameContains": name_contains,
+            "DeviceFleetNameContains": device_fleet_name_contains,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
         }
 
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
 
         return ResourceIterator(
             client=client,
-            list_method='list_edge_deployment_plans',
-            summaries_key='EdgeDeploymentPlanSummaries',
-            summary_name='EdgeDeploymentPlanSummary',
+            list_method="list_edge_deployment_plans",
+            summaries_key="EdgeDeploymentPlanSummaries",
+            summary_name="EdgeDeploymentPlanSummary",
             resource_cls=EdgeDeploymentPlan,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
 
 
@@ -5994,23 +6364,24 @@ class EdgePackagingJob(Base):
     Class representing resource EdgePackagingJob
 
     Attributes:
-        edge_packaging_job_arn:The Amazon Resource Name (ARN) of the edge packaging job.
-        edge_packaging_job_name:The name of the edge packaging job.
-        edge_packaging_job_status:The current status of the packaging job.
-        compilation_job_name:The name of the SageMaker Neo compilation job that is used to locate model artifacts that are being packaged.
-        model_name:The name of the model.
-        model_version:The version of the model.
-        role_arn:The Amazon Resource Name (ARN) of an IAM role that enables Amazon SageMaker to download and upload the model, and to contact Neo.
-        output_config:The output configuration for the edge packaging job.
-        resource_key:The Amazon Web Services KMS key to use when encrypting the EBS volume the job run on.
-        edge_packaging_job_status_message:Returns a message describing the job status and error messages.
-        creation_time:The timestamp of when the packaging job was created.
-        last_modified_time:The timestamp of when the job was last updated.
-        model_artifact:The Amazon Simple Storage (S3) URI where model artifacts ares stored.
-        model_signature:The signature document of files in the model artifact.
-        preset_deployment_output:The output of a SageMaker Edge Manager deployable resource.
+        edge_packaging_job_arn: The Amazon Resource Name (ARN) of the edge packaging job.
+        edge_packaging_job_name: The name of the edge packaging job.
+        edge_packaging_job_status: The current status of the packaging job.
+        compilation_job_name: The name of the SageMaker Neo compilation job that is used to locate model artifacts that are being packaged.
+        model_name: The name of the model.
+        model_version: The version of the model.
+        role_arn: The Amazon Resource Name (ARN) of an IAM role that enables Amazon SageMaker to download and upload the model, and to contact Neo.
+        output_config: The output configuration for the edge packaging job.
+        resource_key: The Amazon Web Services KMS key to use when encrypting the EBS volume the job run on.
+        edge_packaging_job_status_message: Returns a message describing the job status and error messages.
+        creation_time: The timestamp of when the packaging job was created.
+        last_modified_time: The timestamp of when the job was last updated.
+        model_artifact: The Amazon Simple Storage (S3) URI where model artifacts ares stored.
+        model_signature: The signature document of files in the model artifact.
+        preset_deployment_output: The output of a SageMaker Edge Manager deployable resource.
 
     """
+
     edge_packaging_job_name: str
     edge_packaging_job_arn: Optional[str] = Unassigned()
     compilation_job_name: Optional[str] = Unassigned()
@@ -6029,29 +6400,37 @@ class EdgePackagingJob(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'edge_packaging_job_name':
-                return value
-        raise Exception("Name attribute not found for object")
+        resource_name = "edge_packaging_job_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
 
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
+        for attribute, value in attributes.items():
+            if attribute == "name" or attribute in attribute_name_candidates:
+                return value
+        logger.error("Name attribute not found for object edge_packaging_job")
+        return None
 
     def populate_inputs_decorator(create_func):
+        @functools.wraps(create_func)
         def wrapper(*args, **kwargs):
-            config_schema_for_resource = \
-        {
-          "role_arn": {
-            "type": "string"
-          },
-          "output_config": {
-            "s3_output_location": {
-              "type": "string"
-            },
-            "kms_key_id": {
-              "type": "string"
+            config_schema_for_resource = {
+                "role_arn": {"type": "string"},
+                "output_config": {
+                    "s3_output_location": {"type": "string"},
+                    "kms_key_id": {"type": "string"},
+                },
             }
-          }
-        }
-            return create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "EdgePackagingJob", **kwargs))
+            return create_func(
+                *args,
+                **Base.get_updated_kwargs_with_configured_attributes(
+                    config_schema_for_resource, "EdgePackagingJob", **kwargs
+                ),
+            )
+
         return wrapper
 
     @classmethod
@@ -6105,20 +6484,24 @@ class EdgePackagingJob(Base):
         """
 
         logger.debug("Creating edge_packaging_job resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'EdgePackagingJobName': edge_packaging_job_name,
-            'CompilationJobName': compilation_job_name,
-            'ModelName': model_name,
-            'ModelVersion': model_version,
-            'RoleArn': role_arn,
-            'OutputConfig': output_config,
-            'ResourceKey': resource_key,
-            'Tags': tags,
+            "EdgePackagingJobName": edge_packaging_job_name,
+            "CompilationJobName": compilation_job_name,
+            "ModelName": model_name,
+            "ModelVersion": model_version,
+            "RoleArn": role_arn,
+            "OutputConfig": output_config,
+            "ResourceKey": resource_key,
+            "Tags": tags,
         }
 
-        operation_input_args = Base.populate_chained_attributes(resource_name='EdgePackagingJob', operation_input_args=operation_input_args)
+        operation_input_args = Base.populate_chained_attributes(
+            resource_name="EdgePackagingJob", operation_input_args=operation_input_args
+        )
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -6129,7 +6512,9 @@ class EdgePackagingJob(Base):
         response = client.create_edge_packaging_job(**operation_input_args)
         logger.debug(f"Response: {response}")
 
-        return cls.get(edge_packaging_job_name=edge_packaging_job_name, session=session, region=region)
+        return cls.get(
+            edge_packaging_job_name=edge_packaging_job_name, session=session, region=region
+        )
 
     @classmethod
     def get(
@@ -6164,19 +6549,23 @@ class EdgePackagingJob(Base):
         """
 
         operation_input_args = {
-            'EdgePackagingJobName': edge_packaging_job_name,
+            "EdgePackagingJobName": edge_packaging_job_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
         response = client.describe_edge_packaging_job(**operation_input_args)
 
         pprint(response)
 
         # deserialize the response
-        transformed_response = transform(response, 'DescribeEdgePackagingJobResponse')
+        transformed_response = transform(response, "DescribeEdgePackagingJobResponse")
         edge_packaging_job = cls(**transformed_response)
         return edge_packaging_job
 
-    def refresh(self) -> Optional["EdgePackagingJob"]:
+    def refresh(
+        self,
+    ) -> Optional["EdgePackagingJob"]:
         """
         Refresh a EdgePackagingJob resource
 
@@ -6198,13 +6587,13 @@ class EdgePackagingJob(Base):
         """
 
         operation_input_args = {
-            'EdgePackagingJobName': self.edge_packaging_job_name,
+            "EdgePackagingJobName": self.edge_packaging_job_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_edge_packaging_job(**operation_input_args)
 
         # deserialize response and update self
-        transform(response, 'DescribeEdgePackagingJobResponse', self)
+        transform(response, "DescribeEdgePackagingJobResponse", self)
         return self
 
     def stop(self) -> None:
@@ -6228,15 +6617,11 @@ class EdgePackagingJob(Base):
         client = SageMakerClient().client
 
         operation_input_args = {
-            'EdgePackagingJobName': self.edge_packaging_job_name,
+            "EdgePackagingJobName": self.edge_packaging_job_name,
         }
         client.stop_edge_packaging_job(**operation_input_args)
 
-    def wait(
-        self,
-        poll: int = 5,
-        timeout: Optional[int] = None
-    ) -> Optional["EdgePackagingJob"]:
+    def wait(self, poll: int = 5, timeout: Optional[int] = None):
         """
         Wait for a EdgePackagingJob resource.
 
@@ -6253,7 +6638,7 @@ class EdgePackagingJob(Base):
             WaiterError: Raised when an error occurs while waiting.
 
         """
-        terminal_states = ['COMPLETED', 'FAILED', 'STOPPED']
+        terminal_states = ["COMPLETED", "FAILED", "STOPPED"]
         start_time = time.time()
 
         while True:
@@ -6261,11 +6646,16 @@ class EdgePackagingJob(Base):
             current_status = self.edge_packaging_job_status
 
             if current_status in terminal_states:
+                print(f"\nFinal Resource Status: {current_status}")
 
                 if "failed" in current_status.lower():
-                    raise FailedStatusError(resource_type="EdgePackagingJob", status=current_status, reason=self.edge_packaging_job_status_message)
+                    raise FailedStatusError(
+                        resource_type="EdgePackagingJob",
+                        status=current_status,
+                        reason=self.edge_packaging_job_status_message,
+                    )
 
-                return self
+                return
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="EdgePackagingJob", status=current_status)
@@ -6321,29 +6711,35 @@ class EdgePackagingJob(Base):
                 ```
         """
 
-        client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'CreationTimeAfter': creation_time_after,
-            'CreationTimeBefore': creation_time_before,
-            'LastModifiedTimeAfter': last_modified_time_after,
-            'LastModifiedTimeBefore': last_modified_time_before,
-            'NameContains': name_contains,
-            'ModelNameContains': model_name_contains,
-            'StatusEquals': status_equals,
-            'SortBy': sort_by,
-            'SortOrder': sort_order,
+            "CreationTimeAfter": creation_time_after,
+            "CreationTimeBefore": creation_time_before,
+            "LastModifiedTimeAfter": last_modified_time_after,
+            "LastModifiedTimeBefore": last_modified_time_before,
+            "NameContains": name_contains,
+            "ModelNameContains": model_name_contains,
+            "StatusEquals": status_equals,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
         }
 
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
 
         return ResourceIterator(
             client=client,
-            list_method='list_edge_packaging_jobs',
-            summaries_key='EdgePackagingJobSummaries',
-            summary_name='EdgePackagingJobSummary',
+            list_method="list_edge_packaging_jobs",
+            summaries_key="EdgePackagingJobSummaries",
+            summary_name="EdgePackagingJobSummary",
             resource_cls=EdgePackagingJob,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
 
 
@@ -6352,22 +6748,23 @@ class Endpoint(Base):
     Class representing resource Endpoint
 
     Attributes:
-        endpoint_name:Name of the endpoint.
-        endpoint_arn:The Amazon Resource Name (ARN) of the endpoint.
-        endpoint_status:The status of the endpoint.    OutOfService: Endpoint is not available to take incoming requests.    Creating: CreateEndpoint is executing.    Updating: UpdateEndpoint or UpdateEndpointWeightsAndCapacities is executing.    SystemUpdating: Endpoint is undergoing maintenance and cannot be updated or deleted or re-scaled until it has completed. This maintenance operation does not change any customer-specified values such as VPC config, KMS encryption, model, instance type, or instance count.    RollingBack: Endpoint fails to scale up or down or change its variant weight and is in the process of rolling back to its previous configuration. Once the rollback completes, endpoint returns to an InService status. This transitional status only applies to an endpoint that has autoscaling enabled and is undergoing variant weight or capacity changes as part of an UpdateEndpointWeightsAndCapacities call or when the UpdateEndpointWeightsAndCapacities operation is called explicitly.    InService: Endpoint is available to process incoming requests.    Deleting: DeleteEndpoint is executing.    Failed: Endpoint could not be created, updated, or re-scaled. Use the FailureReason value returned by DescribeEndpoint for information about the failure. DeleteEndpoint is the only operation that can be performed on a failed endpoint.    UpdateRollbackFailed: Both the rolling deployment and auto-rollback failed. Your endpoint is in service with a mix of the old and new endpoint configurations. For information about how to remedy this issue and restore the endpoint's status to InService, see Rolling Deployments.
-        creation_time:A timestamp that shows when the endpoint was created.
-        last_modified_time:A timestamp that shows when the endpoint was last modified.
-        endpoint_config_name:The name of the endpoint configuration associated with this endpoint.
-        production_variants:An array of ProductionVariantSummary objects, one for each model hosted behind this endpoint.
+        endpoint_name: Name of the endpoint.
+        endpoint_arn: The Amazon Resource Name (ARN) of the endpoint.
+        endpoint_status: The status of the endpoint.    OutOfService: Endpoint is not available to take incoming requests.    Creating: CreateEndpoint is executing.    Updating: UpdateEndpoint or UpdateEndpointWeightsAndCapacities is executing.    SystemUpdating: Endpoint is undergoing maintenance and cannot be updated or deleted or re-scaled until it has completed. This maintenance operation does not change any customer-specified values such as VPC config, KMS encryption, model, instance type, or instance count.    RollingBack: Endpoint fails to scale up or down or change its variant weight and is in the process of rolling back to its previous configuration. Once the rollback completes, endpoint returns to an InService status. This transitional status only applies to an endpoint that has autoscaling enabled and is undergoing variant weight or capacity changes as part of an UpdateEndpointWeightsAndCapacities call or when the UpdateEndpointWeightsAndCapacities operation is called explicitly.    InService: Endpoint is available to process incoming requests.    Deleting: DeleteEndpoint is executing.    Failed: Endpoint could not be created, updated, or re-scaled. Use the FailureReason value returned by DescribeEndpoint for information about the failure. DeleteEndpoint is the only operation that can be performed on a failed endpoint.    UpdateRollbackFailed: Both the rolling deployment and auto-rollback failed. Your endpoint is in service with a mix of the old and new endpoint configurations. For information about how to remedy this issue and restore the endpoint's status to InService, see Rolling Deployments.
+        creation_time: A timestamp that shows when the endpoint was created.
+        last_modified_time: A timestamp that shows when the endpoint was last modified.
+        endpoint_config_name: The name of the endpoint configuration associated with this endpoint.
+        production_variants: An array of ProductionVariantSummary objects, one for each model hosted behind this endpoint.
         data_capture_config:
-        failure_reason:If the status of the endpoint is Failed, the reason why it failed.
-        last_deployment_config:The most recent deployment configuration for the endpoint.
-        async_inference_config:Returns the description of an endpoint configuration created using the  CreateEndpointConfig  API.
-        pending_deployment_summary:Returns the summary of an in-progress deployment. This field is only returned when the endpoint is creating or updating with a new endpoint configuration.
-        explainer_config:The configuration parameters for an explainer.
-        shadow_production_variants:An array of ProductionVariantSummary objects, one for each model that you want to host at this endpoint in shadow mode with production traffic replicated from the model specified on ProductionVariants.
+        failure_reason: If the status of the endpoint is Failed, the reason why it failed.
+        last_deployment_config: The most recent deployment configuration for the endpoint.
+        async_inference_config: Returns the description of an endpoint configuration created using the  CreateEndpointConfig  API.
+        pending_deployment_summary: Returns the summary of an in-progress deployment. This field is only returned when the endpoint is creating or updating with a new endpoint configuration.
+        explainer_config: The configuration parameters for an explainer.
+        shadow_production_variants: An array of ProductionVariantSummary objects, one for each model that you want to host at this endpoint in shadow mode with production traffic replicated from the model specified on ProductionVariants.
 
     """
+
     endpoint_name: str
     endpoint_arn: Optional[str] = Unassigned()
     endpoint_config_name: Optional[str] = Unassigned()
@@ -6385,39 +6782,43 @@ class Endpoint(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'endpoint_name':
-                return value
-        raise Exception("Name attribute not found for object")
+        resource_name = "endpoint_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
 
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
+        for attribute, value in attributes.items():
+            if attribute == "name" or attribute in attribute_name_candidates:
+                return value
+        logger.error("Name attribute not found for object endpoint")
+        return None
 
     def populate_inputs_decorator(create_func):
+        @functools.wraps(create_func)
         def wrapper(*args, **kwargs):
-            config_schema_for_resource = \
-        {
-          "data_capture_config": {
-            "destination_s3_uri": {
-              "type": "string"
-            },
-            "kms_key_id": {
-              "type": "string"
+            config_schema_for_resource = {
+                "data_capture_config": {
+                    "destination_s3_uri": {"type": "string"},
+                    "kms_key_id": {"type": "string"},
+                },
+                "async_inference_config": {
+                    "output_config": {
+                        "kms_key_id": {"type": "string"},
+                        "s3_output_path": {"type": "string"},
+                        "s3_failure_path": {"type": "string"},
+                    }
+                },
             }
-          },
-          "async_inference_config": {
-            "output_config": {
-              "kms_key_id": {
-                "type": "string"
-              },
-              "s3_output_path": {
-                "type": "string"
-              },
-              "s3_failure_path": {
-                "type": "string"
-              }
-            }
-          }
-        }
-            return create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "Endpoint", **kwargs))
+            return create_func(
+                *args,
+                **Base.get_updated_kwargs_with_configured_attributes(
+                    config_schema_for_resource, "Endpoint", **kwargs
+                ),
+            )
+
         return wrapper
 
     @classmethod
@@ -6435,8 +6836,8 @@ class Endpoint(Base):
         Create a Endpoint resource
 
         Parameters:
-            endpoint_name:The name of the endpoint.The name must be unique within an Amazon Web Services Region in your Amazon Web Services account. The name is case-insensitive in CreateEndpoint, but the case is preserved and must be matched in InvokeEndpoint.
-            endpoint_config_name:The name of an endpoint configuration. For more information, see CreateEndpointConfig.
+            endpoint_name: The name of the endpoint.The name must be unique within an Amazon Web Services Region in your Amazon Web Services account. The name is case-insensitive in CreateEndpoint, but the case is preserved and must be matched in InvokeEndpoint.
+            endpoint_config_name: The name of an endpoint configuration. For more information, see CreateEndpointConfig.
             deployment_config:
             tags: An array of key-value pairs. You can use tags to categorize your Amazon Web Services resources in different ways, for example, by purpose, owner, or environment. For more information, see Tagging Amazon Web Services Resources.
             session: Boto3 session.
@@ -6463,16 +6864,20 @@ class Endpoint(Base):
         """
 
         logger.debug("Creating endpoint resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'EndpointName': endpoint_name,
-            'EndpointConfigName': endpoint_config_name,
-            'DeploymentConfig': deployment_config,
-            'Tags': tags,
+            "EndpointName": endpoint_name,
+            "EndpointConfigName": endpoint_config_name,
+            "DeploymentConfig": deployment_config,
+            "Tags": tags,
         }
 
-        operation_input_args = Base.populate_chained_attributes(resource_name='Endpoint', operation_input_args=operation_input_args)
+        operation_input_args = Base.populate_chained_attributes(
+            resource_name="Endpoint", operation_input_args=operation_input_args
+        )
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -6517,19 +6922,23 @@ class Endpoint(Base):
         """
 
         operation_input_args = {
-            'EndpointName': endpoint_name,
+            "EndpointName": endpoint_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
         response = client.describe_endpoint(**operation_input_args)
 
         pprint(response)
 
         # deserialize the response
-        transformed_response = transform(response, 'DescribeEndpointOutput')
+        transformed_response = transform(response, "DescribeEndpointOutput")
         endpoint = cls(**transformed_response)
         return endpoint
 
-    def refresh(self) -> Optional["Endpoint"]:
+    def refresh(
+        self,
+    ) -> Optional["Endpoint"]:
         """
         Refresh a Endpoint resource
 
@@ -6550,13 +6959,13 @@ class Endpoint(Base):
         """
 
         operation_input_args = {
-            'EndpointName': self.endpoint_name,
+            "EndpointName": self.endpoint_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_endpoint(**operation_input_args)
 
         # deserialize response and update self
-        transform(response, 'DescribeEndpointOutput', self)
+        transform(response, "DescribeEndpointOutput", self)
         return self
 
     @populate_inputs_decorator
@@ -6571,10 +6980,10 @@ class Endpoint(Base):
         Update a Endpoint resource
 
         Parameters:
-            retain_all_variant_properties:When updating endpoint resources, enables or disables the retention of variant properties, such as the instance count or the variant weight. To retain the variant properties of an endpoint when updating it, set RetainAllVariantProperties to true. To use the variant properties specified in a new EndpointConfig call when updating an endpoint, set RetainAllVariantProperties to false. The default is false.
-            exclude_retained_variant_properties:When you are updating endpoint resources with RetainAllVariantProperties, whose value is set to true, ExcludeRetainedVariantProperties specifies the list of type VariantProperty to override with the values provided by EndpointConfig. If you don't specify a value for ExcludeRetainedVariantProperties, no variant properties are overridden.
-            deployment_config:The deployment configuration for an endpoint, which contains the desired deployment strategy and rollback configurations.
-            retain_deployment_config:Specifies whether to reuse the last deployment configuration. The default value is false (the configuration is not reused).
+            retain_all_variant_properties: When updating endpoint resources, enables or disables the retention of variant properties, such as the instance count or the variant weight. To retain the variant properties of an endpoint when updating it, set RetainAllVariantProperties to true. To use the variant properties specified in a new EndpointConfig call when updating an endpoint, set RetainAllVariantProperties to false. The default is false.
+            exclude_retained_variant_properties: When you are updating endpoint resources with RetainAllVariantProperties, whose value is set to true, ExcludeRetainedVariantProperties specifies the list of type VariantProperty to override with the values provided by EndpointConfig. If you don't specify a value for ExcludeRetainedVariantProperties, no variant properties are overridden.
+            deployment_config: The deployment configuration for an endpoint, which contains the desired deployment strategy and rollback configurations.
+            retain_deployment_config: Specifies whether to reuse the last deployment configuration. The default value is false (the configuration is not reused).
 
         Returns:
             The Endpoint resource.
@@ -6594,15 +7003,15 @@ class Endpoint(Base):
         """
 
         logger.debug("Updating endpoint resource.")
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
-            'EndpointName': self.endpoint_name,
-            'EndpointConfigName': self.endpoint_config_name,
-            'RetainAllVariantProperties': retain_all_variant_properties,
-            'ExcludeRetainedVariantProperties': exclude_retained_variant_properties,
-            'DeploymentConfig': deployment_config,
-            'RetainDeploymentConfig': retain_deployment_config,
+            "EndpointName": self.endpoint_name,
+            "EndpointConfigName": self.endpoint_config_name,
+            "RetainAllVariantProperties": retain_all_variant_properties,
+            "ExcludeRetainedVariantProperties": exclude_retained_variant_properties,
+            "DeploymentConfig": deployment_config,
+            "RetainDeploymentConfig": retain_deployment_config,
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -6616,7 +7025,9 @@ class Endpoint(Base):
 
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a Endpoint resource
 
@@ -6634,19 +7045,31 @@ class Endpoint(Base):
                 ```
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
-            'EndpointName': self.endpoint_name,
+            "EndpointName": self.endpoint_name,
         }
         client.delete_endpoint(**operation_input_args)
 
+        logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+
     def wait_for_status(
         self,
-        status: Literal['OutOfService', 'Creating', 'Updating', 'SystemUpdating', 'RollingBack', 'InService', 'Deleting', 'Failed', 'UpdateRollbackFailed'],
+        status: Literal[
+            "OutOfService",
+            "Creating",
+            "Updating",
+            "SystemUpdating",
+            "RollingBack",
+            "InService",
+            "Deleting",
+            "Failed",
+            "UpdateRollbackFailed",
+        ],
         poll: int = 5,
-        timeout: Optional[int] = None
-    ) -> Optional["Endpoint"]:
+        timeout: Optional[int] = None,
+    ):
         """
         Wait for a Endpoint resource.
 
@@ -6671,17 +7094,21 @@ class Endpoint(Base):
             current_status = self.endpoint_status
 
             if status == current_status:
-                return self
+                print(f"\nFinal Resource Status: {current_status}")
+                return
 
             if "failed" in current_status.lower():
-                raise FailedStatusError(resource_type="Endpoint", status=current_status, reason=self.failure_reason)
+                raise FailedStatusError(
+                    resource_type="Endpoint", status=current_status, reason=self.failure_reason
+                )
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="Endpoint", status=current_status)
             print("-", end="")
             time.sleep(poll)
 
-    def invoke(self,
+    def invoke(
+        self,
         body: Any,
         content_type: Optional[str] = Unassigned(),
         accept: Optional[str] = Unassigned(),
@@ -6697,16 +7124,16 @@ class Endpoint(Base):
         Invoke a Endpoint resource
 
         Parameters:
-            body:Provides input data, in the format specified in the ContentType request header. Amazon SageMaker passes all of the data in the body to the model.  For information about the format of the request body, see Common Data Formats-Inference.
-            content_type:The MIME type of the input data in the request body.
-            accept:The desired MIME type of the inference response from the model container.
-            custom_attributes:Provides additional information about a request for an inference submitted to a model hosted at an Amazon SageMaker endpoint. The information is an opaque value that is forwarded verbatim. You could use this value, for example, to provide an ID that you can use to track a request or to provide other metadata that a service endpoint was programmed to process. The value must consist of no more than 1024 visible US-ASCII characters as specified in Section 3.3.6. Field Value Components of the Hypertext Transfer Protocol (HTTP/1.1).  The code in your model is responsible for setting or updating any custom attributes in the response. If your code does not set this value in the response, an empty value is returned. For example, if a custom attribute represents the trace ID, your model can prepend the custom attribute with Trace ID: in your post-processing function.  This feature is currently supported in the Amazon Web Services SDKs but not in the Amazon SageMaker Python SDK.
-            target_model:The model to request for inference when invoking a multi-model endpoint.
-            target_variant:Specify the production variant to send the inference request to when invoking an endpoint that is running two or more variants. Note that this parameter overrides the default behavior for the endpoint, which is to distribute the invocation traffic based on the variant weights. For information about how to use variant targeting to perform a/b testing, see Test models in production
-            target_container_hostname:If the endpoint hosts multiple containers and is configured to use direct invocation, this parameter specifies the host name of the container to invoke.
-            inference_id:If you provide a value, it is added to the captured data when you enable data capture on the endpoint. For information about data capture, see Capture Data.
-            enable_explanations:An optional JMESPath expression used to override the EnableExplanations parameter of the ClarifyExplainerConfig API. See the EnableExplanations section in the developer guide for more information.
-            inference_component_name:If the endpoint hosts one or more inference components, this parameter specifies the name of inference component to invoke.
+            body: Provides input data, in the format specified in the ContentType request header. Amazon SageMaker passes all of the data in the body to the model.  For information about the format of the request body, see Common Data Formats-Inference.
+            content_type: The MIME type of the input data in the request body.
+            accept: The desired MIME type of the inference response from the model container.
+            custom_attributes: Provides additional information about a request for an inference submitted to a model hosted at an Amazon SageMaker endpoint. The information is an opaque value that is forwarded verbatim. You could use this value, for example, to provide an ID that you can use to track a request or to provide other metadata that a service endpoint was programmed to process. The value must consist of no more than 1024 visible US-ASCII characters as specified in Section 3.3.6. Field Value Components of the Hypertext Transfer Protocol (HTTP/1.1).  The code in your model is responsible for setting or updating any custom attributes in the response. If your code does not set this value in the response, an empty value is returned. For example, if a custom attribute represents the trace ID, your model can prepend the custom attribute with Trace ID: in your post-processing function.  This feature is currently supported in the Amazon Web Services SDKs but not in the Amazon SageMaker Python SDK.
+            target_model: The model to request for inference when invoking a multi-model endpoint.
+            target_variant: Specify the production variant to send the inference request to when invoking an endpoint that is running two or more variants. Note that this parameter overrides the default behavior for the endpoint, which is to distribute the invocation traffic based on the variant weights. For information about how to use variant targeting to perform a/b testing, see Test models in production
+            target_container_hostname: If the endpoint hosts multiple containers and is configured to use direct invocation, this parameter specifies the host name of the container to invoke.
+            inference_id: If you provide a value, it is added to the captured data when you enable data capture on the endpoint. For information about data capture, see Capture Data.
+            enable_explanations: An optional JMESPath expression used to override the EnableExplanations parameter of the ClarifyExplainerConfig API. See the EnableExplanations section in the developer guide for more information.
+            inference_component_name: If the endpoint hosts one or more inference components, this parameter specifies the name of inference component to invoke.
 
 
         Returns:
@@ -6734,17 +7161,17 @@ class Endpoint(Base):
         logger.debug(f"Invoking endpoint resource.")
         client = SageMakerRuntimeClient(service_name="sagemaker-runtime").client
         operation_input_args = {
-            'EndpointName': self.endpoint_name,
-            'Body': body,
-            'ContentType': content_type,
-            'Accept': accept,
-            'CustomAttributes': custom_attributes,
-            'TargetModel': target_model,
-            'TargetVariant': target_variant,
-            'TargetContainerHostname': target_container_hostname,
-            'InferenceId': inference_id,
-            'EnableExplanations': enable_explanations,
-            'InferenceComponentName': inference_component_name,
+            "EndpointName": self.endpoint_name,
+            "Body": body,
+            "ContentType": content_type,
+            "Accept": accept,
+            "CustomAttributes": custom_attributes,
+            "TargetModel": target_model,
+            "TargetVariant": target_variant,
+            "TargetContainerHostname": target_container_hostname,
+            "InferenceId": inference_id,
+            "EnableExplanations": enable_explanations,
+            "InferenceComponentName": inference_component_name,
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -6757,26 +7184,27 @@ class Endpoint(Base):
 
         return response
 
-    def invoke_async(self,
+    def invoke_async(
+        self,
         input_location: str,
         content_type: Optional[str] = Unassigned(),
         accept: Optional[str] = Unassigned(),
         custom_attributes: Optional[str] = Unassigned(),
         inference_id: Optional[str] = Unassigned(),
-        request_t_t_l_seconds: Optional[int] = Unassigned(),
+        request_ttl_seconds: Optional[int] = Unassigned(),
         invocation_timeout_seconds: Optional[int] = Unassigned(),
     ) -> Optional[object]:
         """
         Invoke Async a Endpoint resource
 
         Parameters:
-            input_location:The Amazon S3 URI where the inference request payload is stored.
-            content_type:The MIME type of the input data in the request body.
-            accept:The desired MIME type of the inference response from the model container.
-            custom_attributes:Provides additional information about a request for an inference submitted to a model hosted at an Amazon SageMaker endpoint. The information is an opaque value that is forwarded verbatim. You could use this value, for example, to provide an ID that you can use to track a request or to provide other metadata that a service endpoint was programmed to process. The value must consist of no more than 1024 visible US-ASCII characters as specified in Section 3.3.6. Field Value Components of the Hypertext Transfer Protocol (HTTP/1.1).  The code in your model is responsible for setting or updating any custom attributes in the response. If your code does not set this value in the response, an empty value is returned. For example, if a custom attribute represents the trace ID, your model can prepend the custom attribute with Trace ID: in your post-processing function.  This feature is currently supported in the Amazon Web Services SDKs but not in the Amazon SageMaker Python SDK.
-            inference_id:The identifier for the inference request. Amazon SageMaker will generate an identifier for you if none is specified.
-            request_ttl_seconds:Maximum age in seconds a request can be in the queue before it is marked as expired. The default is 6 hours, or 21,600 seconds.
-            invocation_timeout_seconds:Maximum amount of time in seconds a request can be processed before it is marked as expired. The default is 15 minutes, or 900 seconds.
+            input_location: The Amazon S3 URI where the inference request payload is stored.
+            content_type: The MIME type of the input data in the request body.
+            accept: The desired MIME type of the inference response from the model container.
+            custom_attributes: Provides additional information about a request for an inference submitted to a model hosted at an Amazon SageMaker endpoint. The information is an opaque value that is forwarded verbatim. You could use this value, for example, to provide an ID that you can use to track a request or to provide other metadata that a service endpoint was programmed to process. The value must consist of no more than 1024 visible US-ASCII characters as specified in Section 3.3.6. Field Value Components of the Hypertext Transfer Protocol (HTTP/1.1).  The code in your model is responsible for setting or updating any custom attributes in the response. If your code does not set this value in the response, an empty value is returned. For example, if a custom attribute represents the trace ID, your model can prepend the custom attribute with Trace ID: in your post-processing function.  This feature is currently supported in the Amazon Web Services SDKs but not in the Amazon SageMaker Python SDK.
+            inference_id: The identifier for the inference request. Amazon SageMaker will generate an identifier for you if none is specified.
+            request_ttl_seconds: Maximum age in seconds a request can be in the queue before it is marked as expired. The default is 6 hours, or 21,600 seconds.
+            invocation_timeout_seconds: Maximum amount of time in seconds a request can be processed before it is marked as expired. The default is 15 minutes, or 900 seconds.
 
 
         Returns:
@@ -6802,14 +7230,14 @@ class Endpoint(Base):
         client = SageMakerRuntimeClient(service_name="sagemaker-runtime").client
 
         operation_input_args = {
-            'EndpointName': self.endpoint_name,
-            'ContentType': content_type,
-            'Accept': accept,
-            'CustomAttributes': custom_attributes,
-            'InferenceId': inference_id,
-            'InputLocation': input_location,
-            'RequestTTLSeconds': request_t_t_l_seconds,
-            'InvocationTimeoutSeconds': invocation_timeout_seconds,
+            "EndpointName": self.endpoint_name,
+            "ContentType": content_type,
+            "Accept": accept,
+            "CustomAttributes": custom_attributes,
+            "InferenceId": inference_id,
+            "InputLocation": input_location,
+            "RequestTTLSeconds": request_ttl_seconds,
+            "InvocationTimeoutSeconds": invocation_timeout_seconds,
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -6822,7 +7250,8 @@ class Endpoint(Base):
 
         return response
 
-    def invoke_with_response_stream(self,
+    def invoke_with_response_stream(
+        self,
         body: Any,
         content_type: Optional[str] = Unassigned(),
         accept: Optional[str] = Unassigned(),
@@ -6836,14 +7265,14 @@ class Endpoint(Base):
         Invoke with response stream a Endpoint resource
 
         Parameters:
-            body:Provides input data, in the format specified in the ContentType request header. Amazon SageMaker passes all of the data in the body to the model.  For information about the format of the request body, see Common Data Formats-Inference.
-            content_type:The MIME type of the input data in the request body.
-            accept:The desired MIME type of the inference response from the model container.
-            custom_attributes:Provides additional information about a request for an inference submitted to a model hosted at an Amazon SageMaker endpoint. The information is an opaque value that is forwarded verbatim. You could use this value, for example, to provide an ID that you can use to track a request or to provide other metadata that a service endpoint was programmed to process. The value must consist of no more than 1024 visible US-ASCII characters as specified in Section 3.3.6. Field Value Components of the Hypertext Transfer Protocol (HTTP/1.1).  The code in your model is responsible for setting or updating any custom attributes in the response. If your code does not set this value in the response, an empty value is returned. For example, if a custom attribute represents the trace ID, your model can prepend the custom attribute with Trace ID: in your post-processing function.  This feature is currently supported in the Amazon Web Services SDKs but not in the Amazon SageMaker Python SDK.
-            target_variant:Specify the production variant to send the inference request to when invoking an endpoint that is running two or more variants. Note that this parameter overrides the default behavior for the endpoint, which is to distribute the invocation traffic based on the variant weights. For information about how to use variant targeting to perform a/b testing, see Test models in production
-            target_container_hostname:If the endpoint hosts multiple containers and is configured to use direct invocation, this parameter specifies the host name of the container to invoke.
-            inference_id:An identifier that you assign to your request.
-            inference_component_name:If the endpoint hosts one or more inference components, this parameter specifies the name of inference component to invoke for a streaming response.
+            body: Provides input data, in the format specified in the ContentType request header. Amazon SageMaker passes all of the data in the body to the model.  For information about the format of the request body, see Common Data Formats-Inference.
+            content_type: The MIME type of the input data in the request body.
+            accept: The desired MIME type of the inference response from the model container.
+            custom_attributes: Provides additional information about a request for an inference submitted to a model hosted at an Amazon SageMaker endpoint. The information is an opaque value that is forwarded verbatim. You could use this value, for example, to provide an ID that you can use to track a request or to provide other metadata that a service endpoint was programmed to process. The value must consist of no more than 1024 visible US-ASCII characters as specified in Section 3.3.6. Field Value Components of the Hypertext Transfer Protocol (HTTP/1.1).  The code in your model is responsible for setting or updating any custom attributes in the response. If your code does not set this value in the response, an empty value is returned. For example, if a custom attribute represents the trace ID, your model can prepend the custom attribute with Trace ID: in your post-processing function.  This feature is currently supported in the Amazon Web Services SDKs but not in the Amazon SageMaker Python SDK.
+            target_variant: Specify the production variant to send the inference request to when invoking an endpoint that is running two or more variants. Note that this parameter overrides the default behavior for the endpoint, which is to distribute the invocation traffic based on the variant weights. For information about how to use variant targeting to perform a/b testing, see Test models in production
+            target_container_hostname: If the endpoint hosts multiple containers and is configured to use direct invocation, this parameter specifies the host name of the container to invoke.
+            inference_id: An identifier that you assign to your request.
+            inference_component_name: If the endpoint hosts one or more inference components, this parameter specifies the name of inference component to invoke for a streaming response.
 
 
         Returns:
@@ -6872,15 +7301,15 @@ class Endpoint(Base):
         client = SageMakerRuntimeClient(service_name="sagemaker-runtime").client
 
         operation_input_args = {
-            'EndpointName': self.endpoint_name,
-            'Body': body,
-            'ContentType': content_type,
-            'Accept': accept,
-            'CustomAttributes': custom_attributes,
-            'TargetVariant': target_variant,
-            'TargetContainerHostname': target_container_hostname,
-            'InferenceId': inference_id,
-            'InferenceComponentName': inference_component_name,
+            "EndpointName": self.endpoint_name,
+            "Body": body,
+            "ContentType": content_type,
+            "Accept": accept,
+            "CustomAttributes": custom_attributes,
+            "TargetVariant": target_variant,
+            "TargetContainerHostname": target_container_hostname,
+            "InferenceId": inference_id,
+            "InferenceComponentName": inference_component_name,
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -6911,16 +7340,16 @@ class Endpoint(Base):
         Get all Endpoint resources
 
         Parameters:
-            sort_by:Sorts the list of results. The default is CreationTime.
-            sort_order:The sort order for results. The default is Descending.
-            next_token:If the result of a ListEndpoints request was truncated, the response includes a NextToken. To retrieve the next set of endpoints, use the token in the next request.
-            max_results:The maximum number of endpoints to return in the response. This value defaults to 10.
-            name_contains:A string in endpoint names. This filter returns only endpoints whose name contains the specified string.
-            creation_time_before:A filter that returns only endpoints that were created before the specified time (timestamp).
-            creation_time_after:A filter that returns only endpoints with a creation time greater than or equal to the specified time (timestamp).
-            last_modified_time_before: A filter that returns only endpoints that were modified before the specified timestamp.
-            last_modified_time_after: A filter that returns only endpoints that were modified after the specified timestamp.
-            status_equals: A filter that returns only endpoints with the specified status.
+            sort_by: Sorts the list of results. The default is CreationTime.
+            sort_order: The sort order for results. The default is Descending.
+            next_token: If the result of a ListEndpoints request was truncated, the response includes a NextToken. To retrieve the next set of endpoints, use the token in the next request.
+            max_results: The maximum number of endpoints to return in the response. This value defaults to 10.
+            name_contains: A string in endpoint names. This filter returns only endpoints whose name contains the specified string.
+            creation_time_before: A filter that returns only endpoints that were created before the specified time (timestamp).
+            creation_time_after: A filter that returns only endpoints with a creation time greater than or equal to the specified time (timestamp).
+            last_modified_time_before:  A filter that returns only endpoints that were modified before the specified timestamp.
+            last_modified_time_after:  A filter that returns only endpoints that were modified after the specified timestamp.
+            status_equals:  A filter that returns only endpoints with the specified status.
             session: Boto3 session.
             region: Region name.
 
@@ -6940,30 +7369,35 @@ class Endpoint(Base):
                 ```
         """
 
-        client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'SortBy': sort_by,
-            'SortOrder': sort_order,
-            'NameContains': name_contains,
-            'CreationTimeBefore': creation_time_before,
-            'CreationTimeAfter': creation_time_after,
-            'LastModifiedTimeBefore': last_modified_time_before,
-            'LastModifiedTimeAfter': last_modified_time_after,
-            'StatusEquals': status_equals,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
+            "NameContains": name_contains,
+            "CreationTimeBefore": creation_time_before,
+            "CreationTimeAfter": creation_time_after,
+            "LastModifiedTimeBefore": last_modified_time_before,
+            "LastModifiedTimeAfter": last_modified_time_after,
+            "StatusEquals": status_equals,
         }
 
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
 
         return ResourceIterator(
             client=client,
-            list_method='list_endpoints',
-            summaries_key='Endpoints',
-            summary_name='EndpointSummary',
+            list_method="list_endpoints",
+            summaries_key="Endpoints",
+            summary_name="EndpointSummary",
             resource_cls=Endpoint,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
-
 
     def update_weights_and_capacities(
         self,
@@ -6972,7 +7406,7 @@ class Endpoint(Base):
         region: Optional[str] = None,
     ) -> None:
         """
-        Perform UpdateEndpointWeightsAndCapacities on a Endpoint resource.
+        Updates variant weight of one or more variants associated with an existing endpoint, or capacity of one variant associated with an existing endpoint.
 
         Parameters:
             desired_weights_and_capacities: An object that provides new capacity and weight values for a variant.
@@ -6982,19 +7416,19 @@ class Endpoint(Base):
 
         """
 
-
         operation_input_args = {
-            'EndpointName': self.endpoint_name,
-            'DesiredWeightsAndCapacities': desired_weights_and_capacities,
+            "EndpointName": self.endpoint_name,
+            "DesiredWeightsAndCapacities": desired_weights_and_capacities,
         }
         logger.debug(f"Input request: {operation_input_args}")
 
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         logger.debug(f"Calling update_endpoint_weights_and_capacities API")
         response = client.update_endpoint_weights_and_capacities(**operation_input_args)
         logger.debug(f"Response: {response}")
-
 
 
 class EndpointConfig(Base):
@@ -7013,9 +7447,10 @@ class EndpointConfig(Base):
         shadow_production_variants: An array of ProductionVariant objects, one for each model that you want to host at this endpoint in shadow mode with production traffic replicated from the model specified on ProductionVariants.
         execution_role_arn: The Amazon Resource Name (ARN) of the IAM role that you assigned to the endpoint configuration.
         vpc_config:
-        enable_network_isolation:Indicates whether all model containers deployed to the endpoint are isolated. If they are, no inbound or outbound network calls can be made to or from the model containers.
+        enable_network_isolation: Indicates whether all model containers deployed to the endpoint are isolated. If they are, no inbound or outbound network calls can be made to or from the model containers.
 
     """
+
     endpoint_config_name: str
     endpoint_config_arn: Optional[str] = Unassigned()
     production_variants: Optional[List[ProductionVariant]] = Unassigned()
@@ -7031,59 +7466,49 @@ class EndpointConfig(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'endpoint_config_name':
-                return value
-        raise Exception("Name attribute not found for object")
+        resource_name = "endpoint_config_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
 
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
+        for attribute, value in attributes.items():
+            if attribute == "name" or attribute in attribute_name_candidates:
+                return value
+        logger.error("Name attribute not found for object endpoint_config")
+        return None
 
     def populate_inputs_decorator(create_func):
+        @functools.wraps(create_func)
         def wrapper(*args, **kwargs):
-            config_schema_for_resource = \
-        {
-          "data_capture_config": {
-            "destination_s3_uri": {
-              "type": "string"
-            },
-            "kms_key_id": {
-              "type": "string"
+            config_schema_for_resource = {
+                "data_capture_config": {
+                    "destination_s3_uri": {"type": "string"},
+                    "kms_key_id": {"type": "string"},
+                },
+                "kms_key_id": {"type": "string"},
+                "async_inference_config": {
+                    "output_config": {
+                        "kms_key_id": {"type": "string"},
+                        "s3_output_path": {"type": "string"},
+                        "s3_failure_path": {"type": "string"},
+                    }
+                },
+                "execution_role_arn": {"type": "string"},
+                "vpc_config": {
+                    "security_group_ids": {"type": "array", "items": {"type": "string"}},
+                    "subnets": {"type": "array", "items": {"type": "string"}},
+                },
             }
-          },
-          "kms_key_id": {
-            "type": "string"
-          },
-          "async_inference_config": {
-            "output_config": {
-              "kms_key_id": {
-                "type": "string"
-              },
-              "s3_output_path": {
-                "type": "string"
-              },
-              "s3_failure_path": {
-                "type": "string"
-              }
-            }
-          },
-          "execution_role_arn": {
-            "type": "string"
-          },
-          "vpc_config": {
-            "security_group_ids": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            "subnets": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
-          }
-        }
-            return create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "EndpointConfig", **kwargs))
+            return create_func(
+                *args,
+                **Base.get_updated_kwargs_with_configured_attributes(
+                    config_schema_for_resource, "EndpointConfig", **kwargs
+                ),
+            )
+
         return wrapper
 
     @classmethod
@@ -7108,15 +7533,15 @@ class EndpointConfig(Base):
         Create a EndpointConfig resource
 
         Parameters:
-            endpoint_config_name:The name of the endpoint configuration. You specify this name in a CreateEndpoint request.
-            production_variants:An array of ProductionVariant objects, one for each model that you want to host at this endpoint.
+            endpoint_config_name: The name of the endpoint configuration. You specify this name in a CreateEndpoint request.
+            production_variants: An array of ProductionVariant objects, one for each model that you want to host at this endpoint.
             data_capture_config:
-            tags:An array of key-value pairs. You can use tags to categorize your Amazon Web Services resources in different ways, for example, by purpose, owner, or environment. For more information, see Tagging Amazon Web Services Resources.
-            kms_key_id:The Amazon Resource Name (ARN) of a Amazon Web Services Key Management Service key that SageMaker uses to encrypt data on the storage volume attached to the ML compute instance that hosts the endpoint. The KmsKeyId can be any of the following formats:    Key ID: 1234abcd-12ab-34cd-56ef-1234567890ab    Key ARN: arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab    Alias name: alias/ExampleAlias    Alias name ARN: arn:aws:kms:us-west-2:111122223333:alias/ExampleAlias    The KMS key policy must grant permission to the IAM role that you specify in your CreateEndpoint, UpdateEndpoint requests. For more information, refer to the Amazon Web Services Key Management Service section Using Key Policies in Amazon Web Services KMS    Certain Nitro-based instances include local storage, dependent on the instance type. Local storage volumes are encrypted using a hardware module on the instance. You can't request a KmsKeyId when using an instance type with local storage. If any of the models that you specify in the ProductionVariants parameter use nitro-based instances with local storage, do not specify a value for the KmsKeyId parameter. If you specify a value for KmsKeyId when using any nitro-based instances with local storage, the call to CreateEndpointConfig fails. For a list of instance types that support local instance storage, see Instance Store Volumes. For more information about local instance storage encryption, see SSD Instance Store Volumes.
-            async_inference_config:Specifies configuration for how an endpoint performs asynchronous inference. This is a required field in order for your Endpoint to be invoked using InvokeEndpointAsync.
-            explainer_config:A member of CreateEndpointConfig that enables explainers.
-            shadow_production_variants:An array of ProductionVariant objects, one for each model that you want to host at this endpoint in shadow mode with production traffic replicated from the model specified on ProductionVariants. If you use this field, you can only specify one variant for ProductionVariants and one variant for ShadowProductionVariants.
-            execution_role_arn:The Amazon Resource Name (ARN) of an IAM role that Amazon SageMaker can assume to perform actions on your behalf. For more information, see SageMaker Roles.   To be able to pass this role to Amazon SageMaker, the caller of this action must have the iam:PassRole permission.
+            tags: An array of key-value pairs. You can use tags to categorize your Amazon Web Services resources in different ways, for example, by purpose, owner, or environment. For more information, see Tagging Amazon Web Services Resources.
+            kms_key_id: The Amazon Resource Name (ARN) of a Amazon Web Services Key Management Service key that SageMaker uses to encrypt data on the storage volume attached to the ML compute instance that hosts the endpoint. The KmsKeyId can be any of the following formats:    Key ID: 1234abcd-12ab-34cd-56ef-1234567890ab    Key ARN: arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab    Alias name: alias/ExampleAlias    Alias name ARN: arn:aws:kms:us-west-2:111122223333:alias/ExampleAlias    The KMS key policy must grant permission to the IAM role that you specify in your CreateEndpoint, UpdateEndpoint requests. For more information, refer to the Amazon Web Services Key Management Service section Using Key Policies in Amazon Web Services KMS    Certain Nitro-based instances include local storage, dependent on the instance type. Local storage volumes are encrypted using a hardware module on the instance. You can't request a KmsKeyId when using an instance type with local storage. If any of the models that you specify in the ProductionVariants parameter use nitro-based instances with local storage, do not specify a value for the KmsKeyId parameter. If you specify a value for KmsKeyId when using any nitro-based instances with local storage, the call to CreateEndpointConfig fails. For a list of instance types that support local instance storage, see Instance Store Volumes. For more information about local instance storage encryption, see SSD Instance Store Volumes.
+            async_inference_config: Specifies configuration for how an endpoint performs asynchronous inference. This is a required field in order for your Endpoint to be invoked using InvokeEndpointAsync.
+            explainer_config: A member of CreateEndpointConfig that enables explainers.
+            shadow_production_variants: An array of ProductionVariant objects, one for each model that you want to host at this endpoint in shadow mode with production traffic replicated from the model specified on ProductionVariants. If you use this field, you can only specify one variant for ProductionVariants and one variant for ShadowProductionVariants.
+            execution_role_arn: The Amazon Resource Name (ARN) of an IAM role that Amazon SageMaker can assume to perform actions on your behalf. For more information, see SageMaker Roles.   To be able to pass this role to Amazon SageMaker, the caller of this action must have the iam:PassRole permission.
             vpc_config:
             enable_network_isolation: Sets whether all model containers deployed to the endpoint are isolated. If they are, no inbound or outbound network calls can be made to or from the model containers.
             session: Boto3 session.
@@ -7143,23 +7568,27 @@ class EndpointConfig(Base):
         """
 
         logger.debug("Creating endpoint_config resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'EndpointConfigName': endpoint_config_name,
-            'ProductionVariants': production_variants,
-            'DataCaptureConfig': data_capture_config,
-            'Tags': tags,
-            'KmsKeyId': kms_key_id,
-            'AsyncInferenceConfig': async_inference_config,
-            'ExplainerConfig': explainer_config,
-            'ShadowProductionVariants': shadow_production_variants,
-            'ExecutionRoleArn': execution_role_arn,
-            'VpcConfig': vpc_config,
-            'EnableNetworkIsolation': enable_network_isolation,
+            "EndpointConfigName": endpoint_config_name,
+            "ProductionVariants": production_variants,
+            "DataCaptureConfig": data_capture_config,
+            "Tags": tags,
+            "KmsKeyId": kms_key_id,
+            "AsyncInferenceConfig": async_inference_config,
+            "ExplainerConfig": explainer_config,
+            "ShadowProductionVariants": shadow_production_variants,
+            "ExecutionRoleArn": execution_role_arn,
+            "VpcConfig": vpc_config,
+            "EnableNetworkIsolation": enable_network_isolation,
         }
 
-        operation_input_args = Base.populate_chained_attributes(resource_name='EndpointConfig', operation_input_args=operation_input_args)
+        operation_input_args = Base.populate_chained_attributes(
+            resource_name="EndpointConfig", operation_input_args=operation_input_args
+        )
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -7204,19 +7633,23 @@ class EndpointConfig(Base):
         """
 
         operation_input_args = {
-            'EndpointConfigName': endpoint_config_name,
+            "EndpointConfigName": endpoint_config_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
         response = client.describe_endpoint_config(**operation_input_args)
 
         pprint(response)
 
         # deserialize the response
-        transformed_response = transform(response, 'DescribeEndpointConfigOutput')
+        transformed_response = transform(response, "DescribeEndpointConfigOutput")
         endpoint_config = cls(**transformed_response)
         return endpoint_config
 
-    def refresh(self) -> Optional["EndpointConfig"]:
+    def refresh(
+        self,
+    ) -> Optional["EndpointConfig"]:
         """
         Refresh a EndpointConfig resource
 
@@ -7237,16 +7670,18 @@ class EndpointConfig(Base):
         """
 
         operation_input_args = {
-            'EndpointConfigName': self.endpoint_config_name,
+            "EndpointConfigName": self.endpoint_config_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_endpoint_config(**operation_input_args)
 
         # deserialize response and update self
-        transform(response, 'DescribeEndpointConfigOutput', self)
+        transform(response, "DescribeEndpointConfigOutput", self)
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a EndpointConfig resource
 
@@ -7264,12 +7699,14 @@ class EndpointConfig(Base):
                 ```
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
-            'EndpointConfigName': self.endpoint_config_name,
+            "EndpointConfigName": self.endpoint_config_name,
         }
         client.delete_endpoint_config(**operation_input_args)
+
+        logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
     @classmethod
     def get_all(
@@ -7286,13 +7723,13 @@ class EndpointConfig(Base):
         Get all EndpointConfig resources
 
         Parameters:
-            sort_by:The field to sort results by. The default is CreationTime.
-            sort_order:The sort order for results. The default is Descending.
-            next_token:If the result of the previous ListEndpointConfig request was truncated, the response includes a NextToken. To retrieve the next set of endpoint configurations, use the token in the next request.
-            max_results:The maximum number of training jobs to return in the response.
-            name_contains:A string in the endpoint configuration name. This filter returns only endpoint configurations whose name contains the specified string.
-            creation_time_before:A filter that returns only endpoint configurations created before the specified time (timestamp).
-            creation_time_after:A filter that returns only endpoint configurations with a creation time greater than or equal to the specified time (timestamp).
+            sort_by: The field to sort results by. The default is CreationTime.
+            sort_order: The sort order for results. The default is Descending.
+            next_token: If the result of the previous ListEndpointConfig request was truncated, the response includes a NextToken. To retrieve the next set of endpoint configurations, use the token in the next request.
+            max_results: The maximum number of training jobs to return in the response.
+            name_contains: A string in the endpoint configuration name. This filter returns only endpoint configurations whose name contains the specified string.
+            creation_time_before: A filter that returns only endpoint configurations created before the specified time (timestamp).
+            creation_time_after: A filter that returns only endpoint configurations with a creation time greater than or equal to the specified time (timestamp).
             session: Boto3 session.
             region: Region name.
 
@@ -7312,25 +7749,31 @@ class EndpointConfig(Base):
                 ```
         """
 
-        client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'SortBy': sort_by,
-            'SortOrder': sort_order,
-            'NameContains': name_contains,
-            'CreationTimeBefore': creation_time_before,
-            'CreationTimeAfter': creation_time_after,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
+            "NameContains": name_contains,
+            "CreationTimeBefore": creation_time_before,
+            "CreationTimeAfter": creation_time_after,
         }
 
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
 
         return ResourceIterator(
             client=client,
-            list_method='list_endpoint_configs',
-            summaries_key='EndpointConfigs',
-            summary_name='EndpointConfigSummary',
+            list_method="list_endpoint_configs",
+            summaries_key="EndpointConfigs",
+            summary_name="EndpointConfigSummary",
             resource_cls=EndpointConfig,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
 
 
@@ -7339,17 +7782,18 @@ class Experiment(Base):
     Class representing resource Experiment
 
     Attributes:
-        experiment_name:The name of the experiment.
-        experiment_arn:The Amazon Resource Name (ARN) of the experiment.
-        display_name:The name of the experiment as displayed. If DisplayName isn't specified, ExperimentName is displayed.
-        source:The Amazon Resource Name (ARN) of the source and, optionally, the type.
-        description:The description of the experiment.
-        creation_time:When the experiment was created.
-        created_by:Who created the experiment.
-        last_modified_time:When the experiment was last modified.
-        last_modified_by:Who last modified the experiment.
+        experiment_name: The name of the experiment.
+        experiment_arn: The Amazon Resource Name (ARN) of the experiment.
+        display_name: The name of the experiment as displayed. If DisplayName isn't specified, ExperimentName is displayed.
+        source: The Amazon Resource Name (ARN) of the source and, optionally, the type.
+        description: The description of the experiment.
+        creation_time: When the experiment was created.
+        created_by: Who created the experiment.
+        last_modified_time: When the experiment was last modified.
+        last_modified_by: Who last modified the experiment.
 
     """
+
     experiment_name: str
     experiment_arn: Optional[str] = Unassigned()
     display_name: Optional[str] = Unassigned()
@@ -7362,10 +7806,19 @@ class Experiment(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "experiment_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'experiment_name':
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object experiment")
+        return None
 
     @classmethod
     def create(
@@ -7409,16 +7862,20 @@ class Experiment(Base):
         """
 
         logger.debug("Creating experiment resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'ExperimentName': experiment_name,
-            'DisplayName': display_name,
-            'Description': description,
-            'Tags': tags,
+            "ExperimentName": experiment_name,
+            "DisplayName": display_name,
+            "Description": description,
+            "Tags": tags,
         }
 
-        operation_input_args = Base.populate_chained_attributes(resource_name='Experiment', operation_input_args=operation_input_args)
+        operation_input_args = Base.populate_chained_attributes(
+            resource_name="Experiment", operation_input_args=operation_input_args
+        )
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -7464,19 +7921,23 @@ class Experiment(Base):
         """
 
         operation_input_args = {
-            'ExperimentName': experiment_name,
+            "ExperimentName": experiment_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
         response = client.describe_experiment(**operation_input_args)
 
         pprint(response)
 
         # deserialize the response
-        transformed_response = transform(response, 'DescribeExperimentResponse')
+        transformed_response = transform(response, "DescribeExperimentResponse")
         experiment = cls(**transformed_response)
         return experiment
 
-    def refresh(self) -> Optional["Experiment"]:
+    def refresh(
+        self,
+    ) -> Optional["Experiment"]:
         """
         Refresh a Experiment resource
 
@@ -7498,13 +7959,13 @@ class Experiment(Base):
         """
 
         operation_input_args = {
-            'ExperimentName': self.experiment_name,
+            "ExperimentName": self.experiment_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_experiment(**operation_input_args)
 
         # deserialize response and update self
-        transform(response, 'DescribeExperimentResponse', self)
+        transform(response, "DescribeExperimentResponse", self)
         return self
 
     def update(
@@ -7535,12 +7996,12 @@ class Experiment(Base):
         """
 
         logger.debug("Updating experiment resource.")
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
-            'ExperimentName': self.experiment_name,
-            'DisplayName': display_name,
-            'Description': description,
+            "ExperimentName": self.experiment_name,
+            "DisplayName": display_name,
+            "Description": description,
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -7554,7 +8015,9 @@ class Experiment(Base):
 
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a Experiment resource
 
@@ -7573,12 +8036,14 @@ class Experiment(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
-            'ExperimentName': self.experiment_name,
+            "ExperimentName": self.experiment_name,
         }
         client.delete_experiment(**operation_input_args)
+
+        logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
     @classmethod
     def get_all(
@@ -7619,24 +8084,30 @@ class Experiment(Base):
                 ```
         """
 
-        client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'CreatedAfter': created_after,
-            'CreatedBefore': created_before,
-            'SortBy': sort_by,
-            'SortOrder': sort_order,
+            "CreatedAfter": created_after,
+            "CreatedBefore": created_before,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
         }
 
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
 
         return ResourceIterator(
             client=client,
-            list_method='list_experiments',
-            summaries_key='ExperimentSummaries',
-            summary_name='ExperimentSummary',
+            list_method="list_experiments",
+            summaries_key="ExperimentSummaries",
+            summary_name="ExperimentSummary",
             resource_cls=Experiment,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
 
 
@@ -7645,26 +8116,27 @@ class FeatureGroup(Base):
     Class representing resource FeatureGroup
 
     Attributes:
-        feature_group_arn:The Amazon Resource Name (ARN) of the FeatureGroup.
-        feature_group_name:he name of the FeatureGroup.
-        record_identifier_feature_name:The name of the Feature used for RecordIdentifier, whose value uniquely identifies a record stored in the feature store.
-        event_time_feature_name:The name of the feature that stores the EventTime of a Record in a FeatureGroup.  An EventTime is a point in time when a new event occurs that corresponds to the creation or update of a Record in a FeatureGroup. All Records in the FeatureGroup have a corresponding EventTime.
-        feature_definitions:A list of the Features in the FeatureGroup. Each feature is defined by a FeatureName and FeatureType.
-        creation_time:A timestamp indicating when SageMaker created the FeatureGroup.
-        next_token:A token to resume pagination of the list of Features (FeatureDefinitions).
-        last_modified_time:A timestamp indicating when the feature group was last updated.
-        online_store_config:The configuration for the OnlineStore.
-        offline_store_config:The configuration of the offline store. It includes the following configurations:   Amazon S3 location of the offline store.   Configuration of the Glue data catalog.   Table format of the offline store.   Option to disable the automatic creation of a Glue table for the offline store.   Encryption configuration.
+        feature_group_arn: The Amazon Resource Name (ARN) of the FeatureGroup.
+        feature_group_name: he name of the FeatureGroup.
+        record_identifier_feature_name: The name of the Feature used for RecordIdentifier, whose value uniquely identifies a record stored in the feature store.
+        event_time_feature_name: The name of the feature that stores the EventTime of a Record in a FeatureGroup.  An EventTime is a point in time when a new event occurs that corresponds to the creation or update of a Record in a FeatureGroup. All Records in the FeatureGroup have a corresponding EventTime.
+        feature_definitions: A list of the Features in the FeatureGroup. Each feature is defined by a FeatureName and FeatureType.
+        creation_time: A timestamp indicating when SageMaker created the FeatureGroup.
+        next_token: A token to resume pagination of the list of Features (FeatureDefinitions).
+        last_modified_time: A timestamp indicating when the feature group was last updated.
+        online_store_config: The configuration for the OnlineStore.
+        offline_store_config: The configuration of the offline store. It includes the following configurations:   Amazon S3 location of the offline store.   Configuration of the Glue data catalog.   Table format of the offline store.   Option to disable the automatic creation of a Glue table for the offline store.   Encryption configuration.
         throughput_config:
-        role_arn:The Amazon Resource Name (ARN) of the IAM execution role used to persist data into the OfflineStore if an OfflineStoreConfig is provided.
-        feature_group_status:The status of the feature group.
-        offline_store_status:The status of the OfflineStore. Notifies you if replicating data into the OfflineStore has failed. Returns either: Active or Blocked
-        last_update_status:A value indicating whether the update made to the feature group was successful.
-        failure_reason:The reason that the FeatureGroup failed to be replicated in the OfflineStore. This is failure can occur because:   The FeatureGroup could not be created in the OfflineStore.   The FeatureGroup could not be deleted from the OfflineStore.
-        description:A free form description of the feature group.
-        online_store_total_size_bytes:The size of the OnlineStore in bytes.
+        role_arn: The Amazon Resource Name (ARN) of the IAM execution role used to persist data into the OfflineStore if an OfflineStoreConfig is provided.
+        feature_group_status: The status of the feature group.
+        offline_store_status: The status of the OfflineStore. Notifies you if replicating data into the OfflineStore has failed. Returns either: Active or Blocked
+        last_update_status: A value indicating whether the update made to the feature group was successful.
+        failure_reason: The reason that the FeatureGroup failed to be replicated in the OfflineStore. This is failure can occur because:   The FeatureGroup could not be created in the OfflineStore.   The FeatureGroup could not be deleted from the OfflineStore.
+        description: A free form description of the feature group.
+        online_store_total_size_bytes: The size of the OnlineStore in bytes.
 
     """
+
     feature_group_name: str
     feature_group_arn: Optional[str] = Unassigned()
     record_identifier_feature_name: Optional[str] = Unassigned()
@@ -7686,41 +8158,41 @@ class FeatureGroup(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'feature_group_name':
-                return value
-        raise Exception("Name attribute not found for object")
+        resource_name = "feature_group_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
 
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
+        for attribute, value in attributes.items():
+            if attribute == "name" or attribute in attribute_name_candidates:
+                return value
+        logger.error("Name attribute not found for object feature_group")
+        return None
 
     def populate_inputs_decorator(create_func):
+        @functools.wraps(create_func)
         def wrapper(*args, **kwargs):
-            config_schema_for_resource = \
-        {
-          "online_store_config": {
-            "security_config": {
-              "kms_key_id": {
-                "type": "string"
-              }
+            config_schema_for_resource = {
+                "online_store_config": {"security_config": {"kms_key_id": {"type": "string"}}},
+                "offline_store_config": {
+                    "s3_storage_config": {
+                        "s3_uri": {"type": "string"},
+                        "kms_key_id": {"type": "string"},
+                        "resolved_output_s3_uri": {"type": "string"},
+                    }
+                },
+                "role_arn": {"type": "string"},
             }
-          },
-          "offline_store_config": {
-            "s3_storage_config": {
-              "s3_uri": {
-                "type": "string"
-              },
-              "kms_key_id": {
-                "type": "string"
-              },
-              "resolved_output_s3_uri": {
-                "type": "string"
-              }
-            }
-          },
-          "role_arn": {
-            "type": "string"
-          }
-        }
-            return create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "FeatureGroup", **kwargs))
+            return create_func(
+                *args,
+                **Base.get_updated_kwargs_with_configured_attributes(
+                    config_schema_for_resource, "FeatureGroup", **kwargs
+                ),
+            )
+
         return wrapper
 
     @classmethod
@@ -7744,12 +8216,12 @@ class FeatureGroup(Base):
         Create a FeatureGroup resource
 
         Parameters:
-            feature_group_name:The name of the FeatureGroup. The name must be unique within an Amazon Web Services Region in an Amazon Web Services account. The name:   Must start and end with an alphanumeric character.   Can only include alphanumeric characters, underscores, and hyphens. Spaces are not allowed.
-            record_identifier_feature_name:The name of the Feature whose value uniquely identifies a Record defined in the FeatureStore. Only the latest record per identifier value will be stored in the OnlineStore. RecordIdentifierFeatureName must be one of feature definitions' names. You use the RecordIdentifierFeatureName to access data in a FeatureStore. This name:   Must start and end with an alphanumeric character.   Can only contains alphanumeric characters, hyphens, underscores. Spaces are not allowed.
-            event_time_feature_name:The name of the feature that stores the EventTime of a Record in a FeatureGroup. An EventTime is a point in time when a new event occurs that corresponds to the creation or update of a Record in a FeatureGroup. All Records in the FeatureGroup must have a corresponding EventTime. An EventTime can be a String or Fractional.     Fractional: EventTime feature values must be a Unix timestamp in seconds.    String: EventTime feature values must be an ISO-8601 string in the format. The following formats are supported yyyy-MM-dd'T'HH:mm:ssZ and yyyy-MM-dd'T'HH:mm:ss.SSSZ where yyyy, MM, and dd represent the year, month, and day respectively and HH, mm, ss, and if applicable, SSS represent the hour, month, second and milliseconds respsectively. 'T' and Z are constants.
-            feature_definitions:A list of Feature names and types. Name and Type is compulsory per Feature.  Valid feature FeatureTypes are Integral, Fractional and String.  FeatureNames cannot be any of the following: is_deleted, write_time, api_invocation_time  You can create up to 2,500 FeatureDefinitions per FeatureGroup.
-            online_store_config:You can turn the OnlineStore on or off by specifying True for the EnableOnlineStore flag in OnlineStoreConfig. You can also include an Amazon Web Services KMS key ID (KMSKeyId) for at-rest encryption of the OnlineStore. The default value is False.
-            offline_store_config:Use this to configure an OfflineFeatureStore. This parameter allows you to specify:   The Amazon Simple Storage Service (Amazon S3) location of an OfflineStore.   A configuration for an Amazon Web Services Glue or Amazon Web Services Hive data catalog.    An KMS encryption key to encrypt the Amazon S3 location used for OfflineStore. If KMS encryption key is not specified, by default we encrypt all data at rest using Amazon Web Services KMS key. By defining your bucket-level key for SSE, you can reduce Amazon Web Services KMS requests costs by up to 99 percent.   Format for the offline store table. Supported formats are Glue (Default) and Apache Iceberg.   To learn more about this parameter, see OfflineStoreConfig.
+            feature_group_name: The name of the FeatureGroup. The name must be unique within an Amazon Web Services Region in an Amazon Web Services account. The name:   Must start and end with an alphanumeric character.   Can only include alphanumeric characters, underscores, and hyphens. Spaces are not allowed.
+            record_identifier_feature_name: The name of the Feature whose value uniquely identifies a Record defined in the FeatureStore. Only the latest record per identifier value will be stored in the OnlineStore. RecordIdentifierFeatureName must be one of feature definitions' names. You use the RecordIdentifierFeatureName to access data in a FeatureStore. This name:   Must start and end with an alphanumeric character.   Can only contains alphanumeric characters, hyphens, underscores. Spaces are not allowed.
+            event_time_feature_name: The name of the feature that stores the EventTime of a Record in a FeatureGroup. An EventTime is a point in time when a new event occurs that corresponds to the creation or update of a Record in a FeatureGroup. All Records in the FeatureGroup must have a corresponding EventTime. An EventTime can be a String or Fractional.     Fractional: EventTime feature values must be a Unix timestamp in seconds.    String: EventTime feature values must be an ISO-8601 string in the format. The following formats are supported yyyy-MM-dd'T'HH:mm:ssZ and yyyy-MM-dd'T'HH:mm:ss.SSSZ where yyyy, MM, and dd represent the year, month, and day respectively and HH, mm, ss, and if applicable, SSS represent the hour, month, second and milliseconds respsectively. 'T' and Z are constants.
+            feature_definitions: A list of Feature names and types. Name and Type is compulsory per Feature.  Valid feature FeatureTypes are Integral, Fractional and String.  FeatureNames cannot be any of the following: is_deleted, write_time, api_invocation_time  You can create up to 2,500 FeatureDefinitions per FeatureGroup.
+            online_store_config: You can turn the OnlineStore on or off by specifying True for the EnableOnlineStore flag in OnlineStoreConfig. You can also include an Amazon Web Services KMS key ID (KMSKeyId) for at-rest encryption of the OnlineStore. The default value is False.
+            offline_store_config: Use this to configure an OfflineFeatureStore. This parameter allows you to specify:   The Amazon Simple Storage Service (Amazon S3) location of an OfflineStore.   A configuration for an Amazon Web Services Glue or Amazon Web Services Hive data catalog.    An KMS encryption key to encrypt the Amazon S3 location used for OfflineStore. If KMS encryption key is not specified, by default we encrypt all data at rest using Amazon Web Services KMS key. By defining your bucket-level key for SSE, you can reduce Amazon Web Services KMS requests costs by up to 99 percent.   Format for the offline store table. Supported formats are Glue (Default) and Apache Iceberg.   To learn more about this parameter, see OfflineStoreConfig.
             throughput_config:
             role_arn: The Amazon Resource Name (ARN) of the IAM execution role used to persist data into the OfflineStore if an OfflineStoreConfig is provided.
             description: A free-form description of a FeatureGroup.
@@ -7779,22 +8251,26 @@ class FeatureGroup(Base):
         """
 
         logger.debug("Creating feature_group resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'FeatureGroupName': feature_group_name,
-            'RecordIdentifierFeatureName': record_identifier_feature_name,
-            'EventTimeFeatureName': event_time_feature_name,
-            'FeatureDefinitions': feature_definitions,
-            'OnlineStoreConfig': online_store_config,
-            'OfflineStoreConfig': offline_store_config,
-            'ThroughputConfig': throughput_config,
-            'RoleArn': role_arn,
-            'Description': description,
-            'Tags': tags,
+            "FeatureGroupName": feature_group_name,
+            "RecordIdentifierFeatureName": record_identifier_feature_name,
+            "EventTimeFeatureName": event_time_feature_name,
+            "FeatureDefinitions": feature_definitions,
+            "OnlineStoreConfig": online_store_config,
+            "OfflineStoreConfig": offline_store_config,
+            "ThroughputConfig": throughput_config,
+            "RoleArn": role_arn,
+            "Description": description,
+            "Tags": tags,
         }
 
-        operation_input_args = Base.populate_chained_attributes(resource_name='FeatureGroup', operation_input_args=operation_input_args)
+        operation_input_args = Base.populate_chained_attributes(
+            resource_name="FeatureGroup", operation_input_args=operation_input_args
+        )
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -7819,8 +8295,8 @@ class FeatureGroup(Base):
         Get a FeatureGroup resource
 
         Parameters:
-            feature_group_name:The name or Amazon Resource Name (ARN) of the FeatureGroup you want described.
-            next_token:A token to resume pagination of the list of Features (FeatureDefinitions). 2,500 Features are returned by default.
+            feature_group_name: The name or Amazon Resource Name (ARN) of the FeatureGroup you want described.
+            next_token: A token to resume pagination of the list of Features (FeatureDefinitions). 2,500 Features are returned by default.
             session: Boto3 session.
             region: Region name.
 
@@ -7842,20 +8318,24 @@ class FeatureGroup(Base):
         """
 
         operation_input_args = {
-            'FeatureGroupName': feature_group_name,
-            'NextToken': next_token,
+            "FeatureGroupName": feature_group_name,
+            "NextToken": next_token,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
         response = client.describe_feature_group(**operation_input_args)
 
         pprint(response)
 
         # deserialize the response
-        transformed_response = transform(response, 'DescribeFeatureGroupResponse')
+        transformed_response = transform(response, "DescribeFeatureGroupResponse")
         feature_group = cls(**transformed_response)
         return feature_group
 
-    def refresh(self) -> Optional["FeatureGroup"]:
+    def refresh(
+        self,
+    ) -> Optional["FeatureGroup"]:
         """
         Refresh a FeatureGroup resource
 
@@ -7877,14 +8357,14 @@ class FeatureGroup(Base):
         """
 
         operation_input_args = {
-            'FeatureGroupName': self.feature_group_name,
-            'NextToken': self.next_token,
+            "FeatureGroupName": self.feature_group_name,
+            "NextToken": self.next_token,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_feature_group(**operation_input_args)
 
         # deserialize response and update self
-        transform(response, 'DescribeFeatureGroupResponse', self)
+        transform(response, "DescribeFeatureGroupResponse", self)
         return self
 
     @populate_inputs_decorator
@@ -7898,7 +8378,7 @@ class FeatureGroup(Base):
         Update a FeatureGroup resource
 
         Parameters:
-            feature_additions:Updates the feature group. Updating a feature group is an asynchronous operation. When you get an HTTP 200 response, you've made a valid request. It takes some time after you've made a valid request for Feature Store to update the feature group.
+            feature_additions: Updates the feature group. Updating a feature group is an asynchronous operation. When you get an HTTP 200 response, you've made a valid request. It takes some time after you've made a valid request for Feature Store to update the feature group.
 
         Returns:
             The FeatureGroup resource.
@@ -7919,13 +8399,13 @@ class FeatureGroup(Base):
         """
 
         logger.debug("Updating feature_group resource.")
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
-            'FeatureGroupName': self.feature_group_name,
-            'FeatureAdditions': feature_additions,
-            'OnlineStoreConfig': online_store_config,
-            'ThroughputConfig': throughput_config,
+            "FeatureGroupName": self.feature_group_name,
+            "FeatureAdditions": feature_additions,
+            "OnlineStoreConfig": online_store_config,
+            "ThroughputConfig": throughput_config,
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -7939,7 +8419,9 @@ class FeatureGroup(Base):
 
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a FeatureGroup resource
 
@@ -7958,19 +8440,21 @@ class FeatureGroup(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
-            'FeatureGroupName': self.feature_group_name,
+            "FeatureGroupName": self.feature_group_name,
         }
         client.delete_feature_group(**operation_input_args)
 
+        logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+
     def wait_for_status(
         self,
-        status: Literal['Creating', 'Created', 'CreateFailed', 'Deleting', 'DeleteFailed'],
+        status: Literal["Creating", "Created", "CreateFailed", "Deleting", "DeleteFailed"],
         poll: int = 5,
-        timeout: Optional[int] = None
-    ) -> Optional["FeatureGroup"]:
+        timeout: Optional[int] = None,
+    ):
         """
         Wait for a FeatureGroup resource.
 
@@ -7995,10 +8479,13 @@ class FeatureGroup(Base):
             current_status = self.feature_group_status
 
             if status == current_status:
-                return self
+                print(f"\nFinal Resource Status: {current_status}")
+                return
 
             if "failed" in current_status.lower():
-                raise FailedStatusError(resource_type="FeatureGroup", status=current_status, reason=self.failure_reason)
+                raise FailedStatusError(
+                    resource_type="FeatureGroup", status=current_status, reason=self.failure_reason
+                )
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="FeatureGroup", status=current_status)
@@ -8022,15 +8509,15 @@ class FeatureGroup(Base):
         Get all FeatureGroup resources
 
         Parameters:
-            name_contains:A string that partially matches one or more FeatureGroups names. Filters FeatureGroups by name.
-            feature_group_status_equals:A FeatureGroup status. Filters by FeatureGroup status.
-            offline_store_status_equals:An OfflineStore status. Filters by OfflineStore status.
-            creation_time_after:Use this parameter to search for FeatureGroupss created after a specific date and time.
-            creation_time_before:Use this parameter to search for FeatureGroupss created before a specific date and time.
-            sort_order:The order in which feature groups are listed.
-            sort_by:The value on which the feature group list is sorted.
-            max_results:The maximum number of results returned by ListFeatureGroups.
-            next_token:A token to resume pagination of ListFeatureGroups results.
+            name_contains: A string that partially matches one or more FeatureGroups names. Filters FeatureGroups by name.
+            feature_group_status_equals: A FeatureGroup status. Filters by FeatureGroup status.
+            offline_store_status_equals: An OfflineStore status. Filters by OfflineStore status.
+            creation_time_after: Use this parameter to search for FeatureGroupss created after a specific date and time.
+            creation_time_before: Use this parameter to search for FeatureGroupss created before a specific date and time.
+            sort_order: The order in which feature groups are listed.
+            sort_by: The value on which the feature group list is sorted.
+            max_results: The maximum number of results returned by ListFeatureGroups.
+            next_token: A token to resume pagination of ListFeatureGroups results.
             session: Boto3 session.
             region: Region name.
 
@@ -8050,27 +8537,33 @@ class FeatureGroup(Base):
                 ```
         """
 
-        client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'NameContains': name_contains,
-            'FeatureGroupStatusEquals': feature_group_status_equals,
-            'OfflineStoreStatusEquals': offline_store_status_equals,
-            'CreationTimeAfter': creation_time_after,
-            'CreationTimeBefore': creation_time_before,
-            'SortOrder': sort_order,
-            'SortBy': sort_by,
+            "NameContains": name_contains,
+            "FeatureGroupStatusEquals": feature_group_status_equals,
+            "OfflineStoreStatusEquals": offline_store_status_equals,
+            "CreationTimeAfter": creation_time_after,
+            "CreationTimeBefore": creation_time_before,
+            "SortOrder": sort_order,
+            "SortBy": sort_by,
         }
 
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
 
         return ResourceIterator(
             client=client,
-            list_method='list_feature_groups',
-            summaries_key='FeatureGroupSummaries',
-            summary_name='FeatureGroupSummary',
+            list_method="list_feature_groups",
+            summaries_key="FeatureGroupSummaries",
+            summary_name="FeatureGroupSummary",
             resource_cls=FeatureGroup,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
 
 
@@ -8079,16 +8572,17 @@ class FeatureMetadata(Base):
     Class representing resource FeatureMetadata
 
     Attributes:
-        feature_group_arn:The Amazon Resource Number (ARN) of the feature group that contains the feature.
-        feature_group_name:The name of the feature group that you've specified.
-        feature_name:The name of the feature that you've specified.
-        feature_type:The data type of the feature.
-        creation_time:A timestamp indicating when the feature was created.
-        last_modified_time:A timestamp indicating when the metadata for the feature group was modified. For example, if you add a parameter describing the feature, the timestamp changes to reflect the last time you
-        description:The description you added to describe the feature.
-        parameters:The key-value pairs that you added to describe the feature.
+        feature_group_arn: The Amazon Resource Number (ARN) of the feature group that contains the feature.
+        feature_group_name: The name of the feature group that you've specified.
+        feature_name: The name of the feature that you've specified.
+        feature_type: The data type of the feature.
+        creation_time: A timestamp indicating when the feature was created.
+        last_modified_time: A timestamp indicating when the metadata for the feature group was modified. For example, if you add a parameter describing the feature, the timestamp changes to reflect the last time you
+        description: The description you added to describe the feature.
+        parameters: The key-value pairs that you added to describe the feature.
 
     """
+
     feature_group_name: str
     feature_name: str
     feature_group_arn: Optional[str] = Unassigned()
@@ -8100,10 +8594,19 @@ class FeatureMetadata(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "feature_metadata_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'feature_metadata_name':
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object feature_metadata")
+        return None
 
     @classmethod
     def get(
@@ -8140,20 +8643,24 @@ class FeatureMetadata(Base):
         """
 
         operation_input_args = {
-            'FeatureGroupName': feature_group_name,
-            'FeatureName': feature_name,
+            "FeatureGroupName": feature_group_name,
+            "FeatureName": feature_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
         response = client.describe_feature_metadata(**operation_input_args)
 
         pprint(response)
 
         # deserialize the response
-        transformed_response = transform(response, 'DescribeFeatureMetadataResponse')
+        transformed_response = transform(response, "DescribeFeatureMetadataResponse")
         feature_metadata = cls(**transformed_response)
         return feature_metadata
 
-    def refresh(self) -> Optional["FeatureMetadata"]:
+    def refresh(
+        self,
+    ) -> Optional["FeatureMetadata"]:
         """
         Refresh a FeatureMetadata resource
 
@@ -8175,14 +8682,14 @@ class FeatureMetadata(Base):
         """
 
         operation_input_args = {
-            'FeatureGroupName': self.feature_group_name,
-            'FeatureName': self.feature_name,
+            "FeatureGroupName": self.feature_group_name,
+            "FeatureName": self.feature_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_feature_metadata(**operation_input_args)
 
         # deserialize response and update self
-        transform(response, 'DescribeFeatureMetadataResponse', self)
+        transform(response, "DescribeFeatureMetadataResponse", self)
         return self
 
     def update(
@@ -8195,8 +8702,8 @@ class FeatureMetadata(Base):
         Update a FeatureMetadata resource
 
         Parameters:
-            parameter_additions:A list of key-value pairs that you can add to better describe the feature.
-            parameter_removals:A list of parameter keys that you can specify to remove parameters that describe your feature.
+            parameter_additions: A list of key-value pairs that you can add to better describe the feature.
+            parameter_removals: A list of parameter keys that you can specify to remove parameters that describe your feature.
 
         Returns:
             The FeatureMetadata resource.
@@ -8216,14 +8723,14 @@ class FeatureMetadata(Base):
         """
 
         logger.debug("Updating feature_metadata resource.")
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
-            'FeatureGroupName': self.feature_group_name,
-            'FeatureName': self.feature_name,
-            'Description': description,
-            'ParameterAdditions': parameter_additions,
-            'ParameterRemovals': parameter_removals,
+            "FeatureGroupName": self.feature_group_name,
+            "FeatureName": self.feature_name,
+            "Description": description,
+            "ParameterAdditions": parameter_additions,
+            "ParameterRemovals": parameter_removals,
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -8243,18 +8750,19 @@ class FlowDefinition(Base):
     Class representing resource FlowDefinition
 
     Attributes:
-        flow_definition_arn:The Amazon Resource Name (ARN) of the flow defintion.
-        flow_definition_name:The Amazon Resource Name (ARN) of the flow definition.
-        flow_definition_status:The status of the flow definition. Valid values are listed below.
-        creation_time:The timestamp when the flow definition was created.
-        output_config:An object containing information about the output file.
-        role_arn:The Amazon Resource Name (ARN) of the Amazon Web Services Identity and Access Management (IAM) execution role for the flow definition.
-        human_loop_request_source:Container for configuring the source of human task requests. Used to specify if Amazon Rekognition or Amazon Textract is used as an integration source.
-        human_loop_activation_config:An object containing information about what triggers a human review workflow.
-        human_loop_config:An object containing information about who works on the task, the workforce task price, and other task details.
-        failure_reason:The reason your flow definition failed.
+        flow_definition_arn: The Amazon Resource Name (ARN) of the flow defintion.
+        flow_definition_name: The Amazon Resource Name (ARN) of the flow definition.
+        flow_definition_status: The status of the flow definition. Valid values are listed below.
+        creation_time: The timestamp when the flow definition was created.
+        output_config: An object containing information about the output file.
+        role_arn: The Amazon Resource Name (ARN) of the Amazon Web Services Identity and Access Management (IAM) execution role for the flow definition.
+        human_loop_request_source: Container for configuring the source of human task requests. Used to specify if Amazon Rekognition or Amazon Textract is used as an integration source.
+        human_loop_activation_config: An object containing information about what triggers a human review workflow.
+        human_loop_config: An object containing information about who works on the task, the workforce task price, and other task details.
+        failure_reason: The reason your flow definition failed.
 
     """
+
     flow_definition_name: str
     flow_definition_arn: Optional[str] = Unassigned()
     flow_definition_status: Optional[str] = Unassigned()
@@ -8268,29 +8776,37 @@ class FlowDefinition(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'flow_definition_name':
-                return value
-        raise Exception("Name attribute not found for object")
+        resource_name = "flow_definition_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
 
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
+        for attribute, value in attributes.items():
+            if attribute == "name" or attribute in attribute_name_candidates:
+                return value
+        logger.error("Name attribute not found for object flow_definition")
+        return None
 
     def populate_inputs_decorator(create_func):
+        @functools.wraps(create_func)
         def wrapper(*args, **kwargs):
-            config_schema_for_resource = \
-        {
-          "output_config": {
-            "s3_output_path": {
-              "type": "string"
-            },
-            "kms_key_id": {
-              "type": "string"
+            config_schema_for_resource = {
+                "output_config": {
+                    "s3_output_path": {"type": "string"},
+                    "kms_key_id": {"type": "string"},
+                },
+                "role_arn": {"type": "string"},
             }
-          },
-          "role_arn": {
-            "type": "string"
-          }
-        }
-            return create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "FlowDefinition", **kwargs))
+            return create_func(
+                *args,
+                **Base.get_updated_kwargs_with_configured_attributes(
+                    config_schema_for_resource, "FlowDefinition", **kwargs
+                ),
+            )
+
         return wrapper
 
     @classmethod
@@ -8343,19 +8859,23 @@ class FlowDefinition(Base):
         """
 
         logger.debug("Creating flow_definition resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'FlowDefinitionName': flow_definition_name,
-            'HumanLoopRequestSource': human_loop_request_source,
-            'HumanLoopActivationConfig': human_loop_activation_config,
-            'HumanLoopConfig': human_loop_config,
-            'OutputConfig': output_config,
-            'RoleArn': role_arn,
-            'Tags': tags,
+            "FlowDefinitionName": flow_definition_name,
+            "HumanLoopRequestSource": human_loop_request_source,
+            "HumanLoopActivationConfig": human_loop_activation_config,
+            "HumanLoopConfig": human_loop_config,
+            "OutputConfig": output_config,
+            "RoleArn": role_arn,
+            "Tags": tags,
         }
 
-        operation_input_args = Base.populate_chained_attributes(resource_name='FlowDefinition', operation_input_args=operation_input_args)
+        operation_input_args = Base.populate_chained_attributes(
+            resource_name="FlowDefinition", operation_input_args=operation_input_args
+        )
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -8401,19 +8921,23 @@ class FlowDefinition(Base):
         """
 
         operation_input_args = {
-            'FlowDefinitionName': flow_definition_name,
+            "FlowDefinitionName": flow_definition_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
         response = client.describe_flow_definition(**operation_input_args)
 
         pprint(response)
 
         # deserialize the response
-        transformed_response = transform(response, 'DescribeFlowDefinitionResponse')
+        transformed_response = transform(response, "DescribeFlowDefinitionResponse")
         flow_definition = cls(**transformed_response)
         return flow_definition
 
-    def refresh(self) -> Optional["FlowDefinition"]:
+    def refresh(
+        self,
+    ) -> Optional["FlowDefinition"]:
         """
         Refresh a FlowDefinition resource
 
@@ -8435,16 +8959,18 @@ class FlowDefinition(Base):
         """
 
         operation_input_args = {
-            'FlowDefinitionName': self.flow_definition_name,
+            "FlowDefinitionName": self.flow_definition_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_flow_definition(**operation_input_args)
 
         # deserialize response and update self
-        transform(response, 'DescribeFlowDefinitionResponse', self)
+        transform(response, "DescribeFlowDefinitionResponse", self)
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a FlowDefinition resource
 
@@ -8464,19 +8990,21 @@ class FlowDefinition(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
-            'FlowDefinitionName': self.flow_definition_name,
+            "FlowDefinitionName": self.flow_definition_name,
         }
         client.delete_flow_definition(**operation_input_args)
 
+        logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+
     def wait_for_status(
         self,
-        status: Literal['Initializing', 'Active', 'Failed', 'Deleting'],
+        status: Literal["Initializing", "Active", "Failed", "Deleting"],
         poll: int = 5,
-        timeout: Optional[int] = None
-    ) -> Optional["FlowDefinition"]:
+        timeout: Optional[int] = None,
+    ):
         """
         Wait for a FlowDefinition resource.
 
@@ -8501,10 +9029,15 @@ class FlowDefinition(Base):
             current_status = self.flow_definition_status
 
             if status == current_status:
-                return self
+                print(f"\nFinal Resource Status: {current_status}")
+                return
 
             if "failed" in current_status.lower():
-                raise FailedStatusError(resource_type="FlowDefinition", status=current_status, reason=self.failure_reason)
+                raise FailedStatusError(
+                    resource_type="FlowDefinition",
+                    status=current_status,
+                    reason=self.failure_reason,
+                )
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="FlowDefinition", status=current_status)
@@ -8548,23 +9081,29 @@ class FlowDefinition(Base):
                 ```
         """
 
-        client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'CreationTimeAfter': creation_time_after,
-            'CreationTimeBefore': creation_time_before,
-            'SortOrder': sort_order,
+            "CreationTimeAfter": creation_time_after,
+            "CreationTimeBefore": creation_time_before,
+            "SortOrder": sort_order,
         }
 
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
 
         return ResourceIterator(
             client=client,
-            list_method='list_flow_definitions',
-            summaries_key='FlowDefinitionSummaries',
-            summary_name='FlowDefinitionSummary',
+            list_method="list_flow_definitions",
+            summaries_key="FlowDefinitionSummaries",
+            summary_name="FlowDefinitionSummary",
             resource_cls=FlowDefinition,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
 
 
@@ -8573,18 +9112,19 @@ class Hub(Base):
     Class representing resource Hub
 
     Attributes:
-        hub_name:The name of the hub.
-        hub_arn:The Amazon Resource Name (ARN) of the hub.
-        hub_status:The status of the hub.
-        creation_time:The date and time that the hub was created.
-        last_modified_time:The date and time that the hub was last modified.
-        hub_display_name:The display name of the hub.
-        hub_description:A description of the hub.
-        hub_search_keywords:The searchable keywords for the hub.
-        s3_storage_config:The Amazon S3 storage configuration for the hub.
-        failure_reason:The failure reason if importing hub content failed.
+        hub_name: The name of the hub.
+        hub_arn: The Amazon Resource Name (ARN) of the hub.
+        hub_status: The status of the hub.
+        creation_time: The date and time that the hub was created.
+        last_modified_time: The date and time that the hub was last modified.
+        hub_display_name: The display name of the hub.
+        hub_description: A description of the hub.
+        hub_search_keywords: The searchable keywords for the hub.
+        s3_storage_config: The Amazon S3 storage configuration for the hub.
+        failure_reason: The failure reason if importing hub content failed.
 
     """
+
     hub_name: str
     hub_arn: Optional[str] = Unassigned()
     hub_display_name: Optional[str] = Unassigned()
@@ -8598,23 +9138,33 @@ class Hub(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'hub_name':
-                return value
-        raise Exception("Name attribute not found for object")
+        resource_name = "hub_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
 
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
+        for attribute, value in attributes.items():
+            if attribute == "name" or attribute in attribute_name_candidates:
+                return value
+        logger.error("Name attribute not found for object hub")
+        return None
 
     def populate_inputs_decorator(create_func):
+        @functools.wraps(create_func)
         def wrapper(*args, **kwargs):
-            config_schema_for_resource = \
-        {
-          "s3_storage_config": {
-            "s3_output_path": {
-              "type": "string"
+            config_schema_for_resource = {
+                "s3_storage_config": {"s3_output_path": {"type": "string"}}
             }
-          }
-        }
-            return create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "Hub", **kwargs))
+            return create_func(
+                *args,
+                **Base.get_updated_kwargs_with_configured_attributes(
+                    config_schema_for_resource, "Hub", **kwargs
+                ),
+            )
+
         return wrapper
 
     @classmethod
@@ -8665,18 +9215,22 @@ class Hub(Base):
         """
 
         logger.debug("Creating hub resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'HubName': hub_name,
-            'HubDescription': hub_description,
-            'HubDisplayName': hub_display_name,
-            'HubSearchKeywords': hub_search_keywords,
-            'S3StorageConfig': s3_storage_config,
-            'Tags': tags,
+            "HubName": hub_name,
+            "HubDescription": hub_description,
+            "HubDisplayName": hub_display_name,
+            "HubSearchKeywords": hub_search_keywords,
+            "S3StorageConfig": s3_storage_config,
+            "Tags": tags,
         }
 
-        operation_input_args = Base.populate_chained_attributes(resource_name='Hub', operation_input_args=operation_input_args)
+        operation_input_args = Base.populate_chained_attributes(
+            resource_name="Hub", operation_input_args=operation_input_args
+        )
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -8722,19 +9276,23 @@ class Hub(Base):
         """
 
         operation_input_args = {
-            'HubName': hub_name,
+            "HubName": hub_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
         response = client.describe_hub(**operation_input_args)
 
         pprint(response)
 
         # deserialize the response
-        transformed_response = transform(response, 'DescribeHubResponse')
+        transformed_response = transform(response, "DescribeHubResponse")
         hub = cls(**transformed_response)
         return hub
 
-    def refresh(self) -> Optional["Hub"]:
+    def refresh(
+        self,
+    ) -> Optional["Hub"]:
         """
         Refresh a Hub resource
 
@@ -8756,13 +9314,13 @@ class Hub(Base):
         """
 
         operation_input_args = {
-            'HubName': self.hub_name,
+            "HubName": self.hub_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_hub(**operation_input_args)
 
         # deserialize response and update self
-        transform(response, 'DescribeHubResponse', self)
+        transform(response, "DescribeHubResponse", self)
         return self
 
     @populate_inputs_decorator
@@ -8794,13 +9352,13 @@ class Hub(Base):
         """
 
         logger.debug("Updating hub resource.")
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
-            'HubName': self.hub_name,
-            'HubDescription': hub_description,
-            'HubDisplayName': hub_display_name,
-            'HubSearchKeywords': hub_search_keywords,
+            "HubName": self.hub_name,
+            "HubDescription": hub_description,
+            "HubDisplayName": hub_display_name,
+            "HubSearchKeywords": hub_search_keywords,
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -8814,7 +9372,9 @@ class Hub(Base):
 
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a Hub resource
 
@@ -8834,19 +9394,29 @@ class Hub(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
-            'HubName': self.hub_name,
+            "HubName": self.hub_name,
         }
         client.delete_hub(**operation_input_args)
 
+        logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+
     def wait_for_status(
         self,
-        status: Literal['InService', 'Creating', 'Updating', 'Deleting', 'CreateFailed', 'UpdateFailed', 'DeleteFailed'],
+        status: Literal[
+            "InService",
+            "Creating",
+            "Updating",
+            "Deleting",
+            "CreateFailed",
+            "UpdateFailed",
+            "DeleteFailed",
+        ],
         poll: int = 5,
-        timeout: Optional[int] = None
-    ) -> Optional["Hub"]:
+        timeout: Optional[int] = None,
+    ):
         """
         Wait for a Hub resource.
 
@@ -8871,10 +9441,13 @@ class Hub(Base):
             current_status = self.hub_status
 
             if status == current_status:
-                return self
+                print(f"\nFinal Resource Status: {current_status}")
+                return
 
             if "failed" in current_status.lower():
-                raise FailedStatusError(resource_type="Hub", status=current_status, reason=self.failure_reason)
+                raise FailedStatusError(
+                    resource_type="Hub", status=current_status, reason=self.failure_reason
+                )
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="Hub", status=current_status)
@@ -8926,27 +9499,33 @@ class Hub(Base):
                 ```
         """
 
-        client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'NameContains': name_contains,
-            'CreationTimeBefore': creation_time_before,
-            'CreationTimeAfter': creation_time_after,
-            'LastModifiedTimeBefore': last_modified_time_before,
-            'LastModifiedTimeAfter': last_modified_time_after,
-            'SortBy': sort_by,
-            'SortOrder': sort_order,
+            "NameContains": name_contains,
+            "CreationTimeBefore": creation_time_before,
+            "CreationTimeAfter": creation_time_after,
+            "LastModifiedTimeBefore": last_modified_time_before,
+            "LastModifiedTimeAfter": last_modified_time_after,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
         }
 
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
 
         return ResourceIterator(
             client=client,
-            list_method='list_hubs',
-            summaries_key='HubSummaries',
-            summary_name='HubInfo',
+            list_method="list_hubs",
+            summaries_key="HubSummaries",
+            summary_name="HubInfo",
             resource_cls=Hub,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
 
 
@@ -8955,25 +9534,25 @@ class HubContent(Base):
     Class representing resource HubContent
 
     Attributes:
-        hub_content_name:The name of the hub content.
-        hub_content_arn:The Amazon Resource Name (ARN) of the hub content.
-        hub_content_version:The version of the hub content.
-        hub_content_type:The type of hub content.
-        document_schema_version:The document schema version for the hub content.
-        hub_name:The name of the hub that contains the content.
-        hub_arn:The Amazon Resource Name (ARN) of the hub that contains the content.
-        hub_content_document:The hub content document that describes information about the hub content such as type, associated containers, scripts, and more.
-        hub_content_status:The status of the hub content.
-        creation_time:The date and time that hub content was created.
-        hub_content_display_name:The display name of the hub content.
-        hub_content_description:A description of the hub content.
-        hub_content_markdown:A string that provides a description of the hub content. This string can include links, tables, and standard markdown formating.
-        hub_content_search_keywords:The searchable keywords for the hub content.
-        hub_content_dependencies:The location of any dependencies that the hub content has, such as scripts, model artifacts, datasets, or notebooks.
-        failure_reason:The failure reason if importing hub content failed.
+        hub_content_name: The name of the hub content.
+        hub_content_arn: The Amazon Resource Name (ARN) of the hub content.
+        hub_content_version: The version of the hub content.
+        hub_content_type: The type of hub content.
+        document_schema_version: The document schema version for the hub content.
+        hub_name: The name of the hub that contains the content.
+        hub_arn: The Amazon Resource Name (ARN) of the hub that contains the content.
+        hub_content_document: The hub content document that describes information about the hub content such as type, associated containers, scripts, and more.
+        hub_content_status: The status of the hub content.
+        creation_time: The date and time that hub content was created.
+        hub_content_display_name: The display name of the hub content.
+        hub_content_description: A description of the hub content.
+        hub_content_markdown: A string that provides a description of the hub content. This string can include links, tables, and standard markdown formating.
+        hub_content_search_keywords: The searchable keywords for the hub content.
+        hub_content_dependencies: The location of any dependencies that the hub content has, such as scripts, model artifacts, datasets, or notebooks.
+        failure_reason: The failure reason if importing hub content failed.
 
     """
-    hub_name: str
+
     hub_content_type: str
     hub_content_name: str
     hub_content_arn: Optional[str] = Unassigned()
@@ -8989,13 +9568,23 @@ class HubContent(Base):
     hub_content_status: Optional[str] = Unassigned()
     failure_reason: Optional[str] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
+    hub_name: Optional[str] = Unassigned()
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "hub_content_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'hub_content_name':
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object hub_content")
+        return None
 
     @classmethod
     def get(
@@ -9036,22 +9625,26 @@ class HubContent(Base):
         """
 
         operation_input_args = {
-            'HubName': hub_name,
-            'HubContentType': hub_content_type,
-            'HubContentName': hub_content_name,
-            'HubContentVersion': hub_content_version,
+            "HubName": hub_name,
+            "HubContentType": hub_content_type,
+            "HubContentName": hub_content_name,
+            "HubContentVersion": hub_content_version,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
         response = client.describe_hub_content(**operation_input_args)
 
         pprint(response)
 
         # deserialize the response
-        transformed_response = transform(response, 'DescribeHubContentResponse')
+        transformed_response = transform(response, "DescribeHubContentResponse")
         hub_content = cls(**transformed_response)
         return hub_content
 
-    def refresh(self) -> Optional["HubContent"]:
+    def refresh(
+        self,
+    ) -> Optional["HubContent"]:
         """
         Refresh a HubContent resource
 
@@ -9073,19 +9666,21 @@ class HubContent(Base):
         """
 
         operation_input_args = {
-            'HubName': self.hub_name,
-            'HubContentType': self.hub_content_type,
-            'HubContentName': self.hub_content_name,
-            'HubContentVersion': self.hub_content_version,
+            "HubName": self.hub_name,
+            "HubContentType": self.hub_content_type,
+            "HubContentName": self.hub_content_name,
+            "HubContentVersion": self.hub_content_version,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_hub_content(**operation_input_args)
 
         # deserialize response and update self
-        transform(response, 'DescribeHubContentResponse', self)
+        transform(response, "DescribeHubContentResponse", self)
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a HubContent resource
 
@@ -9105,22 +9700,24 @@ class HubContent(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
-            'HubName': self.hub_name,
-            'HubContentType': self.hub_content_type,
-            'HubContentName': self.hub_content_name,
-            'HubContentVersion': self.hub_content_version,
+            "HubName": self.hub_name,
+            "HubContentType": self.hub_content_type,
+            "HubContentName": self.hub_content_name,
+            "HubContentVersion": self.hub_content_version,
         }
         client.delete_hub_content(**operation_input_args)
 
+        logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+
     def wait_for_status(
         self,
-        status: Literal['Available', 'Importing', 'Deleting', 'ImportFailed', 'DeleteFailed'],
+        status: Literal["Available", "Importing", "Deleting", "ImportFailed", "DeleteFailed"],
         poll: int = 5,
-        timeout: Optional[int] = None
-    ) -> Optional["HubContent"]:
+        timeout: Optional[int] = None,
+    ):
         """
         Wait for a HubContent resource.
 
@@ -9145,10 +9742,13 @@ class HubContent(Base):
             current_status = self.hub_content_status
 
             if status == current_status:
-                return self
+                print(f"\nFinal Resource Status: {current_status}")
+                return
 
             if "failed" in current_status.lower():
-                raise FailedStatusError(resource_type="HubContent", status=current_status, reason=self.failure_reason)
+                raise FailedStatusError(
+                    resource_type="HubContent", status=current_status, reason=self.failure_reason
+                )
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="HubContent", status=current_status)
@@ -9210,20 +9810,22 @@ class HubContent(Base):
         """
 
         logger.debug(f"Importing hub_content resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
 
         operation_input_args = {
-            'HubContentName': hub_content_name,
-            'HubContentVersion': hub_content_version,
-            'HubContentType': hub_content_type,
-            'DocumentSchemaVersion': document_schema_version,
-            'HubName': hub_name,
-            'HubContentDisplayName': hub_content_display_name,
-            'HubContentDescription': hub_content_description,
-            'HubContentMarkdown': hub_content_markdown,
-            'HubContentDocument': hub_content_document,
-            'HubContentSearchKeywords': hub_content_search_keywords,
-            'Tags': tags,
+            "HubContentName": hub_content_name,
+            "HubContentVersion": hub_content_version,
+            "HubContentType": hub_content_type,
+            "DocumentSchemaVersion": document_schema_version,
+            "HubName": hub_name,
+            "HubContentDisplayName": hub_content_display_name,
+            "HubContentDescription": hub_content_description,
+            "HubContentMarkdown": hub_content_markdown,
+            "HubContentDocument": hub_content_document,
+            "HubContentSearchKeywords": hub_content_search_keywords,
+            "Tags": tags,
         }
 
         logger.debug(f"Input request: {operation_input_args}")
@@ -9235,14 +9837,17 @@ class HubContent(Base):
         response = client.import_hub_content(**operation_input_args)
         logger.debug(f"Response: {response}")
 
-        return cls.get(hub_name=hub_name, hub_content_type=hub_content_type, hub_content_name=hub_content_name, session=session, region=region)
+        return cls.get(
+            hub_name=hub_name,
+            hub_content_type=hub_content_type,
+            hub_content_name=hub_content_name,
+            session=session,
+            region=region,
+        )
 
-    @classmethod
-    def get_all(
-        cls,
-        hub_name: str,
-        hub_content_type: str,
-        name_contains: Optional[str] = Unassigned(),
+    def get_all_versions(
+        self,
+        min_version: Optional[str] = Unassigned(),
         max_schema_version: Optional[str] = Unassigned(),
         creation_time_before: Optional[datetime.datetime] = Unassigned(),
         creation_time_after: Optional[datetime.datetime] = Unassigned(),
@@ -9252,76 +9857,7 @@ class HubContent(Base):
         region: Optional[str] = None,
     ) -> ResourceIterator["HubContent"]:
         """
-        Get all HubContent resources
-
-        Parameters:
-            hub_name:The name of the hub to list the contents of.
-            hub_content_type:The type of hub content to list.
-            name_contains:Only list hub content if the name contains the specified string.
-            max_schema_version:The upper bound of the hub content schema verion.
-            creation_time_before:Only list hub content that was created before the time specified.
-            creation_time_after:Only list hub content that was created after the time specified.
-            sort_by:Sort hub content versions by either name or creation time.
-            sort_order:Sort hubs by ascending or descending order.
-            max_results:The maximum amount of hub content to list.
-            next_token:If the response to a previous ListHubContents request was truncated, the response includes a NextToken. To retrieve the next set of hub content, use the token in the next request.
-            session: Boto3 session.
-            region: Region name.
-
-        Returns:
-            Iterator for listed HubContent resources.
-
-        Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
-                The error message and error code can be parsed from the exception as follows:
-
-                ```
-                try:
-                    # AWS service call here
-                except botocore.exceptions.ClientError as e:
-                    error_message = e.response['Error']['Message']
-                    error_code = e.response['Error']['Code']
-                ```
-            ResourceNotFound: Resource being access is not found.
-        """
-
-        client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
-
-        operation_input_args = {
-            'HubName': hub_name,
-            'HubContentType': hub_content_type,
-            'NameContains': name_contains,
-            'MaxSchemaVersion': max_schema_version,
-            'CreationTimeBefore': creation_time_before,
-            'CreationTimeAfter': creation_time_after,
-            'SortBy': sort_by,
-            'SortOrder': sort_order,
-        }
-
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
-
-        return ResourceIterator(
-            client=client,
-            list_method='list_hub_contents',
-            summaries_key='HubContentSummaries',
-            summary_name='HubContentInfo',
-            resource_cls=HubContent,
-            list_method_kwargs=operation_input_args
-        )
-
-
-    def get_all_versions(
-        self,
-        min_version: Optional[str] = Unassigned(),
-        max_schema_version: Optional[str] = Unassigned(),
-        creation_time_before: Optional[datetime.datetime] = Unassigned(),
-        creation_time_after: Optional[datetime.datetime] = Unassigned(),
-        sort_by: Optional[str] = Unassigned(),
-        sort_order: Optional[str] = Unassigned(),    session: Optional[Session] = None,
-        region: Optional[str] = None,
-    ) -> ResourceIterator["HubContent"]:
-        """
-        Perform ListHubContentVersions on a HubContent resource.
+        List hub content versions.
 
         Parameters:
             min_version: The lower bound of the hub content versions to list.
@@ -9338,31 +9874,35 @@ class HubContent(Base):
 
         """
 
-
         operation_input_args = {
-            'HubName': self.hub_name,
-            'HubContentType': self.hub_content_type,
-            'HubContentName': self.hub_content_name,
-            'MinVersion': min_version,
-            'MaxSchemaVersion': max_schema_version,
-            'CreationTimeBefore': creation_time_before,
-            'CreationTimeAfter': creation_time_after,
-            'SortBy': sort_by,
-            'SortOrder': sort_order,
+            "HubName": self.hub_name,
+            "HubContentType": self.hub_content_type,
+            "HubContentName": self.hub_content_name,
+            "MinVersion": min_version,
+            "MaxSchemaVersion": max_schema_version,
+            "CreationTimeBefore": creation_time_before,
+            "CreationTimeAfter": creation_time_after,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
         }
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
         logger.debug(f"Input request: {operation_input_args}")
 
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
-
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         return ResourceIterator(
             client=client,
-            list_method='list_hub_content_versions',
-            summaries_key='HubContentSummaries',
-            summary_name='HubContentInfo',
+            list_method="list_hub_content_versions",
+            summaries_key="HubContentSummaries",
+            summary_name="HubContentInfo",
             resource_cls=HubContent,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
 
 
@@ -9375,9 +9915,10 @@ class HumanTaskUi(Base):
         human_task_ui_name: The name of the human task user interface (worker task template).
         creation_time: The timestamp when the human task user interface was created.
         ui_template:
-        human_task_ui_status:The status of the human task user interface (worker task template). Valid values are listed below.
+        human_task_ui_status: The status of the human task user interface (worker task template). Valid values are listed below.
 
     """
+
     human_task_ui_name: str
     human_task_ui_arn: Optional[str] = Unassigned()
     human_task_ui_status: Optional[str] = Unassigned()
@@ -9386,10 +9927,19 @@ class HumanTaskUi(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "human_task_ui_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'human_task_ui_name':
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object human_task_ui")
+        return None
 
     @classmethod
     def create(
@@ -9432,15 +9982,19 @@ class HumanTaskUi(Base):
         """
 
         logger.debug("Creating human_task_ui resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'HumanTaskUiName': human_task_ui_name,
-            'UiTemplate': ui_template,
-            'Tags': tags,
+            "HumanTaskUiName": human_task_ui_name,
+            "UiTemplate": ui_template,
+            "Tags": tags,
         }
 
-        operation_input_args = Base.populate_chained_attributes(resource_name='HumanTaskUi', operation_input_args=operation_input_args)
+        operation_input_args = Base.populate_chained_attributes(
+            resource_name="HumanTaskUi", operation_input_args=operation_input_args
+        )
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -9486,19 +10040,23 @@ class HumanTaskUi(Base):
         """
 
         operation_input_args = {
-            'HumanTaskUiName': human_task_ui_name,
+            "HumanTaskUiName": human_task_ui_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
         response = client.describe_human_task_ui(**operation_input_args)
 
         pprint(response)
 
         # deserialize the response
-        transformed_response = transform(response, 'DescribeHumanTaskUiResponse')
+        transformed_response = transform(response, "DescribeHumanTaskUiResponse")
         human_task_ui = cls(**transformed_response)
         return human_task_ui
 
-    def refresh(self) -> Optional["HumanTaskUi"]:
+    def refresh(
+        self,
+    ) -> Optional["HumanTaskUi"]:
         """
         Refresh a HumanTaskUi resource
 
@@ -9520,16 +10078,18 @@ class HumanTaskUi(Base):
         """
 
         operation_input_args = {
-            'HumanTaskUiName': self.human_task_ui_name,
+            "HumanTaskUiName": self.human_task_ui_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_human_task_ui(**operation_input_args)
 
         # deserialize response and update self
-        transform(response, 'DescribeHumanTaskUiResponse', self)
+        transform(response, "DescribeHumanTaskUiResponse", self)
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a HumanTaskUi resource
 
@@ -9548,19 +10108,18 @@ class HumanTaskUi(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
-            'HumanTaskUiName': self.human_task_ui_name,
+            "HumanTaskUiName": self.human_task_ui_name,
         }
         client.delete_human_task_ui(**operation_input_args)
 
+        logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+
     def wait_for_status(
-        self,
-        status: Literal['Active', 'Deleting'],
-        poll: int = 5,
-        timeout: Optional[int] = None
-    ) -> Optional["HumanTaskUi"]:
+        self, status: Literal["Active", "Deleting"], poll: int = 5, timeout: Optional[int] = None
+    ):
         """
         Wait for a HumanTaskUi resource.
 
@@ -9585,7 +10144,8 @@ class HumanTaskUi(Base):
             current_status = self.human_task_ui_status
 
             if status == current_status:
-                return self
+                print(f"\nFinal Resource Status: {current_status}")
+                return
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="HumanTaskUi", status=current_status)
@@ -9629,23 +10189,29 @@ class HumanTaskUi(Base):
                 ```
         """
 
-        client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'CreationTimeAfter': creation_time_after,
-            'CreationTimeBefore': creation_time_before,
-            'SortOrder': sort_order,
+            "CreationTimeAfter": creation_time_after,
+            "CreationTimeBefore": creation_time_before,
+            "SortOrder": sort_order,
         }
 
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
 
         return ResourceIterator(
             client=client,
-            list_method='list_human_task_uis',
-            summaries_key='HumanTaskUiSummaries',
-            summary_name='HumanTaskUiSummary',
+            list_method="list_human_task_uis",
+            summaries_key="HumanTaskUiSummaries",
+            summary_name="HumanTaskUiSummary",
             resource_cls=HumanTaskUi,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
 
 
@@ -9654,26 +10220,27 @@ class HyperParameterTuningJob(Base):
     Class representing resource HyperParameterTuningJob
 
     Attributes:
-        hyper_parameter_tuning_job_name:The name of the hyperparameter tuning job.
-        hyper_parameter_tuning_job_arn:The Amazon Resource Name (ARN) of the tuning job.
-        hyper_parameter_tuning_job_config:The HyperParameterTuningJobConfig object that specifies the configuration of the tuning job.
-        hyper_parameter_tuning_job_status:The status of the tuning job.
-        creation_time:The date and time that the tuning job started.
-        training_job_status_counters:The TrainingJobStatusCounters object that specifies the number of training jobs, categorized by status, that this tuning job launched.
-        objective_status_counters:The ObjectiveStatusCounters object that specifies the number of training jobs, categorized by the status of their final objective metric, that this tuning job launched.
-        training_job_definition:The HyperParameterTrainingJobDefinition object that specifies the definition of the training jobs that this tuning job launches.
-        training_job_definitions:A list of the HyperParameterTrainingJobDefinition objects launched for this tuning job.
-        hyper_parameter_tuning_end_time:The date and time that the tuning job ended.
-        last_modified_time:The date and time that the status of the tuning job was modified.
-        best_training_job:A TrainingJobSummary object that describes the training job that completed with the best current HyperParameterTuningJobObjective.
-        overall_best_training_job:If the hyperparameter tuning job is an warm start tuning job with a WarmStartType of IDENTICAL_DATA_AND_ALGORITHM, this is the TrainingJobSummary for the training job with the best objective metric value of all training jobs launched by this tuning job and all parent jobs specified for the warm start tuning job.
-        warm_start_config:The configuration for starting the hyperparameter parameter tuning job using one or more previous tuning jobs as a starting point. The results of previous tuning jobs are used to inform which combinations of hyperparameters to search over in the new tuning job.
-        autotune:A flag to indicate if autotune is enabled for the hyperparameter tuning job.
-        failure_reason:If the tuning job failed, the reason it failed.
-        tuning_job_completion_details:Tuning job completion information returned as the response from a hyperparameter tuning job. This information tells if your tuning job has or has not converged. It also includes the number of training jobs that have not improved model performance as evaluated against the objective function.
+        hyper_parameter_tuning_job_name: The name of the hyperparameter tuning job.
+        hyper_parameter_tuning_job_arn: The Amazon Resource Name (ARN) of the tuning job.
+        hyper_parameter_tuning_job_config: The HyperParameterTuningJobConfig object that specifies the configuration of the tuning job.
+        hyper_parameter_tuning_job_status: The status of the tuning job.
+        creation_time: The date and time that the tuning job started.
+        training_job_status_counters: The TrainingJobStatusCounters object that specifies the number of training jobs, categorized by status, that this tuning job launched.
+        objective_status_counters: The ObjectiveStatusCounters object that specifies the number of training jobs, categorized by the status of their final objective metric, that this tuning job launched.
+        training_job_definition: The HyperParameterTrainingJobDefinition object that specifies the definition of the training jobs that this tuning job launches.
+        training_job_definitions: A list of the HyperParameterTrainingJobDefinition objects launched for this tuning job.
+        hyper_parameter_tuning_end_time: The date and time that the tuning job ended.
+        last_modified_time: The date and time that the status of the tuning job was modified.
+        best_training_job: A TrainingJobSummary object that describes the training job that completed with the best current HyperParameterTuningJobObjective.
+        overall_best_training_job: If the hyperparameter tuning job is an warm start tuning job with a WarmStartType of IDENTICAL_DATA_AND_ALGORITHM, this is the TrainingJobSummary for the training job with the best objective metric value of all training jobs launched by this tuning job and all parent jobs specified for the warm start tuning job.
+        warm_start_config: The configuration for starting the hyperparameter parameter tuning job using one or more previous tuning jobs as a starting point. The results of previous tuning jobs are used to inform which combinations of hyperparameters to search over in the new tuning job.
+        autotune: A flag to indicate if autotune is enabled for the hyperparameter tuning job.
+        failure_reason: If the tuning job failed, the reason it failed.
+        tuning_job_completion_details: Tuning job completion information returned as the response from a hyperparameter tuning job. This information tells if your tuning job has or has not converged. It also includes the number of training jobs that have not improved model performance as evaluated against the objective function.
         consumed_resources:
 
     """
+
     hyper_parameter_tuning_job_name: str
     hyper_parameter_tuning_job_arn: Optional[str] = Unassigned()
     hyper_parameter_tuning_job_config: Optional[HyperParameterTuningJobConfig] = Unassigned()
@@ -9695,60 +10262,48 @@ class HyperParameterTuningJob(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'hyper_parameter_tuning_job_name':
-                return value
-        raise Exception("Name attribute not found for object")
+        resource_name = "hyper_parameter_tuning_job_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
 
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
+        for attribute, value in attributes.items():
+            if attribute == "name" or attribute in attribute_name_candidates:
+                return value
+        logger.error("Name attribute not found for object hyper_parameter_tuning_job")
+        return None
 
     def populate_inputs_decorator(create_func):
+        @functools.wraps(create_func)
         def wrapper(*args, **kwargs):
-            config_schema_for_resource = \
-        {
-          "training_job_definition": {
-            "role_arn": {
-              "type": "string"
-            },
-            "output_data_config": {
-              "s3_output_path": {
-                "type": "string"
-              },
-              "kms_key_id": {
-                "type": "string"
-              }
-            },
-            "vpc_config": {
-              "security_group_ids": {
-                "type": "array",
-                "items": {
-                  "type": "string"
+            config_schema_for_resource = {
+                "training_job_definition": {
+                    "role_arn": {"type": "string"},
+                    "output_data_config": {
+                        "s3_output_path": {"type": "string"},
+                        "kms_key_id": {"type": "string"},
+                    },
+                    "vpc_config": {
+                        "security_group_ids": {"type": "array", "items": {"type": "string"}},
+                        "subnets": {"type": "array", "items": {"type": "string"}},
+                    },
+                    "resource_config": {"volume_kms_key_id": {"type": "string"}},
+                    "hyper_parameter_tuning_resource_config": {
+                        "volume_kms_key_id": {"type": "string"}
+                    },
+                    "checkpoint_config": {"s3_uri": {"type": "string"}},
                 }
-              },
-              "subnets": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
-              }
-            },
-            "resource_config": {
-              "volume_kms_key_id": {
-                "type": "string"
-              }
-            },
-            "hyper_parameter_tuning_resource_config": {
-              "volume_kms_key_id": {
-                "type": "string"
-              }
-            },
-            "checkpoint_config": {
-              "s3_uri": {
-                "type": "string"
-              }
             }
-          }
-        }
-            return create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "HyperParameterTuningJob", **kwargs))
+            return create_func(
+                *args,
+                **Base.get_updated_kwargs_with_configured_attributes(
+                    config_schema_for_resource, "HyperParameterTuningJob", **kwargs
+                ),
+            )
+
         return wrapper
 
     @classmethod
@@ -9758,7 +10313,9 @@ class HyperParameterTuningJob(Base):
         hyper_parameter_tuning_job_name: str,
         hyper_parameter_tuning_job_config: HyperParameterTuningJobConfig,
         training_job_definition: Optional[HyperParameterTrainingJobDefinition] = Unassigned(),
-        training_job_definitions: Optional[List[HyperParameterTrainingJobDefinition]] = Unassigned(),
+        training_job_definitions: Optional[
+            List[HyperParameterTrainingJobDefinition]
+        ] = Unassigned(),
         warm_start_config: Optional[HyperParameterTuningJobWarmStartConfig] = Unassigned(),
         tags: Optional[List[Tag]] = Unassigned(),
         autotune: Optional[Autotune] = Unassigned(),
@@ -9769,13 +10326,13 @@ class HyperParameterTuningJob(Base):
         Create a HyperParameterTuningJob resource
 
         Parameters:
-            hyper_parameter_tuning_job_name:The name of the tuning job. This name is the prefix for the names of all training jobs that this tuning job launches. The name must be unique within the same Amazon Web Services account and Amazon Web Services Region. The name must have 1 to 32 characters. Valid characters are a-z, A-Z, 0-9, and : + = @ _ % - (hyphen). The name is not case sensitive.
-            hyper_parameter_tuning_job_config:The HyperParameterTuningJobConfig object that describes the tuning job, including the search strategy, the objective metric used to evaluate training jobs, ranges of parameters to search, and resource limits for the tuning job. For more information, see How Hyperparameter Tuning Works.
-            training_job_definition:The HyperParameterTrainingJobDefinition object that describes the training jobs that this tuning job launches, including static hyperparameters, input data configuration, output data configuration, resource configuration, and stopping condition.
-            training_job_definitions:A list of the HyperParameterTrainingJobDefinition objects launched for this tuning job.
-            warm_start_config:Specifies the configuration for starting the hyperparameter tuning job using one or more previous tuning jobs as a starting point. The results of previous tuning jobs are used to inform which combinations of hyperparameters to search over in the new tuning job. All training jobs launched by the new hyperparameter tuning job are evaluated by using the objective metric. If you specify IDENTICAL_DATA_AND_ALGORITHM as the WarmStartType value for the warm start configuration, the training job that performs the best in the new tuning job is compared to the best training jobs from the parent tuning jobs. From these, the training job that performs the best as measured by the objective metric is returned as the overall best training job.  All training jobs launched by parent hyperparameter tuning jobs and the new hyperparameter tuning jobs count against the limit of training jobs for the tuning job.
-            tags:An array of key-value pairs. You can use tags to categorize your Amazon Web Services resources in different ways, for example, by purpose, owner, or environment. For more information, see Tagging Amazon Web Services Resources. Tags that you specify for the tuning job are also added to all training jobs that the tuning job launches.
-            autotune:Configures SageMaker Automatic model tuning (AMT) to automatically find optimal parameters for the following fields:    ParameterRanges: The names and ranges of parameters that a hyperparameter tuning job can optimize.    ResourceLimits: The maximum resources that can be used for a training job. These resources include the maximum number of training jobs, the maximum runtime of a tuning job, and the maximum number of training jobs to run at the same time.    TrainingJobEarlyStoppingType: A flag that specifies whether or not to use early stopping for training jobs launched by a hyperparameter tuning job.    RetryStrategy: The number of times to retry a training job.    Strategy: Specifies how hyperparameter tuning chooses the combinations of hyperparameter values to use for the training jobs that it launches.    ConvergenceDetected: A flag to indicate that Automatic model tuning (AMT) has detected model convergence.
+            hyper_parameter_tuning_job_name: The name of the tuning job. This name is the prefix for the names of all training jobs that this tuning job launches. The name must be unique within the same Amazon Web Services account and Amazon Web Services Region. The name must have 1 to 32 characters. Valid characters are a-z, A-Z, 0-9, and : + = @ _ % - (hyphen). The name is not case sensitive.
+            hyper_parameter_tuning_job_config: The HyperParameterTuningJobConfig object that describes the tuning job, including the search strategy, the objective metric used to evaluate training jobs, ranges of parameters to search, and resource limits for the tuning job. For more information, see How Hyperparameter Tuning Works.
+            training_job_definition: The HyperParameterTrainingJobDefinition object that describes the training jobs that this tuning job launches, including static hyperparameters, input data configuration, output data configuration, resource configuration, and stopping condition.
+            training_job_definitions: A list of the HyperParameterTrainingJobDefinition objects launched for this tuning job.
+            warm_start_config: Specifies the configuration for starting the hyperparameter tuning job using one or more previous tuning jobs as a starting point. The results of previous tuning jobs are used to inform which combinations of hyperparameters to search over in the new tuning job. All training jobs launched by the new hyperparameter tuning job are evaluated by using the objective metric. If you specify IDENTICAL_DATA_AND_ALGORITHM as the WarmStartType value for the warm start configuration, the training job that performs the best in the new tuning job is compared to the best training jobs from the parent tuning jobs. From these, the training job that performs the best as measured by the objective metric is returned as the overall best training job.  All training jobs launched by parent hyperparameter tuning jobs and the new hyperparameter tuning jobs count against the limit of training jobs for the tuning job.
+            tags: An array of key-value pairs. You can use tags to categorize your Amazon Web Services resources in different ways, for example, by purpose, owner, or environment. For more information, see Tagging Amazon Web Services Resources. Tags that you specify for the tuning job are also added to all training jobs that the tuning job launches.
+            autotune: Configures SageMaker Automatic model tuning (AMT) to automatically find optimal parameters for the following fields:    ParameterRanges: The names and ranges of parameters that a hyperparameter tuning job can optimize.    ResourceLimits: The maximum resources that can be used for a training job. These resources include the maximum number of training jobs, the maximum runtime of a tuning job, and the maximum number of training jobs to run at the same time.    TrainingJobEarlyStoppingType: A flag that specifies whether or not to use early stopping for training jobs launched by a hyperparameter tuning job.    RetryStrategy: The number of times to retry a training job.    Strategy: Specifies how hyperparameter tuning chooses the combinations of hyperparameter values to use for the training jobs that it launches.    ConvergenceDetected: A flag to indicate that Automatic model tuning (AMT) has detected model convergence.
             session: Boto3 session.
             region: Region name.
 
@@ -9801,19 +10358,23 @@ class HyperParameterTuningJob(Base):
         """
 
         logger.debug("Creating hyper_parameter_tuning_job resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'HyperParameterTuningJobName': hyper_parameter_tuning_job_name,
-            'HyperParameterTuningJobConfig': hyper_parameter_tuning_job_config,
-            'TrainingJobDefinition': training_job_definition,
-            'TrainingJobDefinitions': training_job_definitions,
-            'WarmStartConfig': warm_start_config,
-            'Tags': tags,
-            'Autotune': autotune,
+            "HyperParameterTuningJobName": hyper_parameter_tuning_job_name,
+            "HyperParameterTuningJobConfig": hyper_parameter_tuning_job_config,
+            "TrainingJobDefinition": training_job_definition,
+            "TrainingJobDefinitions": training_job_definitions,
+            "WarmStartConfig": warm_start_config,
+            "Tags": tags,
+            "Autotune": autotune,
         }
 
-        operation_input_args = Base.populate_chained_attributes(resource_name='HyperParameterTuningJob', operation_input_args=operation_input_args)
+        operation_input_args = Base.populate_chained_attributes(
+            resource_name="HyperParameterTuningJob", operation_input_args=operation_input_args
+        )
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -9824,7 +10385,11 @@ class HyperParameterTuningJob(Base):
         response = client.create_hyper_parameter_tuning_job(**operation_input_args)
         logger.debug(f"Response: {response}")
 
-        return cls.get(hyper_parameter_tuning_job_name=hyper_parameter_tuning_job_name, session=session, region=region)
+        return cls.get(
+            hyper_parameter_tuning_job_name=hyper_parameter_tuning_job_name,
+            session=session,
+            region=region,
+        )
 
     @classmethod
     def get(
@@ -9859,19 +10424,23 @@ class HyperParameterTuningJob(Base):
         """
 
         operation_input_args = {
-            'HyperParameterTuningJobName': hyper_parameter_tuning_job_name,
+            "HyperParameterTuningJobName": hyper_parameter_tuning_job_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
         response = client.describe_hyper_parameter_tuning_job(**operation_input_args)
 
         pprint(response)
 
         # deserialize the response
-        transformed_response = transform(response, 'DescribeHyperParameterTuningJobResponse')
+        transformed_response = transform(response, "DescribeHyperParameterTuningJobResponse")
         hyper_parameter_tuning_job = cls(**transformed_response)
         return hyper_parameter_tuning_job
 
-    def refresh(self) -> Optional["HyperParameterTuningJob"]:
+    def refresh(
+        self,
+    ) -> Optional["HyperParameterTuningJob"]:
         """
         Refresh a HyperParameterTuningJob resource
 
@@ -9893,16 +10462,18 @@ class HyperParameterTuningJob(Base):
         """
 
         operation_input_args = {
-            'HyperParameterTuningJobName': self.hyper_parameter_tuning_job_name,
+            "HyperParameterTuningJobName": self.hyper_parameter_tuning_job_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_hyper_parameter_tuning_job(**operation_input_args)
 
         # deserialize response and update self
-        transform(response, 'DescribeHyperParameterTuningJobResponse', self)
+        transform(response, "DescribeHyperParameterTuningJobResponse", self)
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a HyperParameterTuningJob resource
 
@@ -9920,12 +10491,14 @@ class HyperParameterTuningJob(Base):
                 ```
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
-            'HyperParameterTuningJobName': self.hyper_parameter_tuning_job_name,
+            "HyperParameterTuningJobName": self.hyper_parameter_tuning_job_name,
         }
         client.delete_hyper_parameter_tuning_job(**operation_input_args)
+
+        logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
     def stop(self) -> None:
         """
@@ -9949,15 +10522,11 @@ class HyperParameterTuningJob(Base):
         client = SageMakerClient().client
 
         operation_input_args = {
-            'HyperParameterTuningJobName': self.hyper_parameter_tuning_job_name,
+            "HyperParameterTuningJobName": self.hyper_parameter_tuning_job_name,
         }
         client.stop_hyper_parameter_tuning_job(**operation_input_args)
 
-    def wait(
-        self,
-        poll: int = 5,
-        timeout: Optional[int] = None
-    ) -> Optional["HyperParameterTuningJob"]:
+    def wait(self, poll: int = 5, timeout: Optional[int] = None):
         """
         Wait for a HyperParameterTuningJob resource.
 
@@ -9974,7 +10543,7 @@ class HyperParameterTuningJob(Base):
             WaiterError: Raised when an error occurs while waiting.
 
         """
-        terminal_states = ['Completed', 'Failed', 'Stopped', 'DeleteFailed']
+        terminal_states = ["Completed", "Failed", "Stopped", "DeleteFailed"]
         start_time = time.time()
 
         while True:
@@ -9982,14 +10551,21 @@ class HyperParameterTuningJob(Base):
             current_status = self.hyper_parameter_tuning_job_status
 
             if current_status in terminal_states:
+                print(f"\nFinal Resource Status: {current_status}")
 
                 if "failed" in current_status.lower():
-                    raise FailedStatusError(resource_type="HyperParameterTuningJob", status=current_status, reason=self.failure_reason)
+                    raise FailedStatusError(
+                        resource_type="HyperParameterTuningJob",
+                        status=current_status,
+                        reason=self.failure_reason,
+                    )
 
-                return self
+                return
 
             if timeout is not None and time.time() - start_time >= timeout:
-                raise TimeoutExceededError(resouce_type="HyperParameterTuningJob", status=current_status)
+                raise TimeoutExceededError(
+                    resouce_type="HyperParameterTuningJob", status=current_status
+                )
             print("-", end="")
             time.sleep(poll)
 
@@ -10040,40 +10616,46 @@ class HyperParameterTuningJob(Base):
                 ```
         """
 
-        client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'SortBy': sort_by,
-            'SortOrder': sort_order,
-            'NameContains': name_contains,
-            'CreationTimeAfter': creation_time_after,
-            'CreationTimeBefore': creation_time_before,
-            'LastModifiedTimeAfter': last_modified_time_after,
-            'LastModifiedTimeBefore': last_modified_time_before,
-            'StatusEquals': status_equals,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
+            "NameContains": name_contains,
+            "CreationTimeAfter": creation_time_after,
+            "CreationTimeBefore": creation_time_before,
+            "LastModifiedTimeAfter": last_modified_time_after,
+            "LastModifiedTimeBefore": last_modified_time_before,
+            "StatusEquals": status_equals,
         }
 
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
 
         return ResourceIterator(
             client=client,
-            list_method='list_hyper_parameter_tuning_jobs',
-            summaries_key='HyperParameterTuningJobSummaries',
-            summary_name='HyperParameterTuningJobSummary',
+            list_method="list_hyper_parameter_tuning_jobs",
+            summaries_key="HyperParameterTuningJobSummaries",
+            summary_name="HyperParameterTuningJobSummary",
             resource_cls=HyperParameterTuningJob,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
-
 
     def get_all_training_jobs(
         self,
         status_equals: Optional[str] = Unassigned(),
         sort_by: Optional[str] = Unassigned(),
-        sort_order: Optional[str] = Unassigned(),    session: Optional[Session] = None,
+        sort_order: Optional[str] = Unassigned(),
+        session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> ResourceIterator[HyperParameterTrainingJobSummary]:
         """
-        Perform ListTrainingJobsForHyperParameterTuningJob on a HyperParameterTuningJob resource.
+        Gets a list of TrainingJobSummary objects that describe the training jobs that a hyperparameter tuning job launched.
 
         Parameters:
             next_token: If the result of the previous ListTrainingJobsForHyperParameterTuningJob request was truncated, the response includes a NextToken. To retrieve the next set of training jobs, use the token in the next request.
@@ -10087,26 +10669,30 @@ class HyperParameterTuningJob(Base):
 
         """
 
-
         operation_input_args = {
-            'HyperParameterTuningJobName': self.hyper_parameter_tuning_job_name,
-            'StatusEquals': status_equals,
-            'SortBy': sort_by,
-            'SortOrder': sort_order,
+            "HyperParameterTuningJobName": self.hyper_parameter_tuning_job_name,
+            "StatusEquals": status_equals,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
         }
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
         logger.debug(f"Input request: {operation_input_args}")
 
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
-
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         return ResourceIterator(
             client=client,
-            list_method='list_training_jobs_for_hyper_parameter_tuning_job',
-            summaries_key='TrainingJobSummaries',
-            summary_name='HyperParameterTrainingJobSummary',
+            list_method="list_training_jobs_for_hyper_parameter_tuning_job",
+            summaries_key="TrainingJobSummaries",
+            summary_name="HyperParameterTrainingJobSummary",
             resource_cls=HyperParameterTrainingJobSummary,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
 
 
@@ -10115,17 +10701,18 @@ class Image(Base):
     Class representing resource Image
 
     Attributes:
-        creation_time:When the image was created.
-        description:The description of the image.
-        display_name:The name of the image as displayed.
-        failure_reason:When a create, update, or delete operation fails, the reason for the failure.
-        image_arn:The ARN of the image.
-        image_name:The name of the image.
-        image_status:The status of the image.
-        last_modified_time:When the image was last modified.
-        role_arn:The ARN of the IAM role that enables Amazon SageMaker to perform tasks on your behalf.
+        creation_time: When the image was created.
+        description: The description of the image.
+        display_name: The name of the image as displayed.
+        failure_reason: When a create, update, or delete operation fails, the reason for the failure.
+        image_arn: The ARN of the image.
+        image_name: The name of the image.
+        image_status: The status of the image.
+        last_modified_time: When the image was last modified.
+        role_arn: The ARN of the IAM role that enables Amazon SageMaker to perform tasks on your behalf.
 
     """
+
     image_name: str
     creation_time: Optional[datetime.datetime] = Unassigned()
     description: Optional[str] = Unassigned()
@@ -10138,21 +10725,31 @@ class Image(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'image_name':
-                return value
-        raise Exception("Name attribute not found for object")
+        resource_name = "image_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
 
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
+        for attribute, value in attributes.items():
+            if attribute == "name" or attribute in attribute_name_candidates:
+                return value
+        logger.error("Name attribute not found for object image")
+        return None
 
     def populate_inputs_decorator(create_func):
+        @functools.wraps(create_func)
         def wrapper(*args, **kwargs):
-            config_schema_for_resource = \
-        {
-          "role_arn": {
-            "type": "string"
-          }
-        }
-            return create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "Image", **kwargs))
+            config_schema_for_resource = {"role_arn": {"type": "string"}}
+            return create_func(
+                *args,
+                **Base.get_updated_kwargs_with_configured_attributes(
+                    config_schema_for_resource, "Image", **kwargs
+                ),
+            )
+
         return wrapper
 
     @classmethod
@@ -10201,17 +10798,21 @@ class Image(Base):
         """
 
         logger.debug("Creating image resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'Description': description,
-            'DisplayName': display_name,
-            'ImageName': image_name,
-            'RoleArn': role_arn,
-            'Tags': tags,
+            "Description": description,
+            "DisplayName": display_name,
+            "ImageName": image_name,
+            "RoleArn": role_arn,
+            "Tags": tags,
         }
 
-        operation_input_args = Base.populate_chained_attributes(resource_name='Image', operation_input_args=operation_input_args)
+        operation_input_args = Base.populate_chained_attributes(
+            resource_name="Image", operation_input_args=operation_input_args
+        )
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -10257,19 +10858,23 @@ class Image(Base):
         """
 
         operation_input_args = {
-            'ImageName': image_name,
+            "ImageName": image_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
         response = client.describe_image(**operation_input_args)
 
         pprint(response)
 
         # deserialize the response
-        transformed_response = transform(response, 'DescribeImageResponse')
+        transformed_response = transform(response, "DescribeImageResponse")
         image = cls(**transformed_response)
         return image
 
-    def refresh(self) -> Optional["Image"]:
+    def refresh(
+        self,
+    ) -> Optional["Image"]:
         """
         Refresh a Image resource
 
@@ -10291,13 +10896,13 @@ class Image(Base):
         """
 
         operation_input_args = {
-            'ImageName': self.image_name,
+            "ImageName": self.image_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_image(**operation_input_args)
 
         # deserialize response and update self
-        transform(response, 'DescribeImageResponse', self)
+        transform(response, "DescribeImageResponse", self)
         return self
 
     @populate_inputs_decorator
@@ -10312,7 +10917,7 @@ class Image(Base):
         Update a Image resource
 
         Parameters:
-            delete_properties:A list of properties to delete. Only the Description and DisplayName properties can be deleted.
+            delete_properties: A list of properties to delete. Only the Description and DisplayName properties can be deleted.
 
         Returns:
             The Image resource.
@@ -10333,14 +10938,14 @@ class Image(Base):
         """
 
         logger.debug("Updating image resource.")
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
-            'DeleteProperties': delete_properties,
-            'Description': description,
-            'DisplayName': display_name,
-            'ImageName': self.image_name,
-            'RoleArn': role_arn,
+            "DeleteProperties": delete_properties,
+            "Description": description,
+            "DisplayName": display_name,
+            "ImageName": self.image_name,
+            "RoleArn": role_arn,
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -10354,7 +10959,9 @@ class Image(Base):
 
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a Image resource
 
@@ -10374,19 +10981,29 @@ class Image(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
-            'ImageName': self.image_name,
+            "ImageName": self.image_name,
         }
         client.delete_image(**operation_input_args)
 
+        logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+
     def wait_for_status(
         self,
-        status: Literal['CREATING', 'CREATED', 'CREATE_FAILED', 'UPDATING', 'UPDATE_FAILED', 'DELETING', 'DELETE_FAILED'],
+        status: Literal[
+            "CREATING",
+            "CREATED",
+            "CREATE_FAILED",
+            "UPDATING",
+            "UPDATE_FAILED",
+            "DELETING",
+            "DELETE_FAILED",
+        ],
         poll: int = 5,
-        timeout: Optional[int] = None
-    ) -> Optional["Image"]:
+        timeout: Optional[int] = None,
+    ):
         """
         Wait for a Image resource.
 
@@ -10411,10 +11028,13 @@ class Image(Base):
             current_status = self.image_status
 
             if status == current_status:
-                return self
+                print(f"\nFinal Resource Status: {current_status}")
+                return
 
             if "failed" in current_status.lower():
-                raise FailedStatusError(resource_type="Image", status=current_status, reason=self.failure_reason)
+                raise FailedStatusError(
+                    resource_type="Image", status=current_status, reason=self.failure_reason
+                )
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="Image", status=current_status)
@@ -10438,15 +11058,15 @@ class Image(Base):
         Get all Image resources
 
         Parameters:
-            creation_time_after:A filter that returns only images created on or after the specified time.
-            creation_time_before:A filter that returns only images created on or before the specified time.
-            last_modified_time_after:A filter that returns only images modified on or after the specified time.
-            last_modified_time_before:A filter that returns only images modified on or before the specified time.
-            max_results:The maximum number of images to return in the response. The default value is 10.
-            name_contains:A filter that returns only images whose name contains the specified string.
-            next_token:If the previous call to ListImages didn't return the full set of images, the call returns a token for getting the next set of images.
-            sort_by:The property used to sort results. The default value is CREATION_TIME.
-            sort_order:The sort order. The default value is DESCENDING.
+            creation_time_after: A filter that returns only images created on or after the specified time.
+            creation_time_before: A filter that returns only images created on or before the specified time.
+            last_modified_time_after: A filter that returns only images modified on or after the specified time.
+            last_modified_time_before: A filter that returns only images modified on or before the specified time.
+            max_results: The maximum number of images to return in the response. The default value is 10.
+            name_contains: A filter that returns only images whose name contains the specified string.
+            next_token: If the previous call to ListImages didn't return the full set of images, the call returns a token for getting the next set of images.
+            sort_by: The property used to sort results. The default value is CREATION_TIME.
+            sort_order: The sort order. The default value is DESCENDING.
             session: Boto3 session.
             region: Region name.
 
@@ -10466,27 +11086,33 @@ class Image(Base):
                 ```
         """
 
-        client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'CreationTimeAfter': creation_time_after,
-            'CreationTimeBefore': creation_time_before,
-            'LastModifiedTimeAfter': last_modified_time_after,
-            'LastModifiedTimeBefore': last_modified_time_before,
-            'NameContains': name_contains,
-            'SortBy': sort_by,
-            'SortOrder': sort_order,
+            "CreationTimeAfter": creation_time_after,
+            "CreationTimeBefore": creation_time_before,
+            "LastModifiedTimeAfter": last_modified_time_after,
+            "LastModifiedTimeBefore": last_modified_time_before,
+            "NameContains": name_contains,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
         }
 
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
 
         return ResourceIterator(
             client=client,
-            list_method='list_images',
-            summaries_key='Images',
-            summary_name='Image',
+            list_method="list_images",
+            summaries_key="Images",
+            summary_name="Image",
             resource_cls=Image,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
 
 
@@ -10495,24 +11121,26 @@ class ImageVersion(Base):
     Class representing resource ImageVersion
 
     Attributes:
-        base_image:The registry path of the container image on which this image version is based.
-        container_image:The registry path of the container image that contains this image version.
-        creation_time:When the version was created.
-        failure_reason:When a create or delete operation fails, the reason for the failure.
-        image_arn:The ARN of the image the version is based on.
-        image_version_arn:The ARN of the version.
-        image_version_status:The status of the version.
-        last_modified_time:When the version was last modified.
-        version:The version number.
-        vendor_guidance:The stability of the image version specified by the maintainer.    NOT_PROVIDED: The maintainers did not provide a status for image version stability.    STABLE: The image version is stable.    TO_BE_ARCHIVED: The image version is set to be archived. Custom image versions that are set to be archived are automatically archived after three months.    ARCHIVED: The image version is archived. Archived image versions are not searchable and are no longer actively supported.
-        job_type:Indicates SageMaker job type compatibility.    TRAINING: The image version is compatible with SageMaker training jobs.    INFERENCE: The image version is compatible with SageMaker inference jobs.    NOTEBOOK_KERNEL: The image version is compatible with SageMaker notebook kernels.
-        ml_framework:The machine learning framework vended in the image version.
-        programming_lang:The supported programming language and its version.
-        processor:Indicates CPU or GPU compatibility.    CPU: The image version is compatible with CPU.    GPU: The image version is compatible with GPU.
-        horovod:Indicates Horovod compatibility.
-        release_notes:The maintainer description of the image version.
+        base_image: The registry path of the container image on which this image version is based.
+        container_image: The registry path of the container image that contains this image version.
+        creation_time: When the version was created.
+        failure_reason: When a create or delete operation fails, the reason for the failure.
+        image_arn: The ARN of the image the version is based on.
+        image_version_arn: The ARN of the version.
+        image_version_status: The status of the version.
+        last_modified_time: When the version was last modified.
+        version: The version number.
+        vendor_guidance: The stability of the image version specified by the maintainer.    NOT_PROVIDED: The maintainers did not provide a status for image version stability.    STABLE: The image version is stable.    TO_BE_ARCHIVED: The image version is set to be archived. Custom image versions that are set to be archived are automatically archived after three months.    ARCHIVED: The image version is archived. Archived image versions are not searchable and are no longer actively supported.
+        job_type: Indicates SageMaker job type compatibility.    TRAINING: The image version is compatible with SageMaker training jobs.    INFERENCE: The image version is compatible with SageMaker inference jobs.    NOTEBOOK_KERNEL: The image version is compatible with SageMaker notebook kernels.
+        ml_framework: The machine learning framework vended in the image version.
+        programming_lang: The supported programming language and its version.
+        processor: Indicates CPU or GPU compatibility.    CPU: The image version is compatible with CPU.    GPU: The image version is compatible with GPU.
+        horovod: Indicates Horovod compatibility.
+        release_notes: The maintainer description of the image version.
 
     """
+
+    image_name: str
     base_image: Optional[str] = Unassigned()
     container_image: Optional[str] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
@@ -10524,7 +11152,7 @@ class ImageVersion(Base):
     version: Optional[int] = Unassigned()
     vendor_guidance: Optional[str] = Unassigned()
     job_type: Optional[str] = Unassigned()
-    m_l_framework: Optional[str] = Unassigned()
+    ml_framework: Optional[str] = Unassigned()
     programming_lang: Optional[str] = Unassigned()
     processor: Optional[str] = Unassigned()
     horovod: Optional[bool] = Unassigned()
@@ -10532,10 +11160,19 @@ class ImageVersion(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "image_version_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'image_version_name':
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object image_version")
+        return None
 
     @classmethod
     def create(
@@ -10546,7 +11183,7 @@ class ImageVersion(Base):
         aliases: Optional[List[str]] = Unassigned(),
         vendor_guidance: Optional[str] = Unassigned(),
         job_type: Optional[str] = Unassigned(),
-        m_l_framework: Optional[str] = Unassigned(),
+        ml_framework: Optional[str] = Unassigned(),
         programming_lang: Optional[str] = Unassigned(),
         processor: Optional[str] = Unassigned(),
         horovod: Optional[bool] = Unassigned(),
@@ -10558,17 +11195,17 @@ class ImageVersion(Base):
         Create a ImageVersion resource
 
         Parameters:
-            base_image:The registry path of the container image to use as the starting point for this version. The path is an Amazon ECR URI in the following format:  &lt;acct-id&gt;.dkr.ecr.&lt;region&gt;.amazonaws.com/&lt;repo-name[:tag] or [@digest]&gt;
-            client_token:A unique ID. If not specified, the Amazon Web Services CLI and Amazon Web Services SDKs, such as the SDK for Python (Boto3), add a unique value to the call.
-            image_name:The ImageName of the Image to create a version of.
-            aliases:A list of aliases created with the image version.
-            vendor_guidance:The stability of the image version, specified by the maintainer.    NOT_PROVIDED: The maintainers did not provide a status for image version stability.    STABLE: The image version is stable.    TO_BE_ARCHIVED: The image version is set to be archived. Custom image versions that are set to be archived are automatically archived after three months.    ARCHIVED: The image version is archived. Archived image versions are not searchable and are no longer actively supported.
-            job_type:Indicates SageMaker job type compatibility.    TRAINING: The image version is compatible with SageMaker training jobs.    INFERENCE: The image version is compatible with SageMaker inference jobs.    NOTEBOOK_KERNEL: The image version is compatible with SageMaker notebook kernels.
-            ml_framework:The machine learning framework vended in the image version.
-            programming_lang:The supported programming language and its version.
-            processor:Indicates CPU or GPU compatibility.    CPU: The image version is compatible with CPU.    GPU: The image version is compatible with GPU.
-            horovod:Indicates Horovod compatibility.
-            release_notes:The maintainer description of the image version.
+            base_image: The registry path of the container image to use as the starting point for this version. The path is an Amazon ECR URI in the following format:  &lt;acct-id&gt;.dkr.ecr.&lt;region&gt;.amazonaws.com/&lt;repo-name[:tag] or [@digest]&gt;
+            client_token: A unique ID. If not specified, the Amazon Web Services CLI and Amazon Web Services SDKs, such as the SDK for Python (Boto3), add a unique value to the call.
+            image_name: The ImageName of the Image to create a version of.
+            aliases: A list of aliases created with the image version.
+            vendor_guidance: The stability of the image version, specified by the maintainer.    NOT_PROVIDED: The maintainers did not provide a status for image version stability.    STABLE: The image version is stable.    TO_BE_ARCHIVED: The image version is set to be archived. Custom image versions that are set to be archived are automatically archived after three months.    ARCHIVED: The image version is archived. Archived image versions are not searchable and are no longer actively supported.
+            job_type: Indicates SageMaker job type compatibility.    TRAINING: The image version is compatible with SageMaker training jobs.    INFERENCE: The image version is compatible with SageMaker inference jobs.    NOTEBOOK_KERNEL: The image version is compatible with SageMaker notebook kernels.
+            ml_framework: The machine learning framework vended in the image version.
+            programming_lang: The supported programming language and its version.
+            processor: Indicates CPU or GPU compatibility.    CPU: The image version is compatible with CPU.    GPU: The image version is compatible with GPU.
+            horovod: Indicates Horovod compatibility.
+            release_notes: The maintainer description of the image version.
             session: Boto3 session.
             region: Region name.
 
@@ -10595,23 +11232,27 @@ class ImageVersion(Base):
         """
 
         logger.debug("Creating image_version resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'BaseImage': base_image,
-            'ClientToken': client_token,
-            'ImageName': image_name,
-            'Aliases': aliases,
-            'VendorGuidance': vendor_guidance,
-            'JobType': job_type,
-            'MLFramework': m_l_framework,
-            'ProgrammingLang': programming_lang,
-            'Processor': processor,
-            'Horovod': horovod,
-            'ReleaseNotes': release_notes,
+            "BaseImage": base_image,
+            "ClientToken": client_token,
+            "ImageName": image_name,
+            "Aliases": aliases,
+            "VendorGuidance": vendor_guidance,
+            "JobType": job_type,
+            "MLFramework": ml_framework,
+            "ProgrammingLang": programming_lang,
+            "Processor": processor,
+            "Horovod": horovod,
+            "ReleaseNotes": release_notes,
         }
 
-        operation_input_args = Base.populate_chained_attributes(resource_name='ImageVersion', operation_input_args=operation_input_args)
+        operation_input_args = Base.populate_chained_attributes(
+            resource_name="ImageVersion", operation_input_args=operation_input_args
+        )
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -10661,21 +11302,26 @@ class ImageVersion(Base):
         """
 
         operation_input_args = {
-            'ImageName': image_name,
-            'Version': version,
-            'Alias': alias,
+            "ImageName": image_name,
+            "Version": version,
+            "Alias": alias,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
         response = client.describe_image_version(**operation_input_args)
 
         pprint(response)
 
         # deserialize the response
-        transformed_response = transform(response, 'DescribeImageVersionResponse')
+        transformed_response = transform(response, "DescribeImageVersionResponse")
         image_version = cls(**transformed_response)
         return image_version
 
-    def refresh(self) -> Optional["ImageVersion"]:
+    def refresh(
+        self,
+        alias: Optional[str] = Unassigned(),
+    ) -> Optional["ImageVersion"]:
         """
         Refresh a ImageVersion resource
 
@@ -10697,27 +11343,26 @@ class ImageVersion(Base):
         """
 
         operation_input_args = {
-            'ImageName': self.image_name,
-            'Version': self.version,
-            'Alias': self.alias,
+            "ImageName": self.image_name,
+            "Version": self.version,
+            "Alias": alias,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_image_version(**operation_input_args)
 
         # deserialize response and update self
-        transform(response, 'DescribeImageVersionResponse', self)
+        transform(response, "DescribeImageVersionResponse", self)
         return self
 
     def update(
         self,
-        image_name: str,
         alias: Optional[str] = Unassigned(),
         version: Optional[int] = Unassigned(),
         aliases_to_add: Optional[List[str]] = Unassigned(),
         aliases_to_delete: Optional[List[str]] = Unassigned(),
         vendor_guidance: Optional[str] = Unassigned(),
         job_type: Optional[str] = Unassigned(),
-        m_l_framework: Optional[str] = Unassigned(),
+        ml_framework: Optional[str] = Unassigned(),
         programming_lang: Optional[str] = Unassigned(),
         processor: Optional[str] = Unassigned(),
         horovod: Optional[bool] = Unassigned(),
@@ -10727,9 +11372,9 @@ class ImageVersion(Base):
         Update a ImageVersion resource
 
         Parameters:
-            alias:The alias of the image version.
-            aliases_to_add:A list of aliases to add.
-            aliases_to_delete:A list of aliases to delete.
+            alias: The alias of the image version.
+            aliases_to_add: A list of aliases to add.
+            aliases_to_delete: A list of aliases to delete.
 
         Returns:
             The ImageVersion resource.
@@ -10750,21 +11395,21 @@ class ImageVersion(Base):
         """
 
         logger.debug("Updating image_version resource.")
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
-            'ImageName': image_name,
-            'Alias': alias,
-            'Version': version,
-            'AliasesToAdd': aliases_to_add,
-            'AliasesToDelete': aliases_to_delete,
-            'VendorGuidance': vendor_guidance,
-            'JobType': job_type,
-            'MLFramework': m_l_framework,
-            'ProgrammingLang': programming_lang,
-            'Processor': processor,
-            'Horovod': horovod,
-            'ReleaseNotes': release_notes,
+            "ImageName": self.image_name,
+            "Alias": alias,
+            "Version": version,
+            "AliasesToAdd": aliases_to_add,
+            "AliasesToDelete": aliases_to_delete,
+            "VendorGuidance": vendor_guidance,
+            "JobType": job_type,
+            "MLFramework": ml_framework,
+            "ProgrammingLang": programming_lang,
+            "Processor": processor,
+            "Horovod": horovod,
+            "ReleaseNotes": release_notes,
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -10778,7 +11423,10 @@ class ImageVersion(Base):
 
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+        alias: Optional[str] = Unassigned(),
+    ) -> None:
         """
         Delete a ImageVersion resource
 
@@ -10798,21 +11446,23 @@ class ImageVersion(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
-            'ImageName': self.image_name,
-            'Version': self.version,
-            'Alias': self.alias,
+            "ImageName": self.image_name,
+            "Version": self.version,
+            "Alias": alias,
         }
         client.delete_image_version(**operation_input_args)
 
+        logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+
     def wait_for_status(
         self,
-        status: Literal['CREATING', 'CREATED', 'CREATE_FAILED', 'DELETING', 'DELETE_FAILED'],
+        status: Literal["CREATING", "CREATED", "CREATE_FAILED", "DELETING", "DELETE_FAILED"],
         poll: int = 5,
-        timeout: Optional[int] = None
-    ) -> Optional["ImageVersion"]:
+        timeout: Optional[int] = None,
+    ):
         """
         Wait for a ImageVersion resource.
 
@@ -10837,10 +11487,13 @@ class ImageVersion(Base):
             current_status = self.image_version_status
 
             if status == current_status:
-                return self
+                print(f"\nFinal Resource Status: {current_status}")
+                return
 
             if "failed" in current_status.lower():
-                raise FailedStatusError(resource_type="ImageVersion", status=current_status, reason=self.failure_reason)
+                raise FailedStatusError(
+                    resource_type="ImageVersion", status=current_status, reason=self.failure_reason
+                )
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="ImageVersion", status=current_status)
@@ -10853,19 +11506,20 @@ class InferenceComponent(Base):
     Class representing resource InferenceComponent
 
     Attributes:
-        inference_component_name:The name of the inference component.
-        inference_component_arn:The Amazon Resource Name (ARN) of the inference component.
-        endpoint_name:The name of the endpoint that hosts the inference component.
-        endpoint_arn:The Amazon Resource Name (ARN) of the endpoint that hosts the inference component.
-        creation_time:The time when the inference component was created.
-        last_modified_time:The time when the inference component was last updated.
-        variant_name:The name of the production variant that hosts the inference component.
-        failure_reason:If the inference component status is Failed, the reason for the failure.
-        specification:Details about the resources that are deployed with this inference component.
-        runtime_config:Details about the runtime settings for the model that is deployed with the inference component.
-        inference_component_status:The status of the inference component.
+        inference_component_name: The name of the inference component.
+        inference_component_arn: The Amazon Resource Name (ARN) of the inference component.
+        endpoint_name: The name of the endpoint that hosts the inference component.
+        endpoint_arn: The Amazon Resource Name (ARN) of the endpoint that hosts the inference component.
+        creation_time: The time when the inference component was created.
+        last_modified_time: The time when the inference component was last updated.
+        variant_name: The name of the production variant that hosts the inference component.
+        failure_reason: If the inference component status is Failed, the reason for the failure.
+        specification: Details about the resources that are deployed with this inference component.
+        runtime_config: Details about the runtime settings for the model that is deployed with the inference component.
+        inference_component_status: The status of the inference component.
 
     """
+
     inference_component_name: str
     inference_component_arn: Optional[str] = Unassigned()
     endpoint_name: Optional[str] = Unassigned()
@@ -10880,10 +11534,19 @@ class InferenceComponent(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "inference_component_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'inference_component_name':
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object inference_component")
+        return None
 
     @classmethod
     def create(
@@ -10931,18 +11594,22 @@ class InferenceComponent(Base):
         """
 
         logger.debug("Creating inference_component resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'InferenceComponentName': inference_component_name,
-            'EndpointName': endpoint_name,
-            'VariantName': variant_name,
-            'Specification': specification,
-            'RuntimeConfig': runtime_config,
-            'Tags': tags,
+            "InferenceComponentName": inference_component_name,
+            "EndpointName": endpoint_name,
+            "VariantName": variant_name,
+            "Specification": specification,
+            "RuntimeConfig": runtime_config,
+            "Tags": tags,
         }
 
-        operation_input_args = Base.populate_chained_attributes(resource_name='InferenceComponent', operation_input_args=operation_input_args)
+        operation_input_args = Base.populate_chained_attributes(
+            resource_name="InferenceComponent", operation_input_args=operation_input_args
+        )
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -10953,7 +11620,9 @@ class InferenceComponent(Base):
         response = client.create_inference_component(**operation_input_args)
         logger.debug(f"Response: {response}")
 
-        return cls.get(inference_component_name=inference_component_name, session=session, region=region)
+        return cls.get(
+            inference_component_name=inference_component_name, session=session, region=region
+        )
 
     @classmethod
     def get(
@@ -10987,19 +11656,23 @@ class InferenceComponent(Base):
         """
 
         operation_input_args = {
-            'InferenceComponentName': inference_component_name,
+            "InferenceComponentName": inference_component_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
         response = client.describe_inference_component(**operation_input_args)
 
         pprint(response)
 
         # deserialize the response
-        transformed_response = transform(response, 'DescribeInferenceComponentOutput')
+        transformed_response = transform(response, "DescribeInferenceComponentOutput")
         inference_component = cls(**transformed_response)
         return inference_component
 
-    def refresh(self) -> Optional["InferenceComponent"]:
+    def refresh(
+        self,
+    ) -> Optional["InferenceComponent"]:
         """
         Refresh a InferenceComponent resource
 
@@ -11020,13 +11693,13 @@ class InferenceComponent(Base):
         """
 
         operation_input_args = {
-            'InferenceComponentName': self.inference_component_name,
+            "InferenceComponentName": self.inference_component_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_inference_component(**operation_input_args)
 
         # deserialize response and update self
-        transform(response, 'DescribeInferenceComponentOutput', self)
+        transform(response, "DescribeInferenceComponentOutput", self)
         return self
 
     def update(
@@ -11056,12 +11729,12 @@ class InferenceComponent(Base):
         """
 
         logger.debug("Updating inference_component resource.")
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
-            'InferenceComponentName': self.inference_component_name,
-            'Specification': specification,
-            'RuntimeConfig': runtime_config,
+            "InferenceComponentName": self.inference_component_name,
+            "Specification": specification,
+            "RuntimeConfig": runtime_config,
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -11075,7 +11748,9 @@ class InferenceComponent(Base):
 
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a InferenceComponent resource
 
@@ -11093,19 +11768,21 @@ class InferenceComponent(Base):
                 ```
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
-            'InferenceComponentName': self.inference_component_name,
+            "InferenceComponentName": self.inference_component_name,
         }
         client.delete_inference_component(**operation_input_args)
 
+        logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+
     def wait_for_status(
         self,
-        status: Literal['InService', 'Creating', 'Updating', 'Failed', 'Deleting'],
+        status: Literal["InService", "Creating", "Updating", "Failed", "Deleting"],
         poll: int = 5,
-        timeout: Optional[int] = None
-    ) -> Optional["InferenceComponent"]:
+        timeout: Optional[int] = None,
+    ):
         """
         Wait for a InferenceComponent resource.
 
@@ -11130,10 +11807,15 @@ class InferenceComponent(Base):
             current_status = self.inference_component_status
 
             if status == current_status:
-                return self
+                print(f"\nFinal Resource Status: {current_status}")
+                return
 
             if "failed" in current_status.lower():
-                raise FailedStatusError(resource_type="InferenceComponent", status=current_status, reason=self.failure_reason)
+                raise FailedStatusError(
+                    resource_type="InferenceComponent",
+                    status=current_status,
+                    reason=self.failure_reason,
+                )
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="InferenceComponent", status=current_status)
@@ -11191,32 +11873,37 @@ class InferenceComponent(Base):
                 ```
         """
 
-        client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'SortBy': sort_by,
-            'SortOrder': sort_order,
-            'NameContains': name_contains,
-            'CreationTimeBefore': creation_time_before,
-            'CreationTimeAfter': creation_time_after,
-            'LastModifiedTimeBefore': last_modified_time_before,
-            'LastModifiedTimeAfter': last_modified_time_after,
-            'StatusEquals': status_equals,
-            'EndpointNameEquals': endpoint_name_equals,
-            'VariantNameEquals': variant_name_equals,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
+            "NameContains": name_contains,
+            "CreationTimeBefore": creation_time_before,
+            "CreationTimeAfter": creation_time_after,
+            "LastModifiedTimeBefore": last_modified_time_before,
+            "LastModifiedTimeAfter": last_modified_time_after,
+            "StatusEquals": status_equals,
+            "EndpointNameEquals": endpoint_name_equals,
+            "VariantNameEquals": variant_name_equals,
         }
 
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
 
         return ResourceIterator(
             client=client,
-            list_method='list_inference_components',
-            summaries_key='InferenceComponents',
-            summary_name='InferenceComponentSummary',
+            list_method="list_inference_components",
+            summaries_key="InferenceComponents",
+            summary_name="InferenceComponentSummary",
             resource_cls=InferenceComponent,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
-
 
     def update_runtime_configs(
         self,
@@ -11225,7 +11912,7 @@ class InferenceComponent(Base):
         region: Optional[str] = None,
     ) -> None:
         """
-        Perform UpdateInferenceComponentRuntimeConfig on a InferenceComponent resource.
+        Runtime settings for a model that is deployed with an inference component.
 
         Parameters:
             desired_runtime_config: Runtime settings for a model that is deployed with an inference component.
@@ -11235,19 +11922,19 @@ class InferenceComponent(Base):
 
         """
 
-
         operation_input_args = {
-            'InferenceComponentName': self.inference_component_name,
-            'DesiredRuntimeConfig': desired_runtime_config,
+            "InferenceComponentName": self.inference_component_name,
+            "DesiredRuntimeConfig": desired_runtime_config,
         }
         logger.debug(f"Input request: {operation_input_args}")
 
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         logger.debug(f"Calling update_inference_component_runtime_config API")
         response = client.update_inference_component_runtime_config(**operation_input_args)
         logger.debug(f"Response: {response}")
-
 
 
 class InferenceExperiment(Base):
@@ -11255,24 +11942,25 @@ class InferenceExperiment(Base):
     Class representing resource InferenceExperiment
 
     Attributes:
-        arn:The ARN of the inference experiment being described.
-        name:The name of the inference experiment.
-        type:The type of the inference experiment.
-        status: The status of the inference experiment. The following are the possible statuses for an inference experiment:     Creating - Amazon SageMaker is creating your experiment.     Created - Amazon SageMaker has finished the creation of your experiment and will begin the experiment at the scheduled time.     Updating - When you make changes to your experiment, your experiment shows as updating.     Starting - Amazon SageMaker is beginning your experiment.     Running - Your experiment is in progress.     Stopping - Amazon SageMaker is stopping your experiment.     Completed - Your experiment has completed.     Cancelled - When you conclude your experiment early using the StopInferenceExperiment API, or if any operation fails with an unexpected error, it shows as cancelled.
-        endpoint_metadata:The metadata of the endpoint on which the inference experiment ran.
-        model_variants: An array of ModelVariantConfigSummary objects. There is one for each variant in the inference experiment. Each ModelVariantConfigSummary object in the array describes the infrastructure configuration for deploying the corresponding variant.
-        schedule:The duration for which the inference experiment ran or will run.
-        status_reason: The error message or client-specified Reason from the StopInferenceExperiment API, that explains the status of the inference experiment.
-        description:The description of the inference experiment.
-        creation_time:The timestamp at which you created the inference experiment.
-        completion_time: The timestamp at which the inference experiment was completed.
-        last_modified_time:The timestamp at which you last modified the inference experiment.
-        role_arn: The ARN of the IAM role that Amazon SageMaker can assume to access model artifacts and container images, and manage Amazon SageMaker Inference endpoints for model deployment.
-        data_storage_config:The Amazon S3 location and configuration for storing inference request and response data.
-        shadow_mode_config: The configuration of ShadowMode inference experiment type, which shows the production variant that takes all the inference requests, and the shadow variant to which Amazon SageMaker replicates a percentage of the inference requests. For the shadow variant it also shows the percentage of requests that Amazon SageMaker replicates.
-        kms_key: The Amazon Web Services Key Management Service (Amazon Web Services KMS) key that Amazon SageMaker uses to encrypt data on the storage volume attached to the ML compute instance that hosts the endpoint. For more information, see CreateInferenceExperiment.
+        arn: The ARN of the inference experiment being described.
+        name: The name of the inference experiment.
+        type: The type of the inference experiment.
+        status:  The status of the inference experiment. The following are the possible statuses for an inference experiment:     Creating - Amazon SageMaker is creating your experiment.     Created - Amazon SageMaker has finished the creation of your experiment and will begin the experiment at the scheduled time.     Updating - When you make changes to your experiment, your experiment shows as updating.     Starting - Amazon SageMaker is beginning your experiment.     Running - Your experiment is in progress.     Stopping - Amazon SageMaker is stopping your experiment.     Completed - Your experiment has completed.     Cancelled - When you conclude your experiment early using the StopInferenceExperiment API, or if any operation fails with an unexpected error, it shows as cancelled.
+        endpoint_metadata: The metadata of the endpoint on which the inference experiment ran.
+        model_variants:  An array of ModelVariantConfigSummary objects. There is one for each variant in the inference experiment. Each ModelVariantConfigSummary object in the array describes the infrastructure configuration for deploying the corresponding variant.
+        schedule: The duration for which the inference experiment ran or will run.
+        status_reason:  The error message or client-specified Reason from the StopInferenceExperiment API, that explains the status of the inference experiment.
+        description: The description of the inference experiment.
+        creation_time: The timestamp at which you created the inference experiment.
+        completion_time:  The timestamp at which the inference experiment was completed.
+        last_modified_time: The timestamp at which you last modified the inference experiment.
+        role_arn:  The ARN of the IAM role that Amazon SageMaker can assume to access model artifacts and container images, and manage Amazon SageMaker Inference endpoints for model deployment.
+        data_storage_config: The Amazon S3 location and configuration for storing inference request and response data.
+        shadow_mode_config:  The configuration of ShadowMode inference experiment type, which shows the production variant that takes all the inference requests, and the shadow variant to which Amazon SageMaker replicates a percentage of the inference requests. For the shadow variant it also shows the percentage of requests that Amazon SageMaker replicates.
+        kms_key:  The Amazon Web Services Key Management Service (Amazon Web Services KMS) key that Amazon SageMaker uses to encrypt data on the storage volume attached to the ML compute instance that hosts the endpoint. For more information, see CreateInferenceExperiment.
 
     """
+
     name: str
     arn: Optional[str] = Unassigned()
     type: Optional[str] = Unassigned()
@@ -11292,29 +11980,35 @@ class InferenceExperiment(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'inference_experiment_name':
-                return value
-        raise Exception("Name attribute not found for object")
+        resource_name = "inference_experiment_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
 
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
+        for attribute, value in attributes.items():
+            if attribute == "name" or attribute in attribute_name_candidates:
+                return value
+        logger.error("Name attribute not found for object inference_experiment")
+        return None
 
     def populate_inputs_decorator(create_func):
+        @functools.wraps(create_func)
         def wrapper(*args, **kwargs):
-            config_schema_for_resource = \
-        {
-          "role_arn": {
-            "type": "string"
-          },
-          "data_storage_config": {
-            "kms_key": {
-              "type": "string"
+            config_schema_for_resource = {
+                "role_arn": {"type": "string"},
+                "data_storage_config": {"kms_key": {"type": "string"}},
+                "kms_key": {"type": "string"},
             }
-          },
-          "kms_key": {
-            "type": "string"
-          }
-        }
-            return create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "InferenceExperiment", **kwargs))
+            return create_func(
+                *args,
+                **Base.get_updated_kwargs_with_configured_attributes(
+                    config_schema_for_resource, "InferenceExperiment", **kwargs
+                ),
+            )
+
         return wrapper
 
     @classmethod
@@ -11339,17 +12033,17 @@ class InferenceExperiment(Base):
         Create a InferenceExperiment resource
 
         Parameters:
-            name:The name for the inference experiment.
-            type: The type of the inference experiment that you want to run. The following types of experiments are possible:     ShadowMode: You can use this type to validate a shadow variant. For more information, see Shadow tests.
-            role_arn: The ARN of the IAM role that Amazon SageMaker can assume to access model artifacts and container images, and manage Amazon SageMaker Inference endpoints for model deployment.
-            endpoint_name: The name of the Amazon SageMaker endpoint on which you want to run the inference experiment.
-            model_variants: An array of ModelVariantConfig objects. There is one for each variant in the inference experiment. Each ModelVariantConfig object in the array describes the infrastructure configuration for the corresponding variant.
-            shadow_mode_config: The configuration of ShadowMode inference experiment type. Use this field to specify a production variant which takes all the inference requests, and a shadow variant to which Amazon SageMaker replicates a percentage of the inference requests. For the shadow variant also specify the percentage of requests that Amazon SageMaker replicates.
-            schedule: The duration for which you want the inference experiment to run. If you don't specify this field, the experiment automatically starts immediately upon creation and concludes after 7 days.
-            description:A description for the inference experiment.
-            data_storage_config: The Amazon S3 location and configuration for storing inference request and response data.   This is an optional parameter that you can use for data capture. For more information, see Capture data.
-            kms_key: The Amazon Web Services Key Management Service (Amazon Web Services KMS) key that Amazon SageMaker uses to encrypt data on the storage volume attached to the ML compute instance that hosts the endpoint. The KmsKey can be any of the following formats:    KMS key ID  "1234abcd-12ab-34cd-56ef-1234567890ab"    Amazon Resource Name (ARN) of a KMS key  "arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab"    KMS key Alias  "alias/ExampleAlias"    Amazon Resource Name (ARN) of a KMS key Alias  "arn:aws:kms:us-west-2:111122223333:alias/ExampleAlias"     If you use a KMS key ID or an alias of your KMS key, the Amazon SageMaker execution role must include permissions to call kms:Encrypt. If you don't provide a KMS key ID, Amazon SageMaker uses the default KMS key for Amazon S3 for your role's account. Amazon SageMaker uses server-side encryption with KMS managed keys for OutputDataConfig. If you use a bucket policy with an s3:PutObject permission that only allows objects with server-side encryption, set the condition key of s3:x-amz-server-side-encryption to "aws:kms". For more information, see KMS managed Encryption Keys in the Amazon Simple Storage Service Developer Guide.   The KMS key policy must grant permission to the IAM role that you specify in your CreateEndpoint and UpdateEndpoint requests. For more information, see Using Key Policies in Amazon Web Services KMS in the Amazon Web Services Key Management Service Developer Guide.
-            tags: Array of key-value pairs. You can use tags to categorize your Amazon Web Services resources in different ways, for example, by purpose, owner, or environment. For more information, see Tagging your Amazon Web Services Resources.
+            name: The name for the inference experiment.
+            type:  The type of the inference experiment that you want to run. The following types of experiments are possible:     ShadowMode: You can use this type to validate a shadow variant. For more information, see Shadow tests.
+            role_arn:  The ARN of the IAM role that Amazon SageMaker can assume to access model artifacts and container images, and manage Amazon SageMaker Inference endpoints for model deployment.
+            endpoint_name:  The name of the Amazon SageMaker endpoint on which you want to run the inference experiment.
+            model_variants:  An array of ModelVariantConfig objects. There is one for each variant in the inference experiment. Each ModelVariantConfig object in the array describes the infrastructure configuration for the corresponding variant.
+            shadow_mode_config:  The configuration of ShadowMode inference experiment type. Use this field to specify a production variant which takes all the inference requests, and a shadow variant to which Amazon SageMaker replicates a percentage of the inference requests. For the shadow variant also specify the percentage of requests that Amazon SageMaker replicates.
+            schedule:  The duration for which you want the inference experiment to run. If you don't specify this field, the experiment automatically starts immediately upon creation and concludes after 7 days.
+            description: A description for the inference experiment.
+            data_storage_config:  The Amazon S3 location and configuration for storing inference request and response data.   This is an optional parameter that you can use for data capture. For more information, see Capture data.
+            kms_key:  The Amazon Web Services Key Management Service (Amazon Web Services KMS) key that Amazon SageMaker uses to encrypt data on the storage volume attached to the ML compute instance that hosts the endpoint. The KmsKey can be any of the following formats:    KMS key ID  "1234abcd-12ab-34cd-56ef-1234567890ab"    Amazon Resource Name (ARN) of a KMS key  "arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab"    KMS key Alias  "alias/ExampleAlias"    Amazon Resource Name (ARN) of a KMS key Alias  "arn:aws:kms:us-west-2:111122223333:alias/ExampleAlias"     If you use a KMS key ID or an alias of your KMS key, the Amazon SageMaker execution role must include permissions to call kms:Encrypt. If you don't provide a KMS key ID, Amazon SageMaker uses the default KMS key for Amazon S3 for your role's account. Amazon SageMaker uses server-side encryption with KMS managed keys for OutputDataConfig. If you use a bucket policy with an s3:PutObject permission that only allows objects with server-side encryption, set the condition key of s3:x-amz-server-side-encryption to "aws:kms". For more information, see KMS managed Encryption Keys in the Amazon Simple Storage Service Developer Guide.   The KMS key policy must grant permission to the IAM role that you specify in your CreateEndpoint and UpdateEndpoint requests. For more information, see Using Key Policies in Amazon Web Services KMS in the Amazon Web Services Key Management Service Developer Guide.
+            tags:  Array of key-value pairs. You can use tags to categorize your Amazon Web Services resources in different ways, for example, by purpose, owner, or environment. For more information, see Tagging your Amazon Web Services Resources.
             session: Boto3 session.
             region: Region name.
 
@@ -11375,23 +12069,27 @@ class InferenceExperiment(Base):
         """
 
         logger.debug("Creating inference_experiment resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'Name': name,
-            'Type': type,
-            'Schedule': schedule,
-            'Description': description,
-            'RoleArn': role_arn,
-            'EndpointName': endpoint_name,
-            'ModelVariants': model_variants,
-            'DataStorageConfig': data_storage_config,
-            'ShadowModeConfig': shadow_mode_config,
-            'KmsKey': kms_key,
-            'Tags': tags,
+            "Name": name,
+            "Type": type,
+            "Schedule": schedule,
+            "Description": description,
+            "RoleArn": role_arn,
+            "EndpointName": endpoint_name,
+            "ModelVariants": model_variants,
+            "DataStorageConfig": data_storage_config,
+            "ShadowModeConfig": shadow_mode_config,
+            "KmsKey": kms_key,
+            "Tags": tags,
         }
 
-        operation_input_args = Base.populate_chained_attributes(resource_name='InferenceExperiment', operation_input_args=operation_input_args)
+        operation_input_args = Base.populate_chained_attributes(
+            resource_name="InferenceExperiment", operation_input_args=operation_input_args
+        )
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -11437,19 +12135,23 @@ class InferenceExperiment(Base):
         """
 
         operation_input_args = {
-            'Name': name,
+            "Name": name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
         response = client.describe_inference_experiment(**operation_input_args)
 
         pprint(response)
 
         # deserialize the response
-        transformed_response = transform(response, 'DescribeInferenceExperimentResponse')
+        transformed_response = transform(response, "DescribeInferenceExperimentResponse")
         inference_experiment = cls(**transformed_response)
         return inference_experiment
 
-    def refresh(self) -> Optional["InferenceExperiment"]:
+    def refresh(
+        self,
+    ) -> Optional["InferenceExperiment"]:
         """
         Refresh a InferenceExperiment resource
 
@@ -11471,13 +12173,13 @@ class InferenceExperiment(Base):
         """
 
         operation_input_args = {
-            'Name': self.name,
+            "Name": self.name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_inference_experiment(**operation_input_args)
 
         # deserialize response and update self
-        transform(response, 'DescribeInferenceExperimentResponse', self)
+        transform(response, "DescribeInferenceExperimentResponse", self)
         return self
 
     @populate_inputs_decorator
@@ -11512,15 +12214,15 @@ class InferenceExperiment(Base):
         """
 
         logger.debug("Updating inference_experiment resource.")
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
-            'Name': self.name,
-            'Schedule': schedule,
-            'Description': description,
-            'ModelVariants': model_variants,
-            'DataStorageConfig': data_storage_config,
-            'ShadowModeConfig': shadow_mode_config,
+            "Name": self.name,
+            "Schedule": schedule,
+            "Description": description,
+            "ModelVariants": model_variants,
+            "DataStorageConfig": data_storage_config,
+            "ShadowModeConfig": shadow_mode_config,
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -11534,7 +12236,9 @@ class InferenceExperiment(Base):
 
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a InferenceExperiment resource
 
@@ -11554,12 +12258,14 @@ class InferenceExperiment(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
-            'Name': self.name,
+            "Name": self.name,
         }
         client.delete_inference_experiment(**operation_input_args)
+
+        logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
     def stop(self) -> None:
         """
@@ -11584,20 +12290,29 @@ class InferenceExperiment(Base):
         client = SageMakerClient().client
 
         operation_input_args = {
-            'Name': self.name,
-            'ModelVariantActions': self.model_variant_actions,
-            'DesiredModelVariants': self.desired_model_variants,
-            'DesiredState': self.desired_state,
-            'Reason': self.reason,
+            "Name": self.name,
+            "ModelVariantActions": self.model_variant_actions,
+            "DesiredModelVariants": self.desired_model_variants,
+            "DesiredState": self.desired_state,
+            "Reason": self.reason,
         }
         client.stop_inference_experiment(**operation_input_args)
 
     def wait_for_status(
         self,
-        status: Literal['Creating', 'Created', 'Updating', 'Running', 'Starting', 'Stopping', 'Completed', 'Cancelled'],
+        status: Literal[
+            "Creating",
+            "Created",
+            "Updating",
+            "Running",
+            "Starting",
+            "Stopping",
+            "Completed",
+            "Cancelled",
+        ],
         poll: int = 5,
-        timeout: Optional[int] = None
-    ) -> Optional["InferenceExperiment"]:
+        timeout: Optional[int] = None,
+    ):
         """
         Wait for a InferenceExperiment resource.
 
@@ -11622,10 +12337,13 @@ class InferenceExperiment(Base):
             current_status = self.status
 
             if status == current_status:
-                return self
+                print(f"\nFinal Resource Status: {current_status}")
+                return
 
             if timeout is not None and time.time() - start_time >= timeout:
-                raise TimeoutExceededError(resouce_type="InferenceExperiment", status=current_status)
+                raise TimeoutExceededError(
+                    resouce_type="InferenceExperiment", status=current_status
+                )
             print("-", end="")
             time.sleep(poll)
 
@@ -11648,17 +12366,17 @@ class InferenceExperiment(Base):
         Get all InferenceExperiment resources
 
         Parameters:
-            name_contains:Selects inference experiments whose names contain this name.
-            type: Selects inference experiments of this type. For the possible types of inference experiments, see CreateInferenceExperiment.
-            status_equals: Selects inference experiments which are in this status. For the possible statuses, see DescribeInferenceExperiment.
-            creation_time_after:Selects inference experiments which were created after this timestamp.
-            creation_time_before:Selects inference experiments which were created before this timestamp.
-            last_modified_time_after:Selects inference experiments which were last modified after this timestamp.
-            last_modified_time_before:Selects inference experiments which were last modified before this timestamp.
-            sort_by:The column by which to sort the listed inference experiments.
-            sort_order:The direction of sorting (ascending or descending).
-            next_token: The response from the last list when returning a list large enough to need tokening.
-            max_results:The maximum number of results to select.
+            name_contains: Selects inference experiments whose names contain this name.
+            type:  Selects inference experiments of this type. For the possible types of inference experiments, see CreateInferenceExperiment.
+            status_equals:  Selects inference experiments which are in this status. For the possible statuses, see DescribeInferenceExperiment.
+            creation_time_after: Selects inference experiments which were created after this timestamp.
+            creation_time_before: Selects inference experiments which were created before this timestamp.
+            last_modified_time_after: Selects inference experiments which were last modified after this timestamp.
+            last_modified_time_before: Selects inference experiments which were last modified before this timestamp.
+            sort_by: The column by which to sort the listed inference experiments.
+            sort_order: The direction of sorting (ascending or descending).
+            next_token:  The response from the last list when returning a list large enough to need tokening.
+            max_results: The maximum number of results to select.
             session: Boto3 session.
             region: Region name.
 
@@ -11678,29 +12396,35 @@ class InferenceExperiment(Base):
                 ```
         """
 
-        client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'NameContains': name_contains,
-            'Type': type,
-            'StatusEquals': status_equals,
-            'CreationTimeAfter': creation_time_after,
-            'CreationTimeBefore': creation_time_before,
-            'LastModifiedTimeAfter': last_modified_time_after,
-            'LastModifiedTimeBefore': last_modified_time_before,
-            'SortBy': sort_by,
-            'SortOrder': sort_order,
+            "NameContains": name_contains,
+            "Type": type,
+            "StatusEquals": status_equals,
+            "CreationTimeAfter": creation_time_after,
+            "CreationTimeBefore": creation_time_before,
+            "LastModifiedTimeAfter": last_modified_time_after,
+            "LastModifiedTimeBefore": last_modified_time_before,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
         }
 
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
 
         return ResourceIterator(
             client=client,
-            list_method='list_inference_experiments',
-            summaries_key='InferenceExperiments',
-            summary_name='InferenceExperimentSummary',
+            list_method="list_inference_experiments",
+            summaries_key="InferenceExperiments",
+            summary_name="InferenceExperimentSummary",
             resource_cls=InferenceExperiment,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
 
 
@@ -11709,22 +12433,23 @@ class InferenceRecommendationsJob(Base):
     Class representing resource InferenceRecommendationsJob
 
     Attributes:
-        job_name:The name of the job. The name must be unique within an Amazon Web Services Region in the Amazon Web Services account.
-        job_type:The job type that you provided when you initiated the job.
-        job_arn:The Amazon Resource Name (ARN) of the job.
-        role_arn:The Amazon Resource Name (ARN) of the Amazon Web Services Identity and Access Management (IAM) role you provided when you initiated the job.
-        status:The status of the job.
-        creation_time:A timestamp that shows when the job was created.
-        last_modified_time:A timestamp that shows when the job was last modified.
-        input_config:Returns information about the versioned model package Amazon Resource Name (ARN), the traffic pattern, and endpoint configurations you provided when you initiated the job.
-        job_description:The job description that you provided when you initiated the job.
-        completion_time:A timestamp that shows when the job completed.
-        failure_reason:If the job fails, provides information why the job failed.
-        stopping_conditions:The stopping conditions that you provided when you initiated the job.
-        inference_recommendations:The recommendations made by Inference Recommender.
-        endpoint_performances:The performance results from running an Inference Recommender job on an existing endpoint.
+        job_name: The name of the job. The name must be unique within an Amazon Web Services Region in the Amazon Web Services account.
+        job_type: The job type that you provided when you initiated the job.
+        job_arn: The Amazon Resource Name (ARN) of the job.
+        role_arn: The Amazon Resource Name (ARN) of the Amazon Web Services Identity and Access Management (IAM) role you provided when you initiated the job.
+        status: The status of the job.
+        creation_time: A timestamp that shows when the job was created.
+        last_modified_time: A timestamp that shows when the job was last modified.
+        input_config: Returns information about the versioned model package Amazon Resource Name (ARN), the traffic pattern, and endpoint configurations you provided when you initiated the job.
+        job_description: The job description that you provided when you initiated the job.
+        completion_time: A timestamp that shows when the job completed.
+        failure_reason: If the job fails, provides information why the job failed.
+        stopping_conditions: The stopping conditions that you provided when you initiated the job.
+        inference_recommendations: The recommendations made by Inference Recommender.
+        endpoint_performances: The performance results from running an Inference Recommender job on an existing endpoint.
 
     """
+
     job_name: str
     job_description: Optional[str] = Unassigned()
     job_type: Optional[str] = Unassigned()
@@ -11742,40 +12467,40 @@ class InferenceRecommendationsJob(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'inference_recommendations_job_name':
-                return value
-        raise Exception("Name attribute not found for object")
+        resource_name = "inference_recommendations_job_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
 
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
+        for attribute, value in attributes.items():
+            if attribute == "name" or attribute in attribute_name_candidates:
+                return value
+        logger.error("Name attribute not found for object inference_recommendations_job")
+        return None
 
     def populate_inputs_decorator(create_func):
+        @functools.wraps(create_func)
         def wrapper(*args, **kwargs):
-            config_schema_for_resource = \
-        {
-          "role_arn": {
-            "type": "string"
-          },
-          "input_config": {
-            "volume_kms_key_id": {
-              "type": "string"
-            },
-            "vpc_config": {
-              "security_group_ids": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
-              },
-              "subnets": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
-              }
+            config_schema_for_resource = {
+                "role_arn": {"type": "string"},
+                "input_config": {
+                    "volume_kms_key_id": {"type": "string"},
+                    "vpc_config": {
+                        "security_group_ids": {"type": "array", "items": {"type": "string"}},
+                        "subnets": {"type": "array", "items": {"type": "string"}},
+                    },
+                },
             }
-          }
-        }
-            return create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "InferenceRecommendationsJob", **kwargs))
+            return create_func(
+                *args,
+                **Base.get_updated_kwargs_with_configured_attributes(
+                    config_schema_for_resource, "InferenceRecommendationsJob", **kwargs
+                ),
+            )
+
         return wrapper
 
     @classmethod
@@ -11830,20 +12555,24 @@ class InferenceRecommendationsJob(Base):
         """
 
         logger.debug("Creating inference_recommendations_job resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'JobName': job_name,
-            'JobType': job_type,
-            'RoleArn': role_arn,
-            'InputConfig': input_config,
-            'JobDescription': job_description,
-            'StoppingConditions': stopping_conditions,
-            'OutputConfig': output_config,
-            'Tags': tags,
+            "JobName": job_name,
+            "JobType": job_type,
+            "RoleArn": role_arn,
+            "InputConfig": input_config,
+            "JobDescription": job_description,
+            "StoppingConditions": stopping_conditions,
+            "OutputConfig": output_config,
+            "Tags": tags,
         }
 
-        operation_input_args = Base.populate_chained_attributes(resource_name='InferenceRecommendationsJob', operation_input_args=operation_input_args)
+        operation_input_args = Base.populate_chained_attributes(
+            resource_name="InferenceRecommendationsJob", operation_input_args=operation_input_args
+        )
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -11889,19 +12618,23 @@ class InferenceRecommendationsJob(Base):
         """
 
         operation_input_args = {
-            'JobName': job_name,
+            "JobName": job_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
         response = client.describe_inference_recommendations_job(**operation_input_args)
 
         pprint(response)
 
         # deserialize the response
-        transformed_response = transform(response, 'DescribeInferenceRecommendationsJobResponse')
+        transformed_response = transform(response, "DescribeInferenceRecommendationsJobResponse")
         inference_recommendations_job = cls(**transformed_response)
         return inference_recommendations_job
 
-    def refresh(self) -> Optional["InferenceRecommendationsJob"]:
+    def refresh(
+        self,
+    ) -> Optional["InferenceRecommendationsJob"]:
         """
         Refresh a InferenceRecommendationsJob resource
 
@@ -11923,13 +12656,13 @@ class InferenceRecommendationsJob(Base):
         """
 
         operation_input_args = {
-            'JobName': self.job_name,
+            "JobName": self.job_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_inference_recommendations_job(**operation_input_args)
 
         # deserialize response and update self
-        transform(response, 'DescribeInferenceRecommendationsJobResponse', self)
+        transform(response, "DescribeInferenceRecommendationsJobResponse", self)
         return self
 
     def stop(self) -> None:
@@ -11954,15 +12687,11 @@ class InferenceRecommendationsJob(Base):
         client = SageMakerClient().client
 
         operation_input_args = {
-            'JobName': self.job_name,
+            "JobName": self.job_name,
         }
         client.stop_inference_recommendations_job(**operation_input_args)
 
-    def wait(
-        self,
-        poll: int = 5,
-        timeout: Optional[int] = None
-    ) -> Optional["InferenceRecommendationsJob"]:
+    def wait(self, poll: int = 5, timeout: Optional[int] = None):
         """
         Wait for a InferenceRecommendationsJob resource.
 
@@ -11979,7 +12708,7 @@ class InferenceRecommendationsJob(Base):
             WaiterError: Raised when an error occurs while waiting.
 
         """
-        terminal_states = ['COMPLETED', 'FAILED', 'STOPPED', 'DELETED']
+        terminal_states = ["COMPLETED", "FAILED", "STOPPED", "DELETED"]
         start_time = time.time()
 
         while True:
@@ -11987,14 +12716,21 @@ class InferenceRecommendationsJob(Base):
             current_status = self.status
 
             if current_status in terminal_states:
+                print(f"\nFinal Resource Status: {current_status}")
 
                 if "failed" in current_status.lower():
-                    raise FailedStatusError(resource_type="InferenceRecommendationsJob", status=current_status, reason=self.failure_reason)
+                    raise FailedStatusError(
+                        resource_type="InferenceRecommendationsJob",
+                        status=current_status,
+                        reason=self.failure_reason,
+                    )
 
-                return self
+                return
 
             if timeout is not None and time.time() - start_time >= timeout:
-                raise TimeoutExceededError(resouce_type="InferenceRecommendationsJob", status=current_status)
+                raise TimeoutExceededError(
+                    resouce_type="InferenceRecommendationsJob", status=current_status
+                )
             print("-", end="")
             time.sleep(poll)
 
@@ -12049,40 +12785,46 @@ class InferenceRecommendationsJob(Base):
                 ```
         """
 
-        client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'CreationTimeAfter': creation_time_after,
-            'CreationTimeBefore': creation_time_before,
-            'LastModifiedTimeAfter': last_modified_time_after,
-            'LastModifiedTimeBefore': last_modified_time_before,
-            'NameContains': name_contains,
-            'StatusEquals': status_equals,
-            'SortBy': sort_by,
-            'SortOrder': sort_order,
-            'ModelNameEquals': model_name_equals,
-            'ModelPackageVersionArnEquals': model_package_version_arn_equals,
+            "CreationTimeAfter": creation_time_after,
+            "CreationTimeBefore": creation_time_before,
+            "LastModifiedTimeAfter": last_modified_time_after,
+            "LastModifiedTimeBefore": last_modified_time_before,
+            "NameContains": name_contains,
+            "StatusEquals": status_equals,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
+            "ModelNameEquals": model_name_equals,
+            "ModelPackageVersionArnEquals": model_package_version_arn_equals,
         }
 
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
 
         return ResourceIterator(
             client=client,
-            list_method='list_inference_recommendations_jobs',
-            summaries_key='InferenceRecommendationsJobs',
-            summary_name='InferenceRecommendationsJob',
+            list_method="list_inference_recommendations_jobs",
+            summaries_key="InferenceRecommendationsJobs",
+            summary_name="InferenceRecommendationsJob",
             resource_cls=InferenceRecommendationsJob,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
-
 
     def get_all_steps(
         self,
-        step_type: Optional[str] = Unassigned(),    session: Optional[Session] = None,
+        step_type: Optional[str] = Unassigned(),
+        session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> ResourceIterator[InferenceRecommendationsJobStep]:
         """
-        Perform ListInferenceRecommendationsJobSteps on a InferenceRecommendationsJob resource.
+        Returns a list of the subtasks for an Inference Recommender job.
 
         Parameters:
             step_type: A filter to return details about the specified type of subtask.  BENCHMARK: Evaluate the performance of your model on different instance types.
@@ -12094,25 +12836,29 @@ class InferenceRecommendationsJob(Base):
 
         """
 
-
         operation_input_args = {
-            'JobName': self.job_name,
-            'Status': self.status,
-            'StepType': step_type,
+            "JobName": self.job_name,
+            "Status": self.status,
+            "StepType": step_type,
         }
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
         logger.debug(f"Input request: {operation_input_args}")
 
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
-
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         return ResourceIterator(
             client=client,
-            list_method='list_inference_recommendations_job_steps',
-            summaries_key='Steps',
-            summary_name='InferenceRecommendationsJobStep',
+            list_method="list_inference_recommendations_job_steps",
+            summaries_key="Steps",
+            summary_name="InferenceRecommendationsJobStep",
             resource_cls=InferenceRecommendationsJobStep,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
 
 
@@ -12121,26 +12867,27 @@ class LabelingJob(Base):
     Class representing resource LabelingJob
 
     Attributes:
-        labeling_job_status:The processing status of the labeling job.
-        label_counters:Provides a breakdown of the number of data objects labeled by humans, the number of objects labeled by machine, the number of objects than couldn't be labeled, and the total number of objects labeled.
-        creation_time:The date and time that the labeling job was created.
-        last_modified_time:The date and time that the labeling job was last updated.
-        job_reference_code:A unique identifier for work done as part of a labeling job.
-        labeling_job_name:The name assigned to the labeling job when it was created.
-        labeling_job_arn:The Amazon Resource Name (ARN) of the labeling job.
-        input_config:Input configuration information for the labeling job, such as the Amazon S3 location of the data objects and the location of the manifest file that describes the data objects.
-        output_config:The location of the job's output data and the Amazon Web Services Key Management Service key ID for the key used to encrypt the output data, if any.
-        role_arn:The Amazon Resource Name (ARN) that SageMaker assumes to perform tasks on your behalf during data labeling.
-        human_task_config:Configuration information required for human workers to complete a labeling task.
-        failure_reason:If the job failed, the reason that it failed.
-        label_attribute_name:The attribute used as the label in the output manifest file.
-        label_category_config_s3_uri:The S3 location of the JSON file that defines the categories used to label data objects. Please note the following label-category limits:   Semantic segmentation labeling jobs using automated labeling: 20 labels   Box bounding labeling jobs (all): 10 labels   The file is a JSON structure in the following format:  {    "document-version": "2018-11-28"    "labels": [    {    "label": "label 1"    },    {    "label": "label 2"    },    ...    {    "label": "label n"    }    ]   }
-        stopping_conditions:A set of conditions for stopping a labeling job. If any of the conditions are met, the job is automatically stopped.
-        labeling_job_algorithms_config:Configuration information for automated data labeling.
-        tags:An array of key-value pairs. You can use tags to categorize your Amazon Web Services resources in different ways, for example, by purpose, owner, or environment. For more information, see Tagging Amazon Web Services Resources.
-        labeling_job_output:The location of the output produced by the labeling job.
+        labeling_job_status: The processing status of the labeling job.
+        label_counters: Provides a breakdown of the number of data objects labeled by humans, the number of objects labeled by machine, the number of objects than couldn't be labeled, and the total number of objects labeled.
+        creation_time: The date and time that the labeling job was created.
+        last_modified_time: The date and time that the labeling job was last updated.
+        job_reference_code: A unique identifier for work done as part of a labeling job.
+        labeling_job_name: The name assigned to the labeling job when it was created.
+        labeling_job_arn: The Amazon Resource Name (ARN) of the labeling job.
+        input_config: Input configuration information for the labeling job, such as the Amazon S3 location of the data objects and the location of the manifest file that describes the data objects.
+        output_config: The location of the job's output data and the Amazon Web Services Key Management Service key ID for the key used to encrypt the output data, if any.
+        role_arn: The Amazon Resource Name (ARN) that SageMaker assumes to perform tasks on your behalf during data labeling.
+        human_task_config: Configuration information required for human workers to complete a labeling task.
+        failure_reason: If the job failed, the reason that it failed.
+        label_attribute_name: The attribute used as the label in the output manifest file.
+        label_category_config_s3_uri: The S3 location of the JSON file that defines the categories used to label data objects. Please note the following label-category limits:   Semantic segmentation labeling jobs using automated labeling: 20 labels   Box bounding labeling jobs (all): 10 labels   The file is a JSON structure in the following format:  {    "document-version": "2018-11-28"    "labels": [    {    "label": "label 1"    },    {    "label": "label 2"    },    ...    {    "label": "label n"    }    ]   }
+        stopping_conditions: A set of conditions for stopping a labeling job. If any of the conditions are met, the job is automatically stopped.
+        labeling_job_algorithms_config: Configuration information for automated data labeling.
+        tags: An array of key-value pairs. You can use tags to categorize your Amazon Web Services resources in different ways, for example, by purpose, owner, or environment. For more information, see Tagging Amazon Web Services Resources.
+        labeling_job_output: The location of the output produced by the labeling job.
 
     """
+
     labeling_job_name: str
     labeling_job_status: Optional[str] = Unassigned()
     label_counters: Optional[LabelCounters] = Unassigned()
@@ -12162,74 +12909,52 @@ class LabelingJob(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'labeling_job_name':
-                return value
-        raise Exception("Name attribute not found for object")
+        resource_name = "labeling_job_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
 
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
+        for attribute, value in attributes.items():
+            if attribute == "name" or attribute in attribute_name_candidates:
+                return value
+        logger.error("Name attribute not found for object labeling_job")
+        return None
 
     def populate_inputs_decorator(create_func):
+        @functools.wraps(create_func)
         def wrapper(*args, **kwargs):
-            config_schema_for_resource = \
-        {
-          "input_config": {
-            "data_source": {
-              "s3_data_source": {
-                "manifest_s3_uri": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "output_config": {
-            "s3_output_path": {
-              "type": "string"
-            },
-            "kms_key_id": {
-              "type": "string"
-            }
-          },
-          "role_arn": {
-            "type": "string"
-          },
-          "human_task_config": {
-            "ui_config": {
-              "ui_template_s3_uri": {
-                "type": "string"
-              }
-            }
-          },
-          "label_category_config_s3_uri": {
-            "type": "string"
-          },
-          "labeling_job_algorithms_config": {
-            "labeling_job_resource_config": {
-              "volume_kms_key_id": {
-                "type": "string"
-              },
-              "vpc_config": {
-                "security_group_ids": {
-                  "type": "array",
-                  "items": {
-                    "type": "string"
-                  }
+            config_schema_for_resource = {
+                "input_config": {
+                    "data_source": {"s3_data_source": {"manifest_s3_uri": {"type": "string"}}}
                 },
-                "subnets": {
-                  "type": "array",
-                  "items": {
-                    "type": "string"
-                  }
-                }
-              }
+                "output_config": {
+                    "s3_output_path": {"type": "string"},
+                    "kms_key_id": {"type": "string"},
+                },
+                "role_arn": {"type": "string"},
+                "human_task_config": {"ui_config": {"ui_template_s3_uri": {"type": "string"}}},
+                "label_category_config_s3_uri": {"type": "string"},
+                "labeling_job_algorithms_config": {
+                    "labeling_job_resource_config": {
+                        "volume_kms_key_id": {"type": "string"},
+                        "vpc_config": {
+                            "security_group_ids": {"type": "array", "items": {"type": "string"}},
+                            "subnets": {"type": "array", "items": {"type": "string"}},
+                        },
+                    }
+                },
+                "labeling_job_output": {"output_dataset_s3_uri": {"type": "string"}},
             }
-          },
-          "labeling_job_output": {
-            "output_dataset_s3_uri": {
-              "type": "string"
-            }
-          }
-        }
-            return create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "LabelingJob", **kwargs))
+            return create_func(
+                *args,
+                **Base.get_updated_kwargs_with_configured_attributes(
+                    config_schema_for_resource, "LabelingJob", **kwargs
+                ),
+            )
+
         return wrapper
 
     @classmethod
@@ -12253,16 +12978,16 @@ class LabelingJob(Base):
         Create a LabelingJob resource
 
         Parameters:
-            labeling_job_name:The name of the labeling job. This name is used to identify the job in a list of labeling jobs. Labeling job names must be unique within an Amazon Web Services account and region. LabelingJobName is not case sensitive. For example, Example-job and example-job are considered the same labeling job name by Ground Truth.
-            label_attribute_name:The attribute name to use for the label in the output manifest file. This is the key for the key/value pair formed with the label that a worker assigns to the object. The LabelAttributeName must meet the following requirements.   The name can't end with "-metadata".    If you are using one of the following built-in task types, the attribute name must end with "-ref". If the task type you are using is not listed below, the attribute name must not end with "-ref".   Image semantic segmentation (SemanticSegmentation), and adjustment (AdjustmentSemanticSegmentation) and verification (VerificationSemanticSegmentation) labeling jobs for this task type.   Video frame object detection (VideoObjectDetection), and adjustment and verification (AdjustmentVideoObjectDetection) labeling jobs for this task type.   Video frame object tracking (VideoObjectTracking), and adjustment and verification (AdjustmentVideoObjectTracking) labeling jobs for this task type.   3D point cloud semantic segmentation (3DPointCloudSemanticSegmentation), and adjustment and verification (Adjustment3DPointCloudSemanticSegmentation) labeling jobs for this task type.    3D point cloud object tracking (3DPointCloudObjectTracking), and adjustment and verification (Adjustment3DPointCloudObjectTracking) labeling jobs for this task type.        If you are creating an adjustment or verification labeling job, you must use a different LabelAttributeName than the one used in the original labeling job. The original labeling job is the Ground Truth labeling job that produced the labels that you want verified or adjusted. To learn more about adjustment and verification labeling jobs, see Verify and Adjust Labels.
-            input_config:Input data for the labeling job, such as the Amazon S3 location of the data objects and the location of the manifest file that describes the data objects. You must specify at least one of the following: S3DataSource or SnsDataSource.    Use SnsDataSource to specify an SNS input topic for a streaming labeling job. If you do not specify and SNS input topic ARN, Ground Truth will create a one-time labeling job that stops after all data objects in the input manifest file have been labeled.   Use S3DataSource to specify an input manifest file for both streaming and one-time labeling jobs. Adding an S3DataSource is optional if you use SnsDataSource to create a streaming labeling job.   If you use the Amazon Mechanical Turk workforce, your input data should not include confidential information, personal information or protected health information. Use ContentClassifiers to specify that your data is free of personally identifiable information and adult content.
-            output_config:The location of the output data and the Amazon Web Services Key Management Service key ID for the key used to encrypt the output data, if any.
-            role_arn:The Amazon Resource Number (ARN) that Amazon SageMaker assumes to perform tasks on your behalf during data labeling. You must grant this role the necessary permissions so that Amazon SageMaker can successfully complete data labeling.
-            human_task_config:Configures the labeling task and how it is presented to workers; including, but not limited to price, keywords, and batch size (task count).
-            label_category_config_s3_uri:The S3 URI of the file, referred to as a label category configuration file, that defines the categories used to label the data objects. For 3D point cloud and video frame task types, you can add label category attributes and frame attributes to your label category configuration file. To learn how, see Create a Labeling Category Configuration File for 3D Point Cloud Labeling Jobs.  For named entity recognition jobs, in addition to "labels", you must provide worker instructions in the label category configuration file using the "instructions" parameter: "instructions": {"shortInstruction":"&lt;h1&gt;Add header&lt;/h1&gt;&lt;p&gt;Add Instructions&lt;/p&gt;", "fullInstruction":"&lt;p&gt;Add additional instructions.&lt;/p&gt;"}. For details and an example, see Create a Named Entity Recognition Labeling Job (API) . For all other built-in task types and custom tasks, your label category configuration file must be a JSON file in the following format. Identify the labels you want to use by replacing label_1, label_2,...,label_n with your label categories.  {    "document-version": "2018-11-28",   "labels": [{"label": "label_1"},{"label": "label_2"},...{"label": "label_n"}]   }  Note the following about the label category configuration file:   For image classification and text classification (single and multi-label) you must specify at least two label categories. For all other task types, the minimum number of label categories required is one.    Each label category must be unique, you cannot specify duplicate label categories.   If you create a 3D point cloud or video frame adjustment or verification labeling job, you must include auditLabelAttributeName in the label category configuration. Use this parameter to enter the  LabelAttributeName  of the labeling job you want to adjust or verify annotations of.
-            stopping_conditions:A set of conditions for stopping the labeling job. If any of the conditions are met, the job is automatically stopped. You can use these conditions to control the cost of data labeling.
-            labeling_job_algorithms_config:Configures the information required to perform automated data labeling.
-            tags:An array of key/value pairs. For more information, see Using Cost Allocation Tags in the Amazon Web Services Billing and Cost Management User Guide.
+            labeling_job_name: The name of the labeling job. This name is used to identify the job in a list of labeling jobs. Labeling job names must be unique within an Amazon Web Services account and region. LabelingJobName is not case sensitive. For example, Example-job and example-job are considered the same labeling job name by Ground Truth.
+            label_attribute_name: The attribute name to use for the label in the output manifest file. This is the key for the key/value pair formed with the label that a worker assigns to the object. The LabelAttributeName must meet the following requirements.   The name can't end with "-metadata".    If you are using one of the following built-in task types, the attribute name must end with "-ref". If the task type you are using is not listed below, the attribute name must not end with "-ref".   Image semantic segmentation (SemanticSegmentation), and adjustment (AdjustmentSemanticSegmentation) and verification (VerificationSemanticSegmentation) labeling jobs for this task type.   Video frame object detection (VideoObjectDetection), and adjustment and verification (AdjustmentVideoObjectDetection) labeling jobs for this task type.   Video frame object tracking (VideoObjectTracking), and adjustment and verification (AdjustmentVideoObjectTracking) labeling jobs for this task type.   3D point cloud semantic segmentation (3DPointCloudSemanticSegmentation), and adjustment and verification (Adjustment3DPointCloudSemanticSegmentation) labeling jobs for this task type.    3D point cloud object tracking (3DPointCloudObjectTracking), and adjustment and verification (Adjustment3DPointCloudObjectTracking) labeling jobs for this task type.        If you are creating an adjustment or verification labeling job, you must use a different LabelAttributeName than the one used in the original labeling job. The original labeling job is the Ground Truth labeling job that produced the labels that you want verified or adjusted. To learn more about adjustment and verification labeling jobs, see Verify and Adjust Labels.
+            input_config: Input data for the labeling job, such as the Amazon S3 location of the data objects and the location of the manifest file that describes the data objects. You must specify at least one of the following: S3DataSource or SnsDataSource.    Use SnsDataSource to specify an SNS input topic for a streaming labeling job. If you do not specify and SNS input topic ARN, Ground Truth will create a one-time labeling job that stops after all data objects in the input manifest file have been labeled.   Use S3DataSource to specify an input manifest file for both streaming and one-time labeling jobs. Adding an S3DataSource is optional if you use SnsDataSource to create a streaming labeling job.   If you use the Amazon Mechanical Turk workforce, your input data should not include confidential information, personal information or protected health information. Use ContentClassifiers to specify that your data is free of personally identifiable information and adult content.
+            output_config: The location of the output data and the Amazon Web Services Key Management Service key ID for the key used to encrypt the output data, if any.
+            role_arn: The Amazon Resource Number (ARN) that Amazon SageMaker assumes to perform tasks on your behalf during data labeling. You must grant this role the necessary permissions so that Amazon SageMaker can successfully complete data labeling.
+            human_task_config: Configures the labeling task and how it is presented to workers; including, but not limited to price, keywords, and batch size (task count).
+            label_category_config_s3_uri: The S3 URI of the file, referred to as a label category configuration file, that defines the categories used to label the data objects. For 3D point cloud and video frame task types, you can add label category attributes and frame attributes to your label category configuration file. To learn how, see Create a Labeling Category Configuration File for 3D Point Cloud Labeling Jobs.  For named entity recognition jobs, in addition to "labels", you must provide worker instructions in the label category configuration file using the "instructions" parameter: "instructions": {"shortInstruction":"&lt;h1&gt;Add header&lt;/h1&gt;&lt;p&gt;Add Instructions&lt;/p&gt;", "fullInstruction":"&lt;p&gt;Add additional instructions.&lt;/p&gt;"}. For details and an example, see Create a Named Entity Recognition Labeling Job (API) . For all other built-in task types and custom tasks, your label category configuration file must be a JSON file in the following format. Identify the labels you want to use by replacing label_1, label_2,...,label_n with your label categories.  {    "document-version": "2018-11-28",   "labels": [{"label": "label_1"},{"label": "label_2"},...{"label": "label_n"}]   }  Note the following about the label category configuration file:   For image classification and text classification (single and multi-label) you must specify at least two label categories. For all other task types, the minimum number of label categories required is one.    Each label category must be unique, you cannot specify duplicate label categories.   If you create a 3D point cloud or video frame adjustment or verification labeling job, you must include auditLabelAttributeName in the label category configuration. Use this parameter to enter the  LabelAttributeName  of the labeling job you want to adjust or verify annotations of.
+            stopping_conditions: A set of conditions for stopping the labeling job. If any of the conditions are met, the job is automatically stopped. You can use these conditions to control the cost of data labeling.
+            labeling_job_algorithms_config: Configures the information required to perform automated data labeling.
+            tags: An array of key/value pairs. For more information, see Using Cost Allocation Tags in the Amazon Web Services Billing and Cost Management User Guide.
             session: Boto3 session.
             region: Region name.
 
@@ -12288,22 +13013,26 @@ class LabelingJob(Base):
         """
 
         logger.debug("Creating labeling_job resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'LabelingJobName': labeling_job_name,
-            'LabelAttributeName': label_attribute_name,
-            'InputConfig': input_config,
-            'OutputConfig': output_config,
-            'RoleArn': role_arn,
-            'LabelCategoryConfigS3Uri': label_category_config_s3_uri,
-            'StoppingConditions': stopping_conditions,
-            'LabelingJobAlgorithmsConfig': labeling_job_algorithms_config,
-            'HumanTaskConfig': human_task_config,
-            'Tags': tags,
+            "LabelingJobName": labeling_job_name,
+            "LabelAttributeName": label_attribute_name,
+            "InputConfig": input_config,
+            "OutputConfig": output_config,
+            "RoleArn": role_arn,
+            "LabelCategoryConfigS3Uri": label_category_config_s3_uri,
+            "StoppingConditions": stopping_conditions,
+            "LabelingJobAlgorithmsConfig": labeling_job_algorithms_config,
+            "HumanTaskConfig": human_task_config,
+            "Tags": tags,
         }
 
-        operation_input_args = Base.populate_chained_attributes(resource_name='LabelingJob', operation_input_args=operation_input_args)
+        operation_input_args = Base.populate_chained_attributes(
+            resource_name="LabelingJob", operation_input_args=operation_input_args
+        )
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -12349,19 +13078,23 @@ class LabelingJob(Base):
         """
 
         operation_input_args = {
-            'LabelingJobName': labeling_job_name,
+            "LabelingJobName": labeling_job_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
         response = client.describe_labeling_job(**operation_input_args)
 
         pprint(response)
 
         # deserialize the response
-        transformed_response = transform(response, 'DescribeLabelingJobResponse')
+        transformed_response = transform(response, "DescribeLabelingJobResponse")
         labeling_job = cls(**transformed_response)
         return labeling_job
 
-    def refresh(self) -> Optional["LabelingJob"]:
+    def refresh(
+        self,
+    ) -> Optional["LabelingJob"]:
         """
         Refresh a LabelingJob resource
 
@@ -12383,13 +13116,13 @@ class LabelingJob(Base):
         """
 
         operation_input_args = {
-            'LabelingJobName': self.labeling_job_name,
+            "LabelingJobName": self.labeling_job_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_labeling_job(**operation_input_args)
 
         # deserialize response and update self
-        transform(response, 'DescribeLabelingJobResponse', self)
+        transform(response, "DescribeLabelingJobResponse", self)
         return self
 
     def stop(self) -> None:
@@ -12414,15 +13147,11 @@ class LabelingJob(Base):
         client = SageMakerClient().client
 
         operation_input_args = {
-            'LabelingJobName': self.labeling_job_name,
+            "LabelingJobName": self.labeling_job_name,
         }
         client.stop_labeling_job(**operation_input_args)
 
-    def wait(
-        self,
-        poll: int = 5,
-        timeout: Optional[int] = None
-    ) -> Optional["LabelingJob"]:
+    def wait(self, poll: int = 5, timeout: Optional[int] = None):
         """
         Wait for a LabelingJob resource.
 
@@ -12439,7 +13168,7 @@ class LabelingJob(Base):
             WaiterError: Raised when an error occurs while waiting.
 
         """
-        terminal_states = ['Completed', 'Failed', 'Stopped']
+        terminal_states = ["Completed", "Failed", "Stopped"]
         start_time = time.time()
 
         while True:
@@ -12447,11 +13176,16 @@ class LabelingJob(Base):
             current_status = self.labeling_job_status
 
             if current_status in terminal_states:
+                print(f"\nFinal Resource Status: {current_status}")
 
                 if "failed" in current_status.lower():
-                    raise FailedStatusError(resource_type="LabelingJob", status=current_status, reason=self.failure_reason)
+                    raise FailedStatusError(
+                        resource_type="LabelingJob",
+                        status=current_status,
+                        reason=self.failure_reason,
+                    )
 
-                return self
+                return
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="LabelingJob", status=current_status)
@@ -12505,28 +13239,34 @@ class LabelingJob(Base):
                 ```
         """
 
-        client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'CreationTimeAfter': creation_time_after,
-            'CreationTimeBefore': creation_time_before,
-            'LastModifiedTimeAfter': last_modified_time_after,
-            'LastModifiedTimeBefore': last_modified_time_before,
-            'NameContains': name_contains,
-            'SortBy': sort_by,
-            'SortOrder': sort_order,
-            'StatusEquals': status_equals,
+            "CreationTimeAfter": creation_time_after,
+            "CreationTimeBefore": creation_time_before,
+            "LastModifiedTimeAfter": last_modified_time_after,
+            "LastModifiedTimeBefore": last_modified_time_before,
+            "NameContains": name_contains,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
+            "StatusEquals": status_equals,
         }
 
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
 
         return ResourceIterator(
             client=client,
-            list_method='list_labeling_jobs',
-            summaries_key='LabelingJobSummaryList',
-            summary_name='LabelingJobSummary',
+            list_method="list_labeling_jobs",
+            summaries_key="LabelingJobSummaryList",
+            summary_name="LabelingJobSummary",
             resource_cls=LabelingJob,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
 
 
@@ -12545,6 +13285,7 @@ class LineageGroup(Base):
         last_modified_by:
 
     """
+
     lineage_group_name: str
     lineage_group_arn: Optional[str] = Unassigned()
     display_name: Optional[str] = Unassigned()
@@ -12556,10 +13297,19 @@ class LineageGroup(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "lineage_group_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'lineage_group_name':
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object lineage_group")
+        return None
 
     @classmethod
     def get(
@@ -12594,19 +13344,23 @@ class LineageGroup(Base):
         """
 
         operation_input_args = {
-            'LineageGroupName': lineage_group_name,
+            "LineageGroupName": lineage_group_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
         response = client.describe_lineage_group(**operation_input_args)
 
         pprint(response)
 
         # deserialize the response
-        transformed_response = transform(response, 'DescribeLineageGroupResponse')
+        transformed_response = transform(response, "DescribeLineageGroupResponse")
         lineage_group = cls(**transformed_response)
         return lineage_group
 
-    def refresh(self) -> Optional["LineageGroup"]:
+    def refresh(
+        self,
+    ) -> Optional["LineageGroup"]:
         """
         Refresh a LineageGroup resource
 
@@ -12628,13 +13382,13 @@ class LineageGroup(Base):
         """
 
         operation_input_args = {
-            'LineageGroupName': self.lineage_group_name,
+            "LineageGroupName": self.lineage_group_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_lineage_group(**operation_input_args)
 
         # deserialize response and update self
-        transform(response, 'DescribeLineageGroupResponse', self)
+        transform(response, "DescribeLineageGroupResponse", self)
         return self
 
     @classmethod
@@ -12676,52 +13430,57 @@ class LineageGroup(Base):
                 ```
         """
 
-        client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'CreatedAfter': created_after,
-            'CreatedBefore': created_before,
-            'SortBy': sort_by,
-            'SortOrder': sort_order,
+            "CreatedAfter": created_after,
+            "CreatedBefore": created_before,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
         }
 
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
 
         return ResourceIterator(
             client=client,
-            list_method='list_lineage_groups',
-            summaries_key='LineageGroupSummaries',
-            summary_name='LineageGroupSummary',
+            list_method="list_lineage_groups",
+            summaries_key="LineageGroupSummaries",
+            summary_name="LineageGroupSummary",
             resource_cls=LineageGroup,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
-
 
     def get_policy(
         self,
-
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[GetLineageGroupPolicyResponse]:
         """
-        Perform GetLineageGroupPolicy on a LineageGroup resource.
+        The resource policy for the lineage group.
 
 
         """
 
-
         operation_input_args = {
-            'LineageGroupName': self.lineage_group_name,
+            "LineageGroupName": self.lineage_group_name,
         }
         logger.debug(f"Input request: {operation_input_args}")
 
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         logger.debug(f"Calling get_lineage_group_policy API")
         response = client.get_lineage_group_policy(**operation_input_args)
         logger.debug(f"Response: {response}")
 
-        transformed_response = transform(response, 'GetLineageGroupPolicyResponse')
+        transformed_response = transform(response, "GetLineageGroupPolicyResponse")
         return GetLineageGroupPolicyResponse(**transformed_response)
 
 
@@ -12730,18 +13489,19 @@ class Model(Base):
     Class representing resource Model
 
     Attributes:
-        model_name:Name of the SageMaker model.
-        creation_time:A timestamp that shows when the model was created.
-        model_arn:The Amazon Resource Name (ARN) of the model.
-        primary_container:The location of the primary inference code, associated artifacts, and custom environment map that the inference code uses when it is deployed in production.
-        containers:The containers in the inference pipeline.
-        inference_execution_config:Specifies details of how containers in a multi-container endpoint are called.
-        execution_role_arn:The Amazon Resource Name (ARN) of the IAM role that you specified for the model.
-        vpc_config:A VpcConfig object that specifies the VPC that this model has access to. For more information, see Protect Endpoints by Using an Amazon Virtual Private Cloud
-        enable_network_isolation:If True, no inbound or outbound network calls can be made to or from the model container.
-        deployment_recommendation:A set of recommended deployment configurations for the model.
+        model_name: Name of the SageMaker model.
+        creation_time: A timestamp that shows when the model was created.
+        model_arn: The Amazon Resource Name (ARN) of the model.
+        primary_container: The location of the primary inference code, associated artifacts, and custom environment map that the inference code uses when it is deployed in production.
+        containers: The containers in the inference pipeline.
+        inference_execution_config: Specifies details of how containers in a multi-container endpoint are called.
+        execution_role_arn: The Amazon Resource Name (ARN) of the IAM role that you specified for the model.
+        vpc_config: A VpcConfig object that specifies the VPC that this model has access to. For more information, see Protect Endpoints by Using an Amazon Virtual Private Cloud
+        enable_network_isolation: If True, no inbound or outbound network calls can be made to or from the model container.
+        deployment_recommendation: A set of recommended deployment configurations for the model.
 
     """
+
     model_name: str
     primary_container: Optional[ContainerDefinition] = Unassigned()
     containers: Optional[List[ContainerDefinition]] = Unassigned()
@@ -12755,47 +13515,45 @@ class Model(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'model_name':
-                return value
-        raise Exception("Name attribute not found for object")
+        resource_name = "model_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
 
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
+        for attribute, value in attributes.items():
+            if attribute == "name" or attribute in attribute_name_candidates:
+                return value
+        logger.error("Name attribute not found for object model")
+        return None
 
     def populate_inputs_decorator(create_func):
+        @functools.wraps(create_func)
         def wrapper(*args, **kwargs):
-            config_schema_for_resource = \
-        {
-          "primary_container": {
-            "model_data_source": {
-              "s3_data_source": {
-                "s3_uri": {
-                  "type": "string"
+            config_schema_for_resource = {
+                "primary_container": {
+                    "model_data_source": {
+                        "s3_data_source": {
+                            "s3_uri": {"type": "string"},
+                            "s3_data_type": {"type": "string"},
+                        }
+                    }
                 },
-                "s3_data_type": {
-                  "type": "string"
-                }
-              }
+                "execution_role_arn": {"type": "string"},
+                "vpc_config": {
+                    "security_group_ids": {"type": "array", "items": {"type": "string"}},
+                    "subnets": {"type": "array", "items": {"type": "string"}},
+                },
             }
-          },
-          "execution_role_arn": {
-            "type": "string"
-          },
-          "vpc_config": {
-            "security_group_ids": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            "subnets": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
-          }
-        }
-            return create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "Model", **kwargs))
+            return create_func(
+                *args,
+                **Base.get_updated_kwargs_with_configured_attributes(
+                    config_schema_for_resource, "Model", **kwargs
+                ),
+            )
+
         return wrapper
 
     @classmethod
@@ -12817,14 +13575,14 @@ class Model(Base):
         Create a Model resource
 
         Parameters:
-            model_name:The name of the new model.
-            primary_container:The location of the primary docker image containing inference code, associated artifacts, and custom environment map that the inference code uses when the model is deployed for predictions.
-            containers:Specifies the containers in the inference pipeline.
-            inference_execution_config:Specifies details of how containers in a multi-container endpoint are called.
-            execution_role_arn:The Amazon Resource Name (ARN) of the IAM role that SageMaker can assume to access model artifacts and docker image for deployment on ML compute instances or for batch transform jobs. Deploying on ML compute instances is part of model hosting. For more information, see SageMaker Roles.   To be able to pass this role to SageMaker, the caller of this API must have the iam:PassRole permission.
-            tags:An array of key-value pairs. You can use tags to categorize your Amazon Web Services resources in different ways, for example, by purpose, owner, or environment. For more information, see Tagging Amazon Web Services Resources.
-            vpc_config:A VpcConfig object that specifies the VPC that you want your model to connect to. Control access to and from your model container by configuring the VPC. VpcConfig is used in hosting services and in batch transform. For more information, see Protect Endpoints by Using an Amazon Virtual Private Cloud and Protect Data in Batch Transform Jobs by Using an Amazon Virtual Private Cloud.
-            enable_network_isolation:Isolates the model container. No inbound or outbound network calls can be made to or from the model container.
+            model_name: The name of the new model.
+            primary_container: The location of the primary docker image containing inference code, associated artifacts, and custom environment map that the inference code uses when the model is deployed for predictions.
+            containers: Specifies the containers in the inference pipeline.
+            inference_execution_config: Specifies details of how containers in a multi-container endpoint are called.
+            execution_role_arn: The Amazon Resource Name (ARN) of the IAM role that SageMaker can assume to access model artifacts and docker image for deployment on ML compute instances or for batch transform jobs. Deploying on ML compute instances is part of model hosting. For more information, see SageMaker Roles.   To be able to pass this role to SageMaker, the caller of this API must have the iam:PassRole permission.
+            tags: An array of key-value pairs. You can use tags to categorize your Amazon Web Services resources in different ways, for example, by purpose, owner, or environment. For more information, see Tagging Amazon Web Services Resources.
+            vpc_config: A VpcConfig object that specifies the VPC that you want your model to connect to. Control access to and from your model container by configuring the VPC. VpcConfig is used in hosting services and in batch transform. For more information, see Protect Endpoints by Using an Amazon Virtual Private Cloud and Protect Data in Batch Transform Jobs by Using an Amazon Virtual Private Cloud.
+            enable_network_isolation: Isolates the model container. No inbound or outbound network calls can be made to or from the model container.
             session: Boto3 session.
             region: Region name.
 
@@ -12849,20 +13607,24 @@ class Model(Base):
         """
 
         logger.debug("Creating model resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'ModelName': model_name,
-            'PrimaryContainer': primary_container,
-            'Containers': containers,
-            'InferenceExecutionConfig': inference_execution_config,
-            'ExecutionRoleArn': execution_role_arn,
-            'Tags': tags,
-            'VpcConfig': vpc_config,
-            'EnableNetworkIsolation': enable_network_isolation,
+            "ModelName": model_name,
+            "PrimaryContainer": primary_container,
+            "Containers": containers,
+            "InferenceExecutionConfig": inference_execution_config,
+            "ExecutionRoleArn": execution_role_arn,
+            "Tags": tags,
+            "VpcConfig": vpc_config,
+            "EnableNetworkIsolation": enable_network_isolation,
         }
 
-        operation_input_args = Base.populate_chained_attributes(resource_name='Model', operation_input_args=operation_input_args)
+        operation_input_args = Base.populate_chained_attributes(
+            resource_name="Model", operation_input_args=operation_input_args
+        )
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -12907,19 +13669,23 @@ class Model(Base):
         """
 
         operation_input_args = {
-            'ModelName': model_name,
+            "ModelName": model_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
         response = client.describe_model(**operation_input_args)
 
         pprint(response)
 
         # deserialize the response
-        transformed_response = transform(response, 'DescribeModelOutput')
+        transformed_response = transform(response, "DescribeModelOutput")
         model = cls(**transformed_response)
         return model
 
-    def refresh(self) -> Optional["Model"]:
+    def refresh(
+        self,
+    ) -> Optional["Model"]:
         """
         Refresh a Model resource
 
@@ -12940,16 +13706,18 @@ class Model(Base):
         """
 
         operation_input_args = {
-            'ModelName': self.model_name,
+            "ModelName": self.model_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_model(**operation_input_args)
 
         # deserialize response and update self
-        transform(response, 'DescribeModelOutput', self)
+        transform(response, "DescribeModelOutput", self)
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a Model resource
 
@@ -12967,12 +13735,14 @@ class Model(Base):
                 ```
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
-            'ModelName': self.model_name,
+            "ModelName": self.model_name,
         }
         client.delete_model(**operation_input_args)
+
+        logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
     @classmethod
     def get_all(
@@ -13015,35 +13785,41 @@ class Model(Base):
                 ```
         """
 
-        client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'SortBy': sort_by,
-            'SortOrder': sort_order,
-            'NameContains': name_contains,
-            'CreationTimeBefore': creation_time_before,
-            'CreationTimeAfter': creation_time_after,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
+            "NameContains": name_contains,
+            "CreationTimeBefore": creation_time_before,
+            "CreationTimeAfter": creation_time_after,
         }
 
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
 
         return ResourceIterator(
             client=client,
-            list_method='list_models',
-            summaries_key='Models',
-            summary_name='ModelSummary',
+            list_method="list_models",
+            summaries_key="Models",
+            summary_name="ModelSummary",
             resource_cls=Model,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
-
 
     def get_all_metadata(
         self,
-        search_expression: Optional[ModelMetadataSearchExpression] = Unassigned(),    session: Optional[Session] = None,
+        search_expression: Optional[ModelMetadataSearchExpression] = Unassigned(),
+        session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> ResourceIterator[ModelMetadataSummary]:
         """
-        Perform ListModelMetadata on a Model resource.
+        Lists the domain, framework, task, and model name of standard machine learning models found in common model zoos.
 
         Parameters:
             search_expression: One or more filters that searches for the specified resource or resources in a search. All resource objects that satisfy the expression's condition are included in the search results. Specify the Framework, FrameworkVersion, Domain or Task to filter supported. Filter names and values are case-sensitive.
@@ -13055,23 +13831,27 @@ class Model(Base):
 
         """
 
-
         operation_input_args = {
-            'SearchExpression': search_expression,
+            "SearchExpression": search_expression,
         }
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
         logger.debug(f"Input request: {operation_input_args}")
 
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
-
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         return ResourceIterator(
             client=client,
-            list_method='list_model_metadata',
-            summaries_key='ModelMetadataSummaries',
-            summary_name='ModelMetadataSummary',
+            list_method="list_model_metadata",
+            summaries_key="ModelMetadataSummaries",
+            summary_name="ModelMetadataSummary",
             resource_cls=ModelMetadataSummary,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
 
 
@@ -13093,6 +13873,7 @@ class ModelBiasJobDefinition(Base):
         stopping_condition:
 
     """
+
     job_definition_name: str
     job_definition_arn: Optional[str] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
@@ -13107,82 +13888,56 @@ class ModelBiasJobDefinition(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'model_bias_job_definition_name':
-                return value
-        raise Exception("Name attribute not found for object")
+        resource_name = "model_bias_job_definition_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
 
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
+        for attribute, value in attributes.items():
+            if attribute == "name" or attribute in attribute_name_candidates:
+                return value
+        logger.error("Name attribute not found for object model_bias_job_definition")
+        return None
 
     def populate_inputs_decorator(create_func):
+        @functools.wraps(create_func)
         def wrapper(*args, **kwargs):
-            config_schema_for_resource = \
-        {
-          "model_bias_job_input": {
-            "ground_truth_s3_input": {
-              "s3_uri": {
-                "type": "string"
-              }
-            },
-            "endpoint_input": {
-              "s3_input_mode": {
-                "type": "string"
-              },
-              "s3_data_distribution_type": {
-                "type": "string"
-              }
-            },
-            "batch_transform_input": {
-              "data_captured_destination_s3_uri": {
-                "type": "string"
-              },
-              "s3_input_mode": {
-                "type": "string"
-              },
-              "s3_data_distribution_type": {
-                "type": "string"
-              }
+            config_schema_for_resource = {
+                "model_bias_job_input": {
+                    "ground_truth_s3_input": {"s3_uri": {"type": "string"}},
+                    "endpoint_input": {
+                        "s3_input_mode": {"type": "string"},
+                        "s3_data_distribution_type": {"type": "string"},
+                    },
+                    "batch_transform_input": {
+                        "data_captured_destination_s3_uri": {"type": "string"},
+                        "s3_input_mode": {"type": "string"},
+                        "s3_data_distribution_type": {"type": "string"},
+                    },
+                },
+                "model_bias_job_output_config": {"kms_key_id": {"type": "string"}},
+                "job_resources": {"cluster_config": {"volume_kms_key_id": {"type": "string"}}},
+                "role_arn": {"type": "string"},
+                "model_bias_baseline_config": {
+                    "constraints_resource": {"s3_uri": {"type": "string"}}
+                },
+                "network_config": {
+                    "vpc_config": {
+                        "security_group_ids": {"type": "array", "items": {"type": "string"}},
+                        "subnets": {"type": "array", "items": {"type": "string"}},
+                    }
+                },
             }
-          },
-          "model_bias_job_output_config": {
-            "kms_key_id": {
-              "type": "string"
-            }
-          },
-          "job_resources": {
-            "cluster_config": {
-              "volume_kms_key_id": {
-                "type": "string"
-              }
-            }
-          },
-          "role_arn": {
-            "type": "string"
-          },
-          "model_bias_baseline_config": {
-            "constraints_resource": {
-              "s3_uri": {
-                "type": "string"
-              }
-            }
-          },
-          "network_config": {
-            "vpc_config": {
-              "security_group_ids": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
-              },
-              "subnets": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
-              }
-            }
-          }
-        }
-            return create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "ModelBiasJobDefinition", **kwargs))
+            return create_func(
+                *args,
+                **Base.get_updated_kwargs_with_configured_attributes(
+                    config_schema_for_resource, "ModelBiasJobDefinition", **kwargs
+                ),
+            )
+
         return wrapper
 
     @classmethod
@@ -13241,22 +13996,26 @@ class ModelBiasJobDefinition(Base):
         """
 
         logger.debug("Creating model_bias_job_definition resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'JobDefinitionName': job_definition_name,
-            'ModelBiasBaselineConfig': model_bias_baseline_config,
-            'ModelBiasAppSpecification': model_bias_app_specification,
-            'ModelBiasJobInput': model_bias_job_input,
-            'ModelBiasJobOutputConfig': model_bias_job_output_config,
-            'JobResources': job_resources,
-            'NetworkConfig': network_config,
-            'RoleArn': role_arn,
-            'StoppingCondition': stopping_condition,
-            'Tags': tags,
+            "JobDefinitionName": job_definition_name,
+            "ModelBiasBaselineConfig": model_bias_baseline_config,
+            "ModelBiasAppSpecification": model_bias_app_specification,
+            "ModelBiasJobInput": model_bias_job_input,
+            "ModelBiasJobOutputConfig": model_bias_job_output_config,
+            "JobResources": job_resources,
+            "NetworkConfig": network_config,
+            "RoleArn": role_arn,
+            "StoppingCondition": stopping_condition,
+            "Tags": tags,
         }
 
-        operation_input_args = Base.populate_chained_attributes(resource_name='ModelBiasJobDefinition', operation_input_args=operation_input_args)
+        operation_input_args = Base.populate_chained_attributes(
+            resource_name="ModelBiasJobDefinition", operation_input_args=operation_input_args
+        )
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -13302,19 +14061,23 @@ class ModelBiasJobDefinition(Base):
         """
 
         operation_input_args = {
-            'JobDefinitionName': job_definition_name,
+            "JobDefinitionName": job_definition_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
         response = client.describe_model_bias_job_definition(**operation_input_args)
 
         pprint(response)
 
         # deserialize the response
-        transformed_response = transform(response, 'DescribeModelBiasJobDefinitionResponse')
+        transformed_response = transform(response, "DescribeModelBiasJobDefinitionResponse")
         model_bias_job_definition = cls(**transformed_response)
         return model_bias_job_definition
 
-    def refresh(self) -> Optional["ModelBiasJobDefinition"]:
+    def refresh(
+        self,
+    ) -> Optional["ModelBiasJobDefinition"]:
         """
         Refresh a ModelBiasJobDefinition resource
 
@@ -13336,16 +14099,18 @@ class ModelBiasJobDefinition(Base):
         """
 
         operation_input_args = {
-            'JobDefinitionName': self.job_definition_name,
+            "JobDefinitionName": self.job_definition_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_model_bias_job_definition(**operation_input_args)
 
         # deserialize response and update self
-        transform(response, 'DescribeModelBiasJobDefinitionResponse', self)
+        transform(response, "DescribeModelBiasJobDefinitionResponse", self)
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a ModelBiasJobDefinition resource
 
@@ -13364,12 +14129,14 @@ class ModelBiasJobDefinition(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
-            'JobDefinitionName': self.job_definition_name,
+            "JobDefinitionName": self.job_definition_name,
         }
         client.delete_model_bias_job_definition(**operation_input_args)
+
+        logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
     @classmethod
     def get_all(
@@ -13414,27 +14181,36 @@ class ModelBiasJobDefinition(Base):
                 ```
         """
 
-        client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'EndpointName': endpoint_name,
-            'SortBy': sort_by,
-            'SortOrder': sort_order,
-            'NameContains': name_contains,
-            'CreationTimeBefore': creation_time_before,
-            'CreationTimeAfter': creation_time_after,
+            "EndpointName": endpoint_name,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
+            "NameContains": name_contains,
+            "CreationTimeBefore": creation_time_before,
+            "CreationTimeAfter": creation_time_after,
         }
-        custom_key_mapping = {"monitoring_job_definition_name": "job_definition_name", "monitoring_job_definition_arn": "job_definition_arn"}
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
+        custom_key_mapping = {
+            "monitoring_job_definition_name": "job_definition_name",
+            "monitoring_job_definition_arn": "job_definition_arn",
+        }
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
 
         return ResourceIterator(
             client=client,
-            list_method='list_model_bias_job_definitions',
-            summaries_key='JobDefinitionSummaries',
-            summary_name='MonitoringJobDefinitionSummary',
+            list_method="list_model_bias_job_definitions",
+            summaries_key="JobDefinitionSummaries",
+            summary_name="MonitoringJobDefinitionSummary",
             resource_cls=ModelBiasJobDefinition,
             custom_key_mapping=custom_key_mapping,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
 
 
@@ -13443,19 +14219,20 @@ class ModelCard(Base):
     Class representing resource ModelCard
 
     Attributes:
-        model_card_arn:The Amazon Resource Name (ARN) of the model card.
-        model_card_name:The name of the model card.
-        model_card_version:The version of the model card.
-        content:The content of the model card.
-        model_card_status:The approval status of the model card within your organization. Different organizations might have different criteria for model card review and approval.    Draft: The model card is a work in progress.    PendingReview: The model card is pending review.    Approved: The model card is approved.    Archived: The model card is archived. No more updates should be made to the model card, but it can still be exported.
-        creation_time:The date and time the model card was created.
+        model_card_arn: The Amazon Resource Name (ARN) of the model card.
+        model_card_name: The name of the model card.
+        model_card_version: The version of the model card.
+        content: The content of the model card.
+        model_card_status: The approval status of the model card within your organization. Different organizations might have different criteria for model card review and approval.    Draft: The model card is a work in progress.    PendingReview: The model card is pending review.    Approved: The model card is approved.    Archived: The model card is archived. No more updates should be made to the model card, but it can still be exported.
+        creation_time: The date and time the model card was created.
         created_by:
         security_config: The security configuration used to protect model card content.
         last_modified_time: The date and time the model card was last modified.
         last_modified_by:
-        model_card_processing_status:The processing status of model card deletion. The ModelCardProcessingStatus updates throughout the different deletion steps.    DeletePending: Model card deletion request received.    DeleteInProgress: Model card deletion is in progress.    ContentDeleted: Deleted model card content.    ExportJobsDeleted: Deleted all export jobs associated with the model card.    DeleteCompleted: Successfully deleted the model card.    DeleteFailed: The model card failed to delete.
+        model_card_processing_status: The processing status of model card deletion. The ModelCardProcessingStatus updates throughout the different deletion steps.    DeletePending: Model card deletion request received.    DeleteInProgress: Model card deletion is in progress.    ContentDeleted: Deleted model card content.    ExportJobsDeleted: Deleted all export jobs associated with the model card.    DeleteCompleted: Successfully deleted the model card.    DeleteFailed: The model card failed to delete.
 
     """
+
     model_card_name: str
     model_card_arn: Optional[str] = Unassigned()
     model_card_version: Optional[int] = Unassigned()
@@ -13470,23 +14247,31 @@ class ModelCard(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'model_card_name':
-                return value
-        raise Exception("Name attribute not found for object")
+        resource_name = "model_card_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
 
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
+        for attribute, value in attributes.items():
+            if attribute == "name" or attribute in attribute_name_candidates:
+                return value
+        logger.error("Name attribute not found for object model_card")
+        return None
 
     def populate_inputs_decorator(create_func):
+        @functools.wraps(create_func)
         def wrapper(*args, **kwargs):
-            config_schema_for_resource = \
-        {
-          "security_config": {
-            "kms_key_id": {
-              "type": "string"
-            }
-          }
-        }
-            return create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "ModelCard", **kwargs))
+            config_schema_for_resource = {"security_config": {"kms_key_id": {"type": "string"}}}
+            return create_func(
+                *args,
+                **Base.get_updated_kwargs_with_configured_attributes(
+                    config_schema_for_resource, "ModelCard", **kwargs
+                ),
+            )
+
         return wrapper
 
     @classmethod
@@ -13505,11 +14290,11 @@ class ModelCard(Base):
         Create a ModelCard resource
 
         Parameters:
-            model_card_name:The unique name of the model card.
-            content:The content of the model card. Content must be in model card JSON schema and provided as a string.
-            model_card_status:The approval status of the model card within your organization. Different organizations might have different criteria for model card review and approval.    Draft: The model card is a work in progress.    PendingReview: The model card is pending review.    Approved: The model card is approved.    Archived: The model card is archived. No more updates should be made to the model card, but it can still be exported.
-            security_config:An optional Key Management Service key to encrypt, decrypt, and re-encrypt model card content for regulated workloads with highly sensitive data.
-            tags:Key-value pairs used to manage metadata for model cards.
+            model_card_name: The unique name of the model card.
+            content: The content of the model card. Content must be in model card JSON schema and provided as a string.
+            model_card_status: The approval status of the model card within your organization. Different organizations might have different criteria for model card review and approval.    Draft: The model card is a work in progress.    PendingReview: The model card is pending review.    Approved: The model card is approved.    Archived: The model card is archived. No more updates should be made to the model card, but it can still be exported.
+            security_config: An optional Key Management Service key to encrypt, decrypt, and re-encrypt model card content for regulated workloads with highly sensitive data.
+            tags: Key-value pairs used to manage metadata for model cards.
             session: Boto3 session.
             region: Region name.
 
@@ -13535,17 +14320,21 @@ class ModelCard(Base):
         """
 
         logger.debug("Creating model_card resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'ModelCardName': model_card_name,
-            'SecurityConfig': security_config,
-            'Content': content,
-            'ModelCardStatus': model_card_status,
-            'Tags': tags,
+            "ModelCardName": model_card_name,
+            "SecurityConfig": security_config,
+            "Content": content,
+            "ModelCardStatus": model_card_status,
+            "Tags": tags,
         }
 
-        operation_input_args = Base.populate_chained_attributes(resource_name='ModelCard', operation_input_args=operation_input_args)
+        operation_input_args = Base.populate_chained_attributes(
+            resource_name="ModelCard", operation_input_args=operation_input_args
+        )
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -13593,20 +14382,24 @@ class ModelCard(Base):
         """
 
         operation_input_args = {
-            'ModelCardName': model_card_name,
-            'ModelCardVersion': model_card_version,
+            "ModelCardName": model_card_name,
+            "ModelCardVersion": model_card_version,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
         response = client.describe_model_card(**operation_input_args)
 
         pprint(response)
 
         # deserialize the response
-        transformed_response = transform(response, 'DescribeModelCardResponse')
+        transformed_response = transform(response, "DescribeModelCardResponse")
         model_card = cls(**transformed_response)
         return model_card
 
-    def refresh(self) -> Optional["ModelCard"]:
+    def refresh(
+        self,
+    ) -> Optional["ModelCard"]:
         """
         Refresh a ModelCard resource
 
@@ -13628,14 +14421,14 @@ class ModelCard(Base):
         """
 
         operation_input_args = {
-            'ModelCardName': self.model_card_name,
-            'ModelCardVersion': self.model_card_version,
+            "ModelCardName": self.model_card_name,
+            "ModelCardVersion": self.model_card_version,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_model_card(**operation_input_args)
 
         # deserialize response and update self
-        transform(response, 'DescribeModelCardResponse', self)
+        transform(response, "DescribeModelCardResponse", self)
         return self
 
     @populate_inputs_decorator
@@ -13668,12 +14461,12 @@ class ModelCard(Base):
         """
 
         logger.debug("Updating model_card resource.")
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
-            'ModelCardName': self.model_card_name,
-            'Content': content,
-            'ModelCardStatus': model_card_status,
+            "ModelCardName": self.model_card_name,
+            "Content": content,
+            "ModelCardStatus": model_card_status,
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -13687,7 +14480,9 @@ class ModelCard(Base):
 
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a ModelCard resource
 
@@ -13707,19 +14502,21 @@ class ModelCard(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
-            'ModelCardName': self.model_card_name,
+            "ModelCardName": self.model_card_name,
         }
         client.delete_model_card(**operation_input_args)
 
+        logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+
     def wait_for_status(
         self,
-        status: Literal['Draft', 'PendingReview', 'Approved', 'Archived'],
+        status: Literal["Draft", "PendingReview", "Approved", "Archived"],
         poll: int = 5,
-        timeout: Optional[int] = None
-    ) -> Optional["ModelCard"]:
+        timeout: Optional[int] = None,
+    ):
         """
         Wait for a ModelCard resource.
 
@@ -13744,7 +14541,8 @@ class ModelCard(Base):
             current_status = self.model_card_status
 
             if status == current_status:
-                return self
+                print(f"\nFinal Resource Status: {current_status}")
+                return
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="ModelCard", status=current_status)
@@ -13794,39 +14592,45 @@ class ModelCard(Base):
                 ```
         """
 
-        client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'CreationTimeAfter': creation_time_after,
-            'CreationTimeBefore': creation_time_before,
-            'NameContains': name_contains,
-            'ModelCardStatus': model_card_status,
-            'SortBy': sort_by,
-            'SortOrder': sort_order,
+            "CreationTimeAfter": creation_time_after,
+            "CreationTimeBefore": creation_time_before,
+            "NameContains": name_contains,
+            "ModelCardStatus": model_card_status,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
         }
 
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
 
         return ResourceIterator(
             client=client,
-            list_method='list_model_cards',
-            summaries_key='ModelCardSummaries',
-            summary_name='ModelCardSummary',
+            list_method="list_model_cards",
+            summaries_key="ModelCardSummaries",
+            summary_name="ModelCardSummary",
             resource_cls=ModelCard,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
-
 
     def get_all_versions(
         self,
         creation_time_after: Optional[datetime.datetime] = Unassigned(),
         creation_time_before: Optional[datetime.datetime] = Unassigned(),
         sort_by: Optional[str] = Unassigned(),
-        sort_order: Optional[str] = Unassigned(),    session: Optional[Session] = None,
+        sort_order: Optional[str] = Unassigned(),
+        session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> ResourceIterator[ModelCardVersionSummary]:
         """
-        Perform ListModelCardVersions on a ModelCard resource.
+        List existing versions of an Amazon SageMaker Model Card.
 
         Parameters:
             creation_time_after: Only list model card versions that were created after the time specified.
@@ -13841,28 +14645,32 @@ class ModelCard(Base):
 
         """
 
-
         operation_input_args = {
-            'CreationTimeAfter': creation_time_after,
-            'CreationTimeBefore': creation_time_before,
-            'ModelCardName': self.model_card_name,
-            'ModelCardStatus': self.model_card_status,
-            'SortBy': sort_by,
-            'SortOrder': sort_order,
+            "CreationTimeAfter": creation_time_after,
+            "CreationTimeBefore": creation_time_before,
+            "ModelCardName": self.model_card_name,
+            "ModelCardStatus": self.model_card_status,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
         }
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
         logger.debug(f"Input request: {operation_input_args}")
 
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
-
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         return ResourceIterator(
             client=client,
-            list_method='list_model_card_versions',
-            summaries_key='ModelCardVersionSummaryList',
-            summary_name='ModelCardVersionSummary',
+            list_method="list_model_card_versions",
+            summaries_key="ModelCardVersionSummaryList",
+            summary_name="ModelCardVersionSummary",
             resource_cls=ModelCardVersionSummary,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
 
 
@@ -13871,18 +14679,19 @@ class ModelCardExportJob(Base):
     Class representing resource ModelCardExportJob
 
     Attributes:
-        model_card_export_job_name:The name of the model card export job to describe.
-        model_card_export_job_arn:The Amazon Resource Name (ARN) of the model card export job.
-        status:The completion status of the model card export job.    InProgress: The model card export job is in progress.    Completed: The model card export job is complete.    Failed: The model card export job failed. To see the reason for the failure, see the FailureReason field in the response to a DescribeModelCardExportJob call.
-        model_card_name:The name or Amazon Resource Name (ARN) of the model card that the model export job exports.
-        model_card_version:The version of the model card that the model export job exports.
-        output_config:The export output details for the model card.
-        created_at:The date and time that the model export job was created.
-        last_modified_at:The date and time that the model export job was last modified.
-        failure_reason:The failure reason if the model export job fails.
-        export_artifacts:The exported model card artifacts.
+        model_card_export_job_name: The name of the model card export job to describe.
+        model_card_export_job_arn: The Amazon Resource Name (ARN) of the model card export job.
+        status: The completion status of the model card export job.    InProgress: The model card export job is in progress.    Completed: The model card export job is complete.    Failed: The model card export job failed. To see the reason for the failure, see the FailureReason field in the response to a DescribeModelCardExportJob call.
+        model_card_name: The name or Amazon Resource Name (ARN) of the model card that the model export job exports.
+        model_card_version: The version of the model card that the model export job exports.
+        output_config: The export output details for the model card.
+        created_at: The date and time that the model export job was created.
+        last_modified_at: The date and time that the model export job was last modified.
+        failure_reason: The failure reason if the model export job fails.
+        export_artifacts: The exported model card artifacts.
 
     """
+
     model_card_export_job_arn: str
     model_card_export_job_name: Optional[str] = Unassigned()
     status: Optional[str] = Unassigned()
@@ -13896,28 +14705,34 @@ class ModelCardExportJob(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'model_card_export_job_name':
-                return value
-        raise Exception("Name attribute not found for object")
+        resource_name = "model_card_export_job_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
 
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
+        for attribute, value in attributes.items():
+            if attribute == "name" or attribute in attribute_name_candidates:
+                return value
+        logger.error("Name attribute not found for object model_card_export_job")
+        return None
 
     def populate_inputs_decorator(create_func):
+        @functools.wraps(create_func)
         def wrapper(*args, **kwargs):
-            config_schema_for_resource = \
-        {
-          "output_config": {
-            "s3_output_path": {
-              "type": "string"
+            config_schema_for_resource = {
+                "output_config": {"s3_output_path": {"type": "string"}},
+                "export_artifacts": {"s3_export_artifacts": {"type": "string"}},
             }
-          },
-          "export_artifacts": {
-            "s3_export_artifacts": {
-              "type": "string"
-            }
-          }
-        }
-            return create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "ModelCardExportJob", **kwargs))
+            return create_func(
+                *args,
+                **Base.get_updated_kwargs_with_configured_attributes(
+                    config_schema_for_resource, "ModelCardExportJob", **kwargs
+                ),
+            )
+
         return wrapper
 
     @classmethod
@@ -13965,16 +14780,20 @@ class ModelCardExportJob(Base):
         """
 
         logger.debug("Creating model_card_export_job resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'ModelCardName': model_card_name,
-            'ModelCardVersion': model_card_version,
-            'ModelCardExportJobName': model_card_export_job_name,
-            'OutputConfig': output_config,
+            "ModelCardName": model_card_name,
+            "ModelCardVersion": model_card_version,
+            "ModelCardExportJobName": model_card_export_job_name,
+            "OutputConfig": output_config,
         }
 
-        operation_input_args = Base.populate_chained_attributes(resource_name='ModelCardExportJob', operation_input_args=operation_input_args)
+        operation_input_args = Base.populate_chained_attributes(
+            resource_name="ModelCardExportJob", operation_input_args=operation_input_args
+        )
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -13985,7 +14804,11 @@ class ModelCardExportJob(Base):
         response = client.create_model_card_export_job(**operation_input_args)
         logger.debug(f"Response: {response}")
 
-        return cls.get(model_card_export_job_arn=response['ModelCardExportJobArn'], session=session, region=region)
+        return cls.get(
+            model_card_export_job_arn=response["ModelCardExportJobArn"],
+            session=session,
+            region=region,
+        )
 
     @classmethod
     def get(
@@ -14020,19 +14843,23 @@ class ModelCardExportJob(Base):
         """
 
         operation_input_args = {
-            'ModelCardExportJobArn': model_card_export_job_arn,
+            "ModelCardExportJobArn": model_card_export_job_arn,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
         response = client.describe_model_card_export_job(**operation_input_args)
 
         pprint(response)
 
         # deserialize the response
-        transformed_response = transform(response, 'DescribeModelCardExportJobResponse')
+        transformed_response = transform(response, "DescribeModelCardExportJobResponse")
         model_card_export_job = cls(**transformed_response)
         return model_card_export_job
 
-    def refresh(self) -> Optional["ModelCardExportJob"]:
+    def refresh(
+        self,
+    ) -> Optional["ModelCardExportJob"]:
         """
         Refresh a ModelCardExportJob resource
 
@@ -14054,20 +14881,16 @@ class ModelCardExportJob(Base):
         """
 
         operation_input_args = {
-            'ModelCardExportJobArn': self.model_card_export_job_arn,
+            "ModelCardExportJobArn": self.model_card_export_job_arn,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_model_card_export_job(**operation_input_args)
 
         # deserialize response and update self
-        transform(response, 'DescribeModelCardExportJobResponse', self)
+        transform(response, "DescribeModelCardExportJobResponse", self)
         return self
 
-    def wait(
-        self,
-        poll: int = 5,
-        timeout: Optional[int] = None
-    ) -> Optional["ModelCardExportJob"]:
+    def wait(self, poll: int = 5, timeout: Optional[int] = None):
         """
         Wait for a ModelCardExportJob resource.
 
@@ -14084,7 +14907,7 @@ class ModelCardExportJob(Base):
             WaiterError: Raised when an error occurs while waiting.
 
         """
-        terminal_states = ['Completed', 'Failed']
+        terminal_states = ["Completed", "Failed"]
         start_time = time.time()
 
         while True:
@@ -14092,11 +14915,16 @@ class ModelCardExportJob(Base):
             current_status = self.status
 
             if current_status in terminal_states:
+                print(f"\nFinal Resource Status: {current_status}")
 
                 if "failed" in current_status.lower():
-                    raise FailedStatusError(resource_type="ModelCardExportJob", status=current_status, reason=self.failure_reason)
+                    raise FailedStatusError(
+                        resource_type="ModelCardExportJob",
+                        status=current_status,
+                        reason=self.failure_reason,
+                    )
 
-                return self
+                return
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="ModelCardExportJob", status=current_status)
@@ -14150,28 +14978,34 @@ class ModelCardExportJob(Base):
                 ```
         """
 
-        client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'ModelCardName': model_card_name,
-            'ModelCardVersion': model_card_version,
-            'CreationTimeAfter': creation_time_after,
-            'CreationTimeBefore': creation_time_before,
-            'ModelCardExportJobNameContains': model_card_export_job_name_contains,
-            'StatusEquals': status_equals,
-            'SortBy': sort_by,
-            'SortOrder': sort_order,
+            "ModelCardName": model_card_name,
+            "ModelCardVersion": model_card_version,
+            "CreationTimeAfter": creation_time_after,
+            "CreationTimeBefore": creation_time_before,
+            "ModelCardExportJobNameContains": model_card_export_job_name_contains,
+            "StatusEquals": status_equals,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
         }
 
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
 
         return ResourceIterator(
             client=client,
-            list_method='list_model_card_export_jobs',
-            summaries_key='ModelCardExportJobSummaries',
-            summary_name='ModelCardExportJobSummary',
+            list_method="list_model_card_export_jobs",
+            summaries_key="ModelCardExportJobSummaries",
+            summary_name="ModelCardExportJobSummary",
             resource_cls=ModelCardExportJob,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
 
 
@@ -14193,11 +15027,14 @@ class ModelExplainabilityJobDefinition(Base):
         stopping_condition:
 
     """
+
     job_definition_name: str
     job_definition_arn: Optional[str] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
     model_explainability_baseline_config: Optional[ModelExplainabilityBaselineConfig] = Unassigned()
-    model_explainability_app_specification: Optional[ModelExplainabilityAppSpecification] = Unassigned()
+    model_explainability_app_specification: Optional[ModelExplainabilityAppSpecification] = (
+        Unassigned()
+    )
     model_explainability_job_input: Optional[ModelExplainabilityJobInput] = Unassigned()
     model_explainability_job_output_config: Optional[MonitoringOutputConfig] = Unassigned()
     job_resources: Optional[MonitoringResources] = Unassigned()
@@ -14207,77 +15044,55 @@ class ModelExplainabilityJobDefinition(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'model_explainability_job_definition_name':
-                return value
-        raise Exception("Name attribute not found for object")
+        resource_name = "model_explainability_job_definition_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
 
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
+        for attribute, value in attributes.items():
+            if attribute == "name" or attribute in attribute_name_candidates:
+                return value
+        logger.error("Name attribute not found for object model_explainability_job_definition")
+        return None
 
     def populate_inputs_decorator(create_func):
+        @functools.wraps(create_func)
         def wrapper(*args, **kwargs):
-            config_schema_for_resource = \
-        {
-          "model_explainability_job_input": {
-            "endpoint_input": {
-              "s3_input_mode": {
-                "type": "string"
-              },
-              "s3_data_distribution_type": {
-                "type": "string"
-              }
-            },
-            "batch_transform_input": {
-              "data_captured_destination_s3_uri": {
-                "type": "string"
-              },
-              "s3_input_mode": {
-                "type": "string"
-              },
-              "s3_data_distribution_type": {
-                "type": "string"
-              }
+            config_schema_for_resource = {
+                "model_explainability_job_input": {
+                    "endpoint_input": {
+                        "s3_input_mode": {"type": "string"},
+                        "s3_data_distribution_type": {"type": "string"},
+                    },
+                    "batch_transform_input": {
+                        "data_captured_destination_s3_uri": {"type": "string"},
+                        "s3_input_mode": {"type": "string"},
+                        "s3_data_distribution_type": {"type": "string"},
+                    },
+                },
+                "model_explainability_job_output_config": {"kms_key_id": {"type": "string"}},
+                "job_resources": {"cluster_config": {"volume_kms_key_id": {"type": "string"}}},
+                "role_arn": {"type": "string"},
+                "model_explainability_baseline_config": {
+                    "constraints_resource": {"s3_uri": {"type": "string"}}
+                },
+                "network_config": {
+                    "vpc_config": {
+                        "security_group_ids": {"type": "array", "items": {"type": "string"}},
+                        "subnets": {"type": "array", "items": {"type": "string"}},
+                    }
+                },
             }
-          },
-          "model_explainability_job_output_config": {
-            "kms_key_id": {
-              "type": "string"
-            }
-          },
-          "job_resources": {
-            "cluster_config": {
-              "volume_kms_key_id": {
-                "type": "string"
-              }
-            }
-          },
-          "role_arn": {
-            "type": "string"
-          },
-          "model_explainability_baseline_config": {
-            "constraints_resource": {
-              "s3_uri": {
-                "type": "string"
-              }
-            }
-          },
-          "network_config": {
-            "vpc_config": {
-              "security_group_ids": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
-              },
-              "subnets": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
-              }
-            }
-          }
-        }
-            return create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "ModelExplainabilityJobDefinition", **kwargs))
+            return create_func(
+                *args,
+                **Base.get_updated_kwargs_with_configured_attributes(
+                    config_schema_for_resource, "ModelExplainabilityJobDefinition", **kwargs
+                ),
+            )
+
         return wrapper
 
     @classmethod
@@ -14290,7 +15105,9 @@ class ModelExplainabilityJobDefinition(Base):
         model_explainability_job_output_config: MonitoringOutputConfig,
         job_resources: MonitoringResources,
         role_arn: str,
-        model_explainability_baseline_config: Optional[ModelExplainabilityBaselineConfig] = Unassigned(),
+        model_explainability_baseline_config: Optional[
+            ModelExplainabilityBaselineConfig
+        ] = Unassigned(),
         network_config: Optional[MonitoringNetworkConfig] = Unassigned(),
         stopping_condition: Optional[MonitoringStoppingCondition] = Unassigned(),
         tags: Optional[List[Tag]] = Unassigned(),
@@ -14336,22 +15153,27 @@ class ModelExplainabilityJobDefinition(Base):
         """
 
         logger.debug("Creating model_explainability_job_definition resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'JobDefinitionName': job_definition_name,
-            'ModelExplainabilityBaselineConfig': model_explainability_baseline_config,
-            'ModelExplainabilityAppSpecification': model_explainability_app_specification,
-            'ModelExplainabilityJobInput': model_explainability_job_input,
-            'ModelExplainabilityJobOutputConfig': model_explainability_job_output_config,
-            'JobResources': job_resources,
-            'NetworkConfig': network_config,
-            'RoleArn': role_arn,
-            'StoppingCondition': stopping_condition,
-            'Tags': tags,
+            "JobDefinitionName": job_definition_name,
+            "ModelExplainabilityBaselineConfig": model_explainability_baseline_config,
+            "ModelExplainabilityAppSpecification": model_explainability_app_specification,
+            "ModelExplainabilityJobInput": model_explainability_job_input,
+            "ModelExplainabilityJobOutputConfig": model_explainability_job_output_config,
+            "JobResources": job_resources,
+            "NetworkConfig": network_config,
+            "RoleArn": role_arn,
+            "StoppingCondition": stopping_condition,
+            "Tags": tags,
         }
 
-        operation_input_args = Base.populate_chained_attributes(resource_name='ModelExplainabilityJobDefinition', operation_input_args=operation_input_args)
+        operation_input_args = Base.populate_chained_attributes(
+            resource_name="ModelExplainabilityJobDefinition",
+            operation_input_args=operation_input_args,
+        )
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -14397,19 +15219,25 @@ class ModelExplainabilityJobDefinition(Base):
         """
 
         operation_input_args = {
-            'JobDefinitionName': job_definition_name,
+            "JobDefinitionName": job_definition_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
         response = client.describe_model_explainability_job_definition(**operation_input_args)
 
         pprint(response)
 
         # deserialize the response
-        transformed_response = transform(response, 'DescribeModelExplainabilityJobDefinitionResponse')
+        transformed_response = transform(
+            response, "DescribeModelExplainabilityJobDefinitionResponse"
+        )
         model_explainability_job_definition = cls(**transformed_response)
         return model_explainability_job_definition
 
-    def refresh(self) -> Optional["ModelExplainabilityJobDefinition"]:
+    def refresh(
+        self,
+    ) -> Optional["ModelExplainabilityJobDefinition"]:
         """
         Refresh a ModelExplainabilityJobDefinition resource
 
@@ -14431,16 +15259,18 @@ class ModelExplainabilityJobDefinition(Base):
         """
 
         operation_input_args = {
-            'JobDefinitionName': self.job_definition_name,
+            "JobDefinitionName": self.job_definition_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_model_explainability_job_definition(**operation_input_args)
 
         # deserialize response and update self
-        transform(response, 'DescribeModelExplainabilityJobDefinitionResponse', self)
+        transform(response, "DescribeModelExplainabilityJobDefinitionResponse", self)
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a ModelExplainabilityJobDefinition resource
 
@@ -14459,12 +15289,14 @@ class ModelExplainabilityJobDefinition(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
-            'JobDefinitionName': self.job_definition_name,
+            "JobDefinitionName": self.job_definition_name,
         }
         client.delete_model_explainability_job_definition(**operation_input_args)
+
+        logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
     @classmethod
     def get_all(
@@ -14509,27 +15341,36 @@ class ModelExplainabilityJobDefinition(Base):
                 ```
         """
 
-        client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'EndpointName': endpoint_name,
-            'SortBy': sort_by,
-            'SortOrder': sort_order,
-            'NameContains': name_contains,
-            'CreationTimeBefore': creation_time_before,
-            'CreationTimeAfter': creation_time_after,
+            "EndpointName": endpoint_name,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
+            "NameContains": name_contains,
+            "CreationTimeBefore": creation_time_before,
+            "CreationTimeAfter": creation_time_after,
         }
-        custom_key_mapping = {"monitoring_job_definition_name": "job_definition_name", "monitoring_job_definition_arn": "job_definition_arn"}
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
+        custom_key_mapping = {
+            "monitoring_job_definition_name": "job_definition_name",
+            "monitoring_job_definition_arn": "job_definition_arn",
+        }
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
 
         return ResourceIterator(
             client=client,
-            list_method='list_model_explainability_job_definitions',
-            summaries_key='JobDefinitionSummaries',
-            summary_name='MonitoringJobDefinitionSummary',
+            list_method="list_model_explainability_job_definitions",
+            summaries_key="JobDefinitionSummaries",
+            summary_name="MonitoringJobDefinitionSummary",
             resource_cls=ModelExplainabilityJobDefinition,
             custom_key_mapping=custom_key_mapping,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
 
 
@@ -14556,17 +15397,18 @@ class ModelPackage(Base):
         model_metrics: Metrics for the model.
         last_modified_time: The last time that the model package was modified.
         last_modified_by:
-        approval_description:A description provided for the model approval.
-        domain:The machine learning domain of the model package you specified. Common machine learning domains include computer vision and natural language processing.
-        task:The machine learning task you specified that your model package accomplishes. Common machine learning tasks include object detection and image classification.
-        sample_payload_url:The Amazon Simple Storage Service (Amazon S3) path where the sample payload are stored. This path points to a single gzip compressed tar archive (.tar.gz suffix).
-        customer_metadata_properties:The metadata properties associated with the model package versions.
-        drift_check_baselines:Represents the drift check baselines that can be used when the model monitor is set using the model package. For more information, see the topic on Drift Detection against Previous Baselines in SageMaker Pipelines in the Amazon SageMaker Developer Guide.
-        additional_inference_specifications:An array of additional Inference Specification objects. Each additional Inference Specification specifies artifacts based on this model package that can be used on inference endpoints. Generally used with SageMaker Neo to store the compiled artifacts.
-        skip_model_validation:Indicates if you want to skip model validation.
-        source_uri:The URI of the source for the model package.
+        approval_description: A description provided for the model approval.
+        domain: The machine learning domain of the model package you specified. Common machine learning domains include computer vision and natural language processing.
+        task: The machine learning task you specified that your model package accomplishes. Common machine learning tasks include object detection and image classification.
+        sample_payload_url: The Amazon Simple Storage Service (Amazon S3) path where the sample payload are stored. This path points to a single gzip compressed tar archive (.tar.gz suffix).
+        customer_metadata_properties: The metadata properties associated with the model package versions.
+        drift_check_baselines: Represents the drift check baselines that can be used when the model monitor is set using the model package. For more information, see the topic on Drift Detection against Previous Baselines in SageMaker Pipelines in the Amazon SageMaker Developer Guide.
+        additional_inference_specifications: An array of additional Inference Specification objects. Each additional Inference Specification specifies artifacts based on this model package that can be used on inference endpoints. Generally used with SageMaker Neo to store the compiled artifacts.
+        skip_model_validation: Indicates if you want to skip model validation.
+        source_uri: The URI of the source for the model package.
 
     """
+
     model_package_name: str
     model_package_group_name: Optional[str] = Unassigned()
     model_package_version: Optional[int] = Unassigned()
@@ -14591,134 +15433,76 @@ class ModelPackage(Base):
     sample_payload_url: Optional[str] = Unassigned()
     customer_metadata_properties: Optional[Dict[str, str]] = Unassigned()
     drift_check_baselines: Optional[DriftCheckBaselines] = Unassigned()
-    additional_inference_specifications: Optional[List[AdditionalInferenceSpecificationDefinition]] = Unassigned()
+    additional_inference_specifications: Optional[
+        List[AdditionalInferenceSpecificationDefinition]
+    ] = Unassigned()
     skip_model_validation: Optional[str] = Unassigned()
     source_uri: Optional[str] = Unassigned()
 
     def get_name(self) -> str:
         attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'model_package_name':
-                return value
-        raise Exception("Name attribute not found for object")
+        resource_name = "model_package_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
 
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
+        for attribute, value in attributes.items():
+            if attribute == "name" or attribute in attribute_name_candidates:
+                return value
+        logger.error("Name attribute not found for object model_package")
+        return None
 
     def populate_inputs_decorator(create_func):
+        @functools.wraps(create_func)
         def wrapper(*args, **kwargs):
-            config_schema_for_resource = \
-        {
-          "validation_specification": {
-            "validation_role": {
-              "type": "string"
+            config_schema_for_resource = {
+                "validation_specification": {"validation_role": {"type": "string"}},
+                "model_metrics": {
+                    "model_quality": {
+                        "statistics": {"s3_uri": {"type": "string"}},
+                        "constraints": {"s3_uri": {"type": "string"}},
+                    },
+                    "model_data_quality": {
+                        "statistics": {"s3_uri": {"type": "string"}},
+                        "constraints": {"s3_uri": {"type": "string"}},
+                    },
+                    "bias": {
+                        "report": {"s3_uri": {"type": "string"}},
+                        "pre_training_report": {"s3_uri": {"type": "string"}},
+                        "post_training_report": {"s3_uri": {"type": "string"}},
+                    },
+                    "explainability": {"report": {"s3_uri": {"type": "string"}}},
+                },
+                "drift_check_baselines": {
+                    "bias": {
+                        "config_file": {"s3_uri": {"type": "string"}},
+                        "pre_training_constraints": {"s3_uri": {"type": "string"}},
+                        "post_training_constraints": {"s3_uri": {"type": "string"}},
+                    },
+                    "explainability": {
+                        "constraints": {"s3_uri": {"type": "string"}},
+                        "config_file": {"s3_uri": {"type": "string"}},
+                    },
+                    "model_quality": {
+                        "statistics": {"s3_uri": {"type": "string"}},
+                        "constraints": {"s3_uri": {"type": "string"}},
+                    },
+                    "model_data_quality": {
+                        "statistics": {"s3_uri": {"type": "string"}},
+                        "constraints": {"s3_uri": {"type": "string"}},
+                    },
+                },
             }
-          },
-          "model_metrics": {
-            "model_quality": {
-              "statistics": {
-                "s3_uri": {
-                  "type": "string"
-                }
-              },
-              "constraints": {
-                "s3_uri": {
-                  "type": "string"
-                }
-              }
-            },
-            "model_data_quality": {
-              "statistics": {
-                "s3_uri": {
-                  "type": "string"
-                }
-              },
-              "constraints": {
-                "s3_uri": {
-                  "type": "string"
-                }
-              }
-            },
-            "bias": {
-              "report": {
-                "s3_uri": {
-                  "type": "string"
-                }
-              },
-              "pre_training_report": {
-                "s3_uri": {
-                  "type": "string"
-                }
-              },
-              "post_training_report": {
-                "s3_uri": {
-                  "type": "string"
-                }
-              }
-            },
-            "explainability": {
-              "report": {
-                "s3_uri": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "drift_check_baselines": {
-            "bias": {
-              "config_file": {
-                "s3_uri": {
-                  "type": "string"
-                }
-              },
-              "pre_training_constraints": {
-                "s3_uri": {
-                  "type": "string"
-                }
-              },
-              "post_training_constraints": {
-                "s3_uri": {
-                  "type": "string"
-                }
-              }
-            },
-            "explainability": {
-              "constraints": {
-                "s3_uri": {
-                  "type": "string"
-                }
-              },
-              "config_file": {
-                "s3_uri": {
-                  "type": "string"
-                }
-              }
-            },
-            "model_quality": {
-              "statistics": {
-                "s3_uri": {
-                  "type": "string"
-                }
-              },
-              "constraints": {
-                "s3_uri": {
-                  "type": "string"
-                }
-              }
-            },
-            "model_data_quality": {
-              "statistics": {
-                "s3_uri": {
-                  "type": "string"
-                }
-              },
-              "constraints": {
-                "s3_uri": {
-                  "type": "string"
-                }
-              }
-            }
-          }
-        }
-            return create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "ModelPackage", **kwargs))
+            return create_func(
+                *args,
+                **Base.get_updated_kwargs_with_configured_attributes(
+                    config_schema_for_resource, "ModelPackage", **kwargs
+                ),
+            )
+
         return wrapper
 
     @classmethod
@@ -14742,7 +15526,9 @@ class ModelPackage(Base):
         sample_payload_url: Optional[str] = Unassigned(),
         customer_metadata_properties: Optional[Dict[str, str]] = Unassigned(),
         drift_check_baselines: Optional[DriftCheckBaselines] = Unassigned(),
-        additional_inference_specifications: Optional[List[AdditionalInferenceSpecificationDefinition]] = Unassigned(),
+        additional_inference_specifications: Optional[
+            List[AdditionalInferenceSpecificationDefinition]
+        ] = Unassigned(),
         skip_model_validation: Optional[str] = Unassigned(),
         source_uri: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
@@ -14752,26 +15538,26 @@ class ModelPackage(Base):
         Create a ModelPackage resource
 
         Parameters:
-            model_package_name:The name of the model package. The name must have 1 to 63 characters. Valid characters are a-z, A-Z, 0-9, and - (hyphen). This parameter is required for unversioned models. It is not applicable to versioned models.
-            model_package_group_name:The name or Amazon Resource Name (ARN) of the model package group that this model version belongs to. This parameter is required for versioned models, and does not apply to unversioned models.
-            model_package_description:A description of the model package.
-            inference_specification:Specifies details about inference jobs that you can run with models based on this model package, including the following information:   The Amazon ECR paths of containers that contain the inference code and model artifacts.   The instance types that the model package supports for transform jobs and real-time endpoints used for inference.   The input and output content formats that the model package supports for inference.
-            validation_specification:Specifies configurations for one or more transform jobs that SageMaker runs to test the model package.
-            source_algorithm_specification:Details about the algorithm that was used to create the model package.
-            certify_for_marketplace:Whether to certify the model package for listing on Amazon Web Services Marketplace. This parameter is optional for unversioned models, and does not apply to versioned models.
-            tags:A list of key value pairs associated with the model. For more information, see Tagging Amazon Web Services resources in the Amazon Web Services General Reference Guide. If you supply ModelPackageGroupName, your model package belongs to the model group you specify and uses the tags associated with the model group. In this case, you cannot supply a tag argument.
-            model_approval_status:Whether the model is approved for deployment. This parameter is optional for versioned models, and does not apply to unversioned models. For versioned models, the value of this parameter must be set to Approved to deploy the model.
+            model_package_name: The name of the model package. The name must have 1 to 63 characters. Valid characters are a-z, A-Z, 0-9, and - (hyphen). This parameter is required for unversioned models. It is not applicable to versioned models.
+            model_package_group_name: The name or Amazon Resource Name (ARN) of the model package group that this model version belongs to. This parameter is required for versioned models, and does not apply to unversioned models.
+            model_package_description: A description of the model package.
+            inference_specification: Specifies details about inference jobs that you can run with models based on this model package, including the following information:   The Amazon ECR paths of containers that contain the inference code and model artifacts.   The instance types that the model package supports for transform jobs and real-time endpoints used for inference.   The input and output content formats that the model package supports for inference.
+            validation_specification: Specifies configurations for one or more transform jobs that SageMaker runs to test the model package.
+            source_algorithm_specification: Details about the algorithm that was used to create the model package.
+            certify_for_marketplace: Whether to certify the model package for listing on Amazon Web Services Marketplace. This parameter is optional for unversioned models, and does not apply to versioned models.
+            tags: A list of key value pairs associated with the model. For more information, see Tagging Amazon Web Services resources in the Amazon Web Services General Reference Guide. If you supply ModelPackageGroupName, your model package belongs to the model group you specify and uses the tags associated with the model group. In this case, you cannot supply a tag argument.
+            model_approval_status: Whether the model is approved for deployment. This parameter is optional for versioned models, and does not apply to unversioned models. For versioned models, the value of this parameter must be set to Approved to deploy the model.
             metadata_properties:
-            model_metrics:A structure that contains model metrics reports.
-            client_token:A unique token that guarantees that the call to this API is idempotent.
-            domain:The machine learning domain of your model package and its components. Common machine learning domains include computer vision and natural language processing.
-            task:The machine learning task your model package accomplishes. Common machine learning tasks include object detection and image classification. The following tasks are supported by Inference Recommender: "IMAGE_CLASSIFICATION" | "OBJECT_DETECTION" | "TEXT_GENERATION" |"IMAGE_SEGMENTATION" | "FILL_MASK" | "CLASSIFICATION" | "REGRESSION" | "OTHER". Specify "OTHER" if none of the tasks listed fit your use case.
-            sample_payload_url:The Amazon Simple Storage Service (Amazon S3) path where the sample payload is stored. This path must point to a single gzip compressed tar archive (.tar.gz suffix). This archive can hold multiple files that are all equally used in the load test. Each file in the archive must satisfy the size constraints of the InvokeEndpoint call.
-            customer_metadata_properties:The metadata properties associated with the model package versions.
-            drift_check_baselines:Represents the drift check baselines that can be used when the model monitor is set using the model package. For more information, see the topic on Drift Detection against Previous Baselines in SageMaker Pipelines in the Amazon SageMaker Developer Guide.
-            additional_inference_specifications:An array of additional Inference Specification objects. Each additional Inference Specification specifies artifacts based on this model package that can be used on inference endpoints. Generally used with SageMaker Neo to store the compiled artifacts.
-            skip_model_validation:Indicates if you want to skip model validation.
-            source_uri:The URI of the source for the model package. If you want to clone a model package, set it to the model package Amazon Resource Name (ARN). If you want to register a model, set it to the model ARN.
+            model_metrics: A structure that contains model metrics reports.
+            client_token: A unique token that guarantees that the call to this API is idempotent.
+            domain: The machine learning domain of your model package and its components. Common machine learning domains include computer vision and natural language processing.
+            task: The machine learning task your model package accomplishes. Common machine learning tasks include object detection and image classification. The following tasks are supported by Inference Recommender: "IMAGE_CLASSIFICATION" | "OBJECT_DETECTION" | "TEXT_GENERATION" |"IMAGE_SEGMENTATION" | "FILL_MASK" | "CLASSIFICATION" | "REGRESSION" | "OTHER". Specify "OTHER" if none of the tasks listed fit your use case.
+            sample_payload_url: The Amazon Simple Storage Service (Amazon S3) path where the sample payload is stored. This path must point to a single gzip compressed tar archive (.tar.gz suffix). This archive can hold multiple files that are all equally used in the load test. Each file in the archive must satisfy the size constraints of the InvokeEndpoint call.
+            customer_metadata_properties: The metadata properties associated with the model package versions.
+            drift_check_baselines: Represents the drift check baselines that can be used when the model monitor is set using the model package. For more information, see the topic on Drift Detection against Previous Baselines in SageMaker Pipelines in the Amazon SageMaker Developer Guide.
+            additional_inference_specifications: An array of additional Inference Specification objects. Each additional Inference Specification specifies artifacts based on this model package that can be used on inference endpoints. Generally used with SageMaker Neo to store the compiled artifacts.
+            skip_model_validation: Indicates if you want to skip model validation.
+            source_uri: The URI of the source for the model package. If you want to clone a model package, set it to the model package Amazon Resource Name (ARN). If you want to register a model, set it to the model ARN.
             session: Boto3 session.
             region: Region name.
 
@@ -14797,32 +15583,36 @@ class ModelPackage(Base):
         """
 
         logger.debug("Creating model_package resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'ModelPackageName': model_package_name,
-            'ModelPackageGroupName': model_package_group_name,
-            'ModelPackageDescription': model_package_description,
-            'InferenceSpecification': inference_specification,
-            'ValidationSpecification': validation_specification,
-            'SourceAlgorithmSpecification': source_algorithm_specification,
-            'CertifyForMarketplace': certify_for_marketplace,
-            'Tags': tags,
-            'ModelApprovalStatus': model_approval_status,
-            'MetadataProperties': metadata_properties,
-            'ModelMetrics': model_metrics,
-            'ClientToken': client_token,
-            'Domain': domain,
-            'Task': task,
-            'SamplePayloadUrl': sample_payload_url,
-            'CustomerMetadataProperties': customer_metadata_properties,
-            'DriftCheckBaselines': drift_check_baselines,
-            'AdditionalInferenceSpecifications': additional_inference_specifications,
-            'SkipModelValidation': skip_model_validation,
-            'SourceUri': source_uri,
+            "ModelPackageName": model_package_name,
+            "ModelPackageGroupName": model_package_group_name,
+            "ModelPackageDescription": model_package_description,
+            "InferenceSpecification": inference_specification,
+            "ValidationSpecification": validation_specification,
+            "SourceAlgorithmSpecification": source_algorithm_specification,
+            "CertifyForMarketplace": certify_for_marketplace,
+            "Tags": tags,
+            "ModelApprovalStatus": model_approval_status,
+            "MetadataProperties": metadata_properties,
+            "ModelMetrics": model_metrics,
+            "ClientToken": client_token,
+            "Domain": domain,
+            "Task": task,
+            "SamplePayloadUrl": sample_payload_url,
+            "CustomerMetadataProperties": customer_metadata_properties,
+            "DriftCheckBaselines": drift_check_baselines,
+            "AdditionalInferenceSpecifications": additional_inference_specifications,
+            "SkipModelValidation": skip_model_validation,
+            "SourceUri": source_uri,
         }
 
-        operation_input_args = Base.populate_chained_attributes(resource_name='ModelPackage', operation_input_args=operation_input_args)
+        operation_input_args = Base.populate_chained_attributes(
+            resource_name="ModelPackage", operation_input_args=operation_input_args
+        )
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -14833,7 +15623,9 @@ class ModelPackage(Base):
         response = client.create_model_package(**operation_input_args)
         logger.debug(f"Response: {response}")
 
-        return cls.get(model_package_name=response['ModelPackageName'], session=session, region=region)
+        return cls.get(
+            model_package_name=response["ModelPackageName"], session=session, region=region
+        )
 
     @classmethod
     def get(
@@ -14867,19 +15659,23 @@ class ModelPackage(Base):
         """
 
         operation_input_args = {
-            'ModelPackageName': model_package_name,
+            "ModelPackageName": model_package_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
         response = client.describe_model_package(**operation_input_args)
 
         pprint(response)
 
         # deserialize the response
-        transformed_response = transform(response, 'DescribeModelPackageOutput')
+        transformed_response = transform(response, "DescribeModelPackageOutput")
         model_package = cls(**transformed_response)
         return model_package
 
-    def refresh(self) -> Optional["ModelPackage"]:
+    def refresh(
+        self,
+    ) -> Optional["ModelPackage"]:
         """
         Refresh a ModelPackage resource
 
@@ -14900,13 +15696,13 @@ class ModelPackage(Base):
         """
 
         operation_input_args = {
-            'ModelPackageName': self.model_package_name,
+            "ModelPackageName": self.model_package_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_model_package(**operation_input_args)
 
         # deserialize response and update self
-        transform(response, 'DescribeModelPackageOutput', self)
+        transform(response, "DescribeModelPackageOutput", self)
         return self
 
     @populate_inputs_decorator
@@ -14916,7 +15712,9 @@ class ModelPackage(Base):
         approval_description: Optional[str] = Unassigned(),
         customer_metadata_properties: Optional[Dict[str, str]] = Unassigned(),
         customer_metadata_properties_to_remove: Optional[List[str]] = Unassigned(),
-        additional_inference_specifications_to_add: Optional[List[AdditionalInferenceSpecificationDefinition]] = Unassigned(),
+        additional_inference_specifications_to_add: Optional[
+            List[AdditionalInferenceSpecificationDefinition]
+        ] = Unassigned(),
         inference_specification: Optional[InferenceSpecification] = Unassigned(),
         source_uri: Optional[str] = Unassigned(),
     ) -> Optional["ModelPackage"]:
@@ -14924,8 +15722,8 @@ class ModelPackage(Base):
         Update a ModelPackage resource
 
         Parameters:
-            customer_metadata_properties_to_remove:The metadata properties associated with the model package versions to remove.
-            additional_inference_specifications_to_add:An array of additional Inference Specification objects to be added to the existing array additional Inference Specification. Total number of additional Inference Specifications can not exceed 15. Each additional Inference Specification specifies artifacts based on this model package that can be used on inference endpoints. Generally used with SageMaker Neo to store the compiled artifacts.
+            customer_metadata_properties_to_remove: The metadata properties associated with the model package versions to remove.
+            additional_inference_specifications_to_add: An array of additional Inference Specification objects to be added to the existing array additional Inference Specification. Total number of additional Inference Specifications can not exceed 15. Each additional Inference Specification specifies artifacts based on this model package that can be used on inference endpoints. Generally used with SageMaker Neo to store the compiled artifacts.
 
         Returns:
             The ModelPackage resource.
@@ -14945,17 +15743,17 @@ class ModelPackage(Base):
         """
 
         logger.debug("Updating model_package resource.")
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
-            'ModelPackageArn': self.model_package_arn,
-            'ModelApprovalStatus': model_approval_status,
-            'ApprovalDescription': approval_description,
-            'CustomerMetadataProperties': customer_metadata_properties,
-            'CustomerMetadataPropertiesToRemove': customer_metadata_properties_to_remove,
-            'AdditionalInferenceSpecificationsToAdd': additional_inference_specifications_to_add,
-            'InferenceSpecification': inference_specification,
-            'SourceUri': source_uri,
+            "ModelPackageArn": self.model_package_arn,
+            "ModelApprovalStatus": model_approval_status,
+            "ApprovalDescription": approval_description,
+            "CustomerMetadataProperties": customer_metadata_properties,
+            "CustomerMetadataPropertiesToRemove": customer_metadata_properties_to_remove,
+            "AdditionalInferenceSpecificationsToAdd": additional_inference_specifications_to_add,
+            "InferenceSpecification": inference_specification,
+            "SourceUri": source_uri,
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -14969,7 +15767,9 @@ class ModelPackage(Base):
 
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a ModelPackage resource
 
@@ -14988,19 +15788,21 @@ class ModelPackage(Base):
             ConflictException: There was a conflict when you attempted to modify a SageMaker entity such as an Experiment or Artifact.
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
-            'ModelPackageName': self.model_package_name,
+            "ModelPackageName": self.model_package_name,
         }
         client.delete_model_package(**operation_input_args)
 
+        logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+
     def wait_for_status(
         self,
-        status: Literal['Pending', 'InProgress', 'Completed', 'Failed', 'Deleting'],
+        status: Literal["Pending", "InProgress", "Completed", "Failed", "Deleting"],
         poll: int = 5,
-        timeout: Optional[int] = None
-    ) -> Optional["ModelPackage"]:
+        timeout: Optional[int] = None,
+    ):
         """
         Wait for a ModelPackage resource.
 
@@ -15025,10 +15827,13 @@ class ModelPackage(Base):
             current_status = self.model_package_status
 
             if status == current_status:
-                return self
+                print(f"\nFinal Resource Status: {current_status}")
+                return
 
             if "failed" in current_status.lower():
-                raise FailedStatusError(resource_type="ModelPackage", status=current_status, reason='(Unknown)')
+                raise FailedStatusError(
+                    resource_type="ModelPackage", status=current_status, reason="(Unknown)"
+                )
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="ModelPackage", status=current_status)
@@ -15053,16 +15858,16 @@ class ModelPackage(Base):
         Get all ModelPackage resources
 
         Parameters:
-            creation_time_after:A filter that returns only model packages created after the specified time (timestamp).
-            creation_time_before:A filter that returns only model packages created before the specified time (timestamp).
-            max_results:The maximum number of model packages to return in the response.
-            name_contains:A string in the model package name. This filter returns only model packages whose name contains the specified string.
-            model_approval_status:A filter that returns only the model packages with the specified approval status.
-            model_package_group_name:A filter that returns only model versions that belong to the specified model group.
-            model_package_type:A filter that returns only the model packages of the specified type. This can be one of the following values.    UNVERSIONED - List only unversioined models. This is the default value if no ModelPackageType is specified.    VERSIONED - List only versioned models.    BOTH - List both versioned and unversioned models.
-            next_token:If the response to a previous ListModelPackages request was truncated, the response includes a NextToken. To retrieve the next set of model packages, use the token in the next request.
-            sort_by:The parameter by which to sort the results. The default is CreationTime.
-            sort_order:The sort order for the results. The default is Ascending.
+            creation_time_after: A filter that returns only model packages created after the specified time (timestamp).
+            creation_time_before: A filter that returns only model packages created before the specified time (timestamp).
+            max_results: The maximum number of model packages to return in the response.
+            name_contains: A string in the model package name. This filter returns only model packages whose name contains the specified string.
+            model_approval_status: A filter that returns only the model packages with the specified approval status.
+            model_package_group_name: A filter that returns only model versions that belong to the specified model group.
+            model_package_type: A filter that returns only the model packages of the specified type. This can be one of the following values.    UNVERSIONED - List only unversioined models. This is the default value if no ModelPackageType is specified.    VERSIONED - List only versioned models.    BOTH - List both versioned and unversioned models.
+            next_token: If the response to a previous ListModelPackages request was truncated, the response includes a NextToken. To retrieve the next set of model packages, use the token in the next request.
+            sort_by: The parameter by which to sort the results. The default is CreationTime.
+            sort_order: The sort order for the results. The default is Ascending.
             session: Boto3 session.
             region: Region name.
 
@@ -15082,30 +15887,35 @@ class ModelPackage(Base):
                 ```
         """
 
-        client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'CreationTimeAfter': creation_time_after,
-            'CreationTimeBefore': creation_time_before,
-            'NameContains': name_contains,
-            'ModelApprovalStatus': model_approval_status,
-            'ModelPackageGroupName': model_package_group_name,
-            'ModelPackageType': model_package_type,
-            'SortBy': sort_by,
-            'SortOrder': sort_order,
+            "CreationTimeAfter": creation_time_after,
+            "CreationTimeBefore": creation_time_before,
+            "NameContains": name_contains,
+            "ModelApprovalStatus": model_approval_status,
+            "ModelPackageGroupName": model_package_group_name,
+            "ModelPackageType": model_package_type,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
         }
 
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
 
         return ResourceIterator(
             client=client,
-            list_method='list_model_packages',
-            summaries_key='ModelPackageSummaryList',
-            summary_name='ModelPackageSummary',
+            list_method="list_model_packages",
+            summaries_key="ModelPackageSummaryList",
+            summary_name="ModelPackageSummary",
             resource_cls=ModelPackage,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
-
 
     def batch_get(
         self,
@@ -15114,7 +15924,7 @@ class ModelPackage(Base):
         region: Optional[str] = None,
     ) -> Optional[BatchDescribeModelPackageOutput]:
         """
-        Perform BatchDescribeModelPackage on a ModelPackage resource.
+        This action batch describes a list of versioned model packages.
 
         Parameters:
             model_package_arn_list: The list of Amazon Resource Name (ARN) of the model package groups.
@@ -15124,19 +15934,20 @@ class ModelPackage(Base):
 
         """
 
-
         operation_input_args = {
-            'ModelPackageArnList': model_package_arn_list,
+            "ModelPackageArnList": model_package_arn_list,
         }
         logger.debug(f"Input request: {operation_input_args}")
 
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         logger.debug(f"Calling batch_describe_model_package API")
         response = client.batch_describe_model_package(**operation_input_args)
         logger.debug(f"Response: {response}")
 
-        transformed_response = transform(response, 'BatchDescribeModelPackageOutput')
+        transformed_response = transform(response, "BatchDescribeModelPackageOutput")
         return BatchDescribeModelPackageOutput(**transformed_response)
 
 
@@ -15149,10 +15960,11 @@ class ModelPackageGroup(Base):
         model_package_group_arn: The Amazon Resource Name (ARN) of the model group.
         creation_time: The time that the model group was created.
         created_by:
-        model_package_group_status:The status of the model group.
-        model_package_group_description:A description of the model group.
+        model_package_group_status: The status of the model group.
+        model_package_group_description: A description of the model group.
 
     """
+
     model_package_group_name: str
     model_package_group_arn: Optional[str] = Unassigned()
     model_package_group_description: Optional[str] = Unassigned()
@@ -15162,10 +15974,19 @@ class ModelPackageGroup(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "model_package_group_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'model_package_group_name':
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object model_package_group")
+        return None
 
     @classmethod
     def create(
@@ -15207,15 +16028,19 @@ class ModelPackageGroup(Base):
         """
 
         logger.debug("Creating model_package_group resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'ModelPackageGroupName': model_package_group_name,
-            'ModelPackageGroupDescription': model_package_group_description,
-            'Tags': tags,
+            "ModelPackageGroupName": model_package_group_name,
+            "ModelPackageGroupDescription": model_package_group_description,
+            "Tags": tags,
         }
 
-        operation_input_args = Base.populate_chained_attributes(resource_name='ModelPackageGroup', operation_input_args=operation_input_args)
+        operation_input_args = Base.populate_chained_attributes(
+            resource_name="ModelPackageGroup", operation_input_args=operation_input_args
+        )
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -15226,7 +16051,9 @@ class ModelPackageGroup(Base):
         response = client.create_model_package_group(**operation_input_args)
         logger.debug(f"Response: {response}")
 
-        return cls.get(model_package_group_name=model_package_group_name, session=session, region=region)
+        return cls.get(
+            model_package_group_name=model_package_group_name, session=session, region=region
+        )
 
     @classmethod
     def get(
@@ -15260,19 +16087,23 @@ class ModelPackageGroup(Base):
         """
 
         operation_input_args = {
-            'ModelPackageGroupName': model_package_group_name,
+            "ModelPackageGroupName": model_package_group_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
         response = client.describe_model_package_group(**operation_input_args)
 
         pprint(response)
 
         # deserialize the response
-        transformed_response = transform(response, 'DescribeModelPackageGroupOutput')
+        transformed_response = transform(response, "DescribeModelPackageGroupOutput")
         model_package_group = cls(**transformed_response)
         return model_package_group
 
-    def refresh(self) -> Optional["ModelPackageGroup"]:
+    def refresh(
+        self,
+    ) -> Optional["ModelPackageGroup"]:
         """
         Refresh a ModelPackageGroup resource
 
@@ -15293,16 +16124,18 @@ class ModelPackageGroup(Base):
         """
 
         operation_input_args = {
-            'ModelPackageGroupName': self.model_package_group_name,
+            "ModelPackageGroupName": self.model_package_group_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_model_package_group(**operation_input_args)
 
         # deserialize response and update self
-        transform(response, 'DescribeModelPackageGroupOutput', self)
+        transform(response, "DescribeModelPackageGroupOutput", self)
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a ModelPackageGroup resource
 
@@ -15321,19 +16154,21 @@ class ModelPackageGroup(Base):
             ConflictException: There was a conflict when you attempted to modify a SageMaker entity such as an Experiment or Artifact.
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
-            'ModelPackageGroupName': self.model_package_group_name,
+            "ModelPackageGroupName": self.model_package_group_name,
         }
         client.delete_model_package_group(**operation_input_args)
 
+        logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+
     def wait_for_status(
         self,
-        status: Literal['Pending', 'InProgress', 'Completed', 'Failed', 'Deleting', 'DeleteFailed'],
+        status: Literal["Pending", "InProgress", "Completed", "Failed", "Deleting", "DeleteFailed"],
         poll: int = 5,
-        timeout: Optional[int] = None
-    ) -> Optional["ModelPackageGroup"]:
+        timeout: Optional[int] = None,
+    ):
         """
         Wait for a ModelPackageGroup resource.
 
@@ -15358,10 +16193,13 @@ class ModelPackageGroup(Base):
             current_status = self.model_package_group_status
 
             if status == current_status:
-                return self
+                print(f"\nFinal Resource Status: {current_status}")
+                return
 
             if "failed" in current_status.lower():
-                raise FailedStatusError(resource_type="ModelPackageGroup", status=current_status, reason='(Unknown)')
+                raise FailedStatusError(
+                    resource_type="ModelPackageGroup", status=current_status, reason="(Unknown)"
+                )
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="ModelPackageGroup", status=current_status)
@@ -15409,47 +16247,52 @@ class ModelPackageGroup(Base):
                 ```
         """
 
-        client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'CreationTimeAfter': creation_time_after,
-            'CreationTimeBefore': creation_time_before,
-            'NameContains': name_contains,
-            'SortBy': sort_by,
-            'SortOrder': sort_order,
+            "CreationTimeAfter": creation_time_after,
+            "CreationTimeBefore": creation_time_before,
+            "NameContains": name_contains,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
         }
 
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
 
         return ResourceIterator(
             client=client,
-            list_method='list_model_package_groups',
-            summaries_key='ModelPackageGroupSummaryList',
-            summary_name='ModelPackageGroupSummary',
+            list_method="list_model_package_groups",
+            summaries_key="ModelPackageGroupSummaryList",
+            summary_name="ModelPackageGroupSummary",
             resource_cls=ModelPackageGroup,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
-
 
     def get_policy(
         self,
-
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[str]:
         """
-        Perform GetModelPackageGroupPolicy on a ModelPackageGroup resource.
+        Gets a resource policy that manages access for a model group.
 
 
         """
 
-
         operation_input_args = {
-            'ModelPackageGroupName': self.model_package_group_name,
+            "ModelPackageGroupName": self.model_package_group_name,
         }
         logger.debug(f"Input request: {operation_input_args}")
 
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         logger.debug(f"Calling get_model_package_group_policy API")
         response = client.get_model_package_group_policy(**operation_input_args)
@@ -15457,32 +16300,29 @@ class ModelPackageGroup(Base):
 
         return list(response.values())[0]
 
-
     def delete_policy(
         self,
-
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> None:
         """
-        Perform DeleteModelPackageGroupPolicy on a ModelPackageGroup resource.
+        Deletes a model group resource policy.
 
 
         """
 
-
         operation_input_args = {
-            'ModelPackageGroupName': self.model_package_group_name,
+            "ModelPackageGroupName": self.model_package_group_name,
         }
         logger.debug(f"Input request: {operation_input_args}")
 
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         logger.debug(f"Calling delete_model_package_group_policy API")
         response = client.delete_model_package_group_policy(**operation_input_args)
         logger.debug(f"Response: {response}")
-
-
 
     def put_policy(
         self,
@@ -15491,7 +16331,7 @@ class ModelPackageGroup(Base):
         region: Optional[str] = None,
     ) -> None:
         """
-        Perform PutModelPackageGroupPolicy on a ModelPackageGroup resource.
+        Adds a resouce policy to control access to a model group.
 
         Parameters:
             resource_policy: The resource policy for the model group.
@@ -15501,19 +16341,19 @@ class ModelPackageGroup(Base):
 
         """
 
-
         operation_input_args = {
-            'ModelPackageGroupName': self.model_package_group_name,
-            'ResourcePolicy': resource_policy,
+            "ModelPackageGroupName": self.model_package_group_name,
+            "ResourcePolicy": resource_policy,
         }
         logger.debug(f"Input request: {operation_input_args}")
 
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         logger.debug(f"Calling put_model_package_group_policy API")
         response = client.put_model_package_group_policy(**operation_input_args)
         logger.debug(f"Response: {response}")
-
 
 
 class ModelQualityJobDefinition(Base):
@@ -15534,6 +16374,7 @@ class ModelQualityJobDefinition(Base):
         stopping_condition:
 
     """
+
     job_definition_name: str
     job_definition_arn: Optional[str] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
@@ -15548,82 +16389,56 @@ class ModelQualityJobDefinition(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'model_quality_job_definition_name':
-                return value
-        raise Exception("Name attribute not found for object")
+        resource_name = "model_quality_job_definition_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
 
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
+        for attribute, value in attributes.items():
+            if attribute == "name" or attribute in attribute_name_candidates:
+                return value
+        logger.error("Name attribute not found for object model_quality_job_definition")
+        return None
 
     def populate_inputs_decorator(create_func):
+        @functools.wraps(create_func)
         def wrapper(*args, **kwargs):
-            config_schema_for_resource = \
-        {
-          "model_quality_job_input": {
-            "ground_truth_s3_input": {
-              "s3_uri": {
-                "type": "string"
-              }
-            },
-            "endpoint_input": {
-              "s3_input_mode": {
-                "type": "string"
-              },
-              "s3_data_distribution_type": {
-                "type": "string"
-              }
-            },
-            "batch_transform_input": {
-              "data_captured_destination_s3_uri": {
-                "type": "string"
-              },
-              "s3_input_mode": {
-                "type": "string"
-              },
-              "s3_data_distribution_type": {
-                "type": "string"
-              }
+            config_schema_for_resource = {
+                "model_quality_job_input": {
+                    "ground_truth_s3_input": {"s3_uri": {"type": "string"}},
+                    "endpoint_input": {
+                        "s3_input_mode": {"type": "string"},
+                        "s3_data_distribution_type": {"type": "string"},
+                    },
+                    "batch_transform_input": {
+                        "data_captured_destination_s3_uri": {"type": "string"},
+                        "s3_input_mode": {"type": "string"},
+                        "s3_data_distribution_type": {"type": "string"},
+                    },
+                },
+                "model_quality_job_output_config": {"kms_key_id": {"type": "string"}},
+                "job_resources": {"cluster_config": {"volume_kms_key_id": {"type": "string"}}},
+                "role_arn": {"type": "string"},
+                "model_quality_baseline_config": {
+                    "constraints_resource": {"s3_uri": {"type": "string"}}
+                },
+                "network_config": {
+                    "vpc_config": {
+                        "security_group_ids": {"type": "array", "items": {"type": "string"}},
+                        "subnets": {"type": "array", "items": {"type": "string"}},
+                    }
+                },
             }
-          },
-          "model_quality_job_output_config": {
-            "kms_key_id": {
-              "type": "string"
-            }
-          },
-          "job_resources": {
-            "cluster_config": {
-              "volume_kms_key_id": {
-                "type": "string"
-              }
-            }
-          },
-          "role_arn": {
-            "type": "string"
-          },
-          "model_quality_baseline_config": {
-            "constraints_resource": {
-              "s3_uri": {
-                "type": "string"
-              }
-            }
-          },
-          "network_config": {
-            "vpc_config": {
-              "security_group_ids": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
-              },
-              "subnets": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
-              }
-            }
-          }
-        }
-            return create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "ModelQualityJobDefinition", **kwargs))
+            return create_func(
+                *args,
+                **Base.get_updated_kwargs_with_configured_attributes(
+                    config_schema_for_resource, "ModelQualityJobDefinition", **kwargs
+                ),
+            )
+
         return wrapper
 
     @classmethod
@@ -15682,22 +16497,26 @@ class ModelQualityJobDefinition(Base):
         """
 
         logger.debug("Creating model_quality_job_definition resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'JobDefinitionName': job_definition_name,
-            'ModelQualityBaselineConfig': model_quality_baseline_config,
-            'ModelQualityAppSpecification': model_quality_app_specification,
-            'ModelQualityJobInput': model_quality_job_input,
-            'ModelQualityJobOutputConfig': model_quality_job_output_config,
-            'JobResources': job_resources,
-            'NetworkConfig': network_config,
-            'RoleArn': role_arn,
-            'StoppingCondition': stopping_condition,
-            'Tags': tags,
+            "JobDefinitionName": job_definition_name,
+            "ModelQualityBaselineConfig": model_quality_baseline_config,
+            "ModelQualityAppSpecification": model_quality_app_specification,
+            "ModelQualityJobInput": model_quality_job_input,
+            "ModelQualityJobOutputConfig": model_quality_job_output_config,
+            "JobResources": job_resources,
+            "NetworkConfig": network_config,
+            "RoleArn": role_arn,
+            "StoppingCondition": stopping_condition,
+            "Tags": tags,
         }
 
-        operation_input_args = Base.populate_chained_attributes(resource_name='ModelQualityJobDefinition', operation_input_args=operation_input_args)
+        operation_input_args = Base.populate_chained_attributes(
+            resource_name="ModelQualityJobDefinition", operation_input_args=operation_input_args
+        )
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -15743,19 +16562,23 @@ class ModelQualityJobDefinition(Base):
         """
 
         operation_input_args = {
-            'JobDefinitionName': job_definition_name,
+            "JobDefinitionName": job_definition_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
         response = client.describe_model_quality_job_definition(**operation_input_args)
 
         pprint(response)
 
         # deserialize the response
-        transformed_response = transform(response, 'DescribeModelQualityJobDefinitionResponse')
+        transformed_response = transform(response, "DescribeModelQualityJobDefinitionResponse")
         model_quality_job_definition = cls(**transformed_response)
         return model_quality_job_definition
 
-    def refresh(self) -> Optional["ModelQualityJobDefinition"]:
+    def refresh(
+        self,
+    ) -> Optional["ModelQualityJobDefinition"]:
         """
         Refresh a ModelQualityJobDefinition resource
 
@@ -15777,16 +16600,18 @@ class ModelQualityJobDefinition(Base):
         """
 
         operation_input_args = {
-            'JobDefinitionName': self.job_definition_name,
+            "JobDefinitionName": self.job_definition_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_model_quality_job_definition(**operation_input_args)
 
         # deserialize response and update self
-        transform(response, 'DescribeModelQualityJobDefinitionResponse', self)
+        transform(response, "DescribeModelQualityJobDefinitionResponse", self)
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a ModelQualityJobDefinition resource
 
@@ -15805,12 +16630,14 @@ class ModelQualityJobDefinition(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
-            'JobDefinitionName': self.job_definition_name,
+            "JobDefinitionName": self.job_definition_name,
         }
         client.delete_model_quality_job_definition(**operation_input_args)
+
+        logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
     @classmethod
     def get_all(
@@ -15855,27 +16682,36 @@ class ModelQualityJobDefinition(Base):
                 ```
         """
 
-        client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'EndpointName': endpoint_name,
-            'SortBy': sort_by,
-            'SortOrder': sort_order,
-            'NameContains': name_contains,
-            'CreationTimeBefore': creation_time_before,
-            'CreationTimeAfter': creation_time_after,
+            "EndpointName": endpoint_name,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
+            "NameContains": name_contains,
+            "CreationTimeBefore": creation_time_before,
+            "CreationTimeAfter": creation_time_after,
         }
-        custom_key_mapping = {"monitoring_job_definition_name": "job_definition_name", "monitoring_job_definition_arn": "job_definition_arn"}
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
+        custom_key_mapping = {
+            "monitoring_job_definition_name": "job_definition_name",
+            "monitoring_job_definition_arn": "job_definition_arn",
+        }
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
 
         return ResourceIterator(
             client=client,
-            list_method='list_model_quality_job_definitions',
-            summaries_key='JobDefinitionSummaries',
-            summary_name='MonitoringJobDefinitionSummary',
+            list_method="list_model_quality_job_definitions",
+            summaries_key="JobDefinitionSummaries",
+            summary_name="MonitoringJobDefinitionSummary",
             resource_cls=ModelQualityJobDefinition,
             custom_key_mapping=custom_key_mapping,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
 
 
@@ -15904,10 +16740,19 @@ class MonitoringAlert(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "monitoring_alert_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == "name" or attribute == "monitoring_alert_name":
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object monitoring_alert")
+        return None
 
     def update(
         self,
@@ -15940,7 +16785,7 @@ class MonitoringAlert(Base):
         """
 
         logger.debug("Updating monitoring_alert resource.")
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
             "MonitoringScheduleName": monitoring_schedule_name,
@@ -15994,9 +16839,9 @@ class MonitoringAlert(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
 
         operation_input_args = {
             "MonitoringScheduleName": monitoring_schedule_name,
@@ -16061,9 +16906,9 @@ class MonitoringAlert(Base):
         }
         logger.debug(f"Input request: {operation_input_args}")
 
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
 
         logger.debug(f"Calling list_monitoring_alert_history API")
         response = client.list_monitoring_alert_history(**operation_input_args)
@@ -16078,18 +16923,19 @@ class MonitoringSchedule(Base):
     Class representing resource MonitoringSchedule
 
     Attributes:
-        monitoring_schedule_arn:The Amazon Resource Name (ARN) of the monitoring schedule.
-        monitoring_schedule_name:Name of the monitoring schedule.
-        monitoring_schedule_status:The status of an monitoring job.
-        creation_time:The time at which the monitoring job was created.
-        last_modified_time:The time at which the monitoring job was last modified.
-        monitoring_schedule_config:The configuration object that specifies the monitoring schedule and defines the monitoring job.
-        monitoring_type:The type of the monitoring job that this schedule runs. This is one of the following values.    DATA_QUALITY - The schedule is for a data quality monitoring job.    MODEL_QUALITY - The schedule is for a model quality monitoring job.    MODEL_BIAS - The schedule is for a bias monitoring job.    MODEL_EXPLAINABILITY - The schedule is for an explainability monitoring job.
-        failure_reason:A string, up to one KB in size, that contains the reason a monitoring job failed, if it failed.
-        endpoint_name: The name of the endpoint for the monitoring job.
-        last_monitoring_execution_summary:Describes metadata on the last execution to run, if there was one.
+        monitoring_schedule_arn: The Amazon Resource Name (ARN) of the monitoring schedule.
+        monitoring_schedule_name: Name of the monitoring schedule.
+        monitoring_schedule_status: The status of an monitoring job.
+        creation_time: The time at which the monitoring job was created.
+        last_modified_time: The time at which the monitoring job was last modified.
+        monitoring_schedule_config: The configuration object that specifies the monitoring schedule and defines the monitoring job.
+        monitoring_type: The type of the monitoring job that this schedule runs. This is one of the following values.    DATA_QUALITY - The schedule is for a data quality monitoring job.    MODEL_QUALITY - The schedule is for a model quality monitoring job.    MODEL_BIAS - The schedule is for a bias monitoring job.    MODEL_EXPLAINABILITY - The schedule is for an explainability monitoring job.
+        failure_reason: A string, up to one KB in size, that contains the reason a monitoring job failed, if it failed.
+        endpoint_name:  The name of the endpoint for the monitoring job.
+        last_monitoring_execution_summary: Describes metadata on the last execution to run, if there was one.
 
     """
+
     monitoring_schedule_name: str
     monitoring_schedule_arn: Optional[str] = Unassigned()
     monitoring_schedule_status: Optional[str] = Unassigned()
@@ -16103,65 +16949,54 @@ class MonitoringSchedule(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'monitoring_schedule_name':
-                return value
-        raise Exception("Name attribute not found for object")
+        resource_name = "monitoring_schedule_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
 
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
+        for attribute, value in attributes.items():
+            if attribute == "name" or attribute in attribute_name_candidates:
+                return value
+        logger.error("Name attribute not found for object monitoring_schedule")
+        return None
 
     def populate_inputs_decorator(create_func):
+        @functools.wraps(create_func)
         def wrapper(*args, **kwargs):
-            config_schema_for_resource = \
-        {
-          "monitoring_schedule_config": {
-            "monitoring_job_definition": {
-              "monitoring_output_config": {
-                "kms_key_id": {
-                  "type": "string"
-                }
-              },
-              "monitoring_resources": {
-                "cluster_config": {
-                  "volume_kms_key_id": {
-                    "type": "string"
-                  }
-                }
-              },
-              "role_arn": {
-                "type": "string"
-              },
-              "baseline_config": {
-                "constraints_resource": {
-                  "s3_uri": {
-                    "type": "string"
-                  }
-                },
-                "statistics_resource": {
-                  "s3_uri": {
-                    "type": "string"
-                  }
-                }
-              },
-              "network_config": {
-                "vpc_config": {
-                  "security_group_ids": {
-                    "type": "array",
-                    "items": {
-                      "type": "string"
+            config_schema_for_resource = {
+                "monitoring_schedule_config": {
+                    "monitoring_job_definition": {
+                        "monitoring_output_config": {"kms_key_id": {"type": "string"}},
+                        "monitoring_resources": {
+                            "cluster_config": {"volume_kms_key_id": {"type": "string"}}
+                        },
+                        "role_arn": {"type": "string"},
+                        "baseline_config": {
+                            "constraints_resource": {"s3_uri": {"type": "string"}},
+                            "statistics_resource": {"s3_uri": {"type": "string"}},
+                        },
+                        "network_config": {
+                            "vpc_config": {
+                                "security_group_ids": {
+                                    "type": "array",
+                                    "items": {"type": "string"},
+                                },
+                                "subnets": {"type": "array", "items": {"type": "string"}},
+                            }
+                        },
                     }
-                  },
-                  "subnets": {
-                    "type": "array",
-                    "items": {
-                      "type": "string"
-                    }
-                  }
                 }
-              }
             }
-          }
-        }
-            return create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "MonitoringSchedule", **kwargs))
+            return create_func(
+                *args,
+                **Base.get_updated_kwargs_with_configured_attributes(
+                    config_schema_for_resource, "MonitoringSchedule", **kwargs
+                ),
+            )
+
         return wrapper
 
     @classmethod
@@ -16206,15 +17041,19 @@ class MonitoringSchedule(Base):
         """
 
         logger.debug("Creating monitoring_schedule resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'MonitoringScheduleName': monitoring_schedule_name,
-            'MonitoringScheduleConfig': monitoring_schedule_config,
-            'Tags': tags,
+            "MonitoringScheduleName": monitoring_schedule_name,
+            "MonitoringScheduleConfig": monitoring_schedule_config,
+            "Tags": tags,
         }
 
-        operation_input_args = Base.populate_chained_attributes(resource_name='MonitoringSchedule', operation_input_args=operation_input_args)
+        operation_input_args = Base.populate_chained_attributes(
+            resource_name="MonitoringSchedule", operation_input_args=operation_input_args
+        )
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -16225,7 +17064,9 @@ class MonitoringSchedule(Base):
         response = client.create_monitoring_schedule(**operation_input_args)
         logger.debug(f"Response: {response}")
 
-        return cls.get(monitoring_schedule_name=monitoring_schedule_name, session=session, region=region)
+        return cls.get(
+            monitoring_schedule_name=monitoring_schedule_name, session=session, region=region
+        )
 
     @classmethod
     def get(
@@ -16260,19 +17101,23 @@ class MonitoringSchedule(Base):
         """
 
         operation_input_args = {
-            'MonitoringScheduleName': monitoring_schedule_name,
+            "MonitoringScheduleName": monitoring_schedule_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
         response = client.describe_monitoring_schedule(**operation_input_args)
 
         pprint(response)
 
         # deserialize the response
-        transformed_response = transform(response, 'DescribeMonitoringScheduleResponse')
+        transformed_response = transform(response, "DescribeMonitoringScheduleResponse")
         monitoring_schedule = cls(**transformed_response)
         return monitoring_schedule
 
-    def refresh(self) -> Optional["MonitoringSchedule"]:
+    def refresh(
+        self,
+    ) -> Optional["MonitoringSchedule"]:
         """
         Refresh a MonitoringSchedule resource
 
@@ -16294,13 +17139,13 @@ class MonitoringSchedule(Base):
         """
 
         operation_input_args = {
-            'MonitoringScheduleName': self.monitoring_schedule_name,
+            "MonitoringScheduleName": self.monitoring_schedule_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_monitoring_schedule(**operation_input_args)
 
         # deserialize response and update self
-        transform(response, 'DescribeMonitoringScheduleResponse', self)
+        transform(response, "DescribeMonitoringScheduleResponse", self)
         return self
 
     @populate_inputs_decorator
@@ -16331,11 +17176,11 @@ class MonitoringSchedule(Base):
         """
 
         logger.debug("Updating monitoring_schedule resource.")
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
-            'MonitoringScheduleName': self.monitoring_schedule_name,
-            'MonitoringScheduleConfig': monitoring_schedule_config,
+            "MonitoringScheduleName": self.monitoring_schedule_name,
+            "MonitoringScheduleConfig": monitoring_schedule_config,
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -16349,7 +17194,9 @@ class MonitoringSchedule(Base):
 
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a MonitoringSchedule resource
 
@@ -16368,12 +17215,14 @@ class MonitoringSchedule(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
-            'MonitoringScheduleName': self.monitoring_schedule_name,
+            "MonitoringScheduleName": self.monitoring_schedule_name,
         }
         client.delete_monitoring_schedule(**operation_input_args)
+
+        logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
     def stop(self) -> None:
         """
@@ -16397,16 +17246,16 @@ class MonitoringSchedule(Base):
         client = SageMakerClient().client
 
         operation_input_args = {
-            'MonitoringScheduleName': self.monitoring_schedule_name,
+            "MonitoringScheduleName": self.monitoring_schedule_name,
         }
         client.stop_monitoring_schedule(**operation_input_args)
 
     def wait_for_status(
         self,
-        status: Literal['Pending', 'Failed', 'Scheduled', 'Stopped'],
+        status: Literal["Pending", "Failed", "Scheduled", "Stopped"],
         poll: int = 5,
-        timeout: Optional[int] = None
-    ) -> Optional["MonitoringSchedule"]:
+        timeout: Optional[int] = None,
+    ):
         """
         Wait for a MonitoringSchedule resource.
 
@@ -16431,10 +17280,15 @@ class MonitoringSchedule(Base):
             current_status = self.monitoring_schedule_status
 
             if status == current_status:
-                return self
+                print(f"\nFinal Resource Status: {current_status}")
+                return
 
             if "failed" in current_status.lower():
-                raise FailedStatusError(resource_type="MonitoringSchedule", status=current_status, reason=self.failure_reason)
+                raise FailedStatusError(
+                    resource_type="MonitoringSchedule",
+                    status=current_status,
+                    reason=self.failure_reason,
+                )
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="MonitoringSchedule", status=current_status)
@@ -16494,31 +17348,37 @@ class MonitoringSchedule(Base):
                 ```
         """
 
-        client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'EndpointName': endpoint_name,
-            'SortBy': sort_by,
-            'SortOrder': sort_order,
-            'NameContains': name_contains,
-            'CreationTimeBefore': creation_time_before,
-            'CreationTimeAfter': creation_time_after,
-            'LastModifiedTimeBefore': last_modified_time_before,
-            'LastModifiedTimeAfter': last_modified_time_after,
-            'StatusEquals': status_equals,
-            'MonitoringJobDefinitionName': monitoring_job_definition_name,
-            'MonitoringTypeEquals': monitoring_type_equals,
+            "EndpointName": endpoint_name,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
+            "NameContains": name_contains,
+            "CreationTimeBefore": creation_time_before,
+            "CreationTimeAfter": creation_time_after,
+            "LastModifiedTimeBefore": last_modified_time_before,
+            "LastModifiedTimeAfter": last_modified_time_after,
+            "StatusEquals": status_equals,
+            "MonitoringJobDefinitionName": monitoring_job_definition_name,
+            "MonitoringTypeEquals": monitoring_type_equals,
         }
 
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
 
         return ResourceIterator(
             client=client,
-            list_method='list_monitoring_schedules',
-            summaries_key='MonitoringScheduleSummaries',
-            summary_name='MonitoringScheduleSummary',
+            list_method="list_monitoring_schedules",
+            summaries_key="MonitoringScheduleSummaries",
+            summary_name="MonitoringScheduleSummary",
             resource_cls=MonitoringSchedule,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
 
 
@@ -16527,30 +17387,31 @@ class NotebookInstance(Base):
     Class representing resource NotebookInstance
 
     Attributes:
-        notebook_instance_arn:The Amazon Resource Name (ARN) of the notebook instance.
-        notebook_instance_name:The name of the SageMaker notebook instance.
-        notebook_instance_status:The status of the notebook instance.
-        failure_reason:If status is Failed, the reason it failed.
-        url:The URL that you use to connect to the Jupyter notebook that is running in your notebook instance.
-        instance_type:The type of ML compute instance running on the notebook instance.
-        subnet_id:The ID of the VPC subnet.
-        security_groups:The IDs of the VPC security groups.
-        role_arn:The Amazon Resource Name (ARN) of the IAM role associated with the instance.
-        kms_key_id:The Amazon Web Services KMS key ID SageMaker uses to encrypt data when storing it on the ML storage volume attached to the instance.
-        network_interface_id:The network interface IDs that SageMaker created at the time of creating the instance.
-        last_modified_time:A timestamp. Use this parameter to retrieve the time when the notebook instance was last modified.
-        creation_time:A timestamp. Use this parameter to return the time when the notebook instance was created
-        notebook_instance_lifecycle_config_name:Returns the name of a notebook instance lifecycle configuration. For information about notebook instance lifestyle configurations, see Step 2.1: (Optional) Customize a Notebook Instance
-        direct_internet_access:Describes whether SageMaker provides internet access to the notebook instance. If this value is set to Disabled, the notebook instance does not have internet access, and cannot connect to SageMaker training and endpoint services. For more information, see Notebook Instances Are Internet-Enabled by Default.
-        volume_size_in_gb:The size, in GB, of the ML storage volume attached to the notebook instance.
-        accelerator_types:A list of the Elastic Inference (EI) instance types associated with this notebook instance. Currently only one EI instance type can be associated with a notebook instance. For more information, see Using Elastic Inference in Amazon SageMaker.
-        default_code_repository:The Git repository associated with the notebook instance as its default code repository. This can be either the name of a Git repository stored as a resource in your account, or the URL of a Git repository in Amazon Web Services CodeCommit or in any other Git repository. When you open a notebook instance, it opens in the directory that contains this repository. For more information, see Associating Git Repositories with SageMaker Notebook Instances.
-        additional_code_repositories:An array of up to three Git repositories associated with the notebook instance. These can be either the names of Git repositories stored as resources in your account, or the URL of Git repositories in Amazon Web Services CodeCommit or in any other Git repository. These repositories are cloned at the same level as the default repository of your notebook instance. For more information, see Associating Git Repositories with SageMaker Notebook Instances.
-        root_access:Whether root access is enabled or disabled for users of the notebook instance.  Lifecycle configurations need root access to be able to set up a notebook instance. Because of this, lifecycle configurations associated with a notebook instance always run with root access even if you disable root access for users.
-        platform_identifier:The platform identifier of the notebook instance runtime environment.
-        instance_metadata_service_configuration:Information on the IMDS configuration of the notebook instance
+        notebook_instance_arn: The Amazon Resource Name (ARN) of the notebook instance.
+        notebook_instance_name: The name of the SageMaker notebook instance.
+        notebook_instance_status: The status of the notebook instance.
+        failure_reason: If status is Failed, the reason it failed.
+        url: The URL that you use to connect to the Jupyter notebook that is running in your notebook instance.
+        instance_type: The type of ML compute instance running on the notebook instance.
+        subnet_id: The ID of the VPC subnet.
+        security_groups: The IDs of the VPC security groups.
+        role_arn: The Amazon Resource Name (ARN) of the IAM role associated with the instance.
+        kms_key_id: The Amazon Web Services KMS key ID SageMaker uses to encrypt data when storing it on the ML storage volume attached to the instance.
+        network_interface_id: The network interface IDs that SageMaker created at the time of creating the instance.
+        last_modified_time: A timestamp. Use this parameter to retrieve the time when the notebook instance was last modified.
+        creation_time: A timestamp. Use this parameter to return the time when the notebook instance was created
+        notebook_instance_lifecycle_config_name: Returns the name of a notebook instance lifecycle configuration. For information about notebook instance lifestyle configurations, see Step 2.1: (Optional) Customize a Notebook Instance
+        direct_internet_access: Describes whether SageMaker provides internet access to the notebook instance. If this value is set to Disabled, the notebook instance does not have internet access, and cannot connect to SageMaker training and endpoint services. For more information, see Notebook Instances Are Internet-Enabled by Default.
+        volume_size_in_gb: The size, in GB, of the ML storage volume attached to the notebook instance.
+        accelerator_types: A list of the Elastic Inference (EI) instance types associated with this notebook instance. Currently only one EI instance type can be associated with a notebook instance. For more information, see Using Elastic Inference in Amazon SageMaker.
+        default_code_repository: The Git repository associated with the notebook instance as its default code repository. This can be either the name of a Git repository stored as a resource in your account, or the URL of a Git repository in Amazon Web Services CodeCommit or in any other Git repository. When you open a notebook instance, it opens in the directory that contains this repository. For more information, see Associating Git Repositories with SageMaker Notebook Instances.
+        additional_code_repositories: An array of up to three Git repositories associated with the notebook instance. These can be either the names of Git repositories stored as resources in your account, or the URL of Git repositories in Amazon Web Services CodeCommit or in any other Git repository. These repositories are cloned at the same level as the default repository of your notebook instance. For more information, see Associating Git Repositories with SageMaker Notebook Instances.
+        root_access: Whether root access is enabled or disabled for users of the notebook instance.  Lifecycle configurations need root access to be able to set up a notebook instance. Because of this, lifecycle configurations associated with a notebook instance always run with root access even if you disable root access for users.
+        platform_identifier: The platform identifier of the notebook instance runtime environment.
+        instance_metadata_service_configuration: Information on the IMDS configuration of the notebook instance
 
     """
+
     notebook_instance_name: str
     notebook_instance_arn: Optional[str] = Unassigned()
     notebook_instance_status: Optional[str] = Unassigned()
@@ -16566,43 +17427,48 @@ class NotebookInstance(Base):
     creation_time: Optional[datetime.datetime] = Unassigned()
     notebook_instance_lifecycle_config_name: Optional[str] = Unassigned()
     direct_internet_access: Optional[str] = Unassigned()
-    volume_size_in_g_b: Optional[int] = Unassigned()
+    volume_size_in_gb: Optional[int] = Unassigned()
     accelerator_types: Optional[List[str]] = Unassigned()
     default_code_repository: Optional[str] = Unassigned()
     additional_code_repositories: Optional[List[str]] = Unassigned()
     root_access: Optional[str] = Unassigned()
     platform_identifier: Optional[str] = Unassigned()
-    instance_metadata_service_configuration: Optional[InstanceMetadataServiceConfiguration] = Unassigned()
+    instance_metadata_service_configuration: Optional[InstanceMetadataServiceConfiguration] = (
+        Unassigned()
+    )
 
     def get_name(self) -> str:
         attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'notebook_instance_name':
-                return value
-        raise Exception("Name attribute not found for object")
+        resource_name = "notebook_instance_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
 
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
+        for attribute, value in attributes.items():
+            if attribute == "name" or attribute in attribute_name_candidates:
+                return value
+        logger.error("Name attribute not found for object notebook_instance")
+        return None
 
     def populate_inputs_decorator(create_func):
+        @functools.wraps(create_func)
         def wrapper(*args, **kwargs):
-            config_schema_for_resource = \
-        {
-          "subnet_id": {
-            "type": "string"
-          },
-          "security_groups": {
-            "type": "array",
-            "items": {
-              "type": "string"
+            config_schema_for_resource = {
+                "subnet_id": {"type": "string"},
+                "security_groups": {"type": "array", "items": {"type": "string"}},
+                "role_arn": {"type": "string"},
+                "kms_key_id": {"type": "string"},
             }
-          },
-          "role_arn": {
-            "type": "string"
-          },
-          "kms_key_id": {
-            "type": "string"
-          }
-        }
-            return create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "NotebookInstance", **kwargs))
+            return create_func(
+                *args,
+                **Base.get_updated_kwargs_with_configured_attributes(
+                    config_schema_for_resource, "NotebookInstance", **kwargs
+                ),
+            )
+
         return wrapper
 
     @classmethod
@@ -16618,13 +17484,15 @@ class NotebookInstance(Base):
         tags: Optional[List[Tag]] = Unassigned(),
         lifecycle_config_name: Optional[str] = Unassigned(),
         direct_internet_access: Optional[str] = Unassigned(),
-        volume_size_in_g_b: Optional[int] = Unassigned(),
+        volume_size_in_gb: Optional[int] = Unassigned(),
         accelerator_types: Optional[List[str]] = Unassigned(),
         default_code_repository: Optional[str] = Unassigned(),
         additional_code_repositories: Optional[List[str]] = Unassigned(),
         root_access: Optional[str] = Unassigned(),
         platform_identifier: Optional[str] = Unassigned(),
-        instance_metadata_service_configuration: Optional[InstanceMetadataServiceConfiguration] = Unassigned(),
+        instance_metadata_service_configuration: Optional[
+            InstanceMetadataServiceConfiguration
+        ] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["NotebookInstance"]:
@@ -16632,22 +17500,22 @@ class NotebookInstance(Base):
         Create a NotebookInstance resource
 
         Parameters:
-            notebook_instance_name:The name of the new notebook instance.
-            instance_type:The type of ML compute instance to launch for the notebook instance.
-            role_arn: When you send any requests to Amazon Web Services resources from the notebook instance, SageMaker assumes this role to perform tasks on your behalf. You must grant this role necessary permissions so SageMaker can perform these tasks. The policy must allow the SageMaker service principal (sagemaker.amazonaws.com) permissions to assume this role. For more information, see SageMaker Roles.   To be able to pass this role to SageMaker, the caller of this API must have the iam:PassRole permission.
-            subnet_id:The ID of the subnet in a VPC to which you would like to have a connectivity from your ML compute instance.
-            security_group_ids:The VPC security group IDs, in the form sg-xxxxxxxx. The security groups must be for the same VPC as specified in the subnet.
-            kms_key_id:The Amazon Resource Name (ARN) of a Amazon Web Services Key Management Service key that SageMaker uses to encrypt data on the storage volume attached to your notebook instance. The KMS key you provide must be enabled. For information, see Enabling and Disabling Keys in the Amazon Web Services Key Management Service Developer Guide.
-            tags:An array of key-value pairs. You can use tags to categorize your Amazon Web Services resources in different ways, for example, by purpose, owner, or environment. For more information, see Tagging Amazon Web Services Resources.
-            lifecycle_config_name:The name of a lifecycle configuration to associate with the notebook instance. For information about lifestyle configurations, see Step 2.1: (Optional) Customize a Notebook Instance.
-            direct_internet_access:Sets whether SageMaker provides internet access to the notebook instance. If you set this to Disabled this notebook instance is able to access resources only in your VPC, and is not be able to connect to SageMaker training and endpoint services unless you configure a NAT Gateway in your VPC. For more information, see Notebook Instances Are Internet-Enabled by Default. You can set the value of this parameter to Disabled only if you set a value for the SubnetId parameter.
-            volume_size_in_gb:The size, in GB, of the ML storage volume to attach to the notebook instance. The default value is 5 GB.
-            accelerator_types:A list of Elastic Inference (EI) instance types to associate with this notebook instance. Currently, only one instance type can be associated with a notebook instance. For more information, see Using Elastic Inference in Amazon SageMaker.
-            default_code_repository:A Git repository to associate with the notebook instance as its default code repository. This can be either the name of a Git repository stored as a resource in your account, or the URL of a Git repository in Amazon Web Services CodeCommit or in any other Git repository. When you open a notebook instance, it opens in the directory that contains this repository. For more information, see Associating Git Repositories with SageMaker Notebook Instances.
-            additional_code_repositories:An array of up to three Git repositories to associate with the notebook instance. These can be either the names of Git repositories stored as resources in your account, or the URL of Git repositories in Amazon Web Services CodeCommit or in any other Git repository. These repositories are cloned at the same level as the default repository of your notebook instance. For more information, see Associating Git Repositories with SageMaker Notebook Instances.
-            root_access:Whether root access is enabled or disabled for users of the notebook instance. The default value is Enabled.  Lifecycle configurations need root access to be able to set up a notebook instance. Because of this, lifecycle configurations associated with a notebook instance always run with root access even if you disable root access for users.
-            platform_identifier:The platform identifier of the notebook instance runtime environment.
-            instance_metadata_service_configuration:Information on the IMDS configuration of the notebook instance
+            notebook_instance_name: The name of the new notebook instance.
+            instance_type: The type of ML compute instance to launch for the notebook instance.
+            role_arn:  When you send any requests to Amazon Web Services resources from the notebook instance, SageMaker assumes this role to perform tasks on your behalf. You must grant this role necessary permissions so SageMaker can perform these tasks. The policy must allow the SageMaker service principal (sagemaker.amazonaws.com) permissions to assume this role. For more information, see SageMaker Roles.   To be able to pass this role to SageMaker, the caller of this API must have the iam:PassRole permission.
+            subnet_id: The ID of the subnet in a VPC to which you would like to have a connectivity from your ML compute instance.
+            security_group_ids: The VPC security group IDs, in the form sg-xxxxxxxx. The security groups must be for the same VPC as specified in the subnet.
+            kms_key_id: The Amazon Resource Name (ARN) of a Amazon Web Services Key Management Service key that SageMaker uses to encrypt data on the storage volume attached to your notebook instance. The KMS key you provide must be enabled. For information, see Enabling and Disabling Keys in the Amazon Web Services Key Management Service Developer Guide.
+            tags: An array of key-value pairs. You can use tags to categorize your Amazon Web Services resources in different ways, for example, by purpose, owner, or environment. For more information, see Tagging Amazon Web Services Resources.
+            lifecycle_config_name: The name of a lifecycle configuration to associate with the notebook instance. For information about lifestyle configurations, see Step 2.1: (Optional) Customize a Notebook Instance.
+            direct_internet_access: Sets whether SageMaker provides internet access to the notebook instance. If you set this to Disabled this notebook instance is able to access resources only in your VPC, and is not be able to connect to SageMaker training and endpoint services unless you configure a NAT Gateway in your VPC. For more information, see Notebook Instances Are Internet-Enabled by Default. You can set the value of this parameter to Disabled only if you set a value for the SubnetId parameter.
+            volume_size_in_gb: The size, in GB, of the ML storage volume to attach to the notebook instance. The default value is 5 GB.
+            accelerator_types: A list of Elastic Inference (EI) instance types to associate with this notebook instance. Currently, only one instance type can be associated with a notebook instance. For more information, see Using Elastic Inference in Amazon SageMaker.
+            default_code_repository: A Git repository to associate with the notebook instance as its default code repository. This can be either the name of a Git repository stored as a resource in your account, or the URL of a Git repository in Amazon Web Services CodeCommit or in any other Git repository. When you open a notebook instance, it opens in the directory that contains this repository. For more information, see Associating Git Repositories with SageMaker Notebook Instances.
+            additional_code_repositories: An array of up to three Git repositories to associate with the notebook instance. These can be either the names of Git repositories stored as resources in your account, or the URL of Git repositories in Amazon Web Services CodeCommit or in any other Git repository. These repositories are cloned at the same level as the default repository of your notebook instance. For more information, see Associating Git Repositories with SageMaker Notebook Instances.
+            root_access: Whether root access is enabled or disabled for users of the notebook instance. The default value is Enabled.  Lifecycle configurations need root access to be able to set up a notebook instance. Because of this, lifecycle configurations associated with a notebook instance always run with root access even if you disable root access for users.
+            platform_identifier: The platform identifier of the notebook instance runtime environment.
+            instance_metadata_service_configuration: Information on the IMDS configuration of the notebook instance
             session: Boto3 session.
             region: Region name.
 
@@ -16672,28 +17540,32 @@ class NotebookInstance(Base):
         """
 
         logger.debug("Creating notebook_instance resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'NotebookInstanceName': notebook_instance_name,
-            'InstanceType': instance_type,
-            'SubnetId': subnet_id,
-            'SecurityGroupIds': security_group_ids,
-            'RoleArn': role_arn,
-            'KmsKeyId': kms_key_id,
-            'Tags': tags,
-            'LifecycleConfigName': lifecycle_config_name,
-            'DirectInternetAccess': direct_internet_access,
-            'VolumeSizeInGB': volume_size_in_g_b,
-            'AcceleratorTypes': accelerator_types,
-            'DefaultCodeRepository': default_code_repository,
-            'AdditionalCodeRepositories': additional_code_repositories,
-            'RootAccess': root_access,
-            'PlatformIdentifier': platform_identifier,
-            'InstanceMetadataServiceConfiguration': instance_metadata_service_configuration,
+            "NotebookInstanceName": notebook_instance_name,
+            "InstanceType": instance_type,
+            "SubnetId": subnet_id,
+            "SecurityGroupIds": security_group_ids,
+            "RoleArn": role_arn,
+            "KmsKeyId": kms_key_id,
+            "Tags": tags,
+            "LifecycleConfigName": lifecycle_config_name,
+            "DirectInternetAccess": direct_internet_access,
+            "VolumeSizeInGB": volume_size_in_gb,
+            "AcceleratorTypes": accelerator_types,
+            "DefaultCodeRepository": default_code_repository,
+            "AdditionalCodeRepositories": additional_code_repositories,
+            "RootAccess": root_access,
+            "PlatformIdentifier": platform_identifier,
+            "InstanceMetadataServiceConfiguration": instance_metadata_service_configuration,
         }
 
-        operation_input_args = Base.populate_chained_attributes(resource_name='NotebookInstance', operation_input_args=operation_input_args)
+        operation_input_args = Base.populate_chained_attributes(
+            resource_name="NotebookInstance", operation_input_args=operation_input_args
+        )
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -16704,7 +17576,9 @@ class NotebookInstance(Base):
         response = client.create_notebook_instance(**operation_input_args)
         logger.debug(f"Response: {response}")
 
-        return cls.get(notebook_instance_name=notebook_instance_name, session=session, region=region)
+        return cls.get(
+            notebook_instance_name=notebook_instance_name, session=session, region=region
+        )
 
     @classmethod
     def get(
@@ -16738,19 +17612,23 @@ class NotebookInstance(Base):
         """
 
         operation_input_args = {
-            'NotebookInstanceName': notebook_instance_name,
+            "NotebookInstanceName": notebook_instance_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
         response = client.describe_notebook_instance(**operation_input_args)
 
         pprint(response)
 
         # deserialize the response
-        transformed_response = transform(response, 'DescribeNotebookInstanceOutput')
+        transformed_response = transform(response, "DescribeNotebookInstanceOutput")
         notebook_instance = cls(**transformed_response)
         return notebook_instance
 
-    def refresh(self) -> Optional["NotebookInstance"]:
+    def refresh(
+        self,
+    ) -> Optional["NotebookInstance"]:
         """
         Refresh a NotebookInstance resource
 
@@ -16771,13 +17649,13 @@ class NotebookInstance(Base):
         """
 
         operation_input_args = {
-            'NotebookInstanceName': self.notebook_instance_name,
+            "NotebookInstanceName": self.notebook_instance_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_notebook_instance(**operation_input_args)
 
         # deserialize response and update self
-        transform(response, 'DescribeNotebookInstanceOutput', self)
+        transform(response, "DescribeNotebookInstanceOutput", self)
         return self
 
     @populate_inputs_decorator
@@ -16787,7 +17665,7 @@ class NotebookInstance(Base):
         role_arn: Optional[str] = Unassigned(),
         lifecycle_config_name: Optional[str] = Unassigned(),
         disassociate_lifecycle_config: Optional[bool] = Unassigned(),
-        volume_size_in_g_b: Optional[int] = Unassigned(),
+        volume_size_in_gb: Optional[int] = Unassigned(),
         default_code_repository: Optional[str] = Unassigned(),
         additional_code_repositories: Optional[List[str]] = Unassigned(),
         accelerator_types: Optional[List[str]] = Unassigned(),
@@ -16795,17 +17673,19 @@ class NotebookInstance(Base):
         disassociate_default_code_repository: Optional[bool] = Unassigned(),
         disassociate_additional_code_repositories: Optional[bool] = Unassigned(),
         root_access: Optional[str] = Unassigned(),
-        instance_metadata_service_configuration: Optional[InstanceMetadataServiceConfiguration] = Unassigned(),
+        instance_metadata_service_configuration: Optional[
+            InstanceMetadataServiceConfiguration
+        ] = Unassigned(),
     ) -> Optional["NotebookInstance"]:
         """
         Update a NotebookInstance resource
 
         Parameters:
-            lifecycle_config_name:The name of a lifecycle configuration to associate with the notebook instance. For information about lifestyle configurations, see Step 2.1: (Optional) Customize a Notebook Instance.
-            disassociate_lifecycle_config:Set to true to remove the notebook instance lifecycle configuration currently associated with the notebook instance. This operation is idempotent. If you specify a lifecycle configuration that is not associated with the notebook instance when you call this method, it does not throw an error.
-            disassociate_accelerator_types:A list of the Elastic Inference (EI) instance types to remove from this notebook instance. This operation is idempotent. If you specify an accelerator type that is not associated with the notebook instance when you call this method, it does not throw an error.
-            disassociate_default_code_repository:The name or URL of the default Git repository to remove from this notebook instance. This operation is idempotent. If you specify a Git repository that is not associated with the notebook instance when you call this method, it does not throw an error.
-            disassociate_additional_code_repositories:A list of names or URLs of the default Git repositories to remove from this notebook instance. This operation is idempotent. If you specify a Git repository that is not associated with the notebook instance when you call this method, it does not throw an error.
+            lifecycle_config_name: The name of a lifecycle configuration to associate with the notebook instance. For information about lifestyle configurations, see Step 2.1: (Optional) Customize a Notebook Instance.
+            disassociate_lifecycle_config: Set to true to remove the notebook instance lifecycle configuration currently associated with the notebook instance. This operation is idempotent. If you specify a lifecycle configuration that is not associated with the notebook instance when you call this method, it does not throw an error.
+            disassociate_accelerator_types: A list of the Elastic Inference (EI) instance types to remove from this notebook instance. This operation is idempotent. If you specify an accelerator type that is not associated with the notebook instance when you call this method, it does not throw an error.
+            disassociate_default_code_repository: The name or URL of the default Git repository to remove from this notebook instance. This operation is idempotent. If you specify a Git repository that is not associated with the notebook instance when you call this method, it does not throw an error.
+            disassociate_additional_code_repositories: A list of names or URLs of the default Git repositories to remove from this notebook instance. This operation is idempotent. If you specify a Git repository that is not associated with the notebook instance when you call this method, it does not throw an error.
 
         Returns:
             The NotebookInstance resource.
@@ -16825,23 +17705,23 @@ class NotebookInstance(Base):
         """
 
         logger.debug("Updating notebook_instance resource.")
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
-            'NotebookInstanceName': self.notebook_instance_name,
-            'InstanceType': instance_type,
-            'RoleArn': role_arn,
-            'LifecycleConfigName': lifecycle_config_name,
-            'DisassociateLifecycleConfig': disassociate_lifecycle_config,
-            'VolumeSizeInGB': volume_size_in_g_b,
-            'DefaultCodeRepository': default_code_repository,
-            'AdditionalCodeRepositories': additional_code_repositories,
-            'AcceleratorTypes': accelerator_types,
-            'DisassociateAcceleratorTypes': disassociate_accelerator_types,
-            'DisassociateDefaultCodeRepository': disassociate_default_code_repository,
-            'DisassociateAdditionalCodeRepositories': disassociate_additional_code_repositories,
-            'RootAccess': root_access,
-            'InstanceMetadataServiceConfiguration': instance_metadata_service_configuration,
+            "NotebookInstanceName": self.notebook_instance_name,
+            "InstanceType": instance_type,
+            "RoleArn": role_arn,
+            "LifecycleConfigName": lifecycle_config_name,
+            "DisassociateLifecycleConfig": disassociate_lifecycle_config,
+            "VolumeSizeInGB": volume_size_in_gb,
+            "DefaultCodeRepository": default_code_repository,
+            "AdditionalCodeRepositories": additional_code_repositories,
+            "AcceleratorTypes": accelerator_types,
+            "DisassociateAcceleratorTypes": disassociate_accelerator_types,
+            "DisassociateDefaultCodeRepository": disassociate_default_code_repository,
+            "DisassociateAdditionalCodeRepositories": disassociate_additional_code_repositories,
+            "RootAccess": root_access,
+            "InstanceMetadataServiceConfiguration": instance_metadata_service_configuration,
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -16855,7 +17735,9 @@ class NotebookInstance(Base):
 
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a NotebookInstance resource
 
@@ -16873,12 +17755,14 @@ class NotebookInstance(Base):
                 ```
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
-            'NotebookInstanceName': self.notebook_instance_name,
+            "NotebookInstanceName": self.notebook_instance_name,
         }
         client.delete_notebook_instance(**operation_input_args)
+
+        logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
     def stop(self) -> None:
         """
@@ -16901,16 +17785,18 @@ class NotebookInstance(Base):
         client = SageMakerClient().client
 
         operation_input_args = {
-            'NotebookInstanceName': self.notebook_instance_name,
+            "NotebookInstanceName": self.notebook_instance_name,
         }
         client.stop_notebook_instance(**operation_input_args)
 
     def wait_for_status(
         self,
-        status: Literal['Pending', 'InService', 'Stopping', 'Stopped', 'Failed', 'Deleting', 'Updating'],
+        status: Literal[
+            "Pending", "InService", "Stopping", "Stopped", "Failed", "Deleting", "Updating"
+        ],
         poll: int = 5,
-        timeout: Optional[int] = None
-    ) -> Optional["NotebookInstance"]:
+        timeout: Optional[int] = None,
+    ):
         """
         Wait for a NotebookInstance resource.
 
@@ -16935,10 +17821,15 @@ class NotebookInstance(Base):
             current_status = self.notebook_instance_status
 
             if status == current_status:
-                return self
+                print(f"\nFinal Resource Status: {current_status}")
+                return
 
             if "failed" in current_status.lower():
-                raise FailedStatusError(resource_type="NotebookInstance", status=current_status, reason=self.failure_reason)
+                raise FailedStatusError(
+                    resource_type="NotebookInstance",
+                    status=current_status,
+                    reason=self.failure_reason,
+                )
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="NotebookInstance", status=current_status)
@@ -16966,19 +17857,19 @@ class NotebookInstance(Base):
         Get all NotebookInstance resources
 
         Parameters:
-            next_token: If the previous call to the ListNotebookInstances is truncated, the response includes a NextToken. You can use this token in your subsequent ListNotebookInstances request to fetch the next set of notebook instances.   You might specify a filter or a sort order in your request. When response is truncated, you must use the same values for the filer and sort order in the next request.
-            max_results:The maximum number of notebook instances to return.
-            sort_by:The field to sort results by. The default is Name.
-            sort_order:The sort order for results.
-            name_contains:A string in the notebook instances' name. This filter returns only notebook instances whose name contains the specified string.
-            creation_time_before:A filter that returns only notebook instances that were created before the specified time (timestamp).
-            creation_time_after:A filter that returns only notebook instances that were created after the specified time (timestamp).
-            last_modified_time_before:A filter that returns only notebook instances that were modified before the specified time (timestamp).
-            last_modified_time_after:A filter that returns only notebook instances that were modified after the specified time (timestamp).
-            status_equals:A filter that returns only notebook instances with the specified status.
-            notebook_instance_lifecycle_config_name_contains:A string in the name of a notebook instances lifecycle configuration associated with this notebook instance. This filter returns only notebook instances associated with a lifecycle configuration with a name that contains the specified string.
-            default_code_repository_contains:A string in the name or URL of a Git repository associated with this notebook instance. This filter returns only notebook instances associated with a git repository with a name that contains the specified string.
-            additional_code_repository_equals:A filter that returns only notebook instances with associated with the specified git repository.
+            next_token:  If the previous call to the ListNotebookInstances is truncated, the response includes a NextToken. You can use this token in your subsequent ListNotebookInstances request to fetch the next set of notebook instances.   You might specify a filter or a sort order in your request. When response is truncated, you must use the same values for the filer and sort order in the next request.
+            max_results: The maximum number of notebook instances to return.
+            sort_by: The field to sort results by. The default is Name.
+            sort_order: The sort order for results.
+            name_contains: A string in the notebook instances' name. This filter returns only notebook instances whose name contains the specified string.
+            creation_time_before: A filter that returns only notebook instances that were created before the specified time (timestamp).
+            creation_time_after: A filter that returns only notebook instances that were created after the specified time (timestamp).
+            last_modified_time_before: A filter that returns only notebook instances that were modified before the specified time (timestamp).
+            last_modified_time_after: A filter that returns only notebook instances that were modified after the specified time (timestamp).
+            status_equals: A filter that returns only notebook instances with the specified status.
+            notebook_instance_lifecycle_config_name_contains: A string in the name of a notebook instances lifecycle configuration associated with this notebook instance. This filter returns only notebook instances associated with a lifecycle configuration with a name that contains the specified string.
+            default_code_repository_contains: A string in the name or URL of a Git repository associated with this notebook instance. This filter returns only notebook instances associated with a git repository with a name that contains the specified string.
+            additional_code_repository_equals: A filter that returns only notebook instances with associated with the specified git repository.
             session: Boto3 session.
             region: Region name.
 
@@ -16998,31 +17889,37 @@ class NotebookInstance(Base):
                 ```
         """
 
-        client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'SortBy': sort_by,
-            'SortOrder': sort_order,
-            'NameContains': name_contains,
-            'CreationTimeBefore': creation_time_before,
-            'CreationTimeAfter': creation_time_after,
-            'LastModifiedTimeBefore': last_modified_time_before,
-            'LastModifiedTimeAfter': last_modified_time_after,
-            'StatusEquals': status_equals,
-            'NotebookInstanceLifecycleConfigNameContains': notebook_instance_lifecycle_config_name_contains,
-            'DefaultCodeRepositoryContains': default_code_repository_contains,
-            'AdditionalCodeRepositoryEquals': additional_code_repository_equals,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
+            "NameContains": name_contains,
+            "CreationTimeBefore": creation_time_before,
+            "CreationTimeAfter": creation_time_after,
+            "LastModifiedTimeBefore": last_modified_time_before,
+            "LastModifiedTimeAfter": last_modified_time_after,
+            "StatusEquals": status_equals,
+            "NotebookInstanceLifecycleConfigNameContains": notebook_instance_lifecycle_config_name_contains,
+            "DefaultCodeRepositoryContains": default_code_repository_contains,
+            "AdditionalCodeRepositoryEquals": additional_code_repository_equals,
         }
 
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
 
         return ResourceIterator(
             client=client,
-            list_method='list_notebook_instances',
-            summaries_key='NotebookInstances',
-            summary_name='NotebookInstanceSummary',
+            list_method="list_notebook_instances",
+            summaries_key="NotebookInstances",
+            summary_name="NotebookInstanceSummary",
             resource_cls=NotebookInstance,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
 
 
@@ -17031,14 +17928,15 @@ class NotebookInstanceLifecycleConfig(Base):
     Class representing resource NotebookInstanceLifecycleConfig
 
     Attributes:
-        notebook_instance_lifecycle_config_arn:The Amazon Resource Name (ARN) of the lifecycle configuration.
-        notebook_instance_lifecycle_config_name:The name of the lifecycle configuration.
-        on_create:The shell script that runs only once, when you create a notebook instance.
-        on_start:The shell script that runs every time you start a notebook instance, including when you create the notebook instance.
-        last_modified_time:A timestamp that tells when the lifecycle configuration was last modified.
-        creation_time:A timestamp that tells when the lifecycle configuration was created.
+        notebook_instance_lifecycle_config_arn: The Amazon Resource Name (ARN) of the lifecycle configuration.
+        notebook_instance_lifecycle_config_name: The name of the lifecycle configuration.
+        on_create: The shell script that runs only once, when you create a notebook instance.
+        on_start: The shell script that runs every time you start a notebook instance, including when you create the notebook instance.
+        last_modified_time: A timestamp that tells when the lifecycle configuration was last modified.
+        creation_time: A timestamp that tells when the lifecycle configuration was created.
 
     """
+
     notebook_instance_lifecycle_config_name: str
     notebook_instance_lifecycle_config_arn: Optional[str] = Unassigned()
     on_create: Optional[List[NotebookInstanceLifecycleHook]] = Unassigned()
@@ -17048,10 +17946,19 @@ class NotebookInstanceLifecycleConfig(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "notebook_instance_lifecycle_config_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'notebook_instance_lifecycle_config_name':
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object notebook_instance_lifecycle_config")
+        return None
 
     @classmethod
     def create(
@@ -17093,15 +18000,20 @@ class NotebookInstanceLifecycleConfig(Base):
         """
 
         logger.debug("Creating notebook_instance_lifecycle_config resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'NotebookInstanceLifecycleConfigName': notebook_instance_lifecycle_config_name,
-            'OnCreate': on_create,
-            'OnStart': on_start,
+            "NotebookInstanceLifecycleConfigName": notebook_instance_lifecycle_config_name,
+            "OnCreate": on_create,
+            "OnStart": on_start,
         }
 
-        operation_input_args = Base.populate_chained_attributes(resource_name='NotebookInstanceLifecycleConfig', operation_input_args=operation_input_args)
+        operation_input_args = Base.populate_chained_attributes(
+            resource_name="NotebookInstanceLifecycleConfig",
+            operation_input_args=operation_input_args,
+        )
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -17112,7 +18024,11 @@ class NotebookInstanceLifecycleConfig(Base):
         response = client.create_notebook_instance_lifecycle_config(**operation_input_args)
         logger.debug(f"Response: {response}")
 
-        return cls.get(notebook_instance_lifecycle_config_name=notebook_instance_lifecycle_config_name, session=session, region=region)
+        return cls.get(
+            notebook_instance_lifecycle_config_name=notebook_instance_lifecycle_config_name,
+            session=session,
+            region=region,
+        )
 
     @classmethod
     def get(
@@ -17146,19 +18062,23 @@ class NotebookInstanceLifecycleConfig(Base):
         """
 
         operation_input_args = {
-            'NotebookInstanceLifecycleConfigName': notebook_instance_lifecycle_config_name,
+            "NotebookInstanceLifecycleConfigName": notebook_instance_lifecycle_config_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
         response = client.describe_notebook_instance_lifecycle_config(**operation_input_args)
 
         pprint(response)
 
         # deserialize the response
-        transformed_response = transform(response, 'DescribeNotebookInstanceLifecycleConfigOutput')
+        transformed_response = transform(response, "DescribeNotebookInstanceLifecycleConfigOutput")
         notebook_instance_lifecycle_config = cls(**transformed_response)
         return notebook_instance_lifecycle_config
 
-    def refresh(self) -> Optional["NotebookInstanceLifecycleConfig"]:
+    def refresh(
+        self,
+    ) -> Optional["NotebookInstanceLifecycleConfig"]:
         """
         Refresh a NotebookInstanceLifecycleConfig resource
 
@@ -17179,13 +18099,13 @@ class NotebookInstanceLifecycleConfig(Base):
         """
 
         operation_input_args = {
-            'NotebookInstanceLifecycleConfigName': self.notebook_instance_lifecycle_config_name,
+            "NotebookInstanceLifecycleConfigName": self.notebook_instance_lifecycle_config_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_notebook_instance_lifecycle_config(**operation_input_args)
 
         # deserialize response and update self
-        transform(response, 'DescribeNotebookInstanceLifecycleConfigOutput', self)
+        transform(response, "DescribeNotebookInstanceLifecycleConfigOutput", self)
         return self
 
     def update(
@@ -17215,12 +18135,12 @@ class NotebookInstanceLifecycleConfig(Base):
         """
 
         logger.debug("Updating notebook_instance_lifecycle_config resource.")
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
-            'NotebookInstanceLifecycleConfigName': self.notebook_instance_lifecycle_config_name,
-            'OnCreate': on_create,
-            'OnStart': on_start,
+            "NotebookInstanceLifecycleConfigName": self.notebook_instance_lifecycle_config_name,
+            "OnCreate": on_create,
+            "OnStart": on_start,
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -17234,7 +18154,9 @@ class NotebookInstanceLifecycleConfig(Base):
 
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a NotebookInstanceLifecycleConfig resource
 
@@ -17252,12 +18174,14 @@ class NotebookInstanceLifecycleConfig(Base):
                 ```
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
-            'NotebookInstanceLifecycleConfigName': self.notebook_instance_lifecycle_config_name,
+            "NotebookInstanceLifecycleConfigName": self.notebook_instance_lifecycle_config_name,
         }
         client.delete_notebook_instance_lifecycle_config(**operation_input_args)
+
+        logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
     @classmethod
     def get_all(
@@ -17304,27 +18228,33 @@ class NotebookInstanceLifecycleConfig(Base):
                 ```
         """
 
-        client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'SortBy': sort_by,
-            'SortOrder': sort_order,
-            'NameContains': name_contains,
-            'CreationTimeBefore': creation_time_before,
-            'CreationTimeAfter': creation_time_after,
-            'LastModifiedTimeBefore': last_modified_time_before,
-            'LastModifiedTimeAfter': last_modified_time_after,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
+            "NameContains": name_contains,
+            "CreationTimeBefore": creation_time_before,
+            "CreationTimeAfter": creation_time_after,
+            "LastModifiedTimeBefore": last_modified_time_before,
+            "LastModifiedTimeAfter": last_modified_time_after,
         }
 
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
 
         return ResourceIterator(
             client=client,
-            list_method='list_notebook_instance_lifecycle_configs',
-            summaries_key='NotebookInstanceLifecycleConfigs',
-            summary_name='NotebookInstanceLifecycleConfigSummary',
+            list_method="list_notebook_instance_lifecycle_configs",
+            summaries_key="NotebookInstanceLifecycleConfigs",
+            summary_name="NotebookInstanceLifecycleConfigSummary",
             resource_cls=NotebookInstanceLifecycleConfig,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
 
 
@@ -17345,9 +18275,10 @@ class Pipeline(Base):
         last_run_time: The time when the pipeline was last run.
         created_by:
         last_modified_by:
-        parallelism_configuration:Lists the parallelism configuration applied to the pipeline.
+        parallelism_configuration: Lists the parallelism configuration applied to the pipeline.
 
     """
+
     pipeline_name: str
     pipeline_arn: Optional[str] = Unassigned()
     pipeline_display_name: Optional[str] = Unassigned()
@@ -17364,21 +18295,31 @@ class Pipeline(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'pipeline_name':
-                return value
-        raise Exception("Name attribute not found for object")
+        resource_name = "pipeline_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
 
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
+        for attribute, value in attributes.items():
+            if attribute == "name" or attribute in attribute_name_candidates:
+                return value
+        logger.error("Name attribute not found for object pipeline")
+        return None
 
     def populate_inputs_decorator(create_func):
+        @functools.wraps(create_func)
         def wrapper(*args, **kwargs):
-            config_schema_for_resource = \
-        {
-          "role_arn": {
-            "type": "string"
-          }
-        }
-            return create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "Pipeline", **kwargs))
+            config_schema_for_resource = {"role_arn": {"type": "string"}}
+            return create_func(
+                *args,
+                **Base.get_updated_kwargs_with_configured_attributes(
+                    config_schema_for_resource, "Pipeline", **kwargs
+                ),
+            )
+
         return wrapper
 
     @classmethod
@@ -17436,21 +18377,25 @@ class Pipeline(Base):
         """
 
         logger.debug("Creating pipeline resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'PipelineName': pipeline_name,
-            'PipelineDisplayName': pipeline_display_name,
-            'PipelineDefinition': pipeline_definition,
-            'PipelineDefinitionS3Location': pipeline_definition_s3_location,
-            'PipelineDescription': pipeline_description,
-            'ClientRequestToken': client_request_token,
-            'RoleArn': role_arn,
-            'Tags': tags,
-            'ParallelismConfiguration': parallelism_configuration,
+            "PipelineName": pipeline_name,
+            "PipelineDisplayName": pipeline_display_name,
+            "PipelineDefinition": pipeline_definition,
+            "PipelineDefinitionS3Location": pipeline_definition_s3_location,
+            "PipelineDescription": pipeline_description,
+            "ClientRequestToken": client_request_token,
+            "RoleArn": role_arn,
+            "Tags": tags,
+            "ParallelismConfiguration": parallelism_configuration,
         }
 
-        operation_input_args = Base.populate_chained_attributes(resource_name='Pipeline', operation_input_args=operation_input_args)
+        operation_input_args = Base.populate_chained_attributes(
+            resource_name="Pipeline", operation_input_args=operation_input_args
+        )
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -17496,19 +18441,23 @@ class Pipeline(Base):
         """
 
         operation_input_args = {
-            'PipelineName': pipeline_name,
+            "PipelineName": pipeline_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
         response = client.describe_pipeline(**operation_input_args)
 
         pprint(response)
 
         # deserialize the response
-        transformed_response = transform(response, 'DescribePipelineResponse')
+        transformed_response = transform(response, "DescribePipelineResponse")
         pipeline = cls(**transformed_response)
         return pipeline
 
-    def refresh(self) -> Optional["Pipeline"]:
+    def refresh(
+        self,
+    ) -> Optional["Pipeline"]:
         """
         Refresh a Pipeline resource
 
@@ -17530,13 +18479,13 @@ class Pipeline(Base):
         """
 
         operation_input_args = {
-            'PipelineName': self.pipeline_name,
+            "PipelineName": self.pipeline_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_pipeline(**operation_input_args)
 
         # deserialize response and update self
-        transform(response, 'DescribePipelineResponse', self)
+        transform(response, "DescribePipelineResponse", self)
         return self
 
     @populate_inputs_decorator
@@ -17553,7 +18502,7 @@ class Pipeline(Base):
         Update a Pipeline resource
 
         Parameters:
-            pipeline_definition_s3_location:The location of the pipeline definition stored in Amazon S3. If specified, SageMaker will retrieve the pipeline definition from this location.
+            pipeline_definition_s3_location: The location of the pipeline definition stored in Amazon S3. If specified, SageMaker will retrieve the pipeline definition from this location.
 
         Returns:
             The Pipeline resource.
@@ -17574,16 +18523,16 @@ class Pipeline(Base):
         """
 
         logger.debug("Updating pipeline resource.")
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
-            'PipelineName': self.pipeline_name,
-            'PipelineDisplayName': pipeline_display_name,
-            'PipelineDefinition': pipeline_definition,
-            'PipelineDefinitionS3Location': pipeline_definition_s3_location,
-            'PipelineDescription': pipeline_description,
-            'RoleArn': role_arn,
-            'ParallelismConfiguration': parallelism_configuration,
+            "PipelineName": self.pipeline_name,
+            "PipelineDisplayName": pipeline_display_name,
+            "PipelineDefinition": pipeline_definition,
+            "PipelineDefinitionS3Location": pipeline_definition_s3_location,
+            "PipelineDescription": pipeline_description,
+            "RoleArn": role_arn,
+            "ParallelismConfiguration": parallelism_configuration,
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -17597,7 +18546,10 @@ class Pipeline(Base):
 
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+        client_request_token: str,
+    ) -> None:
         """
         Delete a Pipeline resource
 
@@ -17617,20 +18569,19 @@ class Pipeline(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
-            'PipelineName': self.pipeline_name,
-            'ClientRequestToken': self.client_request_token,
+            "PipelineName": self.pipeline_name,
+            "ClientRequestToken": client_request_token,
         }
         client.delete_pipeline(**operation_input_args)
 
+        logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+
     def wait_for_status(
-        self,
-        status: Literal['Active', 'Deleting'],
-        poll: int = 5,
-        timeout: Optional[int] = None
-    ) -> Optional["Pipeline"]:
+        self, status: Literal["Active", "Deleting"], poll: int = 5, timeout: Optional[int] = None
+    ):
         """
         Wait for a Pipeline resource.
 
@@ -17655,7 +18606,8 @@ class Pipeline(Base):
             current_status = self.pipeline_status
 
             if status == current_status:
-                return self
+                print(f"\nFinal Resource Status: {current_status}")
+                return
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="Pipeline", status=current_status)
@@ -17703,25 +18655,31 @@ class Pipeline(Base):
                 ```
         """
 
-        client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'PipelineNamePrefix': pipeline_name_prefix,
-            'CreatedAfter': created_after,
-            'CreatedBefore': created_before,
-            'SortBy': sort_by,
-            'SortOrder': sort_order,
+            "PipelineNamePrefix": pipeline_name_prefix,
+            "CreatedAfter": created_after,
+            "CreatedBefore": created_before,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
         }
 
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
 
         return ResourceIterator(
             client=client,
-            list_method='list_pipelines',
-            summaries_key='PipelineSummaries',
-            summary_name='PipelineSummary',
+            list_method="list_pipelines",
+            summaries_key="PipelineSummaries",
+            summary_name="PipelineSummary",
             resource_cls=Pipeline,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
 
 
@@ -17741,10 +18699,11 @@ class PipelineExecution(Base):
         last_modified_time: The time when the pipeline execution was modified last.
         created_by:
         last_modified_by:
-        parallelism_configuration:The parallelism configuration applied to the pipeline.
-        selective_execution_config:The selective execution configuration applied to the pipeline run.
+        parallelism_configuration: The parallelism configuration applied to the pipeline.
+        selective_execution_config: The selective execution configuration applied to the pipeline run.
 
     """
+
     pipeline_execution_arn: str
     pipeline_arn: Optional[str] = Unassigned()
     pipeline_execution_display_name: Optional[str] = Unassigned()
@@ -17761,10 +18720,19 @@ class PipelineExecution(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "pipeline_execution_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'pipeline_execution_name':
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object pipeline_execution")
+        return None
 
     @classmethod
     def get(
@@ -17799,19 +18767,23 @@ class PipelineExecution(Base):
         """
 
         operation_input_args = {
-            'PipelineExecutionArn': pipeline_execution_arn,
+            "PipelineExecutionArn": pipeline_execution_arn,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
         response = client.describe_pipeline_execution(**operation_input_args)
 
         pprint(response)
 
         # deserialize the response
-        transformed_response = transform(response, 'DescribePipelineExecutionResponse')
+        transformed_response = transform(response, "DescribePipelineExecutionResponse")
         pipeline_execution = cls(**transformed_response)
         return pipeline_execution
 
-    def refresh(self) -> Optional["PipelineExecution"]:
+    def refresh(
+        self,
+    ) -> Optional["PipelineExecution"]:
         """
         Refresh a PipelineExecution resource
 
@@ -17833,13 +18805,13 @@ class PipelineExecution(Base):
         """
 
         operation_input_args = {
-            'PipelineExecutionArn': self.pipeline_execution_arn,
+            "PipelineExecutionArn": self.pipeline_execution_arn,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_pipeline_execution(**operation_input_args)
 
         # deserialize response and update self
-        transform(response, 'DescribePipelineExecutionResponse', self)
+        transform(response, "DescribePipelineExecutionResponse", self)
         return self
 
     def update(
@@ -17871,13 +18843,13 @@ class PipelineExecution(Base):
         """
 
         logger.debug("Updating pipeline_execution resource.")
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
-            'PipelineExecutionArn': self.pipeline_execution_arn,
-            'PipelineExecutionDescription': pipeline_execution_description,
-            'PipelineExecutionDisplayName': pipeline_execution_display_name,
-            'ParallelismConfiguration': parallelism_configuration,
+            "PipelineExecutionArn": self.pipeline_execution_arn,
+            "PipelineExecutionDescription": pipeline_execution_description,
+            "PipelineExecutionDisplayName": pipeline_execution_display_name,
+            "ParallelismConfiguration": parallelism_configuration,
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -17914,17 +18886,17 @@ class PipelineExecution(Base):
         client = SageMakerClient().client
 
         operation_input_args = {
-            'PipelineExecutionArn': self.pipeline_execution_arn,
-            'ClientRequestToken': self.client_request_token,
+            "PipelineExecutionArn": self.pipeline_execution_arn,
+            "ClientRequestToken": self.client_request_token,
         }
         client.stop_pipeline_execution(**operation_input_args)
 
     def wait_for_status(
         self,
-        status: Literal['Executing', 'Stopping', 'Stopped', 'Failed', 'Succeeded'],
+        status: Literal["Executing", "Stopping", "Stopped", "Failed", "Succeeded"],
         poll: int = 5,
-        timeout: Optional[int] = None
-    ) -> Optional["PipelineExecution"]:
+        timeout: Optional[int] = None,
+    ):
         """
         Wait for a PipelineExecution resource.
 
@@ -17949,10 +18921,15 @@ class PipelineExecution(Base):
             current_status = self.pipeline_execution_status
 
             if status == current_status:
-                return self
+                print(f"\nFinal Resource Status: {current_status}")
+                return
 
             if "failed" in current_status.lower():
-                raise FailedStatusError(resource_type="PipelineExecution", status=current_status, reason=self.failure_reason)
+                raise FailedStatusError(
+                    resource_type="PipelineExecution",
+                    status=current_status,
+                    reason=self.failure_reason,
+                )
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="PipelineExecution", status=current_status)
@@ -18001,63 +18978,68 @@ class PipelineExecution(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'PipelineName': pipeline_name,
-            'CreatedAfter': created_after,
-            'CreatedBefore': created_before,
-            'SortBy': sort_by,
-            'SortOrder': sort_order,
+            "PipelineName": pipeline_name,
+            "CreatedAfter": created_after,
+            "CreatedBefore": created_before,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
         }
 
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
 
         return ResourceIterator(
             client=client,
-            list_method='list_pipeline_executions',
-            summaries_key='PipelineExecutionSummaries',
-            summary_name='PipelineExecutionSummary',
+            list_method="list_pipeline_executions",
+            summaries_key="PipelineExecutionSummaries",
+            summary_name="PipelineExecutionSummary",
             resource_cls=PipelineExecution,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
-
 
     def get_pipeline_definition(
         self,
-
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[DescribePipelineDefinitionForExecutionResponse]:
         """
-        Perform DescribePipelineDefinitionForExecution on a PipelineExecution resource.
+        Describes the details of an execution's pipeline definition.
 
 
         """
 
-
         operation_input_args = {
-            'PipelineExecutionArn': self.pipeline_execution_arn,
+            "PipelineExecutionArn": self.pipeline_execution_arn,
         }
         logger.debug(f"Input request: {operation_input_args}")
 
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         logger.debug(f"Calling describe_pipeline_definition_for_execution API")
         response = client.describe_pipeline_definition_for_execution(**operation_input_args)
         logger.debug(f"Response: {response}")
 
-        transformed_response = transform(response, 'DescribePipelineDefinitionForExecutionResponse')
+        transformed_response = transform(response, "DescribePipelineDefinitionForExecutionResponse")
         return DescribePipelineDefinitionForExecutionResponse(**transformed_response)
-
 
     def get_all_steps(
         self,
-        sort_order: Optional[str] = Unassigned(),    session: Optional[Session] = None,
+        sort_order: Optional[str] = Unassigned(),
+        session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> ResourceIterator[PipelineExecutionStep]:
         """
-        Perform ListPipelineExecutionSteps on a PipelineExecution resource.
+        Gets a list of PipeLineExecutionStep objects.
 
         Parameters:
             next_token: If the result of the previous ListPipelineExecutionSteps request was truncated, the response includes a NextToken. To retrieve the next set of pipeline execution steps, use the token in the next request.
@@ -18069,26 +19051,29 @@ class PipelineExecution(Base):
 
         """
 
-
         operation_input_args = {
-            'PipelineExecutionArn': self.pipeline_execution_arn,
-            'SortOrder': sort_order,
+            "PipelineExecutionArn": self.pipeline_execution_arn,
+            "SortOrder": sort_order,
         }
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
         logger.debug(f"Input request: {operation_input_args}")
 
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
-
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         return ResourceIterator(
             client=client,
-            list_method='list_pipeline_execution_steps',
-            summaries_key='PipelineExecutionSteps',
-            summary_name='PipelineExecutionStep',
+            list_method="list_pipeline_execution_steps",
+            summaries_key="PipelineExecutionSteps",
+            summary_name="PipelineExecutionStep",
             resource_cls=PipelineExecutionStep,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
-
 
     def get_all_parameters(
         self,
@@ -18096,7 +19081,7 @@ class PipelineExecution(Base):
         region: Optional[str] = None,
     ) -> ResourceIterator[Parameter]:
         """
-        Perform ListPipelineParametersForExecution on a PipelineExecution resource.
+        Gets a list of parameters for a pipeline execution.
 
         Parameters:
             next_token: If the result of the previous ListPipelineParametersForExecution request was truncated, the response includes a NextToken. To retrieve the next set of parameters, use the token in the next request.
@@ -18107,25 +19092,28 @@ class PipelineExecution(Base):
 
         """
 
-
         operation_input_args = {
-            'PipelineExecutionArn': self.pipeline_execution_arn,
+            "PipelineExecutionArn": self.pipeline_execution_arn,
         }
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
         logger.debug(f"Input request: {operation_input_args}")
 
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
-
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         return ResourceIterator(
             client=client,
-            list_method='list_pipeline_parameters_for_execution',
-            summaries_key='PipelineParameters',
-            summary_name='Parameter',
+            list_method="list_pipeline_parameters_for_execution",
+            summaries_key="PipelineParameters",
+            summary_name="Parameter",
             resource_cls=Parameter,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
-
 
     def retry(
         self,
@@ -18134,7 +19122,7 @@ class PipelineExecution(Base):
         region: Optional[str] = None,
     ) -> None:
         """
-        Perform RetryPipelineExecution on a PipelineExecution resource.
+        Retry the execution of the pipeline.
 
         Parameters:
             client_request_token: A unique, case-sensitive identifier that you provide to ensure the idempotency of the operation. An idempotent operation completes no more than once.
@@ -18144,21 +19132,20 @@ class PipelineExecution(Base):
 
         """
 
-
         operation_input_args = {
-            'PipelineExecutionArn': self.pipeline_execution_arn,
-            'ClientRequestToken': client_request_token,
-            'ParallelismConfiguration': self.parallelism_configuration,
+            "PipelineExecutionArn": self.pipeline_execution_arn,
+            "ClientRequestToken": client_request_token,
+            "ParallelismConfiguration": self.parallelism_configuration,
         }
         logger.debug(f"Input request: {operation_input_args}")
 
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         logger.debug(f"Calling retry_pipeline_execution API")
         response = client.retry_pipeline_execution(**operation_input_args)
         logger.debug(f"Response: {response}")
-
-
 
     def send_execution_step_failure(
         self,
@@ -18168,7 +19155,7 @@ class PipelineExecution(Base):
         region: Optional[str] = None,
     ) -> None:
         """
-        Perform SendPipelineExecutionStepFailure on a PipelineExecution resource.
+        Notifies the pipeline that the execution of a callback step failed, along with a message describing why.
 
         Parameters:
             callback_token: The pipeline generated token from the Amazon SQS queue.
@@ -18179,21 +19166,20 @@ class PipelineExecution(Base):
 
         """
 
-
         operation_input_args = {
-            'CallbackToken': callback_token,
-            'FailureReason': self.failure_reason,
-            'ClientRequestToken': client_request_token,
+            "CallbackToken": callback_token,
+            "FailureReason": self.failure_reason,
+            "ClientRequestToken": client_request_token,
         }
         logger.debug(f"Input request: {operation_input_args}")
 
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         logger.debug(f"Calling send_pipeline_execution_step_failure API")
         response = client.send_pipeline_execution_step_failure(**operation_input_args)
         logger.debug(f"Response: {response}")
-
-
 
     def send_execution_step_success(
         self,
@@ -18204,7 +19190,7 @@ class PipelineExecution(Base):
         region: Optional[str] = None,
     ) -> None:
         """
-        Perform SendPipelineExecutionStepSuccess on a PipelineExecution resource.
+        Notifies the pipeline that the execution of a callback step succeeded and provides a list of the step's output parameters.
 
         Parameters:
             callback_token: The pipeline generated token from the Amazon SQS queue.
@@ -18216,20 +19202,20 @@ class PipelineExecution(Base):
 
         """
 
-
         operation_input_args = {
-            'CallbackToken': callback_token,
-            'OutputParameters': output_parameters,
-            'ClientRequestToken': client_request_token,
+            "CallbackToken": callback_token,
+            "OutputParameters": output_parameters,
+            "ClientRequestToken": client_request_token,
         }
         logger.debug(f"Input request: {operation_input_args}")
 
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         logger.debug(f"Calling send_pipeline_execution_step_success API")
         response = client.send_pipeline_execution_step_success(**operation_input_args)
         logger.debug(f"Response: {response}")
-
 
 
 class ProcessingJob(Base):
@@ -18237,29 +19223,30 @@ class ProcessingJob(Base):
     Class representing resource ProcessingJob
 
     Attributes:
-        processing_job_name:The name of the processing job. The name must be unique within an Amazon Web Services Region in the Amazon Web Services account.
-        processing_resources:Identifies the resources, ML compute instances, and ML storage volumes to deploy for a processing job. In distributed training, you specify more than one instance.
-        app_specification:Configures the processing job to run a specified container image.
-        processing_job_arn:The Amazon Resource Name (ARN) of the processing job.
-        processing_job_status:Provides the status of a processing job.
-        creation_time:The time at which the processing job was created.
-        processing_inputs:The inputs for a processing job.
-        processing_output_config:Output configuration for the processing job.
-        stopping_condition:The time limit for how long the processing job is allowed to run.
-        environment:The environment variables set in the Docker container.
-        network_config:Networking options for a processing job.
-        role_arn:The Amazon Resource Name (ARN) of an IAM role that Amazon SageMaker can assume to perform tasks on your behalf.
-        experiment_config:The configuration information used to create an experiment.
-        exit_message:An optional string, up to one KB in size, that contains metadata from the processing container when the processing job exits.
-        failure_reason:A string, up to one KB in size, that contains the reason a processing job failed, if it failed.
-        processing_end_time:The time at which the processing job completed.
-        processing_start_time:The time at which the processing job started.
-        last_modified_time:The time at which the processing job was last modified.
-        monitoring_schedule_arn:The ARN of a monitoring schedule for an endpoint associated with this processing job.
-        auto_ml_job_arn:The ARN of an AutoML job associated with this processing job.
-        training_job_arn:The ARN of a training job associated with this processing job.
+        processing_job_name: The name of the processing job. The name must be unique within an Amazon Web Services Region in the Amazon Web Services account.
+        processing_resources: Identifies the resources, ML compute instances, and ML storage volumes to deploy for a processing job. In distributed training, you specify more than one instance.
+        app_specification: Configures the processing job to run a specified container image.
+        processing_job_arn: The Amazon Resource Name (ARN) of the processing job.
+        processing_job_status: Provides the status of a processing job.
+        creation_time: The time at which the processing job was created.
+        processing_inputs: The inputs for a processing job.
+        processing_output_config: Output configuration for the processing job.
+        stopping_condition: The time limit for how long the processing job is allowed to run.
+        environment: The environment variables set in the Docker container.
+        network_config: Networking options for a processing job.
+        role_arn: The Amazon Resource Name (ARN) of an IAM role that Amazon SageMaker can assume to perform tasks on your behalf.
+        experiment_config: The configuration information used to create an experiment.
+        exit_message: An optional string, up to one KB in size, that contains metadata from the processing container when the processing job exits.
+        failure_reason: A string, up to one KB in size, that contains the reason a processing job failed, if it failed.
+        processing_end_time: The time at which the processing job completed.
+        processing_start_time: The time at which the processing job started.
+        last_modified_time: The time at which the processing job was last modified.
+        monitoring_schedule_arn: The ARN of a monitoring schedule for an endpoint associated with this processing job.
+        auto_ml_job_arn: The ARN of an AutoML job associated with this processing job.
+        training_job_arn: The ARN of a training job associated with this processing job.
 
     """
+
     processing_job_name: str
     processing_inputs: Optional[List[ProcessingInput]] = Unassigned()
     processing_output_config: Optional[ProcessingOutputConfig] = Unassigned()
@@ -18279,54 +19266,48 @@ class ProcessingJob(Base):
     last_modified_time: Optional[datetime.datetime] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
     monitoring_schedule_arn: Optional[str] = Unassigned()
-    auto_m_l_job_arn: Optional[str] = Unassigned()
+    auto_ml_job_arn: Optional[str] = Unassigned()
     training_job_arn: Optional[str] = Unassigned()
 
     def get_name(self) -> str:
         attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'processing_job_name':
-                return value
-        raise Exception("Name attribute not found for object")
+        resource_name = "processing_job_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
 
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
+        for attribute, value in attributes.items():
+            if attribute == "name" or attribute in attribute_name_candidates:
+                return value
+        logger.error("Name attribute not found for object processing_job")
+        return None
 
     def populate_inputs_decorator(create_func):
+        @functools.wraps(create_func)
         def wrapper(*args, **kwargs):
-            config_schema_for_resource = \
-        {
-          "processing_resources": {
-            "cluster_config": {
-              "volume_kms_key_id": {
-                "type": "string"
-              }
+            config_schema_for_resource = {
+                "processing_resources": {
+                    "cluster_config": {"volume_kms_key_id": {"type": "string"}}
+                },
+                "processing_output_config": {"kms_key_id": {"type": "string"}},
+                "network_config": {
+                    "vpc_config": {
+                        "security_group_ids": {"type": "array", "items": {"type": "string"}},
+                        "subnets": {"type": "array", "items": {"type": "string"}},
+                    }
+                },
+                "role_arn": {"type": "string"},
             }
-          },
-          "processing_output_config": {
-            "kms_key_id": {
-              "type": "string"
-            }
-          },
-          "network_config": {
-            "vpc_config": {
-              "security_group_ids": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
-              },
-              "subnets": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "role_arn": {
-            "type": "string"
-          }
-        }
-            return create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "ProcessingJob", **kwargs))
+            return create_func(
+                *args,
+                **Base.get_updated_kwargs_with_configured_attributes(
+                    config_schema_for_resource, "ProcessingJob", **kwargs
+                ),
+            )
+
         return wrapper
 
     @classmethod
@@ -18388,23 +19369,27 @@ class ProcessingJob(Base):
         """
 
         logger.debug("Creating processing_job resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'ProcessingInputs': processing_inputs,
-            'ProcessingOutputConfig': processing_output_config,
-            'ProcessingJobName': processing_job_name,
-            'ProcessingResources': processing_resources,
-            'StoppingCondition': stopping_condition,
-            'AppSpecification': app_specification,
-            'Environment': environment,
-            'NetworkConfig': network_config,
-            'RoleArn': role_arn,
-            'Tags': tags,
-            'ExperimentConfig': experiment_config,
+            "ProcessingInputs": processing_inputs,
+            "ProcessingOutputConfig": processing_output_config,
+            "ProcessingJobName": processing_job_name,
+            "ProcessingResources": processing_resources,
+            "StoppingCondition": stopping_condition,
+            "AppSpecification": app_specification,
+            "Environment": environment,
+            "NetworkConfig": network_config,
+            "RoleArn": role_arn,
+            "Tags": tags,
+            "ExperimentConfig": experiment_config,
         }
 
-        operation_input_args = Base.populate_chained_attributes(resource_name='ProcessingJob', operation_input_args=operation_input_args)
+        operation_input_args = Base.populate_chained_attributes(
+            resource_name="ProcessingJob", operation_input_args=operation_input_args
+        )
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -18450,19 +19435,23 @@ class ProcessingJob(Base):
         """
 
         operation_input_args = {
-            'ProcessingJobName': processing_job_name,
+            "ProcessingJobName": processing_job_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
         response = client.describe_processing_job(**operation_input_args)
 
         pprint(response)
 
         # deserialize the response
-        transformed_response = transform(response, 'DescribeProcessingJobResponse')
+        transformed_response = transform(response, "DescribeProcessingJobResponse")
         processing_job = cls(**transformed_response)
         return processing_job
 
-    def refresh(self) -> Optional["ProcessingJob"]:
+    def refresh(
+        self,
+    ) -> Optional["ProcessingJob"]:
         """
         Refresh a ProcessingJob resource
 
@@ -18484,13 +19473,13 @@ class ProcessingJob(Base):
         """
 
         operation_input_args = {
-            'ProcessingJobName': self.processing_job_name,
+            "ProcessingJobName": self.processing_job_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_processing_job(**operation_input_args)
 
         # deserialize response and update self
-        transform(response, 'DescribeProcessingJobResponse', self)
+        transform(response, "DescribeProcessingJobResponse", self)
         return self
 
     def stop(self) -> None:
@@ -18515,15 +19504,11 @@ class ProcessingJob(Base):
         client = SageMakerClient().client
 
         operation_input_args = {
-            'ProcessingJobName': self.processing_job_name,
+            "ProcessingJobName": self.processing_job_name,
         }
         client.stop_processing_job(**operation_input_args)
 
-    def wait(
-        self,
-        poll: int = 5,
-        timeout: Optional[int] = None
-    ) -> Optional["ProcessingJob"]:
+    def wait(self, poll: int = 5, timeout: Optional[int] = None):
         """
         Wait for a ProcessingJob resource.
 
@@ -18540,7 +19525,7 @@ class ProcessingJob(Base):
             WaiterError: Raised when an error occurs while waiting.
 
         """
-        terminal_states = ['Completed', 'Failed', 'Stopped']
+        terminal_states = ["Completed", "Failed", "Stopped"]
         start_time = time.time()
 
         while True:
@@ -18548,11 +19533,16 @@ class ProcessingJob(Base):
             current_status = self.processing_job_status
 
             if current_status in terminal_states:
+                print(f"\nFinal Resource Status: {current_status}")
 
                 if "failed" in current_status.lower():
-                    raise FailedStatusError(resource_type="ProcessingJob", status=current_status, reason=self.failure_reason)
+                    raise FailedStatusError(
+                        resource_type="ProcessingJob",
+                        status=current_status,
+                        reason=self.failure_reason,
+                    )
 
-                return self
+                return
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="ProcessingJob", status=current_status)
@@ -18606,28 +19596,34 @@ class ProcessingJob(Base):
                 ```
         """
 
-        client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'CreationTimeAfter': creation_time_after,
-            'CreationTimeBefore': creation_time_before,
-            'LastModifiedTimeAfter': last_modified_time_after,
-            'LastModifiedTimeBefore': last_modified_time_before,
-            'NameContains': name_contains,
-            'StatusEquals': status_equals,
-            'SortBy': sort_by,
-            'SortOrder': sort_order,
+            "CreationTimeAfter": creation_time_after,
+            "CreationTimeBefore": creation_time_before,
+            "LastModifiedTimeAfter": last_modified_time_after,
+            "LastModifiedTimeBefore": last_modified_time_before,
+            "NameContains": name_contains,
+            "StatusEquals": status_equals,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
         }
 
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
 
         return ResourceIterator(
             client=client,
-            list_method='list_processing_jobs',
-            summaries_key='ProcessingJobSummaries',
-            summary_name='ProcessingJobSummary',
+            list_method="list_processing_jobs",
+            summaries_key="ProcessingJobSummaries",
+            summary_name="ProcessingJobSummary",
             resource_cls=ProcessingJob,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
 
 
@@ -18649,12 +19645,15 @@ class Project(Base):
         last_modified_by:
 
     """
+
     project_name: str
     project_arn: Optional[str] = Unassigned()
     project_id: Optional[str] = Unassigned()
     project_description: Optional[str] = Unassigned()
     service_catalog_provisioning_details: Optional[ServiceCatalogProvisioningDetails] = Unassigned()
-    service_catalog_provisioned_product_details: Optional[ServiceCatalogProvisionedProductDetails] = Unassigned()
+    service_catalog_provisioned_product_details: Optional[
+        ServiceCatalogProvisionedProductDetails
+    ] = Unassigned()
     project_status: Optional[str] = Unassigned()
     created_by: Optional[UserContext] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
@@ -18663,10 +19662,19 @@ class Project(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "project_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'project_name':
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object project")
+        return None
 
     @classmethod
     def create(
@@ -18710,16 +19718,20 @@ class Project(Base):
         """
 
         logger.debug("Creating project resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'ProjectName': project_name,
-            'ProjectDescription': project_description,
-            'ServiceCatalogProvisioningDetails': service_catalog_provisioning_details,
-            'Tags': tags,
+            "ProjectName": project_name,
+            "ProjectDescription": project_description,
+            "ServiceCatalogProvisioningDetails": service_catalog_provisioning_details,
+            "Tags": tags,
         }
 
-        operation_input_args = Base.populate_chained_attributes(resource_name='Project', operation_input_args=operation_input_args)
+        operation_input_args = Base.populate_chained_attributes(
+            resource_name="Project", operation_input_args=operation_input_args
+        )
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -18764,19 +19776,23 @@ class Project(Base):
         """
 
         operation_input_args = {
-            'ProjectName': project_name,
+            "ProjectName": project_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
         response = client.describe_project(**operation_input_args)
 
         pprint(response)
 
         # deserialize the response
-        transformed_response = transform(response, 'DescribeProjectOutput')
+        transformed_response = transform(response, "DescribeProjectOutput")
         project = cls(**transformed_response)
         return project
 
-    def refresh(self) -> Optional["Project"]:
+    def refresh(
+        self,
+    ) -> Optional["Project"]:
         """
         Refresh a Project resource
 
@@ -18797,27 +19813,29 @@ class Project(Base):
         """
 
         operation_input_args = {
-            'ProjectName': self.project_name,
+            "ProjectName": self.project_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_project(**operation_input_args)
 
         # deserialize response and update self
-        transform(response, 'DescribeProjectOutput', self)
+        transform(response, "DescribeProjectOutput", self)
         return self
 
     def update(
         self,
         project_description: Optional[str] = Unassigned(),
-        service_catalog_provisioning_update_details: Optional[ServiceCatalogProvisioningUpdateDetails] = Unassigned(),
+        service_catalog_provisioning_update_details: Optional[
+            ServiceCatalogProvisioningUpdateDetails
+        ] = Unassigned(),
         tags: Optional[List[Tag]] = Unassigned(),
     ) -> Optional["Project"]:
         """
         Update a Project resource
 
         Parameters:
-            service_catalog_provisioning_update_details:The product ID and provisioning artifact ID to provision a service catalog. The provisioning artifact ID will default to the latest provisioning artifact ID of the product, if you don't provide the provisioning artifact ID. For more information, see What is Amazon Web Services Service Catalog.
-            tags:An array of key-value pairs. You can use tags to categorize your Amazon Web Services resources in different ways, for example, by purpose, owner, or environment. For more information, see Tagging Amazon Web Services Resources. In addition, the project must have tag update constraints set in order to include this parameter in the request. For more information, see Amazon Web Services Service Catalog Tag Update Constraints.
+            service_catalog_provisioning_update_details: The product ID and provisioning artifact ID to provision a service catalog. The provisioning artifact ID will default to the latest provisioning artifact ID of the product, if you don't provide the provisioning artifact ID. For more information, see What is Amazon Web Services Service Catalog.
+            tags: An array of key-value pairs. You can use tags to categorize your Amazon Web Services resources in different ways, for example, by purpose, owner, or environment. For more information, see Tagging Amazon Web Services Resources. In addition, the project must have tag update constraints set in order to include this parameter in the request. For more information, see Amazon Web Services Service Catalog Tag Update Constraints.
 
         Returns:
             The Project resource.
@@ -18837,13 +19855,13 @@ class Project(Base):
         """
 
         logger.debug("Updating project resource.")
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
-            'ProjectName': self.project_name,
-            'ProjectDescription': project_description,
-            'ServiceCatalogProvisioningUpdateDetails': service_catalog_provisioning_update_details,
-            'Tags': tags,
+            "ProjectName": self.project_name,
+            "ProjectDescription": project_description,
+            "ServiceCatalogProvisioningUpdateDetails": service_catalog_provisioning_update_details,
+            "Tags": tags,
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -18857,7 +19875,9 @@ class Project(Base):
 
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a Project resource
 
@@ -18876,19 +19896,32 @@ class Project(Base):
             ConflictException: There was a conflict when you attempted to modify a SageMaker entity such as an Experiment or Artifact.
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
-            'ProjectName': self.project_name,
+            "ProjectName": self.project_name,
         }
         client.delete_project(**operation_input_args)
 
+        logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+
     def wait_for_status(
         self,
-        status: Literal['Pending', 'CreateInProgress', 'CreateCompleted', 'CreateFailed', 'DeleteInProgress', 'DeleteFailed', 'DeleteCompleted', 'UpdateInProgress', 'UpdateCompleted', 'UpdateFailed'],
+        status: Literal[
+            "Pending",
+            "CreateInProgress",
+            "CreateCompleted",
+            "CreateFailed",
+            "DeleteInProgress",
+            "DeleteFailed",
+            "DeleteCompleted",
+            "UpdateInProgress",
+            "UpdateCompleted",
+            "UpdateFailed",
+        ],
         poll: int = 5,
-        timeout: Optional[int] = None
-    ) -> Optional["Project"]:
+        timeout: Optional[int] = None,
+    ):
         """
         Wait for a Project resource.
 
@@ -18913,10 +19946,13 @@ class Project(Base):
             current_status = self.project_status
 
             if status == current_status:
-                return self
+                print(f"\nFinal Resource Status: {current_status}")
+                return
 
             if "failed" in current_status.lower():
-                raise FailedStatusError(resource_type="Project", status=current_status, reason='(Unknown)')
+                raise FailedStatusError(
+                    resource_type="Project", status=current_status, reason="(Unknown)"
+                )
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="Project", status=current_status)
@@ -18964,25 +20000,31 @@ class Project(Base):
                 ```
         """
 
-        client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'CreationTimeAfter': creation_time_after,
-            'CreationTimeBefore': creation_time_before,
-            'NameContains': name_contains,
-            'SortBy': sort_by,
-            'SortOrder': sort_order,
+            "CreationTimeAfter": creation_time_after,
+            "CreationTimeBefore": creation_time_before,
+            "NameContains": name_contains,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
         }
 
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
 
         return ResourceIterator(
             client=client,
-            list_method='list_projects',
-            summaries_key='ProjectSummaryList',
-            summary_name='ProjectSummary',
+            list_method="list_projects",
+            summaries_key="ProjectSummaryList",
+            summary_name="ProjectSummary",
             resource_cls=Project,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
 
 
@@ -18991,21 +20033,22 @@ class Space(Base):
     Class representing resource Space
 
     Attributes:
-        domain_id:The ID of the associated domain.
-        space_arn:The space's Amazon Resource Name (ARN).
-        space_name:The name of the space.
-        home_efs_file_system_uid:The ID of the space's profile in the Amazon EFS volume.
-        status:The status.
-        last_modified_time:The last modified time.
-        creation_time:The creation time.
-        failure_reason:The failure reason.
-        space_settings:A collection of space settings.
-        ownership_settings:The collection of ownership settings for a space.
-        space_sharing_settings:The collection of space sharing settings for a space.
-        space_display_name:The name of the space that appears in the Amazon SageMaker Studio UI.
-        url:Returns the URL of the space. If the space is created with Amazon Web Services IAM Identity Center (Successor to Amazon Web Services Single Sign-On) authentication, users can navigate to the URL after appending the respective redirect parameter for the application type to be federated through Amazon Web Services IAM Identity Center. The following application types are supported:   Studio Classic: &amp;redirect=JupyterServer    JupyterLab: &amp;redirect=JupyterLab    Code Editor, based on Code-OSS, Visual Studio Code - Open Source: &amp;redirect=CodeEditor
+        domain_id: The ID of the associated domain.
+        space_arn: The space's Amazon Resource Name (ARN).
+        space_name: The name of the space.
+        home_efs_file_system_uid: The ID of the space's profile in the Amazon EFS volume.
+        status: The status.
+        last_modified_time: The last modified time.
+        creation_time: The creation time.
+        failure_reason: The failure reason.
+        space_settings: A collection of space settings.
+        ownership_settings: The collection of ownership settings for a space.
+        space_sharing_settings: The collection of space sharing settings for a space.
+        space_display_name: The name of the space that appears in the Amazon SageMaker Studio UI.
+        url: Returns the URL of the space. If the space is created with Amazon Web Services IAM Identity Center (Successor to Amazon Web Services Single Sign-On) authentication, users can navigate to the URL after appending the respective redirect parameter for the application type to be federated through Amazon Web Services IAM Identity Center. The following application types are supported:   Studio Classic: &amp;redirect=JupyterServer    JupyterLab: &amp;redirect=JupyterLab    Code Editor, based on Code-OSS, Visual Studio Code - Open Source: &amp;redirect=CodeEditor
 
     """
+
     domain_id: str
     space_name: str
     space_arn: Optional[str] = Unassigned()
@@ -19022,10 +20065,19 @@ class Space(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "space_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'space_name':
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object space")
+        return None
 
     @classmethod
     def create(
@@ -19076,19 +20128,23 @@ class Space(Base):
         """
 
         logger.debug("Creating space resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'DomainId': domain_id,
-            'SpaceName': space_name,
-            'Tags': tags,
-            'SpaceSettings': space_settings,
-            'OwnershipSettings': ownership_settings,
-            'SpaceSharingSettings': space_sharing_settings,
-            'SpaceDisplayName': space_display_name,
+            "DomainId": domain_id,
+            "SpaceName": space_name,
+            "Tags": tags,
+            "SpaceSettings": space_settings,
+            "OwnershipSettings": ownership_settings,
+            "SpaceSharingSettings": space_sharing_settings,
+            "SpaceDisplayName": space_display_name,
         }
 
-        operation_input_args = Base.populate_chained_attributes(resource_name='Space', operation_input_args=operation_input_args)
+        operation_input_args = Base.populate_chained_attributes(
+            resource_name="Space", operation_input_args=operation_input_args
+        )
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -19136,20 +20192,24 @@ class Space(Base):
         """
 
         operation_input_args = {
-            'DomainId': domain_id,
-            'SpaceName': space_name,
+            "DomainId": domain_id,
+            "SpaceName": space_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
         response = client.describe_space(**operation_input_args)
 
         pprint(response)
 
         # deserialize the response
-        transformed_response = transform(response, 'DescribeSpaceResponse')
+        transformed_response = transform(response, "DescribeSpaceResponse")
         space = cls(**transformed_response)
         return space
 
-    def refresh(self) -> Optional["Space"]:
+    def refresh(
+        self,
+    ) -> Optional["Space"]:
         """
         Refresh a Space resource
 
@@ -19171,14 +20231,14 @@ class Space(Base):
         """
 
         operation_input_args = {
-            'DomainId': self.domain_id,
-            'SpaceName': self.space_name,
+            "DomainId": self.domain_id,
+            "SpaceName": self.space_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_space(**operation_input_args)
 
         # deserialize response and update self
-        transform(response, 'DescribeSpaceResponse', self)
+        transform(response, "DescribeSpaceResponse", self)
         return self
 
     def update(
@@ -19210,13 +20270,13 @@ class Space(Base):
         """
 
         logger.debug("Updating space resource.")
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
-            'DomainId': self.domain_id,
-            'SpaceName': self.space_name,
-            'SpaceSettings': space_settings,
-            'SpaceDisplayName': space_display_name,
+            "DomainId": self.domain_id,
+            "SpaceName": self.space_name,
+            "SpaceSettings": space_settings,
+            "SpaceDisplayName": space_display_name,
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -19230,7 +20290,9 @@ class Space(Base):
 
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a Space resource
 
@@ -19250,20 +20312,30 @@ class Space(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
-            'DomainId': self.domain_id,
-            'SpaceName': self.space_name,
+            "DomainId": self.domain_id,
+            "SpaceName": self.space_name,
         }
         client.delete_space(**operation_input_args)
 
+        logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+
     def wait_for_status(
         self,
-        status: Literal['Deleting', 'Failed', 'InService', 'Pending', 'Updating', 'Update_Failed', 'Delete_Failed'],
+        status: Literal[
+            "Deleting",
+            "Failed",
+            "InService",
+            "Pending",
+            "Updating",
+            "Update_Failed",
+            "Delete_Failed",
+        ],
         poll: int = 5,
-        timeout: Optional[int] = None
-    ) -> Optional["Space"]:
+        timeout: Optional[int] = None,
+    ):
         """
         Wait for a Space resource.
 
@@ -19288,10 +20360,13 @@ class Space(Base):
             current_status = self.status
 
             if status == current_status:
-                return self
+                print(f"\nFinal Resource Status: {current_status}")
+                return
 
             if "failed" in current_status.lower():
-                raise FailedStatusError(resource_type="Space", status=current_status, reason=self.failure_reason)
+                raise FailedStatusError(
+                    resource_type="Space", status=current_status, reason=self.failure_reason
+                )
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="Space", status=current_status)
@@ -19337,24 +20412,30 @@ class Space(Base):
                 ```
         """
 
-        client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'SortOrder': sort_order,
-            'SortBy': sort_by,
-            'DomainIdEquals': domain_id_equals,
-            'SpaceNameContains': space_name_contains,
+            "SortOrder": sort_order,
+            "SortBy": sort_by,
+            "DomainIdEquals": domain_id_equals,
+            "SpaceNameContains": space_name_contains,
         }
 
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
 
         return ResourceIterator(
             client=client,
-            list_method='list_spaces',
-            summaries_key='Spaces',
-            summary_name='SpaceDetails',
+            list_method="list_spaces",
+            summaries_key="Spaces",
+            summary_name="SpaceDetails",
             resource_cls=Space,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
 
 
@@ -19363,14 +20444,15 @@ class StudioLifecycleConfig(Base):
     Class representing resource StudioLifecycleConfig
 
     Attributes:
-        studio_lifecycle_config_arn:The ARN of the Lifecycle Configuration to describe.
-        studio_lifecycle_config_name:The name of the Amazon SageMaker Studio Lifecycle Configuration that is described.
-        creation_time:The creation time of the Amazon SageMaker Studio Lifecycle Configuration.
-        last_modified_time:This value is equivalent to CreationTime because Amazon SageMaker Studio Lifecycle Configurations are immutable.
-        studio_lifecycle_config_content:The content of your Amazon SageMaker Studio Lifecycle Configuration script.
-        studio_lifecycle_config_app_type:The App type that the Lifecycle Configuration is attached to.
+        studio_lifecycle_config_arn: The ARN of the Lifecycle Configuration to describe.
+        studio_lifecycle_config_name: The name of the Amazon SageMaker Studio Lifecycle Configuration that is described.
+        creation_time: The creation time of the Amazon SageMaker Studio Lifecycle Configuration.
+        last_modified_time: This value is equivalent to CreationTime because Amazon SageMaker Studio Lifecycle Configurations are immutable.
+        studio_lifecycle_config_content: The content of your Amazon SageMaker Studio Lifecycle Configuration script.
+        studio_lifecycle_config_app_type: The App type that the Lifecycle Configuration is attached to.
 
     """
+
     studio_lifecycle_config_name: str
     studio_lifecycle_config_arn: Optional[str] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
@@ -19380,10 +20462,19 @@ class StudioLifecycleConfig(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "studio_lifecycle_config_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'studio_lifecycle_config_name':
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object studio_lifecycle_config")
+        return None
 
     @classmethod
     def create(
@@ -19399,10 +20490,10 @@ class StudioLifecycleConfig(Base):
         Create a StudioLifecycleConfig resource
 
         Parameters:
-            studio_lifecycle_config_name:The name of the Amazon SageMaker Studio Lifecycle Configuration to create.
-            studio_lifecycle_config_content:The content of your Amazon SageMaker Studio Lifecycle Configuration script. This content must be base64 encoded.
-            studio_lifecycle_config_app_type:The App type that the Lifecycle Configuration is attached to.
-            tags:Tags to be associated with the Lifecycle Configuration. Each tag consists of a key and an optional value. Tag keys must be unique per resource. Tags are searchable using the Search API.
+            studio_lifecycle_config_name: The name of the Amazon SageMaker Studio Lifecycle Configuration to create.
+            studio_lifecycle_config_content: The content of your Amazon SageMaker Studio Lifecycle Configuration script. This content must be base64 encoded.
+            studio_lifecycle_config_app_type: The App type that the Lifecycle Configuration is attached to.
+            tags: Tags to be associated with the Lifecycle Configuration. Each tag consists of a key and an optional value. Tag keys must be unique per resource. Tags are searchable using the Search API.
             session: Boto3 session.
             region: Region name.
 
@@ -19427,16 +20518,20 @@ class StudioLifecycleConfig(Base):
         """
 
         logger.debug("Creating studio_lifecycle_config resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'StudioLifecycleConfigName': studio_lifecycle_config_name,
-            'StudioLifecycleConfigContent': studio_lifecycle_config_content,
-            'StudioLifecycleConfigAppType': studio_lifecycle_config_app_type,
-            'Tags': tags,
+            "StudioLifecycleConfigName": studio_lifecycle_config_name,
+            "StudioLifecycleConfigContent": studio_lifecycle_config_content,
+            "StudioLifecycleConfigAppType": studio_lifecycle_config_app_type,
+            "Tags": tags,
         }
 
-        operation_input_args = Base.populate_chained_attributes(resource_name='StudioLifecycleConfig', operation_input_args=operation_input_args)
+        operation_input_args = Base.populate_chained_attributes(
+            resource_name="StudioLifecycleConfig", operation_input_args=operation_input_args
+        )
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -19447,7 +20542,11 @@ class StudioLifecycleConfig(Base):
         response = client.create_studio_lifecycle_config(**operation_input_args)
         logger.debug(f"Response: {response}")
 
-        return cls.get(studio_lifecycle_config_name=studio_lifecycle_config_name, session=session, region=region)
+        return cls.get(
+            studio_lifecycle_config_name=studio_lifecycle_config_name,
+            session=session,
+            region=region,
+        )
 
     @classmethod
     def get(
@@ -19482,19 +20581,23 @@ class StudioLifecycleConfig(Base):
         """
 
         operation_input_args = {
-            'StudioLifecycleConfigName': studio_lifecycle_config_name,
+            "StudioLifecycleConfigName": studio_lifecycle_config_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
         response = client.describe_studio_lifecycle_config(**operation_input_args)
 
         pprint(response)
 
         # deserialize the response
-        transformed_response = transform(response, 'DescribeStudioLifecycleConfigResponse')
+        transformed_response = transform(response, "DescribeStudioLifecycleConfigResponse")
         studio_lifecycle_config = cls(**transformed_response)
         return studio_lifecycle_config
 
-    def refresh(self) -> Optional["StudioLifecycleConfig"]:
+    def refresh(
+        self,
+    ) -> Optional["StudioLifecycleConfig"]:
         """
         Refresh a StudioLifecycleConfig resource
 
@@ -19516,16 +20619,18 @@ class StudioLifecycleConfig(Base):
         """
 
         operation_input_args = {
-            'StudioLifecycleConfigName': self.studio_lifecycle_config_name,
+            "StudioLifecycleConfigName": self.studio_lifecycle_config_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_studio_lifecycle_config(**operation_input_args)
 
         # deserialize response and update self
-        transform(response, 'DescribeStudioLifecycleConfigResponse', self)
+        transform(response, "DescribeStudioLifecycleConfigResponse", self)
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a StudioLifecycleConfig resource
 
@@ -19545,12 +20650,14 @@ class StudioLifecycleConfig(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
-            'StudioLifecycleConfigName': self.studio_lifecycle_config_name,
+            "StudioLifecycleConfigName": self.studio_lifecycle_config_name,
         }
         client.delete_studio_lifecycle_config(**operation_input_args)
+
+        logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
     @classmethod
     def get_all(
@@ -19600,28 +20707,34 @@ class StudioLifecycleConfig(Base):
             ResourceInUse: Resource being accessed is in use.
         """
 
-        client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'NameContains': name_contains,
-            'AppTypeEquals': app_type_equals,
-            'CreationTimeBefore': creation_time_before,
-            'CreationTimeAfter': creation_time_after,
-            'ModifiedTimeBefore': modified_time_before,
-            'ModifiedTimeAfter': modified_time_after,
-            'SortBy': sort_by,
-            'SortOrder': sort_order,
+            "NameContains": name_contains,
+            "AppTypeEquals": app_type_equals,
+            "CreationTimeBefore": creation_time_before,
+            "CreationTimeAfter": creation_time_after,
+            "ModifiedTimeBefore": modified_time_before,
+            "ModifiedTimeAfter": modified_time_after,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
         }
 
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
 
         return ResourceIterator(
             client=client,
-            list_method='list_studio_lifecycle_configs',
-            summaries_key='StudioLifecycleConfigs',
-            summary_name='StudioLifecycleConfigDetails',
+            list_method="list_studio_lifecycle_configs",
+            summaries_key="StudioLifecycleConfigs",
+            summary_name="StudioLifecycleConfigDetails",
             resource_cls=StudioLifecycleConfig,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
 
 
@@ -19630,17 +20743,28 @@ class SubscribedWorkteam(Base):
     Class representing resource SubscribedWorkteam
 
     Attributes:
-        subscribed_workteam:A Workteam instance that contains information about the work team.
+        subscribed_workteam: A Workteam instance that contains information about the work team.
 
     """
+
+    workteam_arn: str
     subscribed_workteam: Optional[SubscribedWorkteam] = Unassigned()
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "subscribed_workteam_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'subscribed_workteam_name':
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object subscribed_workteam")
+        return None
 
     @classmethod
     def get(
@@ -19674,19 +20798,23 @@ class SubscribedWorkteam(Base):
         """
 
         operation_input_args = {
-            'WorkteamArn': workteam_arn,
+            "WorkteamArn": workteam_arn,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
         response = client.describe_subscribed_workteam(**operation_input_args)
 
         pprint(response)
 
         # deserialize the response
-        transformed_response = transform(response, 'DescribeSubscribedWorkteamResponse')
+        transformed_response = transform(response, "DescribeSubscribedWorkteamResponse")
         subscribed_workteam = cls(**transformed_response)
         return subscribed_workteam
 
-    def refresh(self) -> Optional["SubscribedWorkteam"]:
+    def refresh(
+        self,
+    ) -> Optional["SubscribedWorkteam"]:
         """
         Refresh a SubscribedWorkteam resource
 
@@ -19707,13 +20835,13 @@ class SubscribedWorkteam(Base):
         """
 
         operation_input_args = {
-            'WorkteamArn': self.workteam_arn,
+            "WorkteamArn": self.workteam_arn,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_subscribed_workteam(**operation_input_args)
 
         # deserialize response and update self
-        transform(response, 'DescribeSubscribedWorkteamResponse', self)
+        transform(response, "DescribeSubscribedWorkteamResponse", self)
         return self
 
     @classmethod
@@ -19749,21 +20877,27 @@ class SubscribedWorkteam(Base):
                 ```
         """
 
-        client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'NameContains': name_contains,
+            "NameContains": name_contains,
         }
 
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
 
         return ResourceIterator(
             client=client,
-            list_method='list_subscribed_workteams',
-            summaries_key='SubscribedWorkteams',
-            summary_name='SubscribedWorkteam',
+            list_method="list_subscribed_workteams",
+            summaries_key="SubscribedWorkteams",
+            summary_name="SubscribedWorkteam",
             resource_cls=SubscribedWorkteam,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
 
 
@@ -19782,10 +20916,19 @@ class Tag(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "tag_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == "name" or attribute == "tag_name":
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object tag")
+        return None
 
     @classmethod
     def get_all(
@@ -19820,9 +20963,9 @@ class Tag(Base):
                 ```
         """
 
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
 
         operation_input_args = {
             "ResourceArn": resource_arn,
@@ -19843,8 +20986,9 @@ class Tag(Base):
             list_method_kwargs=operation_input_args,
         )
 
+    @classmethod
     def add_tags(
-        self,
+        cls,
         resource_arn: str,
         tags: List[Tag],
         session: Optional[Session] = None,
@@ -19868,16 +21012,17 @@ class Tag(Base):
         }
         logger.debug(f"Input request: {operation_input_args}")
 
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
 
         logger.debug(f"Calling add_tags API")
         response = client.add_tags(**operation_input_args)
         logger.debug(f"Response: {response}")
 
+    @classmethod
     def delete_tags(
-        self,
+        cls,
         resource_arn: str,
         tag_keys: List[str],
         session: Optional[Session] = None,
@@ -19901,9 +21046,9 @@ class Tag(Base):
         }
         logger.debug(f"Input request: {operation_input_args}")
 
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
 
         logger.debug(f"Calling delete_tags API")
         response = client.delete_tags(**operation_input_args)
@@ -19915,33 +21060,33 @@ class TrainingJob(Base):
     Class representing resource TrainingJob
 
     Attributes:
-        training_job_name: Name of the model training job.
-        training_job_arn:The Amazon Resource Name (ARN) of the training job.
-        model_artifacts:Information about the Amazon S3 location that is configured for storing model artifacts.
-        training_job_status:The status of the training job. SageMaker provides the following training job statuses:    InProgress - The training is in progress.    Completed - The training job has completed.    Failed - The training job has failed. To see the reason for the failure, see the FailureReason field in the response to a DescribeTrainingJobResponse call.    Stopping - The training job is stopping.    Stopped - The training job has stopped.   For more detailed information, see SecondaryStatus.
-        secondary_status: Provides detailed information about the state of the training job. For detailed information on the secondary status of the training job, see StatusMessage under SecondaryStatusTransition. SageMaker provides primary statuses and secondary statuses that apply to each of them:  InProgress     Starting - Starting the training job.    Downloading - An optional stage for algorithms that support File training input mode. It indicates that data is being downloaded to the ML storage volumes.    Training - Training is in progress.    Interrupted - The job stopped because the managed spot training instances were interrupted.     Uploading - Training is complete and the model artifacts are being uploaded to the S3 location.    Completed     Completed - The training job has completed.    Failed     Failed - The training job has failed. The reason for the failure is returned in the FailureReason field of DescribeTrainingJobResponse.    Stopped     MaxRuntimeExceeded - The job stopped because it exceeded the maximum allowed runtime.    MaxWaitTimeExceeded - The job stopped because it exceeded the maximum allowed wait time.    Stopped - The training job has stopped.    Stopping     Stopping - Stopping the training job.      Valid values for SecondaryStatus are subject to change.   We no longer support the following secondary statuses:    LaunchingMLInstances     PreparingTraining     DownloadingTrainingImage
-        algorithm_specification:Information about the algorithm used for training, and algorithm metadata.
-        resource_config:Resources, including ML compute instances and ML storage volumes, that are configured for model training.
-        stopping_condition:Specifies a limit to how long a model training job can run. It also specifies how long a managed Spot training job has to complete. When the job reaches the time limit, SageMaker ends the training job. Use this API to cap model training costs. To stop a job, SageMaker sends the algorithm the SIGTERM signal, which delays job termination for 120 seconds. Algorithms can use this 120-second window to save the model artifacts, so the results of training are not lost.
-        creation_time:A timestamp that indicates when the training job was created.
-        tuning_job_arn:The Amazon Resource Name (ARN) of the associated hyperparameter tuning job if the training job was launched by a hyperparameter tuning job.
-        labeling_job_arn:The Amazon Resource Name (ARN) of the SageMaker Ground Truth labeling job that created the transform or training job.
-        auto_ml_job_arn:The Amazon Resource Name (ARN) of an AutoML job.
-        failure_reason:If the training job failed, the reason it failed.
-        hyper_parameters:Algorithm-specific parameters.
-        role_arn:The Amazon Web Services Identity and Access Management (IAM) role configured for the training job.
-        input_data_config:An array of Channel objects that describes each data input channel.
-        output_data_config:The S3 path where model artifacts that you configured when creating the job are stored. SageMaker creates subfolders for model artifacts.
-        warm_pool_status:The status of the warm pool associated with the training job.
-        vpc_config:A VpcConfig object that specifies the VPC that this training job has access to. For more information, see Protect Training Jobs by Using an Amazon Virtual Private Cloud.
-        training_start_time:Indicates the time when the training job starts on training instances. You are billed for the time interval between this time and the value of TrainingEndTime. The start time in CloudWatch Logs might be later than this time. The difference is due to the time it takes to download the training data and to the size of the training container.
-        training_end_time:Indicates the time when the training job ends on training instances. You are billed for the time interval between the value of TrainingStartTime and this time. For successful jobs and stopped jobs, this is the time after model artifacts are uploaded. For failed jobs, this is the time when SageMaker detects a job failure.
-        last_modified_time:A timestamp that indicates when the status of the training job was last modified.
-        secondary_status_transitions:A history of all of the secondary statuses that the training job has transitioned through.
-        final_metric_data_list:A collection of MetricData objects that specify the names, values, and dates and times that the training algorithm emitted to Amazon CloudWatch.
-        enable_network_isolation:If you want to allow inbound or outbound network calls, except for calls between peers within a training cluster for distributed training, choose True. If you enable network isolation for training jobs that are configured to use a VPC, SageMaker downloads and uploads customer data and model artifacts through the specified VPC, but the training container does not have network access.
-        enable_inter_container_traffic_encryption:To encrypt all communications between ML compute instances in distributed training, choose True. Encryption provides greater security for distributed training, but training might take longer. How long it takes depends on the amount of communication between compute instances, especially if you use a deep learning algorithms in distributed training.
-        enable_managed_spot_training:A Boolean indicating whether managed spot training is enabled (True) or not (False).
+        training_job_name:  Name of the model training job.
+        training_job_arn: The Amazon Resource Name (ARN) of the training job.
+        model_artifacts: Information about the Amazon S3 location that is configured for storing model artifacts.
+        training_job_status: The status of the training job. SageMaker provides the following training job statuses:    InProgress - The training is in progress.    Completed - The training job has completed.    Failed - The training job has failed. To see the reason for the failure, see the FailureReason field in the response to a DescribeTrainingJobResponse call.    Stopping - The training job is stopping.    Stopped - The training job has stopped.   For more detailed information, see SecondaryStatus.
+        secondary_status:  Provides detailed information about the state of the training job. For detailed information on the secondary status of the training job, see StatusMessage under SecondaryStatusTransition. SageMaker provides primary statuses and secondary statuses that apply to each of them:  InProgress     Starting - Starting the training job.    Downloading - An optional stage for algorithms that support File training input mode. It indicates that data is being downloaded to the ML storage volumes.    Training - Training is in progress.    Interrupted - The job stopped because the managed spot training instances were interrupted.     Uploading - Training is complete and the model artifacts are being uploaded to the S3 location.    Completed     Completed - The training job has completed.    Failed     Failed - The training job has failed. The reason for the failure is returned in the FailureReason field of DescribeTrainingJobResponse.    Stopped     MaxRuntimeExceeded - The job stopped because it exceeded the maximum allowed runtime.    MaxWaitTimeExceeded - The job stopped because it exceeded the maximum allowed wait time.    Stopped - The training job has stopped.    Stopping     Stopping - Stopping the training job.      Valid values for SecondaryStatus are subject to change.   We no longer support the following secondary statuses:    LaunchingMLInstances     PreparingTraining     DownloadingTrainingImage
+        algorithm_specification: Information about the algorithm used for training, and algorithm metadata.
+        resource_config: Resources, including ML compute instances and ML storage volumes, that are configured for model training.
+        stopping_condition: Specifies a limit to how long a model training job can run. It also specifies how long a managed Spot training job has to complete. When the job reaches the time limit, SageMaker ends the training job. Use this API to cap model training costs. To stop a job, SageMaker sends the algorithm the SIGTERM signal, which delays job termination for 120 seconds. Algorithms can use this 120-second window to save the model artifacts, so the results of training are not lost.
+        creation_time: A timestamp that indicates when the training job was created.
+        tuning_job_arn: The Amazon Resource Name (ARN) of the associated hyperparameter tuning job if the training job was launched by a hyperparameter tuning job.
+        labeling_job_arn: The Amazon Resource Name (ARN) of the SageMaker Ground Truth labeling job that created the transform or training job.
+        auto_ml_job_arn: The Amazon Resource Name (ARN) of an AutoML job.
+        failure_reason: If the training job failed, the reason it failed.
+        hyper_parameters: Algorithm-specific parameters.
+        role_arn: The Amazon Web Services Identity and Access Management (IAM) role configured for the training job.
+        input_data_config: An array of Channel objects that describes each data input channel.
+        output_data_config: The S3 path where model artifacts that you configured when creating the job are stored. SageMaker creates subfolders for model artifacts.
+        warm_pool_status: The status of the warm pool associated with the training job.
+        vpc_config: A VpcConfig object that specifies the VPC that this training job has access to. For more information, see Protect Training Jobs by Using an Amazon Virtual Private Cloud.
+        training_start_time: Indicates the time when the training job starts on training instances. You are billed for the time interval between this time and the value of TrainingEndTime. The start time in CloudWatch Logs might be later than this time. The difference is due to the time it takes to download the training data and to the size of the training container.
+        training_end_time: Indicates the time when the training job ends on training instances. You are billed for the time interval between the value of TrainingStartTime and this time. For successful jobs and stopped jobs, this is the time after model artifacts are uploaded. For failed jobs, this is the time when SageMaker detects a job failure.
+        last_modified_time: A timestamp that indicates when the status of the training job was last modified.
+        secondary_status_transitions: A history of all of the secondary statuses that the training job has transitioned through.
+        final_metric_data_list: A collection of MetricData objects that specify the names, values, and dates and times that the training algorithm emitted to Amazon CloudWatch.
+        enable_network_isolation: If you want to allow inbound or outbound network calls, except for calls between peers within a training cluster for distributed training, choose True. If you enable network isolation for training jobs that are configured to use a VPC, SageMaker downloads and uploads customer data and model artifacts through the specified VPC, but the training container does not have network access.
+        enable_inter_container_traffic_encryption: To encrypt all communications between ML compute instances in distributed training, choose True. Encryption provides greater security for distributed training, but training might take longer. How long it takes depends on the amount of communication between compute instances, especially if you use a deep learning algorithms in distributed training.
+        enable_managed_spot_training: A Boolean indicating whether managed spot training is enabled (True) or not (False).
         checkpoint_config:
         training_time_in_seconds: The training time in seconds.
         billable_time_in_seconds: The billable time in seconds. Billable time refers to the absolute wall-clock time. Multiply BillableTimeInSeconds by the number of instances (InstanceCount) in your training cluster to get the total compute time SageMaker bills you if you run distributed training. The formula is as follows: BillableTimeInSeconds * InstanceCount . You can calculate the savings from using managed spot training using the formula (1 - BillableTimeInSeconds / TrainingTimeInSeconds) * 100. For example, if BillableTimeInSeconds is 100 and TrainingTimeInSeconds is 500, the savings is 80%.
@@ -19951,20 +21096,21 @@ class TrainingJob(Base):
         tensor_board_output_config:
         debug_rule_evaluation_statuses: Evaluation status of Amazon SageMaker Debugger rules for debugging on a training job.
         profiler_config:
-        profiler_rule_configurations:Configuration information for Amazon SageMaker Debugger rules for profiling system and framework metrics.
-        profiler_rule_evaluation_statuses:Evaluation status of Amazon SageMaker Debugger rules for profiling on a training job.
-        profiling_status:Profiling status of a training job.
-        environment:The environment variables to set in the Docker container.
-        retry_strategy:The number of times to retry the job when the job fails due to an InternalServerError.
-        remote_debug_config:Configuration for remote debugging. To learn more about the remote debugging functionality of SageMaker, see Access a training container through Amazon Web Services Systems Manager (SSM) for remote debugging.
-        infra_check_config:Contains information about the infrastructure health check configuration for the training job.
+        profiler_rule_configurations: Configuration information for Amazon SageMaker Debugger rules for profiling system and framework metrics.
+        profiler_rule_evaluation_statuses: Evaluation status of Amazon SageMaker Debugger rules for profiling on a training job.
+        profiling_status: Profiling status of a training job.
+        environment: The environment variables to set in the Docker container.
+        retry_strategy: The number of times to retry the job when the job fails due to an InternalServerError.
+        remote_debug_config: Configuration for remote debugging. To learn more about the remote debugging functionality of SageMaker, see Access a training container through Amazon Web Services Systems Manager (SSM) for remote debugging.
+        infra_check_config: Contains information about the infrastructure health check configuration for the training job.
 
     """
+
     training_job_name: str
     training_job_arn: Optional[str] = Unassigned()
     tuning_job_arn: Optional[str] = Unassigned()
     labeling_job_arn: Optional[str] = Unassigned()
-    auto_m_l_job_arn: Optional[str] = Unassigned()
+    auto_ml_job_arn: Optional[str] = Unassigned()
     model_artifacts: Optional[ModelArtifacts] = Unassigned()
     training_job_status: Optional[str] = Unassigned()
     secondary_status: Optional[str] = Unassigned()
@@ -20006,73 +21152,47 @@ class TrainingJob(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'training_job_name':
-                return value
-        raise Exception("Name attribute not found for object")
+        resource_name = "training_job_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
 
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
+        for attribute, value in attributes.items():
+            if attribute == "name" or attribute in attribute_name_candidates:
+                return value
+        logger.error("Name attribute not found for object training_job")
+        return None
 
     def populate_inputs_decorator(create_func):
+        @functools.wraps(create_func)
         def wrapper(*args, **kwargs):
-            config_schema_for_resource = \
-        {
-          "model_artifacts": {
-            "s3_model_artifacts": {
-              "type": "string"
+            config_schema_for_resource = {
+                "model_artifacts": {"s3_model_artifacts": {"type": "string"}},
+                "resource_config": {"volume_kms_key_id": {"type": "string"}},
+                "role_arn": {"type": "string"},
+                "output_data_config": {
+                    "s3_output_path": {"type": "string"},
+                    "kms_key_id": {"type": "string"},
+                },
+                "vpc_config": {
+                    "security_group_ids": {"type": "array", "items": {"type": "string"}},
+                    "subnets": {"type": "array", "items": {"type": "string"}},
+                },
+                "checkpoint_config": {"s3_uri": {"type": "string"}},
+                "debug_hook_config": {"s3_output_path": {"type": "string"}},
+                "tensor_board_output_config": {"s3_output_path": {"type": "string"}},
+                "profiler_config": {"s3_output_path": {"type": "string"}},
             }
-          },
-          "resource_config": {
-            "volume_kms_key_id": {
-              "type": "string"
-            }
-          },
-          "role_arn": {
-            "type": "string"
-          },
-          "output_data_config": {
-            "s3_output_path": {
-              "type": "string"
-            },
-            "kms_key_id": {
-              "type": "string"
-            }
-          },
-          "vpc_config": {
-            "security_group_ids": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            "subnets": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
-          },
-          "checkpoint_config": {
-            "s3_uri": {
-              "type": "string"
-            }
-          },
-          "debug_hook_config": {
-            "s3_output_path": {
-              "type": "string"
-            }
-          },
-          "tensor_board_output_config": {
-            "s3_output_path": {
-              "type": "string"
-            }
-          },
-          "profiler_config": {
-            "s3_output_path": {
-              "type": "string"
-            }
-          }
-        }
-            return create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "TrainingJob", **kwargs))
+            return create_func(
+                *args,
+                **Base.get_updated_kwargs_with_configured_attributes(
+                    config_schema_for_resource, "TrainingJob", **kwargs
+                ),
+            )
+
         return wrapper
 
     @classmethod
@@ -20110,20 +21230,20 @@ class TrainingJob(Base):
         Create a TrainingJob resource
 
         Parameters:
-            training_job_name:The name of the training job. The name must be unique within an Amazon Web Services Region in an Amazon Web Services account.
-            algorithm_specification:The registry path of the Docker image that contains the training algorithm and algorithm-specific metadata, including the input mode. For more information about algorithms provided by SageMaker, see Algorithms. For information about providing your own algorithms, see Using Your Own Algorithms with Amazon SageMaker.
-            role_arn:The Amazon Resource Name (ARN) of an IAM role that SageMaker can assume to perform tasks on your behalf.  During model training, SageMaker needs your permission to read input data from an S3 bucket, download a Docker image that contains training code, write model artifacts to an S3 bucket, write logs to Amazon CloudWatch Logs, and publish metrics to Amazon CloudWatch. You grant permissions for all of these tasks to an IAM role. For more information, see SageMaker Roles.   To be able to pass this role to SageMaker, the caller of this API must have the iam:PassRole permission.
-            output_data_config:Specifies the path to the S3 location where you want to store model artifacts. SageMaker creates subfolders for the artifacts.
-            resource_config:The resources, including the ML compute instances and ML storage volumes, to use for model training.  ML storage volumes store model artifacts and incremental states. Training algorithms might also use ML storage volumes for scratch space. If you want SageMaker to use the ML storage volume to store the training data, choose File as the TrainingInputMode in the algorithm specification. For distributed training algorithms, specify an instance count greater than 1.
-            stopping_condition:Specifies a limit to how long a model training job can run. It also specifies how long a managed Spot training job has to complete. When the job reaches the time limit, SageMaker ends the training job. Use this API to cap model training costs. To stop a job, SageMaker sends the algorithm the SIGTERM signal, which delays job termination for 120 seconds. Algorithms can use this 120-second window to save the model artifacts, so the results of training are not lost.
-            hyper_parameters:Algorithm-specific parameters that influence the quality of the model. You set hyperparameters before you start the learning process. For a list of hyperparameters for each training algorithm provided by SageMaker, see Algorithms.  You can specify a maximum of 100 hyperparameters. Each hyperparameter is a key-value pair. Each key and value is limited to 256 characters, as specified by the Length Constraint.   Do not include any security-sensitive information including account access IDs, secrets or tokens in any hyperparameter field. If the use of security-sensitive credentials are detected, SageMaker will reject your training job request and return an exception error.
-            input_data_config:An array of Channel objects. Each channel is a named input source. InputDataConfig describes the input data and its location.  Algorithms can accept input data from one or more channels. For example, an algorithm might have two channels of input data, training_data and validation_data. The configuration for each channel provides the S3, EFS, or FSx location where the input data is stored. It also provides information about the stored data: the MIME type, compression method, and whether the data is wrapped in RecordIO format.  Depending on the input mode that the algorithm supports, SageMaker either copies input data files from an S3 bucket to a local directory in the Docker container, or makes it available as input streams. For example, if you specify an EFS location, input data files are available as input streams. They do not need to be downloaded. Your input must be in the same Amazon Web Services region as your training job.
-            vpc_config:A VpcConfig object that specifies the VPC that you want your training job to connect to. Control access to and from your training container by configuring the VPC. For more information, see Protect Training Jobs by Using an Amazon Virtual Private Cloud.
-            tags:An array of key-value pairs. You can use tags to categorize your Amazon Web Services resources in different ways, for example, by purpose, owner, or environment. For more information, see Tagging Amazon Web Services Resources.
-            enable_network_isolation:Isolates the training container. No inbound or outbound network calls can be made, except for calls between peers within a training cluster for distributed training. If you enable network isolation for training jobs that are configured to use a VPC, SageMaker downloads and uploads customer data and model artifacts through the specified VPC, but the training container does not have network access.
-            enable_inter_container_traffic_encryption:To encrypt all communications between ML compute instances in distributed training, choose True. Encryption provides greater security for distributed training, but training might take longer. How long it takes depends on the amount of communication between compute instances, especially if you use a deep learning algorithm in distributed training. For more information, see Protect Communications Between ML Compute Instances in a Distributed Training Job.
-            enable_managed_spot_training:To train models using managed spot training, choose True. Managed spot training provides a fully managed and scalable infrastructure for training machine learning models. this option is useful when training jobs can be interrupted and when there is flexibility when the training job is run.  The complete and intermediate results of jobs are stored in an Amazon S3 bucket, and can be used as a starting point to train models incrementally. Amazon SageMaker provides metrics and logs in CloudWatch. They can be used to see when managed spot training jobs are running, interrupted, resumed, or completed.
-            checkpoint_config:Contains information about the output location for managed spot training checkpoint data.
+            training_job_name: The name of the training job. The name must be unique within an Amazon Web Services Region in an Amazon Web Services account.
+            algorithm_specification: The registry path of the Docker image that contains the training algorithm and algorithm-specific metadata, including the input mode. For more information about algorithms provided by SageMaker, see Algorithms. For information about providing your own algorithms, see Using Your Own Algorithms with Amazon SageMaker.
+            role_arn: The Amazon Resource Name (ARN) of an IAM role that SageMaker can assume to perform tasks on your behalf.  During model training, SageMaker needs your permission to read input data from an S3 bucket, download a Docker image that contains training code, write model artifacts to an S3 bucket, write logs to Amazon CloudWatch Logs, and publish metrics to Amazon CloudWatch. You grant permissions for all of these tasks to an IAM role. For more information, see SageMaker Roles.   To be able to pass this role to SageMaker, the caller of this API must have the iam:PassRole permission.
+            output_data_config: Specifies the path to the S3 location where you want to store model artifacts. SageMaker creates subfolders for the artifacts.
+            resource_config: The resources, including the ML compute instances and ML storage volumes, to use for model training.  ML storage volumes store model artifacts and incremental states. Training algorithms might also use ML storage volumes for scratch space. If you want SageMaker to use the ML storage volume to store the training data, choose File as the TrainingInputMode in the algorithm specification. For distributed training algorithms, specify an instance count greater than 1.
+            stopping_condition: Specifies a limit to how long a model training job can run. It also specifies how long a managed Spot training job has to complete. When the job reaches the time limit, SageMaker ends the training job. Use this API to cap model training costs. To stop a job, SageMaker sends the algorithm the SIGTERM signal, which delays job termination for 120 seconds. Algorithms can use this 120-second window to save the model artifacts, so the results of training are not lost.
+            hyper_parameters: Algorithm-specific parameters that influence the quality of the model. You set hyperparameters before you start the learning process. For a list of hyperparameters for each training algorithm provided by SageMaker, see Algorithms.  You can specify a maximum of 100 hyperparameters. Each hyperparameter is a key-value pair. Each key and value is limited to 256 characters, as specified by the Length Constraint.   Do not include any security-sensitive information including account access IDs, secrets or tokens in any hyperparameter field. If the use of security-sensitive credentials are detected, SageMaker will reject your training job request and return an exception error.
+            input_data_config: An array of Channel objects. Each channel is a named input source. InputDataConfig describes the input data and its location.  Algorithms can accept input data from one or more channels. For example, an algorithm might have two channels of input data, training_data and validation_data. The configuration for each channel provides the S3, EFS, or FSx location where the input data is stored. It also provides information about the stored data: the MIME type, compression method, and whether the data is wrapped in RecordIO format.  Depending on the input mode that the algorithm supports, SageMaker either copies input data files from an S3 bucket to a local directory in the Docker container, or makes it available as input streams. For example, if you specify an EFS location, input data files are available as input streams. They do not need to be downloaded. Your input must be in the same Amazon Web Services region as your training job.
+            vpc_config: A VpcConfig object that specifies the VPC that you want your training job to connect to. Control access to and from your training container by configuring the VPC. For more information, see Protect Training Jobs by Using an Amazon Virtual Private Cloud.
+            tags: An array of key-value pairs. You can use tags to categorize your Amazon Web Services resources in different ways, for example, by purpose, owner, or environment. For more information, see Tagging Amazon Web Services Resources.
+            enable_network_isolation: Isolates the training container. No inbound or outbound network calls can be made, except for calls between peers within a training cluster for distributed training. If you enable network isolation for training jobs that are configured to use a VPC, SageMaker downloads and uploads customer data and model artifacts through the specified VPC, but the training container does not have network access.
+            enable_inter_container_traffic_encryption: To encrypt all communications between ML compute instances in distributed training, choose True. Encryption provides greater security for distributed training, but training might take longer. How long it takes depends on the amount of communication between compute instances, especially if you use a deep learning algorithm in distributed training. For more information, see Protect Communications Between ML Compute Instances in a Distributed Training Job.
+            enable_managed_spot_training: To train models using managed spot training, choose True. Managed spot training provides a fully managed and scalable infrastructure for training machine learning models. this option is useful when training jobs can be interrupted and when there is flexibility when the training job is run.  The complete and intermediate results of jobs are stored in an Amazon S3 bucket, and can be used as a starting point to train models incrementally. Amazon SageMaker provides metrics and logs in CloudWatch. They can be used to see when managed spot training jobs are running, interrupted, resumed, or completed.
+            checkpoint_config: Contains information about the output location for managed spot training checkpoint data.
             debug_hook_config:
             debug_rule_configurations: Configuration information for Amazon SageMaker Debugger rules for debugging output tensors.
             tensor_board_output_config:
@@ -20160,36 +21280,40 @@ class TrainingJob(Base):
         """
 
         logger.debug("Creating training_job resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'TrainingJobName': training_job_name,
-            'HyperParameters': hyper_parameters,
-            'AlgorithmSpecification': algorithm_specification,
-            'RoleArn': role_arn,
-            'InputDataConfig': input_data_config,
-            'OutputDataConfig': output_data_config,
-            'ResourceConfig': resource_config,
-            'VpcConfig': vpc_config,
-            'StoppingCondition': stopping_condition,
-            'Tags': tags,
-            'EnableNetworkIsolation': enable_network_isolation,
-            'EnableInterContainerTrafficEncryption': enable_inter_container_traffic_encryption,
-            'EnableManagedSpotTraining': enable_managed_spot_training,
-            'CheckpointConfig': checkpoint_config,
-            'DebugHookConfig': debug_hook_config,
-            'DebugRuleConfigurations': debug_rule_configurations,
-            'TensorBoardOutputConfig': tensor_board_output_config,
-            'ExperimentConfig': experiment_config,
-            'ProfilerConfig': profiler_config,
-            'ProfilerRuleConfigurations': profiler_rule_configurations,
-            'Environment': environment,
-            'RetryStrategy': retry_strategy,
-            'RemoteDebugConfig': remote_debug_config,
-            'InfraCheckConfig': infra_check_config,
+            "TrainingJobName": training_job_name,
+            "HyperParameters": hyper_parameters,
+            "AlgorithmSpecification": algorithm_specification,
+            "RoleArn": role_arn,
+            "InputDataConfig": input_data_config,
+            "OutputDataConfig": output_data_config,
+            "ResourceConfig": resource_config,
+            "VpcConfig": vpc_config,
+            "StoppingCondition": stopping_condition,
+            "Tags": tags,
+            "EnableNetworkIsolation": enable_network_isolation,
+            "EnableInterContainerTrafficEncryption": enable_inter_container_traffic_encryption,
+            "EnableManagedSpotTraining": enable_managed_spot_training,
+            "CheckpointConfig": checkpoint_config,
+            "DebugHookConfig": debug_hook_config,
+            "DebugRuleConfigurations": debug_rule_configurations,
+            "TensorBoardOutputConfig": tensor_board_output_config,
+            "ExperimentConfig": experiment_config,
+            "ProfilerConfig": profiler_config,
+            "ProfilerRuleConfigurations": profiler_rule_configurations,
+            "Environment": environment,
+            "RetryStrategy": retry_strategy,
+            "RemoteDebugConfig": remote_debug_config,
+            "InfraCheckConfig": infra_check_config,
         }
 
-        operation_input_args = Base.populate_chained_attributes(resource_name='TrainingJob', operation_input_args=operation_input_args)
+        operation_input_args = Base.populate_chained_attributes(
+            resource_name="TrainingJob", operation_input_args=operation_input_args
+        )
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -20235,19 +21359,23 @@ class TrainingJob(Base):
         """
 
         operation_input_args = {
-            'TrainingJobName': training_job_name,
+            "TrainingJobName": training_job_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
         response = client.describe_training_job(**operation_input_args)
 
         pprint(response)
 
         # deserialize the response
-        transformed_response = transform(response, 'DescribeTrainingJobResponse')
+        transformed_response = transform(response, "DescribeTrainingJobResponse")
         training_job = cls(**transformed_response)
         return training_job
 
-    def refresh(self) -> Optional["TrainingJob"]:
+    def refresh(
+        self,
+    ) -> Optional["TrainingJob"]:
         """
         Refresh a TrainingJob resource
 
@@ -20269,13 +21397,13 @@ class TrainingJob(Base):
         """
 
         operation_input_args = {
-            'TrainingJobName': self.training_job_name,
+            "TrainingJobName": self.training_job_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_training_job(**operation_input_args)
 
         # deserialize response and update self
-        transform(response, 'DescribeTrainingJobResponse', self)
+        transform(response, "DescribeTrainingJobResponse", self)
         return self
 
     @populate_inputs_decorator
@@ -20309,14 +21437,14 @@ class TrainingJob(Base):
         """
 
         logger.debug("Updating training_job resource.")
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
-            'TrainingJobName': self.training_job_name,
-            'ProfilerConfig': profiler_config,
-            'ProfilerRuleConfigurations': profiler_rule_configurations,
-            'ResourceConfig': resource_config,
-            'RemoteDebugConfig': remote_debug_config,
+            "TrainingJobName": self.training_job_name,
+            "ProfilerConfig": profiler_config,
+            "ProfilerRuleConfigurations": profiler_rule_configurations,
+            "ResourceConfig": resource_config,
+            "RemoteDebugConfig": remote_debug_config,
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -20352,15 +21480,11 @@ class TrainingJob(Base):
         client = SageMakerClient().client
 
         operation_input_args = {
-            'TrainingJobName': self.training_job_name,
+            "TrainingJobName": self.training_job_name,
         }
         client.stop_training_job(**operation_input_args)
 
-    def wait(
-        self,
-        poll: int = 5,
-        timeout: Optional[int] = None
-    ) -> Optional["TrainingJob"]:
+    def wait(self, poll: int = 5, timeout: Optional[int] = None):
         """
         Wait for a TrainingJob resource.
 
@@ -20377,7 +21501,7 @@ class TrainingJob(Base):
             WaiterError: Raised when an error occurs while waiting.
 
         """
-        terminal_states = ['Completed', 'Failed', 'Stopped']
+        terminal_states = ["Completed", "Failed", "Stopped"]
         start_time = time.time()
 
         while True:
@@ -20385,11 +21509,16 @@ class TrainingJob(Base):
             current_status = self.training_job_status
 
             if current_status in terminal_states:
+                print(f"\nFinal Resource Status: {current_status}")
 
                 if "failed" in current_status.lower():
-                    raise FailedStatusError(resource_type="TrainingJob", status=current_status, reason=self.failure_reason)
+                    raise FailedStatusError(
+                        resource_type="TrainingJob",
+                        status=current_status,
+                        reason=self.failure_reason,
+                    )
 
-                return self
+                return
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="TrainingJob", status=current_status)
@@ -20415,17 +21544,17 @@ class TrainingJob(Base):
         Get all TrainingJob resources
 
         Parameters:
-            next_token:If the result of the previous ListTrainingJobs request was truncated, the response includes a NextToken. To retrieve the next set of training jobs, use the token in the next request.
-            max_results:The maximum number of training jobs to return in the response.
-            creation_time_after:A filter that returns only training jobs created after the specified time (timestamp).
-            creation_time_before:A filter that returns only training jobs created before the specified time (timestamp).
-            last_modified_time_after:A filter that returns only training jobs modified after the specified time (timestamp).
-            last_modified_time_before:A filter that returns only training jobs modified before the specified time (timestamp).
-            name_contains:A string in the training job name. This filter returns only training jobs whose name contains the specified string.
-            status_equals:A filter that retrieves only training jobs with a specific status.
-            sort_by:The field to sort results by. The default is CreationTime.
-            sort_order:The sort order for results. The default is Ascending.
-            warm_pool_status_equals:A filter that retrieves only training jobs with a specific warm pool status.
+            next_token: If the result of the previous ListTrainingJobs request was truncated, the response includes a NextToken. To retrieve the next set of training jobs, use the token in the next request.
+            max_results: The maximum number of training jobs to return in the response.
+            creation_time_after: A filter that returns only training jobs created after the specified time (timestamp).
+            creation_time_before: A filter that returns only training jobs created before the specified time (timestamp).
+            last_modified_time_after: A filter that returns only training jobs modified after the specified time (timestamp).
+            last_modified_time_before: A filter that returns only training jobs modified before the specified time (timestamp).
+            name_contains: A string in the training job name. This filter returns only training jobs whose name contains the specified string.
+            status_equals: A filter that retrieves only training jobs with a specific status.
+            sort_by: The field to sort results by. The default is CreationTime.
+            sort_order: The sort order for results. The default is Ascending.
+            warm_pool_status_equals: A filter that retrieves only training jobs with a specific warm pool status.
             session: Boto3 session.
             region: Region name.
 
@@ -20445,29 +21574,35 @@ class TrainingJob(Base):
                 ```
         """
 
-        client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'CreationTimeAfter': creation_time_after,
-            'CreationTimeBefore': creation_time_before,
-            'LastModifiedTimeAfter': last_modified_time_after,
-            'LastModifiedTimeBefore': last_modified_time_before,
-            'NameContains': name_contains,
-            'StatusEquals': status_equals,
-            'SortBy': sort_by,
-            'SortOrder': sort_order,
-            'WarmPoolStatusEquals': warm_pool_status_equals,
+            "CreationTimeAfter": creation_time_after,
+            "CreationTimeBefore": creation_time_before,
+            "LastModifiedTimeAfter": last_modified_time_after,
+            "LastModifiedTimeBefore": last_modified_time_before,
+            "NameContains": name_contains,
+            "StatusEquals": status_equals,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
+            "WarmPoolStatusEquals": warm_pool_status_equals,
         }
 
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
 
         return ResourceIterator(
             client=client,
-            list_method='list_training_jobs',
-            summaries_key='TrainingJobSummaries',
-            summary_name='TrainingJobSummary',
+            list_method="list_training_jobs",
+            summaries_key="TrainingJobSummaries",
+            summary_name="TrainingJobSummary",
             resource_cls=TrainingJob,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
 
 
@@ -20476,29 +21611,30 @@ class TransformJob(Base):
     Class representing resource TransformJob
 
     Attributes:
-        transform_job_name:The name of the transform job.
-        transform_job_arn:The Amazon Resource Name (ARN) of the transform job.
-        transform_job_status:The status of the transform job. If the transform job failed, the reason is returned in the FailureReason field.
-        model_name:The name of the model used in the transform job.
-        transform_input:Describes the dataset to be transformed and the Amazon S3 location where it is stored.
-        transform_resources:Describes the resources, including ML instance types and ML instance count, to use for the transform job.
-        creation_time:A timestamp that shows when the transform Job was created.
-        failure_reason:If the transform job failed, FailureReason describes why it failed. A transform job creates a log file, which includes error messages, and stores it as an Amazon S3 object. For more information, see Log Amazon SageMaker Events with Amazon CloudWatch.
-        max_concurrent_transforms:The maximum number of parallel requests on each instance node that can be launched in a transform job. The default value is 1.
-        model_client_config:The timeout and maximum number of retries for processing a transform job invocation.
-        max_payload_in_mb:The maximum payload size, in MB, used in the transform job.
-        batch_strategy:Specifies the number of records to include in a mini-batch for an HTTP inference request. A record  is a single unit of input data that inference can be made on. For example, a single line in a CSV file is a record.  To enable the batch strategy, you must set SplitType to Line, RecordIO, or TFRecord.
-        environment:The environment variables to set in the Docker container. We support up to 16 key and values entries in the map.
-        transform_output:Identifies the Amazon S3 location where you want Amazon SageMaker to save the results from the transform job.
-        data_capture_config:Configuration to control how SageMaker captures inference data.
-        transform_start_time:Indicates when the transform job starts on ML instances. You are billed for the time interval between this time and the value of TransformEndTime.
-        transform_end_time:Indicates when the transform job has been completed, or has stopped or failed. You are billed for the time interval between this time and the value of TransformStartTime.
-        labeling_job_arn:The Amazon Resource Name (ARN) of the Amazon SageMaker Ground Truth labeling job that created the transform or training job.
-        auto_ml_job_arn:The Amazon Resource Name (ARN) of the AutoML transform job.
+        transform_job_name: The name of the transform job.
+        transform_job_arn: The Amazon Resource Name (ARN) of the transform job.
+        transform_job_status: The status of the transform job. If the transform job failed, the reason is returned in the FailureReason field.
+        model_name: The name of the model used in the transform job.
+        transform_input: Describes the dataset to be transformed and the Amazon S3 location where it is stored.
+        transform_resources: Describes the resources, including ML instance types and ML instance count, to use for the transform job.
+        creation_time: A timestamp that shows when the transform Job was created.
+        failure_reason: If the transform job failed, FailureReason describes why it failed. A transform job creates a log file, which includes error messages, and stores it as an Amazon S3 object. For more information, see Log Amazon SageMaker Events with Amazon CloudWatch.
+        max_concurrent_transforms: The maximum number of parallel requests on each instance node that can be launched in a transform job. The default value is 1.
+        model_client_config: The timeout and maximum number of retries for processing a transform job invocation.
+        max_payload_in_mb: The maximum payload size, in MB, used in the transform job.
+        batch_strategy: Specifies the number of records to include in a mini-batch for an HTTP inference request. A record  is a single unit of input data that inference can be made on. For example, a single line in a CSV file is a record.  To enable the batch strategy, you must set SplitType to Line, RecordIO, or TFRecord.
+        environment: The environment variables to set in the Docker container. We support up to 16 key and values entries in the map.
+        transform_output: Identifies the Amazon S3 location where you want Amazon SageMaker to save the results from the transform job.
+        data_capture_config: Configuration to control how SageMaker captures inference data.
+        transform_start_time: Indicates when the transform job starts on ML instances. You are billed for the time interval between this time and the value of TransformEndTime.
+        transform_end_time: Indicates when the transform job has been completed, or has stopped or failed. You are billed for the time interval between this time and the value of TransformStartTime.
+        labeling_job_arn: The Amazon Resource Name (ARN) of the Amazon SageMaker Ground Truth labeling job that created the transform or training job.
+        auto_ml_job_arn: The Amazon Resource Name (ARN) of the AutoML transform job.
         data_processing:
         experiment_config:
 
     """
+
     transform_job_name: str
     transform_job_arn: Optional[str] = Unassigned()
     transform_job_status: Optional[str] = Unassigned()
@@ -20506,7 +21642,7 @@ class TransformJob(Base):
     model_name: Optional[str] = Unassigned()
     max_concurrent_transforms: Optional[int] = Unassigned()
     model_client_config: Optional[ModelClientConfig] = Unassigned()
-    max_payload_in_m_b: Optional[int] = Unassigned()
+    max_payload_in_mb: Optional[int] = Unassigned()
     batch_strategy: Optional[str] = Unassigned()
     environment: Optional[Dict[str, str]] = Unassigned()
     transform_input: Optional[TransformInput] = Unassigned()
@@ -20517,57 +21653,55 @@ class TransformJob(Base):
     transform_start_time: Optional[datetime.datetime] = Unassigned()
     transform_end_time: Optional[datetime.datetime] = Unassigned()
     labeling_job_arn: Optional[str] = Unassigned()
-    auto_m_l_job_arn: Optional[str] = Unassigned()
+    auto_ml_job_arn: Optional[str] = Unassigned()
     data_processing: Optional[DataProcessing] = Unassigned()
     experiment_config: Optional[ExperimentConfig] = Unassigned()
 
     def get_name(self) -> str:
         attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'transform_job_name':
-                return value
-        raise Exception("Name attribute not found for object")
+        resource_name = "transform_job_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
 
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
+        for attribute, value in attributes.items():
+            if attribute == "name" or attribute in attribute_name_candidates:
+                return value
+        logger.error("Name attribute not found for object transform_job")
+        return None
 
     def populate_inputs_decorator(create_func):
+        @functools.wraps(create_func)
         def wrapper(*args, **kwargs):
-            config_schema_for_resource = \
-        {
-          "transform_input": {
-            "data_source": {
-              "s3_data_source": {
-                "s3_data_type": {
-                  "type": "string"
+            config_schema_for_resource = {
+                "transform_input": {
+                    "data_source": {
+                        "s3_data_source": {
+                            "s3_data_type": {"type": "string"},
+                            "s3_uri": {"type": "string"},
+                        }
+                    }
                 },
-                "s3_uri": {
-                  "type": "string"
-                }
-              }
+                "transform_resources": {"volume_kms_key_id": {"type": "string"}},
+                "transform_output": {
+                    "s3_output_path": {"type": "string"},
+                    "kms_key_id": {"type": "string"},
+                },
+                "data_capture_config": {
+                    "destination_s3_uri": {"type": "string"},
+                    "kms_key_id": {"type": "string"},
+                },
             }
-          },
-          "transform_resources": {
-            "volume_kms_key_id": {
-              "type": "string"
-            }
-          },
-          "transform_output": {
-            "s3_output_path": {
-              "type": "string"
-            },
-            "kms_key_id": {
-              "type": "string"
-            }
-          },
-          "data_capture_config": {
-            "destination_s3_uri": {
-              "type": "string"
-            },
-            "kms_key_id": {
-              "type": "string"
-            }
-          }
-        }
-            return create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "TransformJob", **kwargs))
+            return create_func(
+                *args,
+                **Base.get_updated_kwargs_with_configured_attributes(
+                    config_schema_for_resource, "TransformJob", **kwargs
+                ),
+            )
+
         return wrapper
 
     @classmethod
@@ -20581,7 +21715,7 @@ class TransformJob(Base):
         transform_resources: TransformResources,
         max_concurrent_transforms: Optional[int] = Unassigned(),
         model_client_config: Optional[ModelClientConfig] = Unassigned(),
-        max_payload_in_m_b: Optional[int] = Unassigned(),
+        max_payload_in_mb: Optional[int] = Unassigned(),
         batch_strategy: Optional[str] = Unassigned(),
         environment: Optional[Dict[str, str]] = Unassigned(),
         data_capture_config: Optional[BatchDataCaptureConfig] = Unassigned(),
@@ -20595,19 +21729,19 @@ class TransformJob(Base):
         Create a TransformJob resource
 
         Parameters:
-            transform_job_name:The name of the transform job. The name must be unique within an Amazon Web Services Region in an Amazon Web Services account.
-            model_name:The name of the model that you want to use for the transform job. ModelName must be the name of an existing Amazon SageMaker model within an Amazon Web Services Region in an Amazon Web Services account.
-            transform_input:Describes the input source and the way the transform job consumes it.
-            transform_output:Describes the results of the transform job.
-            transform_resources:Describes the resources, including ML instance types and ML instance count, to use for the transform job.
-            max_concurrent_transforms:The maximum number of parallel requests that can be sent to each instance in a transform job. If MaxConcurrentTransforms is set to 0 or left unset, Amazon SageMaker checks the optional execution-parameters to determine the settings for your chosen algorithm. If the execution-parameters endpoint is not enabled, the default value is 1. For more information on execution-parameters, see How Containers Serve Requests. For built-in algorithms, you don't need to set a value for MaxConcurrentTransforms.
-            model_client_config:Configures the timeout and maximum number of retries for processing a transform job invocation.
-            max_payload_in_mb:The maximum allowed size of the payload, in MB. A payload is the data portion of a record (without metadata). The value in MaxPayloadInMB must be greater than, or equal to, the size of a single record. To estimate the size of a record in MB, divide the size of your dataset by the number of records. To ensure that the records fit within the maximum payload size, we recommend using a slightly larger value. The default value is 6 MB.  The value of MaxPayloadInMB cannot be greater than 100 MB. If you specify the MaxConcurrentTransforms parameter, the value of (MaxConcurrentTransforms * MaxPayloadInMB) also cannot exceed 100 MB. For cases where the payload might be arbitrarily large and is transmitted using HTTP chunked encoding, set the value to 0. This feature works only in supported algorithms. Currently, Amazon SageMaker built-in algorithms do not support HTTP chunked encoding.
-            batch_strategy:Specifies the number of records to include in a mini-batch for an HTTP inference request. A record  is a single unit of input data that inference can be made on. For example, a single line in a CSV file is a record.  To enable the batch strategy, you must set the SplitType property to Line, RecordIO, or TFRecord. To use only one record when making an HTTP invocation request to a container, set BatchStrategy to SingleRecord and SplitType to Line. To fit as many records in a mini-batch as can fit within the MaxPayloadInMB limit, set BatchStrategy to MultiRecord and SplitType to Line.
-            environment:The environment variables to set in the Docker container. We support up to 16 key and values entries in the map.
-            data_capture_config:Configuration to control how SageMaker captures inference data.
-            data_processing:The data structure used to specify the data to be used for inference in a batch transform job and to associate the data that is relevant to the prediction results in the output. The input filter provided allows you to exclude input data that is not needed for inference in a batch transform job. The output filter provided allows you to include input data relevant to interpreting the predictions in the output from the job. For more information, see Associate Prediction Results with their Corresponding Input Records.
-            tags:(Optional) An array of key-value pairs. For more information, see Using Cost Allocation Tags in the Amazon Web Services Billing and Cost Management User Guide.
+            transform_job_name: The name of the transform job. The name must be unique within an Amazon Web Services Region in an Amazon Web Services account.
+            model_name: The name of the model that you want to use for the transform job. ModelName must be the name of an existing Amazon SageMaker model within an Amazon Web Services Region in an Amazon Web Services account.
+            transform_input: Describes the input source and the way the transform job consumes it.
+            transform_output: Describes the results of the transform job.
+            transform_resources: Describes the resources, including ML instance types and ML instance count, to use for the transform job.
+            max_concurrent_transforms: The maximum number of parallel requests that can be sent to each instance in a transform job. If MaxConcurrentTransforms is set to 0 or left unset, Amazon SageMaker checks the optional execution-parameters to determine the settings for your chosen algorithm. If the execution-parameters endpoint is not enabled, the default value is 1. For more information on execution-parameters, see How Containers Serve Requests. For built-in algorithms, you don't need to set a value for MaxConcurrentTransforms.
+            model_client_config: Configures the timeout and maximum number of retries for processing a transform job invocation.
+            max_payload_in_mb: The maximum allowed size of the payload, in MB. A payload is the data portion of a record (without metadata). The value in MaxPayloadInMB must be greater than, or equal to, the size of a single record. To estimate the size of a record in MB, divide the size of your dataset by the number of records. To ensure that the records fit within the maximum payload size, we recommend using a slightly larger value. The default value is 6 MB.  The value of MaxPayloadInMB cannot be greater than 100 MB. If you specify the MaxConcurrentTransforms parameter, the value of (MaxConcurrentTransforms * MaxPayloadInMB) also cannot exceed 100 MB. For cases where the payload might be arbitrarily large and is transmitted using HTTP chunked encoding, set the value to 0. This feature works only in supported algorithms. Currently, Amazon SageMaker built-in algorithms do not support HTTP chunked encoding.
+            batch_strategy: Specifies the number of records to include in a mini-batch for an HTTP inference request. A record  is a single unit of input data that inference can be made on. For example, a single line in a CSV file is a record.  To enable the batch strategy, you must set the SplitType property to Line, RecordIO, or TFRecord. To use only one record when making an HTTP invocation request to a container, set BatchStrategy to SingleRecord and SplitType to Line. To fit as many records in a mini-batch as can fit within the MaxPayloadInMB limit, set BatchStrategy to MultiRecord and SplitType to Line.
+            environment: The environment variables to set in the Docker container. We support up to 16 key and values entries in the map.
+            data_capture_config: Configuration to control how SageMaker captures inference data.
+            data_processing: The data structure used to specify the data to be used for inference in a batch transform job and to associate the data that is relevant to the prediction results in the output. The input filter provided allows you to exclude input data that is not needed for inference in a batch transform job. The output filter provided allows you to include input data relevant to interpreting the predictions in the output from the job. For more information, see Associate Prediction Results with their Corresponding Input Records.
+            tags: (Optional) An array of key-value pairs. For more information, see Using Cost Allocation Tags in the Amazon Web Services Billing and Cost Management User Guide.
             experiment_config:
             session: Boto3 session.
             region: Region name.
@@ -20635,26 +21769,30 @@ class TransformJob(Base):
         """
 
         logger.debug("Creating transform_job resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'TransformJobName': transform_job_name,
-            'ModelName': model_name,
-            'MaxConcurrentTransforms': max_concurrent_transforms,
-            'ModelClientConfig': model_client_config,
-            'MaxPayloadInMB': max_payload_in_m_b,
-            'BatchStrategy': batch_strategy,
-            'Environment': environment,
-            'TransformInput': transform_input,
-            'TransformOutput': transform_output,
-            'DataCaptureConfig': data_capture_config,
-            'TransformResources': transform_resources,
-            'DataProcessing': data_processing,
-            'Tags': tags,
-            'ExperimentConfig': experiment_config,
+            "TransformJobName": transform_job_name,
+            "ModelName": model_name,
+            "MaxConcurrentTransforms": max_concurrent_transforms,
+            "ModelClientConfig": model_client_config,
+            "MaxPayloadInMB": max_payload_in_mb,
+            "BatchStrategy": batch_strategy,
+            "Environment": environment,
+            "TransformInput": transform_input,
+            "TransformOutput": transform_output,
+            "DataCaptureConfig": data_capture_config,
+            "TransformResources": transform_resources,
+            "DataProcessing": data_processing,
+            "Tags": tags,
+            "ExperimentConfig": experiment_config,
         }
 
-        operation_input_args = Base.populate_chained_attributes(resource_name='TransformJob', operation_input_args=operation_input_args)
+        operation_input_args = Base.populate_chained_attributes(
+            resource_name="TransformJob", operation_input_args=operation_input_args
+        )
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -20700,19 +21838,23 @@ class TransformJob(Base):
         """
 
         operation_input_args = {
-            'TransformJobName': transform_job_name,
+            "TransformJobName": transform_job_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
         response = client.describe_transform_job(**operation_input_args)
 
         pprint(response)
 
         # deserialize the response
-        transformed_response = transform(response, 'DescribeTransformJobResponse')
+        transformed_response = transform(response, "DescribeTransformJobResponse")
         transform_job = cls(**transformed_response)
         return transform_job
 
-    def refresh(self) -> Optional["TransformJob"]:
+    def refresh(
+        self,
+    ) -> Optional["TransformJob"]:
         """
         Refresh a TransformJob resource
 
@@ -20734,13 +21876,13 @@ class TransformJob(Base):
         """
 
         operation_input_args = {
-            'TransformJobName': self.transform_job_name,
+            "TransformJobName": self.transform_job_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_transform_job(**operation_input_args)
 
         # deserialize response and update self
-        transform(response, 'DescribeTransformJobResponse', self)
+        transform(response, "DescribeTransformJobResponse", self)
         return self
 
     def stop(self) -> None:
@@ -20765,15 +21907,11 @@ class TransformJob(Base):
         client = SageMakerClient().client
 
         operation_input_args = {
-            'TransformJobName': self.transform_job_name,
+            "TransformJobName": self.transform_job_name,
         }
         client.stop_transform_job(**operation_input_args)
 
-    def wait(
-        self,
-        poll: int = 5,
-        timeout: Optional[int] = None
-    ) -> Optional["TransformJob"]:
+    def wait(self, poll: int = 5, timeout: Optional[int] = None):
         """
         Wait for a TransformJob resource.
 
@@ -20790,7 +21928,7 @@ class TransformJob(Base):
             WaiterError: Raised when an error occurs while waiting.
 
         """
-        terminal_states = ['Completed', 'Failed', 'Stopped']
+        terminal_states = ["Completed", "Failed", "Stopped"]
         start_time = time.time()
 
         while True:
@@ -20798,11 +21936,16 @@ class TransformJob(Base):
             current_status = self.transform_job_status
 
             if current_status in terminal_states:
+                print(f"\nFinal Resource Status: {current_status}")
 
                 if "failed" in current_status.lower():
-                    raise FailedStatusError(resource_type="TransformJob", status=current_status, reason=self.failure_reason)
+                    raise FailedStatusError(
+                        resource_type="TransformJob",
+                        status=current_status,
+                        reason=self.failure_reason,
+                    )
 
-                return self
+                return
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="TransformJob", status=current_status)
@@ -20856,28 +21999,34 @@ class TransformJob(Base):
                 ```
         """
 
-        client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'CreationTimeAfter': creation_time_after,
-            'CreationTimeBefore': creation_time_before,
-            'LastModifiedTimeAfter': last_modified_time_after,
-            'LastModifiedTimeBefore': last_modified_time_before,
-            'NameContains': name_contains,
-            'StatusEquals': status_equals,
-            'SortBy': sort_by,
-            'SortOrder': sort_order,
+            "CreationTimeAfter": creation_time_after,
+            "CreationTimeBefore": creation_time_before,
+            "LastModifiedTimeAfter": last_modified_time_after,
+            "LastModifiedTimeBefore": last_modified_time_before,
+            "NameContains": name_contains,
+            "StatusEquals": status_equals,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
         }
 
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
 
         return ResourceIterator(
             client=client,
-            list_method='list_transform_jobs',
-            summaries_key='TransformJobSummaries',
-            summary_name='TransformJobSummary',
+            list_method="list_transform_jobs",
+            summaries_key="TransformJobSummaries",
+            summary_name="TransformJobSummary",
             resource_cls=TransformJob,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
 
 
@@ -20898,6 +22047,7 @@ class Trial(Base):
         metadata_properties:
 
     """
+
     trial_name: str
     trial_arn: Optional[str] = Unassigned()
     display_name: Optional[str] = Unassigned()
@@ -20911,10 +22061,19 @@ class Trial(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "trial_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'trial_name':
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object trial")
+        return None
 
     @classmethod
     def create(
@@ -20961,17 +22120,21 @@ class Trial(Base):
         """
 
         logger.debug("Creating trial resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'TrialName': trial_name,
-            'DisplayName': display_name,
-            'ExperimentName': experiment_name,
-            'MetadataProperties': metadata_properties,
-            'Tags': tags,
+            "TrialName": trial_name,
+            "DisplayName": display_name,
+            "ExperimentName": experiment_name,
+            "MetadataProperties": metadata_properties,
+            "Tags": tags,
         }
 
-        operation_input_args = Base.populate_chained_attributes(resource_name='Trial', operation_input_args=operation_input_args)
+        operation_input_args = Base.populate_chained_attributes(
+            resource_name="Trial", operation_input_args=operation_input_args
+        )
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -21017,19 +22180,23 @@ class Trial(Base):
         """
 
         operation_input_args = {
-            'TrialName': trial_name,
+            "TrialName": trial_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
         response = client.describe_trial(**operation_input_args)
 
         pprint(response)
 
         # deserialize the response
-        transformed_response = transform(response, 'DescribeTrialResponse')
+        transformed_response = transform(response, "DescribeTrialResponse")
         trial = cls(**transformed_response)
         return trial
 
-    def refresh(self) -> Optional["Trial"]:
+    def refresh(
+        self,
+    ) -> Optional["Trial"]:
         """
         Refresh a Trial resource
 
@@ -21051,13 +22218,13 @@ class Trial(Base):
         """
 
         operation_input_args = {
-            'TrialName': self.trial_name,
+            "TrialName": self.trial_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_trial(**operation_input_args)
 
         # deserialize response and update self
-        transform(response, 'DescribeTrialResponse', self)
+        transform(response, "DescribeTrialResponse", self)
         return self
 
     def update(
@@ -21087,11 +22254,11 @@ class Trial(Base):
         """
 
         logger.debug("Updating trial resource.")
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
-            'TrialName': self.trial_name,
-            'DisplayName': display_name,
+            "TrialName": self.trial_name,
+            "DisplayName": display_name,
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -21105,7 +22272,9 @@ class Trial(Base):
 
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a Trial resource
 
@@ -21124,12 +22293,14 @@ class Trial(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
-            'TrialName': self.trial_name,
+            "TrialName": self.trial_name,
         }
         client.delete_trial(**operation_input_args)
+
+        logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
     @classmethod
     def get_all(
@@ -21175,26 +22346,32 @@ class Trial(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'ExperimentName': experiment_name,
-            'TrialComponentName': trial_component_name,
-            'CreatedAfter': created_after,
-            'CreatedBefore': created_before,
-            'SortBy': sort_by,
-            'SortOrder': sort_order,
+            "ExperimentName": experiment_name,
+            "TrialComponentName": trial_component_name,
+            "CreatedAfter": created_after,
+            "CreatedBefore": created_before,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
         }
 
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
 
         return ResourceIterator(
             client=client,
-            list_method='list_trials',
-            summaries_key='TrialSummaries',
-            summary_name='TrialSummary',
+            list_method="list_trials",
+            summaries_key="TrialSummaries",
+            summary_name="TrialSummary",
             resource_cls=Trial,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
 
 
@@ -21203,26 +22380,27 @@ class TrialComponent(Base):
     Class representing resource TrialComponent
 
     Attributes:
-        trial_component_name:The name of the trial component.
-        trial_component_arn:The Amazon Resource Name (ARN) of the trial component.
-        display_name:The name of the component as displayed. If DisplayName isn't specified, TrialComponentName is displayed.
-        source:The Amazon Resource Name (ARN) of the source and, optionally, the job type.
-        status:The status of the component. States include:   InProgress   Completed   Failed
-        start_time:When the component started.
-        end_time:When the component ended.
-        creation_time:When the component was created.
-        created_by:Who created the trial component.
-        last_modified_time:When the component was last modified.
-        last_modified_by:Who last modified the component.
-        parameters:The hyperparameters of the component.
-        input_artifacts:The input artifacts of the component.
-        output_artifacts:The output artifacts of the component.
+        trial_component_name: The name of the trial component.
+        trial_component_arn: The Amazon Resource Name (ARN) of the trial component.
+        display_name: The name of the component as displayed. If DisplayName isn't specified, TrialComponentName is displayed.
+        source: The Amazon Resource Name (ARN) of the source and, optionally, the job type.
+        status: The status of the component. States include:   InProgress   Completed   Failed
+        start_time: When the component started.
+        end_time: When the component ended.
+        creation_time: When the component was created.
+        created_by: Who created the trial component.
+        last_modified_time: When the component was last modified.
+        last_modified_by: Who last modified the component.
+        parameters: The hyperparameters of the component.
+        input_artifacts: The input artifacts of the component.
+        output_artifacts: The output artifacts of the component.
         metadata_properties:
-        metrics:The metrics for the component.
-        lineage_group_arn:The Amazon Resource Name (ARN) of the lineage group.
-        sources:A list of ARNs and, if applicable, job types for multiple sources of an experiment run.
+        metrics: The metrics for the component.
+        lineage_group_arn: The Amazon Resource Name (ARN) of the lineage group.
+        sources: A list of ARNs and, if applicable, job types for multiple sources of an experiment run.
 
     """
+
     trial_component_name: str
     trial_component_arn: Optional[str] = Unassigned()
     display_name: Optional[str] = Unassigned()
@@ -21244,10 +22422,19 @@ class TrialComponent(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "trial_component_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'trial_component_name':
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object trial_component")
+        return None
 
     @classmethod
     def create(
@@ -21269,14 +22456,14 @@ class TrialComponent(Base):
         Create a TrialComponent resource
 
         Parameters:
-            trial_component_name:The name of the component. The name must be unique in your Amazon Web Services account and is not case-sensitive.
-            display_name:The name of the component as displayed. The name doesn't need to be unique. If DisplayName isn't specified, TrialComponentName is displayed.
-            status:The status of the component. States include:   InProgress   Completed   Failed
-            start_time:When the component started.
-            end_time:When the component ended.
-            parameters:The hyperparameters for the component.
-            input_artifacts:The input artifacts for the component. Examples of input artifacts are datasets, algorithms, hyperparameters, source code, and instance types.
-            output_artifacts:The output artifacts for the component. Examples of output artifacts are metrics, snapshots, logs, and images.
+            trial_component_name: The name of the component. The name must be unique in your Amazon Web Services account and is not case-sensitive.
+            display_name: The name of the component as displayed. The name doesn't need to be unique. If DisplayName isn't specified, TrialComponentName is displayed.
+            status: The status of the component. States include:   InProgress   Completed   Failed
+            start_time: When the component started.
+            end_time: When the component ended.
+            parameters: The hyperparameters for the component.
+            input_artifacts: The input artifacts for the component. Examples of input artifacts are datasets, algorithms, hyperparameters, source code, and instance types.
+            output_artifacts: The output artifacts for the component. Examples of output artifacts are metrics, snapshots, logs, and images.
             metadata_properties:
             tags: A list of tags to associate with the component. You can use Search API to search on the tags.
             session: Boto3 session.
@@ -21303,22 +22490,26 @@ class TrialComponent(Base):
         """
 
         logger.debug("Creating trial_component resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'TrialComponentName': trial_component_name,
-            'DisplayName': display_name,
-            'Status': status,
-            'StartTime': start_time,
-            'EndTime': end_time,
-            'Parameters': parameters,
-            'InputArtifacts': input_artifacts,
-            'OutputArtifacts': output_artifacts,
-            'MetadataProperties': metadata_properties,
-            'Tags': tags,
+            "TrialComponentName": trial_component_name,
+            "DisplayName": display_name,
+            "Status": status,
+            "StartTime": start_time,
+            "EndTime": end_time,
+            "Parameters": parameters,
+            "InputArtifacts": input_artifacts,
+            "OutputArtifacts": output_artifacts,
+            "MetadataProperties": metadata_properties,
+            "Tags": tags,
         }
 
-        operation_input_args = Base.populate_chained_attributes(resource_name='TrialComponent', operation_input_args=operation_input_args)
+        operation_input_args = Base.populate_chained_attributes(
+            resource_name="TrialComponent", operation_input_args=operation_input_args
+        )
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -21364,19 +22555,23 @@ class TrialComponent(Base):
         """
 
         operation_input_args = {
-            'TrialComponentName': trial_component_name,
+            "TrialComponentName": trial_component_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
         response = client.describe_trial_component(**operation_input_args)
 
         pprint(response)
 
         # deserialize the response
-        transformed_response = transform(response, 'DescribeTrialComponentResponse')
+        transformed_response = transform(response, "DescribeTrialComponentResponse")
         trial_component = cls(**transformed_response)
         return trial_component
 
-    def refresh(self) -> Optional["TrialComponent"]:
+    def refresh(
+        self,
+    ) -> Optional["TrialComponent"]:
         """
         Refresh a TrialComponent resource
 
@@ -21398,13 +22593,13 @@ class TrialComponent(Base):
         """
 
         operation_input_args = {
-            'TrialComponentName': self.trial_component_name,
+            "TrialComponentName": self.trial_component_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_trial_component(**operation_input_args)
 
         # deserialize response and update self
-        transform(response, 'DescribeTrialComponentResponse', self)
+        transform(response, "DescribeTrialComponentResponse", self)
         return self
 
     def update(
@@ -21424,9 +22619,9 @@ class TrialComponent(Base):
         Update a TrialComponent resource
 
         Parameters:
-            parameters_to_remove:The hyperparameters to remove from the component.
-            input_artifacts_to_remove:The input artifacts to remove from the component.
-            output_artifacts_to_remove:The output artifacts to remove from the component.
+            parameters_to_remove: The hyperparameters to remove from the component.
+            input_artifacts_to_remove: The input artifacts to remove from the component.
+            output_artifacts_to_remove: The output artifacts to remove from the component.
 
         Returns:
             The TrialComponent resource.
@@ -21447,20 +22642,20 @@ class TrialComponent(Base):
         """
 
         logger.debug("Updating trial_component resource.")
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
-            'TrialComponentName': self.trial_component_name,
-            'DisplayName': display_name,
-            'Status': status,
-            'StartTime': start_time,
-            'EndTime': end_time,
-            'Parameters': parameters,
-            'ParametersToRemove': parameters_to_remove,
-            'InputArtifacts': input_artifacts,
-            'InputArtifactsToRemove': input_artifacts_to_remove,
-            'OutputArtifacts': output_artifacts,
-            'OutputArtifactsToRemove': output_artifacts_to_remove,
+            "TrialComponentName": self.trial_component_name,
+            "DisplayName": display_name,
+            "Status": status,
+            "StartTime": start_time,
+            "EndTime": end_time,
+            "Parameters": parameters,
+            "ParametersToRemove": parameters_to_remove,
+            "InputArtifacts": input_artifacts,
+            "InputArtifactsToRemove": input_artifacts_to_remove,
+            "OutputArtifacts": output_artifacts,
+            "OutputArtifactsToRemove": output_artifacts_to_remove,
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -21474,7 +22669,9 @@ class TrialComponent(Base):
 
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a TrialComponent resource
 
@@ -21493,19 +22690,21 @@ class TrialComponent(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
-            'TrialComponentName': self.trial_component_name,
+            "TrialComponentName": self.trial_component_name,
         }
         client.delete_trial_component(**operation_input_args)
 
+        logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+
     def wait_for_status(
         self,
-        status: Literal['InProgress', 'Completed', 'Failed', 'Stopping', 'Stopped'],
+        status: Literal["InProgress", "Completed", "Failed", "Stopping", "Stopped"],
         poll: int = 5,
-        timeout: Optional[int] = None
-    ) -> Optional["TrialComponent"]:
+        timeout: Optional[int] = None,
+    ):
         """
         Wait for a TrialComponent resource.
 
@@ -21530,10 +22729,13 @@ class TrialComponent(Base):
             current_status = self.status.primary_status
 
             if status == current_status:
-                return self
+                print(f"\nFinal Resource Status: {current_status}")
+                return
 
             if "failed" in current_status.lower():
-                raise FailedStatusError(resource_type="TrialComponent", status=current_status, reason='(Unknown)')
+                raise FailedStatusError(
+                    resource_type="TrialComponent", status=current_status, reason="(Unknown)"
+                )
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="TrialComponent", status=current_status)
@@ -21586,29 +22788,34 @@ class TrialComponent(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'ExperimentName': experiment_name,
-            'TrialName': trial_name,
-            'SourceArn': source_arn,
-            'CreatedAfter': created_after,
-            'CreatedBefore': created_before,
-            'SortBy': sort_by,
-            'SortOrder': sort_order,
+            "ExperimentName": experiment_name,
+            "TrialName": trial_name,
+            "SourceArn": source_arn,
+            "CreatedAfter": created_after,
+            "CreatedBefore": created_before,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
         }
 
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
 
         return ResourceIterator(
             client=client,
-            list_method='list_trial_components',
-            summaries_key='TrialComponentSummaries',
-            summary_name='TrialComponentSummary',
+            list_method="list_trial_components",
+            summaries_key="TrialComponentSummaries",
+            summary_name="TrialComponentSummary",
             resource_cls=TrialComponent,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
-
 
     def associate_trail(
         self,
@@ -21617,7 +22824,7 @@ class TrialComponent(Base):
         region: Optional[str] = None,
     ) -> None:
         """
-        Perform AssociateTrialComponent on a TrialComponent resource.
+        Associates a trial component with a trial.
 
         Parameters:
             trial_name: The name of the trial to associate with.
@@ -21627,20 +22834,19 @@ class TrialComponent(Base):
 
         """
 
-
         operation_input_args = {
-            'TrialComponentName': self.trial_component_name,
-            'TrialName': trial_name,
+            "TrialComponentName": self.trial_component_name,
+            "TrialName": trial_name,
         }
         logger.debug(f"Input request: {operation_input_args}")
 
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         logger.debug(f"Calling associate_trial_component API")
         response = client.associate_trial_component(**operation_input_args)
         logger.debug(f"Response: {response}")
-
-
 
     def disassociate_trail(
         self,
@@ -21649,7 +22855,7 @@ class TrialComponent(Base):
         region: Optional[str] = None,
     ) -> None:
         """
-        Perform DisassociateTrialComponent on a TrialComponent resource.
+        Disassociates a trial component from a trial.
 
         Parameters:
             trial_name: The name of the trial to disassociate from.
@@ -21659,19 +22865,19 @@ class TrialComponent(Base):
 
         """
 
-
         operation_input_args = {
-            'TrialComponentName': self.trial_component_name,
-            'TrialName': trial_name,
+            "TrialComponentName": self.trial_component_name,
+            "TrialName": trial_name,
         }
         logger.debug(f"Input request: {operation_input_args}")
 
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         logger.debug(f"Calling disassociate_trial_component API")
         response = client.disassociate_trial_component(**operation_input_args)
         logger.debug(f"Response: {response}")
-
 
 
 class UserProfile(Base):
@@ -21679,19 +22885,20 @@ class UserProfile(Base):
     Class representing resource UserProfile
 
     Attributes:
-        domain_id:The ID of the domain that contains the profile.
-        user_profile_arn:The user profile Amazon Resource Name (ARN).
-        user_profile_name:The user profile name.
-        home_efs_file_system_uid:The ID of the user's profile in the Amazon Elastic File System volume.
-        status:The status.
-        last_modified_time:The last modified time.
-        creation_time:The creation time.
-        failure_reason:The failure reason.
-        single_sign_on_user_identifier:The IAM Identity Center user identifier.
-        single_sign_on_user_value:The IAM Identity Center user value.
-        user_settings:A collection of settings.
+        domain_id: The ID of the domain that contains the profile.
+        user_profile_arn: The user profile Amazon Resource Name (ARN).
+        user_profile_name: The user profile name.
+        home_efs_file_system_uid: The ID of the user's profile in the Amazon Elastic File System volume.
+        status: The status.
+        last_modified_time: The last modified time.
+        creation_time: The creation time.
+        failure_reason: The failure reason.
+        single_sign_on_user_identifier: The IAM Identity Center user identifier.
+        single_sign_on_user_value: The IAM Identity Center user value.
+        user_settings: A collection of settings.
 
     """
+
     domain_id: str
     user_profile_name: str
     user_profile_arn: Optional[str] = Unassigned()
@@ -21706,62 +22913,53 @@ class UserProfile(Base):
 
     def get_name(self) -> str:
         attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'user_profile_name':
-                return value
-        raise Exception("Name attribute not found for object")
+        resource_name = "user_profile_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
 
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
+        for attribute, value in attributes.items():
+            if attribute == "name" or attribute in attribute_name_candidates:
+                return value
+        logger.error("Name attribute not found for object user_profile")
+        return None
 
     def populate_inputs_decorator(create_func):
+        @functools.wraps(create_func)
         def wrapper(*args, **kwargs):
-            config_schema_for_resource = \
-        {
-          "user_settings": {
-            "execution_role": {
-              "type": "string"
-            },
-            "security_groups": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            "sharing_settings": {
-              "s3_output_path": {
-                "type": "string"
-              },
-              "s3_kms_key_id": {
-                "type": "string"
-              }
-            },
-            "canvas_app_settings": {
-              "time_series_forecasting_settings": {
-                "amazon_forecast_role_arn": {
-                  "type": "string"
+            config_schema_for_resource = {
+                "user_settings": {
+                    "execution_role": {"type": "string"},
+                    "security_groups": {"type": "array", "items": {"type": "string"}},
+                    "sharing_settings": {
+                        "s3_output_path": {"type": "string"},
+                        "s3_kms_key_id": {"type": "string"},
+                    },
+                    "canvas_app_settings": {
+                        "time_series_forecasting_settings": {
+                            "amazon_forecast_role_arn": {"type": "string"}
+                        },
+                        "model_register_settings": {
+                            "cross_account_model_register_role_arn": {"type": "string"}
+                        },
+                        "workspace_settings": {
+                            "s3_artifact_path": {"type": "string"},
+                            "s3_kms_key_id": {"type": "string"},
+                        },
+                        "generative_ai_settings": {"amazon_bedrock_role_arn": {"type": "string"}},
+                    },
                 }
-              },
-              "model_register_settings": {
-                "cross_account_model_register_role_arn": {
-                  "type": "string"
-                }
-              },
-              "workspace_settings": {
-                "s3_artifact_path": {
-                  "type": "string"
-                },
-                "s3_kms_key_id": {
-                  "type": "string"
-                }
-              },
-              "generative_ai_settings": {
-                "amazon_bedrock_role_arn": {
-                  "type": "string"
-                }
-              }
             }
-          }
-        }
-            return create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "UserProfile", **kwargs))
+            return create_func(
+                *args,
+                **Base.get_updated_kwargs_with_configured_attributes(
+                    config_schema_for_resource, "UserProfile", **kwargs
+                ),
+            )
+
         return wrapper
 
     @classmethod
@@ -21781,12 +22979,12 @@ class UserProfile(Base):
         Create a UserProfile resource
 
         Parameters:
-            domain_id:The ID of the associated Domain.
-            user_profile_name:A name for the UserProfile. This value is not case sensitive.
-            single_sign_on_user_identifier:A specifier for the type of value specified in SingleSignOnUserValue. Currently, the only supported value is "UserName". If the Domain's AuthMode is IAM Identity Center, this field is required. If the Domain's AuthMode is not IAM Identity Center, this field cannot be specified.
-            single_sign_on_user_value:The username of the associated Amazon Web Services Single Sign-On User for this UserProfile. If the Domain's AuthMode is IAM Identity Center, this field is required, and must match a valid username of a user in your directory. If the Domain's AuthMode is not IAM Identity Center, this field cannot be specified.
-            tags:Each tag consists of a key and an optional value. Tag keys must be unique per resource. Tags that you specify for the User Profile are also added to all Apps that the User Profile launches.
-            user_settings:A collection of settings.
+            domain_id: The ID of the associated Domain.
+            user_profile_name: A name for the UserProfile. This value is not case sensitive.
+            single_sign_on_user_identifier: A specifier for the type of value specified in SingleSignOnUserValue. Currently, the only supported value is "UserName". If the Domain's AuthMode is IAM Identity Center, this field is required. If the Domain's AuthMode is not IAM Identity Center, this field cannot be specified.
+            single_sign_on_user_value: The username of the associated Amazon Web Services Single Sign-On User for this UserProfile. If the Domain's AuthMode is IAM Identity Center, this field is required, and must match a valid username of a user in your directory. If the Domain's AuthMode is not IAM Identity Center, this field cannot be specified.
+            tags: Each tag consists of a key and an optional value. Tag keys must be unique per resource. Tags that you specify for the User Profile are also added to all Apps that the User Profile launches.
+            user_settings: A collection of settings.
             session: Boto3 session.
             region: Region name.
 
@@ -21812,18 +23010,22 @@ class UserProfile(Base):
         """
 
         logger.debug("Creating user_profile resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'DomainId': domain_id,
-            'UserProfileName': user_profile_name,
-            'SingleSignOnUserIdentifier': single_sign_on_user_identifier,
-            'SingleSignOnUserValue': single_sign_on_user_value,
-            'Tags': tags,
-            'UserSettings': user_settings,
+            "DomainId": domain_id,
+            "UserProfileName": user_profile_name,
+            "SingleSignOnUserIdentifier": single_sign_on_user_identifier,
+            "SingleSignOnUserValue": single_sign_on_user_value,
+            "Tags": tags,
+            "UserSettings": user_settings,
         }
 
-        operation_input_args = Base.populate_chained_attributes(resource_name='UserProfile', operation_input_args=operation_input_args)
+        operation_input_args = Base.populate_chained_attributes(
+            resource_name="UserProfile", operation_input_args=operation_input_args
+        )
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -21834,7 +23036,9 @@ class UserProfile(Base):
         response = client.create_user_profile(**operation_input_args)
         logger.debug(f"Response: {response}")
 
-        return cls.get(domain_id=domain_id, user_profile_name=user_profile_name, session=session, region=region)
+        return cls.get(
+            domain_id=domain_id, user_profile_name=user_profile_name, session=session, region=region
+        )
 
     @classmethod
     def get(
@@ -21872,20 +23076,24 @@ class UserProfile(Base):
         """
 
         operation_input_args = {
-            'DomainId': domain_id,
-            'UserProfileName': user_profile_name,
+            "DomainId": domain_id,
+            "UserProfileName": user_profile_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
         response = client.describe_user_profile(**operation_input_args)
 
         pprint(response)
 
         # deserialize the response
-        transformed_response = transform(response, 'DescribeUserProfileResponse')
+        transformed_response = transform(response, "DescribeUserProfileResponse")
         user_profile = cls(**transformed_response)
         return user_profile
 
-    def refresh(self) -> Optional["UserProfile"]:
+    def refresh(
+        self,
+    ) -> Optional["UserProfile"]:
         """
         Refresh a UserProfile resource
 
@@ -21908,14 +23116,14 @@ class UserProfile(Base):
         """
 
         operation_input_args = {
-            'DomainId': self.domain_id,
-            'UserProfileName': self.user_profile_name,
+            "DomainId": self.domain_id,
+            "UserProfileName": self.user_profile_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_user_profile(**operation_input_args)
 
         # deserialize response and update self
-        transform(response, 'DescribeUserProfileResponse', self)
+        transform(response, "DescribeUserProfileResponse", self)
         return self
 
     @populate_inputs_decorator
@@ -21947,12 +23155,12 @@ class UserProfile(Base):
         """
 
         logger.debug("Updating user_profile resource.")
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
-            'DomainId': self.domain_id,
-            'UserProfileName': self.user_profile_name,
-            'UserSettings': user_settings,
+            "DomainId": self.domain_id,
+            "UserProfileName": self.user_profile_name,
+            "UserSettings": user_settings,
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -21966,7 +23174,9 @@ class UserProfile(Base):
 
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a UserProfile resource
 
@@ -21986,20 +23196,30 @@ class UserProfile(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
-            'DomainId': self.domain_id,
-            'UserProfileName': self.user_profile_name,
+            "DomainId": self.domain_id,
+            "UserProfileName": self.user_profile_name,
         }
         client.delete_user_profile(**operation_input_args)
 
+        logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+
     def wait_for_status(
         self,
-        status: Literal['Deleting', 'Failed', 'InService', 'Pending', 'Updating', 'Update_Failed', 'Delete_Failed'],
+        status: Literal[
+            "Deleting",
+            "Failed",
+            "InService",
+            "Pending",
+            "Updating",
+            "Update_Failed",
+            "Delete_Failed",
+        ],
         poll: int = 5,
-        timeout: Optional[int] = None
-    ) -> Optional["UserProfile"]:
+        timeout: Optional[int] = None,
+    ):
         """
         Wait for a UserProfile resource.
 
@@ -22024,10 +23244,13 @@ class UserProfile(Base):
             current_status = self.status
 
             if status == current_status:
-                return self
+                print(f"\nFinal Resource Status: {current_status}")
+                return
 
             if "failed" in current_status.lower():
-                raise FailedStatusError(resource_type="UserProfile", status=current_status, reason=self.failure_reason)
+                raise FailedStatusError(
+                    resource_type="UserProfile", status=current_status, reason=self.failure_reason
+                )
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="UserProfile", status=current_status)
@@ -22073,24 +23296,30 @@ class UserProfile(Base):
                 ```
         """
 
-        client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'SortOrder': sort_order,
-            'SortBy': sort_by,
-            'DomainIdEquals': domain_id_equals,
-            'UserProfileNameContains': user_profile_name_contains,
+            "SortOrder": sort_order,
+            "SortBy": sort_by,
+            "DomainIdEquals": domain_id_equals,
+            "UserProfileNameContains": user_profile_name_contains,
         }
 
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
 
         return ResourceIterator(
             client=client,
-            list_method='list_user_profiles',
-            summaries_key='UserProfiles',
-            summary_name='UserProfileDetails',
+            list_method="list_user_profiles",
+            summaries_key="UserProfiles",
+            summary_name="UserProfileDetails",
             resource_cls=UserProfile,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
 
 
@@ -22099,41 +23328,47 @@ class Workforce(Base):
     Class representing resource Workforce
 
     Attributes:
-        workforce:A single private workforce, which is automatically created when you create your first private work team. You can create one private work force in each Amazon Web Services Region. By default, any workforce-related API operation used in a specific region will apply to the workforce created in that region. To learn how to create a private workforce, see Create a Private Workforce.
+        workforce: A single private workforce, which is automatically created when you create your first private work team. You can create one private work force in each Amazon Web Services Region. By default, any workforce-related API operation used in a specific region will apply to the workforce created in that region. To learn how to create a private workforce, see Create a Private Workforce.
 
     """
+
+    workforce_name: str
     workforce: Optional[Workforce] = Unassigned()
 
     def get_name(self) -> str:
         attributes = vars(self)
-        for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'workforce_name':
-                return value
-        raise Exception("Name attribute not found for object")
+        resource_name = "workforce_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
 
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
+        for attribute, value in attributes.items():
+            if attribute == "name" or attribute in attribute_name_candidates:
+                return value
+        logger.error("Name attribute not found for object workforce")
+        return None
 
     def populate_inputs_decorator(create_func):
+        @functools.wraps(create_func)
         def wrapper(*args, **kwargs):
-            config_schema_for_resource = \
-        {
-          "workforce": {
-            "workforce_vpc_config": {
-              "security_group_ids": {
-                "type": "array",
-                "items": {
-                  "type": "string"
+            config_schema_for_resource = {
+                "workforce": {
+                    "workforce_vpc_config": {
+                        "security_group_ids": {"type": "array", "items": {"type": "string"}},
+                        "subnets": {"type": "array", "items": {"type": "string"}},
+                    }
                 }
-              },
-              "subnets": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
-              }
             }
-          }
-        }
-            return create_func(*args, **Base.get_updated_kwargs_with_configured_attributes(config_schema_for_resource, "Workforce", **kwargs))
+            return create_func(
+                *args,
+                **Base.get_updated_kwargs_with_configured_attributes(
+                    config_schema_for_resource, "Workforce", **kwargs
+                ),
+            )
+
         return wrapper
 
     @classmethod
@@ -22182,18 +23417,22 @@ class Workforce(Base):
         """
 
         logger.debug("Creating workforce resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'CognitoConfig': cognito_config,
-            'OidcConfig': oidc_config,
-            'SourceIpConfig': source_ip_config,
-            'WorkforceName': workforce_name,
-            'Tags': tags,
-            'WorkforceVpcConfig': workforce_vpc_config,
+            "CognitoConfig": cognito_config,
+            "OidcConfig": oidc_config,
+            "SourceIpConfig": source_ip_config,
+            "WorkforceName": workforce_name,
+            "Tags": tags,
+            "WorkforceVpcConfig": workforce_vpc_config,
         }
 
-        operation_input_args = Base.populate_chained_attributes(resource_name='Workforce', operation_input_args=operation_input_args)
+        operation_input_args = Base.populate_chained_attributes(
+            resource_name="Workforce", operation_input_args=operation_input_args
+        )
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -22217,7 +23456,7 @@ class Workforce(Base):
         Get a Workforce resource
 
         Parameters:
-            workforce_name:The name of the private workforce whose access you want to restrict. WorkforceName is automatically set to default when a workforce is created and cannot be modified.
+            workforce_name: The name of the private workforce whose access you want to restrict. WorkforceName is automatically set to default when a workforce is created and cannot be modified.
             session: Boto3 session.
             region: Region name.
 
@@ -22238,19 +23477,23 @@ class Workforce(Base):
         """
 
         operation_input_args = {
-            'WorkforceName': workforce_name,
+            "WorkforceName": workforce_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
         response = client.describe_workforce(**operation_input_args)
 
         pprint(response)
 
         # deserialize the response
-        transformed_response = transform(response, 'DescribeWorkforceResponse')
+        transformed_response = transform(response, "DescribeWorkforceResponse")
         workforce = cls(**transformed_response)
         return workforce
 
-    def refresh(self) -> Optional["Workforce"]:
+    def refresh(
+        self,
+    ) -> Optional["Workforce"]:
         """
         Refresh a Workforce resource
 
@@ -22271,19 +23514,18 @@ class Workforce(Base):
         """
 
         operation_input_args = {
-            'WorkforceName': self.workforce_name,
+            "WorkforceName": self.workforce_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_workforce(**operation_input_args)
 
         # deserialize response and update self
-        transform(response, 'DescribeWorkforceResponse', self)
+        transform(response, "DescribeWorkforceResponse", self)
         return self
 
     @populate_inputs_decorator
     def update(
         self,
-        workforce_name: str,
         source_ip_config: Optional[SourceIpConfig] = Unassigned(),
         oidc_config: Optional[OidcConfig] = Unassigned(),
         workforce_vpc_config: Optional[WorkforceVpcConfigRequest] = Unassigned(),
@@ -22292,9 +23534,9 @@ class Workforce(Base):
         Update a Workforce resource
 
         Parameters:
-            source_ip_config:A list of one to ten worker IP address ranges (CIDRs) that can be used to access tasks assigned to this workforce. Maximum: Ten CIDR values
-            oidc_config:Use this parameter to update your OIDC Identity Provider (IdP) configuration for a workforce made using your own IdP.
-            workforce_vpc_config:Use this parameter to update your VPC configuration for a workforce.
+            source_ip_config: A list of one to ten worker IP address ranges (CIDRs) that can be used to access tasks assigned to this workforce. Maximum: Ten CIDR values
+            oidc_config: Use this parameter to update your OIDC Identity Provider (IdP) configuration for a workforce made using your own IdP.
+            workforce_vpc_config: Use this parameter to update your VPC configuration for a workforce.
 
         Returns:
             The Workforce resource.
@@ -22314,13 +23556,13 @@ class Workforce(Base):
         """
 
         logger.debug("Updating workforce resource.")
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
-            'WorkforceName': workforce_name,
-            'SourceIpConfig': source_ip_config,
-            'OidcConfig': oidc_config,
-            'WorkforceVpcConfig': workforce_vpc_config,
+            "WorkforceName": self.workforce_name,
+            "SourceIpConfig": source_ip_config,
+            "OidcConfig": oidc_config,
+            "WorkforceVpcConfig": workforce_vpc_config,
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -22334,7 +23576,9 @@ class Workforce(Base):
 
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a Workforce resource
 
@@ -22352,19 +23596,21 @@ class Workforce(Base):
                 ```
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
-            'WorkforceName': self.workforce_name,
+            "WorkforceName": self.workforce_name,
         }
         client.delete_workforce(**operation_input_args)
 
+        logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+
     def wait_for_status(
         self,
-        status: Literal['Initializing', 'Updating', 'Deleting', 'Failed', 'Active'],
+        status: Literal["Initializing", "Updating", "Deleting", "Failed", "Active"],
         poll: int = 5,
-        timeout: Optional[int] = None
-    ) -> Optional["Workforce"]:
+        timeout: Optional[int] = None,
+    ):
         """
         Wait for a Workforce resource.
 
@@ -22389,10 +23635,13 @@ class Workforce(Base):
             current_status = self.workforce.status
 
             if status == current_status:
-                return self
+                print(f"\nFinal Resource Status: {current_status}")
+                return
 
             if "failed" in current_status.lower():
-                raise FailedStatusError(resource_type="Workforce", status=current_status, reason='(Unknown)')
+                raise FailedStatusError(
+                    resource_type="Workforce", status=current_status, reason="(Unknown)"
+                )
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="Workforce", status=current_status)
@@ -22436,23 +23685,29 @@ class Workforce(Base):
                 ```
         """
 
-        client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'SortBy': sort_by,
-            'SortOrder': sort_order,
-            'NameContains': name_contains,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
+            "NameContains": name_contains,
         }
 
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
 
         return ResourceIterator(
             client=client,
-            list_method='list_workforces',
-            summaries_key='Workforces',
-            summary_name='Workforce',
+            list_method="list_workforces",
+            summaries_key="Workforces",
+            summary_name="Workforce",
             resource_cls=Workforce,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
 
 
@@ -22461,17 +23716,28 @@ class Workteam(Base):
     Class representing resource Workteam
 
     Attributes:
-        workteam:A Workteam instance that contains information about the work team.
+        workteam: A Workteam instance that contains information about the work team.
 
     """
+
+    workteam_name: str
     workteam: Optional[Workteam] = Unassigned()
 
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = "workteam_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
         for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'workteam_name':
+            if attribute == "name" or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object workteam")
+        return None
 
     @classmethod
     def create(
@@ -22520,18 +23786,22 @@ class Workteam(Base):
         """
 
         logger.debug("Creating workteam resource.")
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'WorkteamName': workteam_name,
-            'WorkforceName': workforce_name,
-            'MemberDefinitions': member_definitions,
-            'Description': description,
-            'NotificationConfiguration': notification_configuration,
-            'Tags': tags,
+            "WorkteamName": workteam_name,
+            "WorkforceName": workforce_name,
+            "MemberDefinitions": member_definitions,
+            "Description": description,
+            "NotificationConfiguration": notification_configuration,
+            "Tags": tags,
         }
 
-        operation_input_args = Base.populate_chained_attributes(resource_name='Workteam', operation_input_args=operation_input_args)
+        operation_input_args = Base.populate_chained_attributes(
+            resource_name="Workteam", operation_input_args=operation_input_args
+        )
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -22576,19 +23846,23 @@ class Workteam(Base):
         """
 
         operation_input_args = {
-            'WorkteamName': workteam_name,
+            "WorkteamName": workteam_name,
         }
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
         response = client.describe_workteam(**operation_input_args)
 
         pprint(response)
 
         # deserialize the response
-        transformed_response = transform(response, 'DescribeWorkteamResponse')
+        transformed_response = transform(response, "DescribeWorkteamResponse")
         workteam = cls(**transformed_response)
         return workteam
 
-    def refresh(self) -> Optional["Workteam"]:
+    def refresh(
+        self,
+    ) -> Optional["Workteam"]:
         """
         Refresh a Workteam resource
 
@@ -22609,18 +23883,17 @@ class Workteam(Base):
         """
 
         operation_input_args = {
-            'WorkteamName': self.workteam_name,
+            "WorkteamName": self.workteam_name,
         }
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
         response = client.describe_workteam(**operation_input_args)
 
         # deserialize response and update self
-        transform(response, 'DescribeWorkteamResponse', self)
+        transform(response, "DescribeWorkteamResponse", self)
         return self
 
     def update(
         self,
-        workteam_name: str,
         member_definitions: Optional[List[MemberDefinition]] = Unassigned(),
         description: Optional[str] = Unassigned(),
         notification_configuration: Optional[NotificationConfiguration] = Unassigned(),
@@ -22629,9 +23902,9 @@ class Workteam(Base):
         Update a Workteam resource
 
         Parameters:
-            member_definitions:A list of MemberDefinition objects that contains objects that identify the workers that make up the work team.  Workforces can be created using Amazon Cognito or your own OIDC Identity Provider (IdP). For private workforces created using Amazon Cognito use CognitoMemberDefinition. For workforces created using your own OIDC identity provider (IdP) use OidcMemberDefinition. You should not provide input for both of these parameters in a single request. For workforces created using Amazon Cognito, private work teams correspond to Amazon Cognito user groups within the user pool used to create a workforce. All of the CognitoMemberDefinition objects that make up the member definition must have the same ClientId and UserPool values. To add a Amazon Cognito user group to an existing worker pool, see Adding groups to a User Pool. For more information about user pools, see Amazon Cognito User Pools. For workforces created using your own OIDC IdP, specify the user groups that you want to include in your private work team in OidcMemberDefinition by listing those groups in Groups. Be aware that user groups that are already in the work team must also be listed in Groups when you make this request to remain on the work team. If you do not include these user groups, they will no longer be associated with the work team you update.
-            description:An updated description for the work team.
-            notification_configuration:Configures SNS topic notifications for available or expiring work items
+            member_definitions: A list of MemberDefinition objects that contains objects that identify the workers that make up the work team.  Workforces can be created using Amazon Cognito or your own OIDC Identity Provider (IdP). For private workforces created using Amazon Cognito use CognitoMemberDefinition. For workforces created using your own OIDC identity provider (IdP) use OidcMemberDefinition. You should not provide input for both of these parameters in a single request. For workforces created using Amazon Cognito, private work teams correspond to Amazon Cognito user groups within the user pool used to create a workforce. All of the CognitoMemberDefinition objects that make up the member definition must have the same ClientId and UserPool values. To add a Amazon Cognito user group to an existing worker pool, see Adding groups to a User Pool. For more information about user pools, see Amazon Cognito User Pools. For workforces created using your own OIDC IdP, specify the user groups that you want to include in your private work team in OidcMemberDefinition by listing those groups in Groups. Be aware that user groups that are already in the work team must also be listed in Groups when you make this request to remain on the work team. If you do not include these user groups, they will no longer be associated with the work team you update.
+            description: An updated description for the work team.
+            notification_configuration: Configures SNS topic notifications for available or expiring work items
 
         Returns:
             The Workteam resource.
@@ -22651,13 +23924,13 @@ class Workteam(Base):
         """
 
         logger.debug("Updating workteam resource.")
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
-            'WorkteamName': workteam_name,
-            'MemberDefinitions': member_definitions,
-            'Description': description,
-            'NotificationConfiguration': notification_configuration,
+            "WorkteamName": self.workteam_name,
+            "MemberDefinitions": member_definitions,
+            "Description": description,
+            "NotificationConfiguration": notification_configuration,
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -22671,7 +23944,9 @@ class Workteam(Base):
 
         return self
 
-    def delete(self) -> None:
+    def delete(
+        self,
+    ) -> None:
         """
         Delete a Workteam resource
 
@@ -22690,12 +23965,14 @@ class Workteam(Base):
             ResourceLimitExceeded: You have exceeded an SageMaker resource limit. For example, you might have too many training jobs created.
         """
 
-        client = SageMakerClient().client
+        client = Base.get_sagemaker_client()
 
         operation_input_args = {
-            'WorkteamName': self.workteam_name,
+            "WorkteamName": self.workteam_name,
         }
         client.delete_workteam(**operation_input_args)
+
+        logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
     @classmethod
     def get_all(
@@ -22734,25 +24011,30 @@ class Workteam(Base):
                 ```
         """
 
-        client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         operation_input_args = {
-            'SortBy': sort_by,
-            'SortOrder': sort_order,
-            'NameContains': name_contains,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
+            "NameContains": name_contains,
         }
 
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
 
         return ResourceIterator(
             client=client,
-            list_method='list_workteams',
-            summaries_key='Workteams',
-            summary_name='Workteam',
+            list_method="list_workteams",
+            summaries_key="Workteams",
+            summary_name="Workteam",
             resource_cls=Workteam,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
-
 
     def get_all_labeling_jobs(
         self,
@@ -22761,11 +24043,12 @@ class Workteam(Base):
         creation_time_before: Optional[datetime.datetime] = Unassigned(),
         job_reference_code_contains: Optional[str] = Unassigned(),
         sort_by: Optional[str] = Unassigned(),
-        sort_order: Optional[str] = Unassigned(),    session: Optional[Session] = None,
+        sort_order: Optional[str] = Unassigned(),
+        session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> ResourceIterator[LabelingJob]:
         """
-        Perform ListLabelingJobsForWorkteam on a Workteam resource.
+        Gets a list of labeling jobs assigned to a specified work team.
 
         Parameters:
             workteam_arn: The Amazon Resource Name (ARN) of the work team for which you want to see labeling jobs for.
@@ -22782,28 +24065,30 @@ class Workteam(Base):
 
         """
 
-
         operation_input_args = {
-            'WorkteamArn': workteam_arn,
-            'CreationTimeAfter': creation_time_after,
-            'CreationTimeBefore': creation_time_before,
-            'JobReferenceCodeContains': job_reference_code_contains,
-            'SortBy': sort_by,
-            'SortOrder': sort_order,
+            "WorkteamArn": workteam_arn,
+            "CreationTimeAfter": creation_time_after,
+            "CreationTimeBefore": creation_time_before,
+            "JobReferenceCodeContains": job_reference_code_contains,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
         }
-        operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
         logger.debug(f"Input request: {operation_input_args}")
 
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
-
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
 
         return ResourceIterator(
             client=client,
-            list_method='list_labeling_jobs_for_workteam',
-            summaries_key='LabelingJobSummaryList',
-            summary_name='LabelingJobForWorkteamSummary',
+            list_method="list_labeling_jobs_for_workteam",
+            summaries_key="LabelingJobSummaryList",
+            summary_name="LabelingJobForWorkteamSummary",
             resource_cls=LabelingJob,
-            list_method_kwargs=operation_input_args
+            list_method_kwargs=operation_input_args,
         )
-
-

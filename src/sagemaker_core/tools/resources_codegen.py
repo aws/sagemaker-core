@@ -499,6 +499,29 @@ class ResourcesCodeGen:
             attributes_and_documentation = (
                 self.shapes_extractor.fetch_shape_members_and_doc_strings(get_operation_shape)
             )
+            # Some resources are configured in the service.json inconsistently.
+            # These resources take in the main identifier in the create and get methods , but is not present in the describe response output
+            # Hence for consistent behaviour of functions such as refresh and delete, the identifiers are hardcoded
+            if resource_name == "ImageVersion":
+                class_attributes["image_name"] = "str"
+                class_attributes_string = "image_name: str\n" + class_attributes_string
+            if resource_name == "Workteam":
+                class_attributes["workteam_name"] = "str"
+                class_attributes_string = "workteam_name: str\n" + class_attributes_string
+            if resource_name == "Workforce":
+                class_attributes["workforce_name"] = "str"
+                class_attributes_string = "workforce_name: str\n" + class_attributes_string
+            if resource_name == "SubscribedWorkteam":
+                class_attributes["workteam_arn"] = "str"
+                class_attributes_string = "workteam_arn: str\n" + class_attributes_string
+
+            if resource_name == "HubContent":
+                class_attributes["hub_name"] = "Optional[str] = Unassigned()"
+                class_attributes_string = class_attributes_string.replace("hub_name: str", "")
+                class_attributes_string = (
+                    class_attributes_string + "hub_name: Optional[str] = Unassigned()"
+                )
+
             return class_attributes, class_attributes_string, attributes_and_documentation
         elif "get_all" in class_methods:
             # Get the operation and shape for the 'get_all' method
@@ -513,44 +536,20 @@ class ResourcesCodeGen:
                 if key != "NextToken"
             )
 
-        summaries_key = next(iter(filtered_list_operation_output_members))
+            summaries_key = next(iter(filtered_list_operation_output_members))
             summaries_shape_name = filtered_list_operation_output_members[summaries_key]["shape"]
             summary_name = self.shapes[summaries_shape_name]["member"]["shape"]
             required_attributes = self.shapes[summary_name].get("required", [])
-        # Generate the class attributes based on the shape
-        class_attributes, class_attributes_string = (
+            # Generate the class attributes based on the shape
+            class_attributes, class_attributes_string = (
                 self.shapes_extractor.generate_data_shape_members_and_string_body(
                     shape=summary_name, required_override=tuple(required_attributes)
                 )
             )
-        attributes_and_documentation = (
-            self.shapes_extractor.fetch_shape_members_and_doc_strings(summary_name)
-        )
-
-        # Some resources are configured in the service.json inconsistently.
-        # These resources take in the main identifier in the create and get methods , but is not present in the describe response output
-        # Hence for consistent behaviour of functions such as refresh and delete, the identifiers are hardcoded
-        if resource_name == "ImageVersion":
-            class_attributes["image_name"] = "str"
-            class_attributes_string = "image_name: str\n" + class_attributes_list[1]
-        if resource_name == "Workteam":
-            class_attributes["workteam_name"] = "str"
-            class_attributes_string = "workteam_name: str\n" + class_attributes_list[1]
-        if resource_name == "Workforce":
-            class_attributes["workforce_name"] = "str"
-            class_attributes_string = "workforce_name: str\n" + class_attributes_list[1]
-        if resource_name == "SubscribedWorkteam":
-            class_attributes["workteam_arn"] = "str"
-            cclass_attributes_string = "workteam_arn: str\n" + class_attributes_list[1]
-
-        if resource_name == "HubContent":
-            class_attributes["hub_name"] = "Optional[str] = Unassigned()"
-            class_attributes_string = class_attributes_list[1].replace("hub_name: str", "")
-            class_attributes_string = (
-                class_attributes_string + "hub_name: Optional[str] = Unassigned()"
+            attributes_and_documentation = (
+                self.shapes_extractor.fetch_shape_members_and_doc_strings(summary_name)
             )
-
-        return class_attributes, class_attributes_string, attributes_and_documentation
+            return class_attributes, class_attributes_string, attributes_and_documentation
 
     def _get_shape_attr_documentation_string(
         self, attributes_and_documentation, exclude_resource_attrs=None
