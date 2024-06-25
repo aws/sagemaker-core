@@ -63,7 +63,7 @@ class ResourcesTest(unittest.TestCase):
                         pascal_input_args = self._convert_dict_keys_into_pascal_case(input_args)
                         cls.get(**input_args)
                         mock_method.assert_called_once()
-                        self.assertDictContainsSubset(pascal_input_args, mock_method.call_args[1])
+                        self.assertDictContainsSubset(pascal_input_args, mock_method.call_args[1], f"Get call verification failed for {name}")
                     report["Get"] = report["Get"] + 1
                     print_string = print_string + " Get"
 
@@ -105,7 +105,8 @@ class ResourcesTest(unittest.TestCase):
                                 mock_method.assert_called_once()
                                 mock_get_method.assert_called_once()
                                 self.assertDictContainsSubset(
-                                    pascal_input_args, mock_method.call_args[1]
+                                    pascal_input_args, mock_method.call_args[1],
+                                    f"Get All call verification failed for {name}"
                                 )
                         report["Get_all"] = report["Get_all"] + 1
                         print_string = print_string + " Get_All"
@@ -136,7 +137,9 @@ class ResourcesTest(unittest.TestCase):
                             pascal_input_args = self._convert_dict_keys_into_pascal_case(input_args)
                             class_instance.delete(**input_args)
                             mock_method.assert_called_once()
-                            self.assertDictContainsSubset(pascal_input_args, mock_method.call_args[1])
+                            self.assertDictContainsSubset(pascal_input_args,
+                                                          mock_method.call_args[1],
+                                                          f"Delete call verification failed for {name}")
                         report["Delete"] = report["Delete"] + 1
                         print_string = print_string + " Delete"
 
@@ -165,6 +168,7 @@ class ResourcesTest(unittest.TestCase):
                                         )
                                     ),
                                     mock_create_method.call_args[1],
+                                    f"Create call verification failed for {name}"
                                 )
                         report["Create"] = report["Create"] + 1
                         print_string = print_string + " Create"
@@ -191,7 +195,8 @@ class ResourcesTest(unittest.TestCase):
                                 mock_update_method.assert_called_once()
                                 mock_get_method.assert_called_once()
                                 self.assertDictContainsSubset(
-                                    Base._serialize(pascal_input_args), mock_update_method.call_args[1]
+                                    Base._serialize(pascal_input_args), mock_update_method.call_args[1],
+                                    f"Update call verification failed for {name}"
                                 )
                         report["Update"] = report["Update"] + 1
                         print_string = print_string + " Update"
