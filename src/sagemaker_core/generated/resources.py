@@ -6127,6 +6127,93 @@ class EdgeDeploymentPlan(Base):
 
     def create_stage(
         self,
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> None:
+        """
+        Creates a new stage in an existing edge deployment plan.
+
+
+        """
+
+        operation_input_args = {
+            "EdgeDeploymentPlanName": self.edge_deployment_plan_name,
+            "Stages": self.stages,
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
+        logger.debug(f"Calling create_edge_deployment_stage API")
+        response = client.create_edge_deployment_stage(**operation_input_args)
+        logger.debug(f"Response: {response}")
+
+    def delete_stage(
+        self,
+        stage_name: str,
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> None:
+        """
+        Delete a stage in an edge deployment plan if (and only if) the stage is inactive.
+
+        Parameters:
+            stage_name: The name of the stage.
+            session: Boto3 session.
+            region: Region name.
+
+
+        """
+
+        operation_input_args = {
+            "EdgeDeploymentPlanName": self.edge_deployment_plan_name,
+            "StageName": stage_name,
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
+        logger.debug(f"Calling delete_edge_deployment_stage API")
+        response = client.delete_edge_deployment_stage(**operation_input_args)
+        logger.debug(f"Response: {response}")
+
+    def start_stage(
+        self,
+        stage_name: str,
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> None:
+        """
+        Starts a stage in an edge deployment plan.
+
+        Parameters:
+            stage_name: The name of the stage to start.
+            session: Boto3 session.
+            region: Region name.
+
+
+        """
+
+        operation_input_args = {
+            "EdgeDeploymentPlanName": self.edge_deployment_plan_name,
+            "StageName": stage_name,
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
+        logger.debug(f"Calling start_edge_deployment_stage API")
+        response = client.start_edge_deployment_stage(**operation_input_args)
+        logger.debug(f"Response: {response}")
+
+    def stop_stage(
+        self,
         stage_name: str,
         session: Optional[Session] = None,
         region: Optional[str] = None,

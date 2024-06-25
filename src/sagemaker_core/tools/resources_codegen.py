@@ -46,7 +46,6 @@ from sagemaker_core.tools.templates import (
     CALL_OPERATION_API_TEMPLATE,
     CREATE_METHOD_TEMPLATE,
     DESERIALIZE_INPUT_AND_RESPONSE_TO_CLS_TEMPLATE,
-    DESERIALIZE_INPUT_TO_CLS_TEMPLATE,
     DESERIALIZE_RESPONSE_TEMPLATE,
     DESERIALIZE_RESPONSE_TO_BASIC_TYPE_TEMPLATE,
     GENERIC_METHOD_TEMPLATE,
@@ -528,10 +527,8 @@ class ResourcesCodeGen:
             # Get the operation and shape for the 'create' method
             create_operation = self.operations["Create" + resource_name]
             create_operation_input_shape = create_operation["input"]["shape"]
-            create_operation_output_shape = (
-                create_operation["output"]["shape"] if "output" in create_operation else None
-            )
-
+            create_operation_output_shape = create_operation["output"]["shape"]
+            # Generate the class attributes based on the input and output shape
             class_attributes, class_attributes_string = self._get_resource_members_and_string_body(
                 resource_name, create_operation_input_shape, create_operation_output_shape
             )
@@ -544,11 +541,8 @@ class ResourcesCodeGen:
 
     def _get_resource_members_and_string_body(self, resource_name: str, input_shape, output_shape):
         input_members = self.shapes_extractor.generate_shape_members(input_shape)
-        if output_shape:
-            output_members = self.shapes_extractor.generate_shape_members(output_shape)
-            resource_members = {**input_members, **output_members}
-        else:
-            resource_members = input_members
+        output_members = self.shapes_extractor.generate_shape_members(output_shape)
+        resource_members = {**input_members, **output_members}
         # bring the required members in front
         ordered_members = {
             attr: value
@@ -581,12 +575,9 @@ class ResourcesCodeGen:
     def _get_resouce_attributes_and_documentation(self, input_shape, output_shape):
         input_members = self.shapes[input_shape]["members"]
         required_args = set(self.shapes[input_shape].get("required", []))
-        if output_shape:
-            output_members = self.shapes[output_shape]["members"]
-            members = {**input_members, **output_members}
-            required_args.update(self.shapes[output_shape].get("required", []))
-        else:
-            members = input_members
+        output_members = self.shapes[output_shape]["members"]
+        members = {**input_members, **output_members}
+        required_args.update(self.shapes[output_shape].get("required", []))
         # bring the required members in front
         ordered_members = {key: members[key] for key in members if key in required_args}
         ordered_members.update(members)
@@ -892,13 +883,10 @@ class ResourcesCodeGen:
             call_operation_api = CALL_OPERATION_API_TEMPLATE.format(
                 operation=convert_to_snake_case(operation_name)
             )
-            if "output" in operation_metadata:
-                operation_output_shape_name = operation_metadata["output"]["shape"]
-                deserialize_response = DESERIALIZE_INPUT_AND_RESPONSE_TO_CLS_TEMPLATE.format(
-                    operation_output_shape=operation_output_shape_name
-                )
-            else:
-                deserialize_response = DESERIALIZE_INPUT_TO_CLS_TEMPLATE
+            operation_output_shape_name = operation_metadata["output"]["shape"]
+            deserialize_response = DESERIALIZE_INPUT_AND_RESPONSE_TO_CLS_TEMPLATE.format(
+                operation_output_shape=operation_output_shape_name
+            )
             formatted_method = GENERIC_METHOD_TEMPLATE.format(
                 docstring=docstring,
                 decorator=decorator,
