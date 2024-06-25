@@ -20333,6 +20333,76 @@ class Project(Base):
         )
 
 
+class SagemakerServicecatalogPortfolio(Base):
+    """
+    Class representing resource SagemakerServicecatalogPortfolio
+
+
+    """
+
+    @classmethod
+    def disable(
+        cls,
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> None:
+        """
+        Disables using Service Catalog in SageMaker.
+
+
+        """
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
+        logger.debug(f"Calling disable_sagemaker_servicecatalog_portfolio API")
+        response = client.disable_sagemaker_servicecatalog_portfolio()
+        logger.debug(f"Response: {response}")
+
+    @classmethod
+    def enable(
+        cls,
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> None:
+        """
+        Enables using Service Catalog in SageMaker.
+
+
+        """
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
+        logger.debug(f"Calling enable_sagemaker_servicecatalog_portfolio API")
+        response = client.enable_sagemaker_servicecatalog_portfolio()
+        logger.debug(f"Response: {response}")
+
+    @classmethod
+    def get_status(
+        cls,
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional[str]:
+        """
+        Gets the status of Service Catalog in SageMaker.
+
+
+        """
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
+        logger.debug(f"Calling get_sagemaker_servicecatalog_portfolio_status API")
+        response = client.get_sagemaker_servicecatalog_portfolio_status()
+        logger.debug(f"Response: {response}")
+
+        return list(response.values())[0]
+
+
 class Space(Base):
     """
     Class representing resource Space

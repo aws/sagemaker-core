@@ -347,5 +347,31 @@
             "method_type": "object",
             "service_name": "sagemaker"
         }
+    },
+    "SagemakerServicecatalogPortfolio": {
+        "DisableSagemakerServicecatalogPortfolio": {
+            "operation_name": "DisableSagemakerServicecatalogPortfolio",
+            "resource_name": "SagemakerServicecatalogPortfolio",
+            "method_name": "disable",
+            "return_type": "None",
+            "method_type": "class",
+            "service_name": "sagemaker"
+        },
+        "EnableSagemakerServicecatalogPortfolio": {
+            "operation_name": "EnableSagemakerServicecatalogPortfolio",
+            "resource_name": "SagemakerServicecatalogPortfolio",
+            "method_name": "enable",
+            "return_type": "None",
+            "method_type": "class",
+            "service_name": "sagemaker"
+        },
+        "GetSagemakerServicecatalogPortfolioStatus": {
+            "operation_name": "GetSagemakerServicecatalogPortfolioStatus",
+            "resource_name": "SagemakerServicecatalogPortfolio",
+            "method_name": "get_status",
+            "return_type": "str",
+            "method_type": "class",
+            "service_name": "sagemaker"
+        }
     }
 }

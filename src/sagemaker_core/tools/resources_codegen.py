@@ -43,6 +43,7 @@ from sagemaker_core.util.util import (
 from sagemaker_core.tools.resources_extractor import ResourcesExtractor
 from sagemaker_core.tools.shapes_extractor import ShapesExtractor
 from sagemaker_core.tools.templates import (
+    CALL_OPERATION_API_NO_ARG_TEMPLATE,
     CALL_OPERATION_API_TEMPLATE,
     CREATE_METHOD_TEMPLATE,
     DESERIALIZE_INPUT_AND_RESPONSE_TO_CLS_TEMPLATE,
@@ -454,9 +455,11 @@ class ResourcesCodeGen:
                 resource_class += add_indent(list_method, 4)
 
         else:
-            # If there's no 'get' or 'list' method, log a message
-            # TODO: Handle the resources without 'get' or 'list' differently
-            log.warning(f"Resource {resource_name} does not have a GET or LIST method")
+            # If there's no 'get' or 'list' or 'create' method, generate a class with no attributes
+            resource_attributes = []
+            resource_class = f"class {resource_name}(Base):\n"
+            class_documentation_string = f"Class representing resource {resource_name}\n\n"
+            resource_class += add_indent(f'"""\n{class_documentation_string}\n"""\n', 4)
 
         if resource_name in self.resource_methods:
             # TODO: use resource_methods for all methods
@@ -1528,6 +1531,22 @@ class ResourcesCodeGen:
         method_args += add_indent("session: Optional[Session] = None,\n", 4)
         method_args += add_indent("region: Optional[str] = None,", 4)
 
+        initialize_client = INITIALIZE_CLIENT_TEMPLATE.format(service_name=method.service_name)
+        if len(self.shapes[operation_input_shape_name]["members"]) != 0:
+            # the method has input arguments
+            serialize_operation_input = SERIALIZE_INPUT_TEMPLATE.format(
+                operation_input_args=operation_input_args
+            )
+            call_operation_api = CALL_OPERATION_API_TEMPLATE.format(
+                operation=convert_to_snake_case(method.operation_name)
+            )
+        else:
+            # the method has no input arguments
+            serialize_operation_input = ""
+            call_operation_api = CALL_OPERATION_API_NO_ARG_TEMPLATE.format(
+                operation=convert_to_snake_case(method.operation_name)
+            )
+
         if method.return_type == "None":
             return_type = "None"
             deserialize_response = ""
@@ -1546,14 +1565,6 @@ class ResourcesCodeGen:
                 operation_output_shape=operation_output_shape,
                 return_type_conversion=return_type_conversion,
             )
-
-        serialize_operation_input = SERIALIZE_INPUT_TEMPLATE.format(
-            operation_input_args=operation_input_args
-        )
-        initialize_client = INITIALIZE_CLIENT_TEMPLATE.format(service_name=method.service_name)
-        call_operation_api = CALL_OPERATION_API_TEMPLATE.format(
-            operation=convert_to_snake_case(method.operation_name)
-        )
 
         # generate docstring
         docstring = f"{method.docstring_title}\n\n"

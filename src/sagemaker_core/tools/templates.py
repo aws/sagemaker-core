@@ -494,6 +494,11 @@ CALL_OPERATION_API_TEMPLATE = """
     response = client.{operation}(**operation_input_args)
     logger.debug(f"Response: {{response}}")"""
 
+CALL_OPERATION_API_NO_ARG_TEMPLATE = """
+    logger.debug(f"Calling {operation} API")
+    response = client.{operation}()
+    logger.debug(f"Response: {{response}}")"""
+
 DESERIALIZE_RESPONSE_TEMPLATE = """
     transformed_response = transform(response, '{operation_output_shape}')
     return {return_type_conversion}(**transformed_response)"""
