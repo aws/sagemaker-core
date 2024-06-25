@@ -39,7 +39,7 @@ class ResourcesTest(unittest.TestCase):
 
     @patch("sagemaker_core.generated.resources.transform")
     @patch("boto3.session.Session")
-    def test_resources(self,session,  mock_transform):
+    def test_resources(self, session, mock_transform):
         report = {"Create": 0, "Update": 0, "Get": 0, "Get_all": 0, "Refresh": 0, "Delete": 0}
         resources = set()
         client = SageMakerClient(session=session).client
@@ -63,7 +63,11 @@ class ResourcesTest(unittest.TestCase):
                         pascal_input_args = self._convert_dict_keys_into_pascal_case(input_args)
                         cls.get(**input_args)
                         mock_method.assert_called_once()
-                        self.assertDictContainsSubset(pascal_input_args, mock_method.call_args[1], f"Get call verification failed for {name}")
+                        self.assertLessEqual(
+                            pascal_input_args.items(),
+                            mock_method.call_args[1].items(),
+                            f"Get call verification failed for {name}",
+                        )
                     report["Get"] = report["Get"] + 1
                     print_string = print_string + " Get"
 
@@ -100,13 +104,16 @@ class ResourcesTest(unittest.TestCase):
                                 client, get_function_name, return_value={}
                             ) as mock_get_method:
                                 input_args = self._get_required_parameters_for_function(cls.get_all)
-                                pascal_input_args = self._convert_dict_keys_into_pascal_case(input_args)
+                                pascal_input_args = self._convert_dict_keys_into_pascal_case(
+                                    input_args
+                                )
                                 cls.get_all(**input_args).__next__()
                                 mock_method.assert_called_once()
                                 mock_get_method.assert_called_once()
-                                self.assertDictContainsSubset(
-                                    pascal_input_args, mock_method.call_args[1],
-                                    f"Get All call verification failed for {name}"
+                                self.assertLessEqual(
+                                    pascal_input_args.items(),
+                                    mock_method.call_args[1].items(),
+                                    f"Get All call verification failed for {name}",
                                 )
                         report["Get_all"] = report["Get_all"] + 1
                         print_string = print_string + " Get_All"
@@ -122,24 +129,30 @@ class ResourcesTest(unittest.TestCase):
                         pascal_input_args = self._convert_dict_keys_into_pascal_case(input_args)
                         class_instance.refresh(**input_args)
                         mock_method.assert_called_once()
-                        self.assertDictContainsSubset(pascal_input_args, mock_method.call_args[1])
+                        self.assertLessEqual(
+                            pascal_input_args.items(), mock_method.call_args[1].items()
+                        )
                     report["Refresh"] = report["Refresh"] + 1
                     print_string = print_string + " Refresh"
 
                     if hasattr(cls, "delete") and callable(cls.delete):
                         function_name = f"delete_{pascal_to_snake(name)}"
-                        mock_transform.return_value = self.MOCK_RESOURCES_RESPONSE_BY_RESOURCE_NAME.get(
-                            name
+                        mock_transform.return_value = (
+                            self.MOCK_RESOURCES_RESPONSE_BY_RESOURCE_NAME.get(name)
                         )
                         with patch.object(client, function_name, return_value={}) as mock_method:
-                            class_instance = cls(**self._get_required_parameters_for_function(cls.get))
+                            class_instance = cls(
+                                **self._get_required_parameters_for_function(cls.get)
+                            )
                             input_args = self._get_required_parameters_for_function(cls.delete)
                             pascal_input_args = self._convert_dict_keys_into_pascal_case(input_args)
                             class_instance.delete(**input_args)
                             mock_method.assert_called_once()
-                            self.assertDictContainsSubset(pascal_input_args,
-                                                          mock_method.call_args[1],
-                                                          f"Delete call verification failed for {name}")
+                            self.assertLessEqual(
+                                pascal_input_args.items(),
+                                mock_method.call_args[1].items(),
+                                f"Delete call verification failed for {name}",
+                            )
                         report["Delete"] = report["Delete"] + 1
                         print_string = print_string + " Delete"
 
@@ -161,14 +174,15 @@ class ResourcesTest(unittest.TestCase):
                                 cls.create(**input_args)
                                 mock_create_method.assert_called_once()
                                 mock_get_method.assert_called_once()
-                                self.assertDictContainsSubset(
+                                self.assertLessEqual(
                                     Base._serialize(
                                         Base.populate_chained_attributes(
-                                            operation_input_args=pascal_input_args, resource_name=name
+                                            operation_input_args=pascal_input_args,
+                                            resource_name=name,
                                         )
-                                    ),
-                                    mock_create_method.call_args[1],
-                                    f"Create call verification failed for {name}"
+                                    ).items(),
+                                    mock_create_method.call_args[1].items(),
+                                    f"Create call verification failed for {name}",
                                 )
                         report["Create"] = report["Create"] + 1
                         print_string = print_string + " Create"
@@ -187,16 +201,19 @@ class ResourcesTest(unittest.TestCase):
                                 client, get_function_name, return_value={}
                             ) as mock_get_method:
                                 input_args = self._get_required_parameters_for_function(cls.update)
-                                pascal_input_args = self._convert_dict_keys_into_pascal_case(input_args)
+                                pascal_input_args = self._convert_dict_keys_into_pascal_case(
+                                    input_args
+                                )
                                 class_instance = cls(
                                     **self._get_required_parameters_for_function(cls.get)
                                 )
                                 class_instance.update(**input_args)
                                 mock_update_method.assert_called_once()
                                 mock_get_method.assert_called_once()
-                                self.assertDictContainsSubset(
-                                    Base._serialize(pascal_input_args), mock_update_method.call_args[1],
-                                    f"Update call verification failed for {name}"
+                                self.assertLessEqual(
+                                    Base._serialize(pascal_input_args).items(),
+                                    mock_update_method.call_args[1].items(),
+                                    f"Update call verification failed for {name}",
                                 )
                         report["Update"] = report["Update"] + 1
                         print_string = print_string + " Update"
