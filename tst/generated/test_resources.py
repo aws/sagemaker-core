@@ -245,7 +245,9 @@ class ResourcesTest(unittest.TestCase):
         for key, val in inspect.signature(func).parameters.items():
             attribute_type = str(val)
             if (
-                "Optional" not in attribute_type
+                key != "session"
+                and key != "region"
+                and "Optional" not in attribute_type
                 and key != "self"
                 and "utils.Unassigned" not in attribute_type
             ):
