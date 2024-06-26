@@ -550,7 +550,9 @@ class Base(BaseModel):
     def _serialize_dict(cls, value: Dict):
         serialized_dict = {}
         for k, v in value.items():
-            if serialize_result := cls._serialize(v):
+            if k == 'HyperParameters':
+                serialized_dict[k] = v
+            elif serialize_result := cls._serialize(v):
                 key = snake_to_pascal(k) if is_snake_case(k) else k
                 serialized_dict.update({key[0].upper() + key[1:]: serialize_result})
         return serialized_dict
@@ -585,7 +587,7 @@ class Base(BaseModel):
                                               :-len('_name')] != resource_name_in_snake_case and arg_snake != 'name':
                 if value and value != Unassigned() and type(value) != str:
                     updated_args[arg] = value.get_name()
-            elif is_primitive_list(value):
+            elif isinstance(value, list) and is_primitive_list(value):
                 continue
             elif isinstance(value, list) and value != []:
                 updated_args[arg] = [
