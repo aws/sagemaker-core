@@ -106,11 +106,12 @@ class Base(BaseModel):
                     global_defaults = load_default_configs_for_resource_name(
                         resource_name="GlobalDefaults"
                     )
-                    formatted_attribute = pascal_to_snake(configurable_attribute)
                     if config_value := get_config_value(
-                        formatted_attribute, resource_defaults, global_defaults
+                        configurable_attribute, resource_defaults, global_defaults
                     ):
-                        kwargs[formatted_attribute] = config_value
+                        resource_name = snake_to_pascal(configurable_attribute)
+                        class_object = globals()[resource_name]
+                        kwargs[configurable_attribute] = class_object(**config_value)
         except BaseException as e:
             logger.info("Could not load Default Configs. Continuing.", exc_info=True)
             # Continue with existing kwargs if no default configs found
