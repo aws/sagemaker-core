@@ -1247,10 +1247,19 @@ def get_all_training_jobs(
     
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = 'presigned_domain_url_name'
+        resource_name_split = resource_name.split('_')
+        attribute_name_candidates = []
+        
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+        
         for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'presigned_domain_url_name':
+            if attribute == 'name' or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object presigned_domain_url")
+        return None
     
     @classmethod
     def create(
@@ -1306,7 +1315,7 @@ def get_all_training_jobs(
         }
         logger.debug(f"Input request: {operation_input_args}")
     
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(session=session, region_name=region, service_name='sagemaker')
     
         logger.debug(f"Calling create_presigned_domain_url API")
         response = client.create_presigned_domain_url(**operation_input_args)
