@@ -68,7 +68,7 @@ def create(
     """
 
     logger.debug("Creating compilation_job resource.")
-    client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+    client =Base.get_sagemaker_client(session=session, region_name=region, service_name='sagemaker')
 
     operation_input_args = {
         'CompilationJobName': compilation_job_name,
@@ -224,7 +224,7 @@ def update(
     """
 
     logger.debug("Updating endpoint resource.")
-    client = SageMakerClient().client
+    client = Base.get_sagemaker_client()
 
     operation_input_args = {
         'EndpointName': self.endpoint_name,
@@ -291,7 +291,7 @@ def update(
     """
 
     logger.debug("Updating endpoint resource.")
-    client = SageMakerClient().client
+    client = Base.get_sagemaker_client()
 
     operation_input_args = {
         'EndpointName': self.endpoint_name,
@@ -371,7 +371,7 @@ def get(
         'AppType': app_type,
         'AppName': app_name,
     }
-    client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+    client = Base.get_sagemaker_client(session=session, region_name=region, service_name='sagemaker')
     response = client.describe_app(**operation_input_args)
 
     pprint(response)
@@ -385,7 +385,10 @@ def get(
 
     def test_generate_refresh_method(self):
         expected_output = '''
-def refresh(self) -> Optional["App"]:
+def refresh(
+    self,
+    
+    ) -> Optional["App"]:
     """
     Refresh a App resource
     
@@ -413,18 +416,34 @@ def refresh(self) -> Optional["App"]:
         'AppType': self.app_type,
         'AppName': self.app_name,
     }
-    client = SageMakerClient().client
+    client = Base.get_sagemaker_client()
     response = client.describe_app(**operation_input_args)
 
     # deserialize response and update self
     transform(response, 'DescribeAppResponse', self)
     return self
 '''
-        assert self.resource_generator.generate_refresh_method("App") == expected_output
+        assert (
+            self.resource_generator.generate_refresh_method(
+                "App",
+                resource_attributes=[
+                    "app_name",
+                    "domain_id",
+                    "user_profile_name",
+                    "space_name",
+                    "app_type",
+                    "app_name",
+                ],
+            )
+            == expected_output
+        )
 
     def test_generate_delete_method(self):
         expected_output = '''
-def delete(self) -> None:
+def delete(
+    self,
+
+    ) -> None:
     """
     Delete a CompilationJob resource
     
@@ -443,16 +462,21 @@ def delete(self) -> None:
         ResourceNotFound: Resource being access is not found.
     """
 
-    client = SageMakerClient().client
+    client = Base.get_sagemaker_client()
 
     operation_input_args = {
         'CompilationJobName': self.compilation_job_name,
     }
     client.delete_compilation_job(**operation_input_args)
     
-    print(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+    logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 '''
-        assert self.resource_generator.generate_delete_method("CompilationJob") == expected_output
+        assert (
+            self.resource_generator.generate_delete_method(
+                "CompilationJob", resource_attributes=["compilation_job_name"]
+            )
+            == expected_output
+        )
 
     # create a unit test for generate_stop_method
     def test_generate_stop_method(self):
@@ -905,7 +929,7 @@ def get_all(
             ```
     """
 
-    client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
+    client = Base.get_sagemaker_client(session=session, region_name=region, service_name="sagemaker")
         
     operation_input_args = {
         'SortOrder': sort_order,
@@ -947,7 +971,7 @@ def get_all(
         Iterator for listed Domain resources.
 
     """
-    client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
+    client = Base.get_sagemaker_client(session=session, region_name=region, service_name="sagemaker")
 
     return ResourceIterator(
         client=client,
@@ -1004,7 +1028,7 @@ def get_all(
             ```
     """
 
-    client = SageMakerClient(session=session, region_name=region, service_name="sagemaker").client
+    client = Base.get_sagemaker_client(session=session, region_name=region, service_name="sagemaker")
         
     operation_input_args = {
         'EndpointName': endpoint_name,
@@ -1059,7 +1083,7 @@ def get_node(
     }
     logger.debug(f"Input request: {operation_input_args}")
 
-    client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+    client = Base.get_sagemaker_client(session=session, region_name=region, service_name='sagemaker')
 
     logger.debug(f"Calling describe_cluster_node API")
     response = client.describe_cluster_node(**operation_input_args)
@@ -1108,7 +1132,7 @@ def update_weights_and_capacities(
     }
     logger.debug(f"Input request: {operation_input_args}")
 
-    client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+    client = Base.get_sagemaker_client(session=session, region_name=region, service_name='sagemaker')
 
     logger.debug(f"Calling update_endpoint_weights_and_capacities API")
     response = client.update_endpoint_weights_and_capacities(**operation_input_args)
@@ -1168,7 +1192,7 @@ def get_all_training_jobs(
     operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
     logger.debug(f"Input request: {operation_input_args}")
 
-    client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+    client = Base.get_sagemaker_client(session=session, region_name=region, service_name='sagemaker')
 
 
     return ResourceIterator(
@@ -1223,10 +1247,19 @@ def get_all_training_jobs(
     
     def get_name(self) -> str:
         attributes = vars(self)
+        resource_name = 'presigned_domain_url_name'
+        resource_name_split = resource_name.split('_')
+        attribute_name_candidates = []
+        
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+        
         for attribute, value in attributes.items():
-            if attribute == 'name' or attribute == 'presigned_domain_url_name':
+            if attribute == 'name' or attribute in attribute_name_candidates:
                 return value
-        raise Exception("Name attribute not found for object")
+        logger.error("Name attribute not found for object presigned_domain_url")
+        return None
     
     @classmethod
     def create(
@@ -1282,7 +1315,7 @@ def get_all_training_jobs(
         }
         logger.debug(f"Input request: {operation_input_args}")
     
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(session=session, region_name=region, service_name='sagemaker')
     
         logger.debug(f"Calling create_presigned_domain_url API")
         response = client.create_presigned_domain_url(**operation_input_args)

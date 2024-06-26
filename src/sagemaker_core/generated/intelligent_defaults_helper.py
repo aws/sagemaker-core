@@ -92,9 +92,9 @@ def load_default_configs(additional_config_paths: List[str] = None, s3_resource=
             except jsonschema.exceptions.ValidationError as error:
                 raise ConfigSchemaValidationError(file_path=file_path, message=str(error))
             merge_dicts(merged_config, config_from_file)
-            print("Fetched defaults config from location: %s", file_path)
+            logger.debug("Fetched defaults config from location: %s", file_path)
         else:
-            print("Not applying SDK defaults from location: %s", file_path)
+            logger.debug("Not applying SDK defaults from location: %s", file_path)
 
     return merged_config
 

@@ -31,7 +31,7 @@ def create(
 ) -> Optional["{resource_name}"]:
 {docstring}
     logger.debug("Creating {resource_lower} resource.")
-    client = SageMakerClient(session=session, region_name=region, service_name='{service_name}').client
+    client = Base.get_sagemaker_client(session=session, region_name=region, service_name='{service_name}')
 
     operation_input_args = {{
 {operation_input_args}
@@ -61,7 +61,7 @@ def create(
 ) -> Optional["{resource_name}"]:
 {docstring}
     logger.debug("Creating {resource_lower} resource.")
-    client = SageMakerClient(session=session, region_name=region, service_name='{service_name}').client
+    client =Base.get_sagemaker_client(session=session, region_name=region, service_name='{service_name}')
 
     operation_input_args = {{
 {operation_input_args}
@@ -112,10 +112,19 @@ def load(
 GET_NAME_METHOD_TEMPLATE = """
 def get_name(self) -> str:
     attributes = vars(self)
+    resource_name = '{resource_lower}_name'
+    resource_name_split = resource_name.split('_')
+    attribute_name_candidates = []
+    
+    l = len(resource_name_split)
+    for i in range(0, l):
+        attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+    
     for attribute, value in attributes.items():
-        if attribute == 'name' or attribute == '{resource_lower}_name':
+        if attribute == 'name' or attribute in attribute_name_candidates:
             return value
-    raise Exception("Name attribute not found for object")
+    logger.error("Name attribute not found for object {resource_lower}")
+    return None
 """
 
 
@@ -127,7 +136,7 @@ def update(
 ) -> Optional["{resource_name}"]:
 {docstring}
     logger.debug("Updating {resource_lower} resource.")
-    client = SageMakerClient().client
+    client = Base.get_sagemaker_client()
 
     operation_input_args = {{
 {operation_input_args}
@@ -153,7 +162,7 @@ def update(
 ) -> Optional["{resource_name}"]:
 {docstring}
     logger.debug("Updating {resource_lower} resource.")
-    client = SageMakerClient().client
+    client = Base.get_sagemaker_client()
 
     operation_input_args = {{
 {operation_input_args}
@@ -252,6 +261,7 @@ def get_config_value(attribute, resource_defaults, global_defaults):
 
 POPULATE_DEFAULTS_DECORATOR_TEMPLATE = """
 def populate_inputs_decorator(create_func):
+    @functools.wraps(create_func)
     def wrapper(*args, **kwargs):
         config_schema_for_resource = \\
 {config_schema_for_resource}
@@ -271,7 +281,7 @@ def get(
     operation_input_args = {{
 {operation_input_args}
     }}
-    client = SageMakerClient(session=session, region_name=region, service_name='{service_name}').client
+    client = Base.get_sagemaker_client(session=session, region_name=region, service_name='{service_name}')
     response = client.{operation}(**operation_input_args)
 
     pprint(response)
@@ -283,12 +293,15 @@ def get(
 """
 
 REFRESH_METHOD_TEMPLATE = """
-def refresh(self) -> Optional["{resource_name}"]:
+def refresh(
+    self,
+ {refresh_args}   
+    ) -> Optional["{resource_name}"]:
 {docstring}
     operation_input_args = {{
 {operation_input_args}
     }}
-    client = SageMakerClient().client
+    client = Base.get_sagemaker_client()
     response = client.{operation}(**operation_input_args)
 
     # deserialize response and update self
@@ -382,16 +395,19 @@ def wait_for_status(
 '''
 
 DELETE_METHOD_TEMPLATE = """
-def delete(self) -> None:
+def delete(
+    self,
+{delete_args}
+    ) -> None:
 {docstring}
-    client = SageMakerClient().client
+    client = Base.get_sagemaker_client()
 
     operation_input_args = {{
 {operation_input_args}
     }}
     client.{operation}(**operation_input_args)
     
-    print(f"Deleting {{self.__class__.__name__}} - {{self.get_name()}}")
+    logger.info(f"Deleting {{self.__class__.__name__}} - {{self.get_name()}}")
 """
 
 STOP_METHOD_TEMPLATE = """
@@ -414,7 +430,7 @@ def get_all(
     region: Optional[str] = None,
 ) -> ResourceIterator["{resource}"]:
 {docstring}
-    client = SageMakerClient(session=session, region_name=region, service_name="{service_name}").client
+    client = Base.get_sagemaker_client(session=session, region_name=region, service_name="{service_name}")
         
     operation_input_args = {{
 {operation_input_args}
@@ -445,7 +461,7 @@ def get_all(
         Iterator for listed {resource} resources.
 
     """
-    client = SageMakerClient(session=session, region_name=region, service_name="{service_name}").client
+    client = Base.get_sagemaker_client(session=session, region_name=region, service_name="{service_name}")
 {custom_key_mapping}
     return ResourceIterator(
 {resource_iterator_args}
@@ -471,7 +487,7 @@ SERIALIZE_INPUT_TEMPLATE = """
     logger.debug(f"Input request: {{operation_input_args}}")"""
 
 INITIALIZE_CLIENT_TEMPLATE = """
-    client = SageMakerClient(session=session, region_name=region, service_name='{service_name}').client"""
+    client = Base.get_sagemaker_client(session=session, region_name=region, service_name='{service_name}')"""
 
 CALL_OPERATION_API_TEMPLATE = """
     logger.debug(f"Calling {operation} API")
@@ -504,6 +520,10 @@ DESERIALIZE_INPUT_AND_RESPONSE_TO_CLS_TEMPLATE = """
 RESOURCE_BASE_CLASS_TEMPLATE = """
 class Base(BaseModel):
     model_config = ConfigDict(protected_namespaces=(), validate_assignment=True)
+    
+    @classmethod
+    def get_sagemaker_client(cls, session = None, region_name = None, service_name = 'sagemaker'):
+        return SageMakerClient(session=session, region_name=region_name, service_name=service_name).client
     
     @classmethod
     def _serialize(cls, value: any) -> any:
@@ -565,7 +585,9 @@ class Base(BaseModel):
                                               :-len('_name')] != resource_name_in_snake_case and arg_snake != 'name':
                 if value and value != Unassigned() and type(value) != str:
                     updated_args[arg] = value.get_name()
-            elif isinstance(value, list):
+            elif is_primitive_list(value):
+                continue
+            elif isinstance(value, list) and value != []:
                 updated_args[arg] = [
                     Base.populate_chained_attributes(resource_name=type(list_item).__name__,
                                                      operation_input_args={
