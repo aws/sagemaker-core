@@ -674,7 +674,7 @@ class ResourcesCodeGen:
         self,
         resource_operation: dict,
         is_class_method: bool,
-        resource_attributes: list,
+        resource_attributes: list = [],
         exclude_list: list = [],
     ) -> str:
         """Generate the operation input arguments string.
@@ -1507,6 +1507,17 @@ class ResourcesCodeGen:
             method_args += self._generate_method_args(operation_input_shape_name)
             operation_input_args = self._generate_operation_input_args_updated(
                 operation_metadata, True, resource_attributes
+            )
+            _get_shape_attr_documentation_string = self._get_shape_attr_documentation_string(
+                self.shapes_extractor.fetch_shape_members_and_doc_strings(
+                    operation_input_shape_name
+                )
+            )
+        elif method.method_type == MethodType.STATIC.value:
+            decorator = "@staticmethod"
+            method_args = self._generate_method_args(operation_input_shape_name)
+            operation_input_args = self._generate_operation_input_args_updated(
+                operation_metadata, True
             )
             _get_shape_attr_documentation_string = self._get_shape_attr_documentation_string(
                 self.shapes_extractor.fetch_shape_members_and_doc_strings(

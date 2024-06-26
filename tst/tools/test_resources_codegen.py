@@ -1339,9 +1339,8 @@ def get_all_training_jobs(
     
     """
     
-    @classmethod
+    @staticmethod
     def disable(
-        cls,
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> None:
@@ -1360,9 +1359,8 @@ def get_all_training_jobs(
         logger.debug(f"Response: {response}")
     
     
-    @classmethod
+    @staticmethod
     def enable(
-        cls,
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> None:
@@ -1381,9 +1379,8 @@ def get_all_training_jobs(
         logger.debug(f"Response: {response}")
     
     
-    @classmethod
+    @staticmethod
     def get_status(
-        cls,
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[str]:

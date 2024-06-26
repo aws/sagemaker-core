@@ -354,7 +354,7 @@
             "resource_name": "SagemakerServicecatalogPortfolio",
             "method_name": "disable",
             "return_type": "None",
-            "method_type": "class",
+            "method_type": "static",
             "service_name": "sagemaker"
         },
         "EnableSagemakerServicecatalogPortfolio": {
@@ -362,7 +362,7 @@
             "resource_name": "SagemakerServicecatalogPortfolio",
             "method_name": "enable",
             "return_type": "None",
-            "method_type": "class",
+            "method_type": "static",
             "service_name": "sagemaker"
         },
         "GetSagemakerServicecatalogPortfolioStatus": {
@@ -370,7 +370,7 @@
             "resource_name": "SagemakerServicecatalogPortfolio",
             "method_name": "get_status",
             "return_type": "str",
-            "method_type": "class",
+            "method_type": "static",
             "service_name": "sagemaker"
         }
     }

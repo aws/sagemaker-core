@@ -20340,9 +20340,8 @@ class SagemakerServicecatalogPortfolio(Base):
 
     """
 
-    @classmethod
+    @staticmethod
     def disable(
-        cls,
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> None:
@@ -20360,9 +20359,8 @@ class SagemakerServicecatalogPortfolio(Base):
         response = client.disable_sagemaker_servicecatalog_portfolio()
         logger.debug(f"Response: {response}")
 
-    @classmethod
+    @staticmethod
     def enable(
-        cls,
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> None:
@@ -20380,9 +20378,8 @@ class SagemakerServicecatalogPortfolio(Base):
         response = client.enable_sagemaker_servicecatalog_portfolio()
         logger.debug(f"Response: {response}")
 
-    @classmethod
+    @staticmethod
     def get_status(
-        cls,
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[str]:
