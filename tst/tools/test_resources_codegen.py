@@ -1352,7 +1352,7 @@ def get_all_training_jobs(
     
     
     
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(session=session, region_name=region, service_name='sagemaker')
     
         logger.debug(f"Calling disable_sagemaker_servicecatalog_portfolio API")
         response = client.disable_sagemaker_servicecatalog_portfolio()
@@ -1372,7 +1372,7 @@ def get_all_training_jobs(
     
     
     
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(session=session, region_name=region, service_name='sagemaker')
     
         logger.debug(f"Calling enable_sagemaker_servicecatalog_portfolio API")
         response = client.enable_sagemaker_servicecatalog_portfolio()
@@ -1392,7 +1392,7 @@ def get_all_training_jobs(
     
     
     
-        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+        client = Base.get_sagemaker_client(session=session, region_name=region, service_name='sagemaker')
     
         logger.debug(f"Calling get_sagemaker_servicecatalog_portfolio_status API")
         response = client.get_sagemaker_servicecatalog_portfolio_status()

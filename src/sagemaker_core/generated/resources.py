@@ -20351,9 +20351,9 @@ class SagemakerServicecatalogPortfolio(Base):
 
         """
 
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
 
         logger.debug(f"Calling disable_sagemaker_servicecatalog_portfolio API")
         response = client.disable_sagemaker_servicecatalog_portfolio()
@@ -20370,9 +20370,9 @@ class SagemakerServicecatalogPortfolio(Base):
 
         """
 
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
 
         logger.debug(f"Calling enable_sagemaker_servicecatalog_portfolio API")
         response = client.enable_sagemaker_servicecatalog_portfolio()
@@ -20389,9 +20389,9 @@ class SagemakerServicecatalogPortfolio(Base):
 
         """
 
-        client = SageMakerClient(
+        client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
-        ).client
+        )
 
         logger.debug(f"Calling get_sagemaker_servicecatalog_portfolio_status API")
         response = client.get_sagemaker_servicecatalog_portfolio_status()
