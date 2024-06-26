@@ -6476,6 +6476,51 @@ class EdgeDeploymentPlan(Base):
         response = client.stop_edge_deployment_stage(**operation_input_args)
         logger.debug(f"Response: {response}")
 
+    def get_all_stage_devices(
+        self,
+        stage_name: str,
+        exclude_devices_deployed_in_other_stage: Optional[bool] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> ResourceIterator[DeviceDeploymentSummary]:
+        """
+        Lists devices allocated to the stage, containing detailed device information and deployment status.
+
+        Parameters:
+            stage_name: The name of the stage in the deployment.
+            max_results: The maximum number of requests to select.
+            exclude_devices_deployed_in_other_stage: Toggle for excluding devices deployed in other stages.
+            session: Boto3 session.
+            region: Region name.
+
+
+        """
+
+        operation_input_args = {
+            "EdgeDeploymentPlanName": self.edge_deployment_plan_name,
+            "ExcludeDevicesDeployedInOtherStage": exclude_devices_deployed_in_other_stage,
+            "StageName": stage_name,
+        }
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
+
+        return ResourceIterator(
+            client=client,
+            list_method="list_stage_devices",
+            summaries_key="DeviceDeploymentSummaries",
+            summary_name="DeviceDeploymentSummary",
+            resource_cls=DeviceDeploymentSummary,
+            list_method_kwargs=operation_input_args,
+        )
+
 
 class EdgePackagingJob(Base):
     """
@@ -11230,6 +11275,52 @@ class Image(Base):
             summaries_key="Images",
             summary_name="Image",
             resource_cls=Image,
+            list_method_kwargs=operation_input_args,
+        )
+
+    def get_all_aliases(
+        self,
+        alias: Optional[str] = Unassigned(),
+        version: Optional[int] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> ResourceIterator[str]:
+        """
+        Lists the aliases of a specified image or image version.
+
+        Parameters:
+            alias: The alias of the image version.
+            version: The version of the image. If image version is not specified, the aliases of all versions of the image are listed.
+            max_results: The maximum number of aliases to return.
+            next_token: If the previous call to ListAliases didn't return the full set of aliases, the call returns a token for retrieving the next set of aliases.
+            session: Boto3 session.
+            region: Region name.
+
+
+        """
+
+        operation_input_args = {
+            "ImageName": self.image_name,
+            "Alias": alias,
+            "Version": version,
+        }
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
+
+        return ResourceIterator(
+            client=client,
+            list_method="list_aliases",
+            summaries_key="SageMakerImageVersionAliases",
+            summary_name="SageMakerImageVersionAlias",
+            resource_cls=str,
             list_method_kwargs=operation_input_args,
         )
 
@@ -17036,6 +17127,144 @@ class MonitoringAlert(Base):
         return MonitoringAlertHistorySummary(**transformed_response)
 
 
+class MonitoringExecution(Base):
+    """
+    Class representing resource MonitoringExecution
+
+    Attributes:
+        monitoring_schedule_name: The name of the monitoring schedule.
+        scheduled_time: The time the monitoring job was scheduled.
+        creation_time: The time at which the monitoring job was created.
+        last_modified_time: A timestamp that indicates the last time the monitoring job was modified.
+        monitoring_execution_status: The status of the monitoring job.
+        processing_job_arn: The Amazon Resource Name (ARN) of the monitoring job.
+        endpoint_name: The name of the endpoint used to run the monitoring job.
+        failure_reason: Contains the reason a monitoring job failed, if it failed.
+        monitoring_job_definition_name: The name of the monitoring job.
+        monitoring_type: The type of the monitoring job.
+
+    """
+
+    monitoring_schedule_name: str
+    scheduled_time: datetime.datetime
+    creation_time: datetime.datetime
+    last_modified_time: datetime.datetime
+    monitoring_execution_status: str
+    processing_job_arn: Optional[str] = Unassigned()
+    endpoint_name: Optional[str] = Unassigned()
+    failure_reason: Optional[str] = Unassigned()
+    monitoring_job_definition_name: Optional[str] = Unassigned()
+    monitoring_type: Optional[str] = Unassigned()
+
+    def get_name(self) -> str:
+        attributes = vars(self)
+        resource_name = "monitoring_execution_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
+        for attribute, value in attributes.items():
+            if attribute == "name" or attribute in attribute_name_candidates:
+                return value
+        logger.error("Name attribute not found for object monitoring_execution")
+        return None
+
+    @classmethod
+    def get_all(
+        cls,
+        monitoring_schedule_name: Optional[str] = Unassigned(),
+        endpoint_name: Optional[str] = Unassigned(),
+        sort_by: Optional[str] = Unassigned(),
+        sort_order: Optional[str] = Unassigned(),
+        scheduled_time_before: Optional[datetime.datetime] = Unassigned(),
+        scheduled_time_after: Optional[datetime.datetime] = Unassigned(),
+        creation_time_before: Optional[datetime.datetime] = Unassigned(),
+        creation_time_after: Optional[datetime.datetime] = Unassigned(),
+        last_modified_time_before: Optional[datetime.datetime] = Unassigned(),
+        last_modified_time_after: Optional[datetime.datetime] = Unassigned(),
+        status_equals: Optional[str] = Unassigned(),
+        monitoring_job_definition_name: Optional[str] = Unassigned(),
+        monitoring_type_equals: Optional[str] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> ResourceIterator["MonitoringExecution"]:
+        """
+        Get all MonitoringExecution resources
+
+        Parameters:
+            monitoring_schedule_name: Name of a specific schedule to fetch jobs for.
+            endpoint_name: Name of a specific endpoint to fetch jobs for.
+            sort_by: Whether to sort the results by the Status, CreationTime, or ScheduledTime field. The default is CreationTime.
+            sort_order: Whether to sort the results in Ascending or Descending order. The default is Descending.
+            next_token: The token returned if the response is truncated. To retrieve the next set of job executions, use it in the next request.
+            max_results: The maximum number of jobs to return in the response. The default value is 10.
+            scheduled_time_before: Filter for jobs scheduled before a specified time.
+            scheduled_time_after: Filter for jobs scheduled after a specified time.
+            creation_time_before: A filter that returns only jobs created before a specified time.
+            creation_time_after: A filter that returns only jobs created after a specified time.
+            last_modified_time_before: A filter that returns only jobs modified after a specified time.
+            last_modified_time_after: A filter that returns only jobs modified before a specified time.
+            status_equals: A filter that retrieves only jobs with a specific status.
+            monitoring_job_definition_name: Gets a list of the monitoring job runs of the specified monitoring job definitions.
+            monitoring_type_equals: A filter that returns only the monitoring job runs of the specified monitoring type.
+            session: Boto3 session.
+            region: Region name.
+
+        Returns:
+            Iterator for listed MonitoringExecution resources.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+        """
+
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
+
+        operation_input_args = {
+            "MonitoringScheduleName": monitoring_schedule_name,
+            "EndpointName": endpoint_name,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
+            "ScheduledTimeBefore": scheduled_time_before,
+            "ScheduledTimeAfter": scheduled_time_after,
+            "CreationTimeBefore": creation_time_before,
+            "CreationTimeAfter": creation_time_after,
+            "LastModifiedTimeBefore": last_modified_time_before,
+            "LastModifiedTimeAfter": last_modified_time_after,
+            "StatusEquals": status_equals,
+            "MonitoringJobDefinitionName": monitoring_job_definition_name,
+            "MonitoringTypeEquals": monitoring_type_equals,
+        }
+
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
+
+        return ResourceIterator(
+            client=client,
+            list_method="list_monitoring_executions",
+            summaries_key="MonitoringExecutionSummaries",
+            summary_name="MonitoringExecutionSummary",
+            resource_cls=MonitoringExecution,
+            list_method_kwargs=operation_input_args,
+        )
+
+
 class MonitoringSchedule(Base):
     """
     Class representing resource MonitoringSchedule
@@ -20329,6 +20558,108 @@ class Project(Base):
             summaries_key="ProjectSummaryList",
             summary_name="ProjectSummary",
             resource_cls=Project,
+            list_method_kwargs=operation_input_args,
+        )
+
+
+class ResourceCatalog(Base):
+    """
+    Class representing resource ResourceCatalog
+
+    Attributes:
+        resource_catalog_arn:  The Amazon Resource Name (ARN) of the ResourceCatalog.
+        resource_catalog_name:  The name of the ResourceCatalog.
+        description:  A free form description of the ResourceCatalog.
+        creation_time:  The time the ResourceCatalog was created.
+
+    """
+
+    resource_catalog_arn: str
+    resource_catalog_name: str
+    description: str
+    creation_time: datetime.datetime
+
+    def get_name(self) -> str:
+        attributes = vars(self)
+        resource_name = "resource_catalog_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
+        for attribute, value in attributes.items():
+            if attribute == "name" or attribute in attribute_name_candidates:
+                return value
+        logger.error("Name attribute not found for object resource_catalog")
+        return None
+
+    @classmethod
+    def get_all(
+        cls,
+        name_contains: Optional[str] = Unassigned(),
+        creation_time_after: Optional[datetime.datetime] = Unassigned(),
+        creation_time_before: Optional[datetime.datetime] = Unassigned(),
+        sort_order: Optional[str] = Unassigned(),
+        sort_by: Optional[str] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> ResourceIterator["ResourceCatalog"]:
+        """
+        Get all ResourceCatalog resources
+
+        Parameters:
+            name_contains:  A string that partially matches one or more ResourceCatalogs names. Filters ResourceCatalog by name.
+            creation_time_after:  Use this parameter to search for ResourceCatalogs created after a specific date and time.
+            creation_time_before:  Use this parameter to search for ResourceCatalogs created before a specific date and time.
+            sort_order:  The order in which the resource catalogs are listed.
+            sort_by:  The value on which the resource catalog list is sorted.
+            max_results:  The maximum number of results returned by ListResourceCatalogs.
+            next_token:  A token to resume pagination of ListResourceCatalogs results.
+            session: Boto3 session.
+            region: Region name.
+
+        Returns:
+            Iterator for listed ResourceCatalog resources.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+        """
+
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
+
+        operation_input_args = {
+            "NameContains": name_contains,
+            "CreationTimeAfter": creation_time_after,
+            "CreationTimeBefore": creation_time_before,
+            "SortOrder": sort_order,
+            "SortBy": sort_by,
+        }
+
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
+
+        return ResourceIterator(
+            client=client,
+            list_method="list_resource_catalogs",
+            summaries_key="ResourceCatalogs",
+            summary_name="ResourceCatalog",
+            resource_cls=ResourceCatalog,
             list_method_kwargs=operation_input_args,
         )
 
