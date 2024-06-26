@@ -85,7 +85,7 @@ def create(
         
     logger.debug(f"Input request: {operation_input_args}")
     # serialize the input request
-    operation_input_args = cls._serialize(operation_input_args)
+    operation_input_args = cls._serialize_args(operation_input_args)
     logger.debug(f"Serialized input request: {operation_input_args}")
 
     # create the resource
@@ -176,7 +176,7 @@ def load(
 
     logger.debug(f"Input request: {operation_input_args}")
     # serialize the input request
-    operation_input_args = cls._serialize(operation_input_args)
+    operation_input_args = cls._serialize_args(operation_input_args)
     logger.debug(f"Serialized input request: {operation_input_args}")
 
     # import the resource
@@ -236,7 +236,7 @@ def update(
     }
     logger.debug(f"Input request: {operation_input_args}")
     # serialize the input request
-    operation_input_args = Endpoint._serialize(operation_input_args)
+    operation_input_args = Endpoint._serialize_args(operation_input_args)
     logger.debug(f"Serialized input request: {operation_input_args}")
 
     # create the resource
@@ -303,7 +303,7 @@ def update(
     }
     logger.debug(f"Input request: {operation_input_args}")
     # serialize the input request
-    operation_input_args = Endpoint._serialize(operation_input_args)
+    operation_input_args = Endpoint._serialize_args(operation_input_args)
     logger.debug(f"Serialized input request: {operation_input_args}")
 
     # create the resource
@@ -716,7 +716,7 @@ def invoke(self,
     }
     logger.debug(f"Input request: {operation_input_args}")
     # serialize the input request
-    operation_input_args = Endpoint._serialize(operation_input_args)
+    operation_input_args = Endpoint._serialize_args(operation_input_args)
     logger.debug(f"Serialized input request: {operation_input_args}")
 
     # create the resource
@@ -790,7 +790,7 @@ def invoke_async(self,
     }
     logger.debug(f"Input request: {operation_input_args}")
     # serialize the input request
-    operation_input_args = Endpoint._serialize(operation_input_args)
+    operation_input_args = Endpoint._serialize_args(operation_input_args)
     logger.debug(f"Serialized input request: {operation_input_args}")
 
     # create the resource
@@ -870,7 +870,7 @@ def invoke_with_response_stream(self,
     }
     logger.debug(f"Input request: {operation_input_args}")
     # serialize the input request
-    operation_input_args = Endpoint._serialize(operation_input_args)
+    operation_input_args = Endpoint._serialize_args(operation_input_args)
     logger.debug(f"Serialized input request: {operation_input_args}")
 
     # create the resource

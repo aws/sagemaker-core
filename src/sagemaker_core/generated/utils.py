@@ -25,6 +25,11 @@ logger = logging.getLogger(__name__)
 
 T = TypeVar("T")
 
+SPECIAL_SNAKE_TO_PASCAL_MAPPINGS = {
+    "volume_size_in_g_b": "VolumeSizeInGB",
+    "volume_size_in_gb": "VolumeSizeInGB",
+}
+
 
 def configure_logging(log_level=None):
     """Configure the logging configuration based on log level.
@@ -83,6 +88,8 @@ def snake_to_pascal(snake_str):
         str: The PascalCase string.
 
     """
+    if pascal_str := SPECIAL_SNAKE_TO_PASCAL_MAPPINGS.get(snake_str):
+        return pascal_str
     components = snake_str.split("_")
     return "".join(x.title() for x in components[0:])
 
