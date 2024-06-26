@@ -1221,3 +1221,103 @@ def get_all_training_jobs(
             self.resource_generator.generate_method(method, ["hyper_parameter_tuning_job_name"])
             == expected_output
         )
+
+    def test_generate_presigned_domain_url(self):
+        expected_output = '''class PresignedDomainUrl(Base):
+    """
+    Class representing resource PresignedDomainUrl
+    
+    Attributes:
+        domain_id: The domain ID.
+        user_profile_name: The name of the UserProfile to sign-in as.
+        session_expiration_duration_in_seconds: The session expiration duration in seconds. This value defaults to 43200.
+        expires_in_seconds: The number of seconds until the pre-signed URL expires. This value defaults to 300.
+        space_name: The name of the space.
+        landing_uri: The landing page that the user is directed to when accessing the presigned URL. Using this value, users can access Studio or Studio Classic, even if it is not the default experience for the domain. The supported values are:    studio::relative/path: Directs users to the relative path in Studio.    app:JupyterServer:relative/path: Directs users to the relative path in the Studio Classic application.    app:JupyterLab:relative/path: Directs users to the relative path in the JupyterLab application.    app:RStudioServerPro:relative/path: Directs users to the relative path in the RStudio application.    app:CodeEditor:relative/path: Directs users to the relative path in the Code Editor, based on Code-OSS, Visual Studio Code - Open Source application.    app:Canvas:relative/path: Directs users to the relative path in the Canvas application.  
+        authorized_url: The presigned URL.
+    
+    """
+    domain_id: str
+    user_profile_name: Union[str, object]
+    session_expiration_duration_in_seconds: Optional[int] = Unassigned()
+    expires_in_seconds: Optional[int] = Unassigned()
+    space_name: Optional[Union[str, object]] = Unassigned()
+    landing_uri: Optional[str] = Unassigned()
+    authorized_url: Optional[str] = Unassigned()
+    
+    def get_name(self) -> str:
+        attributes = vars(self)
+        for attribute, value in attributes.items():
+            if attribute == 'name' or attribute == 'presigned_domain_url_name':
+                return value
+        raise Exception("Name attribute not found for object")
+    
+    @classmethod
+    def create(
+        cls,
+        domain_id: str,
+        user_profile_name: Union[str, object],
+        session_expiration_duration_in_seconds: Optional[int] = Unassigned(),
+        expires_in_seconds: Optional[int] = Unassigned(),
+        space_name: Optional[Union[str, object]] = Unassigned(),
+        landing_uri: Optional[str] = Unassigned(),
+    ) -> Optional["resource_name"]:
+        """
+        Create a PresignedDomainUrl resource
+        
+        Parameters:
+            domain_id: The domain ID.
+            user_profile_name: The name of the UserProfile to sign-in as.
+            session_expiration_duration_in_seconds: The session expiration duration in seconds. This value defaults to 43200.
+            expires_in_seconds: The number of seconds until the pre-signed URL expires. This value defaults to 300.
+            space_name: The name of the space.
+            landing_uri: The landing page that the user is directed to when accessing the presigned URL. Using this value, users can access Studio or Studio Classic, even if it is not the default experience for the domain. The supported values are:    studio::relative/path: Directs users to the relative path in Studio.    app:JupyterServer:relative/path: Directs users to the relative path in the Studio Classic application.    app:JupyterLab:relative/path: Directs users to the relative path in the JupyterLab application.    app:RStudioServerPro:relative/path: Directs users to the relative path in the RStudio application.    app:CodeEditor:relative/path: Directs users to the relative path in the Code Editor, based on Code-OSS, Visual Studio Code - Open Source application.    app:Canvas:relative/path: Directs users to the relative path in the Canvas application.  
+            session: Boto3 session.
+            region: Region name.
+            
+        Returns:
+            The PresignedDomainUrl resource.
+        
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+                The error message and error code can be parsed from the exception as follows:
+            
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceNotFound: Resource being access is not found.
+            ConfigSchemaValidationError: Raised when a configuration file does not adhere to the schema
+            LocalConfigNotFoundError: Raised when a configuration file is not found in local file system
+            S3ConfigNotFoundError: Raised when a configuration file is not found in S3
+        """
+    
+    
+        operation_input_args = {
+            'DomainId': domain_id,
+            'UserProfileName': user_profile_name,
+            'SessionExpirationDurationInSeconds': session_expiration_duration_in_seconds,
+            'ExpiresInSeconds': expires_in_seconds,
+            'SpaceName': space_name,
+            'LandingUri': landing_uri,
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+    
+        client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
+    
+        logger.debug(f"Calling create_presigned_domain_url API")
+        response = client.create_presigned_domain_url(**operation_input_args)
+        logger.debug(f"Response: {response}")
+    
+        transformed_response = transform(response, 'CreatePresignedDomainUrlResponse')
+        return cls(**operation_input_args, **transformed_response)
+'''
+        assert (
+            self.resource_generator.generate_resource_class(
+                "PresignedDomainUrl", ["create"], [], [], [], [], []
+            )
+            == expected_output
+        )

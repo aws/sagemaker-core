@@ -45,6 +45,7 @@ from sagemaker_core.tools.shapes_extractor import ShapesExtractor
 from sagemaker_core.tools.templates import (
     CALL_OPERATION_API_TEMPLATE,
     CREATE_METHOD_TEMPLATE,
+    DESERIALIZE_INPUT_AND_RESPONSE_TO_CLS_TEMPLATE,
     DESERIALIZE_RESPONSE_TEMPLATE,
     DESERIALIZE_RESPONSE_TO_BASIC_TYPE_TEMPLATE,
     GENERIC_METHOD_TEMPLATE,
@@ -550,6 +551,69 @@ class ResourcesCodeGen:
                 self.shapes_extractor.fetch_shape_members_and_doc_strings(summary_name)
             )
             return class_attributes, class_attributes_string, attributes_and_documentation
+        elif "create" in class_methods:
+            # Get the operation and shape for the 'create' method
+            create_operation = self.operations["Create" + resource_name]
+            create_operation_input_shape = create_operation["input"]["shape"]
+            create_operation_output_shape = create_operation["output"]["shape"]
+            # Generate the class attributes based on the input and output shape
+            class_attributes, class_attributes_string = self._get_resource_members_and_string_body(
+                resource_name, create_operation_input_shape, create_operation_output_shape
+            )
+            attributes_and_documentation = self._get_resouce_attributes_and_documentation(
+                create_operation_input_shape, create_operation_output_shape
+            )
+            return class_attributes, class_attributes_string, attributes_and_documentation
+        else:
+            return None
+
+    def _get_resource_members_and_string_body(self, resource_name: str, input_shape, output_shape):
+        input_members = self.shapes_extractor.generate_shape_members(input_shape)
+        output_members = self.shapes_extractor.generate_shape_members(output_shape)
+        resource_members = {**input_members, **output_members}
+        # bring the required members in front
+        ordered_members = {
+            attr: value
+            for attr, value in resource_members.items()
+            if not value.startswith("Optional")
+        }
+        ordered_members.update(resource_members)
+
+        resource_name_snake_case = pascal_to_snake(resource_name)
+        resource_names = [row["resource_name"] for _, row in self.resources_plan.iterrows()]
+        init_data_body = ""
+        for attr, value in ordered_members.items():
+            if (
+                resource_names
+                and attr.endswith("name")
+                and attr[: -len("_name")] != resource_name_snake_case
+                and attr != "name"
+                and snake_to_pascal(attr[: -len("_name")]) in resource_names
+            ):
+                if value.startswith("Optional"):
+                    init_data_body += f"{attr}: Optional[Union[str, object]] = Unassigned()\n"
+                else:
+                    init_data_body += f"{attr}: Union[str, object]\n"
+            elif attr == "lambda":
+                init_data_body += f"# {attr}: {value}\n"
+            else:
+                init_data_body += f"{attr}: {value}\n"
+        return ordered_members, init_data_body
+
+    def _get_resouce_attributes_and_documentation(self, input_shape, output_shape):
+        input_members = self.shapes[input_shape]["members"]
+        required_args = set(self.shapes[input_shape].get("required", []))
+        output_members = self.shapes[output_shape]["members"]
+        members = {**input_members, **output_members}
+        required_args.update(self.shapes[output_shape].get("required", []))
+        # bring the required members in front
+        ordered_members = {key: members[key] for key in members if key in required_args}
+        ordered_members.update(members)
+        shape_members_and_docstrings = {}
+        for member_name, member_attrs in ordered_members.items():
+            member_shape_documentation = member_attrs.get("documentation")
+            shape_members_and_docstrings[member_name] = member_shape_documentation
+        return shape_members_and_docstrings
 
     def _get_shape_attr_documentation_string(
         self, attributes_and_documentation, exclude_resource_attrs=None
@@ -797,8 +861,6 @@ class ResourcesCodeGen:
         # Convert the operation name to snake case
         operation = convert_to_snake_case(operation_name)
 
-        get_args = self._generate_get_args(resource_name, operation_input_shape_name)
-
         docstring = self._generate_docstring(
             title=f"Create a {resource_name} resource",
             operation_name=operation_name,
@@ -808,32 +870,64 @@ class ResourcesCodeGen:
             include_return_resource_docstring=True,
             include_intelligent_defaults_errors=True,
         )
-        # Format the method using the CREATE_METHOD_TEMPLATE
-        if kwargs["needs_defaults_decorator"]:
-            formatted_method = CREATE_METHOD_TEMPLATE.format(
-                docstring=docstring,
-                resource_name=resource_name,
-                create_args=create_args,
-                resource_lower=resource_lower,
-                service_name="sagemaker",  # TODO: change service name based on the service - runtime, sagemaker, etc.
-                operation_input_args=operation_input_args,
-                operation=operation,
-                get_args=get_args,
-            )
-        else:
-            formatted_method = CREATE_METHOD_TEMPLATE_WITHOUT_DEFAULTS.format(
-                docstring=docstring,
-                resource_name=resource_name,
-                create_args=create_args,
-                resource_lower=resource_lower,
-                service_name="sagemaker",  # TODO: change service name based on the service - runtime, sagemaker, etc.
-                operation_input_args=operation_input_args,
-                operation=operation,
-                get_args=get_args,
-            )
 
-        # Return the formatted method
-        return formatted_method
+        if "Describe" + resource_name in self.operations:
+            # If the resource has Describe method, call Describe API and return its value
+            get_args = self._generate_get_args(resource_name, operation_input_shape_name)
+
+            # Format the method using the CREATE_METHOD_TEMPLATE
+            if kwargs["needs_defaults_decorator"]:
+                formatted_method = CREATE_METHOD_TEMPLATE.format(
+                    docstring=docstring,
+                    resource_name=resource_name,
+                    create_args=create_args,
+                    resource_lower=resource_lower,
+                    service_name="sagemaker",  # TODO: change service name based on the service - runtime, sagemaker, etc.
+                    operation_input_args=operation_input_args,
+                    operation=operation,
+                    get_args=get_args,
+                )
+            else:
+                formatted_method = CREATE_METHOD_TEMPLATE_WITHOUT_DEFAULTS.format(
+                    docstring=docstring,
+                    resource_name=resource_name,
+                    create_args=create_args,
+                    resource_lower=resource_lower,
+                    service_name="sagemaker",  # TODO: change service name based on the service - runtime, sagemaker, etc.
+                    operation_input_args=operation_input_args,
+                    operation=operation,
+                    get_args=get_args,
+                )
+            # Return the formatted method
+            return formatted_method
+        else:
+            # If the resource does not have Describe method, return a instance with
+            # the input and output of Create method
+            decorator = "@classmethod"
+            serialize_operation_input = SERIALIZE_INPUT_TEMPLATE.format(
+                operation_input_args=operation_input_args
+            )
+            initialize_client = INITIALIZE_CLIENT_TEMPLATE.format(service_name="sagemaker")
+            call_operation_api = CALL_OPERATION_API_TEMPLATE.format(
+                operation=convert_to_snake_case(operation_name)
+            )
+            operation_output_shape_name = operation_metadata["output"]["shape"]
+            deserialize_response = DESERIALIZE_INPUT_AND_RESPONSE_TO_CLS_TEMPLATE.format(
+                operation_output_shape=operation_output_shape_name
+            )
+            formatted_method = GENERIC_METHOD_TEMPLATE.format(
+                docstring=docstring,
+                decorator=decorator,
+                method_name="create",
+                method_args=add_indent("cls,\n", 4) + create_args,
+                return_type='Optional["resource_name"]',
+                serialize_operation_input=serialize_operation_input,
+                initialize_client=initialize_client,
+                call_operation_api=call_operation_api,
+                deserialize_response=deserialize_response,
+            )
+            # Return the formatted method
+            return formatted_method
 
     @lru_cache
     def _fetch_shape_errors_and_doc_strings(self, operation):

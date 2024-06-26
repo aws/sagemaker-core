@@ -513,6 +513,10 @@ RETURN_ITERATOR_TEMPLATE = """
 {resource_iterator_args}
     )"""
 
+DESERIALIZE_INPUT_AND_RESPONSE_TO_CLS_TEMPLATE = """
+    transformed_response = transform(response, '{operation_output_shape}')
+    return cls(**operation_input_args, **transformed_response)"""
+
 RESOURCE_BASE_CLASS_TEMPLATE = """
 class Base(BaseModel):
     model_config = ConfigDict(protected_namespaces=(), validate_assignment=True)

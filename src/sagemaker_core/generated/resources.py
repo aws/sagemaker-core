@@ -6358,6 +6358,124 @@ class EdgeDeploymentPlan(Base):
             list_method_kwargs=operation_input_args,
         )
 
+    def create_stage(
+        self,
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> None:
+        """
+        Creates a new stage in an existing edge deployment plan.
+
+
+        """
+
+        operation_input_args = {
+            "EdgeDeploymentPlanName": self.edge_deployment_plan_name,
+            "Stages": self.stages,
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
+        logger.debug(f"Calling create_edge_deployment_stage API")
+        response = client.create_edge_deployment_stage(**operation_input_args)
+        logger.debug(f"Response: {response}")
+
+    def delete_stage(
+        self,
+        stage_name: str,
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> None:
+        """
+        Delete a stage in an edge deployment plan if (and only if) the stage is inactive.
+
+        Parameters:
+            stage_name: The name of the stage.
+            session: Boto3 session.
+            region: Region name.
+
+
+        """
+
+        operation_input_args = {
+            "EdgeDeploymentPlanName": self.edge_deployment_plan_name,
+            "StageName": stage_name,
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
+        logger.debug(f"Calling delete_edge_deployment_stage API")
+        response = client.delete_edge_deployment_stage(**operation_input_args)
+        logger.debug(f"Response: {response}")
+
+    def start_stage(
+        self,
+        stage_name: str,
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> None:
+        """
+        Starts a stage in an edge deployment plan.
+
+        Parameters:
+            stage_name: The name of the stage to start.
+            session: Boto3 session.
+            region: Region name.
+
+
+        """
+
+        operation_input_args = {
+            "EdgeDeploymentPlanName": self.edge_deployment_plan_name,
+            "StageName": stage_name,
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
+        logger.debug(f"Calling start_edge_deployment_stage API")
+        response = client.start_edge_deployment_stage(**operation_input_args)
+        logger.debug(f"Response: {response}")
+
+    def stop_stage(
+        self,
+        stage_name: str,
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> None:
+        """
+        Stops a stage in an edge deployment plan.
+
+        Parameters:
+            stage_name: The name of the stage to stop.
+            session: Boto3 session.
+            region: Region name.
+
+
+        """
+
+        operation_input_args = {
+            "EdgeDeploymentPlanName": self.edge_deployment_plan_name,
+            "StageName": stage_name,
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
+        logger.debug(f"Calling stop_edge_deployment_stage API")
+        response = client.stop_edge_deployment_stage(**operation_input_args)
+        logger.debug(f"Response: {response}")
+
 
 class EdgePackagingJob(Base):
     """
@@ -19216,6 +19334,175 @@ class PipelineExecution(Base):
         logger.debug(f"Calling send_pipeline_execution_step_success API")
         response = client.send_pipeline_execution_step_success(**operation_input_args)
         logger.debug(f"Response: {response}")
+
+
+class PresignedDomainUrl(Base):
+    """
+    Class representing resource PresignedDomainUrl
+
+    Attributes:
+        domain_id: The domain ID.
+        user_profile_name: The name of the UserProfile to sign-in as.
+        session_expiration_duration_in_seconds: The session expiration duration in seconds. This value defaults to 43200.
+        expires_in_seconds: The number of seconds until the pre-signed URL expires. This value defaults to 300.
+        space_name: The name of the space.
+        landing_uri: The landing page that the user is directed to when accessing the presigned URL. Using this value, users can access Studio or Studio Classic, even if it is not the default experience for the domain. The supported values are:    studio::relative/path: Directs users to the relative path in Studio.    app:JupyterServer:relative/path: Directs users to the relative path in the Studio Classic application.    app:JupyterLab:relative/path: Directs users to the relative path in the JupyterLab application.    app:RStudioServerPro:relative/path: Directs users to the relative path in the RStudio application.    app:CodeEditor:relative/path: Directs users to the relative path in the Code Editor, based on Code-OSS, Visual Studio Code - Open Source application.    app:Canvas:relative/path: Directs users to the relative path in the Canvas application.
+        authorized_url: The presigned URL.
+
+    """
+
+    domain_id: str
+    user_profile_name: Union[str, object]
+    session_expiration_duration_in_seconds: Optional[int] = Unassigned()
+    expires_in_seconds: Optional[int] = Unassigned()
+    space_name: Optional[Union[str, object]] = Unassigned()
+    landing_uri: Optional[str] = Unassigned()
+    authorized_url: Optional[str] = Unassigned()
+
+    def get_name(self) -> str:
+        attributes = vars(self)
+        for attribute, value in attributes.items():
+            if attribute == "name" or attribute == "presigned_domain_url_name":
+                return value
+        raise Exception("Name attribute not found for object")
+
+    @classmethod
+    def create(
+        cls,
+        domain_id: str,
+        user_profile_name: Union[str, object],
+        session_expiration_duration_in_seconds: Optional[int] = Unassigned(),
+        expires_in_seconds: Optional[int] = Unassigned(),
+        space_name: Optional[Union[str, object]] = Unassigned(),
+        landing_uri: Optional[str] = Unassigned(),
+    ) -> Optional["resource_name"]:
+        """
+        Create a PresignedDomainUrl resource
+
+        Parameters:
+            domain_id: The domain ID.
+            user_profile_name: The name of the UserProfile to sign-in as.
+            session_expiration_duration_in_seconds: The session expiration duration in seconds. This value defaults to 43200.
+            expires_in_seconds: The number of seconds until the pre-signed URL expires. This value defaults to 300.
+            space_name: The name of the space.
+            landing_uri: The landing page that the user is directed to when accessing the presigned URL. Using this value, users can access Studio or Studio Classic, even if it is not the default experience for the domain. The supported values are:    studio::relative/path: Directs users to the relative path in Studio.    app:JupyterServer:relative/path: Directs users to the relative path in the Studio Classic application.    app:JupyterLab:relative/path: Directs users to the relative path in the JupyterLab application.    app:RStudioServerPro:relative/path: Directs users to the relative path in the RStudio application.    app:CodeEditor:relative/path: Directs users to the relative path in the Code Editor, based on Code-OSS, Visual Studio Code - Open Source application.    app:Canvas:relative/path: Directs users to the relative path in the Canvas application.
+            session: Boto3 session.
+            region: Region name.
+
+        Returns:
+            The PresignedDomainUrl resource.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceNotFound: Resource being access is not found.
+            ConfigSchemaValidationError: Raised when a configuration file does not adhere to the schema
+            LocalConfigNotFoundError: Raised when a configuration file is not found in local file system
+            S3ConfigNotFoundError: Raised when a configuration file is not found in S3
+        """
+
+        operation_input_args = {
+            "DomainId": domain_id,
+            "UserProfileName": user_profile_name,
+            "SessionExpirationDurationInSeconds": session_expiration_duration_in_seconds,
+            "ExpiresInSeconds": expires_in_seconds,
+            "SpaceName": space_name,
+            "LandingUri": landing_uri,
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
+        logger.debug(f"Calling create_presigned_domain_url API")
+        response = client.create_presigned_domain_url(**operation_input_args)
+        logger.debug(f"Response: {response}")
+
+        transformed_response = transform(response, "CreatePresignedDomainUrlResponse")
+        return cls(**operation_input_args, **transformed_response)
+
+
+class PresignedNotebookInstanceUrl(Base):
+    """
+    Class representing resource PresignedNotebookInstanceUrl
+
+    Attributes:
+        notebook_instance_name: The name of the notebook instance.
+        session_expiration_duration_in_seconds: The duration of the session, in seconds. The default is 12 hours.
+        authorized_url: A JSON object that contains the URL string.
+
+    """
+
+    notebook_instance_name: Union[str, object]
+    session_expiration_duration_in_seconds: Optional[int] = Unassigned()
+    authorized_url: Optional[str] = Unassigned()
+
+    def get_name(self) -> str:
+        attributes = vars(self)
+        for attribute, value in attributes.items():
+            if attribute == "name" or attribute == "presigned_notebook_instance_url_name":
+                return value
+        raise Exception("Name attribute not found for object")
+
+    @classmethod
+    def create(
+        cls,
+        notebook_instance_name: Union[str, object],
+        session_expiration_duration_in_seconds: Optional[int] = Unassigned(),
+    ) -> Optional["resource_name"]:
+        """
+        Create a PresignedNotebookInstanceUrl resource
+
+        Parameters:
+            notebook_instance_name: The name of the notebook instance.
+            session_expiration_duration_in_seconds: The duration of the session, in seconds. The default is 12 hours.
+            session: Boto3 session.
+            region: Region name.
+
+        Returns:
+            The PresignedNotebookInstanceUrl resource.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ConfigSchemaValidationError: Raised when a configuration file does not adhere to the schema
+            LocalConfigNotFoundError: Raised when a configuration file is not found in local file system
+            S3ConfigNotFoundError: Raised when a configuration file is not found in S3
+        """
+
+        operation_input_args = {
+            "NotebookInstanceName": notebook_instance_name,
+            "SessionExpirationDurationInSeconds": session_expiration_duration_in_seconds,
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+
+        client = SageMakerClient(
+            session=session, region_name=region, service_name="sagemaker"
+        ).client
+
+        logger.debug(f"Calling create_presigned_notebook_instance_url API")
+        response = client.create_presigned_notebook_instance_url(**operation_input_args)
+        logger.debug(f"Response: {response}")
+
+        transformed_response = transform(response, "CreatePresignedNotebookInstanceUrlOutput")
+        return cls(**operation_input_args, **transformed_response)
 
 
 class ProcessingJob(Base):
