@@ -2,8 +2,7 @@ name: Integration Checks
 
 on:
   pull_request_target:
-    branches:
-      - main
+    branches: ["main"]
 
 permissions:
     id-token: write # This is required for requesting the JWT
