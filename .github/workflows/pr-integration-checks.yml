@@ -1,4 +1,4 @@
-name: PR Checks
+name: Integration Checks
 
 on:
   pull_request_target:
