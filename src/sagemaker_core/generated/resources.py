@@ -56,13 +56,21 @@ class Base(BaseModel):
         ).client
 
     @classmethod
+    def _serialize_args(cls, value: dict) -> dict:
+        serialized_dict = {}
+        for k, v in value.items():
+            if serialize_result := cls._serialize(v):
+                serialized_dict.update({k: serialize_result})
+        return serialized_dict
+
+    @classmethod
     def _serialize(cls, value: any) -> any:
         if isinstance(value, Unassigned):
             return None
         elif isinstance(value, List):
             return cls._serialize_list(value)
-        elif isinstance(value, Dict):
-            return cls._serialize_dict(value)
+        elif is_not_primitive(value) and not isinstance(value, dict):
+            return cls._serialize_object(value)
         elif hasattr(value, "serialize"):
             return value.serialize()
         else:
@@ -77,9 +85,9 @@ class Base(BaseModel):
         return serialized_list
 
     @classmethod
-    def _serialize_dict(cls, value: Dict):
+    def _serialize_object(cls, value: any):
         serialized_dict = {}
-        for k, v in value.items():
+        for k, v in vars(value).items():
             if serialize_result := cls._serialize(v):
                 key = snake_to_pascal(k) if is_snake_case(k) else k
                 serialized_dict.update({key[0].upper() + key[1:]: serialize_result})
@@ -98,53 +106,62 @@ class Base(BaseModel):
                     global_defaults = load_default_configs_for_resource_name(
                         resource_name="GlobalDefaults"
                     )
-                    formatted_attribute = pascal_to_snake(configurable_attribute)
                     if config_value := get_config_value(
-                        formatted_attribute, resource_defaults, global_defaults
+                        configurable_attribute, resource_defaults, global_defaults
                     ):
-                        kwargs[formatted_attribute] = config_value
+                        resource_name = snake_to_pascal(configurable_attribute)
+                        class_object = globals()[resource_name]
+                        kwargs[configurable_attribute] = class_object(**config_value)
         except BaseException as e:
             logger.info("Could not load Default Configs. Continuing.", exc_info=True)
             # Continue with existing kwargs if no default configs found
         return kwargs
 
     @staticmethod
-    def populate_chained_attributes(resource_name: str, operation_input_args: dict) -> dict:
+    def populate_chained_attributes(resource_name: str, operation_input_args: Union[dict, object]):
         resource_name_in_snake_case = pascal_to_snake(resource_name)
-        updated_args = operation_input_args
-        for arg, value in operation_input_args.items():
+        updated_args = (
+            vars(operation_input_args)
+            if type(operation_input_args) == object
+            else operation_input_args
+        )
+        unassigned_args = []
+        keys = operation_input_args.keys()
+        for arg in keys:
+            value = operation_input_args.get(arg)
             arg_snake = pascal_to_snake(arg)
-            if value == Unassigned() or value == None or not value:
+
+            if value == Unassigned():
+                unassigned_args.append(arg)
+            elif value == None or not value:
                 continue
-            if (
+            elif (
                 arg_snake.endswith("name")
                 and arg_snake[: -len("_name")] != resource_name_in_snake_case
                 and arg_snake != "name"
             ):
                 if value and value != Unassigned() and type(value) != str:
                     updated_args[arg] = value.get_name()
-            elif is_primitive_list(value):
+            elif isinstance(value, list) and is_primitive_list(value):
                 continue
             elif isinstance(value, list) and value != []:
-                updated_args[arg] = [
-                    Base.populate_chained_attributes(
-                        resource_name=type(list_item).__name__,
-                        operation_input_args={
-                            snake_to_pascal(k): v for k, v in Base._get_items(list_item)
-                        },
-                    )
-                    for list_item in value
-                ]
-            elif is_not_primitive(value) and is_not_str_dict(value):
-                obj_dict = {snake_to_pascal(k): v for k, v in Base._get_items(value)}
-                updated_args[arg] = Base.populate_chained_attributes(
-                    resource_name=type(value).__name__, operation_input_args=obj_dict
-                )
+                updated_args[arg] = [Base._get_chained_attribute(list_item) for list_item in value]
+            elif is_not_primitive(value) and is_not_str_dict(value) and type(value) == object:
+                updated_args[arg] = Base._get_chained_attribute(item_value=value)
+
+        for unassigned_arg in unassigned_args:
+            del updated_args[unassigned_arg]
         return updated_args
 
     @staticmethod
-    def _get_items(object):
-        return object.items() if type(object) == dict else object.__dict__.items()
+    def _get_chained_attribute(item_value: any):
+        resource_name = type(item_value).__name__
+        class_object = globals()[resource_name]
+        return class_object(
+            **Base.populate_chained_attributes(
+                resource_name=resource_name, operation_input_args=vars(item_value)
+            )
+        )
 
 
 class Action(Base):
@@ -269,7 +286,7 @@ class Action(Base):
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = cls._serialize(operation_input_args)
+        operation_input_args = cls._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -401,7 +418,7 @@ class Action(Base):
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = Action._serialize(operation_input_args)
+        operation_input_args = Action._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -650,7 +667,7 @@ class Algorithm(Base):
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = cls._serialize(operation_input_args)
+        operation_input_args = cls._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -997,7 +1014,7 @@ class App(Base):
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = cls._serialize(operation_input_args)
+        operation_input_args = cls._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -1351,7 +1368,7 @@ class AppImageConfig(Base):
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = cls._serialize(operation_input_args)
+        operation_input_args = cls._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -1476,7 +1493,7 @@ class AppImageConfig(Base):
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = AppImageConfig._serialize(operation_input_args)
+        operation_input_args = AppImageConfig._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -1703,7 +1720,7 @@ class Artifact(Base):
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = cls._serialize(operation_input_args)
+        operation_input_args = cls._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -1833,7 +1850,7 @@ class Artifact(Base):
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = Artifact._serialize(operation_input_args)
+        operation_input_args = Artifact._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -2317,7 +2334,7 @@ class AutoMLJob(Base):
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = cls._serialize(operation_input_args)
+        operation_input_args = cls._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -2781,7 +2798,7 @@ class AutoMLJobV2(Base):
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = cls._serialize(operation_input_args)
+        operation_input_args = cls._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -3030,7 +3047,7 @@ class Cluster(Base):
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = cls._serialize(operation_input_args)
+        operation_input_args = cls._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -3156,7 +3173,7 @@ class Cluster(Base):
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = Cluster._serialize(operation_input_args)
+        operation_input_args = Cluster._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -3520,7 +3537,7 @@ class CodeRepository(Base):
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = cls._serialize(operation_input_args)
+        operation_input_args = cls._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -3641,7 +3658,7 @@ class CodeRepository(Base):
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = CodeRepository._serialize(operation_input_args)
+        operation_input_args = CodeRepository._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -3901,7 +3918,7 @@ class CompilationJob(Base):
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = cls._serialize(operation_input_args)
+        operation_input_args = cls._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -4277,7 +4294,7 @@ class Context(Base):
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = cls._serialize(operation_input_args)
+        operation_input_args = cls._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -4407,7 +4424,7 @@ class Context(Base):
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = Context._serialize(operation_input_args)
+        operation_input_args = Context._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -4684,7 +4701,7 @@ class DataQualityJobDefinition(Base):
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = cls._serialize(operation_input_args)
+        operation_input_args = cls._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -5205,7 +5222,7 @@ class DeviceFleet(Base):
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = cls._serialize(operation_input_args)
+        operation_input_args = cls._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -5337,7 +5354,7 @@ class DeviceFleet(Base):
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = DeviceFleet._serialize(operation_input_args)
+        operation_input_args = DeviceFleet._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -5780,7 +5797,7 @@ class Domain(Base):
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = cls._serialize(operation_input_args)
+        operation_input_args = cls._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -5918,7 +5935,7 @@ class Domain(Base):
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = Domain._serialize(operation_input_args)
+        operation_input_args = Domain._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -6151,7 +6168,7 @@ class EdgeDeploymentPlan(Base):
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = cls._serialize(operation_input_args)
+        operation_input_args = cls._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -6476,6 +6493,51 @@ class EdgeDeploymentPlan(Base):
         response = client.stop_edge_deployment_stage(**operation_input_args)
         logger.debug(f"Response: {response}")
 
+    def get_all_stage_devices(
+        self,
+        stage_name: str,
+        exclude_devices_deployed_in_other_stage: Optional[bool] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> ResourceIterator[DeviceDeploymentSummary]:
+        """
+        Lists devices allocated to the stage, containing detailed device information and deployment status.
+
+        Parameters:
+            stage_name: The name of the stage in the deployment.
+            max_results: The maximum number of requests to select.
+            exclude_devices_deployed_in_other_stage: Toggle for excluding devices deployed in other stages.
+            session: Boto3 session.
+            region: Region name.
+
+
+        """
+
+        operation_input_args = {
+            "EdgeDeploymentPlanName": self.edge_deployment_plan_name,
+            "ExcludeDevicesDeployedInOtherStage": exclude_devices_deployed_in_other_stage,
+            "StageName": stage_name,
+        }
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
+
+        return ResourceIterator(
+            client=client,
+            list_method="list_stage_devices",
+            summaries_key="DeviceDeploymentSummaries",
+            summary_name="DeviceDeploymentSummary",
+            resource_cls=DeviceDeploymentSummary,
+            list_method_kwargs=operation_input_args,
+        )
+
 
 class EdgePackagingJob(Base):
     """
@@ -6623,7 +6685,7 @@ class EdgePackagingJob(Base):
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = cls._serialize(operation_input_args)
+        operation_input_args = cls._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -6999,7 +7061,7 @@ class Endpoint(Base):
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = cls._serialize(operation_input_args)
+        operation_input_args = cls._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -7133,7 +7195,7 @@ class Endpoint(Base):
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = Endpoint._serialize(operation_input_args)
+        operation_input_args = Endpoint._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -7293,7 +7355,7 @@ class Endpoint(Base):
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = Endpoint._serialize(operation_input_args)
+        operation_input_args = Endpoint._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -7359,7 +7421,7 @@ class Endpoint(Base):
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = Endpoint._serialize(operation_input_args)
+        operation_input_args = Endpoint._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -7431,7 +7493,7 @@ class Endpoint(Base):
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = Endpoint._serialize(operation_input_args)
+        operation_input_args = Endpoint._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -7710,7 +7772,7 @@ class EndpointConfig(Base):
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = cls._serialize(operation_input_args)
+        operation_input_args = cls._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -7997,7 +8059,7 @@ class Experiment(Base):
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = cls._serialize(operation_input_args)
+        operation_input_args = cls._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -8123,7 +8185,7 @@ class Experiment(Base):
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = Experiment._serialize(operation_input_args)
+        operation_input_args = Experiment._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -8392,7 +8454,7 @@ class FeatureGroup(Base):
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = cls._serialize(operation_input_args)
+        operation_input_args = cls._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -8527,7 +8589,7 @@ class FeatureGroup(Base):
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = FeatureGroup._serialize(operation_input_args)
+        operation_input_args = FeatureGroup._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -8852,7 +8914,7 @@ class FeatureMetadata(Base):
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = FeatureMetadata._serialize(operation_input_args)
+        operation_input_args = FeatureMetadata._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -8997,7 +9059,7 @@ class FlowDefinition(Base):
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = cls._serialize(operation_input_args)
+        operation_input_args = cls._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -9352,7 +9414,7 @@ class Hub(Base):
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = cls._serialize(operation_input_args)
+        operation_input_args = cls._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -9480,7 +9542,7 @@ class Hub(Base):
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = Hub._serialize(operation_input_args)
+        operation_input_args = Hub._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -9948,7 +10010,7 @@ class HubContent(Base):
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = cls._serialize(operation_input_args)
+        operation_input_args = cls._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # import the resource
@@ -10116,7 +10178,7 @@ class HumanTaskUi(Base):
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = cls._serialize(operation_input_args)
+        operation_input_args = cls._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -10496,7 +10558,7 @@ class HyperParameterTuningJob(Base):
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = cls._serialize(operation_input_args)
+        operation_input_args = cls._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -10934,7 +10996,7 @@ class Image(Base):
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = cls._serialize(operation_input_args)
+        operation_input_args = cls._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -11067,7 +11129,7 @@ class Image(Base):
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = Image._serialize(operation_input_args)
+        operation_input_args = Image._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -11233,6 +11295,52 @@ class Image(Base):
             list_method_kwargs=operation_input_args,
         )
 
+    def get_all_aliases(
+        self,
+        alias: Optional[str] = Unassigned(),
+        version: Optional[int] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> ResourceIterator[str]:
+        """
+        Lists the aliases of a specified image or image version.
+
+        Parameters:
+            alias: The alias of the image version.
+            version: The version of the image. If image version is not specified, the aliases of all versions of the image are listed.
+            max_results: The maximum number of aliases to return.
+            next_token: If the previous call to ListAliases didn't return the full set of aliases, the call returns a token for retrieving the next set of aliases.
+            session: Boto3 session.
+            region: Region name.
+
+
+        """
+
+        operation_input_args = {
+            "ImageName": self.image_name,
+            "Alias": alias,
+            "Version": version,
+        }
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
+
+        return ResourceIterator(
+            client=client,
+            list_method="list_aliases",
+            summaries_key="SageMakerImageVersionAliases",
+            summary_name="SageMakerImageVersionAlias",
+            resource_cls=str,
+            list_method_kwargs=operation_input_args,
+        )
+
 
 class ImageVersion(Base):
     """
@@ -11374,7 +11482,7 @@ class ImageVersion(Base):
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = cls._serialize(operation_input_args)
+        operation_input_args = cls._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -11531,7 +11639,7 @@ class ImageVersion(Base):
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = ImageVersion._serialize(operation_input_args)
+        operation_input_args = ImageVersion._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -11731,7 +11839,7 @@ class InferenceComponent(Base):
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = cls._serialize(operation_input_args)
+        operation_input_args = cls._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -11856,7 +11964,7 @@ class InferenceComponent(Base):
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = InferenceComponent._serialize(operation_input_args)
+        operation_input_args = InferenceComponent._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -12211,7 +12319,7 @@ class InferenceExperiment(Base):
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = cls._serialize(operation_input_args)
+        operation_input_args = cls._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -12344,7 +12452,7 @@ class InferenceExperiment(Base):
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = InferenceExperiment._serialize(operation_input_args)
+        operation_input_args = InferenceExperiment._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -12694,7 +12802,7 @@ class InferenceRecommendationsJob(Base):
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = cls._serialize(operation_input_args)
+        operation_input_args = cls._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -13154,7 +13262,7 @@ class LabelingJob(Base):
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = cls._serialize(operation_input_args)
+        operation_input_args = cls._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -13746,7 +13854,7 @@ class Model(Base):
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = cls._serialize(operation_input_args)
+        operation_input_args = cls._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -14137,7 +14245,7 @@ class ModelBiasJobDefinition(Base):
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = cls._serialize(operation_input_args)
+        operation_input_args = cls._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -14456,7 +14564,7 @@ class ModelCard(Base):
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = cls._serialize(operation_input_args)
+        operation_input_args = cls._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -14588,7 +14696,7 @@ class ModelCard(Base):
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = ModelCard._serialize(operation_input_args)
+        operation_input_args = ModelCard._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -14915,7 +15023,7 @@ class ModelCardExportJob(Base):
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = cls._serialize(operation_input_args)
+        operation_input_args = cls._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -15295,7 +15403,7 @@ class ModelExplainabilityJobDefinition(Base):
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = cls._serialize(operation_input_args)
+        operation_input_args = cls._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -15734,7 +15842,7 @@ class ModelPackage(Base):
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = cls._serialize(operation_input_args)
+        operation_input_args = cls._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -15875,7 +15983,7 @@ class ModelPackage(Base):
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = ModelPackage._serialize(operation_input_args)
+        operation_input_args = ModelPackage._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -16162,7 +16270,7 @@ class ModelPackageGroup(Base):
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = cls._serialize(operation_input_args)
+        operation_input_args = cls._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -16638,7 +16746,7 @@ class ModelQualityJobDefinition(Base):
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = cls._serialize(operation_input_args)
+        operation_input_args = cls._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -16913,7 +17021,7 @@ class MonitoringAlert(Base):
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = MonitoringAlert._serialize(operation_input_args)
+        operation_input_args = MonitoringAlert._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -17034,6 +17142,144 @@ class MonitoringAlert(Base):
 
         transformed_response = transform(response, "ListMonitoringAlertHistoryResponse")
         return MonitoringAlertHistorySummary(**transformed_response)
+
+
+class MonitoringExecution(Base):
+    """
+    Class representing resource MonitoringExecution
+
+    Attributes:
+        monitoring_schedule_name: The name of the monitoring schedule.
+        scheduled_time: The time the monitoring job was scheduled.
+        creation_time: The time at which the monitoring job was created.
+        last_modified_time: A timestamp that indicates the last time the monitoring job was modified.
+        monitoring_execution_status: The status of the monitoring job.
+        processing_job_arn: The Amazon Resource Name (ARN) of the monitoring job.
+        endpoint_name: The name of the endpoint used to run the monitoring job.
+        failure_reason: Contains the reason a monitoring job failed, if it failed.
+        monitoring_job_definition_name: The name of the monitoring job.
+        monitoring_type: The type of the monitoring job.
+
+    """
+
+    monitoring_schedule_name: str
+    scheduled_time: datetime.datetime
+    creation_time: datetime.datetime
+    last_modified_time: datetime.datetime
+    monitoring_execution_status: str
+    processing_job_arn: Optional[str] = Unassigned()
+    endpoint_name: Optional[str] = Unassigned()
+    failure_reason: Optional[str] = Unassigned()
+    monitoring_job_definition_name: Optional[str] = Unassigned()
+    monitoring_type: Optional[str] = Unassigned()
+
+    def get_name(self) -> str:
+        attributes = vars(self)
+        resource_name = "monitoring_execution_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
+        for attribute, value in attributes.items():
+            if attribute == "name" or attribute in attribute_name_candidates:
+                return value
+        logger.error("Name attribute not found for object monitoring_execution")
+        return None
+
+    @classmethod
+    def get_all(
+        cls,
+        monitoring_schedule_name: Optional[str] = Unassigned(),
+        endpoint_name: Optional[str] = Unassigned(),
+        sort_by: Optional[str] = Unassigned(),
+        sort_order: Optional[str] = Unassigned(),
+        scheduled_time_before: Optional[datetime.datetime] = Unassigned(),
+        scheduled_time_after: Optional[datetime.datetime] = Unassigned(),
+        creation_time_before: Optional[datetime.datetime] = Unassigned(),
+        creation_time_after: Optional[datetime.datetime] = Unassigned(),
+        last_modified_time_before: Optional[datetime.datetime] = Unassigned(),
+        last_modified_time_after: Optional[datetime.datetime] = Unassigned(),
+        status_equals: Optional[str] = Unassigned(),
+        monitoring_job_definition_name: Optional[str] = Unassigned(),
+        monitoring_type_equals: Optional[str] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> ResourceIterator["MonitoringExecution"]:
+        """
+        Get all MonitoringExecution resources
+
+        Parameters:
+            monitoring_schedule_name: Name of a specific schedule to fetch jobs for.
+            endpoint_name: Name of a specific endpoint to fetch jobs for.
+            sort_by: Whether to sort the results by the Status, CreationTime, or ScheduledTime field. The default is CreationTime.
+            sort_order: Whether to sort the results in Ascending or Descending order. The default is Descending.
+            next_token: The token returned if the response is truncated. To retrieve the next set of job executions, use it in the next request.
+            max_results: The maximum number of jobs to return in the response. The default value is 10.
+            scheduled_time_before: Filter for jobs scheduled before a specified time.
+            scheduled_time_after: Filter for jobs scheduled after a specified time.
+            creation_time_before: A filter that returns only jobs created before a specified time.
+            creation_time_after: A filter that returns only jobs created after a specified time.
+            last_modified_time_before: A filter that returns only jobs modified after a specified time.
+            last_modified_time_after: A filter that returns only jobs modified before a specified time.
+            status_equals: A filter that retrieves only jobs with a specific status.
+            monitoring_job_definition_name: Gets a list of the monitoring job runs of the specified monitoring job definitions.
+            monitoring_type_equals: A filter that returns only the monitoring job runs of the specified monitoring type.
+            session: Boto3 session.
+            region: Region name.
+
+        Returns:
+            Iterator for listed MonitoringExecution resources.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+        """
+
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
+
+        operation_input_args = {
+            "MonitoringScheduleName": monitoring_schedule_name,
+            "EndpointName": endpoint_name,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
+            "ScheduledTimeBefore": scheduled_time_before,
+            "ScheduledTimeAfter": scheduled_time_after,
+            "CreationTimeBefore": creation_time_before,
+            "CreationTimeAfter": creation_time_after,
+            "LastModifiedTimeBefore": last_modified_time_before,
+            "LastModifiedTimeAfter": last_modified_time_after,
+            "StatusEquals": status_equals,
+            "MonitoringJobDefinitionName": monitoring_job_definition_name,
+            "MonitoringTypeEquals": monitoring_type_equals,
+        }
+
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
+
+        return ResourceIterator(
+            client=client,
+            list_method="list_monitoring_executions",
+            summaries_key="MonitoringExecutionSummaries",
+            summary_name="MonitoringExecutionSummary",
+            resource_cls=MonitoringExecution,
+            list_method_kwargs=operation_input_args,
+        )
 
 
 class MonitoringSchedule(Base):
@@ -17175,7 +17421,7 @@ class MonitoringSchedule(Base):
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = cls._serialize(operation_input_args)
+        operation_input_args = cls._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -17302,7 +17548,7 @@ class MonitoringSchedule(Base):
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = MonitoringSchedule._serialize(operation_input_args)
+        operation_input_args = MonitoringSchedule._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -17687,7 +17933,7 @@ class NotebookInstance(Base):
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = cls._serialize(operation_input_args)
+        operation_input_args = cls._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -17843,7 +18089,7 @@ class NotebookInstance(Base):
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = NotebookInstance._serialize(operation_input_args)
+        operation_input_args = NotebookInstance._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -18135,7 +18381,7 @@ class NotebookInstanceLifecycleConfig(Base):
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = cls._serialize(operation_input_args)
+        operation_input_args = cls._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -18262,7 +18508,7 @@ class NotebookInstanceLifecycleConfig(Base):
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = NotebookInstanceLifecycleConfig._serialize(operation_input_args)
+        operation_input_args = NotebookInstanceLifecycleConfig._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -18517,7 +18763,7 @@ class Pipeline(Base):
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = cls._serialize(operation_input_args)
+        operation_input_args = cls._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -18654,7 +18900,7 @@ class Pipeline(Base):
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = Pipeline._serialize(operation_input_args)
+        operation_input_args = Pipeline._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -18971,7 +19217,7 @@ class PipelineExecution(Base):
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = PipelineExecution._serialize(operation_input_args)
+        operation_input_args = PipelineExecution._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -19698,7 +19944,7 @@ class ProcessingJob(Base):
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = cls._serialize(operation_input_args)
+        operation_input_args = cls._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -20040,7 +20286,7 @@ class Project(Base):
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = cls._serialize(operation_input_args)
+        operation_input_args = cls._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -20170,7 +20416,7 @@ class Project(Base):
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = Project._serialize(operation_input_args)
+        operation_input_args = Project._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -20329,6 +20575,108 @@ class Project(Base):
             summaries_key="ProjectSummaryList",
             summary_name="ProjectSummary",
             resource_cls=Project,
+            list_method_kwargs=operation_input_args,
+        )
+
+
+class ResourceCatalog(Base):
+    """
+    Class representing resource ResourceCatalog
+
+    Attributes:
+        resource_catalog_arn:  The Amazon Resource Name (ARN) of the ResourceCatalog.
+        resource_catalog_name:  The name of the ResourceCatalog.
+        description:  A free form description of the ResourceCatalog.
+        creation_time:  The time the ResourceCatalog was created.
+
+    """
+
+    resource_catalog_arn: str
+    resource_catalog_name: str
+    description: str
+    creation_time: datetime.datetime
+
+    def get_name(self) -> str:
+        attributes = vars(self)
+        resource_name = "resource_catalog_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
+        for attribute, value in attributes.items():
+            if attribute == "name" or attribute in attribute_name_candidates:
+                return value
+        logger.error("Name attribute not found for object resource_catalog")
+        return None
+
+    @classmethod
+    def get_all(
+        cls,
+        name_contains: Optional[str] = Unassigned(),
+        creation_time_after: Optional[datetime.datetime] = Unassigned(),
+        creation_time_before: Optional[datetime.datetime] = Unassigned(),
+        sort_order: Optional[str] = Unassigned(),
+        sort_by: Optional[str] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> ResourceIterator["ResourceCatalog"]:
+        """
+        Get all ResourceCatalog resources
+
+        Parameters:
+            name_contains:  A string that partially matches one or more ResourceCatalogs names. Filters ResourceCatalog by name.
+            creation_time_after:  Use this parameter to search for ResourceCatalogs created after a specific date and time.
+            creation_time_before:  Use this parameter to search for ResourceCatalogs created before a specific date and time.
+            sort_order:  The order in which the resource catalogs are listed.
+            sort_by:  The value on which the resource catalog list is sorted.
+            max_results:  The maximum number of results returned by ListResourceCatalogs.
+            next_token:  A token to resume pagination of ListResourceCatalogs results.
+            session: Boto3 session.
+            region: Region name.
+
+        Returns:
+            Iterator for listed ResourceCatalog resources.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+        """
+
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
+
+        operation_input_args = {
+            "NameContains": name_contains,
+            "CreationTimeAfter": creation_time_after,
+            "CreationTimeBefore": creation_time_before,
+            "SortOrder": sort_order,
+            "SortBy": sort_by,
+        }
+
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
+
+        return ResourceIterator(
+            client=client,
+            list_method="list_resource_catalogs",
+            summaries_key="ResourceCatalogs",
+            summary_name="ResourceCatalog",
+            resource_cls=ResourceCatalog,
             list_method_kwargs=operation_input_args,
         )
 
@@ -20520,7 +20868,7 @@ class Space(Base):
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = cls._serialize(operation_input_args)
+        operation_input_args = cls._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -20652,7 +21000,7 @@ class Space(Base):
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = Space._serialize(operation_input_args)
+        operation_input_args = Space._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -20907,7 +21255,7 @@ class StudioLifecycleConfig(Base):
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = cls._serialize(operation_input_args)
+        operation_input_args = cls._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -21689,7 +22037,7 @@ class TrainingJob(Base):
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = cls._serialize(operation_input_args)
+        operation_input_args = cls._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -21820,7 +22168,7 @@ class TrainingJob(Base):
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = TrainingJob._serialize(operation_input_args)
+        operation_input_args = TrainingJob._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -22168,7 +22516,7 @@ class TransformJob(Base):
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = cls._serialize(operation_input_args)
+        operation_input_args = cls._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -22510,7 +22858,7 @@ class Trial(Base):
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = cls._serialize(operation_input_args)
+        operation_input_args = cls._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -22634,7 +22982,7 @@ class Trial(Base):
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = Trial._serialize(operation_input_args)
+        operation_input_args = Trial._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -22885,7 +23233,7 @@ class TrialComponent(Base):
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = cls._serialize(operation_input_args)
+        operation_input_args = cls._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -23031,7 +23379,7 @@ class TrialComponent(Base):
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = TrialComponent._serialize(operation_input_args)
+        operation_input_args = TrialComponent._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -23401,7 +23749,7 @@ class UserProfile(Base):
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = cls._serialize(operation_input_args)
+        operation_input_args = cls._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -23536,7 +23884,7 @@ class UserProfile(Base):
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = UserProfile._serialize(operation_input_args)
+        operation_input_args = UserProfile._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -23808,7 +24156,7 @@ class Workforce(Base):
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = cls._serialize(operation_input_args)
+        operation_input_args = cls._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -23938,7 +24286,7 @@ class Workforce(Base):
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = Workforce._serialize(operation_input_args)
+        operation_input_args = Workforce._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -24177,7 +24525,7 @@ class Workteam(Base):
 
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = cls._serialize(operation_input_args)
+        operation_input_args = cls._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource
@@ -24306,7 +24654,7 @@ class Workteam(Base):
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
-        operation_input_args = Workteam._serialize(operation_input_args)
+        operation_input_args = Workteam._serialize_args(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
 
         # create the resource

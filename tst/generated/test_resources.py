@@ -175,7 +175,7 @@ class ResourcesTest(unittest.TestCase):
                                 mock_create_method.assert_called_once()
                                 mock_get_method.assert_called_once()
                                 self.assertLessEqual(
-                                    Base._serialize(
+                                    Base._serialize_args(
                                         Base.populate_chained_attributes(
                                             operation_input_args=pascal_input_args,
                                             resource_name=name,
@@ -211,7 +211,7 @@ class ResourcesTest(unittest.TestCase):
                                 mock_update_method.assert_called_once()
                                 mock_get_method.assert_called_once()
                                 self.assertLessEqual(
-                                    Base._serialize(pascal_input_args).items(),
+                                    Base._serialize_args(pascal_input_args).items(),
                                     mock_update_method.call_args[1].items(),
                                     f"Update call verification failed for {name}",
                                 )

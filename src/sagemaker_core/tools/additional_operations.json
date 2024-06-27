@@ -346,6 +346,26 @@
             "return_type": "None",
             "method_type": "object",
             "service_name": "sagemaker"
+        },
+        "ListStageDevices": {
+            "operation_name": "ListStageDevices",
+            "resource_name": "EdgeDeploymentPlan",
+            "method_name": "get_all_stage_devices",
+            "return_type": "DeviceDeploymentSummary",
+            "method_type": "object",
+            "service_name": "sagemaker"
+        }
+    },
+    "MonitoringExecution": {},
+    "ResourceCatalog": {},
+    "Image": {
+        "ListAliases": {
+            "operation_name": "ListAliases",
+            "resource_name": "Image",
+            "method_name": "get_all_aliases",
+            "return_type": "str",
+            "method_type": "object",
+            "service_name": "sagemaker"
         }
     },
     "SagemakerServicecatalogPortfolio": {

@@ -41,7 +41,7 @@ def create(
         
     logger.debug(f"Input request: {{operation_input_args}}")
     # serialize the input request
-    operation_input_args = cls._serialize(operation_input_args)
+    operation_input_args = cls._serialize_args(operation_input_args)
     logger.debug(f"Serialized input request: {{operation_input_args}}")
 
     # create the resource
@@ -71,7 +71,7 @@ def create(
         
     logger.debug(f"Input request: {{operation_input_args}}")
     # serialize the input request
-    operation_input_args = cls._serialize(operation_input_args)
+    operation_input_args = cls._serialize_args(operation_input_args)
     logger.debug(f"Serialized input request: {{operation_input_args}}")
 
     # create the resource
@@ -99,7 +99,7 @@ def load(
 
     logger.debug(f"Input request: {{operation_input_args}}")
     # serialize the input request
-    operation_input_args = cls._serialize(operation_input_args)
+    operation_input_args = cls._serialize_args(operation_input_args)
     logger.debug(f"Serialized input request: {{operation_input_args}}")
 
     # import the resource
@@ -143,7 +143,7 @@ def update(
     }}
     logger.debug(f"Input request: {{operation_input_args}}")
     # serialize the input request
-    operation_input_args = {resource_name}._serialize(operation_input_args)
+    operation_input_args = {resource_name}._serialize_args(operation_input_args)
     logger.debug(f"Serialized input request: {{operation_input_args}}")
 
     # create the resource
@@ -169,7 +169,7 @@ def update(
     }}
     logger.debug(f"Input request: {{operation_input_args}}")
     # serialize the input request
-    operation_input_args = {resource_name}._serialize(operation_input_args)
+    operation_input_args = {resource_name}._serialize_args(operation_input_args)
     logger.debug(f"Serialized input request: {{operation_input_args}}")
 
     # create the resource
@@ -192,7 +192,7 @@ def invoke(self,
     }}
     logger.debug(f"Input request: {{operation_input_args}}")
     # serialize the input request
-    operation_input_args = {resource_name}._serialize(operation_input_args)
+    operation_input_args = {resource_name}._serialize_args(operation_input_args)
     logger.debug(f"Serialized input request: {{operation_input_args}}")
 
     # create the resource
@@ -215,7 +215,7 @@ def invoke_async(self,
     }}
     logger.debug(f"Input request: {{operation_input_args}}")
     # serialize the input request
-    operation_input_args = {resource_name}._serialize(operation_input_args)
+    operation_input_args = {resource_name}._serialize_args(operation_input_args)
     logger.debug(f"Serialized input request: {{operation_input_args}}")
 
     # create the resource
@@ -238,7 +238,7 @@ def invoke_with_response_stream(self,
     }}
     logger.debug(f"Input request: {{operation_input_args}}")
     # serialize the input request
-    operation_input_args = {resource_name}._serialize(operation_input_args)
+    operation_input_args = {resource_name}._serialize_args(operation_input_args)
     logger.debug(f"Serialized input request: {{operation_input_args}}")
 
     # create the resource
@@ -531,14 +531,22 @@ class Base(BaseModel):
         return SageMakerClient(session=session, region_name=region_name, service_name=service_name).client
     
     @classmethod
+    def _serialize_args(cls, value: dict) -> dict:
+        serialized_dict = {}
+        for k, v in value.items():
+            if serialize_result := cls._serialize(v):
+                serialized_dict.update({k: serialize_result})
+        return serialized_dict
+
+    @classmethod
     def _serialize(cls, value: any) -> any:
         if isinstance(value, Unassigned):
             return None
         elif isinstance(value, List):
             return cls._serialize_list(value)
-        elif isinstance(value, Dict):
-            return cls._serialize_dict(value)
-        elif hasattr(value, 'serialize'):
+        elif is_not_primitive(value) and not isinstance(value, dict):
+            return cls._serialize_object(value)
+        elif hasattr(value, "serialize"):
             return value.serialize()
         else:
             return value
@@ -552,26 +560,33 @@ class Base(BaseModel):
         return serialized_list
 
     @classmethod
-    def _serialize_dict(cls, value: Dict):
+    def _serialize_object(cls, value: any):
         serialized_dict = {}
-        for k, v in value.items():
+        for k, v in vars(value).items():
             if serialize_result := cls._serialize(v):
                 key = snake_to_pascal(k) if is_snake_case(k) else k
                 serialized_dict.update({key[0].upper() + key[1:]: serialize_result})
         return serialized_dict
     
     @staticmethod
-    def get_updated_kwargs_with_configured_attributes(config_schema_for_resource: dict, resource_name: str, **kwargs):
+    def get_updated_kwargs_with_configured_attributes(
+        config_schema_for_resource: dict, resource_name: str, **kwargs
+    ):
         try:
             for configurable_attribute in config_schema_for_resource:
                 if kwargs.get(configurable_attribute) is None:
-                    resource_defaults = load_default_configs_for_resource_name(resource_name=resource_name)
-                    global_defaults = load_default_configs_for_resource_name(resource_name="GlobalDefaults")
-                    formatted_attribute = pascal_to_snake(configurable_attribute)
-                    if config_value := get_config_value(formatted_attribute,
-                     resource_defaults,
-                     global_defaults):
-                        kwargs[formatted_attribute] = config_value
+                    resource_defaults = load_default_configs_for_resource_name(
+                        resource_name=resource_name
+                    )
+                    global_defaults = load_default_configs_for_resource_name(
+                        resource_name="GlobalDefaults"
+                    )
+                    if config_value := get_config_value(
+                        configurable_attribute, resource_defaults, global_defaults
+                    ):
+                        resource_name = snake_to_pascal(configurable_attribute)
+                        class_object = globals()[resource_name]
+                        kwargs[configurable_attribute] = class_object(**config_value)
         except BaseException as e:
             logger.info("Could not load Default Configs. Continuing.", exc_info=True)
             # Continue with existing kwargs if no default configs found
@@ -579,36 +594,48 @@ class Base(BaseModel):
         
     
     @staticmethod
-    def populate_chained_attributes(resource_name: str, operation_input_args: dict) -> dict:
+    def populate_chained_attributes(resource_name: str, operation_input_args: Union[dict, object]):
         resource_name_in_snake_case = pascal_to_snake(resource_name)
-        updated_args = operation_input_args
-        for arg, value in operation_input_args.items():
+        updated_args = vars(operation_input_args) if type(operation_input_args) == object else operation_input_args
+        unassigned_args = []
+        keys = operation_input_args.keys()
+        for arg in keys:
+            value = operation_input_args.get(arg)
             arg_snake = pascal_to_snake(arg)
-            if value == Unassigned() or value == None or not value:
+
+            if value == Unassigned() :
+                unassigned_args.append(arg)
+            elif value == None or not value:
                 continue
-            if arg_snake.endswith('name') and arg_snake[
-                                              :-len('_name')] != resource_name_in_snake_case and arg_snake != 'name':
+            elif (
+                arg_snake.endswith("name")
+                and arg_snake[: -len("_name")] != resource_name_in_snake_case
+                and arg_snake != "name"
+            ):
                 if value and value != Unassigned() and type(value) != str:
                     updated_args[arg] = value.get_name()
-            elif is_primitive_list(value):
+            elif isinstance(value, list) and is_primitive_list(value):
                 continue
             elif isinstance(value, list) and value != []:
                 updated_args[arg] = [
-                    Base.populate_chained_attributes(resource_name=type(list_item).__name__,
-                                                     operation_input_args={
-                                                         snake_to_pascal(k): v
-                                                         for k, v in Base._get_items(list_item)
-                                                     })
+                    Base._get_chained_attribute(list_item)
                     for list_item in value
                 ]
-            elif is_not_primitive(value) and is_not_str_dict(value):
-                obj_dict = {snake_to_pascal(k): v for k, v in Base._get_items(value)}
-                updated_args[arg] = Base.populate_chained_attributes(resource_name=type(value).__name__, operation_input_args=obj_dict)
+            elif is_not_primitive(value) and is_not_str_dict(value) and type(value) == object:
+                updated_args[arg] = Base._get_chained_attribute(item_value=value)
+
+        for unassigned_arg in unassigned_args:
+            del updated_args[unassigned_arg]
         return updated_args
 
     @staticmethod
-    def _get_items(object):
-        return object.items() if type(object) == dict else object.__dict__.items()
+    def _get_chained_attribute(item_value: any):
+        resource_name = type(item_value).__name__
+        class_object = globals()[resource_name]
+        return class_object(**Base.populate_chained_attributes(
+            resource_name=resource_name,
+            operation_input_args=vars(item_value)
+        ))
 
         
 """

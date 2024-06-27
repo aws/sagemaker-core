@@ -9749,7 +9749,7 @@ class ResourceCatalog(Base):
     """
 
     resource_catalog_arn: str
-    resource_catalog_name: str
+    resource_catalog_name: Union[str, object]
     description: str
     creation_time: datetime.datetime
 
