@@ -7,7 +7,6 @@ class MethodType(Enum):
     CLASS = "class"
     OBJECT = "object"
     STATIC = "static"
-    # TODO: add static if we add operations as static methods in future
 
 
 class Method:

@@ -1331,7 +1331,7 @@ def get_all_training_jobs(
             == expected_output
         )
 
-    def test_generate_presigned_domain_url(self):
+    def test_generate_sagemaker_servicecatalog_portfolio(self):
         expected_output = '''class SagemakerServicecatalogPortfolio(Base):
     """
     Class representing resource SagemakerServicecatalogPortfolio
