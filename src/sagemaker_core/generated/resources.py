@@ -434,7 +434,6 @@ class Action(Base):
         """
         Delete a Action resource
 
-
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
@@ -759,7 +758,6 @@ class Algorithm(Base):
     ) -> None:
         """
         Delete a Algorithm resource
-
 
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
@@ -1131,7 +1129,6 @@ class App(Base):
         """
         Delete a App resource
 
-
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
@@ -1465,7 +1462,6 @@ class AppImageConfig(Base):
         """
         Update a AppImageConfig resource
 
-
         Returns:
             The AppImageConfig resource.
 
@@ -1508,7 +1504,6 @@ class AppImageConfig(Base):
     ) -> None:
         """
         Delete a AppImageConfig resource
-
 
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
@@ -1866,7 +1861,6 @@ class Artifact(Base):
         """
         Delete a Artifact resource
 
-
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
@@ -2013,7 +2007,6 @@ class Association(Base):
         """
         Delete a Association resource
 
-
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
@@ -2138,7 +2131,19 @@ class Association(Base):
             session: Boto3 session.
             region: Region name.
 
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
 
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceLimitExceeded: You have exceeded an SageMaker resource limit. For example, you might have too many training jobs created.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -2427,7 +2432,6 @@ class AutoMLJob(Base):
         """
         Stop a AutoMLJob resource
 
-
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
@@ -2587,7 +2591,21 @@ class AutoMLJob(Base):
             session: Boto3 session.
             region: Region name.
 
+        Returns:
+            Iterator for listed AutoMLCandidate.
 
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -3144,7 +3162,6 @@ class Cluster(Base):
         """
         Update a Cluster resource
 
-
         Returns:
             The Cluster resource.
 
@@ -3188,7 +3205,6 @@ class Cluster(Base):
     ) -> None:
         """
         Delete a Cluster resource
-
 
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
@@ -3347,7 +3363,21 @@ class Cluster(Base):
             session: Boto3 session.
             region: Region name.
 
+        Returns:
+            ClusterNodeDetails
 
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -3391,7 +3421,21 @@ class Cluster(Base):
             session: Boto3 session.
             region: Region name.
 
+        Returns:
+            Iterator for listed ClusterNodeDetails.
 
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -3430,7 +3474,23 @@ class Cluster(Base):
         """
         Updates the platform software of a SageMaker HyperPod cluster for security patching.
 
+        Parameters:
+            session: Boto3 session.
+            region: Region name.
 
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ConflictException: There was a conflict when you attempted to modify a SageMaker entity such as an Experiment or Artifact.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -3631,7 +3691,6 @@ class CodeRepository(Base):
         """
         Update a CodeRepository resource
 
-
         Returns:
             The CodeRepository resource.
 
@@ -3673,7 +3732,6 @@ class CodeRepository(Base):
     ) -> None:
         """
         Delete a CodeRepository resource
-
 
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
@@ -3726,7 +3784,20 @@ class CodeRepository(Base):
             session: Boto3 session.
             region: Region name.
 
+        Returns:
+            Iterator for listed CodeRepository.
 
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
         """
 
         operation_input_args = {
@@ -4013,7 +4084,6 @@ class CompilationJob(Base):
         """
         Delete a CompilationJob resource
 
-
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
@@ -4040,7 +4110,6 @@ class CompilationJob(Base):
     def stop(self) -> None:
         """
         Stop a CompilationJob resource
-
 
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
@@ -4440,7 +4509,6 @@ class Context(Base):
         """
         Delete a Context resource
 
-
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
@@ -4795,7 +4863,6 @@ class DataQualityJobDefinition(Base):
     ) -> None:
         """
         Delete a DataQualityJobDefinition resource
-
 
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
@@ -5370,7 +5437,6 @@ class DeviceFleet(Base):
         """
         Delete a DeviceFleet resource
 
-
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
@@ -5482,7 +5548,17 @@ class DeviceFleet(Base):
             session: Boto3 session.
             region: Region name.
 
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
 
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
         """
 
         operation_input_args = {
@@ -5507,7 +5583,24 @@ class DeviceFleet(Base):
         """
         Describes a fleet.
 
+        Parameters:
+            session: Boto3 session.
+            region: Region name.
 
+        Returns:
+            GetDeviceFleetReportResponse
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
         """
 
         operation_input_args = {
@@ -5542,7 +5635,18 @@ class DeviceFleet(Base):
             session: Boto3 session.
             region: Region name.
 
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
 
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceLimitExceeded: You have exceeded an SageMaker resource limit. For example, you might have too many training jobs created.
         """
 
         operation_input_args = {
@@ -5574,7 +5678,17 @@ class DeviceFleet(Base):
             session: Boto3 session.
             region: Region name.
 
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
 
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
         """
 
         operation_input_args = {
@@ -5952,7 +6066,6 @@ class Domain(Base):
         """
         Delete a Domain resource
 
-
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
@@ -6274,7 +6387,6 @@ class EdgeDeploymentPlan(Base):
         """
         Delete a EdgeDeploymentPlan resource
 
-
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
@@ -6383,7 +6495,22 @@ class EdgeDeploymentPlan(Base):
         """
         Creates a new stage in an existing edge deployment plan.
 
+        Parameters:
+            session: Boto3 session.
+            region: Region name.
 
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceLimitExceeded: You have exceeded an SageMaker resource limit. For example, you might have too many training jobs created.
         """
 
         operation_input_args = {
@@ -6414,7 +6541,18 @@ class EdgeDeploymentPlan(Base):
             session: Boto3 session.
             region: Region name.
 
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
 
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceInUse: Resource being accessed is in use.
         """
 
         operation_input_args = {
@@ -6445,7 +6583,17 @@ class EdgeDeploymentPlan(Base):
             session: Boto3 session.
             region: Region name.
 
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
 
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
         """
 
         operation_input_args = {
@@ -6476,7 +6624,17 @@ class EdgeDeploymentPlan(Base):
             session: Boto3 session.
             region: Region name.
 
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
 
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
         """
 
         operation_input_args = {
@@ -6779,7 +6937,6 @@ class EdgePackagingJob(Base):
     def stop(self) -> None:
         """
         Stop a EdgePackagingJob resource
-
 
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
@@ -7211,7 +7368,6 @@ class Endpoint(Base):
         """
         Delete a Endpoint resource
 
-
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
@@ -7315,7 +7471,6 @@ class Endpoint(Base):
             enable_explanations: An optional JMESPath expression used to override the EnableExplanations parameter of the ClarifyExplainerConfig API. See the EnableExplanations section in the developer guide for more information.
             inference_component_name: If the endpoint hosts one or more inference components, this parameter specifies the name of inference component to invoke.
 
-
         Returns:
             The Invoke response.
 
@@ -7386,7 +7541,6 @@ class Endpoint(Base):
             request_ttl_seconds: Maximum age in seconds a request can be in the queue before it is marked as expired. The default is 6 hours, or 21,600 seconds.
             invocation_timeout_seconds: Maximum amount of time in seconds a request can be processed before it is marked as expired. The default is 15 minutes, or 900 seconds.
 
-
         Returns:
             The Invoke response.
 
@@ -7453,7 +7607,6 @@ class Endpoint(Base):
             target_container_hostname: If the endpoint hosts multiple containers and is configured to use direct invocation, this parameter specifies the host name of the container to invoke.
             inference_id: An identifier that you assign to your request.
             inference_component_name: If the endpoint hosts one or more inference components, this parameter specifies the name of inference component to invoke for a streaming response.
-
 
         Returns:
             The Invoke response.
@@ -7593,7 +7746,18 @@ class Endpoint(Base):
             session: Boto3 session.
             region: Region name.
 
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
 
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceLimitExceeded: You have exceeded an SageMaker resource limit. For example, you might have too many training jobs created.
         """
 
         operation_input_args = {
@@ -7864,7 +8028,6 @@ class EndpointConfig(Base):
     ) -> None:
         """
         Delete a EndpointConfig resource
-
 
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
@@ -8156,7 +8319,6 @@ class Experiment(Base):
         """
         Update a Experiment resource
 
-
         Returns:
             The Experiment resource.
 
@@ -8200,7 +8362,6 @@ class Experiment(Base):
     ) -> None:
         """
         Delete a Experiment resource
-
 
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
@@ -8604,7 +8765,6 @@ class FeatureGroup(Base):
     ) -> None:
         """
         Delete a FeatureGroup resource
-
 
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
@@ -9154,7 +9314,6 @@ class FlowDefinition(Base):
         """
         Delete a FlowDefinition resource
 
-
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
@@ -9513,7 +9672,6 @@ class Hub(Base):
         """
         Update a Hub resource
 
-
         Returns:
             The Hub resource.
 
@@ -9557,7 +9715,6 @@ class Hub(Base):
     ) -> None:
         """
         Delete a Hub resource
-
 
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
@@ -9864,7 +10021,6 @@ class HubContent(Base):
         """
         Delete a HubContent resource
 
-
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
@@ -10051,7 +10207,21 @@ class HubContent(Base):
             session: Boto3 session.
             region: Region name.
 
+        Returns:
+            Iterator for listed HubContent.
 
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -10272,7 +10442,6 @@ class HumanTaskUi(Base):
     ) -> None:
         """
         Delete a HumanTaskUi resource
-
 
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
@@ -10657,7 +10826,6 @@ class HyperParameterTuningJob(Base):
         """
         Delete a HyperParameterTuningJob resource
 
-
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
@@ -10683,7 +10851,6 @@ class HyperParameterTuningJob(Base):
     def stop(self) -> None:
         """
         Stop a HyperParameterTuningJob resource
-
 
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
@@ -10846,7 +11013,21 @@ class HyperParameterTuningJob(Base):
             session: Boto3 session.
             region: Region name.
 
+        Returns:
+            Iterator for listed HyperParameterTrainingJobSummary.
 
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -11144,7 +11325,6 @@ class Image(Base):
     ) -> None:
         """
         Delete a Image resource
-
 
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
@@ -11656,7 +11836,6 @@ class ImageVersion(Base):
         """
         Delete a ImageVersion resource
 
-
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
@@ -11936,7 +12115,6 @@ class InferenceComponent(Base):
         """
         Update a InferenceComponent resource
 
-
         Returns:
             The InferenceComponent resource.
 
@@ -11979,7 +12157,6 @@ class InferenceComponent(Base):
     ) -> None:
         """
         Delete a InferenceComponent resource
-
 
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
@@ -12145,7 +12322,18 @@ class InferenceComponent(Base):
             session: Boto3 session.
             region: Region name.
 
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
 
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceLimitExceeded: You have exceeded an SageMaker resource limit. For example, you might have too many training jobs created.
         """
 
         operation_input_args = {
@@ -12420,7 +12608,6 @@ class InferenceExperiment(Base):
         """
         Update a InferenceExperiment resource
 
-
         Returns:
             The InferenceExperiment resource.
 
@@ -12468,7 +12655,6 @@ class InferenceExperiment(Base):
         """
         Delete a InferenceExperiment resource
 
-
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
@@ -12496,7 +12682,6 @@ class InferenceExperiment(Base):
     def stop(self) -> None:
         """
         Stop a InferenceExperiment resource
-
 
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
@@ -12895,7 +13080,6 @@ class InferenceRecommendationsJob(Base):
         """
         Stop a InferenceRecommendationsJob resource
 
-
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
@@ -13059,7 +13243,21 @@ class InferenceRecommendationsJob(Base):
             session: Boto3 session.
             region: Region name.
 
+        Returns:
+            Iterator for listed InferenceRecommendationsJobStep.
 
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -13354,7 +13552,6 @@ class LabelingJob(Base):
     def stop(self) -> None:
         """
         Stop a LabelingJob resource
-
 
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
@@ -13690,7 +13887,25 @@ class LineageGroup(Base):
         """
         The resource policy for the lineage group.
 
+        Parameters:
+            session: Boto3 session.
+            region: Region name.
 
+        Returns:
+            GetLineageGroupPolicyResponse
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -13947,7 +14162,6 @@ class Model(Base):
         """
         Delete a Model resource
 
-
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
@@ -14054,7 +14268,20 @@ class Model(Base):
             session: Boto3 session.
             region: Region name.
 
+        Returns:
+            Iterator for listed ModelMetadataSummary.
 
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
         """
 
         operation_input_args = {
@@ -14339,7 +14566,6 @@ class ModelBiasJobDefinition(Base):
     ) -> None:
         """
         Delete a ModelBiasJobDefinition resource
-
 
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
@@ -14666,7 +14892,6 @@ class ModelCard(Base):
         """
         Update a ModelCard resource
 
-
         Returns:
             The ModelCard resource.
 
@@ -14711,7 +14936,6 @@ class ModelCard(Base):
     ) -> None:
         """
         Delete a ModelCard resource
-
 
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
@@ -14868,7 +15092,21 @@ class ModelCard(Base):
             session: Boto3 session.
             region: Region name.
 
+        Returns:
+            Iterator for listed ModelCardVersionSummary.
 
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -15500,7 +15738,6 @@ class ModelExplainabilityJobDefinition(Base):
         """
         Delete a ModelExplainabilityJobDefinition resource
 
-
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
@@ -15999,7 +16236,6 @@ class ModelPackage(Base):
         """
         Delete a ModelPackage resource
 
-
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
@@ -16157,7 +16393,20 @@ class ModelPackage(Base):
             session: Boto3 session.
             region: Region name.
 
+        Returns:
+            BatchDescribeModelPackageOutput
 
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
         """
 
         operation_input_args = {
@@ -16365,7 +16614,6 @@ class ModelPackageGroup(Base):
         """
         Delete a ModelPackageGroup resource
 
-
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
@@ -16508,7 +16756,24 @@ class ModelPackageGroup(Base):
         """
         Gets a resource policy that manages access for a model group.
 
+        Parameters:
+            session: Boto3 session.
+            region: Region name.
 
+        Returns:
+            str
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
         """
 
         operation_input_args = {
@@ -16534,7 +16799,21 @@ class ModelPackageGroup(Base):
         """
         Deletes a model group resource policy.
 
+        Parameters:
+            session: Boto3 session.
+            region: Region name.
 
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
         """
 
         operation_input_args = {
@@ -16564,7 +16843,18 @@ class ModelPackageGroup(Base):
             session: Boto3 session.
             region: Region name.
 
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
 
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ConflictException: There was a conflict when you attempted to modify a SageMaker entity such as an Experiment or Artifact.
         """
 
         operation_input_args = {
@@ -16841,7 +17131,6 @@ class ModelQualityJobDefinition(Base):
         """
         Delete a ModelQualityJobDefinition resource
 
-
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
@@ -17116,7 +17405,21 @@ class MonitoringAlert(Base):
             session: Boto3 session.
             region: Region name.
 
+        Returns:
+            MonitoringAlertHistorySummary
 
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -17520,7 +17823,6 @@ class MonitoringSchedule(Base):
         """
         Update a MonitoringSchedule resource
 
-
         Returns:
             The MonitoringSchedule resource.
 
@@ -17564,7 +17866,6 @@ class MonitoringSchedule(Base):
         """
         Delete a MonitoringSchedule resource
 
-
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
@@ -17591,7 +17892,6 @@ class MonitoringSchedule(Base):
     def stop(self) -> None:
         """
         Stop a MonitoringSchedule resource
-
 
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
@@ -18105,7 +18405,6 @@ class NotebookInstance(Base):
         """
         Delete a NotebookInstance resource
 
-
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
@@ -18131,7 +18430,6 @@ class NotebookInstance(Base):
     def stop(self) -> None:
         """
         Stop a NotebookInstance resource
-
 
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
@@ -18480,7 +18778,6 @@ class NotebookInstanceLifecycleConfig(Base):
         """
         Update a NotebookInstanceLifecycleConfig resource
 
-
         Returns:
             The NotebookInstanceLifecycleConfig resource.
 
@@ -18523,7 +18820,6 @@ class NotebookInstanceLifecycleConfig(Base):
     ) -> None:
         """
         Delete a NotebookInstanceLifecycleConfig resource
-
 
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
@@ -18917,7 +19213,6 @@ class Pipeline(Base):
         """
         Delete a Pipeline resource
 
-
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
@@ -19187,7 +19482,6 @@ class PipelineExecution(Base):
         """
         Update a PipelineExecution resource
 
-
         Returns:
             The PipelineExecution resource.
 
@@ -19230,7 +19524,6 @@ class PipelineExecution(Base):
     def stop(self) -> None:
         """
         Stop a PipelineExecution resource
-
 
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
@@ -19377,7 +19670,25 @@ class PipelineExecution(Base):
         """
         Describes the details of an execution's pipeline definition.
 
+        Parameters:
+            session: Boto3 session.
+            region: Region name.
 
+        Returns:
+            DescribePipelineDefinitionForExecutionResponse
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -19412,7 +19723,21 @@ class PipelineExecution(Base):
             session: Boto3 session.
             region: Region name.
 
+        Returns:
+            Iterator for listed PipelineExecutionStep.
 
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -19453,7 +19778,21 @@ class PipelineExecution(Base):
             session: Boto3 session.
             region: Region name.
 
+        Returns:
+            Iterator for listed Parameter.
 
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -19493,7 +19832,20 @@ class PipelineExecution(Base):
             session: Boto3 session.
             region: Region name.
 
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
 
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ConflictException: There was a conflict when you attempted to modify a SageMaker entity such as an Experiment or Artifact.
+            ResourceLimitExceeded: You have exceeded an SageMaker resource limit. For example, you might have too many training jobs created.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -19527,7 +19879,20 @@ class PipelineExecution(Base):
             session: Boto3 session.
             region: Region name.
 
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
 
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ConflictException: There was a conflict when you attempted to modify a SageMaker entity such as an Experiment or Artifact.
+            ResourceLimitExceeded: You have exceeded an SageMaker resource limit. For example, you might have too many training jobs created.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -19563,7 +19928,20 @@ class PipelineExecution(Base):
             session: Boto3 session.
             region: Region name.
 
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
 
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ConflictException: There was a conflict when you attempted to modify a SageMaker entity such as an Experiment or Artifact.
+            ResourceLimitExceeded: You have exceeded an SageMaker resource limit. For example, you might have too many training jobs created.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -20037,7 +20415,6 @@ class ProcessingJob(Base):
         """
         Stop a ProcessingJob resource
 
-
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
@@ -20431,7 +20808,6 @@ class Project(Base):
     ) -> None:
         """
         Delete a Project resource
-
 
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
@@ -20969,7 +21345,6 @@ class Space(Base):
         """
         Update a Space resource
 
-
         Returns:
             The Space resource.
 
@@ -21015,7 +21390,6 @@ class Space(Base):
     ) -> None:
         """
         Delete a Space resource
-
 
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
@@ -21353,7 +21727,6 @@ class StudioLifecycleConfig(Base):
     ) -> None:
         """
         Delete a StudioLifecycleConfig resource
-
 
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
@@ -21723,7 +22096,17 @@ class Tag(Base):
             session: Boto3 session.
             region: Region name.
 
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
 
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
         """
 
         operation_input_args = {
@@ -21757,7 +22140,17 @@ class Tag(Base):
             session: Boto3 session.
             region: Region name.
 
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
 
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
         """
 
         operation_input_args = {
@@ -22137,7 +22530,6 @@ class TrainingJob(Base):
         """
         Update a TrainingJob resource
 
-
         Returns:
             The TrainingJob resource.
 
@@ -22181,7 +22573,6 @@ class TrainingJob(Base):
     def stop(self) -> None:
         """
         Stop a TrainingJob resource
-
 
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
@@ -22609,7 +23000,6 @@ class TransformJob(Base):
         """
         Stop a TransformJob resource
 
-
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
@@ -22954,7 +23344,6 @@ class Trial(Base):
         """
         Update a Trial resource
 
-
         Returns:
             The Trial resource.
 
@@ -22997,7 +23386,6 @@ class Trial(Base):
     ) -> None:
         """
         Delete a Trial resource
-
 
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
@@ -23395,7 +23783,6 @@ class TrialComponent(Base):
         """
         Delete a TrialComponent resource
 
-
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
@@ -23551,7 +23938,19 @@ class TrialComponent(Base):
             session: Boto3 session.
             region: Region name.
 
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
 
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceLimitExceeded: You have exceeded an SageMaker resource limit. For example, you might have too many training jobs created.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -23582,7 +23981,18 @@ class TrialComponent(Base):
             session: Boto3 session.
             region: Region name.
 
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
 
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -23854,7 +24264,6 @@ class UserProfile(Base):
         """
         Update a UserProfile resource
 
-
         Returns:
             The UserProfile resource.
 
@@ -23899,7 +24308,6 @@ class UserProfile(Base):
     ) -> None:
         """
         Delete a UserProfile resource
-
 
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
@@ -24302,7 +24710,6 @@ class Workforce(Base):
         """
         Delete a Workforce resource
 
-
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
@@ -24670,7 +25077,6 @@ class Workteam(Base):
         """
         Delete a Workteam resource
 
-
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
@@ -24782,7 +25188,21 @@ class Workteam(Base):
             session: Boto3 session.
             region: Region name.
 
+        Returns:
+            Iterator for listed LabelingJob.
 
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {

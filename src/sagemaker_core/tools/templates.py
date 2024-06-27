@@ -376,7 +376,6 @@ def wait_for_status(
         TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
         FailedStatusError:   If the resource reaches a failed state.
         WaiterError: Raised when an error occurs while waiting.
-    
     """
     start_time = time.time()
 
