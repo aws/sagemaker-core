@@ -564,17 +564,24 @@ class Base(BaseModel):
         return serialized_dict
     
     @staticmethod
-    def get_updated_kwargs_with_configured_attributes(config_schema_for_resource: dict, resource_name: str, **kwargs):
+    def get_updated_kwargs_with_configured_attributes(
+        config_schema_for_resource: dict, resource_name: str, **kwargs
+    ):
         try:
             for configurable_attribute in config_schema_for_resource:
                 if kwargs.get(configurable_attribute) is None:
-                    resource_defaults = load_default_configs_for_resource_name(resource_name=resource_name)
-                    global_defaults = load_default_configs_for_resource_name(resource_name="GlobalDefaults")
-                    formatted_attribute = pascal_to_snake(configurable_attribute)
-                    if config_value := get_config_value(formatted_attribute,
-                     resource_defaults,
-                     global_defaults):
-                        kwargs[formatted_attribute] = config_value
+                    resource_defaults = load_default_configs_for_resource_name(
+                        resource_name=resource_name
+                    )
+                    global_defaults = load_default_configs_for_resource_name(
+                        resource_name="GlobalDefaults"
+                    )
+                    if config_value := get_config_value(
+                        configurable_attribute, resource_defaults, global_defaults
+                    ):
+                        resource_name = snake_to_pascal(configurable_attribute)
+                        class_object = globals()[resource_name]
+                        kwargs[configurable_attribute] = class_object(**config_value)
         except BaseException as e:
             logger.info("Could not load Default Configs. Continuing.", exc_info=True)
             # Continue with existing kwargs if no default configs found
