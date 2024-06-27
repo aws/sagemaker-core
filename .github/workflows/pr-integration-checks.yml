@@ -3,7 +3,7 @@ name: Integration Checks
 on:
   pull_request_target:
     branches:
-      - "main"
+      - "main*"
 
 jobs:
   integ-tests:
