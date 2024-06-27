@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  unit-tests:
+  integ-tests:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
