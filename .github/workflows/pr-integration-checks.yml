@@ -6,7 +6,9 @@ on:
       - "main*"
 
 permissions:
-  contents: read
+  contents: write
+  actions: write
+  security-events: write
 
 
 jobs:
