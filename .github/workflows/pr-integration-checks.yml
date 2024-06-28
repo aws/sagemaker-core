@@ -1,15 +1,9 @@
 name: Integration Checks
 
 on:
-  pull_request:
+  pull_request_target:
     branches:
       - "main*"
-
-permissions:
-  contents: write
-  actions: write
-  security-events: write
-
 
 jobs:
   integ-tests:
@@ -20,9 +14,9 @@ jobs:
         python-version: [ "3.12" ]
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{github.event.pull_request.head.repo.full_name}}
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
