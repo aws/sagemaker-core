@@ -7,6 +7,8 @@ on:
 
 permissions:
     id-token: write # This is required for requesting the JWT Token
+    contents: read
+    packages: write
 
 jobs:
   integ-tests:
