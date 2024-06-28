@@ -5,12 +5,6 @@ on:
     branches:
       - "main*"
 
-permissions:
-  contents: write
-  actions: write
-  security-events: write
-
-
 jobs:
   integ-tests:
     runs-on: ubuntu-latest
