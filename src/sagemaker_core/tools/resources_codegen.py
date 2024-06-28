@@ -1515,11 +1515,7 @@ class ResourcesCodeGen:
             operation_input_args = self._generate_operation_input_args_updated(
                 operation_metadata, True
             )
-            _get_shape_attr_documentation_string = self._get_shape_attr_documentation_string(
-                self.shapes_extractor.fetch_shape_members_and_doc_strings(
-                    operation_input_shape_name
-                )
-            )
+            exclude_resource_attrs = None
         else:
             decorator = ""
             method_args = add_indent("self,\n", 4)
@@ -1572,13 +1568,21 @@ class ResourcesCodeGen:
                 return_type_conversion=return_type_conversion,
             )
 
-        serialize_operation_input = SERIALIZE_INPUT_TEMPLATE.format(
-            operation_input_args=operation_input_args
-        )
         initialize_client = INITIALIZE_CLIENT_TEMPLATE.format(service_name=method.service_name)
-        call_operation_api = CALL_OPERATION_API_TEMPLATE.format(
-            operation=convert_to_snake_case(method.operation_name)
-        )
+        if len(self.shapes[operation_input_shape_name]["members"]) != 0:
+            # the method has input arguments
+            serialize_operation_input = SERIALIZE_INPUT_TEMPLATE.format(
+                operation_input_args=operation_input_args
+            )
+            call_operation_api = CALL_OPERATION_API_TEMPLATE.format(
+                operation=convert_to_snake_case(method.operation_name)
+            )
+        else:
+            # the method has no input arguments
+            serialize_operation_input = ""
+            call_operation_api = CALL_OPERATION_API_NO_ARG_TEMPLATE.format(
+                operation=convert_to_snake_case(method.operation_name)
+            )
 
         # generate docstring
         docstring = self._generate_docstring(

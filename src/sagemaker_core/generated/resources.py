@@ -803,7 +803,6 @@ class Algorithm(Base):
             TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
             FailedStatusError:   If the resource reaches a failed state.
             WaiterError: Raised when an error occurs while waiting.
-
         """
         start_time = time.time()
 
@@ -1178,7 +1177,6 @@ class App(Base):
             TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
             FailedStatusError:   If the resource reaches a failed state.
             WaiterError: Raised when an error occurs while waiting.
-
         """
         start_time = time.time()
 
@@ -3259,7 +3257,6 @@ class Cluster(Base):
             TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
             FailedStatusError:   If the resource reaches a failed state.
             WaiterError: Raised when an error occurs while waiting.
-
         """
         start_time = time.time()
 
@@ -6120,7 +6117,6 @@ class Domain(Base):
             TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
             FailedStatusError:   If the resource reaches a failed state.
             WaiterError: Raised when an error occurs while waiting.
-
         """
         start_time = time.time()
 
@@ -6668,7 +6664,20 @@ class EdgeDeploymentPlan(Base):
             session: Boto3 session.
             region: Region name.
 
+        Returns:
+            Iterator for listed DeviceDeploymentSummary.
 
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
         """
 
         operation_input_args = {
@@ -7421,7 +7430,6 @@ class Endpoint(Base):
             TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
             FailedStatusError:   If the resource reaches a failed state.
             WaiterError: Raised when an error occurs while waiting.
-
         """
         start_time = time.time()
 
@@ -8810,7 +8818,6 @@ class FeatureGroup(Base):
             TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
             FailedStatusError:   If the resource reaches a failed state.
             WaiterError: Raised when an error occurs while waiting.
-
         """
         start_time = time.time()
 
@@ -9359,7 +9366,6 @@ class FlowDefinition(Base):
             TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
             FailedStatusError:   If the resource reaches a failed state.
             WaiterError: Raised when an error occurs while waiting.
-
         """
         start_time = time.time()
 
@@ -9769,7 +9775,6 @@ class Hub(Base):
             TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
             FailedStatusError:   If the resource reaches a failed state.
             WaiterError: Raised when an error occurs while waiting.
-
         """
         start_time = time.time()
 
@@ -10069,7 +10074,6 @@ class HubContent(Base):
             TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
             FailedStatusError:   If the resource reaches a failed state.
             WaiterError: Raised when an error occurs while waiting.
-
         """
         start_time = time.time()
 
@@ -10484,7 +10488,6 @@ class HumanTaskUi(Base):
             TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
             FailedStatusError:   If the resource reaches a failed state.
             WaiterError: Raised when an error occurs while waiting.
-
         """
         start_time = time.time()
 
@@ -11379,7 +11382,6 @@ class Image(Base):
             TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
             FailedStatusError:   If the resource reaches a failed state.
             WaiterError: Raised when an error occurs while waiting.
-
         """
         start_time = time.time()
 
@@ -11493,7 +11495,21 @@ class Image(Base):
             session: Boto3 session.
             region: Region name.
 
+        Returns:
+            Iterator for listed str.
 
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -11883,7 +11899,6 @@ class ImageVersion(Base):
             TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
             FailedStatusError:   If the resource reaches a failed state.
             WaiterError: Raised when an error occurs while waiting.
-
         """
         start_time = time.time()
 
@@ -12201,7 +12216,6 @@ class InferenceComponent(Base):
             TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
             FailedStatusError:   If the resource reaches a failed state.
             WaiterError: Raised when an error occurs while waiting.
-
         """
         start_time = time.time()
 
@@ -12739,7 +12753,6 @@ class InferenceExperiment(Base):
             TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
             FailedStatusError:   If the resource reaches a failed state.
             WaiterError: Raised when an error occurs while waiting.
-
         """
         start_time = time.time()
 
@@ -14982,7 +14995,6 @@ class ModelCard(Base):
             TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
             FailedStatusError:   If the resource reaches a failed state.
             WaiterError: Raised when an error occurs while waiting.
-
         """
         start_time = time.time()
 
@@ -16280,7 +16292,6 @@ class ModelPackage(Base):
             TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
             FailedStatusError:   If the resource reaches a failed state.
             WaiterError: Raised when an error occurs while waiting.
-
         """
         start_time = time.time()
 
@@ -16658,7 +16669,6 @@ class ModelPackageGroup(Base):
             TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
             FailedStatusError:   If the resource reaches a failed state.
             WaiterError: Raised when an error occurs while waiting.
-
         """
         start_time = time.time()
 
@@ -17935,7 +17945,6 @@ class MonitoringSchedule(Base):
             TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
             FailedStatusError:   If the resource reaches a failed state.
             WaiterError: Raised when an error occurs while waiting.
-
         """
         start_time = time.time()
 
@@ -18474,7 +18483,6 @@ class NotebookInstance(Base):
             TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
             FailedStatusError:   If the resource reaches a failed state.
             WaiterError: Raised when an error occurs while waiting.
-
         """
         start_time = time.time()
 
@@ -19256,7 +19264,6 @@ class Pipeline(Base):
             TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
             FailedStatusError:   If the resource reaches a failed state.
             WaiterError: Raised when an error occurs while waiting.
-
         """
         start_time = time.time()
 
@@ -19569,7 +19576,6 @@ class PipelineExecution(Base):
             TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
             FailedStatusError:   If the resource reaches a failed state.
             WaiterError: Raised when an error occurs while waiting.
-
         """
         start_time = time.time()
 
@@ -20864,7 +20870,6 @@ class Project(Base):
             TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
             FailedStatusError:   If the resource reaches a failed state.
             WaiterError: Raised when an error occurs while waiting.
-
         """
         start_time = time.time()
 
@@ -21072,7 +21077,21 @@ class SagemakerServicecatalogPortfolio(Base):
         """
         Disables using Service Catalog in SageMaker.
 
+        Parameters:
+            session: Boto3 session.
+            region: Region name.
 
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
         """
 
         client = Base.get_sagemaker_client(
@@ -21091,7 +21110,21 @@ class SagemakerServicecatalogPortfolio(Base):
         """
         Enables using Service Catalog in SageMaker.
 
+        Parameters:
+            session: Boto3 session.
+            region: Region name.
 
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
         """
 
         client = Base.get_sagemaker_client(
@@ -21110,7 +21143,24 @@ class SagemakerServicecatalogPortfolio(Base):
         """
         Gets the status of Service Catalog in SageMaker.
 
+        Parameters:
+            session: Boto3 session.
+            region: Region name.
 
+        Returns:
+            str
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
         """
 
         client = Base.get_sagemaker_client(
@@ -21445,7 +21495,6 @@ class Space(Base):
             TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
             FailedStatusError:   If the resource reaches a failed state.
             WaiterError: Raised when an error occurs while waiting.
-
         """
         start_time = time.time()
 
@@ -23827,7 +23876,6 @@ class TrialComponent(Base):
             TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
             FailedStatusError:   If the resource reaches a failed state.
             WaiterError: Raised when an error occurs while waiting.
-
         """
         start_time = time.time()
 
@@ -24363,7 +24411,6 @@ class UserProfile(Base):
             TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
             FailedStatusError:   If the resource reaches a failed state.
             WaiterError: Raised when an error occurs while waiting.
-
         """
         start_time = time.time()
 
@@ -24753,7 +24800,6 @@ class Workforce(Base):
             TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
             FailedStatusError:   If the resource reaches a failed state.
             WaiterError: Raised when an error occurs while waiting.
-
         """
         start_time = time.time()
 
