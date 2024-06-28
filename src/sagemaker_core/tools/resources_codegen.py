@@ -458,7 +458,7 @@ class ResourcesCodeGen:
             # If there's no 'get' or 'list' or 'create' method, generate a class with no attributes
             resource_attributes = []
             resource_class = f"class {resource_name}(Base):\n"
-            class_documentation_string = f"Class representing resource {resource_name}\n\n"
+            class_documentation_string = f"Class representing resource {resource_name}\n"
             resource_class += add_indent(f'"""\n{class_documentation_string}\n"""\n', 4)
 
         if resource_name in self.resource_methods:

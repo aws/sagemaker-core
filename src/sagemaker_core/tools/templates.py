@@ -681,7 +681,6 @@ RESOURCE_METHOD_EXCEPTION_DOCSTRING = """
 Raises:
     botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
         The error message and error code can be parsed from the exception as follows:
-    
         ```
         try:
             # AWS service call here

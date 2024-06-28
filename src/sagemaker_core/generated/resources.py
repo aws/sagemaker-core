@@ -250,7 +250,6 @@ class Action(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -316,7 +315,6 @@ class Action(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -354,7 +352,6 @@ class Action(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -394,7 +391,6 @@ class Action(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -437,7 +433,6 @@ class Action(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -490,7 +485,6 @@ class Action(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -632,7 +626,6 @@ class Algorithm(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -696,7 +689,6 @@ class Algorithm(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -733,7 +725,6 @@ class Algorithm(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -762,7 +753,6 @@ class Algorithm(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -855,7 +845,6 @@ class Algorithm(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -975,7 +964,6 @@ class App(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -1055,7 +1043,6 @@ class App(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -1097,7 +1084,6 @@ class App(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -1131,7 +1117,6 @@ class App(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -1229,7 +1214,6 @@ class App(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -1331,7 +1315,6 @@ class AppImageConfig(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -1393,7 +1376,6 @@ class AppImageConfig(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -1431,7 +1413,6 @@ class AppImageConfig(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -1466,7 +1447,6 @@ class AppImageConfig(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -1506,7 +1486,6 @@ class AppImageConfig(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -1561,7 +1540,6 @@ class AppImageConfig(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -1679,7 +1657,6 @@ class Artifact(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -1743,7 +1720,6 @@ class Artifact(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -1781,7 +1757,6 @@ class Artifact(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -1820,7 +1795,6 @@ class Artifact(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -1862,7 +1836,6 @@ class Artifact(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -1916,7 +1889,6 @@ class Artifact(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -2008,7 +1980,6 @@ class Association(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -2068,7 +2039,6 @@ class Association(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -2132,7 +2102,6 @@ class Association(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -2298,7 +2267,6 @@ class AutoMLJob(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -2367,7 +2335,6 @@ class AutoMLJob(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -2405,7 +2372,6 @@ class AutoMLJob(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -2433,7 +2399,6 @@ class AutoMLJob(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -2527,7 +2492,6 @@ class AutoMLJob(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -2595,7 +2559,6 @@ class AutoMLJob(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -2775,7 +2738,6 @@ class AutoMLJobV2(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -2844,7 +2806,6 @@ class AutoMLJobV2(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -2882,7 +2843,6 @@ class AutoMLJobV2(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -3030,7 +2990,6 @@ class Cluster(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -3093,7 +3052,6 @@ class Cluster(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -3131,7 +3089,6 @@ class Cluster(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -3166,7 +3123,6 @@ class Cluster(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -3207,7 +3163,6 @@ class Cluster(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -3309,7 +3264,6 @@ class Cluster(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -3366,7 +3320,6 @@ class Cluster(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -3424,7 +3377,6 @@ class Cluster(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -3478,7 +3430,6 @@ class Cluster(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -3564,7 +3515,6 @@ class CodeRepository(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -3624,7 +3574,6 @@ class CodeRepository(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -3661,7 +3610,6 @@ class CodeRepository(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -3694,7 +3642,6 @@ class CodeRepository(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -3733,7 +3680,6 @@ class CodeRepository(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -3787,7 +3733,6 @@ class CodeRepository(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -3949,7 +3894,6 @@ class CompilationJob(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -4016,7 +3960,6 @@ class CompilationJob(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -4054,7 +3997,6 @@ class CompilationJob(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -4084,7 +4026,6 @@ class CompilationJob(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -4111,7 +4052,6 @@ class CompilationJob(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -4207,7 +4147,6 @@ class CompilationJob(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -4326,7 +4265,6 @@ class Context(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -4390,7 +4328,6 @@ class Context(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -4428,7 +4365,6 @@ class Context(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -4467,7 +4403,6 @@ class Context(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -4509,7 +4444,6 @@ class Context(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -4562,7 +4496,6 @@ class Context(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -4727,7 +4660,6 @@ class DataQualityJobDefinition(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -4796,7 +4728,6 @@ class DataQualityJobDefinition(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -4834,7 +4765,6 @@ class DataQualityJobDefinition(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -4864,7 +4794,6 @@ class DataQualityJobDefinition(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -4917,7 +4846,6 @@ class DataQualityJobDefinition(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -5032,7 +4960,6 @@ class Device(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -5072,7 +4999,6 @@ class Device(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -5122,7 +5048,6 @@ class Device(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -5251,7 +5176,6 @@ class DeviceFleet(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -5316,7 +5240,6 @@ class DeviceFleet(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -5354,7 +5277,6 @@ class DeviceFleet(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -5395,7 +5317,6 @@ class DeviceFleet(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -5437,7 +5358,6 @@ class DeviceFleet(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -5492,7 +5412,6 @@ class DeviceFleet(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -5548,7 +5467,6 @@ class DeviceFleet(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -5590,7 +5508,6 @@ class DeviceFleet(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -5635,7 +5552,6 @@ class DeviceFleet(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -5678,7 +5594,6 @@ class DeviceFleet(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -5867,7 +5782,6 @@ class Domain(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -5938,7 +5852,6 @@ class Domain(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -5976,7 +5889,6 @@ class Domain(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -6019,7 +5931,6 @@ class Domain(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -6066,7 +5977,6 @@ class Domain(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -6244,7 +6154,6 @@ class EdgeDeploymentPlan(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -6313,7 +6222,6 @@ class EdgeDeploymentPlan(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -6354,7 +6262,6 @@ class EdgeDeploymentPlan(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -6386,7 +6293,6 @@ class EdgeDeploymentPlan(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -6443,7 +6349,6 @@ class EdgeDeploymentPlan(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -6498,7 +6403,6 @@ class EdgeDeploymentPlan(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -6540,7 +6444,6 @@ class EdgeDeploymentPlan(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -6582,7 +6485,6 @@ class EdgeDeploymentPlan(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -6623,7 +6525,6 @@ class EdgeDeploymentPlan(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -6670,7 +6571,6 @@ class EdgeDeploymentPlan(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -6816,7 +6716,6 @@ class EdgePackagingJob(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -6884,7 +6783,6 @@ class EdgePackagingJob(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -6922,7 +6820,6 @@ class EdgePackagingJob(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -6950,7 +6847,6 @@ class EdgePackagingJob(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -7047,7 +6943,6 @@ class EdgePackagingJob(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -7195,7 +7090,6 @@ class Endpoint(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -7257,7 +7151,6 @@ class Endpoint(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -7294,7 +7187,6 @@ class Endpoint(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -7337,7 +7229,6 @@ class Endpoint(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -7380,7 +7271,6 @@ class Endpoint(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -7485,7 +7375,6 @@ class Endpoint(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -7555,7 +7444,6 @@ class Endpoint(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -7622,7 +7510,6 @@ class Endpoint(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -7700,7 +7587,6 @@ class Endpoint(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -7757,7 +7643,6 @@ class Endpoint(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -7905,7 +7790,6 @@ class EndpointConfig(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -7974,7 +7858,6 @@ class EndpointConfig(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -8011,7 +7894,6 @@ class EndpointConfig(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -8040,7 +7922,6 @@ class EndpointConfig(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -8090,7 +7971,6 @@ class EndpointConfig(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -8198,7 +8078,6 @@ class Experiment(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -8260,7 +8139,6 @@ class Experiment(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -8298,7 +8176,6 @@ class Experiment(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -8333,7 +8210,6 @@ class Experiment(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -8374,7 +8250,6 @@ class Experiment(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -8423,7 +8298,6 @@ class Experiment(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -8584,7 +8458,6 @@ class FeatureGroup(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -8655,7 +8528,6 @@ class FeatureGroup(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -8694,7 +8566,6 @@ class FeatureGroup(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -8735,7 +8606,6 @@ class FeatureGroup(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -8777,7 +8647,6 @@ class FeatureGroup(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -8874,7 +8743,6 @@ class FeatureGroup(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -8978,7 +8846,6 @@ class FeatureMetadata(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -9017,7 +8884,6 @@ class FeatureMetadata(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -9058,7 +8924,6 @@ class FeatureMetadata(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -9190,7 +9055,6 @@ class FlowDefinition(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -9256,7 +9120,6 @@ class FlowDefinition(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -9294,7 +9157,6 @@ class FlowDefinition(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -9324,7 +9186,6 @@ class FlowDefinition(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -9416,7 +9277,6 @@ class FlowDefinition(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -9544,7 +9404,6 @@ class Hub(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -9609,7 +9468,6 @@ class Hub(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -9647,7 +9505,6 @@ class Hub(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -9684,7 +9541,6 @@ class Hub(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -9725,7 +9581,6 @@ class Hub(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -9831,7 +9686,6 @@ class Hub(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -9955,7 +9809,6 @@ class HubContent(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -9996,7 +9849,6 @@ class HubContent(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -10029,7 +9881,6 @@ class HubContent(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -10136,7 +9987,6 @@ class HubContent(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -10217,7 +10067,6 @@ class HubContent(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -10320,7 +10169,6 @@ class HumanTaskUi(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -10382,7 +10230,6 @@ class HumanTaskUi(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -10420,7 +10267,6 @@ class HumanTaskUi(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -10450,7 +10296,6 @@ class HumanTaskUi(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -10531,7 +10376,6 @@ class HumanTaskUi(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -10694,7 +10538,6 @@ class HyperParameterTuningJob(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -10764,7 +10607,6 @@ class HyperParameterTuningJob(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -10802,7 +10644,6 @@ class HyperParameterTuningJob(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -10832,7 +10673,6 @@ class HyperParameterTuningJob(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -10858,7 +10698,6 @@ class HyperParameterTuningJob(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -10956,7 +10795,6 @@ class HyperParameterTuningJob(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -11022,7 +10860,6 @@ class HyperParameterTuningJob(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -11146,7 +10983,6 @@ class Image(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -11210,7 +11046,6 @@ class Image(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -11248,7 +11083,6 @@ class Image(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -11289,7 +11123,6 @@ class Image(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -11332,7 +11165,6 @@ class Image(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -11438,7 +11270,6 @@ class Image(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -11501,7 +11332,6 @@ class Image(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -11637,7 +11467,6 @@ class ImageVersion(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -11712,7 +11541,6 @@ class ImageVersion(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -11753,7 +11581,6 @@ class ImageVersion(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -11804,7 +11631,6 @@ class ImageVersion(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -11855,7 +11681,6 @@ class ImageVersion(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -11999,7 +11824,6 @@ class InferenceComponent(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -12065,7 +11889,6 @@ class InferenceComponent(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -12102,7 +11925,6 @@ class InferenceComponent(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -12136,7 +11958,6 @@ class InferenceComponent(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -12176,7 +11997,6 @@ class InferenceComponent(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -12280,7 +12100,6 @@ class InferenceComponent(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -12339,7 +12158,6 @@ class InferenceComponent(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -12481,7 +12299,6 @@ class InferenceExperiment(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -12551,7 +12368,6 @@ class InferenceExperiment(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -12589,7 +12405,6 @@ class InferenceExperiment(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -12628,7 +12443,6 @@ class InferenceExperiment(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -12672,7 +12486,6 @@ class InferenceExperiment(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -12700,7 +12513,6 @@ class InferenceExperiment(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -12810,7 +12622,6 @@ class InferenceExperiment(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -12963,7 +12774,6 @@ class InferenceRecommendationsJob(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -13030,7 +12840,6 @@ class InferenceRecommendationsJob(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -13068,7 +12877,6 @@ class InferenceRecommendationsJob(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -13096,7 +12904,6 @@ class InferenceRecommendationsJob(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -13198,7 +13005,6 @@ class InferenceRecommendationsJob(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -13262,7 +13068,6 @@ class InferenceRecommendationsJob(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -13434,7 +13239,6 @@ class LabelingJob(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -13503,7 +13307,6 @@ class LabelingJob(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -13541,7 +13344,6 @@ class LabelingJob(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -13569,7 +13371,6 @@ class LabelingJob(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -13665,7 +13466,6 @@ class LabelingJob(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -13768,7 +13568,6 @@ class LineageGroup(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -13806,7 +13605,6 @@ class LineageGroup(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -13856,7 +13654,6 @@ class LineageGroup(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -13910,7 +13707,6 @@ class LineageGroup(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -14046,7 +13842,6 @@ class Model(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -14112,7 +13907,6 @@ class Model(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -14149,7 +13943,6 @@ class Model(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -14178,7 +13971,6 @@ class Model(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -14228,7 +14020,6 @@ class Model(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -14287,7 +14078,6 @@ class Model(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -14446,7 +14236,6 @@ class ModelBiasJobDefinition(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -14515,7 +14304,6 @@ class ModelBiasJobDefinition(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -14553,7 +14341,6 @@ class ModelBiasJobDefinition(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -14583,7 +14370,6 @@ class ModelBiasJobDefinition(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -14636,7 +14422,6 @@ class ModelBiasJobDefinition(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -14769,7 +14554,6 @@ class ModelCard(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -14835,7 +14619,6 @@ class ModelCard(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -14874,7 +14657,6 @@ class ModelCard(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -14911,7 +14693,6 @@ class ModelCard(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -14953,7 +14734,6 @@ class ModelCard(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -15044,7 +14824,6 @@ class ModelCard(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -15110,7 +14889,6 @@ class ModelCard(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -15239,7 +15017,6 @@ class ModelCardExportJob(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -15307,7 +15084,6 @@ class ModelCardExportJob(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -15345,7 +15121,6 @@ class ModelCardExportJob(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -15444,7 +15219,6 @@ class ModelCardExportJob(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -15613,7 +15387,6 @@ class ModelExplainabilityJobDefinition(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -15683,7 +15456,6 @@ class ModelExplainabilityJobDefinition(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -15723,7 +15495,6 @@ class ModelExplainabilityJobDefinition(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -15753,7 +15524,6 @@ class ModelExplainabilityJobDefinition(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -15806,7 +15576,6 @@ class ModelExplainabilityJobDefinition(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -16042,7 +15811,6 @@ class ModelPackage(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -16123,7 +15891,6 @@ class ModelPackage(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -16160,7 +15927,6 @@ class ModelPackage(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -16206,7 +15972,6 @@ class ModelPackage(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -16251,7 +16016,6 @@ class ModelPackage(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -16350,7 +16114,6 @@ class ModelPackage(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -16410,7 +16173,6 @@ class ModelPackage(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -16499,7 +16261,6 @@ class ModelPackageGroup(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -16562,7 +16323,6 @@ class ModelPackageGroup(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -16599,7 +16359,6 @@ class ModelPackageGroup(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -16628,7 +16387,6 @@ class ModelPackageGroup(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -16721,7 +16479,6 @@ class ModelPackageGroup(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -16776,7 +16533,6 @@ class ModelPackageGroup(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -16816,7 +16572,6 @@ class ModelPackageGroup(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -16856,7 +16611,6 @@ class ModelPackageGroup(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -17007,7 +16761,6 @@ class ModelQualityJobDefinition(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -17076,7 +16829,6 @@ class ModelQualityJobDefinition(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -17114,7 +16866,6 @@ class ModelQualityJobDefinition(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -17144,7 +16895,6 @@ class ModelQualityJobDefinition(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -17197,7 +16947,6 @@ class ModelQualityJobDefinition(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -17297,7 +17046,6 @@ class MonitoringAlert(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -17353,7 +17101,6 @@ class MonitoringAlert(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -17421,7 +17168,6 @@ class MonitoringAlert(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -17549,7 +17295,6 @@ class MonitoringExecution(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -17702,7 +17447,6 @@ class MonitoringSchedule(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -17766,7 +17510,6 @@ class MonitoringSchedule(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -17804,7 +17547,6 @@ class MonitoringSchedule(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -17839,7 +17581,6 @@ class MonitoringSchedule(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -17879,7 +17620,6 @@ class MonitoringSchedule(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -17906,7 +17646,6 @@ class MonitoringSchedule(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -18011,7 +17750,6 @@ class MonitoringSchedule(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -18198,7 +17936,6 @@ class NotebookInstance(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -18274,7 +18011,6 @@ class NotebookInstance(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -18311,7 +18047,6 @@ class NotebookInstance(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -18366,7 +18101,6 @@ class NotebookInstance(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -18417,7 +18151,6 @@ class NotebookInstance(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -18443,7 +18176,6 @@ class NotebookInstance(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -18549,7 +18281,6 @@ class NotebookInstance(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -18655,7 +18386,6 @@ class NotebookInstanceLifecycleConfig(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -18721,7 +18451,6 @@ class NotebookInstanceLifecycleConfig(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -18758,7 +18487,6 @@ class NotebookInstanceLifecycleConfig(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -18792,7 +18520,6 @@ class NotebookInstanceLifecycleConfig(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -18832,7 +18559,6 @@ class NotebookInstanceLifecycleConfig(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -18886,7 +18612,6 @@ class NotebookInstanceLifecycleConfig(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -19028,7 +18753,6 @@ class Pipeline(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -19097,7 +18821,6 @@ class Pipeline(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -19135,7 +18858,6 @@ class Pipeline(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -19178,7 +18900,6 @@ class Pipeline(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -19224,7 +18945,6 @@ class Pipeline(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -19311,7 +19031,6 @@ class Pipeline(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -19421,7 +19140,6 @@ class PipelineExecution(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -19459,7 +19177,6 @@ class PipelineExecution(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -19495,7 +19212,6 @@ class PipelineExecution(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -19535,7 +19251,6 @@ class PipelineExecution(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -19630,7 +19345,6 @@ class PipelineExecution(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -19686,7 +19400,6 @@ class PipelineExecution(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -19735,7 +19448,6 @@ class PipelineExecution(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -19790,7 +19502,6 @@ class PipelineExecution(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -19841,7 +19552,6 @@ class PipelineExecution(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -19888,7 +19598,6 @@ class PipelineExecution(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -19937,7 +19646,6 @@ class PipelineExecution(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -20034,7 +19742,6 @@ class PresignedDomainUrl(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -20122,7 +19829,6 @@ class PresignedNotebookInstanceUrl(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -20287,7 +19993,6 @@ class ProcessingJob(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -20358,7 +20063,6 @@ class ProcessingJob(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -20396,7 +20100,6 @@ class ProcessingJob(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -20424,7 +20127,6 @@ class ProcessingJob(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -20520,7 +20222,6 @@ class ProcessingJob(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -20637,7 +20338,6 @@ class Project(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -20699,7 +20399,6 @@ class Project(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -20736,7 +20435,6 @@ class Project(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -20777,7 +20475,6 @@ class Project(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -20818,7 +20515,6 @@ class Project(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -20922,7 +20618,6 @@ class Project(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -21024,7 +20719,6 @@ class ResourceCatalog(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -21066,7 +20760,6 @@ class SagemakerServicecatalogPortfolio(Base):
     """
     Class representing resource SagemakerServicecatalogPortfolio
 
-
     """
 
     @staticmethod
@@ -21084,7 +20777,6 @@ class SagemakerServicecatalogPortfolio(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -21117,7 +20809,6 @@ class SagemakerServicecatalogPortfolio(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -21153,7 +20844,6 @@ class SagemakerServicecatalogPortfolio(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -21258,7 +20948,6 @@ class Space(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -21326,7 +21015,6 @@ class Space(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -21365,7 +21053,6 @@ class Space(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -21401,7 +21088,6 @@ class Space(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -21444,7 +21130,6 @@ class Space(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -21545,7 +21230,6 @@ class Space(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -21646,7 +21330,6 @@ class StudioLifecycleConfig(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -21712,7 +21395,6 @@ class StudioLifecycleConfig(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -21750,7 +21432,6 @@ class StudioLifecycleConfig(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -21780,7 +21461,6 @@ class StudioLifecycleConfig(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -21838,7 +21518,6 @@ class StudioLifecycleConfig(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -21929,7 +21608,6 @@ class SubscribedWorkteam(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -21966,7 +21644,6 @@ class SubscribedWorkteam(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -22009,7 +21686,6 @@ class SubscribedWorkteam(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -22095,7 +21771,6 @@ class Tag(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -22148,7 +21823,6 @@ class Tag(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -22192,7 +21866,6 @@ class Tag(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -22425,7 +22098,6 @@ class TrainingJob(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -22509,7 +22181,6 @@ class TrainingJob(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -22547,7 +22218,6 @@ class TrainingJob(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -22585,7 +22255,6 @@ class TrainingJob(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -22626,7 +22295,6 @@ class TrainingJob(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -22724,7 +22392,6 @@ class TrainingJob(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -22912,7 +22579,6 @@ class TransformJob(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -22986,7 +22652,6 @@ class TransformJob(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -23024,7 +22689,6 @@ class TransformJob(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -23052,7 +22716,6 @@ class TransformJob(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -23148,7 +22811,6 @@ class TransformJob(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -23263,7 +22925,6 @@ class Trial(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -23327,7 +22988,6 @@ class Trial(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -23365,7 +23025,6 @@ class Trial(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -23399,7 +23058,6 @@ class Trial(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -23439,7 +23097,6 @@ class Trial(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -23492,7 +23149,6 @@ class Trial(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -23632,7 +23288,6 @@ class TrialComponent(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -23700,7 +23355,6 @@ class TrialComponent(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -23738,7 +23392,6 @@ class TrialComponent(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -23786,7 +23439,6 @@ class TrialComponent(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -23835,7 +23487,6 @@ class TrialComponent(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -23932,7 +23583,6 @@ class TrialComponent(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -23989,7 +23639,6 @@ class TrialComponent(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -24032,7 +23681,6 @@ class TrialComponent(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -24172,7 +23820,6 @@ class UserProfile(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -24241,7 +23888,6 @@ class UserProfile(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -24281,7 +23927,6 @@ class UserProfile(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -24318,7 +23963,6 @@ class UserProfile(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -24360,7 +24004,6 @@ class UserProfile(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -24461,7 +24104,6 @@ class UserProfile(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -24578,7 +24220,6 @@ class Workforce(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -24641,7 +24282,6 @@ class Workforce(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -24678,7 +24318,6 @@ class Workforce(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -24719,7 +24358,6 @@ class Workforce(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -24760,7 +24398,6 @@ class Workforce(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -24848,7 +24485,6 @@ class Workforce(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -24943,7 +24579,6 @@ class Workteam(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -25008,7 +24643,6 @@ class Workteam(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -25045,7 +24679,6 @@ class Workteam(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -25085,7 +24718,6 @@ class Workteam(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -25126,7 +24758,6 @@ class Workteam(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -25173,7 +24804,6 @@ class Workteam(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
@@ -25240,7 +24870,6 @@ class Workteam(Base):
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
                 The error message and error code can be parsed from the exception as follows:
-
                 ```
                 try:
                     # AWS service call here
