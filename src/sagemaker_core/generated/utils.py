@@ -11,6 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+import datetime
 import logging
 import os
 import re
@@ -118,6 +119,10 @@ def is_not_str_dict(obj):
 
 def is_primitive_list(obj):
     return all(not is_not_primitive(s) for s in obj)
+
+
+def is_primitive_class(cls):
+    return cls in (str, int, bool, float, datetime.datetime)
 
 
 class Unassigned:
@@ -264,17 +269,21 @@ class ResourceIterator(Generic[T]):
             summary = self.summary_list[self.index]
             self.index += 1
 
-            # Transform the resource summary into format to initialize object
-            init_data = transform(summary, self.summary_name)
-
-            if self.custom_key_mapping:
-                init_data = {self.custom_key_mapping.get(k, k): v for k, v in init_data.items()}
-
             # Initialize the resource object
-            resource_object = self.resource_cls(**init_data)
+            if is_primitive_class(self.resource_cls):
+                # If the resource class is a primitive class, there will be only one element in the summary
+                resource_object = list(summary.values())[0]
+            else:
+                # Transform the resource summary into format to initialize object
+                init_data = transform(summary, self.summary_name)
 
-            # Refresh the resource object and return it
-            resource_object.refresh()
+                if self.custom_key_mapping:
+                    init_data = {self.custom_key_mapping.get(k, k): v for k, v in init_data.items()}
+                resource_object = self.resource_cls(**init_data)
+
+            # If the resource object has refresh method, refresh and return it
+            if hasattr(resource_object, "refresh"):
+                resource_object.refresh()
             return resource_object
 
         # If index reached the end of summary_list, and there is no next token, raise StopIteration

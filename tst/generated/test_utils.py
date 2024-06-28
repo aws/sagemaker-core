@@ -66,6 +66,17 @@ LIST_DATA_QUALITY_JOB_DEFINITION_RESPONSE_WITHOUT_NEXT_TOKEN = {
     ],
 }
 
+LIST_ALIASES_RESPONSE_WITHOUT_NEXT_TOKEN = {
+    "SageMakerImageVersionAliases": [
+        {
+            "SageMakerImageVersionAlias": "alias-1",
+        },
+        {
+            "SageMakerImageVersionAlias": "alias-2",
+        },
+    ],
+}
+
 
 @pytest.fixture
 def resource_iterator():
@@ -101,6 +112,23 @@ def resource_iterator_with_custom_key_mapping():
         custom_key_mapping=custom_key_mapping,
         list_method_kwargs={},
     )
+    return iterator, client, resource_cls
+
+
+@pytest.fixture
+def resource_iterator_with_primitive_class():
+    client = Mock()
+    resource_cls = str
+    iterator = ResourceIterator(
+        client=client,
+        summaries_key="SageMakerImageVersionAliases",
+        summary_name="SageMakerImageVersionAlias",
+        resource_cls=resource_cls,
+        list_method="list_aliases",
+        list_method_kwargs={},
+        custom_key_mapping=None,
+    )
+
     return iterator, client, resource_cls
 
 
@@ -259,6 +287,30 @@ def test_next_with_custom_key_mapping(resource_iterator_with_custom_key_mapping)
 
         assert mock_refresh.call_count == 2
         assert client.list_data_quality_job_definitions.call_args_list == [call()]
+
+
+def test_next_with_primitive_class(resource_iterator_with_primitive_class):
+    iterator, client, _ = resource_iterator_with_primitive_class
+    client.list_aliases.return_value = LIST_ALIASES_RESPONSE_WITHOUT_NEXT_TOKEN
+
+    index = 0
+    while True:
+        try:
+            next_item = next(iterator)
+            assert isinstance(next_item, str)
+            print(next_item)
+            expected_image_version_alias_data = LIST_ALIASES_RESPONSE_WITHOUT_NEXT_TOKEN[
+                "SageMakerImageVersionAliases"
+            ][index]
+
+            assert next_item == expected_image_version_alias_data["SageMakerImageVersionAlias"]
+
+            assert not hasattr(next_item, "endpoint_name")
+            index += 1
+        except StopIteration:
+            break
+
+        assert client.list_aliases.call_args_list == [call()]
 
 
 def test_configure_logging_with_default_log_level(monkeypatch):
