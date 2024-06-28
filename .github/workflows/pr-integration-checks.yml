@@ -1,10 +1,15 @@
 name: Integration Checks
 
 on:
-  - pull_request_target
+  pull_request:
+    branches:
+      - "main*"
 
 permissions:
-    id-token: write # This is required for requesting the JWT
+  contents: write
+  actions: write
+  security-events: write
+
 
 jobs:
   integ-tests:
@@ -16,6 +21,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
