@@ -1,0 +1,36 @@
+name: Integration Checks
+
+on:
+  - pull_request_target
+
+permissions:
+    id-token: write # This is required for requesting the JWT
+
+jobs:
+  integ-tests:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [ "3.12" ]
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          export PYTHONPATH="$PYTHONPATH:$PWD"
+          python -m pip install --upgrade pip
+          pip install -e ".[codegen]"
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.INTEG_TEST_ROLE_ARN }}
+          aws-region: us-west-2
+          role-duration-seconds: 10800
+      - name: Run Integration Tests
+        run: |
+          pytest integ
