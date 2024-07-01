@@ -28,8 +28,8 @@ jobs:
         run: |
           export PYTHONPATH="$PYTHONPATH:$PWD"
           python -m pip install --upgrade pip
-          pip install -e ".[codegen]
-          pip install scikit-learn sklearn"
+          pip install scikit-learn sklearn
+          pip install -e ".[codegen]"
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
