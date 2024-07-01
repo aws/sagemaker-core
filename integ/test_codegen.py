@@ -208,4 +208,5 @@ class TestSageMakerCore(unittest.TestCase):
         path_to_defaults = os.path.join(DATA_DIRECTORY, "defaults.json")
         with open(os.path.join(DATA_DIRECTORY, "defaults.json"), "w") as f:
             json.dump(DEFAULTS_CONTENT, f, indent=4)
+
         return path_to_defaults
