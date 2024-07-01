@@ -152,7 +152,6 @@ class TestSageMakerCore(unittest.TestCase):
                 )
             ],
         )
-
         endpoint: Endpoint = Endpoint.create(
             endpoint_name=key,
             endpoint_config_name=endpoint_config,  # Pass `EndpointConfig` object created above
