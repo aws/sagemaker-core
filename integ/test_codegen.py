@@ -156,33 +156,56 @@ class TestSageMakerCore(unittest.TestCase):
         )
         endpoint.wait_for_status("InService")
 
+
     def test_intelligent_defaults(self):
         os.environ["SAGEMAKER_ADMIN_CONFIG_OVERRIDE"] = (
             self._setup_intelligent_default_configs_and_fetch_path()
         )
-        cluster_name_v3 = "xgboost-cluster-" + time.strftime("%Y-%m-%d-%H-%M-%S", time.gmtime())
+        job_name_v3 = "xgboost-cluster-" + time.strftime("%Y-%m-%d-%H-%M-%S", time.gmtime())
 
-        cluster = Cluster.create(
-            cluster_name=cluster_name_v3,
-            instance_groups=[
-                ClusterInstanceGroupSpecification(
-                    instance_count=1,
-                    instance_group_name="instance-group-11",
-                    instance_type="ml.m5.4xlarge",
-                    life_cycle_config=ClusterLifeCycleConfig(
-                        source_s3_uri=s3_input_path, on_create="dothis"
-                    ),
-                    execution_role=role,
-                )
-            ],
-        )
-        cluster.wait_for_status("InService")
+        training_job = TrainingJob.create(
+                training_job_name=job_name_v3,
+                hyper_parameters={
+                    "objective": "multi:softmax",
+                    "num_class": "3",
+                    "num_round": "10",
+                    "eval_metric": "merror",
+                },
+                algorithm_specification=AlgorithmSpecification(
+                    training_image=image, training_input_mode="File"
+                ),
+                role_arn=role,
+                input_data_config=[
+                    Channel(
+                        channel_name="train",
+                        content_type="csv",
+                        compression_type="None",
+                        record_wrapper_type="None",
+                        data_source=DataSource(
+                            s3_data_source=S3DataSource(
+                                s3_data_type="S3Prefix",
+                                s3_uri=s3_input_path,
+                                s3_data_distribution_type="FullyReplicated",
+                            )
+                        ),
+                    )
+                ],
+                output_data_config=OutputDataConfig(s3_output_path=s3_output_path),
+                resource_config=ResourceConfig(
+                    instance_type="ml.m4.xlarge",
+                    instance_count=2,
+                    volume_size_in_gb=30,
+                    keep_alive_period_in_seconds=300,
+                ),
+                stopping_condition=StoppingCondition(max_runtime_in_seconds=600),
+            )
+        training_job.wait()
 
-        assert cluster.vpc_config.subnets == [
-            "subnet-0319c641cfe93a990",
-            "subnet-0183a8f96b511cffa",
+        assert training_job.vpc_config.subnets == [
+            SUBNET_ONE,
+            SUBNET_TWO,
         ]
-        assert cluster.vpc_config.security_group_ids == ["sg-0aa587345c73cb302"]
+        assert training_job.vpc_config.security_group_ids == [SECURITY_GROUP_ONE]
 
     def _setup_intelligent_default_configs_and_fetch_path(self) -> str:
         DEFAULTS_CONTENT = {
