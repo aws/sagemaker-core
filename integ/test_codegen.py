@@ -10,6 +10,7 @@ from sklearn.datasets import load_iris
 from sklearn.model_selection import train_test_split
 from sagemaker import get_execution_role, Session, image_uris
 
+from integ.constants import SECURITY_GROUPS
 from sagemaker_core.generated.utils import Unassigned
 from sagemaker_core.generated.shapes import (
     ClusterInstanceGroupSpecification,
@@ -59,6 +60,12 @@ train_input = sagemaker_session.upload_data(
 s3_input_path = "s3://{}/{}/data/{}".format(bucket, prefix, TRAIN_DATA)
 s3_output_path = "s3://{}/{}/output".format(bucket, prefix)
 image = image_uris.retrieve(framework="xgboost", region=region, version="latest")
+
+
+# To be replaced with representing strings when executing from personal account
+SUBNET_ONE = os.environ['SUBNET_ONE']
+SUBNET_TWO = os.environ['SUBNET_TWO']
+SECURITY_GROUP_ONE = os.environ['SECURITY_GROUP_ONE']
 
 
 class TestSageMakerCore(unittest.TestCase):
@@ -187,12 +194,10 @@ class TestSageMakerCore(unittest.TestCase):
                     "Resources": {
                         "GlobalDefaults": {
                             "vpc_config": {
-                                "security_group_ids": [
-                                    "sg-0aa587345c73cb302"  # Replace with security group id
-                                ],
+                                "security_group_ids": [SECURITY_GROUP_ONE],
                                 "subnets": [
-                                    "subnet-0319c641cfe93a990",  # Replace with subnet id
-                                    "subnet-0183a8f96b511cffa",  # Replace with subnet id
+                                    SUBNET_ONE,
+                                    SUBNET_TWO
                                 ],
                             }
                         },
