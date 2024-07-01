@@ -376,7 +376,6 @@ def wait_for_status(
         TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
         FailedStatusError:   If the resource reaches a failed state.
         WaiterError: Raised when an error occurs while waiting.
-    
     """
     start_time = time.time()
 
@@ -682,7 +681,6 @@ RESOURCE_METHOD_EXCEPTION_DOCSTRING = """
 Raises:
     botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
         The error message and error code can be parsed from the exception as follows:
-    
         ```
         try:
             # AWS service call here

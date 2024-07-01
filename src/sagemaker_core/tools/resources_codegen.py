@@ -458,7 +458,7 @@ class ResourcesCodeGen:
             # If there's no 'get' or 'list' or 'create' method, generate a class with no attributes
             resource_attributes = []
             resource_class = f"class {resource_name}(Base):\n"
-            class_documentation_string = f"Class representing resource {resource_name}\n\n"
+            class_documentation_string = f"Class representing resource {resource_name}\n"
             resource_class += add_indent(f'"""\n{class_documentation_string}\n"""\n', 4)
 
         if resource_name in self.resource_methods:
@@ -981,7 +981,7 @@ class ResourcesCodeGen:
         Returns:
             str: The generated docstring for the IMPORT method.
         """
-        docstring = f"{title}\n\n"
+        docstring = f"{title}\n"
         if operation_input_shape_name:
             _shape_attr_documentation_string = self._get_shape_attr_documentation_string(
                 self.shapes_extractor.fetch_shape_members_and_doc_strings(
@@ -990,18 +990,18 @@ class ResourcesCodeGen:
                 exclude_resource_attrs=exclude_resource_attrs,
             )
             if _shape_attr_documentation_string:
-                docstring += f"Parameters:\n"
+                docstring += f"\nParameters:\n"
                 docstring += _shape_attr_documentation_string
-            if not include_session_region:
-                docstring += "\n"
 
         if include_session_region:
-            docstring += add_indent(f"session: Boto3 session.\nregion: Region name.\n\n")
+            if not _shape_attr_documentation_string:
+                docstring += f"\nParameters:\n"
+            docstring += add_indent(f"session: Boto3 session.\nregion: Region name.\n")
 
         if include_return_resource_docstring:
-            docstring += f"Returns:\n" f"    The {resource_name} resource.\n"
+            docstring += f"\nReturns:\n" f"    The {resource_name} resource.\n"
         elif return_string:
-            docstring += return_string
+            docstring += "\n" + return_string
 
         docstring += self._exception_docstring(operation_name)
 
@@ -1197,7 +1197,7 @@ class ResourcesCodeGen:
             operation_input_shape_name=operation_input_shape_name,
             include_session_region=False,
             include_return_resource_docstring=False,
-            return_string=f"\nReturns:\n" f"    The Invoke response.\n",
+            return_string=f"Returns:\n" f"    The Invoke response.\n",
             exclude_resource_attrs=kwargs["resource_attributes"],
         )
         # Format the method using the CREATE_METHOD_TEMPLATE
@@ -1253,7 +1253,7 @@ class ResourcesCodeGen:
             operation_input_shape_name=operation_input_shape_name,
             include_session_region=False,
             include_return_resource_docstring=False,
-            return_string=f"\nReturns:\n" f"    The Invoke response.\n",
+            return_string=f"Returns:\n" f"    The Invoke response.\n",
             exclude_resource_attrs=kwargs["resource_attributes"],
         )
         # Format the method using the CREATE_METHOD_TEMPLATE
@@ -1309,7 +1309,7 @@ class ResourcesCodeGen:
             operation_input_shape_name=operation_input_shape_name,
             include_session_region=False,
             include_return_resource_docstring=False,
-            return_string=f"\nReturns:\n" f"    The Invoke response.\n",
+            return_string=f"Returns:\n" f"    The Invoke response.\n",
             exclude_resource_attrs=kwargs["resource_attributes"],
         )
         # Format the method using the CREATE_METHOD_TEMPLATE
@@ -1508,22 +1508,14 @@ class ResourcesCodeGen:
             operation_input_args = self._generate_operation_input_args_updated(
                 operation_metadata, True, resource_attributes
             )
-            _get_shape_attr_documentation_string = self._get_shape_attr_documentation_string(
-                self.shapes_extractor.fetch_shape_members_and_doc_strings(
-                    operation_input_shape_name
-                )
-            )
+            exclude_resource_attrs = None
         elif method.method_type == MethodType.STATIC.value:
             decorator = "@staticmethod"
             method_args = self._generate_method_args(operation_input_shape_name)
             operation_input_args = self._generate_operation_input_args_updated(
                 operation_metadata, True
             )
-            _get_shape_attr_documentation_string = self._get_shape_attr_documentation_string(
-                self.shapes_extractor.fetch_shape_members_and_doc_strings(
-                    operation_input_shape_name
-                )
-            )
+            exclude_resource_attrs = None
         else:
             decorator = ""
             method_args = add_indent("self,\n", 4)
@@ -1533,12 +1525,7 @@ class ResourcesCodeGen:
             operation_input_args = self._generate_operation_input_args_updated(
                 operation_metadata, False, resource_attributes
             )
-            _get_shape_attr_documentation_string = self._get_shape_attr_documentation_string(
-                self.shapes_extractor.fetch_shape_members_and_doc_strings(
-                    operation_input_shape_name
-                ),
-                exclude_resource_attrs=resource_attributes,
-            )
+            exclude_resource_attrs = resource_attributes
         method_args += add_indent("session: Optional[Session] = None,\n", 4)
         method_args += add_indent("region: Optional[str] = None,", 4)
 
@@ -1561,30 +1548,52 @@ class ResourcesCodeGen:
         if method.return_type == "None":
             return_type = "None"
             deserialize_response = ""
+            return_string = None
         elif method.return_type in BASIC_RETURN_TYPES:
             return_type = f"Optional[{method.return_type}]"
             deserialize_response = DESERIALIZE_RESPONSE_TO_BASIC_TYPE_TEMPLATE
+            return_string = f"Returns:\n" f"    {method.return_type}\n"
         else:
             if method.return_type == "cls":
                 return_type = f'Optional["{method.resource_name}"]'
                 return_type_conversion = "cls"
+                return_string = f"Returns:\n" f"    {method.resource_name}\n"
             else:
                 return_type = f"Optional[{method.return_type}]"
                 return_type_conversion = method.return_type
+                return_string = f"Returns:\n" f"    {method.return_type}\n"
             operation_output_shape = operation_metadata["output"]["shape"]
             deserialize_response = DESERIALIZE_RESPONSE_TEMPLATE.format(
                 operation_output_shape=operation_output_shape,
                 return_type_conversion=return_type_conversion,
             )
 
-        # generate docstring
-        docstring = f"{method.docstring_title}\n\n"
-        if _get_shape_attr_documentation_string:
-            docstring += f"Parameters:\n"
-            docstring += _get_shape_attr_documentation_string
-            docstring += add_indent(f"session: Boto3 session.\nregion: Region name.\n\n")
+        initialize_client = INITIALIZE_CLIENT_TEMPLATE.format(service_name=method.service_name)
+        if len(self.shapes[operation_input_shape_name]["members"]) != 0:
+            # the method has input arguments
+            serialize_operation_input = SERIALIZE_INPUT_TEMPLATE.format(
+                operation_input_args=operation_input_args
+            )
+            call_operation_api = CALL_OPERATION_API_TEMPLATE.format(
+                operation=convert_to_snake_case(method.operation_name)
+            )
+        else:
+            # the method has no input arguments
+            serialize_operation_input = ""
+            call_operation_api = CALL_OPERATION_API_NO_ARG_TEMPLATE.format(
+                operation=convert_to_snake_case(method.operation_name)
+            )
 
-        docstring = add_indent(f'"""\n{docstring}\n"""\n', 4)
+        # generate docstring
+        docstring = self._generate_docstring(
+            title=method.docstring_title,
+            operation_name=method.operation_name,
+            resource_name=method.resource_name,
+            operation_input_shape_name=operation_input_shape_name,
+            include_session_region=True,
+            return_string=return_string,
+            exclude_resource_attrs=exclude_resource_attrs,
+        )
 
         formatted_method = GENERIC_METHOD_TEMPLATE.format(
             docstring=docstring,
@@ -1619,11 +1628,7 @@ class ResourcesCodeGen:
             operation_input_args = self._generate_operation_input_args_updated(
                 operation_metadata, True, resource_attributes, exclude_list
             )
-            _get_shape_attr_documentation_string = self._get_shape_attr_documentation_string(
-                self.shapes_extractor.fetch_shape_members_and_doc_strings(
-                    operation_input_shape_name
-                )
-            )
+            exclude_resource_attrs = None
         else:
             decorator = ""
             method_args = add_indent("self,\n", 4)
@@ -1633,12 +1638,7 @@ class ResourcesCodeGen:
             operation_input_args = self._generate_operation_input_args_updated(
                 operation_metadata, False, resource_attributes, exclude_list
             )
-            _get_shape_attr_documentation_string = self._get_shape_attr_documentation_string(
-                self.shapes_extractor.fetch_shape_members_and_doc_strings(
-                    operation_input_shape_name
-                ),
-                exclude_resource_attrs=resource_attributes,
-            )
+            exclude_resource_attrs = resource_attributes
         method_args += add_indent("session: Optional[Session] = None,\n", 4)
         method_args += add_indent("region: Optional[str] = None,", 4)
 
@@ -1646,6 +1646,7 @@ class ResourcesCodeGen:
             return_type = f'ResourceIterator["{method.resource_name}"]'
         else:
             return_type = f"ResourceIterator[{method.return_type}]"
+        return_string = f"Returns:\n" f"    Iterator for listed {method.return_type}.\n"
 
         get_list_operation_output_shape = operation_metadata["output"]["shape"]
         list_operation_output_members = self.shapes[get_list_operation_output_shape]["members"]
@@ -1682,13 +1683,15 @@ class ResourcesCodeGen:
         )
 
         # generate docstring
-        docstring = f"{method.docstring_title}\n\n"
-        if _get_shape_attr_documentation_string:
-            docstring += f"Parameters:\n"
-            docstring += _get_shape_attr_documentation_string
-            docstring += add_indent(f"session: Boto3 session.\nregion: Region name.\n\n")
-
-        docstring = add_indent(f'"""\n{docstring}\n"""\n', 4)
+        docstring = self._generate_docstring(
+            title=method.docstring_title,
+            operation_name=method.operation_name,
+            resource_name=method.resource_name,
+            operation_input_shape_name=operation_input_shape_name,
+            include_session_region=True,
+            return_string=return_string,
+            exclude_resource_attrs=exclude_resource_attrs,
+        )
 
         return GENERIC_METHOD_TEMPLATE.format(
             docstring=docstring,
