@@ -18,9 +18,9 @@ jobs:
       matrix:
         python-version: [ "3.12" ]
     env:
-      SUBNET_ONE: ${{secrets.SUBNET_ONE}}
-      SUBNET_TWO: ${{secrets.SUBNET_TWO}}
-      SECURITY_GROUP_ONE: ${{secrets.SECURITY_GROUP_ONE}
+      SUBNET_ONE: ${{ secrets.SUBNET_ONE }}
+      SUBNET_TWO: ${{ secrets.SUBNET_TWO }}
+      SECURITY_GROUP_ONE: ${{ secrets.SECURITY_GROUP_ONE }}
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python ${{ matrix.python-version }}
