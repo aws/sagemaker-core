@@ -39,3 +39,5 @@ jobs:
       - name: Run Integration Tests
         run: |
           pytest integ
+        env: |
+          SUBNET_ONE: ${{secrets.SUBNET_ONE}}
