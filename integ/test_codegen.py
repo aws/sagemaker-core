@@ -160,6 +160,7 @@ class TestSageMakerCore(unittest.TestCase):
         )
         endpoint.wait_for_status("InService")
 
+
     def test_intelligent_defaults(self):
         sagemaker_session = Session()
         region = sagemaker_session.boto_region_name
