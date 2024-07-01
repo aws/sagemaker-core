@@ -156,7 +156,6 @@ class TestSageMakerCore(unittest.TestCase):
         )
         endpoint.wait_for_status("InService")
 
-
     def test_intelligent_defaults(self):
         os.environ["SAGEMAKER_ADMIN_CONFIG_OVERRIDE"] = (
             self._setup_intelligent_default_configs_and_fetch_path()
