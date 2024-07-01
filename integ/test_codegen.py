@@ -1,5 +1,6 @@
 import datetime
 import json
+import logging
 import time
 import unittest
 import pandas as pd
@@ -31,6 +32,7 @@ from sagemaker_core.generated.resources import (
     Endpoint,
 )
 
+logger = logging.getLogger()
 
 sagemaker_session = Session()
 region = sagemaker_session.boto_region_name
@@ -65,6 +67,7 @@ SUBNET_ONE = os.environ['SUBNET_ONE']
 SUBNET_TWO = os.environ['SUBNET_TWO']
 SECURITY_GROUP_ONE = os.environ['SECURITY_GROUP_ONE']
 
+logger.warning("Completed Setup steps")
 
 class TestSageMakerCore(unittest.TestCase):
     def test_training_and_inference(self):
