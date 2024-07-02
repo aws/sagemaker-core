@@ -9,13 +9,10 @@ import os
 from sklearn.datasets import load_iris
 from sklearn.model_selection import train_test_split
 from sagemaker import get_execution_role, Session, image_uris
-
-from sagemaker_core.generated.utils import Unassigned
 from sagemaker_core.generated.shapes import (
     ContainerDefinition,
     ProductionVariant,
-    ProfilerConfig,
-    ProfilerConfigForUpdate,
+    ProfilerConfig
 )
 from sagemaker_core.generated.resources import (
     TrainingJob,
@@ -62,13 +59,9 @@ image = image_uris.retrieve(framework="xgboost", region=region, version="latest"
 
 
 # To be replaced with representing strings when executing from personal account
-# SUBNET_ONE = os.environ['SUBNET_ONE']
-# SUBNET_TWO = os.environ['SUBNET_TWO']
-# SECURITY_GROUP_ONE = os.environ['SECURITY_GROUP_ONE']
-
-SUBNET_ONE = "subnet-013a2717c55a67d88"
-SUBNET_TWO = "subnet-0a90a80d8645aa8e5"
-SECURITY_GROUP_ONE = "sg-0c65fed90cc756796"
+SUBNET_ONE = os.environ['SUBNET_ONE']
+SUBNET_TWO = os.environ['SUBNET_TWO']
+SECURITY_GROUP_ONE = os.environ['SECURITY_GROUP_ONE']
 
 
 class TestSageMakerCore(unittest.TestCase):
