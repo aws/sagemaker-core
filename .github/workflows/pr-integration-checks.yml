@@ -6,9 +6,9 @@ on:
       - "main*"
 
 permissions:
-    id-token: write # This is required for requesting the JWT
-    contents: read
-    packages: write
+  id-token: write # This is required for requesting the JWT
+  contents: read
+  packages: write
 
 jobs:
   integ-tests:
@@ -23,6 +23,8 @@ jobs:
       SECURITY_GROUP_ONE: ${{ secrets.SECURITY_GROUP_ONE }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
