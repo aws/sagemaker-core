@@ -109,7 +109,6 @@ class TestSageMakerCore(unittest.TestCase):
             ),
             stopping_condition=StoppingCondition(max_runtime_in_seconds=600),
         )
-
         training_job.wait()
 
         fetched_training_job = TrainingJob.get(training_job_name=job_name_v3)
