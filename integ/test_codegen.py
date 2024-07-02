@@ -34,45 +34,44 @@ from sagemaker_core.generated.resources import (
 
 logger = logging.getLogger()
 
+sagemaker_session = Session()
+region = sagemaker_session.boto_region_name
+role = get_execution_role()
+bucket = sagemaker_session.default_bucket()
 
+iris = load_iris()
+iris_df = pd.DataFrame(iris.data, columns=iris.feature_names)
+iris_df["target"] = iris.target
+
+# Prepare Data
+os.makedirs("./data", exist_ok=True)
+iris_df = iris_df[["target"] + [col for col in iris_df.columns if col != "target"]]
+train_data, test_data = train_test_split(iris_df, test_size=0.2, random_state=42)
+train_data.to_csv("./data/train.csv", index=False, header=False)
+
+# Upload Data
+prefix = "DEMO-scikit-iris"
+TRAIN_DATA = "train.csv"
+DATA_DIRECTORY = "data"
+
+train_input = sagemaker_session.upload_data(
+    DATA_DIRECTORY, bucket=bucket, key_prefix="{}/{}".format(prefix, DATA_DIRECTORY)
+)
+s3_input_path = "s3://{}/{}/data/{}".format(bucket, prefix, TRAIN_DATA)
+s3_output_path = "s3://{}/{}/output".format(bucket, prefix)
+image = image_uris.retrieve(framework="xgboost", region=region, version="latest")
+
+
+# To be replaced with representing strings when executing from personal account
+SUBNET_ONE = os.environ['SUBNET_ONE']
+SUBNET_TWO = os.environ['SUBNET_TWO']
+SECURITY_GROUP_ONE = os.environ['SECURITY_GROUP_ONE']
 
 
 class TestSageMakerCore(unittest.TestCase):
 
 
     def test_training_and_inference(self):
-        sagemaker_session = Session()
-        region = sagemaker_session.boto_region_name
-        role = get_execution_role()
-        bucket = sagemaker_session.default_bucket()
-
-        iris = load_iris()
-        iris_df = pd.DataFrame(iris.data, columns=iris.feature_names)
-        iris_df["target"] = iris.target
-
-        # Prepare Data
-        os.makedirs("./data", exist_ok=True)
-        iris_df = iris_df[["target"] + [col for col in iris_df.columns if col != "target"]]
-        train_data, test_data = train_test_split(iris_df, test_size=0.2, random_state=42)
-        train_data.to_csv("./data/train.csv", index=False, header=False)
-
-        # Upload Data
-        prefix = "DEMO-scikit-iris"
-        TRAIN_DATA = "train.csv"
-        DATA_DIRECTORY = "data"
-
-        train_input = sagemaker_session.upload_data(
-            DATA_DIRECTORY, bucket=bucket, key_prefix="{}/{}".format(prefix, DATA_DIRECTORY)
-        )
-        s3_input_path = "s3://{}/{}/data/{}".format(bucket, prefix, TRAIN_DATA)
-        s3_output_path = "s3://{}/{}/output".format(bucket, prefix)
-        image = image_uris.retrieve(framework="xgboost", region=region, version="latest")
-
-
-        # To be replaced with representing strings when executing from personal account
-        SUBNET_ONE = os.environ['SUBNET_ONE']
-        SUBNET_TWO = os.environ['SUBNET_TWO']
-        SECURITY_GROUP_ONE = os.environ['SECURITY_GROUP_ONE']
 
         job_name_v3 = "xgboost-iris-" + time.strftime("%Y-%m-%d-%H-%M-%S", time.gmtime())
         training_job = TrainingJob.create(
@@ -105,9 +104,8 @@ class TestSageMakerCore(unittest.TestCase):
             output_data_config=OutputDataConfig(s3_output_path=s3_output_path),
             resource_config=ResourceConfig(
                 instance_type="ml.m4.xlarge",
-                instance_count=2,
+                instance_count=1,
                 volume_size_in_gb=30,
-                keep_alive_period_in_seconds=300,
             ),
             stopping_condition=StoppingCondition(max_runtime_in_seconds=600),
         )
@@ -132,7 +130,7 @@ class TestSageMakerCore(unittest.TestCase):
 
         model_data_url = fetched_training_job.model_artifacts.s3_model_artifacts
 
-        key = f'xgboost-iris-{time.strftime("%H-%M-%S", time.gmtime())}'
+        key = f'xgboost-iris-test-{time.strftime("%H-%M-%S", time.gmtime())}'
         print("Key:", key)
 
         model = Model.create(
@@ -162,42 +160,10 @@ class TestSageMakerCore(unittest.TestCase):
 
 
     def test_intelligent_defaults(self):
-        sagemaker_session = Session()
-        region = sagemaker_session.boto_region_name
-        role = get_execution_role()
-        bucket = sagemaker_session.default_bucket()
-        
-        iris = load_iris()
-        iris_df = pd.DataFrame(iris.data, columns=iris.feature_names)
-        iris_df["target"] = iris.target
-        
-        # Prepare Data
-        os.makedirs("./data", exist_ok=True)
-        iris_df = iris_df[["target"] + [col for col in iris_df.columns if col != "target"]]
-        train_data, test_data = train_test_split(iris_df, test_size=0.2, random_state=42)
-        train_data.to_csv("./data/train.csv", index=False, header=False)
-        
-        # Upload Data
-        prefix = "DEMO-scikit-iris"
-        TRAIN_DATA = "train.csv"
-        DATA_DIRECTORY = "data"
-        
-        train_input = sagemaker_session.upload_data(
-            DATA_DIRECTORY, bucket=bucket, key_prefix="{}/{}".format(prefix, DATA_DIRECTORY)
-        )
-        s3_input_path = "s3://{}/{}/data/{}".format(bucket, prefix, TRAIN_DATA)
-        s3_output_path = "s3://{}/{}/output".format(bucket, prefix)
-        image = image_uris.retrieve(framework="xgboost", region=region, version="latest")
-        
-        
-        # To be replaced with representing strings when executing from personal account
-        SUBNET_ONE = os.environ["SUBNET_ONE"]
-        SUBNET_TWO = os.environ["SUBNET_TWO"]
-        SECURITY_GROUP_ONE = os.environ["SECURITY_GROUP_ONE"]
         os.environ["SAGEMAKER_ADMIN_CONFIG_OVERRIDE"] = (
             self._setup_intelligent_default_configs_and_fetch_path()
         )
-        job_name_v3 = "xgboost-cluster-" + time.strftime("%Y-%m-%d-%H-%M-%S", time.gmtime())
+        job_name_v3 = "xgboost-test-intelligent-default-" + time.strftime("%Y-%m-%d-%H-%M-%S", time.gmtime())
 
         training_job = TrainingJob.create(
                 training_job_name=job_name_v3,
@@ -229,9 +195,8 @@ class TestSageMakerCore(unittest.TestCase):
                 output_data_config=OutputDataConfig(s3_output_path=s3_output_path),
                 resource_config=ResourceConfig(
                     instance_type="ml.m4.xlarge",
-                    instance_count=2,
+                    instance_count=1,
                     volume_size_in_gb=30,
-                    keep_alive_period_in_seconds=300,
                 ),
                 stopping_condition=StoppingCondition(max_runtime_in_seconds=600),
             )
