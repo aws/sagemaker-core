@@ -365,15 +365,17 @@ class ResourcesTest(unittest.TestCase):
         return f"list_{resource_name}s"
 
     def _convert_dict_keys_into_pascal_case(self, input_args: dict):
-        coverted = {}
+        converted = {}
         for key, val in input_args.items():
             if isinstance(val, dict):
-                coverted[self._convert(key)] = self._convert_dict_keys_into_pascal_case(val)
+                converted[self._convert_to_pascal(key)] = self._convert_dict_keys_into_pascal_case(
+                    val
+                )
             else:
-                coverted[self._convert(key)] = val
-        return coverted
+                converted[self._convert_to_pascal(key)] = val
+        return converted
 
-    def _convert(self, string: str):
+    def _convert_to_pascal(self, string: str):
         if string == "auto_ml_job_name":
             return "AutoMLJobName"
         return snake_to_pascal(string)
@@ -389,14 +391,9 @@ class ResourcesTest(unittest.TestCase):
                 and key != "self"
                 and "utils.Unassigned" not in attribute_type
             ):
-                if "str" in attribute_type:
-                    params[key] = self.PARAM_CONSTANTS_BY_TYPE["str"]
-                elif "int" in attribute_type or "float" in attribute_type:
-                    params[key] = self.PARAM_CONSTANTS_BY_TYPE["int"]
-                elif "bool" in attribute_type:
-                    params[key] = self.PARAM_CONSTANTS_BY_TYPE["bool"]
-                elif "List" in attribute_type:
-                    params[key] = self.PARAM_CONSTANTS_BY_TYPE["List"]
+                default_value = self._generate_default_value(attribute_type)
+                if default_value is not None:
+                    params[key] = default_value
                 else:
                     shape = attribute_type.split(".")[-1]
                     params[key] = self._generate_test_shape(
@@ -410,26 +407,17 @@ class ResourcesTest(unittest.TestCase):
             return None
         for key, val in inspect.signature(shape_cls).parameters.items():
             attribute_type = str(val.annotation)
+            print(key, attribute_type, self._generate_default_value(attribute_type))
             if "Optional" not in attribute_type and "utils.Unassigned" not in str(val):
-                if "List[str]" in attribute_type:
-                    params[key] = ["Random-String"]
-                elif "List" in attribute_type:
-                    params[key] = self.PARAM_CONSTANTS_BY_TYPE["List"]
-                elif "Dict" in attribute_type:
-                    params[key] = self.PARAM_CONSTANTS_BY_TYPE["Dict"]
-                elif "bool" in attribute_type:
-                    params[key] = self.PARAM_CONSTANTS_BY_TYPE["bool"]
-                elif "str" in attribute_type:
-                    params[key] = self.PARAM_CONSTANTS_BY_TYPE["str"]
-                elif "int" in attribute_type or "float" in attribute_type:
-                    params[key] = self.PARAM_CONSTANTS_BY_TYPE["int"]
-                elif "datetime" in attribute_type:
-                    params[key] = self.PARAM_CONSTANTS_BY_TYPE["datetime"]
+                default_value = self._generate_default_value(attribute_type)
+                if default_value is not None:
+                    params[key] = default_value
                 else:
                     shape = str(val).split(".")[-1]
                     params[key] = self._generate_test_shape(
                         self.SHAPE_CLASSES_BY_SHAPE_NAME.get(shape)
                     )
+        print(params)
         return shape_cls(**params)
 
     def _generate_test_shape_dict(self, shape_cls):
@@ -439,23 +427,32 @@ class ResourcesTest(unittest.TestCase):
         for key, val in inspect.signature(shape_cls).parameters.items():
             attribute_type = str(val.annotation)
             if "Optional" not in attribute_type and "utils.Unassigned" not in str(val):
-                if "List[str]" in attribute_type:
-                    params[key] = ["Random-String"]
-                elif "List" in attribute_type:
-                    params[key] = self.PARAM_CONSTANTS_BY_TYPE["List"]
-                elif "Dict" in attribute_type:
-                    params[key] = self.PARAM_CONSTANTS_BY_TYPE["Dict"]
-                elif "bool" in attribute_type:
-                    params[key] = self.PARAM_CONSTANTS_BY_TYPE["bool"]
-                elif "str" in attribute_type:
-                    params[key] = self.PARAM_CONSTANTS_BY_TYPE["str"]
-                elif "int" in attribute_type or "float" in attribute_type:
-                    params[key] = self.PARAM_CONSTANTS_BY_TYPE["int"]
-                elif "datetime" in attribute_type:
-                    params[key] = self.PARAM_CONSTANTS_BY_TYPE["datetime"]
+                default_value = self._generate_default_value(attribute_type)
+                if default_value is not None:
+                    params[key] = default_value
                 else:
                     shape = str(val).split(".")[-1]
                     params[key] = self._generate_test_shape_dict(
                         self.SHAPE_CLASSES_BY_SHAPE_NAME.get(shape)
                     )
         return params
+
+    def _generate_default_value(self, attribute_type: str):
+        if "List[str]" in attribute_type:
+            return ["Random-String"]
+        elif "List" in attribute_type:
+            return self.PARAM_CONSTANTS_BY_TYPE["List"]
+        elif "Dict" in attribute_type:
+            return self.PARAM_CONSTANTS_BY_TYPE["Dict"]
+        elif "bool" in attribute_type:
+            return self.PARAM_CONSTANTS_BY_TYPE["bool"]
+        elif "str" in attribute_type:
+            return self.PARAM_CONSTANTS_BY_TYPE["str"]
+        elif "int" in attribute_type or "float" in attribute_type:
+            return self.PARAM_CONSTANTS_BY_TYPE["int"]
+        elif "datetime" in attribute_type:
+            return self.PARAM_CONSTANTS_BY_TYPE["datetime"]
+        else:
+            # If attribute_type does not belong to the above types,
+            # generate a shape or dict recursively
+            return None
