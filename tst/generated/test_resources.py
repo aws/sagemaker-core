@@ -1,13 +1,19 @@
+import datetime
 import importlib, inspect
 import unittest
-from unittest import mock
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
-from sagemaker_core.generated.resources import Base, Action
+from sagemaker_core.generated.resources import Base
 
 from sagemaker_core.code_injection.codec import pascal_to_snake, snake_to_pascal
 
 from sagemaker_core.generated.utils import SageMakerClient
+from sagemaker_core.tools.constants import BASIC_RETURN_TYPES
+from sagemaker_core.tools.data_extractor import (
+    load_additional_operations_data,
+    load_combined_operations_data,
+    load_combined_shapes_data,
+)
 
 
 class ResourcesTest(unittest.TestCase):
@@ -19,7 +25,11 @@ class ResourcesTest(unittest.TestCase):
         "List": [],
         "Dict": {},
         "bool": False,
+        "datetime": datetime.datetime(2024, 7, 1),
     }
+    ADDITIONAL_METHODS = load_additional_operations_data()
+    OPERATIONS = load_combined_operations_data()
+    SHAPES = load_combined_shapes_data()
 
     def setUp(self) -> None:
         for name, cls in inspect.getmembers(
@@ -40,14 +50,22 @@ class ResourcesTest(unittest.TestCase):
     @patch("sagemaker_core.generated.resources.transform")
     @patch("boto3.session.Session")
     def test_resources(self, session, mock_transform):
-        report = {"Create": 0, "Update": 0, "Get": 0, "Get_all": 0, "Refresh": 0, "Delete": 0}
+        report = {
+            "Create": 0,
+            "Update": 0,
+            "Get": 0,
+            "Get_all": 0,
+            "Refresh": 0,
+            "Delete": 0,
+            "Others": 0,
+        }
         resources = set()
         client = SageMakerClient(session=session).client
         for name, cls in inspect.getmembers(
             importlib.import_module("sagemaker_core.generated.resources"), inspect.isclass
         ):
             if cls.__module__ == "sagemaker_core.generated.resources":
-                print_string = f"Running the following tests for resource {name}: "
+                print_string = f"Running the following tests for resource {name}:"
                 resources.add(name)
                 if hasattr(cls, "get") and callable(cls.get):
                     function_name = f"describe_{pascal_to_snake(name)}"
@@ -217,6 +235,120 @@ class ResourcesTest(unittest.TestCase):
                                 )
                         report["Update"] = report["Update"] + 1
                         print_string = print_string + " Update"
+
+                if (
+                    hasattr(cls, "get")
+                    and callable(cls.get)
+                    and name in self.ADDITIONAL_METHODS
+                    and self.ADDITIONAL_METHODS[name]
+                ):
+                    # Now we are only testing resources with get methods
+                    for operation_name, operation_info in self.ADDITIONAL_METHODS[name].items():
+                        if operation_name == "ListLabelingJobsForWorkteam":
+                            # The test for this operation is failing because labeling_job_name is
+                            # a required arg in LabelingJob, while it is not a required arg in
+                            # LabelingJobForWorkteamSummary.
+                            continue
+                        get_function_name = f"describe_{pascal_to_snake(name)}"
+                        additional_function_name = pascal_to_snake(operation_name)
+                        if operation_info["return_type"] == "None":
+                            return_value = {}
+                        elif operation_name.startswith("List"):
+                            operation_metadata = self.OPERATIONS[operation_name]
+                            list_operation_output_shape = operation_metadata["output"]["shape"]
+                            list_operation_output_members = self.SHAPES[
+                                list_operation_output_shape
+                            ]["members"]
+                            filtered_list_operation_output_members = next(
+                                {key: value}
+                                for key, value in list_operation_output_members.items()
+                                if key != "NextToken"
+                            )
+                            summaries_key = next(iter(filtered_list_operation_output_members))
+                            summaries_shape_name = filtered_list_operation_output_members[
+                                summaries_key
+                            ]["shape"]
+                            summary_name = self.SHAPES[summaries_shape_name]["member"]["shape"]
+                            if operation_info["return_type"] in BASIC_RETURN_TYPES:
+                                return_value = {
+                                    summaries_key: [
+                                        {
+                                            summary_name: self.PARAM_CONSTANTS_BY_TYPE[
+                                                operation_info["return_type"]
+                                            ]
+                                        }
+                                    ]
+                                }
+                            else:
+                                summary_cls = self.SHAPE_CLASSES_BY_SHAPE_NAME[summary_name]
+                                summary = self._convert_dict_keys_into_pascal_case(
+                                    self._generate_test_shape_dict(summary_cls)
+                                )
+                                return_value = {summaries_key: [summary]}
+                                mock_transform.return_value = summary
+                                print(return_value)
+                        elif operation_info["return_type"] in BASIC_RETURN_TYPES:
+                            return_value = {
+                                "return_value": self.PARAM_CONSTANTS_BY_TYPE[
+                                    operation_info["return_type"]
+                                ]
+                            }
+                        else:
+                            return_cls = self.SHAPE_CLASSES_BY_SHAPE_NAME[
+                                operation_info["return_type"]
+                            ]
+                            return_value = self._generate_test_shape_dict(return_cls)
+                            mock_transform.return_value = return_value
+                        with patch.object(
+                            client,
+                            additional_function_name,
+                            return_value=return_value,
+                        ) as mock_additional_method:
+                            if operation_info["method_type"] == "object":
+                                class_instance = cls(
+                                    **self._get_required_parameters_for_function(cls.get)
+                                )
+                                method = getattr(class_instance, operation_info["method_name"])
+                                input_args = self._get_required_parameters_for_function(method)
+                                pascal_input_args = self._convert_dict_keys_into_pascal_case(
+                                    input_args
+                                )
+                                if additional_function_name.startswith("list"):
+                                    method(**input_args).__next__()
+                                    mock_additional_method.assert_called_once()
+                                    self.assertLessEqual(
+                                        Base._serialize_args(pascal_input_args).items(),
+                                        mock_additional_method.call_args[1].items(),
+                                        f"{operation_info['method_name']} call verification failed for {name}",
+                                    )
+                                else:
+                                    method(**input_args)
+                                    mock_additional_method.assert_called_once()
+                                    self.assertLessEqual(
+                                        Base._serialize_args(pascal_input_args).items(),
+                                        mock_additional_method.call_args[1].items(),
+                                        f"{operation_info['method_name']} call verification failed for {name}",
+                                    )
+                            else:
+                                method = getattr(cls, operation_info["method_name"])
+                                input_args = self._get_required_parameters_for_function(method)
+                                pascal_input_args = self._convert_dict_keys_into_pascal_case(
+                                    input_args
+                                )
+                                if additional_function_name.startswith("list"):
+                                    # The only additional list method that is a class method is ListCodeRepositories,
+                                    # which has already been tested in the get_all part above
+                                    continue
+                                else:
+                                    method(**input_args)
+                                    mock_additional_method.assert_called_once()
+                                    self.assertLessEqual(
+                                        Base._serialize_args(pascal_input_args).items(),
+                                        mock_additional_method.call_args[1].items(),
+                                        f"{operation_info['method_name']} call verification failed for {name}",
+                                    )
+                            report["Others"] = report["Others"] + 1
+                            print_string = print_string + " " + operation_info["method_name"]
                 print(print_string)
 
         total_tests = sum(report.values())
@@ -233,7 +365,13 @@ class ResourcesTest(unittest.TestCase):
         return f"list_{resource_name}s"
 
     def _convert_dict_keys_into_pascal_case(self, input_args: dict):
-        return {self._convert(key): val for key, val in input_args.items()}
+        coverted = {}
+        for key, val in input_args.items():
+            if isinstance(val, dict):
+                coverted[self._convert(key)] = self._convert_dict_keys_into_pascal_case(val)
+            else:
+                coverted[self._convert(key)] = val
+        return coverted
 
     def _convert(self, string: str):
         if string == "auto_ml_job_name":
@@ -285,10 +423,39 @@ class ResourcesTest(unittest.TestCase):
                     params[key] = self.PARAM_CONSTANTS_BY_TYPE["str"]
                 elif "int" in attribute_type or "float" in attribute_type:
                     params[key] = self.PARAM_CONSTANTS_BY_TYPE["int"]
+                elif "datetime" in attribute_type:
+                    params[key] = self.PARAM_CONSTANTS_BY_TYPE["datetime"]
                 else:
                     shape = str(val).split(".")[-1]
                     params[key] = self._generate_test_shape(
                         self.SHAPE_CLASSES_BY_SHAPE_NAME.get(shape)
                     )
-
         return shape_cls(**params)
+
+    def _generate_test_shape_dict(self, shape_cls):
+        params = {}
+        if shape_cls == None:
+            return None
+        for key, val in inspect.signature(shape_cls).parameters.items():
+            attribute_type = str(val.annotation)
+            if "Optional" not in attribute_type and "utils.Unassigned" not in str(val):
+                if "List[str]" in attribute_type:
+                    params[key] = ["Random-String"]
+                elif "List" in attribute_type:
+                    params[key] = self.PARAM_CONSTANTS_BY_TYPE["List"]
+                elif "Dict" in attribute_type:
+                    params[key] = self.PARAM_CONSTANTS_BY_TYPE["Dict"]
+                elif "bool" in attribute_type:
+                    params[key] = self.PARAM_CONSTANTS_BY_TYPE["bool"]
+                elif "str" in attribute_type:
+                    params[key] = self.PARAM_CONSTANTS_BY_TYPE["str"]
+                elif "int" in attribute_type or "float" in attribute_type:
+                    params[key] = self.PARAM_CONSTANTS_BY_TYPE["int"]
+                elif "datetime" in attribute_type:
+                    params[key] = self.PARAM_CONSTANTS_BY_TYPE["datetime"]
+                else:
+                    shape = str(val).split(".")[-1]
+                    params[key] = self._generate_test_shape_dict(
+                        self.SHAPE_CLASSES_BY_SHAPE_NAME.get(shape)
+                    )
+        return params
