@@ -1,0 +1,46 @@
+name: Integration Checks
+
+on:
+  pull_request_target:
+    branches:
+      - "main*"
+
+permissions:
+  id-token: write # This is required for requesting the JWT
+  contents: read
+  packages: write
+
+jobs:
+  integ-tests:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [ "3.12" ]
+    env:
+      SUBNET_ONE: ${{ secrets.SUBNET_ONE }}
+      SUBNET_TWO: ${{ secrets.SUBNET_TWO }}
+      SECURITY_GROUP_ONE: ${{ secrets.SECURITY_GROUP_ONE }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          export PYTHONPATH="$PYTHONPATH:$PWD"
+          python -m pip install --upgrade pip
+          pip install scikit-learn sagemaker setuptools
+          pip install -e ".[codegen]"
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.INTEG_TEST_ROLE_ARN }}
+          aws-region: us-west-2
+          role-duration-seconds: 10800
+      - name: Run Integration Tests
+        run: |
+          pytest integ
