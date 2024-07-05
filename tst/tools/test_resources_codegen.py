@@ -45,14 +45,13 @@ def create(
         tags: An array of key-value pairs. You can use tags to categorize your Amazon Web Services resources in different ways, for example, by purpose, owner, or environment. For more information, see Tagging Amazon Web Services Resources.
         session: Boto3 session.
         region: Region name.
-        
+    
     Returns:
         The CompilationJob resource.
     
     Raises:
         botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
             The error message and error code can be parsed from the exception as follows:
-        
             ```
             try:
                 # AWS service call here
@@ -137,14 +136,13 @@ def load(
         tags: Any tags associated with the hub content.
         session: Boto3 session.
         region: Region name.
-        
+    
     Returns:
         The HubContent resource.
     
     Raises:
         botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
             The error message and error code can be parsed from the exception as follows:
-        
             ```
             try:
                 # AWS service call here
@@ -212,7 +210,6 @@ def update(
     Raises:
         botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
             The error message and error code can be parsed from the exception as follows:
-        
             ```
             try:
                 # AWS service call here
@@ -279,7 +276,6 @@ def update(
     Raises:
         botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
             The error message and error code can be parsed from the exception as follows:
-        
             ```
             try:
                 # AWS service call here
@@ -346,14 +342,13 @@ def get(
         space_name: The name of the space.
         session: Boto3 session.
         region: Region name.
-        
+    
     Returns:
         The App resource.
     
     Raises:
         botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
             The error message and error code can be parsed from the exception as follows:
-        
             ```
             try:
                 # AWS service call here
@@ -398,7 +393,6 @@ def refresh(
     Raises:
         botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
             The error message and error code can be parsed from the exception as follows:
-        
             ```
             try:
                 # AWS service call here
@@ -447,11 +441,9 @@ def delete(
     """
     Delete a CompilationJob resource
     
-    
     Raises:
         botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
             The error message and error code can be parsed from the exception as follows:
-        
             ```
             try:
                 # AWS service call here
@@ -485,11 +477,9 @@ def stop(self) -> None:
     """
     Stop a CompilationJob resource
     
-    
     Raises:
         botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
             The error message and error code can be parsed from the exception as follows:
-        
             ```
             try:
                 # AWS service call here
@@ -577,7 +567,6 @@ def wait_for_status(
         TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
         FailedStatusError:   If the resource reaches a failed state.
         WaiterError: Raised when an error occurs while waiting.
-    
     """
     start_time = time.time()
 
@@ -625,7 +614,6 @@ def wait_for_status(
         TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
         FailedStatusError:   If the resource reaches a failed state.
         WaiterError: Raised when an error occurs while waiting.
-    
     """
     start_time = time.time()
 
@@ -676,14 +664,12 @@ def invoke(self,
         enable_explanations: An optional JMESPath expression used to override the EnableExplanations parameter of the ClarifyExplainerConfig API. See the EnableExplanations section in the developer guide for more information. 
         inference_component_name: If the endpoint hosts one or more inference components, this parameter specifies the name of inference component to invoke.
     
-    
     Returns:
         The Invoke response.
     
     Raises:
         botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
             The error message and error code can be parsed from the exception as follows:
-        
             ```
             try:
                 # AWS service call here
@@ -755,14 +741,12 @@ def invoke_async(self,
         request_ttl_seconds: Maximum age in seconds a request can be in the queue before it is marked as expired. The default is 6 hours, or 21,600 seconds.
         invocation_timeout_seconds: Maximum amount of time in seconds a request can be processed before it is marked as expired. The default is 15 minutes, or 900 seconds.
     
-    
     Returns:
         The Invoke response.
     
     Raises:
         botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
             The error message and error code can be parsed from the exception as follows:
-        
             ```
             try:
                 # AWS service call here
@@ -831,14 +815,12 @@ def invoke_with_response_stream(self,
         inference_id: An identifier that you assign to your request.
         inference_component_name: If the endpoint hosts one or more inference components, this parameter specifies the name of inference component to invoke for a streaming response.
     
-    
     Returns:
         The Invoke response.
     
     Raises:
         botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
             The error message and error code can be parsed from the exception as follows:
-        
             ```
             try:
                 # AWS service call here
@@ -912,14 +894,13 @@ def get_all(
         space_name_equals: A parameter to search by space name. If UserProfileNameEquals is set, then this value cannot be set.
         session: Boto3 session.
         region: Region name.
-        
+    
     Returns:
         Iterator for listed App resources.
     
     Raises:
         botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
             The error message and error code can be parsed from the exception as follows:
-        
             ```
             try:
                 # AWS service call here
@@ -1011,14 +992,13 @@ def get_all(
         creation_time_after: A filter that returns only data quality monitoring job definitions created after the specified time.
         session: Boto3 session.
         region: Region name.
-        
+    
     Returns:
         Iterator for listed DataQualityJobDefinition resources.
     
     Raises:
         botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
             The error message and error code can be parsed from the exception as follows:
-        
             ```
             try:
                 # AWS service call here
@@ -1072,8 +1052,21 @@ def get_node(
         node_id: The ID of the instance.
         session: Boto3 session.
         region: Region name.
-        
     
+    Returns:
+        ClusterNodeDetails
+    
+    Raises:
+        botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            The error message and error code can be parsed from the exception as follows:
+            ```
+            try:
+                # AWS service call here
+            except botocore.exceptions.ClientError as e:
+                error_message = e.response['Error']['Message']
+                error_code = e.response['Error']['Code']
+            ```
+        ResourceNotFound: Resource being access is not found.
     """
 
 
@@ -1110,7 +1103,7 @@ def get_node(
 
 def update_weights_and_capacities(
     self,
-    endpoint_name: str,
+    desired_weights_and_capacities: List[DesiredWeightAndCapacity],
     session: Optional[Session] = None,
     region: Optional[str] = None,
 ) -> None:
@@ -1118,17 +1111,27 @@ def update_weights_and_capacities(
     Updates variant weight of one or more variants associated with an existing endpoint, or capacity of one variant associated with an existing endpoint.
     
     Parameters:
-        endpoint_name: The name of an existing SageMaker endpoint.
+        desired_weights_and_capacities: An object that provides new capacity and weight values for a variant.
         session: Boto3 session.
         region: Region name.
-        
     
+    Raises:
+        botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            The error message and error code can be parsed from the exception as follows:
+            ```
+            try:
+                # AWS service call here
+            except botocore.exceptions.ClientError as e:
+                error_message = e.response['Error']['Message']
+                error_code = e.response['Error']['Code']
+            ```
+        ResourceLimitExceeded: You have exceeded an SageMaker resource limit. For example, you might have too many training jobs created.
     """
 
 
     operation_input_args = {
-        'EndpointName': endpoint_name,
-        'DesiredWeightsAndCapacities': self.desired_weights_and_capacities,
+        'EndpointName': self.endpoint_name,
+        'DesiredWeightsAndCapacities': desired_weights_and_capacities,
     }
     logger.debug(f"Input request: {operation_input_args}")
 
@@ -1152,10 +1155,7 @@ def update_weights_and_capacities(
         method.get_docstring_title(
             self.resource_generator.operations["UpdateEndpointWeightsAndCapacities"]
         )
-        assert (
-            self.resource_generator.generate_method(method, ["desired_weights_and_capacities"])
-            == expected_output
-        )
+        assert self.resource_generator.generate_method(method, ["endpoint_name"]) == expected_output
 
     def test_get_all_training_jobs(self):
         expected_output = '''
@@ -1178,8 +1178,21 @@ def get_all_training_jobs(
         sort_order: The sort order for results. The default is Ascending.
         session: Boto3 session.
         region: Region name.
-        
     
+    Returns:
+        Iterator for listed HyperParameterTrainingJobSummary.
+    
+    Raises:
+        botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            The error message and error code can be parsed from the exception as follows:
+            ```
+            try:
+                # AWS service call here
+            except botocore.exceptions.ClientError as e:
+                error_message = e.response['Error']['Message']
+                error_code = e.response['Error']['Code']
+            ```
+        ResourceNotFound: Resource being access is not found.
     """
 
 
@@ -1283,14 +1296,13 @@ def get_all_training_jobs(
             landing_uri: The landing page that the user is directed to when accessing the presigned URL. Using this value, users can access Studio or Studio Classic, even if it is not the default experience for the domain. The supported values are:    studio::relative/path: Directs users to the relative path in Studio.    app:JupyterServer:relative/path: Directs users to the relative path in the Studio Classic application.    app:JupyterLab:relative/path: Directs users to the relative path in the JupyterLab application.    app:RStudioServerPro:relative/path: Directs users to the relative path in the RStudio application.    app:CodeEditor:relative/path: Directs users to the relative path in the Code Editor, based on Code-OSS, Visual Studio Code - Open Source application.    app:Canvas:relative/path: Directs users to the relative path in the Canvas application.  
             session: Boto3 session.
             region: Region name.
-            
+        
         Returns:
             The PresignedDomainUrl resource.
         
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
                 The error message and error code can be parsed from the exception as follows:
-            
                 ```
                 try:
                     # AWS service call here
@@ -1327,6 +1339,123 @@ def get_all_training_jobs(
         assert (
             self.resource_generator.generate_resource_class(
                 "PresignedDomainUrl", ["create"], [], [], [], [], []
+            )
+            == expected_output
+        )
+
+    def test_generate_sagemaker_servicecatalog_portfolio(self):
+        expected_output = '''class SagemakerServicecatalogPortfolio(Base):
+    """
+    Class representing resource SagemakerServicecatalogPortfolio
+    
+    """
+    
+    @staticmethod
+    def disable(
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> None:
+        """
+        Disables using Service Catalog in SageMaker.
+        
+        Parameters:
+            session: Boto3 session.
+            region: Region name.
+        
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+        """
+    
+    
+    
+        client = Base.get_sagemaker_client(session=session, region_name=region, service_name='sagemaker')
+    
+        logger.debug(f"Calling disable_sagemaker_servicecatalog_portfolio API")
+        response = client.disable_sagemaker_servicecatalog_portfolio()
+        logger.debug(f"Response: {response}")
+    
+    
+    @staticmethod
+    def enable(
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> None:
+        """
+        Enables using Service Catalog in SageMaker.
+        
+        Parameters:
+            session: Boto3 session.
+            region: Region name.
+        
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+        """
+    
+    
+    
+        client = Base.get_sagemaker_client(session=session, region_name=region, service_name='sagemaker')
+    
+        logger.debug(f"Calling enable_sagemaker_servicecatalog_portfolio API")
+        response = client.enable_sagemaker_servicecatalog_portfolio()
+        logger.debug(f"Response: {response}")
+    
+    
+    @staticmethod
+    def get_status(
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional[str]:
+        """
+        Gets the status of Service Catalog in SageMaker.
+        
+        Parameters:
+            session: Boto3 session.
+            region: Region name.
+        
+        Returns:
+            str
+        
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+        """
+    
+    
+    
+        client = Base.get_sagemaker_client(session=session, region_name=region, service_name='sagemaker')
+    
+        logger.debug(f"Calling get_sagemaker_servicecatalog_portfolio_status API")
+        response = client.get_sagemaker_servicecatalog_portfolio_status()
+        logger.debug(f"Response: {response}")
+    
+        return list(response.values())[0]
+'''
+        assert (
+            self.resource_generator.generate_resource_class(
+                "SagemakerServicecatalogPortfolio", [], [], [], [], [], []
             )
             == expected_output
         )

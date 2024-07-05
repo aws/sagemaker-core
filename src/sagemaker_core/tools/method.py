@@ -6,7 +6,7 @@ from sagemaker_core.util.util import remove_html_tags
 class MethodType(Enum):
     CLASS = "class"
     OBJECT = "object"
-    # TODO: add static if we add operations as static methods in future
+    STATIC = "static"
 
 
 class Method:
