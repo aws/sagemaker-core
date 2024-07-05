@@ -34,6 +34,12 @@ jobs:
               console.log("${{ github.event.pull_request.user.login }} is not a collaborator. Requiring Manual Approval to run PR Checks.")
               return "manual-approval"
             }
+  wait-for-approval:
+    runs-on: ubuntu-latest
+    needs: [ collab-check ]
+    environment: ${{ needs.collab-check.outputs.approval-env }}
+    steps:
+      - run: echo "Workflow Approved! Starting PR Checks."
   integ-tests:
     runs-on: ubuntu-latest
     strategy:
