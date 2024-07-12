@@ -1,23 +1,35 @@
 import boto3
 import botocore
 
+from boto3.session import Session
 from botocore.config import Config
 from typing import Generator
+from sagemaker_core.generated.utils import SingletonMeta, logger
 
 
-cw_client = boto3.client('logs', config=Config(retries={"max_attempts": 10, "mode": "standard"}))
+class CloudWatchLogsClient(metaclass=SingletonMeta):
+    """
+    A singleton class for creating a SageMaker client.
+    """
+    def __init__(self):
+        session = Session()
+        self.client = session.client(
+            "logs", 
+            session.region_name, 
+            config=Config(retries={"max_attempts": 10, "mode": "standard"})
+        )
 
 
 class LogStreamHandler:
     log_groupt_name: str = None
     log_stream_name: str = None
     next_token: str = None
-
+    cw_client: CloudWatchLogsClient = None
         
     def __init__(self, log_group_name: str, log_stream_name: str):
         self.log_group_name = log_group_name
         self.log_stream_name = log_stream_name
-
+        self.cw_client = CloudWatchLogsClient()
 
     def get_latest_log_events(self) -> Generator[tuple[str, dict], None, None]:
         """
@@ -46,7 +58,7 @@ class LogStreamHandler:
                     "nextToken": self.next_token
                 }
             
-            response = cw_client.get_log_events(
+            response = self.cw_client.get_log_events(
                 logGroupName=self.log_group_name,
                 logStreamName=self.log_stream_name,
                 startFromHead=True,
@@ -66,13 +78,13 @@ class MultiLogStreamHandler:
     log_stream_name_prefix: str = None
     expected_stream_count: int = None
     streams: list[LogStreamHandler] = []
-    
+    cw_client: CloudWatchLogsClient = None
     
     def __init__(self, log_group_name: str, log_stream_name_prefix: str, expected_stream_count: int):
         self.log_group_name = log_group_name
         self.log_stream_name_prefix = log_stream_name_prefix
         self.expected_stream_count = expected_stream_count
-        
+        self.cw_client = CloudWatchLogsClient()
 
     def get_latest_log_events(self) -> Generator[tuple[str, dict], None, None]:
         """
@@ -111,7 +123,7 @@ class MultiLogStreamHandler:
             return True
         
         try:
-            response = cw_client.describe_log_streams(
+            response = self.cw_client.describe_log_streams(
                 logGroupName=self.log_group_name,
                 logStreamNamePrefix=self.log_stream_name_prefix + "/",
                 orderBy="LogStreamName",
@@ -120,7 +132,7 @@ class MultiLogStreamHandler:
             
             next_token = response.get('nextToken')
             while next_token:
-                response = cw_client.describe_log_streams(
+                response = self.cw_client.describe_log_streams(
                     logGroupName=self.log_group_name, 
                     logStreamNamePrefix=self.log_stream_name_prefix + "/",
                     orderBy="LogStreamName",
