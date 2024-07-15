@@ -55,4 +55,3 @@ jobs:
         with:
           metric-name: failure
           metric-value: ${{ steps.run-integration-tests.failure }}
-
