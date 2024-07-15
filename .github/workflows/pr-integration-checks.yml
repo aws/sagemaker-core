@@ -50,8 +50,10 @@ jobs:
         with:
           metric-name: success
           metric-value: ${{ steps.run-integration-tests.success }}
+        if: always()
       - name: Integration Tests Failure Metric
         uses: ros-tooling/action-cloudwatch-metrics@0.0.4
         with:
           metric-name: failure
           metric-value: ${{ steps.run-integration-tests.failure }}
+        if: always()
