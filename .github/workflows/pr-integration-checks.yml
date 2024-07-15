@@ -47,7 +47,7 @@ jobs:
           pytest integ
       - name: Put Metric Data
         run: |
-          if [ "${{ steps.run-integration-tests.success }}" ]; then
+          if [ "${{ steps.run-integration-tests.outcome }}" == "success" ]; then
             aws cloudwatch put-metric-data --metric-name IntegrationTestSuccess --namespace SecurityMonitoringMetrics --value 1 --unit Count --dimensions ProjectName=sagemaker-core
           else
             aws cloudwatch put-metric-data --metric-name IntegrationTestFailure --namespace SecurityMonitoringMetrics --value 1 --unit Count --dimensions ProjectName=sagemaker-core
