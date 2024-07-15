@@ -33,7 +33,7 @@ jobs:
         run: |
           export PYTHONPATH="$PYTHONPATH:$PWD"
           python -m pip install --upgrade pip
-          pip install scikit-learn sagemaker setuptools
+          pip install scikit-learn sagemaker setuptools awscli
           pip install -e ".[codegen]"
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -45,15 +45,10 @@ jobs:
         id: run-integration-tests
         run: |
           pytest integ
-      - name: Integration Tests Success Metric
-        uses: aws-actions/action-cloudwatch-metrics@0.0.4
-        with:
-          metric-name: success
-          metric-value: ${{ steps.run-integration-tests.success }}
-        if: always()
-      - name: Integration Tests Failure Metric
-        uses: aws-actions/action-cloudwatch-metrics@0.0.4
-        with:
-          metric-name: failure
-          metric-value: ${{ steps.run-integration-tests.failure }}
-        if: always()
+      - name: Put Metric Data
+        run: |
+          if [ "${{ steps.run-integration-tests.success }}" ]; then
+            aws cloudwatch put-metric-data --metric-name IntegrationTestSuccess --namespace SecurityMonitoringMetrics --value 1 --unit Count --dimensions ProjectName=sagemaker-core
+          else
+            aws cloudwatch put-metric-data --metric-name IntegrationTestFailure --namespace SecurityMonitoringMetrics --value 1 --unit Count --dimensions ProjectName=sagemaker-core
+          fi
