@@ -27,6 +27,27 @@ jobs:
     - name: Run Unit Tests
       run: |
         pytest tst
+
+  resources-coverage:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [ "3.12" ]
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          export PYTHONPATH="$PYTHONPATH:$PWD"
+          python -m pip install --upgrade pip
+          pip install -e ".[codegen]"
+      - name: Run Unit Tests
+        run: |
+          coverage run --source=src -m pytest tst/generated/test_resources.py && coverage report
           
   pylint:
     runs-on: ubuntu-latest
