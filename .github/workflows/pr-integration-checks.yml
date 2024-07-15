@@ -42,5 +42,14 @@ jobs:
           aws-region: us-west-2
           role-duration-seconds: 10800
       - name: Run Integration Tests
+        id: run-integration-tests
         run: |
           pytest integ
+      - uses: ros-tooling/action-cloudwatch-metrics@0.0.4
+        with:
+          metric-name: success
+          metric-value: ${{ steps.repo_activity.run-integration-tests.success }}
+      - uses: ros-tooling/action-cloudwatch-metrics@0.0.4
+        with:
+          metric-name: failure
+          metric-value: ${{ steps.repo_activity.run-integration-tests.failure }}
