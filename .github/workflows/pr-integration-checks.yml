@@ -45,6 +45,7 @@ jobs:
         id: run-integration-tests
         run: |
           pytest integ
+          echo "::set-output name=result::success"
       - name: Put Metric Data
         run: |
           if [ "${{ steps.run-integration-tests.outcome }}" == "success" ]; then
