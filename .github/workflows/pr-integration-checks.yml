@@ -45,11 +45,13 @@ jobs:
         id: run-integration-tests
         run: |
           pytest integ
-      - uses: ros-tooling/action-cloudwatch-metrics@0.0.4
+      - name: Integration Test Success Metrics
+        uses: ros-tooling/action-cloudwatch-metrics@0.0.4
         with:
           metric-name: success
           metric-value: ${{ steps.run-integration-tests.success }}
-      - uses: ros-tooling/action-cloudwatch-metrics@0.0.4
+      - name: Integration Test Failure Metrics
+        uses: ros-tooling/action-cloudwatch-metrics@0.0.4
         with:
           metric-name: failure
           metric-value: ${{ steps.run-integration-tests.failure }}
