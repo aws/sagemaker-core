@@ -46,13 +46,13 @@ jobs:
         run: |
           pytest integ
       - name: Integration Tests Success Metric
-        uses: ros-tooling/action-cloudwatch-metrics@0.0.4
+        uses: aws-actions/action-cloudwatch-metrics@0.0.4
         with:
           metric-name: success
           metric-value: ${{ steps.run-integration-tests.success }}
         if: always()
       - name: Integration Tests Failure Metric
-        uses: ros-tooling/action-cloudwatch-metrics@0.0.4
+        uses: aws-actions/action-cloudwatch-metrics@0.0.4
         with:
           metric-name: failure
           metric-value: ${{ steps.run-integration-tests.failure }}
