@@ -52,4 +52,4 @@ jobs:
           fi
           echo "Integration test Succeded. Putting Success Metrics onto Cloudwatch"
           aws cloudwatch put-metric-data --metric-name IntegrationTestSuccess --namespace SecurityMonitoringMetrics --value 1 --unit Count --dimensions MetricCategory=integration
-          
+       
