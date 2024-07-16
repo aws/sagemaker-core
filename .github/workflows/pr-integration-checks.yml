@@ -50,8 +50,10 @@ jobs:
         run: |
           echo "Integration test Failed. Putting Failure Metrics onto Cloudwatch"
           aws cloudwatch put-metric-data --metric-name IntegrationTestFailure --namespace SecurityMonitoringMetrics --value 1 --unit Count --dimensions MetricCategory=Integration
+
       - name: Put Failure Metrics to CloudWatch
         if: ${{ success() }}
         run: |
           echo "Integration test Succeeded. Putting Success Metrics onto Cloudwatch"
           aws cloudwatch put-metric-data --metric-name IntegrationTestSuccess --namespace SecurityMonitoringMetrics --value 1 --unit Count --dimensions MetricCategory=Integration
+
