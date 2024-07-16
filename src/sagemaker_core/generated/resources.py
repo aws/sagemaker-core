@@ -1256,6 +1256,10 @@ class App(Base):
                 self.refresh()
                 current_status = self.status
 
+                if current_status.lower() == "deleted":
+                    print("Resource was deleted.")
+                    return
+
                 if timeout is not None and time.time() - start_time >= timeout:
                     raise TimeoutExceededError(resouce_type="App", status=current_status)
             except botocore.exceptions.ClientError as e:
@@ -6198,7 +6202,10 @@ class Domain(Base):
                 self.refresh()
                 current_status = self.status
 
-                if "delete_failed" in current_status.lower():
+                if (
+                    "delete_failed" in current_status.lower()
+                    or "deletefailed" in current_status.lower()
+                ):
                     raise DeleteFailedStatusError(
                         resource_type="Domain", reason=self.failure_reason
                     )
@@ -11733,7 +11740,10 @@ class Image(Base):
                 self.refresh()
                 current_status = self.image_status
 
-                if "delete_failed" in current_status.lower():
+                if (
+                    "delete_failed" in current_status.lower()
+                    or "deletefailed" in current_status.lower()
+                ):
                     raise DeleteFailedStatusError(resource_type="Image", reason=self.failure_reason)
 
                 if timeout is not None and time.time() - start_time >= timeout:
@@ -12289,7 +12299,10 @@ class ImageVersion(Base):
                 self.refresh()
                 current_status = self.image_version_status
 
-                if "delete_failed" in current_status.lower():
+                if (
+                    "delete_failed" in current_status.lower()
+                    or "deletefailed" in current_status.lower()
+                ):
                     raise DeleteFailedStatusError(
                         resource_type="ImageVersion", reason=self.failure_reason
                     )
@@ -13597,6 +13610,10 @@ class InferenceRecommendationsJob(Base):
             try:
                 self.refresh()
                 current_status = self.status
+
+                if current_status.lower() == "deleted":
+                    print("Resource was deleted.")
+                    return
 
                 if timeout is not None and time.time() - start_time >= timeout:
                     raise TimeoutExceededError(
@@ -22035,7 +22052,10 @@ class Space(Base):
                 self.refresh()
                 current_status = self.status
 
-                if "delete_failed" in current_status.lower():
+                if (
+                    "delete_failed" in current_status.lower()
+                    or "deletefailed" in current_status.lower()
+                ):
                     raise DeleteFailedStatusError(resource_type="Space", reason=self.failure_reason)
 
                 if timeout is not None and time.time() - start_time >= timeout:
@@ -24946,7 +24966,10 @@ class UserProfile(Base):
                 self.refresh()
                 current_status = self.status
 
-                if "delete_failed" in current_status.lower():
+                if (
+                    "delete_failed" in current_status.lower()
+                    or "deletefailed" in current_status.lower()
+                ):
                     raise DeleteFailedStatusError(
                         resource_type="UserProfile", reason=self.failure_reason
                     )

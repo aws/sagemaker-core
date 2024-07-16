@@ -46,6 +46,7 @@ from sagemaker_core.tools.templates import (
     CALL_OPERATION_API_TEMPLATE,
     CREATE_METHOD_TEMPLATE,
     DELETE_FAILED_STATUS_CHECK,
+    DELETED_STATUS_CHECK,
     DESERIALIZE_INPUT_AND_RESPONSE_TO_CLS_TEMPLATE,
     DESERIALIZE_RESPONSE_TEMPLATE,
     DESERIALIZE_RESPONSE_TO_BASIC_TYPE_TEMPLATE,
@@ -1827,10 +1828,16 @@ class ResourcesCodeGen:
             )
             formatted_failed_block = add_indent(formatted_failed_block, 12)
 
+        if any(state.lower() == "deleted" for state in resource_states):
+            deleted_status_check = add_indent(DELETED_STATUS_CHECK, 12)
+        else:
+            deleted_status_check = ""
+
         formatted_method = WAIT_FOR_DELETE_METHOD_TEMPLATE.format(
             resource_states=resource_states,
             status_key_path=status_key_path,
             delete_failed_error_block=formatted_failed_block,
+            deleted_status_check=deleted_status_check,
             resource_name=resource_name,
         )
         return formatted_method

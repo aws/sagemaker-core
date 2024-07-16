@@ -433,6 +433,7 @@ def wait_for_delete(
             self.refresh()
             current_status = self{status_key_path}
 {delete_failed_error_block}
+{deleted_status_check}
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="{resource_name}", status=current_status)
@@ -449,8 +450,14 @@ def wait_for_delete(
 '''
 
 DELETE_FAILED_STATUS_CHECK = """
-if "delete_failed" in current_status.lower():
+if "delete_failed" in current_status.lower() or "deletefailed" in current_status.lower():
     raise DeleteFailedStatusError(resource_type="{resource_name}", reason={reason})
+"""
+
+DELETED_STATUS_CHECK = """
+if current_status.lower() == "deleted":
+    print("Resource was deleted.")
+    return
 """
 
 DELETE_METHOD_TEMPLATE = """

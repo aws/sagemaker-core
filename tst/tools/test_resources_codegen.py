@@ -1486,8 +1486,9 @@ def wait_for_delete(
             self.refresh()
             current_status = self.status
             
-            if "delete_failed" in current_status.lower():
+            if "delete_failed" in current_status.lower() or "deletefailed" in current_status.lower():
                 raise DeleteFailedStatusError(resource_type="Domain", reason=self.failure_reason)
+
 
 
             if timeout is not None and time.time() - start_time >= timeout:
@@ -1539,6 +1540,7 @@ def wait_for_delete(
         try:
             self.refresh()
             current_status = self.algorithm_status
+
 
 
             if timeout is not None and time.time() - start_time >= timeout:
