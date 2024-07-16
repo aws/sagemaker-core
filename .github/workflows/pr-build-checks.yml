@@ -71,6 +71,12 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.INTEG_TEST_ROLE_ARN }}
+          aws-region: us-west-2
+          role-duration-seconds: 10800
       - name: Install dependencies
         run: |
           export PYTHONPATH="$PYTHONPATH:$PWD"
@@ -79,7 +85,13 @@ jobs:
           pip install -e ".[codegen]"
       - name: Run Unit Tests
         run: |
-          coverage run --source=src -m pytest tst/generated/test_resources.py && coverage report
+          pytest --cov-report json --cov=src tst/generated/test_resources.py
+      - name: Execute Python Coverage compute script and capture output
+        id: execute_coverage_parse_script
+        run: |
+          resource_coverage=$(python workflow_helper/compute_resource_coverage.py)
+          aws cloudwatch put-metric-data --metric-name UnitTestCoverage --namespace SecurityMonitoringMetrics --value $(resource_coverage) --unit Count --dimensions MetricCategory=Unit-${{ matrix.python-version }}
+
 
   pylint:
     runs-on: ubuntu-latest
