@@ -49,8 +49,9 @@ jobs:
       - name: Put Integration Test Successful Metric Data
         if: steps.run-integration-tests.outcome == 'success'
         run: |
-          aws cloudwatch put-metric-data --metric-name IntegrationTestSuccess --namespace SecurityMonitoringMetrics --value 1 --unit Count --dimensions ProjectName=sagemaker-core
+          aws cloudwatch put-metric-data --metric-name IntegrationTestSuccess --namespace SecurityMonitoringMetrics --value 1 --unit Count --dimensions MetricCategory=integration
       - name: Put Integration Test Failure Metric Data
-        if: steps.run-integration-tests.outcome == 'success'
+        if: steps.run-integration-tests.outcome != 'success'
         run: |
-          aws cloudwatch put-metric-data --metric-name IntegrationTestFailure --namespace SecurityMonitoringMetrics --value 1 --unit Count --dimensions ProjectName=sagemaker-core
+          aws cloudwatch put-metric-data --metric-name IntegrationTestFailure --namespace SecurityMonitoringMetrics --value 1 --unit Count --dimensions MetricCategory=integration
+
