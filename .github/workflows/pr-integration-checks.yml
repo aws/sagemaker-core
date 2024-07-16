@@ -45,11 +45,13 @@ jobs:
         id: run-integration-tests
         run: |
           pytest integ
-          if [ $? -ne 0 ]; then
-            echo "Integration test Failed. Putting Failure Metrics onto Cloudwatch"
-            aws cloudwatch put-metric-data --metric-name IntegrationTestFailure --namespace SecurityMonitoringMetrics --value 1 --unit Count --dimensions MetricCategory=integration
-          exit 1
-          fi
+      - name: Put Success Metrics to CloudWatch
+        if: ${{ failure() }}
+        run: |
+          echo "Integration test Failed. Putting Failure Metrics onto Cloudwatch"
+          aws cloudwatch put-metric-data --metric-name IntegrationTestFailure --namespace SecurityMonitoringMetrics --value 1 --unit Count --dimensions MetricCategory=integration
+      - name: Put Failure Metrics to CloudWatch
+        if: ${{ success() }}
+        run: |
           echo "Integration test Succeeded. Putting Success Metrics onto Cloudwatch"
           aws cloudwatch put-metric-data --metric-name IntegrationTestSuccess --namespace SecurityMonitoringMetrics --value 1 --unit Count --dimensions MetricCategory=integration
-       
