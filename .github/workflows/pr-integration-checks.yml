@@ -47,5 +47,6 @@ jobs:
           pytest integ
           echo "::set-output name=result::success"
       - name: Put Metric Data
+        if: always()
         run: |
           aws cloudwatch put-metric-data --metric-name IntegrationTestSuccess --namespace SecurityMonitoringMetrics --value 1 --unit Count --dimensions ProjectName=sagemaker-core
