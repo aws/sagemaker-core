@@ -84,7 +84,6 @@ jobs:
       - name: Execute Python Coverage compute script and capture output
         id: execute_coverage_parse_script
         run: |
-          echo "Resource Covered Percentage: $(python workflow_helper/compute_resource_coverage.py)"
           aws cloudwatch put-metric-data --metric-name UnitTestCoverage --namespace SecurityMonitoringMetrics --value $(python workflow_helper/compute_resource_coverage.py) --unit Count --dimensions MetricCategory=Unit-${{ matrix.python-version }}
 
   pylint:
