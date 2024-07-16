@@ -87,7 +87,6 @@ jobs:
           echo "Resource Covered Percentage: $(python workflow_helper/compute_resource_coverage.py)"
           aws cloudwatch put-metric-data --metric-name UnitTestCoverage --namespace SecurityMonitoringMetrics --value $(python workflow_helper/compute_resource_coverage.py) --unit Count --dimensions MetricCategory=Unit-${{ matrix.python-version }}
 
-
   pylint:
     runs-on: ubuntu-latest
     steps:
