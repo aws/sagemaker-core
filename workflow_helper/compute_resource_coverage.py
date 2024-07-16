@@ -2,7 +2,7 @@ import json
 
 
 def main():
-    json_file = '../coverage.json'
+    json_file = 'coverage.json'
 
     with open(json_file, 'r') as f:
         data = json.load(f)
