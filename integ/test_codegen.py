@@ -150,6 +150,7 @@ class TestSageMakerCore(unittest.TestCase):
             endpoint_config_name=endpoint_config,  # Pass `EndpointConfig` object created above
         )
         endpoint.wait_for_status("InService")
+        delete_all_sagemaker_resources()
 
     def test_intelligent_defaults(self):
         os.environ["SAGEMAKER_ADMIN_CONFIG_OVERRIDE"] = (
@@ -202,6 +203,8 @@ class TestSageMakerCore(unittest.TestCase):
         ]
         assert training_job.vpc_config.security_group_ids == [SECURITY_GROUP_ONE]
 
+        delete_all_sagemaker_resources()
+
     def _setup_intelligent_default_configs_and_fetch_path(self) -> str:
         DEFAULTS_CONTENT = {
             "SchemaVesion": "1.0",
@@ -227,3 +230,12 @@ class TestSageMakerCore(unittest.TestCase):
         with open(os.path.join(DATA_DIRECTORY, "defaults.json"), "w") as f:
             json.dump(DEFAULTS_CONTENT, f, indent=4)
         return path_to_defaults
+
+
+def delete_all_sagemaker_resources():
+    all_objects = list(locals().values()) + list(globals().values())
+    deletable_objects = [obj for obj in all_objects if
+                         hasattr(obj, 'delete') and obj.__class__.__module__ == 'sagemaker_core.generated.resources']
+
+    for obj in deletable_objects:
+        obj.delete()
