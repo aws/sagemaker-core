@@ -38,6 +38,12 @@ jobs:
       - name: Put Failure Metrics
         if: ${{ failure() }}
         run: |
+      - name: Run Unit Tests
+        run: |
+          pytest tst
+      - name: Put Failure Metrics
+        if: ${{ failure() }}
+        run: |
           echo "Unit test run Failed. Putting Failure Metrics onto Cloudwatch"
           aws cloudwatch put-metric-data --metric-name UnitTestFailure --namespace SecurityMonitoringMetrics --value 1 --unit Count --dimensions MetricCategory=Unit-${{ matrix.python-version }}
       - name: Put Success Metrics
