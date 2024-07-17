@@ -20,6 +20,18 @@ class {class_name}:
 {object_methods}
 """
 
+RESOURCE_METHOD_EXCEPTION_DOCSTRING = """
+Raises:
+    botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+        The error message and error code can be parsed from the exception as follows:
+        ```
+        try:
+            # AWS service call here
+        except botocore.exceptions.ClientError as e:
+            error_message = e.response['Error']['Message']
+            error_code = e.response['Error']['Code']
+        ```"""
+
 CREATE_METHOD_TEMPLATE = """
 @classmethod
 @populate_inputs_decorator
@@ -309,16 +321,13 @@ def wait(
     self,
     poll: int = 5,
     timeout: Optional[int] = None
-):
+) -> None:
     """
     Wait for a {resource_name} resource.
     
     Parameters:
         poll: The number of seconds to wait between each poll.
         timeout: The maximum number of seconds to wait before timing out.
-    
-    Returns:
-        The {resource_name} resource.
     
     Raises:
         TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
@@ -350,17 +359,14 @@ def wait_for_status(
     status: Literal{resource_states},
     poll: int = 5,
     timeout: Optional[int] = None
-):
+) -> None:
     """
-    Wait for a {resource_name} resource.
+    Wait for a {resource_name} resource to reach certain status.
     
     Parameters:
         status: The status to wait for.
         poll: The number of seconds to wait between each poll.
         timeout: The maximum number of seconds to wait before timing out.
-    
-    Returns:
-        The {resource_name} resource.
     
     Raises:
         TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
@@ -382,6 +388,67 @@ def wait_for_status(
         print("-", end="")
         time.sleep(poll)
 '''
+
+WAIT_FOR_DELETE_METHOD_TEMPLATE = '''
+def wait_for_delete(
+    self,
+    poll: int = 5,
+    timeout: Optional[int] = None,
+) -> None:
+    """
+    Wait for a {resource_name} resource to be deleted.
+    
+    Parameters:
+        poll: The number of seconds to wait between each poll.
+        timeout: The maximum number of seconds to wait before timing out.
+    
+    Raises:
+        botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            The error message and error code can be parsed from the exception as follows:
+            ```
+            try:
+                # AWS service call here
+            except botocore.exceptions.ClientError as e:
+                error_message = e.response['Error']['Message']
+                error_code = e.response['Error']['Code']
+            ```
+        TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
+        DeleteFailedStatusError:   If the resource reaches a failed state.
+        WaiterError: Raised when an error occurs while waiting.
+    """
+    start_time = time.time()
+
+    while True:
+        try:
+            self.refresh()
+            current_status = self{status_key_path}
+{delete_failed_error_block}
+{deleted_status_check}
+
+            if timeout is not None and time.time() - start_time >= timeout:
+                raise TimeoutExceededError(resouce_type="{resource_name}", status=current_status)
+        except botocore.exceptions.ClientError as e:
+            error_code = e.response["Error"]["Code"]
+            
+            if "ResourceNotFound" in error_code or "ValidationException" in error_code:
+                print("Resource was not found. It may have been deleted.")
+                return
+            raise e
+        
+        print("-", end="")
+        time.sleep(poll)
+'''
+
+DELETE_FAILED_STATUS_CHECK = """
+if "delete_failed" in current_status.lower() or "deletefailed" in current_status.lower():
+    raise DeleteFailedStatusError(resource_type="{resource_name}", reason={reason})
+"""
+
+DELETED_STATUS_CHECK = """
+if current_status.lower() == "deleted":
+    print("Resource was deleted.")
+    return
+"""
 
 DELETE_METHOD_TEMPLATE = """
 def delete(
