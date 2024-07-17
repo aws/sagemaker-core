@@ -261,16 +261,6 @@ def invoke_with_response_stream(self,
 """
 
 
-GET_CONFIG_VALUE_TEMPLATE = """
-def get_config_value(attribute, resource_defaults, global_defaults):
-   if resource_defaults and attribute in resource_defaults:
-       return resource_defaults[attribute]
-   if global_defaults and attribute in global_defaults:
-       return global_defaults[attribute]
-   logger.warn("Configurable value not entered in parameters or present in the Config")
-   return None
-"""
-
 POPULATE_DEFAULTS_DECORATOR_TEMPLATE = """
 def populate_inputs_decorator(create_func):
     @functools.wraps(create_func)
