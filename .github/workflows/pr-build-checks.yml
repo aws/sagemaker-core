@@ -44,12 +44,12 @@ jobs:
         if: ${{ failure() }}
         run: |
           echo "Unit test run Failed. Putting Failure Metrics onto Cloudwatch"
-          aws cloudwatch put-metric-data --metric-name UnitTestFailure --namespace SecurityMonitoringMetrics --value 1 --unit Count --dimensions MetricCategory=Unit-${{ matrix.python-version }}
+          aws cloudwatch put-metric-data --metric-name UnitTestFailure --namespace SageMakerPySdkCoreMonitoringMetrics --value 1 --unit Count --dimensions MetricCategory=Unit-${{ matrix.python-version }}
       - name: Put Success Metrics
         if: ${{ success() }}
         run: |
           echo "Unit test run Succeeded. Putting Success Metrics onto Cloudwatch"
-          aws cloudwatch put-metric-data --metric-name UnitTestSuccess --namespace SecurityMonitoringMetrics --value 1 --unit Count --dimensions MetricCategory=Unit-${{ matrix.python-version }}
+          aws cloudwatch put-metric-data --metric-name UnitTestSuccess --namespace SageMakerPySdkCoreMonitoringMetrics --value 1 --unit Count --dimensions MetricCategory=Unit-${{ matrix.python-version }}
 
   resources-coverage:
     runs-on: ubuntu-latest
@@ -84,7 +84,7 @@ jobs:
       - name: Execute Python Coverage compute script and capture output
         id: execute_coverage_parse_script
         run: |
-          aws cloudwatch put-metric-data --metric-name UnitTestCoverage --namespace SecurityMonitoringMetrics --value $(python workflow_helper/compute_resource_coverage.py) --unit Count --dimensions MetricCategory=Unit-${{ matrix.python-version }}
+          aws cloudwatch put-metric-data --metric-name UnitTestCoverage --namespace SageMakerPySdkCoreMonitoringMetrics --value $(python workflow_helper/compute_resource_coverage.py) --unit Count --dimensions MetricCategory=Unit-${{ matrix.python-version }}
 
   pylint:
     runs-on: ubuntu-latest
