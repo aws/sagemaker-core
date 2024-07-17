@@ -1559,3 +1559,59 @@ def wait_for_delete(
         assert (
             self.resource_generator.generate_wait_for_delete_method("Algorithm") == expected_output
         )
+
+    def test_generate_wait_for_delete_method_with_deleted_state(self):
+        expected_output = '''
+def wait_for_delete(
+    self,
+    poll: int = 5,
+    timeout: Optional[int] = None,
+) -> None:
+    """
+    Wait for a App resource to be deleted.
+    
+    Parameters:
+        poll: The number of seconds to wait between each poll.
+        timeout: The maximum number of seconds to wait before timing out.
+    
+    Raises:
+        botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
+            The error message and error code can be parsed from the exception as follows:
+            ```
+            try:
+                # AWS service call here
+            except botocore.exceptions.ClientError as e:
+                error_message = e.response['Error']['Message']
+                error_code = e.response['Error']['Code']
+            ```
+        TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
+        DeleteFailedStatusError:   If the resource reaches a failed state.
+        WaiterError: Raised when an error occurs while waiting.
+    """
+    start_time = time.time()
+
+    while True:
+        try:
+            self.refresh()
+            current_status = self.status
+
+            
+            if current_status.lower() == "deleted":
+                print("Resource was deleted.")
+                return
+
+
+            if timeout is not None and time.time() - start_time >= timeout:
+                raise TimeoutExceededError(resouce_type="App", status=current_status)
+        except botocore.exceptions.ClientError as e:
+            error_code = e.response["Error"]["Code"]
+            
+            if "ResourceNotFound" in error_code or "ValidationException" in error_code:
+                print("Resource was not found. It may have been deleted.")
+                return
+            raise e
+        
+        print("-", end="")
+        time.sleep(poll)
+'''
+        assert self.resource_generator.generate_wait_for_delete_method("App") == expected_output
