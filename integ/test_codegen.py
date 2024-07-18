@@ -10,7 +10,7 @@ from sklearn.datasets import load_iris
 from sklearn.model_selection import train_test_split
 from sagemaker import get_execution_role, Session, image_uris
 
-from integ.sagemaker_cleaner import handle_cleanup
+from sagemaker_cleaner import handle_cleanup
 from sagemaker_core.generated.shapes import ContainerDefinition, ProductionVariant, ProfilerConfig
 from sagemaker_core.generated.resources import (
     TrainingJob,
