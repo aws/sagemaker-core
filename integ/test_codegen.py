@@ -232,8 +232,12 @@ class TestSageMakerCore(unittest.TestCase):
 
 def delete_all_sagemaker_resources():
     all_objects = list(locals().values()) + list(globals().values())
-    deletable_objects = [obj for obj in all_objects if
-                         hasattr(obj, 'delete') and obj.__class__.__module__ == 'sagemaker_core.generated.resources']
+    deletable_objects = [
+        obj
+        for obj in all_objects
+        if hasattr(obj, "delete")
+        and obj.__class__.__module__ == "sagemaker_core.generated.resources"
+    ]
 
     for obj in deletable_objects:
         obj.delete()

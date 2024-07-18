@@ -877,7 +877,7 @@ def get_all(
     
     Parameters:
         next_token: If the previous response was truncated, you will receive this token. Use it in your next request to receive the next set of results.
-        max_results: The total number of items to return in the response. If the total number of items available is more than the value specified, a NextToken is provided in the response. To resume pagination, provide the NextToken value in the as part of a subsequent call. The default value is 10.
+        max_results: This parameter defines the maximum number of results that can be return in a single response. The MaxResults parameter is an upper bound, not a target. If there are more results available than the value specified, a NextToken is provided in the response. The NextToken indicates that the user should get the next set of results by providing this token as a part of a subsequent call. The default value for MaxResults is 10.
         sort_order: The sort order for the results. The default is Ascending.
         sort_by: The parameter by which to sort the results. The default is CreationTime.
         domain_id_equals: A parameter to search for the domain ID.
@@ -1037,10 +1037,10 @@ def get_node(
     region: Optional[str] = None,
 ) -> Optional[ClusterNodeDetails]:
     """
-    Retrieves information of an instance (also called a node interchangeably) of a SageMaker HyperPod cluster.
+    Retrieves information of a node (also called a instance interchangeably) of a SageMaker HyperPod cluster.
     
     Parameters:
-        node_id: The ID of the instance.
+        node_id: The ID of the SageMaker HyperPod cluster node.
         session: Boto3 session.
         region: Region name.
     
