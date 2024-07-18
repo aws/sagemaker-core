@@ -17,7 +17,6 @@ from functools import lru_cache
 
 import os
 import json
-import re
 from sagemaker_core.code_injection.codec import pascal_to_snake
 from sagemaker_core.generated.config_schema import SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA
 from sagemaker_core.generated.exceptions import IntelligentDefaultsError
@@ -46,6 +45,8 @@ from sagemaker_core.tools.templates import (
     CALL_OPERATION_API_NO_ARG_TEMPLATE,
     CALL_OPERATION_API_TEMPLATE,
     CREATE_METHOD_TEMPLATE,
+    DELETE_FAILED_STATUS_CHECK,
+    DELETED_STATUS_CHECK,
     DESERIALIZE_INPUT_AND_RESPONSE_TO_CLS_TEMPLATE,
     DESERIALIZE_RESPONSE_TEMPLATE,
     DESERIALIZE_RESPONSE_TO_BASIC_TYPE_TEMPLATE,
@@ -59,6 +60,7 @@ from sagemaker_core.tools.templates import (
     SERIALIZE_LIST_INPUT_TEMPLATE,
     STOP_METHOD_TEMPLATE,
     DELETE_METHOD_TEMPLATE,
+    WAIT_FOR_DELETE_METHOD_TEMPLATE,
     WAIT_METHOD_TEMPLATE,
     WAIT_FOR_STATUS_METHOD_TEMPLATE,
     UPDATE_METHOD_TEMPLATE,
@@ -175,9 +177,9 @@ class ResourcesCodeGen:
         # List of import statements
         imports = [
             BASIC_IMPORTS_STRING,
+            "import botocore",
             "import datetime",
             "import time",
-            "import os",
             "import functools",
             "from pprint import pprint",
             "from pydantic import validate_call",
@@ -423,6 +425,11 @@ class ResourcesCodeGen:
                 resource_name, "wait_for_status", object_methods
             ):
                 resource_class += add_indent(wait_for_status_method, 4)
+
+            if wait_for_delete_method := self._evaluate_method(
+                resource_name, "wait_for_delete", object_methods
+            ):
+                resource_class += add_indent(wait_for_delete_method, 4)
 
             if invoke_method := self._evaluate_method(
                 resource_name,
@@ -1791,6 +1798,46 @@ class ResourcesCodeGen:
             resource_states=resource_states,
             status_key_path=status_key_path,
             failed_error_block=formatted_failed_block,
+            resource_name=resource_name,
+        )
+        return formatted_method
+
+    def generate_wait_for_delete_method(self, resource_name: str) -> str:
+        """Auto-Generate WAIT_FOR_DELETE Method for a resource with deleting status.
+
+        Args:
+            resource_name (str): The resource name.
+
+        Returns:
+            str: The formatted wait_for_delete Method template.
+        """
+        resource_status_chain, resource_states = (
+            self.resources_extractor.get_status_chain_and_states(resource_name)
+        )
+
+        # Get resource status key path
+        status_key_path = ""
+        for member in resource_status_chain:
+            status_key_path += f'.{convert_to_snake_case(member["name"])}'
+
+        formatted_failed_block = ""
+        if any("delete_failed" in state.lower() for state in resource_states):
+            failure_reason = self._get_failure_reason_ref(resource_name)
+            formatted_failed_block = DELETE_FAILED_STATUS_CHECK.format(
+                resource_name=resource_name, reason=failure_reason
+            )
+            formatted_failed_block = add_indent(formatted_failed_block, 12)
+
+        if any(state.lower() == "deleted" for state in resource_states):
+            deleted_status_check = add_indent(DELETED_STATUS_CHECK, 12)
+        else:
+            deleted_status_check = ""
+
+        formatted_method = WAIT_FOR_DELETE_METHOD_TEMPLATE.format(
+            resource_states=resource_states,
+            status_key_path=status_key_path,
+            delete_failed_error_block=formatted_failed_block,
+            deleted_status_check=deleted_status_check,
             resource_name=resource_name,
         )
         return formatted_method

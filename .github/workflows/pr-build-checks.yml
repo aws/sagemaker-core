@@ -1,9 +1,14 @@
 name: PR Checks
 
 on:
-  pull_request:
+  pull_request_target:
     branches:
       - "main*"
+
+permissions:
+  id-token: write # This is required for requesting the JWT
+  contents: read
+  packages: write
 
 jobs:
   unit-tests:
@@ -11,37 +16,92 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+        python-version: [ "3.8", "3.9", "3.10", "3.11", "3.12" ]
 
     steps:
-    - uses: actions/checkout@v3
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ matrix.python-version }}
-    - name: Install dependencies
-      run: |
-        export PYTHONPATH="$PYTHONPATH:$PWD"
-        python -m pip install --upgrade pip
-        pip install -e ".[codegen]"
-    - name: Run Unit Tests
-      run: |
-        pytest tst
-          
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          export PYTHONPATH="$PYTHONPATH:$PWD"
+          python -m pip install --upgrade pip
+          pip install -e ".[codegen]"
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.INTEG_TEST_ROLE_ARN }}
+          aws-region: us-west-2
+          role-duration-seconds: 10800
+      - name: Run Unit Tests
+        run: |
+          pytest tst
+      - name: Put Failure Metrics
+        if: ${{ failure() }}
+        run: |
+          echo "Unit test run Failed. Putting Failure Metrics onto Cloudwatch"
+          aws cloudwatch put-metric-data --metric-name UnitTestFailure --namespace SageMakerPySdkCoreMonitoringMetrics --value 1 --unit Count --dimensions MetricCategory=Unit-${{ matrix.python-version }}
+      - name: Put Success Metrics
+        if: ${{ success() }}
+        run: |
+          echo "Unit test run Succeeded. Putting Success Metrics onto Cloudwatch"
+          aws cloudwatch put-metric-data --metric-name UnitTestSuccess --namespace SageMakerPySdkCoreMonitoringMetrics --value 1 --unit Count --dimensions MetricCategory=Unit-${{ matrix.python-version }}
+
+  resources-coverage:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [ "3.12" ]
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.INTEG_TEST_ROLE_ARN }}
+          aws-region: us-west-2
+          role-duration-seconds: 10800
+      - name: Install dependencies
+        run: |
+          export PYTHONPATH="$PYTHONPATH:$PWD"
+          python -m pip install --upgrade pip
+          pip install coverage
+          pip install pytest-cov
+          pip install -e ".[codegen]"
+      - name: Run Unit Tests
+        run: |
+          pytest --cov-report json --cov=src tst/generated/test_resources.py
+      - name: Execute Python Coverage compute script and capture output
+        id: execute_coverage_parse_script
+        run: |
+          aws cloudwatch put-metric-data --metric-name UnitTestCoverage --namespace SageMakerPySdkCoreMonitoringMetrics --value $(python workflow_helper/compute_resource_coverage.py) --unit Count --dimensions MetricCategory=Unit-${{ matrix.python-version }}
+
   pylint:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.10'
-    - name: Install dependencies
-      run: |
-        export PYTHONPATH="$PYTHONPATH:$PWD"
-        python -m pip install --upgrade pip
-        pip install -e ".[codegen]"
-    - name: Run Pylint
-      run: |
-        python_files=$(find . -name '*.py')
-        pylint $python_files --persistent=y --fail-under=8
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - name: Install dependencies
+        run: |
+          export PYTHONPATH="$PYTHONPATH:$PWD"
+          python -m pip install --upgrade pip
+          pip install -e ".[codegen]"
+      - name: Run Pylint
+        run: |
+          python_files=$(find . -name '*.py')
+          pylint $python_files --persistent=y --fail-under=8
