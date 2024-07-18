@@ -13,9 +13,9 @@
 
 import logging
 
+import botocore
 import datetime
 import time
-import os
 import functools
 from pprint import pprint
 from pydantic import validate_call
@@ -777,17 +777,14 @@ class Algorithm(Base):
         status: Literal["Pending", "InProgress", "Completed", "Failed", "Deleting"],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ):
+    ) -> None:
         """
-        Wait for a Algorithm resource.
+        Wait for a Algorithm resource to reach certain status.
 
         Parameters:
             status: The status to wait for.
             poll: The number of seconds to wait between each poll.
             timeout: The maximum number of seconds to wait before timing out.
-
-        Returns:
-            The Algorithm resource.
 
         Raises:
             TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
@@ -811,6 +808,52 @@ class Algorithm(Base):
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="Algorithm", status=current_status)
+            print("-", end="")
+            time.sleep(poll)
+
+    def wait_for_delete(
+        self,
+        poll: int = 5,
+        timeout: Optional[int] = None,
+    ) -> None:
+        """
+        Wait for a Algorithm resource to be deleted.
+
+        Parameters:
+            poll: The number of seconds to wait between each poll.
+            timeout: The maximum number of seconds to wait before timing out.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
+            DeleteFailedStatusError:   If the resource reaches a failed state.
+            WaiterError: Raised when an error occurs while waiting.
+        """
+        start_time = time.time()
+
+        while True:
+            try:
+                self.refresh()
+                current_status = self.algorithm_status
+
+                if timeout is not None and time.time() - start_time >= timeout:
+                    raise TimeoutExceededError(resouce_type="Algorithm", status=current_status)
+            except botocore.exceptions.ClientError as e:
+                error_code = e.response["Error"]["Code"]
+
+                if "ResourceNotFound" in error_code or "ValidationException" in error_code:
+                    print("Resource was not found. It may have been deleted.")
+                    return
+                raise e
+
             print("-", end="")
             time.sleep(poll)
 
@@ -1146,17 +1189,14 @@ class App(Base):
         status: Literal["Deleted", "Deleting", "Failed", "InService", "Pending"],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ):
+    ) -> None:
         """
-        Wait for a App resource.
+        Wait for a App resource to reach certain status.
 
         Parameters:
             status: The status to wait for.
             poll: The number of seconds to wait between each poll.
             timeout: The maximum number of seconds to wait before timing out.
-
-        Returns:
-            The App resource.
 
         Raises:
             TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
@@ -1180,6 +1220,56 @@ class App(Base):
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="App", status=current_status)
+            print("-", end="")
+            time.sleep(poll)
+
+    def wait_for_delete(
+        self,
+        poll: int = 5,
+        timeout: Optional[int] = None,
+    ) -> None:
+        """
+        Wait for a App resource to be deleted.
+
+        Parameters:
+            poll: The number of seconds to wait between each poll.
+            timeout: The maximum number of seconds to wait before timing out.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
+            DeleteFailedStatusError:   If the resource reaches a failed state.
+            WaiterError: Raised when an error occurs while waiting.
+        """
+        start_time = time.time()
+
+        while True:
+            try:
+                self.refresh()
+                current_status = self.status
+
+                if current_status.lower() == "deleted":
+                    print("Resource was deleted.")
+                    return
+
+                if timeout is not None and time.time() - start_time >= timeout:
+                    raise TimeoutExceededError(resouce_type="App", status=current_status)
+            except botocore.exceptions.ClientError as e:
+                error_code = e.response["Error"]["Code"]
+
+                if "ResourceNotFound" in error_code or "ValidationException" in error_code:
+                    print("Resource was not found. It may have been deleted.")
+                    return
+                raise e
+
             print("-", end="")
             time.sleep(poll)
 
@@ -2423,16 +2513,13 @@ class AutoMLJob(Base):
         }
         client.stop_auto_ml_job(**operation_input_args)
 
-    def wait(self, poll: int = 5, timeout: Optional[int] = None):
+    def wait(self, poll: int = 5, timeout: Optional[int] = None) -> None:
         """
         Wait for a AutoMLJob resource.
 
         Parameters:
             poll: The number of seconds to wait between each poll.
             timeout: The maximum number of seconds to wait before timing out.
-
-        Returns:
-            The AutoMLJob resource.
 
         Raises:
             TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
@@ -2870,16 +2957,13 @@ class AutoMLJobV2(Base):
         transform(response, "DescribeAutoMLJobV2Response", self)
         return self
 
-    def wait(self, poll: int = 5, timeout: Optional[int] = None):
+    def wait(self, poll: int = 5, timeout: Optional[int] = None) -> None:
         """
         Wait for a AutoMLJobV2 resource.
 
         Parameters:
             poll: The number of seconds to wait between each poll.
             timeout: The maximum number of seconds to wait before timing out.
-
-        Returns:
-            The AutoMLJobV2 resource.
 
         Raises:
             TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
@@ -3203,17 +3287,14 @@ class Cluster(Base):
         ],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ):
+    ) -> None:
         """
-        Wait for a Cluster resource.
+        Wait for a Cluster resource to reach certain status.
 
         Parameters:
             status: The status to wait for.
             poll: The number of seconds to wait between each poll.
             timeout: The maximum number of seconds to wait before timing out.
-
-        Returns:
-            The Cluster resource.
 
         Raises:
             TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
@@ -3237,6 +3318,52 @@ class Cluster(Base):
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="Cluster", status=current_status)
+            print("-", end="")
+            time.sleep(poll)
+
+    def wait_for_delete(
+        self,
+        poll: int = 5,
+        timeout: Optional[int] = None,
+    ) -> None:
+        """
+        Wait for a Cluster resource to be deleted.
+
+        Parameters:
+            poll: The number of seconds to wait between each poll.
+            timeout: The maximum number of seconds to wait before timing out.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
+            DeleteFailedStatusError:   If the resource reaches a failed state.
+            WaiterError: Raised when an error occurs while waiting.
+        """
+        start_time = time.time()
+
+        while True:
+            try:
+                self.refresh()
+                current_status = self.cluster_status
+
+                if timeout is not None and time.time() - start_time >= timeout:
+                    raise TimeoutExceededError(resouce_type="Cluster", status=current_status)
+            except botocore.exceptions.ClientError as e:
+                error_code = e.response["Error"]["Code"]
+
+                if "ResourceNotFound" in error_code or "ValidationException" in error_code:
+                    print("Resource was not found. It may have been deleted.")
+                    return
+                raise e
+
             print("-", end="")
             time.sleep(poll)
 
@@ -4076,16 +4203,13 @@ class CompilationJob(Base):
         }
         client.stop_compilation_job(**operation_input_args)
 
-    def wait(self, poll: int = 5, timeout: Optional[int] = None):
+    def wait(self, poll: int = 5, timeout: Optional[int] = None) -> None:
         """
         Wait for a CompilationJob resource.
 
         Parameters:
             poll: The number of seconds to wait between each poll.
             timeout: The maximum number of seconds to wait before timing out.
-
-        Returns:
-            The CompilationJob resource.
 
         Raises:
             TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
@@ -6018,17 +6142,14 @@ class Domain(Base):
         ],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ):
+    ) -> None:
         """
-        Wait for a Domain resource.
+        Wait for a Domain resource to reach certain status.
 
         Parameters:
             status: The status to wait for.
             poll: The number of seconds to wait between each poll.
             timeout: The maximum number of seconds to wait before timing out.
-
-        Returns:
-            The Domain resource.
 
         Raises:
             TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
@@ -6052,6 +6173,60 @@ class Domain(Base):
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="Domain", status=current_status)
+            print("-", end="")
+            time.sleep(poll)
+
+    def wait_for_delete(
+        self,
+        poll: int = 5,
+        timeout: Optional[int] = None,
+    ) -> None:
+        """
+        Wait for a Domain resource to be deleted.
+
+        Parameters:
+            poll: The number of seconds to wait between each poll.
+            timeout: The maximum number of seconds to wait before timing out.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
+            DeleteFailedStatusError:   If the resource reaches a failed state.
+            WaiterError: Raised when an error occurs while waiting.
+        """
+        start_time = time.time()
+
+        while True:
+            try:
+                self.refresh()
+                current_status = self.status
+
+                if (
+                    "delete_failed" in current_status.lower()
+                    or "deletefailed" in current_status.lower()
+                ):
+                    raise DeleteFailedStatusError(
+                        resource_type="Domain", reason=self.failure_reason
+                    )
+
+                if timeout is not None and time.time() - start_time >= timeout:
+                    raise TimeoutExceededError(resouce_type="Domain", status=current_status)
+            except botocore.exceptions.ClientError as e:
+                error_code = e.response["Error"]["Code"]
+
+                if "ResourceNotFound" in error_code or "ValidationException" in error_code:
+                    print("Resource was not found. It may have been deleted.")
+                    return
+                raise e
+
             print("-", end="")
             time.sleep(poll)
 
@@ -6870,16 +7045,13 @@ class EdgePackagingJob(Base):
         }
         client.stop_edge_packaging_job(**operation_input_args)
 
-    def wait(self, poll: int = 5, timeout: Optional[int] = None):
+    def wait(self, poll: int = 5, timeout: Optional[int] = None) -> None:
         """
         Wait for a EdgePackagingJob resource.
 
         Parameters:
             poll: The number of seconds to wait between each poll.
             timeout: The maximum number of seconds to wait before timing out.
-
-        Returns:
-            The EdgePackagingJob resource.
 
         Raises:
             TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
@@ -7311,17 +7483,14 @@ class Endpoint(Base):
         ],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ):
+    ) -> None:
         """
-        Wait for a Endpoint resource.
+        Wait for a Endpoint resource to reach certain status.
 
         Parameters:
             status: The status to wait for.
             poll: The number of seconds to wait between each poll.
             timeout: The maximum number of seconds to wait before timing out.
-
-        Returns:
-            The Endpoint resource.
 
         Raises:
             TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
@@ -7345,6 +7514,52 @@ class Endpoint(Base):
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="Endpoint", status=current_status)
+            print("-", end="")
+            time.sleep(poll)
+
+    def wait_for_delete(
+        self,
+        poll: int = 5,
+        timeout: Optional[int] = None,
+    ) -> None:
+        """
+        Wait for a Endpoint resource to be deleted.
+
+        Parameters:
+            poll: The number of seconds to wait between each poll.
+            timeout: The maximum number of seconds to wait before timing out.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
+            DeleteFailedStatusError:   If the resource reaches a failed state.
+            WaiterError: Raised when an error occurs while waiting.
+        """
+        start_time = time.time()
+
+        while True:
+            try:
+                self.refresh()
+                current_status = self.endpoint_status
+
+                if timeout is not None and time.time() - start_time >= timeout:
+                    raise TimeoutExceededError(resouce_type="Endpoint", status=current_status)
+            except botocore.exceptions.ClientError as e:
+                error_code = e.response["Error"]["Code"]
+
+                if "ResourceNotFound" in error_code or "ValidationException" in error_code:
+                    print("Resource was not found. It may have been deleted.")
+                    return
+                raise e
+
             print("-", end="")
             time.sleep(poll)
 
@@ -8678,17 +8893,14 @@ class FeatureGroup(Base):
         status: Literal["Creating", "Created", "CreateFailed", "Deleting", "DeleteFailed"],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ):
+    ) -> None:
         """
-        Wait for a FeatureGroup resource.
+        Wait for a FeatureGroup resource to reach certain status.
 
         Parameters:
             status: The status to wait for.
             poll: The number of seconds to wait between each poll.
             timeout: The maximum number of seconds to wait before timing out.
-
-        Returns:
-            The FeatureGroup resource.
 
         Raises:
             TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
@@ -8712,6 +8924,52 @@ class FeatureGroup(Base):
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="FeatureGroup", status=current_status)
+            print("-", end="")
+            time.sleep(poll)
+
+    def wait_for_delete(
+        self,
+        poll: int = 5,
+        timeout: Optional[int] = None,
+    ) -> None:
+        """
+        Wait for a FeatureGroup resource to be deleted.
+
+        Parameters:
+            poll: The number of seconds to wait between each poll.
+            timeout: The maximum number of seconds to wait before timing out.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
+            DeleteFailedStatusError:   If the resource reaches a failed state.
+            WaiterError: Raised when an error occurs while waiting.
+        """
+        start_time = time.time()
+
+        while True:
+            try:
+                self.refresh()
+                current_status = self.feature_group_status
+
+                if timeout is not None and time.time() - start_time >= timeout:
+                    raise TimeoutExceededError(resouce_type="FeatureGroup", status=current_status)
+            except botocore.exceptions.ClientError as e:
+                error_code = e.response["Error"]["Code"]
+
+                if "ResourceNotFound" in error_code or "ValidationException" in error_code:
+                    print("Resource was not found. It may have been deleted.")
+                    return
+                raise e
+
             print("-", end="")
             time.sleep(poll)
 
@@ -9218,17 +9476,14 @@ class FlowDefinition(Base):
         status: Literal["Initializing", "Active", "Failed", "Deleting"],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ):
+    ) -> None:
         """
-        Wait for a FlowDefinition resource.
+        Wait for a FlowDefinition resource to reach certain status.
 
         Parameters:
             status: The status to wait for.
             poll: The number of seconds to wait between each poll.
             timeout: The maximum number of seconds to wait before timing out.
-
-        Returns:
-            The FlowDefinition resource.
 
         Raises:
             TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
@@ -9254,6 +9509,52 @@ class FlowDefinition(Base):
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="FlowDefinition", status=current_status)
+            print("-", end="")
+            time.sleep(poll)
+
+    def wait_for_delete(
+        self,
+        poll: int = 5,
+        timeout: Optional[int] = None,
+    ) -> None:
+        """
+        Wait for a FlowDefinition resource to be deleted.
+
+        Parameters:
+            poll: The number of seconds to wait between each poll.
+            timeout: The maximum number of seconds to wait before timing out.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
+            DeleteFailedStatusError:   If the resource reaches a failed state.
+            WaiterError: Raised when an error occurs while waiting.
+        """
+        start_time = time.time()
+
+        while True:
+            try:
+                self.refresh()
+                current_status = self.flow_definition_status
+
+                if timeout is not None and time.time() - start_time >= timeout:
+                    raise TimeoutExceededError(resouce_type="FlowDefinition", status=current_status)
+            except botocore.exceptions.ClientError as e:
+                error_code = e.response["Error"]["Code"]
+
+                if "ResourceNotFound" in error_code or "ValidationException" in error_code:
+                    print("Resource was not found. It may have been deleted.")
+                    return
+                raise e
+
             print("-", end="")
             time.sleep(poll)
 
@@ -9621,17 +9922,14 @@ class Hub(Base):
         ],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ):
+    ) -> None:
         """
-        Wait for a Hub resource.
+        Wait for a Hub resource to reach certain status.
 
         Parameters:
             status: The status to wait for.
             poll: The number of seconds to wait between each poll.
             timeout: The maximum number of seconds to wait before timing out.
-
-        Returns:
-            The Hub resource.
 
         Raises:
             TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
@@ -9655,6 +9953,52 @@ class Hub(Base):
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="Hub", status=current_status)
+            print("-", end="")
+            time.sleep(poll)
+
+    def wait_for_delete(
+        self,
+        poll: int = 5,
+        timeout: Optional[int] = None,
+    ) -> None:
+        """
+        Wait for a Hub resource to be deleted.
+
+        Parameters:
+            poll: The number of seconds to wait between each poll.
+            timeout: The maximum number of seconds to wait before timing out.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
+            DeleteFailedStatusError:   If the resource reaches a failed state.
+            WaiterError: Raised when an error occurs while waiting.
+        """
+        start_time = time.time()
+
+        while True:
+            try:
+                self.refresh()
+                current_status = self.hub_status
+
+                if timeout is not None and time.time() - start_time >= timeout:
+                    raise TimeoutExceededError(resouce_type="Hub", status=current_status)
+            except botocore.exceptions.ClientError as e:
+                error_code = e.response["Error"]["Code"]
+
+                if "ResourceNotFound" in error_code or "ValidationException" in error_code:
+                    print("Resource was not found. It may have been deleted.")
+                    return
+                raise e
+
             print("-", end="")
             time.sleep(poll)
 
@@ -9922,17 +10266,14 @@ class HubContent(Base):
         status: Literal["Supported", "Deprecated"],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ):
+    ) -> None:
         """
-        Wait for a HubContent resource.
+        Wait for a HubContent resource to reach certain status.
 
         Parameters:
             status: The status to wait for.
             poll: The number of seconds to wait between each poll.
             timeout: The maximum number of seconds to wait before timing out.
-
-        Returns:
-            The HubContent resource.
 
         Raises:
             TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
@@ -10458,17 +10799,14 @@ class HumanTaskUi(Base):
 
     def wait_for_status(
         self, status: Literal["Active", "Deleting"], poll: int = 5, timeout: Optional[int] = None
-    ):
+    ) -> None:
         """
-        Wait for a HumanTaskUi resource.
+        Wait for a HumanTaskUi resource to reach certain status.
 
         Parameters:
             status: The status to wait for.
             poll: The number of seconds to wait between each poll.
             timeout: The maximum number of seconds to wait before timing out.
-
-        Returns:
-            The HumanTaskUi resource.
 
         Raises:
             TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
@@ -10487,6 +10825,52 @@ class HumanTaskUi(Base):
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="HumanTaskUi", status=current_status)
+            print("-", end="")
+            time.sleep(poll)
+
+    def wait_for_delete(
+        self,
+        poll: int = 5,
+        timeout: Optional[int] = None,
+    ) -> None:
+        """
+        Wait for a HumanTaskUi resource to be deleted.
+
+        Parameters:
+            poll: The number of seconds to wait between each poll.
+            timeout: The maximum number of seconds to wait before timing out.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
+            DeleteFailedStatusError:   If the resource reaches a failed state.
+            WaiterError: Raised when an error occurs while waiting.
+        """
+        start_time = time.time()
+
+        while True:
+            try:
+                self.refresh()
+                current_status = self.human_task_ui_status
+
+                if timeout is not None and time.time() - start_time >= timeout:
+                    raise TimeoutExceededError(resouce_type="HumanTaskUi", status=current_status)
+            except botocore.exceptions.ClientError as e:
+                error_code = e.response["Error"]["Code"]
+
+                if "ResourceNotFound" in error_code or "ValidationException" in error_code:
+                    print("Resource was not found. It may have been deleted.")
+                    return
+                raise e
+
             print("-", end="")
             time.sleep(poll)
 
@@ -10856,16 +11240,13 @@ class HyperParameterTuningJob(Base):
         }
         client.stop_hyper_parameter_tuning_job(**operation_input_args)
 
-    def wait(self, poll: int = 5, timeout: Optional[int] = None):
+    def wait(self, poll: int = 5, timeout: Optional[int] = None) -> None:
         """
         Wait for a HyperParameterTuningJob resource.
 
         Parameters:
             poll: The number of seconds to wait between each poll.
             timeout: The maximum number of seconds to wait before timing out.
-
-        Returns:
-            The HyperParameterTuningJob resource.
 
         Raises:
             TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
@@ -10896,6 +11277,54 @@ class HyperParameterTuningJob(Base):
                 raise TimeoutExceededError(
                     resouce_type="HyperParameterTuningJob", status=current_status
                 )
+            print("-", end="")
+            time.sleep(poll)
+
+    def wait_for_delete(
+        self,
+        poll: int = 5,
+        timeout: Optional[int] = None,
+    ) -> None:
+        """
+        Wait for a HyperParameterTuningJob resource to be deleted.
+
+        Parameters:
+            poll: The number of seconds to wait between each poll.
+            timeout: The maximum number of seconds to wait before timing out.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
+            DeleteFailedStatusError:   If the resource reaches a failed state.
+            WaiterError: Raised when an error occurs while waiting.
+        """
+        start_time = time.time()
+
+        while True:
+            try:
+                self.refresh()
+                current_status = self.hyper_parameter_tuning_job_status
+
+                if timeout is not None and time.time() - start_time >= timeout:
+                    raise TimeoutExceededError(
+                        resouce_type="HyperParameterTuningJob", status=current_status
+                    )
+            except botocore.exceptions.ClientError as e:
+                error_code = e.response["Error"]["Code"]
+
+                if "ResourceNotFound" in error_code or "ValidationException" in error_code:
+                    print("Resource was not found. It may have been deleted.")
+                    return
+                raise e
+
             print("-", end="")
             time.sleep(poll)
 
@@ -11339,17 +11768,14 @@ class Image(Base):
         ],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ):
+    ) -> None:
         """
-        Wait for a Image resource.
+        Wait for a Image resource to reach certain status.
 
         Parameters:
             status: The status to wait for.
             poll: The number of seconds to wait between each poll.
             timeout: The maximum number of seconds to wait before timing out.
-
-        Returns:
-            The Image resource.
 
         Raises:
             TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
@@ -11373,6 +11799,58 @@ class Image(Base):
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="Image", status=current_status)
+            print("-", end="")
+            time.sleep(poll)
+
+    def wait_for_delete(
+        self,
+        poll: int = 5,
+        timeout: Optional[int] = None,
+    ) -> None:
+        """
+        Wait for a Image resource to be deleted.
+
+        Parameters:
+            poll: The number of seconds to wait between each poll.
+            timeout: The maximum number of seconds to wait before timing out.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
+            DeleteFailedStatusError:   If the resource reaches a failed state.
+            WaiterError: Raised when an error occurs while waiting.
+        """
+        start_time = time.time()
+
+        while True:
+            try:
+                self.refresh()
+                current_status = self.image_status
+
+                if (
+                    "delete_failed" in current_status.lower()
+                    or "deletefailed" in current_status.lower()
+                ):
+                    raise DeleteFailedStatusError(resource_type="Image", reason=self.failure_reason)
+
+                if timeout is not None and time.time() - start_time >= timeout:
+                    raise TimeoutExceededError(resouce_type="Image", status=current_status)
+            except botocore.exceptions.ClientError as e:
+                error_code = e.response["Error"]["Code"]
+
+                if "ResourceNotFound" in error_code or "ValidationException" in error_code:
+                    print("Resource was not found. It may have been deleted.")
+                    return
+                raise e
+
             print("-", end="")
             time.sleep(poll)
 
@@ -11849,17 +12327,14 @@ class ImageVersion(Base):
         status: Literal["CREATING", "CREATED", "CREATE_FAILED", "DELETING", "DELETE_FAILED"],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ):
+    ) -> None:
         """
-        Wait for a ImageVersion resource.
+        Wait for a ImageVersion resource to reach certain status.
 
         Parameters:
             status: The status to wait for.
             poll: The number of seconds to wait between each poll.
             timeout: The maximum number of seconds to wait before timing out.
-
-        Returns:
-            The ImageVersion resource.
 
         Raises:
             TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
@@ -11883,6 +12358,60 @@ class ImageVersion(Base):
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="ImageVersion", status=current_status)
+            print("-", end="")
+            time.sleep(poll)
+
+    def wait_for_delete(
+        self,
+        poll: int = 5,
+        timeout: Optional[int] = None,
+    ) -> None:
+        """
+        Wait for a ImageVersion resource to be deleted.
+
+        Parameters:
+            poll: The number of seconds to wait between each poll.
+            timeout: The maximum number of seconds to wait before timing out.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
+            DeleteFailedStatusError:   If the resource reaches a failed state.
+            WaiterError: Raised when an error occurs while waiting.
+        """
+        start_time = time.time()
+
+        while True:
+            try:
+                self.refresh()
+                current_status = self.image_version_status
+
+                if (
+                    "delete_failed" in current_status.lower()
+                    or "deletefailed" in current_status.lower()
+                ):
+                    raise DeleteFailedStatusError(
+                        resource_type="ImageVersion", reason=self.failure_reason
+                    )
+
+                if timeout is not None and time.time() - start_time >= timeout:
+                    raise TimeoutExceededError(resouce_type="ImageVersion", status=current_status)
+            except botocore.exceptions.ClientError as e:
+                error_code = e.response["Error"]["Code"]
+
+                if "ResourceNotFound" in error_code or "ValidationException" in error_code:
+                    print("Resource was not found. It may have been deleted.")
+                    return
+                raise e
+
             print("-", end="")
             time.sleep(poll)
 
@@ -12161,17 +12690,14 @@ class InferenceComponent(Base):
         status: Literal["InService", "Creating", "Updating", "Failed", "Deleting"],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ):
+    ) -> None:
         """
-        Wait for a InferenceComponent resource.
+        Wait for a InferenceComponent resource to reach certain status.
 
         Parameters:
             status: The status to wait for.
             poll: The number of seconds to wait between each poll.
             timeout: The maximum number of seconds to wait before timing out.
-
-        Returns:
-            The InferenceComponent resource.
 
         Raises:
             TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
@@ -12197,6 +12723,54 @@ class InferenceComponent(Base):
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="InferenceComponent", status=current_status)
+            print("-", end="")
+            time.sleep(poll)
+
+    def wait_for_delete(
+        self,
+        poll: int = 5,
+        timeout: Optional[int] = None,
+    ) -> None:
+        """
+        Wait for a InferenceComponent resource to be deleted.
+
+        Parameters:
+            poll: The number of seconds to wait between each poll.
+            timeout: The maximum number of seconds to wait before timing out.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
+            DeleteFailedStatusError:   If the resource reaches a failed state.
+            WaiterError: Raised when an error occurs while waiting.
+        """
+        start_time = time.time()
+
+        while True:
+            try:
+                self.refresh()
+                current_status = self.inference_component_status
+
+                if timeout is not None and time.time() - start_time >= timeout:
+                    raise TimeoutExceededError(
+                        resouce_type="InferenceComponent", status=current_status
+                    )
+            except botocore.exceptions.ClientError as e:
+                error_code = e.response["Error"]["Code"]
+
+                if "ResourceNotFound" in error_code or "ValidationException" in error_code:
+                    print("Resource was not found. It may have been deleted.")
+                    return
+                raise e
+
             print("-", end="")
             time.sleep(poll)
 
@@ -12690,17 +13264,14 @@ class InferenceExperiment(Base):
         ],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ):
+    ) -> None:
         """
-        Wait for a InferenceExperiment resource.
+        Wait for a InferenceExperiment resource to reach certain status.
 
         Parameters:
             status: The status to wait for.
             poll: The number of seconds to wait between each poll.
             timeout: The maximum number of seconds to wait before timing out.
-
-        Returns:
-            The InferenceExperiment resource.
 
         Raises:
             TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
@@ -13062,16 +13633,13 @@ class InferenceRecommendationsJob(Base):
         }
         client.stop_inference_recommendations_job(**operation_input_args)
 
-    def wait(self, poll: int = 5, timeout: Optional[int] = None):
+    def wait(self, poll: int = 5, timeout: Optional[int] = None) -> None:
         """
         Wait for a InferenceRecommendationsJob resource.
 
         Parameters:
             poll: The number of seconds to wait between each poll.
             timeout: The maximum number of seconds to wait before timing out.
-
-        Returns:
-            The InferenceRecommendationsJob resource.
 
         Raises:
             TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
@@ -13102,6 +13670,58 @@ class InferenceRecommendationsJob(Base):
                 raise TimeoutExceededError(
                     resouce_type="InferenceRecommendationsJob", status=current_status
                 )
+            print("-", end="")
+            time.sleep(poll)
+
+    def wait_for_delete(
+        self,
+        poll: int = 5,
+        timeout: Optional[int] = None,
+    ) -> None:
+        """
+        Wait for a InferenceRecommendationsJob resource to be deleted.
+
+        Parameters:
+            poll: The number of seconds to wait between each poll.
+            timeout: The maximum number of seconds to wait before timing out.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
+            DeleteFailedStatusError:   If the resource reaches a failed state.
+            WaiterError: Raised when an error occurs while waiting.
+        """
+        start_time = time.time()
+
+        while True:
+            try:
+                self.refresh()
+                current_status = self.status
+
+                if current_status.lower() == "deleted":
+                    print("Resource was deleted.")
+                    return
+
+                if timeout is not None and time.time() - start_time >= timeout:
+                    raise TimeoutExceededError(
+                        resouce_type="InferenceRecommendationsJob", status=current_status
+                    )
+            except botocore.exceptions.ClientError as e:
+                error_code = e.response["Error"]["Code"]
+
+                if "ResourceNotFound" in error_code or "ValidationException" in error_code:
+                    print("Resource was not found. It may have been deleted.")
+                    return
+                raise e
+
             print("-", end="")
             time.sleep(poll)
 
@@ -13529,16 +14149,13 @@ class LabelingJob(Base):
         }
         client.stop_labeling_job(**operation_input_args)
 
-    def wait(self, poll: int = 5, timeout: Optional[int] = None):
+    def wait(self, poll: int = 5, timeout: Optional[int] = None) -> None:
         """
         Wait for a LabelingJob resource.
 
         Parameters:
             poll: The number of seconds to wait between each poll.
             timeout: The maximum number of seconds to wait before timing out.
-
-        Returns:
-            The LabelingJob resource.
 
         Raises:
             TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
@@ -13930,7 +14547,21 @@ class MlflowTrackingServer(Base):
         logger.error("Name attribute not found for object mlflow_tracking_server")
         return None
 
+    def populate_inputs_decorator(create_func):
+        @functools.wraps(create_func)
+        def wrapper(*args, **kwargs):
+            config_schema_for_resource = {"role_arn": {"type": "string"}}
+            return create_func(
+                *args,
+                **Base.get_updated_kwargs_with_configured_attributes(
+                    config_schema_for_resource, "MlflowTrackingServer", **kwargs
+                ),
+            )
+
+        return wrapper
+
     @classmethod
+    @populate_inputs_decorator
     def create(
         cls,
         tracking_server_name: str,
@@ -14087,6 +14718,7 @@ class MlflowTrackingServer(Base):
         transform(response, "DescribeMlflowTrackingServerResponse", self)
         return self
 
+    @populate_inputs_decorator
     def update(
         self,
         artifact_store_uri: Optional[str] = Unassigned(),
@@ -14213,17 +14845,14 @@ class MlflowTrackingServer(Base):
         ],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ):
+    ) -> None:
         """
-        Wait for a MlflowTrackingServer resource.
+        Wait for a MlflowTrackingServer resource to reach certain status.
 
         Parameters:
             status: The status to wait for.
             poll: The number of seconds to wait between each poll.
             timeout: The maximum number of seconds to wait before timing out.
-
-        Returns:
-            The MlflowTrackingServer resource.
 
         Raises:
             TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
@@ -14249,6 +14878,54 @@ class MlflowTrackingServer(Base):
                 raise TimeoutExceededError(
                     resouce_type="MlflowTrackingServer", status=current_status
                 )
+            print("-", end="")
+            time.sleep(poll)
+
+    def wait_for_delete(
+        self,
+        poll: int = 5,
+        timeout: Optional[int] = None,
+    ) -> None:
+        """
+        Wait for a MlflowTrackingServer resource to be deleted.
+
+        Parameters:
+            poll: The number of seconds to wait between each poll.
+            timeout: The maximum number of seconds to wait before timing out.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
+            DeleteFailedStatusError:   If the resource reaches a failed state.
+            WaiterError: Raised when an error occurs while waiting.
+        """
+        start_time = time.time()
+
+        while True:
+            try:
+                self.refresh()
+                current_status = self.tracking_server_status
+
+                if timeout is not None and time.time() - start_time >= timeout:
+                    raise TimeoutExceededError(
+                        resouce_type="MlflowTrackingServer", status=current_status
+                    )
+            except botocore.exceptions.ClientError as e:
+                error_code = e.response["Error"]["Code"]
+
+                if "ResourceNotFound" in error_code or "ValidationException" in error_code:
+                    print("Resource was not found. It may have been deleted.")
+                    return
+                raise e
+
             print("-", end="")
             time.sleep(poll)
 
@@ -15348,17 +16025,14 @@ class ModelCard(Base):
         status: Literal["Draft", "PendingReview", "Approved", "Archived"],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ):
+    ) -> None:
         """
-        Wait for a ModelCard resource.
+        Wait for a ModelCard resource to reach certain status.
 
         Parameters:
             status: The status to wait for.
             poll: The number of seconds to wait between each poll.
             timeout: The maximum number of seconds to wait before timing out.
-
-        Returns:
-            The ModelCard resource.
 
         Raises:
             TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
@@ -15730,16 +16404,13 @@ class ModelCardExportJob(Base):
         transform(response, "DescribeModelCardExportJobResponse", self)
         return self
 
-    def wait(self, poll: int = 5, timeout: Optional[int] = None):
+    def wait(self, poll: int = 5, timeout: Optional[int] = None) -> None:
         """
         Wait for a ModelCardExportJob resource.
 
         Parameters:
             poll: The number of seconds to wait between each poll.
             timeout: The maximum number of seconds to wait before timing out.
-
-        Returns:
-            The ModelCardExportJob resource.
 
         Raises:
             TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
@@ -16332,6 +17003,7 @@ class ModelPackage(Base):
                         "constraints": {"s3_uri": {"type": "string"}},
                     },
                 },
+                "security_config": {"kms_key_id": {"type": "string"}},
             }
             return create_func(
                 *args,
@@ -16641,17 +17313,14 @@ class ModelPackage(Base):
         status: Literal["Pending", "InProgress", "Completed", "Failed", "Deleting"],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ):
+    ) -> None:
         """
-        Wait for a ModelPackage resource.
+        Wait for a ModelPackage resource to reach certain status.
 
         Parameters:
             status: The status to wait for.
             poll: The number of seconds to wait between each poll.
             timeout: The maximum number of seconds to wait before timing out.
-
-        Returns:
-            The ModelPackage resource.
 
         Raises:
             TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
@@ -16675,6 +17344,52 @@ class ModelPackage(Base):
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="ModelPackage", status=current_status)
+            print("-", end="")
+            time.sleep(poll)
+
+    def wait_for_delete(
+        self,
+        poll: int = 5,
+        timeout: Optional[int] = None,
+    ) -> None:
+        """
+        Wait for a ModelPackage resource to be deleted.
+
+        Parameters:
+            poll: The number of seconds to wait between each poll.
+            timeout: The maximum number of seconds to wait before timing out.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
+            DeleteFailedStatusError:   If the resource reaches a failed state.
+            WaiterError: Raised when an error occurs while waiting.
+        """
+        start_time = time.time()
+
+        while True:
+            try:
+                self.refresh()
+                current_status = self.model_package_status
+
+                if timeout is not None and time.time() - start_time >= timeout:
+                    raise TimeoutExceededError(resouce_type="ModelPackage", status=current_status)
+            except botocore.exceptions.ClientError as e:
+                error_code = e.response["Error"]["Code"]
+
+                if "ResourceNotFound" in error_code or "ValidationException" in error_code:
+                    print("Resource was not found. It may have been deleted.")
+                    return
+                raise e
+
             print("-", end="")
             time.sleep(poll)
 
@@ -17012,17 +17727,14 @@ class ModelPackageGroup(Base):
         status: Literal["Pending", "InProgress", "Completed", "Failed", "Deleting", "DeleteFailed"],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ):
+    ) -> None:
         """
-        Wait for a ModelPackageGroup resource.
+        Wait for a ModelPackageGroup resource to reach certain status.
 
         Parameters:
             status: The status to wait for.
             poll: The number of seconds to wait between each poll.
             timeout: The maximum number of seconds to wait before timing out.
-
-        Returns:
-            The ModelPackageGroup resource.
 
         Raises:
             TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
@@ -17046,6 +17758,54 @@ class ModelPackageGroup(Base):
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="ModelPackageGroup", status=current_status)
+            print("-", end="")
+            time.sleep(poll)
+
+    def wait_for_delete(
+        self,
+        poll: int = 5,
+        timeout: Optional[int] = None,
+    ) -> None:
+        """
+        Wait for a ModelPackageGroup resource to be deleted.
+
+        Parameters:
+            poll: The number of seconds to wait between each poll.
+            timeout: The maximum number of seconds to wait before timing out.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
+            DeleteFailedStatusError:   If the resource reaches a failed state.
+            WaiterError: Raised when an error occurs while waiting.
+        """
+        start_time = time.time()
+
+        while True:
+            try:
+                self.refresh()
+                current_status = self.model_package_group_status
+
+                if timeout is not None and time.time() - start_time >= timeout:
+                    raise TimeoutExceededError(
+                        resouce_type="ModelPackageGroup", status=current_status
+                    )
+            except botocore.exceptions.ClientError as e:
+                error_code = e.response["Error"]["Code"]
+
+                if "ResourceNotFound" in error_code or "ValidationException" in error_code:
+                    print("Resource was not found. It may have been deleted.")
+                    return
+                raise e
+
             print("-", end="")
             time.sleep(poll)
 
@@ -18272,17 +19032,14 @@ class MonitoringSchedule(Base):
         status: Literal["Pending", "Failed", "Scheduled", "Stopped"],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ):
+    ) -> None:
         """
-        Wait for a MonitoringSchedule resource.
+        Wait for a MonitoringSchedule resource to reach certain status.
 
         Parameters:
             status: The status to wait for.
             poll: The number of seconds to wait between each poll.
             timeout: The maximum number of seconds to wait before timing out.
-
-        Returns:
-            The MonitoringSchedule resource.
 
         Raises:
             TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
@@ -18803,17 +19560,14 @@ class NotebookInstance(Base):
         ],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ):
+    ) -> None:
         """
-        Wait for a NotebookInstance resource.
+        Wait for a NotebookInstance resource to reach certain status.
 
         Parameters:
             status: The status to wait for.
             poll: The number of seconds to wait between each poll.
             timeout: The maximum number of seconds to wait before timing out.
-
-        Returns:
-            The NotebookInstance resource.
 
         Raises:
             TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
@@ -18839,6 +19593,54 @@ class NotebookInstance(Base):
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="NotebookInstance", status=current_status)
+            print("-", end="")
+            time.sleep(poll)
+
+    def wait_for_delete(
+        self,
+        poll: int = 5,
+        timeout: Optional[int] = None,
+    ) -> None:
+        """
+        Wait for a NotebookInstance resource to be deleted.
+
+        Parameters:
+            poll: The number of seconds to wait between each poll.
+            timeout: The maximum number of seconds to wait before timing out.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
+            DeleteFailedStatusError:   If the resource reaches a failed state.
+            WaiterError: Raised when an error occurs while waiting.
+        """
+        start_time = time.time()
+
+        while True:
+            try:
+                self.refresh()
+                current_status = self.notebook_instance_status
+
+                if timeout is not None and time.time() - start_time >= timeout:
+                    raise TimeoutExceededError(
+                        resouce_type="NotebookInstance", status=current_status
+                    )
+            except botocore.exceptions.ClientError as e:
+                error_code = e.response["Error"]["Code"]
+
+                if "ResourceNotFound" in error_code or "ValidationException" in error_code:
+                    print("Resource was not found. It may have been deleted.")
+                    return
+                raise e
+
             print("-", end="")
             time.sleep(poll)
 
@@ -19314,7 +20116,32 @@ class OptimizationJob(Base):
         logger.error("Name attribute not found for object optimization_job")
         return None
 
+    def populate_inputs_decorator(create_func):
+        @functools.wraps(create_func)
+        def wrapper(*args, **kwargs):
+            config_schema_for_resource = {
+                "model_source": {"s3": {"s3_uri": {"type": "string"}}},
+                "output_config": {
+                    "s3_output_location": {"type": "string"},
+                    "kms_key_id": {"type": "string"},
+                },
+                "role_arn": {"type": "string"},
+                "vpc_config": {
+                    "security_group_ids": {"type": "array", "items": {"type": "string"}},
+                    "subnets": {"type": "array", "items": {"type": "string"}},
+                },
+            }
+            return create_func(
+                *args,
+                **Base.get_updated_kwargs_with_configured_attributes(
+                    config_schema_for_resource, "OptimizationJob", **kwargs
+                ),
+            )
+
+        return wrapper
+
     @classmethod
+    @populate_inputs_decorator
     def create(
         cls,
         optimization_job_name: str,
@@ -19530,16 +20357,13 @@ class OptimizationJob(Base):
         }
         client.stop_optimization_job(**operation_input_args)
 
-    def wait(self, poll: int = 5, timeout: Optional[int] = None):
+    def wait(self, poll: int = 5, timeout: Optional[int] = None) -> None:
         """
         Wait for a OptimizationJob resource.
 
         Parameters:
             poll: The number of seconds to wait between each poll.
             timeout: The maximum number of seconds to wait before timing out.
-
-        Returns:
-            The OptimizationJob resource.
 
         Raises:
             TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
@@ -19968,17 +20792,14 @@ class Pipeline(Base):
 
     def wait_for_status(
         self, status: Literal["Active", "Deleting"], poll: int = 5, timeout: Optional[int] = None
-    ):
+    ) -> None:
         """
-        Wait for a Pipeline resource.
+        Wait for a Pipeline resource to reach certain status.
 
         Parameters:
             status: The status to wait for.
             poll: The number of seconds to wait between each poll.
             timeout: The maximum number of seconds to wait before timing out.
-
-        Returns:
-            The Pipeline resource.
 
         Raises:
             TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
@@ -19997,6 +20818,52 @@ class Pipeline(Base):
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="Pipeline", status=current_status)
+            print("-", end="")
+            time.sleep(poll)
+
+    def wait_for_delete(
+        self,
+        poll: int = 5,
+        timeout: Optional[int] = None,
+    ) -> None:
+        """
+        Wait for a Pipeline resource to be deleted.
+
+        Parameters:
+            poll: The number of seconds to wait between each poll.
+            timeout: The maximum number of seconds to wait before timing out.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
+            DeleteFailedStatusError:   If the resource reaches a failed state.
+            WaiterError: Raised when an error occurs while waiting.
+        """
+        start_time = time.time()
+
+        while True:
+            try:
+                self.refresh()
+                current_status = self.pipeline_status
+
+                if timeout is not None and time.time() - start_time >= timeout:
+                    raise TimeoutExceededError(resouce_type="Pipeline", status=current_status)
+            except botocore.exceptions.ClientError as e:
+                error_code = e.response["Error"]["Code"]
+
+                if "ResourceNotFound" in error_code or "ValidationException" in error_code:
+                    print("Resource was not found. It may have been deleted.")
+                    return
+                raise e
+
             print("-", end="")
             time.sleep(poll)
 
@@ -20275,17 +21142,14 @@ class PipelineExecution(Base):
         status: Literal["Executing", "Stopping", "Stopped", "Failed", "Succeeded"],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ):
+    ) -> None:
         """
-        Wait for a PipelineExecution resource.
+        Wait for a PipelineExecution resource to reach certain status.
 
         Parameters:
             status: The status to wait for.
             poll: The number of seconds to wait between each poll.
             timeout: The maximum number of seconds to wait before timing out.
-
-        Returns:
-            The PipelineExecution resource.
 
         Raises:
             TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
@@ -21232,16 +22096,13 @@ class ProcessingJob(Base):
         }
         client.stop_processing_job(**operation_input_args)
 
-    def wait(self, poll: int = 5, timeout: Optional[int] = None):
+    def wait(self, poll: int = 5, timeout: Optional[int] = None) -> None:
         """
         Wait for a ProcessingJob resource.
 
         Parameters:
             poll: The number of seconds to wait between each poll.
             timeout: The maximum number of seconds to wait before timing out.
-
-        Returns:
-            The ProcessingJob resource.
 
         Raises:
             TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
@@ -21638,17 +22499,14 @@ class Project(Base):
         ],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ):
+    ) -> None:
         """
-        Wait for a Project resource.
+        Wait for a Project resource to reach certain status.
 
         Parameters:
             status: The status to wait for.
             poll: The number of seconds to wait between each poll.
             timeout: The maximum number of seconds to wait before timing out.
-
-        Returns:
-            The Project resource.
 
         Raises:
             TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
@@ -22252,17 +23110,14 @@ class Space(Base):
         ],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ):
+    ) -> None:
         """
-        Wait for a Space resource.
+        Wait for a Space resource to reach certain status.
 
         Parameters:
             status: The status to wait for.
             poll: The number of seconds to wait between each poll.
             timeout: The maximum number of seconds to wait before timing out.
-
-        Returns:
-            The Space resource.
 
         Raises:
             TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
@@ -22286,6 +23141,58 @@ class Space(Base):
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="Space", status=current_status)
+            print("-", end="")
+            time.sleep(poll)
+
+    def wait_for_delete(
+        self,
+        poll: int = 5,
+        timeout: Optional[int] = None,
+    ) -> None:
+        """
+        Wait for a Space resource to be deleted.
+
+        Parameters:
+            poll: The number of seconds to wait between each poll.
+            timeout: The maximum number of seconds to wait before timing out.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
+            DeleteFailedStatusError:   If the resource reaches a failed state.
+            WaiterError: Raised when an error occurs while waiting.
+        """
+        start_time = time.time()
+
+        while True:
+            try:
+                self.refresh()
+                current_status = self.status
+
+                if (
+                    "delete_failed" in current_status.lower()
+                    or "deletefailed" in current_status.lower()
+                ):
+                    raise DeleteFailedStatusError(resource_type="Space", reason=self.failure_reason)
+
+                if timeout is not None and time.time() - start_time >= timeout:
+                    raise TimeoutExceededError(resouce_type="Space", status=current_status)
+            except botocore.exceptions.ClientError as e:
+                error_code = e.response["Error"]["Code"]
+
+                if "ResourceNotFound" in error_code or "ValidationException" in error_code:
+                    print("Resource was not found. It may have been deleted.")
+                    return
+                raise e
+
             print("-", end="")
             time.sleep(poll)
 
@@ -23403,16 +24310,13 @@ class TrainingJob(Base):
         }
         client.stop_training_job(**operation_input_args)
 
-    def wait(self, poll: int = 5, timeout: Optional[int] = None):
+    def wait(self, poll: int = 5, timeout: Optional[int] = None) -> None:
         """
         Wait for a TrainingJob resource.
 
         Parameters:
             poll: The number of seconds to wait between each poll.
             timeout: The maximum number of seconds to wait before timing out.
-
-        Returns:
-            The TrainingJob resource.
 
         Raises:
             TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
@@ -23824,16 +24728,13 @@ class TransformJob(Base):
         }
         client.stop_transform_job(**operation_input_args)
 
-    def wait(self, poll: int = 5, timeout: Optional[int] = None):
+    def wait(self, poll: int = 5, timeout: Optional[int] = None) -> None:
         """
         Wait for a TransformJob resource.
 
         Parameters:
             poll: The number of seconds to wait between each poll.
             timeout: The maximum number of seconds to wait before timing out.
-
-        Returns:
-            The TransformJob resource.
 
         Raises:
             TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
@@ -24602,17 +25503,14 @@ class TrialComponent(Base):
         status: Literal["InProgress", "Completed", "Failed", "Stopping", "Stopped"],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ):
+    ) -> None:
         """
-        Wait for a TrialComponent resource.
+        Wait for a TrialComponent resource to reach certain status.
 
         Parameters:
             status: The status to wait for.
             poll: The number of seconds to wait between each poll.
             timeout: The maximum number of seconds to wait before timing out.
-
-        Returns:
-            The TrialComponent resource.
 
         Raises:
             TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
@@ -25129,17 +26027,14 @@ class UserProfile(Base):
         ],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ):
+    ) -> None:
         """
-        Wait for a UserProfile resource.
+        Wait for a UserProfile resource to reach certain status.
 
         Parameters:
             status: The status to wait for.
             poll: The number of seconds to wait between each poll.
             timeout: The maximum number of seconds to wait before timing out.
-
-        Returns:
-            The UserProfile resource.
 
         Raises:
             TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
@@ -25163,6 +26058,60 @@ class UserProfile(Base):
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="UserProfile", status=current_status)
+            print("-", end="")
+            time.sleep(poll)
+
+    def wait_for_delete(
+        self,
+        poll: int = 5,
+        timeout: Optional[int] = None,
+    ) -> None:
+        """
+        Wait for a UserProfile resource to be deleted.
+
+        Parameters:
+            poll: The number of seconds to wait between each poll.
+            timeout: The maximum number of seconds to wait before timing out.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
+            DeleteFailedStatusError:   If the resource reaches a failed state.
+            WaiterError: Raised when an error occurs while waiting.
+        """
+        start_time = time.time()
+
+        while True:
+            try:
+                self.refresh()
+                current_status = self.status
+
+                if (
+                    "delete_failed" in current_status.lower()
+                    or "deletefailed" in current_status.lower()
+                ):
+                    raise DeleteFailedStatusError(
+                        resource_type="UserProfile", reason=self.failure_reason
+                    )
+
+                if timeout is not None and time.time() - start_time >= timeout:
+                    raise TimeoutExceededError(resouce_type="UserProfile", status=current_status)
+            except botocore.exceptions.ClientError as e:
+                error_code = e.response["Error"]["Code"]
+
+                if "ResourceNotFound" in error_code or "ValidationException" in error_code:
+                    print("Resource was not found. It may have been deleted.")
+                    return
+                raise e
+
             print("-", end="")
             time.sleep(poll)
 
@@ -25512,17 +26461,14 @@ class Workforce(Base):
         status: Literal["Initializing", "Updating", "Deleting", "Failed", "Active"],
         poll: int = 5,
         timeout: Optional[int] = None,
-    ):
+    ) -> None:
         """
-        Wait for a Workforce resource.
+        Wait for a Workforce resource to reach certain status.
 
         Parameters:
             status: The status to wait for.
             poll: The number of seconds to wait between each poll.
             timeout: The maximum number of seconds to wait before timing out.
-
-        Returns:
-            The Workforce resource.
 
         Raises:
             TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
@@ -25546,6 +26492,52 @@ class Workforce(Base):
 
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="Workforce", status=current_status)
+            print("-", end="")
+            time.sleep(poll)
+
+    def wait_for_delete(
+        self,
+        poll: int = 5,
+        timeout: Optional[int] = None,
+    ) -> None:
+        """
+        Wait for a Workforce resource to be deleted.
+
+        Parameters:
+            poll: The number of seconds to wait between each poll.
+            timeout: The maximum number of seconds to wait before timing out.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
+            DeleteFailedStatusError:   If the resource reaches a failed state.
+            WaiterError: Raised when an error occurs while waiting.
+        """
+        start_time = time.time()
+
+        while True:
+            try:
+                self.refresh()
+                current_status = self.workforce.status
+
+                if timeout is not None and time.time() - start_time >= timeout:
+                    raise TimeoutExceededError(resouce_type="Workforce", status=current_status)
+            except botocore.exceptions.ClientError as e:
+                error_code = e.response["Error"]["Code"]
+
+                if "ResourceNotFound" in error_code or "ValidationException" in error_code:
+                    print("Resource was not found. It may have been deleted.")
+                    return
+                raise e
+
             print("-", end="")
             time.sleep(poll)
 

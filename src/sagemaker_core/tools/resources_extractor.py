@@ -294,6 +294,9 @@ class ResourcesExtractor:
                     elif resource_states and resource_low != "action":
                         object_methods.add("wait_for_status")
 
+                    if "Deleting" in resource_states or "DELETING" in resource_states:
+                        object_methods.add("wait_for_delete")
+
                     continue
 
                 if action_low.split(resource_low)[0] == "create":

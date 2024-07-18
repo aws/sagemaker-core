@@ -60,6 +60,22 @@ class FailedStatusError(WaiterError):
         super().__init__(resource_type=resource_type, status=status, reason=reason)
 
 
+class DeleteFailedStatusError(WaiterError):
+    """Raised when a resource enters a delete_failed state."""
+
+    fmt = "Encountered unexpected delete_failed state while deleting {resource_type}. Failure Reason: {reason}"
+
+    def __init__(self, resource_type="(Unkown)", reason="(Unkown)"):
+        """Initialize a FailedStatusError exception.
+
+        Args:
+            resource_type (str): The type of resource being waited on.
+            status (str): The final status of the resource.
+            reason (str): The reason the resource entered a failed state.
+        """
+        super().__init__(resource_type=resource_type, reason=reason)
+
+
 class TimeoutExceededError(WaiterError):
     """Raised when a specified timeout is exceeded"""
 
