@@ -115,6 +115,19 @@ class ModelAccessConfig(Base):
     accept_eula: bool
 
 
+class InferenceHubAccessConfig(Base):
+    """
+    InferenceHubAccessConfig
+         Configuration information specifying which hub contents have accessible deployment options.
+
+        Attributes
+       ----------------------
+       hub_content_arn: 	 The ARN of the hub content for which deployment access is allowed.
+    """
+
+    hub_content_arn: str
+
+
 class S3ModelDataSource(Base):
     """
     S3ModelDataSource
@@ -126,12 +139,14 @@ class S3ModelDataSource(Base):
        s3_data_type: 	 Specifies the type of ML model data to deploy. If you choose S3Prefix, S3Uri identifies a key name prefix. SageMaker uses all objects that match the specified key name prefix as part of the ML model data to deploy. A valid key name prefix identified by S3Uri always ends with a forward slash (/). If you choose S3Object, S3Uri identifies an object that is the ML model data to deploy.
        compression_type: 	 Specifies how the ML model data is prepared. If you choose Gzip and choose S3Object as the value of S3DataType, S3Uri identifies an object that is a gzip-compressed TAR archive. SageMaker will attempt to decompress and untar the object during model deployment. If you choose None and chooose S3Object as the value of S3DataType, S3Uri identifies an object that represents an uncompressed ML model to deploy. If you choose None and choose S3Prefix as the value of S3DataType, S3Uri identifies a key name prefix, under which all objects represents the uncompressed ML model to deploy. If you choose None, then SageMaker will follow rules below when creating model data files under /opt/ml/model directory for use by your inference code:   If you choose S3Object as the value of S3DataType, then SageMaker will split the key of the S3 object referenced by S3Uri by slash (/), and use the last part as the filename of the file holding the content of the S3 object.   If you choose S3Prefix as the value of S3DataType, then for each S3 object under the key name pefix referenced by S3Uri, SageMaker will trim its key by the prefix, and use the remainder as the path (relative to /opt/ml/model) of the file holding the content of the S3 object. SageMaker will split the remainder by slash (/), using intermediate parts as directory names and the last part as filename of the file holding the content of the S3 object.   Do not use any of the following as file names or directory names:   An empty or blank string   A string which contains null bytes   A string longer than 255 bytes   A single dot (.)   A double dot (..)     Ambiguous file names will result in model deployment failure. For example, if your uncompressed ML model consists of two S3 objects s3://mybucket/model/weights and s3://mybucket/model/weights/part1 and you specify s3://mybucket/model/ as the value of S3Uri and S3Prefix as the value of S3DataType, then it will result in name clash between /opt/ml/model/weights (a regular file) and /opt/ml/model/weights/ (a directory).   Do not organize the model artifacts in S3 console using folders. When you create a folder in S3 console, S3 creates a 0-byte object with a key set to the folder name you provide. They key of the 0-byte object ends with a slash (/) which violates SageMaker restrictions on model artifact file names, leading to model deployment failure.
        model_access_config: 	 Specifies the access configuration file for the ML model. You can explicitly accept the model end-user license agreement (EULA) within the ModelAccessConfig. You are responsible for reviewing and complying with any applicable license terms and making sure they are acceptable for your use case before downloading or using a model.
+       hub_access_config: 	 Configuration information for hub access.
     """
 
     s3_uri: str
     s3_data_type: str
     compression_type: str
     model_access_config: Optional[ModelAccessConfig] = Unassigned()
+    hub_access_config: Optional[InferenceHubAccessConfig] = Unassigned()
 
 
 class ModelDataSource(Base):
@@ -235,6 +250,21 @@ class AdditionalInferenceSpecificationDefinition(Base):
     supported_realtime_inference_instance_types: Optional[List[str]] = Unassigned()
     supported_content_types: Optional[List[str]] = Unassigned()
     supported_response_mime_types: Optional[List[str]] = Unassigned()
+
+
+class AdditionalModelDataSource(Base):
+    """
+    AdditionalModelDataSource
+         Data sources that are available to your model in addition to the one that you specify for ModelDataSource when you use the CreateModel action.
+
+        Attributes
+       ----------------------
+       channel_name: 	 A custom name for this AdditionalModelDataSource object.
+       s3_data_source
+    """
+
+    channel_name: str
+    s3_data_source: S3ModelDataSource
 
 
 class AgentVersion(Base):
@@ -541,7 +571,7 @@ class ResourceConfig(Base):
 class StoppingCondition(Base):
     """
     StoppingCondition
-         Specifies a limit to how long a model training job or model compilation job can run. It also specifies how long a managed spot training job has to complete. When the job reaches the time limit, SageMaker ends the training or compilation job. Use this API to cap model training costs. To stop a training job, SageMaker sends the algorithm the SIGTERM signal, which delays job termination for 120 seconds. Algorithms can use this 120-second window to save the model artifacts, so the results of training are not lost.  The training algorithms provided by SageMaker automatically save the intermediate results of a model training job when possible. This attempt to save artifacts is only a best effort case as model might not be in a state from which it can be saved. For example, if training has just started, the model might not be ready to save. When saved, this intermediate data is a valid model artifact. You can use it to create a model with CreateModel.  The Neural Topic Model (NTM) currently does not support saving intermediate model artifacts. When training NTMs, make sure that the maximum runtime is sufficient for the training job to complete.
+         Specifies a limit to how long a job can run. When the job reaches the time limit, SageMaker ends the job. Use this API to cap costs. To stop a training job, SageMaker sends the algorithm the SIGTERM signal, which delays job termination for 120 seconds. Algorithms can use this 120-second window to save the model artifacts, so the results of training are not lost.  The training algorithms provided by SageMaker automatically save the intermediate results of a model training job when possible. This attempt to save artifacts is only a best effort case as model might not be in a state from which it can be saved. For example, if training has just started, the model might not be ready to save. When saved, this intermediate data is a valid model artifact. You can use it to create a model with CreateModel.  The Neural Topic Model (NTM) currently does not support saving intermediate model artifacts. When training NTMs, make sure that the maximum runtime is sufficient for the training job to complete.
 
         Attributes
        ----------------------
@@ -718,6 +748,21 @@ class AlgorithmValidationSpecification(Base):
     validation_profiles: List[AlgorithmValidationProfile]
 
 
+class AmazonQSettings(Base):
+    """
+    AmazonQSettings
+         A collection of settings that configure the Amazon Q experience within the domain.
+
+        Attributes
+       ----------------------
+       status: 	 Whether Amazon Q has been enabled within the domain.
+       q_profile_arn: 	 The ARN of the Amazon Q profile used within the domain.
+    """
+
+    status: Optional[str] = Unassigned()
+    q_profile_arn: Optional[str] = Unassigned()
+
+
 class AnnotationConsolidationConfig(Base):
     """
     AnnotationConsolidationConfig
@@ -858,6 +903,21 @@ class JupyterLabAppImageConfig(Base):
     container_config: Optional[ContainerConfig] = Unassigned()
 
 
+class CodeEditorAppImageConfig(Base):
+    """
+    CodeEditorAppImageConfig
+         The configuration for the file system and kernels in a SageMaker image running as a Code Editor app. The FileSystemConfig object is not supported.
+
+        Attributes
+       ----------------------
+       file_system_config
+       container_config
+    """
+
+    file_system_config: Optional[FileSystemConfig] = Unassigned()
+    container_config: Optional[ContainerConfig] = Unassigned()
+
+
 class AppImageConfigDetails(Base):
     """
     AppImageConfigDetails
@@ -871,6 +931,7 @@ class AppImageConfigDetails(Base):
        last_modified_time: 	 When the AppImageConfig was last modified.
        kernel_gateway_image_config: 	 The configuration for the file system and kernels in the SageMaker image.
        jupyter_lab_app_image_config: 	 The configuration for the file system and the runtime, such as the environment variables and entry point.
+       code_editor_app_image_config: 	 The configuration for the file system and the runtime, such as the environment variables and entry point.
     """
 
     app_image_config_arn: Optional[str] = Unassigned()
@@ -879,6 +940,7 @@ class AppImageConfigDetails(Base):
     last_modified_time: Optional[datetime.datetime] = Unassigned()
     kernel_gateway_image_config: Optional[KernelGatewayImageConfig] = Unassigned()
     jupyter_lab_app_image_config: Optional[JupyterLabAppImageConfig] = Unassigned()
+    code_editor_app_image_config: Optional[CodeEditorAppImageConfig] = Unassigned()
 
 
 class AppSpecification(Base):
@@ -1110,11 +1172,11 @@ class AthenaDatasetDefinition(Base):
 class AutoMLAlgorithmConfig(Base):
     """
     AutoMLAlgorithmConfig
-         The collection of algorithms run on a dataset for training the model candidates of an Autopilot job.
+         The selection of algorithms trained on your dataset to generate the model candidates for an Autopilot job.
 
         Attributes
        ----------------------
-       auto_ml_algorithms: 	 The selection of algorithms run on a dataset to train the model candidates of an Autopilot job.   Selected algorithms must belong to the list corresponding to the training mode set in AutoMLJobConfig.Mode (ENSEMBLING or HYPERPARAMETER_TUNING). Choose a minimum of 1 algorithm.     In ENSEMBLING mode:   "catboost"   "extra-trees"   "fastai"   "lightgbm"   "linear-learner"   "nn-torch"   "randomforest"   "xgboost"     In HYPERPARAMETER_TUNING mode:   "linear-learner"   "mlp"   "xgboost"
+       auto_ml_algorithms: 	 The selection of algorithms trained on your dataset to generate the model candidates for an Autopilot job.    For the tabular problem type TabularJobConfig:   Selected algorithms must belong to the list corresponding to the training mode set in AutoMLJobConfig.Mode (ENSEMBLING or HYPERPARAMETER_TUNING). Choose a minimum of 1 algorithm.    In ENSEMBLING mode:   "catboost"   "extra-trees"   "fastai"   "lightgbm"   "linear-learner"   "nn-torch"   "randomforest"   "xgboost"     In HYPERPARAMETER_TUNING mode:   "linear-learner"   "mlp"   "xgboost"        For the time-series forecasting problem type TimeSeriesForecastingJobConfig:    Choose your algorithms from this list.   "cnn-qr"   "deepar"   "prophet"   "arima"   "npts"   "ets"
     """
 
     auto_ml_algorithms: List[str]
@@ -1269,7 +1331,7 @@ class AutoMLCandidateGenerationConfig(Base):
         Attributes
        ----------------------
        feature_specification_s3_uri: 	 A URL to the Amazon S3 data source containing selected features from the input data source to run an Autopilot job. You can input FeatureAttributeNames (optional) in JSON format as shown below:   { "FeatureAttributeNames":["col1", "col2", ...] }. You can also specify the data type of the feature (optional) in the format shown below:  { "FeatureDataTypes":{"col1":"numeric", "col2":"categorical" ... } }   These column keys may not include the target column.  In ensembling mode, Autopilot only supports the following data types: numeric, categorical, text, and datetime. In HPO mode, Autopilot can support numeric, categorical, text, datetime, and sequence. If only FeatureDataTypes is provided, the column keys (col1, col2,..) should be a subset of the column names in the input data.  If both FeatureDataTypes and FeatureAttributeNames are provided, then the column keys should be a subset of the column names provided in FeatureAttributeNames.  The key name FeatureAttributeNames is fixed. The values listed in ["col1", "col2", ...] are case sensitive and should be a list of strings containing unique values that are a subset of the column names in the input data. The list of columns provided must not include the target column.
-       algorithms_config: 	 Stores the configuration information for the selection of algorithms used to train the model candidates. The list of available algorithms to choose from depends on the training mode set in  AutoMLJobConfig.Mode .    AlgorithmsConfig should not be set in AUTO training mode.   When AlgorithmsConfig is provided, one AutoMLAlgorithms attribute must be set and one only. If the list of algorithms provided as values for AutoMLAlgorithms is empty, AutoMLCandidateGenerationConfig uses the full set of algorithms for the given training mode.   When AlgorithmsConfig is not provided, AutoMLCandidateGenerationConfig uses the full set of algorithms for the given training mode.   For the list of all algorithms per training mode, see  AutoMLAlgorithmConfig. For more information on each algorithm, see the Algorithm support section in Autopilot developer guide.
+       algorithms_config: 	 Stores the configuration information for the selection of algorithms trained on tabular data. The list of available algorithms to choose from depends on the training mode set in  TabularJobConfig.Mode .    AlgorithmsConfig should not be set if the training mode is set on AUTO.   When AlgorithmsConfig is provided, one AutoMLAlgorithms attribute must be set and one only. If the list of algorithms provided as values for AutoMLAlgorithms is empty, CandidateGenerationConfig uses the full set of algorithms for the given training mode.   When AlgorithmsConfig is not provided, CandidateGenerationConfig uses the full set of algorithms for the given training mode.   For the list of all algorithms per problem type and training mode, see  AutoMLAlgorithmConfig. For more information on each algorithm, see the Algorithm support section in Autopilot developer guide.
     """
 
     feature_specification_s3_uri: Optional[str] = Unassigned()
@@ -1604,6 +1666,19 @@ class HolidayConfigAttributes(Base):
     country_code: Optional[str] = Unassigned()
 
 
+class CandidateGenerationConfig(Base):
+    """
+    CandidateGenerationConfig
+         Stores the configuration information for how model candidates are generated using an AutoML job V2.
+
+        Attributes
+       ----------------------
+       algorithms_config: 	 Your Autopilot job trains a default set of algorithms on your dataset. For tabular and time-series data, you can customize the algorithm list by selecting a subset of algorithms for your problem type.  AlgorithmsConfig stores the customized selection of algorithms to train on your data.    For the tabular problem type TabularJobConfig, the list of available algorithms to choose from depends on the training mode set in  AutoMLJobConfig.Mode .    AlgorithmsConfig should not be set when the training mode AutoMLJobConfig.Mode is set to AUTO.   When AlgorithmsConfig is provided, one AutoMLAlgorithms attribute must be set and one only. If the list of algorithms provided as values for AutoMLAlgorithms is empty, CandidateGenerationConfig uses the full set of algorithms for the given training mode.   When AlgorithmsConfig is not provided, CandidateGenerationConfig uses the full set of algorithms for the given training mode.   For the list of all algorithms per training mode, see  AlgorithmConfig. For more information on each algorithm, see the Algorithm support section in the Autopilot developer guide.    For the time-series forecasting problem type TimeSeriesForecastingJobConfig, choose your algorithms from the list provided in  AlgorithmConfig. For more information on each algorithm, see the Algorithms support for time-series forecasting section in the Autopilot developer guide.   When AlgorithmsConfig is provided, one AutoMLAlgorithms attribute must be set and one only. If the list of algorithms provided as values for AutoMLAlgorithms is empty, CandidateGenerationConfig uses the full set of algorithms for time-series forecasting.   When AlgorithmsConfig is not provided, CandidateGenerationConfig uses the full set of algorithms for time-series forecasting.
+    """
+
+    algorithms_config: Optional[List[AutoMLAlgorithmConfig]] = Unassigned()
+
+
 class TimeSeriesForecastingJobConfig(Base):
     """
     TimeSeriesForecastingJobConfig
@@ -1619,6 +1694,7 @@ class TimeSeriesForecastingJobConfig(Base):
        transformations: 	 The transformations modifying specific attributes of the time-series, such as filling strategies for missing values.
        time_series_config: 	 The collection of components that defines the time-series.
        holiday_config: 	 The collection of holiday featurization attributes used to incorporate national holiday information into your forecasting model.
+       candidate_generation_config
     """
 
     forecast_frequency: str
@@ -1629,19 +1705,7 @@ class TimeSeriesForecastingJobConfig(Base):
     forecast_quantiles: Optional[List[str]] = Unassigned()
     transformations: Optional[TimeSeriesTransformations] = Unassigned()
     holiday_config: Optional[List[HolidayConfigAttributes]] = Unassigned()
-
-
-class CandidateGenerationConfig(Base):
-    """
-    CandidateGenerationConfig
-         Stores the configuration information for how model candidates are generated using an AutoML job V2.
-
-        Attributes
-       ----------------------
-       algorithms_config: 	 Stores the configuration information for the selection of algorithms used to train model candidates on tabular data. The list of available algorithms to choose from depends on the training mode set in  TabularJobConfig.Mode .    AlgorithmsConfig should not be set in AUTO training mode.   When AlgorithmsConfig is provided, one AutoMLAlgorithms attribute must be set and one only. If the list of algorithms provided as values for AutoMLAlgorithms is empty, CandidateGenerationConfig uses the full set of algorithms for the given training mode.   When AlgorithmsConfig is not provided, CandidateGenerationConfig uses the full set of algorithms for the given training mode.   For the list of all algorithms per problem type and training mode, see  AutoMLAlgorithmConfig. For more information on each algorithm, see the Algorithm support section in Autopilot developer guide.
-    """
-
-    algorithms_config: Optional[List[AutoMLAlgorithmConfig]] = Unassigned()
+    candidate_generation_config: Optional[CandidateGenerationConfig] = Unassigned()
 
 
 class TabularJobConfig(Base):
@@ -2504,19 +2568,45 @@ class ClarifyExplainerConfig(Base):
     inference_config: Optional[ClarifyInferenceConfig] = Unassigned()
 
 
-class ClusterLifeCycleConfig(Base):
+class ClusterEbsVolumeConfig(Base):
     """
-    ClusterLifeCycleConfig
-         The LifeCycle configuration for a SageMaker HyperPod cluster.
+    ClusterEbsVolumeConfig
+         Defines the configuration for attaching an additional Amazon Elastic Block Store (EBS) volume to each instance of the SageMaker HyperPod cluster instance group. To learn more, see SageMaker HyperPod release notes: June 20, 2024.
 
         Attributes
        ----------------------
-       source_s3_uri: 	 An Amazon S3 bucket path where your LifeCycle scripts are stored.
-       on_create: 	 The directory of the LifeCycle script under SourceS3Uri. This LifeCycle script runs during cluster creation.
+       volume_size_in_gb: 	 The size in gigabytes (GB) of the additional EBS volume to be attached to the instances in the SageMaker HyperPod cluster instance group. The additional EBS volume is attached to each instance within the SageMaker HyperPod cluster instance group and mounted to /opt/sagemaker.
+    """
+
+    volume_size_in_gb: int
+
+
+class ClusterLifeCycleConfig(Base):
+    """
+    ClusterLifeCycleConfig
+         The lifecycle configuration for a SageMaker HyperPod cluster.
+
+        Attributes
+       ----------------------
+       source_s3_uri: 	 An Amazon S3 bucket path where your lifecycle scripts are stored.  Make sure that the S3 bucket path starts with s3://sagemaker-. The IAM role for SageMaker HyperPod has the managed  AmazonSageMakerClusterInstanceRolePolicy  attached, which allows access to S3 buckets with the specific prefix sagemaker-.
+       on_create: 	 The file name of the entrypoint script of lifecycle scripts under SourceS3Uri. This entrypoint script runs during cluster creation.
     """
 
     source_s3_uri: str
     on_create: str
+
+
+class ClusterInstanceStorageConfig(Base):
+    """
+    ClusterInstanceStorageConfig
+         Defines the configuration for attaching additional storage to the instances in the SageMaker HyperPod cluster instance group. To learn more, see SageMaker HyperPod release notes: June 20, 2024.
+
+        Attributes
+       ----------------------
+       ebs_volume_config: 	 Defines the configuration for attaching additional Amazon Elastic Block Store (EBS) volumes to the instances in the SageMaker HyperPod cluster instance group. The additional EBS volume is attached to each instance within the SageMaker HyperPod cluster instance group and mounted to /opt/sagemaker.
+    """
+
+    ebs_volume_config: Optional[ClusterEbsVolumeConfig] = Unassigned()
 
 
 class ClusterInstanceGroupDetails(Base):
@@ -2533,6 +2623,7 @@ class ClusterInstanceGroupDetails(Base):
        life_cycle_config: 	 Details of LifeCycle configuration for the instance group.
        execution_role: 	 The execution role for the instance group to assume.
        threads_per_core: 	 The number you specified to TreadsPerCore in CreateCluster for enabling or disabling multithreading. For instance types that support multithreading, you can specify 1 for disabling multithreading and 2 for enabling multithreading. For more information, see the reference table of CPU cores and threads per CPU core per instance type in the Amazon Elastic Compute Cloud User Guide.
+       instance_storage_configs: 	 The additional storage configurations for the instances in the SageMaker HyperPod cluster instance group.
     """
 
     current_count: Optional[int] = Unassigned()
@@ -2542,6 +2633,7 @@ class ClusterInstanceGroupDetails(Base):
     life_cycle_config: Optional[ClusterLifeCycleConfig] = Unassigned()
     execution_role: Optional[str] = Unassigned()
     threads_per_core: Optional[int] = Unassigned()
+    instance_storage_configs: Optional[List[ClusterInstanceStorageConfig]] = Unassigned()
 
 
 class ClusterInstanceGroupSpecification(Base):
@@ -2557,6 +2649,7 @@ class ClusterInstanceGroupSpecification(Base):
        life_cycle_config: 	 Specifies the LifeCycle configuration for the instance group.
        execution_role: 	 Specifies an IAM execution role to be assumed by the instance group.
        threads_per_core: 	 Specifies the value for Threads per core. For instance types that support multithreading, you can specify 1 for disabling multithreading and 2 for enabling multithreading. For instance types that doesn't support multithreading, specify 1. For more information, see the reference table of CPU cores and threads per CPU core per instance type in the Amazon Elastic Compute Cloud User Guide.
+       instance_storage_configs: 	 Specifies the additional storage configurations for the instances in the SageMaker HyperPod cluster instance group.
     """
 
     instance_count: int
@@ -2565,6 +2658,22 @@ class ClusterInstanceGroupSpecification(Base):
     life_cycle_config: ClusterLifeCycleConfig
     execution_role: str
     threads_per_core: Optional[int] = Unassigned()
+    instance_storage_configs: Optional[List[ClusterInstanceStorageConfig]] = Unassigned()
+
+
+class ClusterInstancePlacement(Base):
+    """
+    ClusterInstancePlacement
+         Specifies the placement details for the node in the SageMaker HyperPod cluster, including the Availability Zone and the unique identifier (ID) of the Availability Zone.
+
+        Attributes
+       ----------------------
+       availability_zone: 	 The Availability Zone where the node in the SageMaker HyperPod cluster is launched.
+       availability_zone_id: 	 The unique identifier (ID) of the Availability Zone where the node in the SageMaker HyperPod cluster is launched.
+    """
+
+    availability_zone: Optional[str] = Unassigned()
+    availability_zone_id: Optional[str] = Unassigned()
 
 
 class ClusterInstanceStatusDetails(Base):
@@ -2596,6 +2705,10 @@ class ClusterNodeDetails(Base):
        launch_time: 	 The time when the instance is launched.
        life_cycle_config: 	 The LifeCycle configuration applied to the instance.
        threads_per_core: 	 The number of threads per CPU core you specified under CreateCluster.
+       instance_storage_configs: 	 The configurations of additional storage specified to the instance group where the instance (node) is launched.
+       private_primary_ip: 	 The private primary IP address of the SageMaker HyperPod cluster node.
+       private_dns_hostname: 	 The private DNS hostname of the SageMaker HyperPod cluster node.
+       placement: 	 The placement details of the SageMaker HyperPod cluster node.
     """
 
     instance_group_name: Optional[str] = Unassigned()
@@ -2605,6 +2718,10 @@ class ClusterNodeDetails(Base):
     launch_time: Optional[datetime.datetime] = Unassigned()
     life_cycle_config: Optional[ClusterLifeCycleConfig] = Unassigned()
     threads_per_core: Optional[int] = Unassigned()
+    instance_storage_configs: Optional[List[ClusterInstanceStorageConfig]] = Unassigned()
+    private_primary_ip: Optional[str] = Unassigned()
+    private_dns_hostname: Optional[str] = Unassigned()
+    placement: Optional[ClusterInstancePlacement] = Unassigned()
 
 
 class ClusterNodeSummary(Base):
@@ -2647,6 +2764,23 @@ class ClusterSummary(Base):
     cluster_status: str
 
 
+class CustomImage(Base):
+    """
+    CustomImage
+         A custom SageMaker image. For more information, see Bring your own SageMaker image.
+
+        Attributes
+       ----------------------
+       image_name: 	 The name of the CustomImage. Must be unique to your account.
+       image_version_number: 	 The version number of the CustomImage.
+       app_image_config_name: 	 The name of the AppImageConfig.
+    """
+
+    image_name: Union[str, object]
+    app_image_config_name: Union[str, object]
+    image_version_number: Optional[int] = Unassigned()
+
+
 class CodeEditorAppSettings(Base):
     """
     CodeEditorAppSettings
@@ -2655,10 +2789,12 @@ class CodeEditorAppSettings(Base):
         Attributes
        ----------------------
        default_resource_spec
+       custom_images: 	 A list of custom SageMaker images that are configured to run as a Code Editor app.
        lifecycle_config_arns: 	 The Amazon Resource Name (ARN) of the Code Editor application lifecycle configuration.
     """
 
     default_resource_spec: Optional[ResourceSpec] = Unassigned()
+    custom_images: Optional[List[CustomImage]] = Unassigned()
     lifecycle_config_arns: Optional[List[str]] = Unassigned()
 
 
@@ -2899,6 +3035,7 @@ class ContainerDefinition(Base):
        mode: 	 Whether the container hosts a single model or multiple models.
        model_data_url: 	 The S3 path where the model artifacts, which result from model training, are stored. This path must point to a single gzip compressed tar archive (.tar.gz suffix). The S3 path is required for SageMaker built-in algorithms, but not if you use your own algorithms. For more information on built-in algorithms, see Common Parameters.   The model artifacts must be in an S3 bucket that is in the same region as the model or endpoint you are creating.  If you provide a value for this parameter, SageMaker uses Amazon Web Services Security Token Service to download model artifacts from the S3 path you provide. Amazon Web Services STS is activated in your Amazon Web Services account by default. If you previously deactivated Amazon Web Services STS for a region, you need to reactivate Amazon Web Services STS for that region. For more information, see Activating and Deactivating Amazon Web Services STS in an Amazon Web Services Region in the Amazon Web Services Identity and Access Management User Guide.  If you use a built-in algorithm to create a model, SageMaker requires that you provide a S3 path to the model artifacts in ModelDataUrl.
        model_data_source: 	 Specifies the location of ML model data to deploy.  Currently you cannot use ModelDataSource in conjunction with SageMaker batch transform, SageMaker serverless endpoints, SageMaker multi-model endpoints, and SageMaker Marketplace.
+       additional_model_data_sources: 	 Data sources that are available to your model in addition to the one that you specify for ModelDataSource when you use the CreateModel action.
        environment: 	 The environment variables to set in the Docker container. The maximum length of each key and value in the Environment map is 1024 bytes. The maximum length of all keys and values in the map, combined, is 32 KB. If you pass multiple containers to a CreateModel request, then the maximum length of all of their maps, combined, is also 32 KB.
        model_package_name: 	 The name or Amazon Resource Name (ARN) of the model package to use to create the model.
        inference_specification_name: 	 The inference specification name in the model package version.
@@ -2911,6 +3048,7 @@ class ContainerDefinition(Base):
     mode: Optional[str] = Unassigned()
     model_data_url: Optional[str] = Unassigned()
     model_data_source: Optional[ModelDataSource] = Unassigned()
+    additional_model_data_sources: Optional[List[AdditionalModelDataSource]] = Unassigned()
     environment: Optional[Dict[str, str]] = Unassigned()
     model_package_name: Optional[Union[str, object]] = Unassigned()
     inference_specification_name: Optional[str] = Unassigned()
@@ -3493,23 +3631,6 @@ class JupyterServerAppSettings(Base):
     code_repositories: Optional[List[CodeRepository]] = Unassigned()
 
 
-class CustomImage(Base):
-    """
-    CustomImage
-         A custom SageMaker image. For more information, see Bring your own SageMaker image.
-
-        Attributes
-       ----------------------
-       image_name: 	 The name of the CustomImage. Must be unique to your account.
-       image_version_number: 	 The version number of the CustomImage.
-       app_image_config_name: 	 The name of the AppImageConfig.
-    """
-
-    image_name: Union[str, object]
-    app_image_config_name: Union[str, object]
-    image_version_number: Optional[int] = Unassigned()
-
-
 class KernelGatewayAppSettings(Base):
     """
     KernelGatewayAppSettings
@@ -3592,12 +3713,12 @@ class JupyterLabAppSettings(Base):
 class DefaultEbsStorageSettings(Base):
     """
     DefaultEbsStorageSettings
-         A collection of default EBS storage settings that applies to private spaces created within a domain or user profile.
+         A collection of default EBS storage settings that apply to spaces created within a domain or user profile.
 
         Attributes
        ----------------------
-       default_ebs_volume_size_in_gb: 	 The default size of the EBS storage volume for a private space.
-       maximum_ebs_volume_size_in_gb: 	 The maximum size of the EBS storage volume for a private space.
+       default_ebs_volume_size_in_gb: 	 The default size of the EBS storage volume for a space.
+       maximum_ebs_volume_size_in_gb: 	 The maximum size of the EBS storage volume for a space.
     """
 
     default_ebs_volume_size_in_gb: int
@@ -3607,11 +3728,11 @@ class DefaultEbsStorageSettings(Base):
 class DefaultSpaceStorageSettings(Base):
     """
     DefaultSpaceStorageSettings
-         The default storage settings for a private space.
+         The default storage settings for a space.
 
         Attributes
        ----------------------
-       default_ebs_storage_settings: 	 The default EBS storage settings for a private space.
+       default_ebs_storage_settings: 	 The default EBS storage settings for a space.
     """
 
     default_ebs_storage_settings: Optional[DefaultEbsStorageSettings] = Unassigned()
@@ -3660,6 +3781,21 @@ class CustomFileSystemConfig(Base):
     efs_file_system_config: Optional[EFSFileSystemConfig] = Unassigned()
 
 
+class StudioWebPortalSettings(Base):
+    """
+    StudioWebPortalSettings
+         Studio settings. If these settings are applied on a user level, they take priority over the settings applied on a domain level.
+
+        Attributes
+       ----------------------
+       hidden_ml_tools: 	 The machine learning tools that are hidden from the Studio left navigation pane.
+       hidden_app_types: 	 The Applications supported in Studio that are hidden from the Studio left navigation pane.
+    """
+
+    hidden_ml_tools: Optional[List[str]] = Unassigned()
+    hidden_app_types: Optional[List[str]] = Unassigned()
+
+
 class UserSettings(Base):
     """
     UserSettings
@@ -3678,11 +3814,12 @@ class UserSettings(Base):
        canvas_app_settings: 	 The Canvas app settings.
        code_editor_app_settings: 	 The Code Editor application settings.
        jupyter_lab_app_settings: 	 The settings for the JupyterLab application.
-       space_storage_settings: 	 The storage settings for a private space.
+       space_storage_settings: 	 The storage settings for a space.
        default_landing_uri: 	 The default experience that the user is directed to when accessing the domain. The supported values are:    studio::: Indicates that Studio is the default experience. This value can only be passed if StudioWebPortal is set to ENABLED.    app:JupyterServer:: Indicates that Studio Classic is the default experience.
        studio_web_portal: 	 Whether the user can access Studio. If this value is set to DISABLED, the user cannot access Studio, even if that is the default experience for the domain.
        custom_posix_user_config: 	 Details about the POSIX identity that is used for file system operations.
        custom_file_system_configs: 	 The settings for assigning a custom file system to a user profile. Permitted users can access this file system in Amazon SageMaker Studio.
+       studio_web_portal_settings: 	 Studio settings. If these settings are applied on a user level, they take priority over the settings applied on a domain level.
     """
 
     execution_role: Optional[str] = Unassigned()
@@ -3701,6 +3838,7 @@ class UserSettings(Base):
     studio_web_portal: Optional[str] = Unassigned()
     custom_posix_user_config: Optional[CustomPosixUserConfig] = Unassigned()
     custom_file_system_configs: Optional[List[CustomFileSystemConfig]] = Unassigned()
+    studio_web_portal_settings: Optional[StudioWebPortalSettings] = Unassigned()
 
 
 class RStudioServerProDomainSettings(Base):
@@ -3748,12 +3886,14 @@ class DomainSettings(Base):
        r_studio_server_pro_domain_settings: 	 A collection of settings that configure the RStudioServerPro Domain-level app.
        execution_role_identity_config: 	 The configuration for attaching a SageMaker user profile name to the execution role as a sts:SourceIdentity key.
        docker_settings: 	 A collection of settings that configure the domain's Docker interaction.
+       amazon_q_settings: 	 A collection of settings that configure the Amazon Q experience within the domain. The AuthMode that you use to create the domain must be SSO.
     """
 
     security_group_ids: Optional[List[str]] = Unassigned()
     r_studio_server_pro_domain_settings: Optional[RStudioServerProDomainSettings] = Unassigned()
     execution_role_identity_config: Optional[str] = Unassigned()
     docker_settings: Optional[DockerSettings] = Unassigned()
+    amazon_q_settings: Optional[AmazonQSettings] = Unassigned()
 
 
 class DefaultSpaceSettings(Base):
@@ -3767,12 +3907,20 @@ class DefaultSpaceSettings(Base):
        security_groups: 	 The security group IDs for the Amazon VPC that the space uses for communication.
        jupyter_server_app_settings
        kernel_gateway_app_settings
+       jupyter_lab_app_settings
+       space_storage_settings
+       custom_posix_user_config
+       custom_file_system_configs: 	 The settings for assigning a custom file system to a domain. Permitted users can access this file system in Amazon SageMaker Studio.
     """
 
     execution_role: Optional[str] = Unassigned()
     security_groups: Optional[List[str]] = Unassigned()
     jupyter_server_app_settings: Optional[JupyterServerAppSettings] = Unassigned()
     kernel_gateway_app_settings: Optional[KernelGatewayAppSettings] = Unassigned()
+    jupyter_lab_app_settings: Optional[JupyterLabAppSettings] = Unassigned()
+    space_storage_settings: Optional[DefaultSpaceStorageSettings] = Unassigned()
+    custom_posix_user_config: Optional[CustomPosixUserConfig] = Unassigned()
+    custom_file_system_configs: Optional[List[CustomFileSystemConfig]] = Unassigned()
 
 
 class EdgeDeploymentModelConfig(Base):
@@ -3922,6 +4070,7 @@ class ProductionVariant(Base):
        enable_ssm_access: 	  You can use this parameter to turn on native Amazon Web Services Systems Manager (SSM) access for a production variant behind an endpoint. By default, SSM access is disabled for all production variants behind an endpoint. You can turn on or turn off SSM access for a production variant behind an existing endpoint by creating a new endpoint configuration and calling UpdateEndpoint.
        managed_instance_scaling: 	 Settings that control the range in the number of instances that the endpoint provisions as it scales up or down to accommodate traffic.
        routing_config: 	 Settings that control how the endpoint routes incoming traffic to the instances that the endpoint hosts.
+       inference_ami_version: 	 Specifies an option from a collection of preconfigured Amazon Machine Image (AMI) images. Each image is configured by Amazon Web Services with a set of software and driver versions. Amazon Web Services optimizes these configurations for different machine learning workloads. By selecting an AMI version, you can ensure that your inference environment is compatible with specific software requirements, such as CUDA driver versions, Linux kernel versions, or Amazon Web Services Neuron driver versions.
     """
 
     variant_name: str
@@ -3938,6 +4087,7 @@ class ProductionVariant(Base):
     enable_ssm_access: Optional[bool] = Unassigned()
     managed_instance_scaling: Optional[ProductionVariantManagedInstanceScaling] = Unassigned()
     routing_config: Optional[ProductionVariantRoutingConfig] = Unassigned()
+    inference_ami_version: Optional[str] = Unassigned()
 
 
 class DataCaptureConfig(Base):
@@ -4019,7 +4169,7 @@ class FeatureDefinition(Base):
 
         Attributes
        ----------------------
-       feature_name: 	 The name of a feature. The type must be a string. FeatureName cannot be any of the following: is_deleted, write_time, api_invocation_time. The name:   Must start and end with an alphanumeric character.   Can only include alphanumeric characters, underscores, and hyphens. Spaces are not allowed.
+       feature_name: 	 The name of a feature. The type must be a string. FeatureName cannot be any of the following: is_deleted, write_time, api_invocation_time. The name:   Must start with an alphanumeric character.   Can only include alphanumeric characters, underscores, and hyphens. Spaces are not allowed.
        feature_type: 	 The value type of a feature. Valid values are Integral, Fractional, or String.
        collection_type: 	 A grouping of elements where each element within the collection must have the same feature type (String, Integral, or Fractional).    List: An ordered collection of elements.    Set: An unordered collection of unique elements.    Vector: A specialized list that represents a fixed-size array of elements. The vector dimension is determined by you. Must have elements with fractional feature types.
        collection_config: 	 Configuration for your collection.
@@ -5569,6 +5719,34 @@ class DriftCheckBaselines(Base):
     model_data_quality: Optional[DriftCheckModelDataQuality] = Unassigned()
 
 
+class ModelPackageSecurityConfig(Base):
+    """
+    ModelPackageSecurityConfig
+         An optional Key Management Service key to encrypt, decrypt, and re-encrypt model package information for regulated workloads with highly sensitive data.
+
+        Attributes
+       ----------------------
+       kms_key_id: 	 The KMS Key ID (KMSKeyId) used for encryption of model package information.
+    """
+
+    kms_key_id: str
+
+
+class ModelPackageModelCard(Base):
+    """
+    ModelPackageModelCard
+         The model card associated with the model package. Since ModelPackageModelCard is tied to a model package, it is a specific usage of a model card and its schema is simplified compared to the schema of ModelCard. The ModelPackageModelCard schema does not include model_package_details, and model_overview is composed of the model_creator and model_artifact properties. For more information about the model package model card schema, see Model package model card schema. For more information about the model card associated with the model package, see View the Details of a Model Version.
+
+        Attributes
+       ----------------------
+       model_card_content: 	 The content of the model card. The content must follow the schema described in Model Package Model Card Schema.
+       model_card_status: 	 The approval status of the model card within your organization. Different organizations might have different criteria for model card review and approval.    Draft: The model card is a work in progress.    PendingReview: The model card is pending review.    Approved: The model card is approved.    Archived: The model card is archived. No more updates can be made to the model card content. If you try to update the model card content, you will receive the message Model Card is in Archived state.
+    """
+
+    model_card_content: Optional[str] = Unassigned()
+    model_card_status: Optional[str] = Unassigned()
+
+
 class ModelQualityBaselineConfig(Base):
     """
     ModelQualityBaselineConfig
@@ -5785,6 +5963,122 @@ class NotebookInstanceLifecycleHook(Base):
     """
 
     content: Optional[str] = Unassigned()
+
+
+class OptimizationModelAccessConfig(Base):
+    """
+    OptimizationModelAccessConfig
+         The access configuration settings for the source ML model for an optimization job, where you can accept the model end-user license agreement (EULA).
+
+        Attributes
+       ----------------------
+       accept_eula: 	 Specifies agreement to the model end-user license agreement (EULA). The AcceptEula value must be explicitly defined as True in order to accept the EULA that this model requires. You are responsible for reviewing and complying with any applicable license terms and making sure they are acceptable for your use case before downloading or using a model.
+    """
+
+    accept_eula: bool
+
+
+class OptimizationJobModelSourceS3(Base):
+    """
+    OptimizationJobModelSourceS3
+         The Amazon S3 location of a source model to optimize with an optimization job.
+
+        Attributes
+       ----------------------
+       s3_uri: 	 An Amazon S3 URI that locates a source model to optimize with an optimization job.
+       model_access_config: 	 The access configuration settings for the source ML model for an optimization job, where you can accept the model end-user license agreement (EULA).
+    """
+
+    s3_uri: Optional[str] = Unassigned()
+    model_access_config: Optional[OptimizationModelAccessConfig] = Unassigned()
+
+
+class OptimizationJobModelSource(Base):
+    """
+    OptimizationJobModelSource
+         The location of the source model to optimize with an optimization job.
+
+        Attributes
+       ----------------------
+       s3: 	 The Amazon S3 location of a source model to optimize with an optimization job.
+    """
+
+    s3: Optional[OptimizationJobModelSourceS3] = Unassigned()
+
+
+class ModelQuantizationConfig(Base):
+    """
+    ModelQuantizationConfig
+         Settings for the model quantization technique that's applied by a model optimization job.
+
+        Attributes
+       ----------------------
+       image: 	 The URI of an LMI DLC in Amazon ECR. SageMaker uses this image to run the optimization.
+       override_environment: 	 Environment variables that override the default ones in the model container.
+    """
+
+    image: Optional[str] = Unassigned()
+    override_environment: Optional[Dict[str, str]] = Unassigned()
+
+
+class ModelCompilationConfig(Base):
+    """
+    ModelCompilationConfig
+         Settings for the model compilation technique that's applied by a model optimization job.
+
+        Attributes
+       ----------------------
+       image: 	 The URI of an LMI DLC in Amazon ECR. SageMaker uses this image to run the optimization.
+       override_environment: 	 Environment variables that override the default ones in the model container.
+    """
+
+    image: Optional[str] = Unassigned()
+    override_environment: Optional[Dict[str, str]] = Unassigned()
+
+
+class OptimizationConfig(Base):
+    """
+    OptimizationConfig
+         Settings for an optimization technique that you apply with a model optimization job.
+
+        Attributes
+       ----------------------
+       model_quantization_config: 	 Settings for the model quantization technique that's applied by a model optimization job.
+       model_compilation_config: 	 Settings for the model compilation technique that's applied by a model optimization job.
+    """
+
+    model_quantization_config: Optional[ModelQuantizationConfig] = Unassigned()
+    model_compilation_config: Optional[ModelCompilationConfig] = Unassigned()
+
+
+class OptimizationJobOutputConfig(Base):
+    """
+    OptimizationJobOutputConfig
+         Details for where to store the optimized model that you create with the optimization job.
+
+        Attributes
+       ----------------------
+       kms_key_id: 	 The Amazon Resource Name (ARN) of a key in Amazon Web Services KMS. SageMaker uses they key to encrypt the artifacts of the optimized model when SageMaker uploads the model to Amazon S3.
+       s3_output_location: 	 The Amazon S3 URI for where to store the optimized model that you create with an optimization job.
+    """
+
+    s3_output_location: str
+    kms_key_id: Optional[str] = Unassigned()
+
+
+class OptimizationVpcConfig(Base):
+    """
+    OptimizationVpcConfig
+         A VPC in Amazon VPC that's accessible to an optimized that you create with an optimization job. You can control access to and from your resources by configuring a VPC. For more information, see Give SageMaker Access to Resources in your Amazon VPC.
+
+        Attributes
+       ----------------------
+       security_group_ids: 	 The VPC security group IDs, in the form sg-xxxxxxxx. Specify the security groups for the VPC that is specified in the Subnets field.
+       subnets: 	 The ID of the subnets in the VPC to which you want to connect your optimized model.
+    """
+
+    security_group_ids: List[str]
+    subnets: List[str]
 
 
 class PipelineDefinitionS3Location(Base):
@@ -6102,11 +6396,11 @@ class SpaceJupyterLabAppSettings(Base):
 class EbsStorageSettings(Base):
     """
     EbsStorageSettings
-         A collection of EBS storage settings that applies to private spaces.
+         A collection of EBS storage settings that apply to both private and shared spaces.
 
         Attributes
        ----------------------
-       ebs_volume_size_in_gb: 	 The size of an EBS storage volume for a private space.
+       ebs_volume_size_in_gb: 	 The size of an EBS storage volume for a space.
     """
 
     ebs_volume_size_in_gb: int
@@ -6115,11 +6409,11 @@ class EbsStorageSettings(Base):
 class SpaceStorageSettings(Base):
     """
     SpaceStorageSettings
-         The storage settings for a private space.
+         The storage settings for a space.
 
         Attributes
        ----------------------
-       ebs_storage_settings: 	 A collection of EBS storage settings for a private space.
+       ebs_storage_settings: 	 A collection of EBS storage settings for a space.
     """
 
     ebs_storage_settings: Optional[EbsStorageSettings] = Unassigned()
@@ -6163,7 +6457,7 @@ class SpaceSettings(Base):
        code_editor_app_settings: 	 The Code Editor application settings.
        jupyter_lab_app_settings: 	 The settings for the JupyterLab application.
        app_type: 	 The type of app created within the space.
-       space_storage_settings: 	 The storage settings for a private space.
+       space_storage_settings: 	 The storage settings for a space.
        custom_file_systems: 	 A file system, created by you, that you assign to a space for an Amazon SageMaker Domain. Permitted users can access this file system in Amazon SageMaker Studio.
     """
 
@@ -6183,7 +6477,7 @@ class OwnershipSettings(Base):
 
         Attributes
        ----------------------
-       owner_user_profile_name: 	 The user profile who is the owner of the private space.
+       owner_user_profile_name: 	 The user profile who is the owner of the space.
     """
 
     owner_user_profile_name: str
@@ -6331,6 +6625,19 @@ class InfraCheckConfig(Base):
     enable_infra_check: Optional[bool] = Unassigned()
 
 
+class SessionChainingConfig(Base):
+    """
+    SessionChainingConfig
+         Contains information about attribute-based access control (ABAC) for a training job. The session chaining configuration uses Amazon Security Token Service (STS) for your training job to request temporary, limited-privilege credentials to tenants. For more information, see Attribute-based access control (ABAC) for multi-tenancy training.
+
+        Attributes
+       ----------------------
+       enable_session_tag_chaining: 	 Set to True to allow SageMaker to extract session tags from a training job creation role and reuse these tags when assuming the training job execution role.
+    """
+
+    enable_session_tag_chaining: Optional[bool] = Unassigned()
+
+
 class ModelClientConfig(Base):
     """
     ModelClientConfig
@@ -6423,6 +6730,8 @@ class OidcConfig(Base):
        user_info_endpoint: 	 The OIDC IdP user information endpoint used to configure your private workforce.
        logout_endpoint: 	 The OIDC IdP logout endpoint used to configure your private workforce.
        jwks_uri: 	 The OIDC IdP JSON Web Key Set (Jwks) URI used to configure your private workforce.
+       scope: 	 An array of string identifiers used to refer to the specific pieces of user data or claims that the client application wants to access.
+       authentication_request_extra_params: 	 A string to string map of identifiers specific to the custom identity provider (IdP) being used.
     """
 
     client_id: str
@@ -6433,12 +6742,14 @@ class OidcConfig(Base):
     user_info_endpoint: str
     logout_endpoint: str
     jwks_uri: str
+    scope: Optional[str] = Unassigned()
+    authentication_request_extra_params: Optional[Dict[str, str]] = Unassigned()
 
 
 class SourceIpConfig(Base):
     """
     SourceIpConfig
-         A list of IP address ranges (CIDRs). Used to create an allow list of IP addresses for a private workforce. Workers will only be able to login to their worker portal from an IP address within this range. By default, a workforce isn't restricted to specific IP addresses.
+         A list of IP address ranges (CIDRs). Used to create an allow list of IP addresses for a private workforce. Workers will only be able to log in to their worker portal from an IP address within this range. By default, a workforce isn't restricted to specific IP addresses.
 
         Attributes
        ----------------------
@@ -6504,6 +6815,47 @@ class NotificationConfiguration(Base):
     """
 
     notification_topic_arn: Optional[str] = Unassigned()
+
+
+class IamPolicyConstraints(Base):
+    """
+    IamPolicyConstraints
+         Use this parameter to specify a supported global condition key that is added to the IAM policy.
+
+        Attributes
+       ----------------------
+       source_ip: 	 When SourceIp is Enabled the worker's IP address when a task is rendered in the worker portal is added to the IAM policy as a Condition used to generate the Amazon S3 presigned URL. This IP address is checked by Amazon S3 and must match in order for the Amazon S3 resource to be rendered in the worker portal.
+       vpc_source_ip: 	 When VpcSourceIp is Enabled the worker's IP address when a task is rendered in private worker portal inside the VPC is added to the IAM policy as a Condition used to generate the Amazon S3 presigned URL. To render the task successfully Amazon S3 checks that the presigned URL is being accessed over an Amazon S3 VPC Endpoint, and that the worker's IP address matches the IP address in the IAM policy. To learn more about configuring private worker portal, see Use Amazon VPC mode from a private worker portal.
+    """
+
+    source_ip: Optional[str] = Unassigned()
+    vpc_source_ip: Optional[str] = Unassigned()
+
+
+class S3Presign(Base):
+    """
+    S3Presign
+         This object defines the access restrictions to Amazon S3 resources that are included in custom worker task templates using the Liquid filter, grant_read_access. To learn more about how custom templates are created, see Create custom worker task templates.
+
+        Attributes
+       ----------------------
+       iam_policy_constraints: 	 Use this parameter to specify the allowed request source. Possible sources are either SourceIp or VpcSourceIp.
+    """
+
+    iam_policy_constraints: Optional[IamPolicyConstraints] = Unassigned()
+
+
+class WorkerAccessConfiguration(Base):
+    """
+    WorkerAccessConfiguration
+         Use this optional parameter to constrain access to an Amazon S3 resource based on the IP address using supported IAM global condition keys. The Amazon S3 resource is accessed in the worker portal using a Amazon S3 presigned URL.
+
+        Attributes
+       ----------------------
+       s3_presign: 	 Defines any Amazon S3 resource constraints.
+    """
+
+    s3_presign: Optional[S3Presign] = Unassigned()
 
 
 class CustomizedMetricSpecification(Base):
@@ -7218,10 +7570,10 @@ class RecommendationMetrics(Base):
        model_setup_time: 	 The time it takes to launch new compute resources for a serverless endpoint. The time can vary depending on the model size, how long it takes to download the model, and the start-up time of the container.  NaN indicates that the value is not available.
     """
 
-    cost_per_hour: float
-    cost_per_inference: float
-    max_invocations: int
-    model_latency: int
+    cost_per_hour: Optional[float] = Unassigned()
+    cost_per_inference: Optional[float] = Unassigned()
+    max_invocations: Optional[int] = Unassigned()
+    model_latency: Optional[int] = Unassigned()
     cpu_utilization: Optional[float] = Unassigned()
     memory_utilization: Optional[float] = Unassigned()
     model_setup_time: Optional[int] = Unassigned()
@@ -7297,10 +7649,10 @@ class InferenceRecommendation(Base):
        invocation_start_time: 	 A timestamp that shows when the benchmark started.
     """
 
-    metrics: RecommendationMetrics
     endpoint_configuration: EndpointOutputConfiguration
     model_configuration: ModelConfiguration
     recommendation_id: Optional[str] = Unassigned()
+    metrics: Optional[RecommendationMetrics] = Unassigned()
     invocation_end_time: Optional[datetime.datetime] = Unassigned()
     invocation_start_time: Optional[datetime.datetime] = Unassigned()
 
@@ -7447,6 +7799,19 @@ class MonitoringExecutionSummary(Base):
     monitoring_type: Optional[str] = Unassigned()
 
 
+class OptimizationOutput(Base):
+    """
+    OptimizationOutput
+         Output values produced by an optimization job.
+
+        Attributes
+       ----------------------
+       recommended_inference_image: 	 The image that SageMaker recommends that you use to host the optimized model that you created with an optimization job.
+    """
+
+    recommended_inference_image: Optional[str] = Unassigned()
+
+
 class DescribePipelineDefinitionForExecutionResponse(Base):
     """
     DescribePipelineDefinitionForExecutionResponse
@@ -7522,7 +7887,7 @@ class ServiceCatalogProvisionedProductDetails(Base):
 class SubscribedWorkteam(Base):
     """
     SubscribedWorkteam
-         Describes a work team of a vendor that does the a labelling job.
+         Describes a work team of a vendor that does the labelling job.
 
         Attributes
        ----------------------
@@ -7687,6 +8052,8 @@ class OidcConfigForResponse(Base):
        user_info_endpoint: 	 The OIDC IdP user information endpoint used to configure your private workforce.
        logout_endpoint: 	 The OIDC IdP logout endpoint used to configure your private workforce.
        jwks_uri: 	 The OIDC IdP JSON Web Key Set (Jwks) URI used to configure your private workforce.
+       scope: 	 An array of string identifiers used to refer to the specific pieces of user data or claims that the client application wants to access.
+       authentication_request_extra_params: 	 A string to string map of identifiers specific to the custom identity provider (IdP) being used.
     """
 
     client_id: Optional[str] = Unassigned()
@@ -7696,6 +8063,8 @@ class OidcConfigForResponse(Base):
     user_info_endpoint: Optional[str] = Unassigned()
     logout_endpoint: Optional[str] = Unassigned()
     jwks_uri: Optional[str] = Unassigned()
+    scope: Optional[str] = Unassigned()
+    authentication_request_extra_params: Optional[Dict[str, str]] = Unassigned()
 
 
 class WorkforceVpcConfigResponse(Base):
@@ -7767,6 +8136,7 @@ class Workteam(Base):
        create_date: 	 The date and time that the work team was created (timestamp).
        last_updated_date: 	 The date and time that the work team was last updated (timestamp).
        notification_configuration: 	 Configures SNS notifications of available or expiring work items for work teams.
+       worker_access_configuration: 	 Describes any access constraints that have been defined for Amazon S3 resources.
     """
 
     workteam_name: Union[str, object]
@@ -7779,6 +8149,7 @@ class Workteam(Base):
     create_date: Optional[datetime.datetime] = Unassigned()
     last_updated_date: Optional[datetime.datetime] = Unassigned()
     notification_configuration: Optional[NotificationConfiguration] = Unassigned()
+    worker_access_configuration: Optional[WorkerAccessConfiguration] = Unassigned()
 
 
 class ProductionVariantServerlessUpdateConfig(Base):
@@ -7998,6 +8369,7 @@ class DomainSettingsForUpdate(Base):
        execution_role_identity_config: 	 The configuration for attaching a SageMaker user profile name to the execution role as a sts:SourceIdentity key. This configuration can only be modified if there are no apps in the InService or Pending state.
        security_group_ids: 	 The security groups for the Amazon Virtual Private Cloud that the Domain uses for communication between Domain-level apps and user apps.
        docker_settings: 	 A collection of settings that configure the domain's Docker interaction.
+       amazon_q_settings: 	 A collection of settings that configure the Amazon Q experience within the domain.
     """
 
     r_studio_server_pro_domain_settings_for_update: Optional[
@@ -8006,6 +8378,7 @@ class DomainSettingsForUpdate(Base):
     execution_role_identity_config: Optional[str] = Unassigned()
     security_group_ids: Optional[List[str]] = Unassigned()
     docker_settings: Optional[DockerSettings] = Unassigned()
+    amazon_q_settings: Optional[AmazonQSettings] = Unassigned()
 
 
 class PredefinedMetricSpecification(Base):
@@ -8631,14 +9004,17 @@ class HubContentInfo(Base):
        ----------------------
        hub_content_name: 	 The name of the hub content.
        hub_content_arn: 	 The Amazon Resource Name (ARN) of the hub content.
+       sage_maker_public_hub_content_arn: 	 The ARN of the public hub content.
        hub_content_version: 	 The version of the hub content.
        hub_content_type: 	 The type of hub content.
        document_schema_version: 	 The version of the hub content document schema.
        hub_content_display_name: 	 The display name of the hub content.
        hub_content_description: 	 A description of the hub content.
+       support_status: 	 The support status of the hub content.
        hub_content_search_keywords: 	 The searchable keywords for the hub content.
        hub_content_status: 	 The status of the hub content.
        creation_time: 	 The date and time that the hub content was created.
+       original_creation_time: 	 The date and time when the hub content was originally created, before any updates or revisions.
     """
 
     hub_content_name: Union[str, object]
@@ -8648,9 +9024,12 @@ class HubContentInfo(Base):
     document_schema_version: str
     hub_content_status: str
     creation_time: datetime.datetime
+    sage_maker_public_hub_content_arn: Optional[str] = Unassigned()
     hub_content_display_name: Optional[str] = Unassigned()
     hub_content_description: Optional[str] = Unassigned()
+    support_status: Optional[str] = Unassigned()
     hub_content_search_keywords: Optional[List[str]] = Unassigned()
+    original_creation_time: Optional[datetime.datetime] = Unassigned()
 
 
 class HubInfo(Base):
@@ -9096,6 +9475,31 @@ class MonitoringJobDefinitionSummary(Base):
     endpoint_name: Union[str, object]
 
 
+class TrackingServerSummary(Base):
+    """
+    TrackingServerSummary
+         The summary of the tracking server to list.
+
+        Attributes
+       ----------------------
+       tracking_server_arn: 	 The ARN of a listed tracking server.
+       tracking_server_name: 	 The name of a listed tracking server.
+       creation_time: 	 The creation time of a listed tracking server.
+       last_modified_time: 	 The last modified time of a listed tracking server.
+       tracking_server_status: 	 The creation status of a listed tracking server.
+       is_active: 	 The activity status of a listed tracking server.
+       mlflow_version: 	 The MLflow version used for a listed tracking server.
+    """
+
+    tracking_server_arn: Optional[str] = Unassigned()
+    tracking_server_name: Optional[str] = Unassigned()
+    creation_time: Optional[datetime.datetime] = Unassigned()
+    last_modified_time: Optional[datetime.datetime] = Unassigned()
+    tracking_server_status: Optional[str] = Unassigned()
+    is_active: Optional[str] = Unassigned()
+    mlflow_version: Optional[str] = Unassigned()
+
+
 class ModelCardExportJobSummary(Base):
     """
     ModelCardExportJobSummary
@@ -9424,6 +9828,35 @@ class NotebookInstanceSummary(Base):
     notebook_instance_lifecycle_config_name: Optional[Union[str, object]] = Unassigned()
     default_code_repository: Optional[str] = Unassigned()
     additional_code_repositories: Optional[List[str]] = Unassigned()
+
+
+class OptimizationJobSummary(Base):
+    """
+    OptimizationJobSummary
+         Summarizes an optimization job by providing some of its key properties.
+
+        Attributes
+       ----------------------
+       optimization_job_name: 	 The name that you assigned to the optimization job.
+       optimization_job_arn: 	 The Amazon Resource Name (ARN) of the optimization job.
+       creation_time: 	 The time when you created the optimization job.
+       optimization_job_status: 	 The current status of the optimization job.
+       optimization_start_time: 	 The time when the optimization job started.
+       optimization_end_time: 	 The time when the optimization job finished processing.
+       last_modified_time: 	 The time when the optimization job was last updated.
+       deployment_instance_type: 	 The type of instance that hosts the optimized model that you create with the optimization job.
+       optimization_types: 	 The optimization techniques that are applied by the optimization job.
+    """
+
+    optimization_job_name: Union[str, object]
+    optimization_job_arn: str
+    creation_time: datetime.datetime
+    optimization_job_status: str
+    deployment_instance_type: str
+    optimization_types: List[str]
+    optimization_start_time: Optional[datetime.datetime] = Unassigned()
+    optimization_end_time: Optional[datetime.datetime] = Unassigned()
+    last_modified_time: Optional[datetime.datetime] = Unassigned()
 
 
 class TrainingJobStepMetadata(Base):
@@ -9762,7 +10195,7 @@ class SpaceSettingsSummary(Base):
         Attributes
        ----------------------
        app_type: 	 The type of app created within the space.
-       space_storage_settings: 	 The storage settings for a private space.
+       space_storage_settings: 	 The storage settings for a space.
     """
 
     app_type: Optional[str] = Unassigned()
@@ -9789,7 +10222,7 @@ class OwnershipSettingsSummary(Base):
 
         Attributes
        ----------------------
-       owner_user_profile_name: 	 The user profile who is the owner of the private space.
+       owner_user_profile_name: 	 The user profile who is the owner of the space.
     """
 
     owner_user_profile_name: Optional[str] = Unassigned()
@@ -10242,6 +10675,8 @@ class ModelPackage(Base):
        sample_payload_url: 	 The Amazon Simple Storage Service path where the sample payload are stored. This path must point to a single gzip compressed tar archive (.tar.gz suffix).
        additional_inference_specifications: 	 An array of additional Inference Specification objects.
        source_uri: 	 The URI of the source for the model package.
+       security_config
+       model_card
        tags: 	 A list of the tags associated with the model package. For more information, see Tagging Amazon Web Services resources in the Amazon Web Services General Reference Guide.
        customer_metadata_properties: 	 The metadata properties for the model package.
        drift_check_baselines: 	 Represents the drift check baselines that can be used when the model monitor is set using the model package.
@@ -10274,6 +10709,8 @@ class ModelPackage(Base):
         List[AdditionalInferenceSpecificationDefinition]
     ] = Unassigned()
     source_uri: Optional[str] = Unassigned()
+    security_config: Optional[ModelPackageSecurityConfig] = Unassigned()
+    model_card: Optional[ModelPackageModelCard] = Unassigned()
     tags: Optional[List[Tag]] = Unassigned()
     customer_metadata_properties: Optional[Dict[str, str]] = Unassigned()
     drift_check_baselines: Optional[DriftCheckBaselines] = Unassigned()
