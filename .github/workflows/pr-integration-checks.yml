@@ -58,3 +58,4 @@ jobs:
           if [[ "$(github.event.pull_request.title)" == "Daily Sync with Botocore"* ]]; then
             echo "Integration test Succeeded. Putting Success Metrics onto Cloudwatch"
             aws cloudwatch put-metric-data --metric-name IntegrationTestSuccess --namespace SageMakerPySdkCoreMonitoringMetrics --value 1 --unit Count --dimensions MetricCategory=Integration
+
