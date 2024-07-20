@@ -425,6 +425,10 @@ SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA = {
                                         },
                                     },
                                 },
+                                "MlflowTrackingServer": {
+                                    "type": "object",
+                                    "properties": {"role_arn": {"type": "string"}},
+                                },
                                 "Model": {
                                     "type": "object",
                                     "properties": {
@@ -600,6 +604,7 @@ SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA = {
                                                 "constraints": {"s3_uri": {"type": "string"}},
                                             },
                                         },
+                                        "security_config": {"kms_key_id": {"type": "string"}},
                                     },
                                 },
                                 "ModelQualityJobDefinition": {
@@ -693,6 +698,27 @@ SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA = {
                                         },
                                         "role_arn": {"type": "string"},
                                         "kms_key_id": {"type": "string"},
+                                    },
+                                },
+                                "OptimizationJob": {
+                                    "type": "object",
+                                    "properties": {
+                                        "model_source": {"s3": {"s3_uri": {"type": "string"}}},
+                                        "output_config": {
+                                            "s3_output_location": {"type": "string"},
+                                            "kms_key_id": {"type": "string"},
+                                        },
+                                        "role_arn": {"type": "string"},
+                                        "vpc_config": {
+                                            "security_group_ids": {
+                                                "type": "array",
+                                                "items": {"type": "string"},
+                                            },
+                                            "subnets": {
+                                                "type": "array",
+                                                "items": {"type": "string"},
+                                            },
+                                        },
                                     },
                                 },
                                 "Pipeline": {

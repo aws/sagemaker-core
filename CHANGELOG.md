@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.1.3 (2024-07-18)
+
+ * Daily Sync with Botocore v1.34.143 on 2024/07/11 (#91)
+ * Update license classifier (#119)
+ * Metrics (#118)
+ * Support wait_for_delete method (#114)
+
 ## v0.1.2 (2024-07-08)
 
  * Add additional methods to the unit test framework (#83)

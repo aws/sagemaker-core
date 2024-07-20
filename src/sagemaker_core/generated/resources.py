@@ -1289,7 +1289,7 @@ class App(Base):
 
         Parameters:
             next_token: If the previous response was truncated, you will receive this token. Use it in your next request to receive the next set of results.
-            max_results: The total number of items to return in the response. If the total number of items available is more than the value specified, a NextToken is provided in the response. To resume pagination, provide the NextToken value in the as part of a subsequent call. The default value is 10.
+            max_results: This parameter defines the maximum number of results that can be return in a single response. The MaxResults parameter is an upper bound, not a target. If there are more results available than the value specified, a NextToken is provided in the response. The NextToken indicates that the user should get the next set of results by providing this token as a part of a subsequent call. The default value for MaxResults is 10.
             sort_order: The sort order for the results. The default is Ascending.
             sort_by: The parameter by which to sort the results. The default is CreationTime.
             domain_id_equals: A parameter to search for the domain ID.
@@ -1352,6 +1352,7 @@ class AppImageConfig(Base):
         last_modified_time: When the AppImageConfig was last modified.
         kernel_gateway_image_config: The configuration of a KernelGateway app.
         jupyter_lab_app_image_config: The configuration of the JupyterLab app.
+        code_editor_app_image_config: The configuration of the Code Editor app.
 
     """
 
@@ -1361,6 +1362,7 @@ class AppImageConfig(Base):
     last_modified_time: Optional[datetime.datetime] = Unassigned()
     kernel_gateway_image_config: Optional[KernelGatewayImageConfig] = Unassigned()
     jupyter_lab_app_image_config: Optional[JupyterLabAppImageConfig] = Unassigned()
+    code_editor_app_image_config: Optional[CodeEditorAppImageConfig] = Unassigned()
 
     def get_name(self) -> str:
         attributes = vars(self)
@@ -1385,6 +1387,7 @@ class AppImageConfig(Base):
         tags: Optional[List[Tag]] = Unassigned(),
         kernel_gateway_image_config: Optional[KernelGatewayImageConfig] = Unassigned(),
         jupyter_lab_app_image_config: Optional[JupyterLabAppImageConfig] = Unassigned(),
+        code_editor_app_image_config: Optional[CodeEditorAppImageConfig] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["AppImageConfig"]:
@@ -1396,6 +1399,7 @@ class AppImageConfig(Base):
             tags: A list of tags to apply to the AppImageConfig.
             kernel_gateway_image_config: The KernelGatewayImageConfig. You can only specify one image kernel in the AppImageConfig API. This kernel will be shown to users before the image starts. Once the image runs, all kernels are visible in JupyterLab.
             jupyter_lab_app_image_config: The JupyterLabAppImageConfig. You can only specify one image kernel in the AppImageConfig API. This kernel is shown to users before the image starts. After the image runs, all kernels are visible in JupyterLab.
+            code_editor_app_image_config: The CodeEditorAppImageConfig. You can only specify one image kernel in the AppImageConfig API. This kernel is shown to users before the image starts. After the image runs, all kernels are visible in Code Editor.
             session: Boto3 session.
             region: Region name.
 
@@ -1428,6 +1432,7 @@ class AppImageConfig(Base):
             "Tags": tags,
             "KernelGatewayImageConfig": kernel_gateway_image_config,
             "JupyterLabAppImageConfig": jupyter_lab_app_image_config,
+            "CodeEditorAppImageConfig": code_editor_app_image_config,
         }
 
         operation_input_args = Base.populate_chained_attributes(
@@ -1527,6 +1532,7 @@ class AppImageConfig(Base):
         self,
         kernel_gateway_image_config: Optional[KernelGatewayImageConfig] = Unassigned(),
         jupyter_lab_app_image_config: Optional[JupyterLabAppImageConfig] = Unassigned(),
+        code_editor_app_image_config: Optional[CodeEditorAppImageConfig] = Unassigned(),
     ) -> Optional["AppImageConfig"]:
         """
         Update a AppImageConfig resource
@@ -1554,6 +1560,7 @@ class AppImageConfig(Base):
             "AppImageConfigName": self.app_image_config_name,
             "KernelGatewayImageConfig": kernel_gateway_image_config,
             "JupyterLabAppImageConfig": jupyter_lab_app_image_config,
+            "CodeEditorAppImageConfig": code_editor_app_image_config,
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -3434,10 +3441,10 @@ class Cluster(Base):
         region: Optional[str] = None,
     ) -> Optional[ClusterNodeDetails]:
         """
-        Retrieves information of an instance (also called a node interchangeably) of a SageMaker HyperPod cluster.
+        Retrieves information of a node (also called a instance interchangeably) of a SageMaker HyperPod cluster.
 
         Parameters:
-            node_id: The ID of the instance.
+            node_id: The ID of the SageMaker HyperPod cluster node.
             session: Boto3 session.
             region: Region name.
 
@@ -8654,8 +8661,8 @@ class FeatureGroup(Base):
         Create a FeatureGroup resource
 
         Parameters:
-            feature_group_name: The name of the FeatureGroup. The name must be unique within an Amazon Web Services Region in an Amazon Web Services account. The name:   Must start and end with an alphanumeric character.   Can only include alphanumeric characters, underscores, and hyphens. Spaces are not allowed.
-            record_identifier_feature_name: The name of the Feature whose value uniquely identifies a Record defined in the FeatureStore. Only the latest record per identifier value will be stored in the OnlineStore. RecordIdentifierFeatureName must be one of feature definitions' names. You use the RecordIdentifierFeatureName to access data in a FeatureStore. This name:   Must start and end with an alphanumeric character.   Can only contains alphanumeric characters, hyphens, underscores. Spaces are not allowed.
+            feature_group_name: The name of the FeatureGroup. The name must be unique within an Amazon Web Services Region in an Amazon Web Services account. The name:   Must start with an alphanumeric character.   Can only include alphanumeric characters, underscores, and hyphens. Spaces are not allowed.
+            record_identifier_feature_name: The name of the Feature whose value uniquely identifies a Record defined in the FeatureStore. Only the latest record per identifier value will be stored in the OnlineStore. RecordIdentifierFeatureName must be one of feature definitions' names. You use the RecordIdentifierFeatureName to access data in a FeatureStore. This name:   Must start with an alphanumeric character.   Can only contains alphanumeric characters, hyphens, underscores. Spaces are not allowed.
             event_time_feature_name: The name of the feature that stores the EventTime of a Record in a FeatureGroup. An EventTime is a point in time when a new event occurs that corresponds to the creation or update of a Record in a FeatureGroup. All Records in the FeatureGroup must have a corresponding EventTime. An EventTime can be a String or Fractional.     Fractional: EventTime feature values must be a Unix timestamp in seconds.    String: EventTime feature values must be an ISO-8601 string in the format. The following formats are supported yyyy-MM-dd'T'HH:mm:ssZ and yyyy-MM-dd'T'HH:mm:ss.SSSZ where yyyy, MM, and dd represent the year, month, and day respectively and HH, mm, ss, and if applicable, SSS represent the hour, month, second and milliseconds respsectively. 'T' and Z are constants.
             feature_definitions: A list of Feature names and types. Name and Type is compulsory per Feature.  Valid feature FeatureTypes are Integral, Fractional and String.  FeatureNames cannot be any of the following: is_deleted, write_time, api_invocation_time  You can create up to 2,500 FeatureDefinitions per FeatureGroup.
             online_store_config: You can turn the OnlineStore on or off by specifying True for the EnableOnlineStore flag in OnlineStoreConfig. You can also include an Amazon Web Services KMS key ID (KMSKeyId) for at-rest encryption of the OnlineStore. The default value is False.
@@ -10087,6 +10094,9 @@ class HubContent(Base):
         hub_content_display_name: The display name of the hub content.
         hub_content_description: A description of the hub content.
         hub_content_markdown: A string that provides a description of the hub content. This string can include links, tables, and standard markdown formating.
+        sage_maker_public_hub_content_arn: The ARN of the public hub content.
+        reference_min_version: The minimum version of the hub content.
+        support_status: The support status of the hub content.
         hub_content_search_keywords: The searchable keywords for the hub content.
         hub_content_dependencies: The location of any dependencies that the hub content has, such as scripts, model artifacts, datasets, or notebooks.
         failure_reason: The failure reason if importing hub content failed.
@@ -10103,6 +10113,9 @@ class HubContent(Base):
     hub_content_description: Optional[str] = Unassigned()
     hub_content_markdown: Optional[str] = Unassigned()
     hub_content_document: Optional[str] = Unassigned()
+    sage_maker_public_hub_content_arn: Optional[str] = Unassigned()
+    reference_min_version: Optional[str] = Unassigned()
+    support_status: Optional[str] = Unassigned()
     hub_content_search_keywords: Optional[List[str]] = Unassigned()
     hub_content_dependencies: Optional[List[HubContentDependency]] = Unassigned()
     hub_content_status: Optional[str] = Unassigned()
@@ -10250,7 +10263,7 @@ class HubContent(Base):
 
     def wait_for_status(
         self,
-        status: Literal["Available", "Importing", "Deleting", "ImportFailed", "DeleteFailed"],
+        status: Literal["Supported", "Deprecated"],
         poll: int = 5,
         timeout: Optional[int] = None,
     ) -> None:
@@ -10271,65 +10284,14 @@ class HubContent(Base):
 
         while True:
             self.refresh()
-            current_status = self.hub_content_status
+            current_status = self.support_status
 
             if status == current_status:
                 print(f"\nFinal Resource Status: {current_status}")
                 return
 
-            if "failed" in current_status.lower():
-                raise FailedStatusError(
-                    resource_type="HubContent", status=current_status, reason=self.failure_reason
-                )
-
             if timeout is not None and time.time() - start_time >= timeout:
                 raise TimeoutExceededError(resouce_type="HubContent", status=current_status)
-            print("-", end="")
-            time.sleep(poll)
-
-    def wait_for_delete(
-        self,
-        poll: int = 5,
-        timeout: Optional[int] = None,
-    ) -> None:
-        """
-        Wait for a HubContent resource to be deleted.
-
-        Parameters:
-            poll: The number of seconds to wait between each poll.
-            timeout: The maximum number of seconds to wait before timing out.
-
-        Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
-                The error message and error code can be parsed from the exception as follows:
-                ```
-                try:
-                    # AWS service call here
-                except botocore.exceptions.ClientError as e:
-                    error_message = e.response['Error']['Message']
-                    error_code = e.response['Error']['Code']
-                ```
-            TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
-            DeleteFailedStatusError:   If the resource reaches a failed state.
-            WaiterError: Raised when an error occurs while waiting.
-        """
-        start_time = time.time()
-
-        while True:
-            try:
-                self.refresh()
-                current_status = self.hub_content_status
-
-                if timeout is not None and time.time() - start_time >= timeout:
-                    raise TimeoutExceededError(resouce_type="HubContent", status=current_status)
-            except botocore.exceptions.ClientError as e:
-                error_code = e.response["Error"]["Code"]
-
-                if "ResourceNotFound" in error_code or "ValidationException" in error_code:
-                    print("Resource was not found. It may have been deleted.")
-                    return
-                raise e
-
             print("-", end="")
             time.sleep(poll)
 
@@ -10494,6 +10456,139 @@ class HubContent(Base):
             resource_cls=HubContent,
             list_method_kwargs=operation_input_args,
         )
+
+
+class HubContentReference(Base):
+    """
+    Class representing resource HubContentReference
+
+    Attributes:
+        hub_name: The name of the hub to add the hub content reference to.
+        sage_maker_public_hub_content_arn: The ARN of the public hub content to reference.
+        hub_arn: The ARN of the hub that the hub content reference was added to.
+        hub_content_arn: The ARN of the hub content.
+        hub_content_name: The name of the hub content to reference.
+        min_version: The minimum version of the hub content to reference.
+        tags: Any tags associated with the hub content to reference.
+
+    """
+
+    hub_name: Union[str, object]
+    sage_maker_public_hub_content_arn: str
+    hub_arn: str
+    hub_content_arn: str
+    hub_content_name: Optional[Union[str, object]] = Unassigned()
+    min_version: Optional[str] = Unassigned()
+    tags: Optional[List[Tag]] = Unassigned()
+
+    def get_name(self) -> str:
+        attributes = vars(self)
+        resource_name = "hub_content_reference_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
+        for attribute, value in attributes.items():
+            if attribute == "name" or attribute in attribute_name_candidates:
+                return value
+        logger.error("Name attribute not found for object hub_content_reference")
+        return None
+
+    @classmethod
+    def create(
+        cls,
+        hub_name: Union[str, object],
+        sage_maker_public_hub_content_arn: str,
+        hub_content_name: Optional[Union[str, object]] = Unassigned(),
+        min_version: Optional[str] = Unassigned(),
+        tags: Optional[List[Tag]] = Unassigned(),
+    ) -> Optional["resource_name"]:
+        """
+        Create a HubContentReference resource
+
+        Parameters:
+            hub_name: The name of the hub to add the hub content reference to.
+            sage_maker_public_hub_content_arn: The ARN of the public hub content to reference.
+            hub_content_name: The name of the hub content to reference.
+            min_version: The minimum version of the hub content to reference.
+            tags: Any tags associated with the hub content to reference.
+            session: Boto3 session.
+            region: Region name.
+
+        Returns:
+            The HubContentReference resource.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceInUse: Resource being accessed is in use.
+            ResourceLimitExceeded: You have exceeded an SageMaker resource limit. For example, you might have too many training jobs created.
+            ResourceNotFound: Resource being access is not found.
+            ConfigSchemaValidationError: Raised when a configuration file does not adhere to the schema
+            LocalConfigNotFoundError: Raised when a configuration file is not found in local file system
+            S3ConfigNotFoundError: Raised when a configuration file is not found in S3
+        """
+
+        operation_input_args = {
+            "HubName": hub_name,
+            "SageMakerPublicHubContentArn": sage_maker_public_hub_content_arn,
+            "HubContentName": hub_content_name,
+            "MinVersion": min_version,
+            "Tags": tags,
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
+
+        logger.debug(f"Calling create_hub_content_reference API")
+        response = client.create_hub_content_reference(**operation_input_args)
+        logger.debug(f"Response: {response}")
+
+        transformed_response = transform(response, "CreateHubContentReferenceResponse")
+        return cls(**operation_input_args, **transformed_response)
+
+    def delete(
+        self,
+        hub_content_type: str,
+    ) -> None:
+        """
+        Delete a HubContentReference resource
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceNotFound: Resource being access is not found.
+        """
+
+        client = Base.get_sagemaker_client()
+
+        operation_input_args = {
+            "HubName": self.hub_name,
+            "HubContentType": hub_content_type,
+            "HubContentName": self.hub_content_name,
+        }
+        client.delete_hub_content_reference(**operation_input_args)
+
+        logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
 
 class HumanTaskUi(Base):
@@ -14397,6 +14492,514 @@ class LineageGroup(Base):
         return GetLineageGroupPolicyResponse(**transformed_response)
 
 
+class MlflowTrackingServer(Base):
+    """
+    Class representing resource MlflowTrackingServer
+
+    Attributes:
+        tracking_server_arn: The ARN of the described tracking server.
+        tracking_server_name: The name of the described tracking server.
+        artifact_store_uri: The S3 URI of the general purpose bucket used as the MLflow Tracking Server artifact store.
+        tracking_server_size: The size of the described tracking server.
+        mlflow_version: The MLflow version used for the described tracking server.
+        role_arn: The Amazon Resource Name (ARN) for an IAM role in your account that the described MLflow Tracking Server uses to access the artifact store in Amazon S3.
+        tracking_server_status: The current creation status of the described MLflow Tracking Server.
+        is_active: Whether the described MLflow Tracking Server is currently active.
+        tracking_server_url: The URL to connect to the MLflow user interface for the described tracking server.
+        weekly_maintenance_window_start: The day and time of the week when weekly maintenance occurs on the described tracking server.
+        automatic_model_registration: Whether automatic registration of new MLflow models to the SageMaker Model Registry is enabled.
+        creation_time: The timestamp of when the described MLflow Tracking Server was created.
+        created_by:
+        last_modified_time: The timestamp of when the described MLflow Tracking Server was last modified.
+        last_modified_by:
+
+    """
+
+    tracking_server_name: str
+    tracking_server_arn: Optional[str] = Unassigned()
+    artifact_store_uri: Optional[str] = Unassigned()
+    tracking_server_size: Optional[str] = Unassigned()
+    mlflow_version: Optional[str] = Unassigned()
+    role_arn: Optional[str] = Unassigned()
+    tracking_server_status: Optional[str] = Unassigned()
+    is_active: Optional[str] = Unassigned()
+    tracking_server_url: Optional[str] = Unassigned()
+    weekly_maintenance_window_start: Optional[str] = Unassigned()
+    automatic_model_registration: Optional[bool] = Unassigned()
+    creation_time: Optional[datetime.datetime] = Unassigned()
+    created_by: Optional[UserContext] = Unassigned()
+    last_modified_time: Optional[datetime.datetime] = Unassigned()
+    last_modified_by: Optional[UserContext] = Unassigned()
+
+    def get_name(self) -> str:
+        attributes = vars(self)
+        resource_name = "mlflow_tracking_server_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
+        for attribute, value in attributes.items():
+            if attribute == "name" or attribute in attribute_name_candidates:
+                return value
+        logger.error("Name attribute not found for object mlflow_tracking_server")
+        return None
+
+    def populate_inputs_decorator(create_func):
+        @functools.wraps(create_func)
+        def wrapper(*args, **kwargs):
+            config_schema_for_resource = {"role_arn": {"type": "string"}}
+            return create_func(
+                *args,
+                **Base.get_updated_kwargs_with_configured_attributes(
+                    config_schema_for_resource, "MlflowTrackingServer", **kwargs
+                ),
+            )
+
+        return wrapper
+
+    @classmethod
+    @populate_inputs_decorator
+    def create(
+        cls,
+        tracking_server_name: str,
+        artifact_store_uri: str,
+        role_arn: str,
+        tracking_server_size: Optional[str] = Unassigned(),
+        mlflow_version: Optional[str] = Unassigned(),
+        automatic_model_registration: Optional[bool] = Unassigned(),
+        weekly_maintenance_window_start: Optional[str] = Unassigned(),
+        tags: Optional[List[Tag]] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional["MlflowTrackingServer"]:
+        """
+        Create a MlflowTrackingServer resource
+
+        Parameters:
+            tracking_server_name: A unique string identifying the tracking server name. This string is part of the tracking server ARN.
+            artifact_store_uri: The S3 URI for a general purpose bucket to use as the MLflow Tracking Server artifact store.
+            role_arn: The Amazon Resource Name (ARN) for an IAM role in your account that the MLflow Tracking Server uses to access the artifact store in Amazon S3. The role should have AmazonS3FullAccess permissions. For more information on IAM permissions for tracking server creation, see Set up IAM permissions for MLflow.
+            tracking_server_size: The size of the tracking server you want to create. You can choose between "Small", "Medium", and "Large". The default MLflow Tracking Server configuration size is "Small". You can choose a size depending on the projected use of the tracking server such as the volume of data logged, number of users, and frequency of use.  We recommend using a small tracking server for teams of up to 25 users, a medium tracking server for teams of up to 50 users, and a large tracking server for teams of up to 100 users.
+            mlflow_version: The version of MLflow that the tracking server uses. To see which MLflow versions are available to use, see How it works.
+            automatic_model_registration: Whether to enable or disable automatic registration of new MLflow models to the SageMaker Model Registry. To enable automatic model registration, set this value to True. To disable automatic model registration, set this value to False. If not specified, AutomaticModelRegistration defaults to False.
+            weekly_maintenance_window_start: The day and time of the week in Coordinated Universal Time (UTC) 24-hour standard time that weekly maintenance updates are scheduled. For example: TUE:03:30.
+            tags: Tags consisting of key-value pairs used to manage metadata for the tracking server.
+            session: Boto3 session.
+            region: Region name.
+
+        Returns:
+            The MlflowTrackingServer resource.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceLimitExceeded: You have exceeded an SageMaker resource limit. For example, you might have too many training jobs created.
+            ConfigSchemaValidationError: Raised when a configuration file does not adhere to the schema
+            LocalConfigNotFoundError: Raised when a configuration file is not found in local file system
+            S3ConfigNotFoundError: Raised when a configuration file is not found in S3
+        """
+
+        logger.debug("Creating mlflow_tracking_server resource.")
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
+
+        operation_input_args = {
+            "TrackingServerName": tracking_server_name,
+            "ArtifactStoreUri": artifact_store_uri,
+            "TrackingServerSize": tracking_server_size,
+            "MlflowVersion": mlflow_version,
+            "RoleArn": role_arn,
+            "AutomaticModelRegistration": automatic_model_registration,
+            "WeeklyMaintenanceWindowStart": weekly_maintenance_window_start,
+            "Tags": tags,
+        }
+
+        operation_input_args = Base.populate_chained_attributes(
+            resource_name="MlflowTrackingServer", operation_input_args=operation_input_args
+        )
+
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = cls._serialize_args(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+
+        # create the resource
+        response = client.create_mlflow_tracking_server(**operation_input_args)
+        logger.debug(f"Response: {response}")
+
+        return cls.get(tracking_server_name=tracking_server_name, session=session, region=region)
+
+    @classmethod
+    def get(
+        cls,
+        tracking_server_name: str,
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional["MlflowTrackingServer"]:
+        """
+        Get a MlflowTrackingServer resource
+
+        Parameters:
+            tracking_server_name: The name of the MLflow Tracking Server to describe.
+            session: Boto3 session.
+            region: Region name.
+
+        Returns:
+            The MlflowTrackingServer resource.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceNotFound: Resource being access is not found.
+        """
+
+        operation_input_args = {
+            "TrackingServerName": tracking_server_name,
+        }
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
+        response = client.describe_mlflow_tracking_server(**operation_input_args)
+
+        pprint(response)
+
+        # deserialize the response
+        transformed_response = transform(response, "DescribeMlflowTrackingServerResponse")
+        mlflow_tracking_server = cls(**transformed_response)
+        return mlflow_tracking_server
+
+    def refresh(
+        self,
+    ) -> Optional["MlflowTrackingServer"]:
+        """
+        Refresh a MlflowTrackingServer resource
+
+        Returns:
+            The MlflowTrackingServer resource.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceNotFound: Resource being access is not found.
+        """
+
+        operation_input_args = {
+            "TrackingServerName": self.tracking_server_name,
+        }
+        client = Base.get_sagemaker_client()
+        response = client.describe_mlflow_tracking_server(**operation_input_args)
+
+        # deserialize response and update self
+        transform(response, "DescribeMlflowTrackingServerResponse", self)
+        return self
+
+    @populate_inputs_decorator
+    def update(
+        self,
+        artifact_store_uri: Optional[str] = Unassigned(),
+        tracking_server_size: Optional[str] = Unassigned(),
+        automatic_model_registration: Optional[bool] = Unassigned(),
+        weekly_maintenance_window_start: Optional[str] = Unassigned(),
+    ) -> Optional["MlflowTrackingServer"]:
+        """
+        Update a MlflowTrackingServer resource
+
+        Returns:
+            The MlflowTrackingServer resource.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ConflictException: There was a conflict when you attempted to modify a SageMaker entity such as an Experiment or Artifact.
+            ResourceLimitExceeded: You have exceeded an SageMaker resource limit. For example, you might have too many training jobs created.
+            ResourceNotFound: Resource being access is not found.
+        """
+
+        logger.debug("Updating mlflow_tracking_server resource.")
+        client = Base.get_sagemaker_client()
+
+        operation_input_args = {
+            "TrackingServerName": self.tracking_server_name,
+            "ArtifactStoreUri": artifact_store_uri,
+            "TrackingServerSize": tracking_server_size,
+            "AutomaticModelRegistration": automatic_model_registration,
+            "WeeklyMaintenanceWindowStart": weekly_maintenance_window_start,
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = MlflowTrackingServer._serialize_args(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+
+        # create the resource
+        response = client.update_mlflow_tracking_server(**operation_input_args)
+        logger.debug(f"Response: {response}")
+        self.refresh()
+
+        return self
+
+    def delete(
+        self,
+    ) -> None:
+        """
+        Delete a MlflowTrackingServer resource
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceNotFound: Resource being access is not found.
+        """
+
+        client = Base.get_sagemaker_client()
+
+        operation_input_args = {
+            "TrackingServerName": self.tracking_server_name,
+        }
+        client.delete_mlflow_tracking_server(**operation_input_args)
+
+        logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+
+    def stop(self) -> None:
+        """
+        Stop a MlflowTrackingServer resource
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ConflictException: There was a conflict when you attempted to modify a SageMaker entity such as an Experiment or Artifact.
+            ResourceNotFound: Resource being access is not found.
+        """
+
+        client = SageMakerClient().client
+
+        operation_input_args = {
+            "TrackingServerName": self.tracking_server_name,
+        }
+        client.stop_mlflow_tracking_server(**operation_input_args)
+
+    def wait_for_status(
+        self,
+        status: Literal[
+            "Creating",
+            "Created",
+            "CreateFailed",
+            "Updating",
+            "Updated",
+            "UpdateFailed",
+            "Deleting",
+            "DeleteFailed",
+            "Stopping",
+            "Stopped",
+            "StopFailed",
+            "Starting",
+            "Started",
+            "StartFailed",
+            "MaintenanceInProgress",
+            "MaintenanceComplete",
+            "MaintenanceFailed",
+        ],
+        poll: int = 5,
+        timeout: Optional[int] = None,
+    ) -> None:
+        """
+        Wait for a MlflowTrackingServer resource to reach certain status.
+
+        Parameters:
+            status: The status to wait for.
+            poll: The number of seconds to wait between each poll.
+            timeout: The maximum number of seconds to wait before timing out.
+
+        Raises:
+            TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
+            FailedStatusError:   If the resource reaches a failed state.
+            WaiterError: Raised when an error occurs while waiting.
+        """
+        start_time = time.time()
+
+        while True:
+            self.refresh()
+            current_status = self.tracking_server_status
+
+            if status == current_status:
+                print(f"\nFinal Resource Status: {current_status}")
+                return
+
+            if "failed" in current_status.lower():
+                raise FailedStatusError(
+                    resource_type="MlflowTrackingServer", status=current_status, reason="(Unknown)"
+                )
+
+            if timeout is not None and time.time() - start_time >= timeout:
+                raise TimeoutExceededError(
+                    resouce_type="MlflowTrackingServer", status=current_status
+                )
+            print("-", end="")
+            time.sleep(poll)
+
+    def wait_for_delete(
+        self,
+        poll: int = 5,
+        timeout: Optional[int] = None,
+    ) -> None:
+        """
+        Wait for a MlflowTrackingServer resource to be deleted.
+
+        Parameters:
+            poll: The number of seconds to wait between each poll.
+            timeout: The maximum number of seconds to wait before timing out.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
+            DeleteFailedStatusError:   If the resource reaches a failed state.
+            WaiterError: Raised when an error occurs while waiting.
+        """
+        start_time = time.time()
+
+        while True:
+            try:
+                self.refresh()
+                current_status = self.tracking_server_status
+
+                if timeout is not None and time.time() - start_time >= timeout:
+                    raise TimeoutExceededError(
+                        resouce_type="MlflowTrackingServer", status=current_status
+                    )
+            except botocore.exceptions.ClientError as e:
+                error_code = e.response["Error"]["Code"]
+
+                if "ResourceNotFound" in error_code or "ValidationException" in error_code:
+                    print("Resource was not found. It may have been deleted.")
+                    return
+                raise e
+
+            print("-", end="")
+            time.sleep(poll)
+
+    @classmethod
+    def get_all(
+        cls,
+        created_after: Optional[datetime.datetime] = Unassigned(),
+        created_before: Optional[datetime.datetime] = Unassigned(),
+        tracking_server_status: Optional[str] = Unassigned(),
+        mlflow_version: Optional[str] = Unassigned(),
+        sort_by: Optional[str] = Unassigned(),
+        sort_order: Optional[str] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> ResourceIterator["MlflowTrackingServer"]:
+        """
+        Get all MlflowTrackingServer resources
+
+        Parameters:
+            created_after: Use the CreatedAfter filter to only list tracking servers created after a specific date and time. Listed tracking servers are shown with a date and time such as "2024-03-16T01:46:56+00:00". The CreatedAfter parameter takes in a Unix timestamp. To convert a date and time into a Unix timestamp, see EpochConverter.
+            created_before: Use the CreatedBefore filter to only list tracking servers created before a specific date and time. Listed tracking servers are shown with a date and time such as "2024-03-16T01:46:56+00:00". The CreatedBefore parameter takes in a Unix timestamp. To convert a date and time into a Unix timestamp, see EpochConverter.
+            tracking_server_status: Filter for tracking servers with a specified creation status.
+            mlflow_version: Filter for tracking servers using the specified MLflow version.
+            sort_by: Filter for trackings servers sorting by name, creation time, or creation status.
+            sort_order: Change the order of the listed tracking servers. By default, tracking servers are listed in Descending order by creation time. To change the list order, you can specify SortOrder to be Ascending.
+            next_token: If the previous response was truncated, you will receive this token. Use it in your next request to receive the next set of results.
+            max_results: The maximum number of tracking servers to list.
+            session: Boto3 session.
+            region: Region name.
+
+        Returns:
+            Iterator for listed MlflowTrackingServer resources.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+        """
+
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
+
+        operation_input_args = {
+            "CreatedAfter": created_after,
+            "CreatedBefore": created_before,
+            "TrackingServerStatus": tracking_server_status,
+            "MlflowVersion": mlflow_version,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
+        }
+
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
+
+        return ResourceIterator(
+            client=client,
+            list_method="list_mlflow_tracking_servers",
+            summaries_key="TrackingServerSummaries",
+            summary_name="TrackingServerSummary",
+            resource_cls=MlflowTrackingServer,
+            list_method_kwargs=operation_input_args,
+        )
+
+
 class Model(Base):
     """
     Class representing resource Model
@@ -16307,6 +16910,8 @@ class ModelPackage(Base):
         additional_inference_specifications: An array of additional Inference Specification objects. Each additional Inference Specification specifies artifacts based on this model package that can be used on inference endpoints. Generally used with SageMaker Neo to store the compiled artifacts.
         skip_model_validation: Indicates if you want to skip model validation.
         source_uri: The URI of the source for the model package.
+        security_config: The KMS Key ID (KMSKeyId) used for encryption of model package information.
+        model_card: The model card associated with the model package. Since ModelPackageModelCard is tied to a model package, it is a specific usage of a model card and its schema is simplified compared to the schema of ModelCard. The ModelPackageModelCard schema does not include model_package_details, and model_overview is composed of the model_creator and model_artifact properties. For more information about the model package model card schema, see Model package model card schema. For more information about the model card associated with the model package, see View the Details of a Model Version.
 
     """
 
@@ -16339,6 +16944,8 @@ class ModelPackage(Base):
     ] = Unassigned()
     skip_model_validation: Optional[str] = Unassigned()
     source_uri: Optional[str] = Unassigned()
+    security_config: Optional[ModelPackageSecurityConfig] = Unassigned()
+    model_card: Optional[ModelPackageModelCard] = Unassigned()
 
     def get_name(self) -> str:
         attributes = vars(self)
@@ -16396,6 +17003,7 @@ class ModelPackage(Base):
                         "constraints": {"s3_uri": {"type": "string"}},
                     },
                 },
+                "security_config": {"kms_key_id": {"type": "string"}},
             }
             return create_func(
                 *args,
@@ -16432,6 +17040,8 @@ class ModelPackage(Base):
         ] = Unassigned(),
         skip_model_validation: Optional[str] = Unassigned(),
         source_uri: Optional[str] = Unassigned(),
+        security_config: Optional[ModelPackageSecurityConfig] = Unassigned(),
+        model_card: Optional[ModelPackageModelCard] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["ModelPackage"]:
@@ -16459,6 +17069,8 @@ class ModelPackage(Base):
             additional_inference_specifications: An array of additional Inference Specification objects. Each additional Inference Specification specifies artifacts based on this model package that can be used on inference endpoints. Generally used with SageMaker Neo to store the compiled artifacts.
             skip_model_validation: Indicates if you want to skip model validation.
             source_uri: The URI of the source for the model package. If you want to clone a model package, set it to the model package Amazon Resource Name (ARN). If you want to register a model, set it to the model ARN.
+            security_config: The KMS Key ID (KMSKeyId) used for encryption of model package information.
+            model_card: The model card associated with the model package. Since ModelPackageModelCard is tied to a model package, it is a specific usage of a model card and its schema is simplified compared to the schema of ModelCard. The ModelPackageModelCard schema does not include model_package_details, and model_overview is composed of the model_creator and model_artifact properties. For more information about the model package model card schema, see Model package model card schema. For more information about the model card associated with the model package, see View the Details of a Model Version.
             session: Boto3 session.
             region: Region name.
 
@@ -16508,6 +17120,8 @@ class ModelPackage(Base):
             "AdditionalInferenceSpecifications": additional_inference_specifications,
             "SkipModelValidation": skip_model_validation,
             "SourceUri": source_uri,
+            "SecurityConfig": security_config,
+            "ModelCard": model_card,
         }
 
         operation_input_args = Base.populate_chained_attributes(
@@ -16615,6 +17229,7 @@ class ModelPackage(Base):
         ] = Unassigned(),
         inference_specification: Optional[InferenceSpecification] = Unassigned(),
         source_uri: Optional[str] = Unassigned(),
+        model_card: Optional[ModelPackageModelCard] = Unassigned(),
     ) -> Optional["ModelPackage"]:
         """
         Update a ModelPackage resource
@@ -16651,6 +17266,7 @@ class ModelPackage(Base):
             "AdditionalInferenceSpecificationsToAdd": additional_inference_specifications_to_add,
             "InferenceSpecification": inference_specification,
             "SourceUri": source_uri,
+            "ModelCard": model_card,
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
@@ -17201,6 +17817,7 @@ class ModelPackageGroup(Base):
         name_contains: Optional[str] = Unassigned(),
         sort_by: Optional[str] = Unassigned(),
         sort_order: Optional[str] = Unassigned(),
+        cross_account_filter_option: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> ResourceIterator["ModelPackageGroup"]:
@@ -17215,6 +17832,7 @@ class ModelPackageGroup(Base):
             next_token: If the result of the previous ListModelPackageGroups request was truncated, the response includes a NextToken. To retrieve the next set of model groups, use the token in the next request.
             sort_by: The field to sort results by. The default is CreationTime.
             sort_order: The sort order for results. The default is Ascending.
+            cross_account_filter_option: A filter that returns either model groups shared with you or model groups in your own account. When the value is CrossAccount, the results show the resources made discoverable to you from other accounts. When the value is SameAccount or null, the results show resources from your account. The default is SameAccount.
             session: Boto3 session.
             region: Region name.
 
@@ -17243,6 +17861,7 @@ class ModelPackageGroup(Base):
             "NameContains": name_contains,
             "SortBy": sort_by,
             "SortOrder": sort_order,
+            "CrossAccountFilterOption": cross_account_filter_option,
         }
 
         operation_input_args = {
@@ -19438,6 +20057,424 @@ class NotebookInstanceLifecycleConfig(Base):
         )
 
 
+class OptimizationJob(Base):
+    """
+    Class representing resource OptimizationJob
+
+    Attributes:
+        optimization_job_arn: The Amazon Resource Name (ARN) of the optimization job.
+        optimization_job_status: The current status of the optimization job.
+        creation_time: The time when you created the optimization job.
+        last_modified_time: The time when the optimization job was last updated.
+        optimization_job_name: The name that you assigned to the optimization job.
+        model_source: The location of the source model to optimize with an optimization job.
+        deployment_instance_type: The type of instance that hosts the optimized model that you create with the optimization job.
+        optimization_configs: Settings for each of the optimization techniques that the job applies.
+        output_config: Details for where to store the optimized model that you create with the optimization job.
+        role_arn: The ARN of the IAM role that you assigned to the optimization job.
+        stopping_condition:
+        optimization_start_time: The time when the optimization job started.
+        optimization_end_time: The time when the optimization job finished processing.
+        failure_reason: If the optimization job status is FAILED, the reason for the failure.
+        optimization_environment: The environment variables to set in the model container.
+        optimization_output: Output values produced by an optimization job.
+        vpc_config: A VPC in Amazon VPC that your optimized model has access to.
+
+    """
+
+    optimization_job_name: str
+    optimization_job_arn: Optional[str] = Unassigned()
+    optimization_job_status: Optional[str] = Unassigned()
+    optimization_start_time: Optional[datetime.datetime] = Unassigned()
+    optimization_end_time: Optional[datetime.datetime] = Unassigned()
+    creation_time: Optional[datetime.datetime] = Unassigned()
+    last_modified_time: Optional[datetime.datetime] = Unassigned()
+    failure_reason: Optional[str] = Unassigned()
+    model_source: Optional[OptimizationJobModelSource] = Unassigned()
+    optimization_environment: Optional[Dict[str, str]] = Unassigned()
+    deployment_instance_type: Optional[str] = Unassigned()
+    optimization_configs: Optional[List[OptimizationConfig]] = Unassigned()
+    output_config: Optional[OptimizationJobOutputConfig] = Unassigned()
+    optimization_output: Optional[OptimizationOutput] = Unassigned()
+    role_arn: Optional[str] = Unassigned()
+    stopping_condition: Optional[StoppingCondition] = Unassigned()
+    vpc_config: Optional[OptimizationVpcConfig] = Unassigned()
+
+    def get_name(self) -> str:
+        attributes = vars(self)
+        resource_name = "optimization_job_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
+        for attribute, value in attributes.items():
+            if attribute == "name" or attribute in attribute_name_candidates:
+                return value
+        logger.error("Name attribute not found for object optimization_job")
+        return None
+
+    def populate_inputs_decorator(create_func):
+        @functools.wraps(create_func)
+        def wrapper(*args, **kwargs):
+            config_schema_for_resource = {
+                "model_source": {"s3": {"s3_uri": {"type": "string"}}},
+                "output_config": {
+                    "s3_output_location": {"type": "string"},
+                    "kms_key_id": {"type": "string"},
+                },
+                "role_arn": {"type": "string"},
+                "vpc_config": {
+                    "security_group_ids": {"type": "array", "items": {"type": "string"}},
+                    "subnets": {"type": "array", "items": {"type": "string"}},
+                },
+            }
+            return create_func(
+                *args,
+                **Base.get_updated_kwargs_with_configured_attributes(
+                    config_schema_for_resource, "OptimizationJob", **kwargs
+                ),
+            )
+
+        return wrapper
+
+    @classmethod
+    @populate_inputs_decorator
+    def create(
+        cls,
+        optimization_job_name: str,
+        role_arn: str,
+        model_source: OptimizationJobModelSource,
+        deployment_instance_type: str,
+        optimization_configs: List[OptimizationConfig],
+        output_config: OptimizationJobOutputConfig,
+        stopping_condition: StoppingCondition,
+        optimization_environment: Optional[Dict[str, str]] = Unassigned(),
+        tags: Optional[List[Tag]] = Unassigned(),
+        vpc_config: Optional[OptimizationVpcConfig] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional["OptimizationJob"]:
+        """
+        Create a OptimizationJob resource
+
+        Parameters:
+            optimization_job_name: A custom name for the new optimization job.
+            role_arn: The Amazon Resource Name (ARN) of an IAM role that enables Amazon SageMaker to perform tasks on your behalf.  During model optimization, Amazon SageMaker needs your permission to:   Read input data from an S3 bucket   Write model artifacts to an S3 bucket   Write logs to Amazon CloudWatch Logs   Publish metrics to Amazon CloudWatch   You grant permissions for all of these tasks to an IAM role. To pass this role to Amazon SageMaker, the caller of this API must have the iam:PassRole permission. For more information, see Amazon SageMaker Roles.
+            model_source: The location of the source model to optimize with an optimization job.
+            deployment_instance_type: The type of instance that hosts the optimized model that you create with the optimization job.
+            optimization_configs: Settings for each of the optimization techniques that the job applies.
+            output_config: Details for where to store the optimized model that you create with the optimization job.
+            stopping_condition:
+            optimization_environment: The environment variables to set in the model container.
+            tags: A list of key-value pairs associated with the optimization job. For more information, see Tagging Amazon Web Services resources in the Amazon Web Services General Reference Guide.
+            vpc_config: A VPC in Amazon VPC that your optimized model has access to.
+            session: Boto3 session.
+            region: Region name.
+
+        Returns:
+            The OptimizationJob resource.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceInUse: Resource being accessed is in use.
+            ResourceLimitExceeded: You have exceeded an SageMaker resource limit. For example, you might have too many training jobs created.
+            ConfigSchemaValidationError: Raised when a configuration file does not adhere to the schema
+            LocalConfigNotFoundError: Raised when a configuration file is not found in local file system
+            S3ConfigNotFoundError: Raised when a configuration file is not found in S3
+        """
+
+        logger.debug("Creating optimization_job resource.")
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
+
+        operation_input_args = {
+            "OptimizationJobName": optimization_job_name,
+            "RoleArn": role_arn,
+            "ModelSource": model_source,
+            "DeploymentInstanceType": deployment_instance_type,
+            "OptimizationEnvironment": optimization_environment,
+            "OptimizationConfigs": optimization_configs,
+            "OutputConfig": output_config,
+            "StoppingCondition": stopping_condition,
+            "Tags": tags,
+            "VpcConfig": vpc_config,
+        }
+
+        operation_input_args = Base.populate_chained_attributes(
+            resource_name="OptimizationJob", operation_input_args=operation_input_args
+        )
+
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = cls._serialize_args(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+
+        # create the resource
+        response = client.create_optimization_job(**operation_input_args)
+        logger.debug(f"Response: {response}")
+
+        return cls.get(optimization_job_name=optimization_job_name, session=session, region=region)
+
+    @classmethod
+    def get(
+        cls,
+        optimization_job_name: str,
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional["OptimizationJob"]:
+        """
+        Get a OptimizationJob resource
+
+        Parameters:
+            optimization_job_name: The name that you assigned to the optimization job.
+            session: Boto3 session.
+            region: Region name.
+
+        Returns:
+            The OptimizationJob resource.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceNotFound: Resource being access is not found.
+        """
+
+        operation_input_args = {
+            "OptimizationJobName": optimization_job_name,
+        }
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
+        response = client.describe_optimization_job(**operation_input_args)
+
+        pprint(response)
+
+        # deserialize the response
+        transformed_response = transform(response, "DescribeOptimizationJobResponse")
+        optimization_job = cls(**transformed_response)
+        return optimization_job
+
+    def refresh(
+        self,
+    ) -> Optional["OptimizationJob"]:
+        """
+        Refresh a OptimizationJob resource
+
+        Returns:
+            The OptimizationJob resource.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceNotFound: Resource being access is not found.
+        """
+
+        operation_input_args = {
+            "OptimizationJobName": self.optimization_job_name,
+        }
+        client = Base.get_sagemaker_client()
+        response = client.describe_optimization_job(**operation_input_args)
+
+        # deserialize response and update self
+        transform(response, "DescribeOptimizationJobResponse", self)
+        return self
+
+    def delete(
+        self,
+    ) -> None:
+        """
+        Delete a OptimizationJob resource
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceNotFound: Resource being access is not found.
+        """
+
+        client = Base.get_sagemaker_client()
+
+        operation_input_args = {
+            "OptimizationJobName": self.optimization_job_name,
+        }
+        client.delete_optimization_job(**operation_input_args)
+
+        logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+
+    def stop(self) -> None:
+        """
+        Stop a OptimizationJob resource
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceNotFound: Resource being access is not found.
+        """
+
+        client = SageMakerClient().client
+
+        operation_input_args = {
+            "OptimizationJobName": self.optimization_job_name,
+        }
+        client.stop_optimization_job(**operation_input_args)
+
+    def wait(self, poll: int = 5, timeout: Optional[int] = None) -> None:
+        """
+        Wait for a OptimizationJob resource.
+
+        Parameters:
+            poll: The number of seconds to wait between each poll.
+            timeout: The maximum number of seconds to wait before timing out.
+
+        Raises:
+            TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
+            FailedStatusError:   If the resource reaches a failed state.
+            WaiterError: Raised when an error occurs while waiting.
+
+        """
+        terminal_states = ["COMPLETED", "FAILED", "STOPPED"]
+        start_time = time.time()
+
+        while True:
+            self.refresh()
+            current_status = self.optimization_job_status
+
+            if current_status in terminal_states:
+                print(f"\nFinal Resource Status: {current_status}")
+
+                if "failed" in current_status.lower():
+                    raise FailedStatusError(
+                        resource_type="OptimizationJob",
+                        status=current_status,
+                        reason=self.failure_reason,
+                    )
+
+                return
+
+            if timeout is not None and time.time() - start_time >= timeout:
+                raise TimeoutExceededError(resouce_type="OptimizationJob", status=current_status)
+            print("-", end="")
+            time.sleep(poll)
+
+    @classmethod
+    def get_all(
+        cls,
+        creation_time_after: Optional[datetime.datetime] = Unassigned(),
+        creation_time_before: Optional[datetime.datetime] = Unassigned(),
+        last_modified_time_after: Optional[datetime.datetime] = Unassigned(),
+        last_modified_time_before: Optional[datetime.datetime] = Unassigned(),
+        optimization_contains: Optional[str] = Unassigned(),
+        name_contains: Optional[str] = Unassigned(),
+        status_equals: Optional[str] = Unassigned(),
+        sort_by: Optional[str] = Unassigned(),
+        sort_order: Optional[str] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> ResourceIterator["OptimizationJob"]:
+        """
+        Get all OptimizationJob resources
+
+        Parameters:
+            next_token: A token that you use to get the next set of results following a truncated response. If the response to the previous request was truncated, that response provides the value for this token.
+            max_results: The maximum number of optimization jobs to return in the response. The default is 50.
+            creation_time_after: Filters the results to only those optimization jobs that were created after the specified time.
+            creation_time_before: Filters the results to only those optimization jobs that were created before the specified time.
+            last_modified_time_after: Filters the results to only those optimization jobs that were updated after the specified time.
+            last_modified_time_before: Filters the results to only those optimization jobs that were updated before the specified time.
+            optimization_contains: Filters the results to only those optimization jobs that apply the specified optimization techniques. You can specify either Quantization or Compilation.
+            name_contains: Filters the results to only those optimization jobs with a name that contains the specified string.
+            status_equals: Filters the results to only those optimization jobs with the specified status.
+            sort_by: The field by which to sort the optimization jobs in the response. The default is CreationTime
+            sort_order: The sort order for results. The default is Ascending
+            session: Boto3 session.
+            region: Region name.
+
+        Returns:
+            Iterator for listed OptimizationJob resources.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+        """
+
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
+
+        operation_input_args = {
+            "CreationTimeAfter": creation_time_after,
+            "CreationTimeBefore": creation_time_before,
+            "LastModifiedTimeAfter": last_modified_time_after,
+            "LastModifiedTimeBefore": last_modified_time_before,
+            "OptimizationContains": optimization_contains,
+            "NameContains": name_contains,
+            "StatusEquals": status_equals,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
+        }
+
+        operation_input_args = {
+            k: v
+            for k, v in operation_input_args.items()
+            if v is not None and not isinstance(v, Unassigned)
+        }
+
+        return ResourceIterator(
+            client=client,
+            list_method="list_optimization_jobs",
+            summaries_key="OptimizationJobSummaries",
+            summary_name="OptimizationJobSummary",
+            resource_cls=OptimizationJob,
+            list_method_kwargs=operation_input_args,
+        )
+
+
 class Pipeline(Base):
     """
     Class representing resource Pipeline
@@ -20601,6 +21638,94 @@ class PresignedDomainUrl(Base):
         logger.debug(f"Response: {response}")
 
         transformed_response = transform(response, "CreatePresignedDomainUrlResponse")
+        return cls(**operation_input_args, **transformed_response)
+
+
+class PresignedMlflowTrackingServerUrl(Base):
+    """
+    Class representing resource PresignedMlflowTrackingServerUrl
+
+    Attributes:
+        tracking_server_name: The name of the tracking server to connect to your MLflow UI.
+        expires_in_seconds: The duration in seconds that your presigned URL is valid. The presigned URL can be used only once.
+        session_expiration_duration_in_seconds: The duration in seconds that your MLflow UI session is valid.
+        authorized_url: A presigned URL with an authorization token.
+
+    """
+
+    tracking_server_name: str
+    expires_in_seconds: Optional[int] = Unassigned()
+    session_expiration_duration_in_seconds: Optional[int] = Unassigned()
+    authorized_url: Optional[str] = Unassigned()
+
+    def get_name(self) -> str:
+        attributes = vars(self)
+        resource_name = "presigned_mlflow_tracking_server_url_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
+        for attribute, value in attributes.items():
+            if attribute == "name" or attribute in attribute_name_candidates:
+                return value
+        logger.error("Name attribute not found for object presigned_mlflow_tracking_server_url")
+        return None
+
+    @classmethod
+    def create(
+        cls,
+        tracking_server_name: str,
+        expires_in_seconds: Optional[int] = Unassigned(),
+        session_expiration_duration_in_seconds: Optional[int] = Unassigned(),
+    ) -> Optional["resource_name"]:
+        """
+        Create a PresignedMlflowTrackingServerUrl resource
+
+        Parameters:
+            tracking_server_name: The name of the tracking server to connect to your MLflow UI.
+            expires_in_seconds: The duration in seconds that your presigned URL is valid. The presigned URL can be used only once.
+            session_expiration_duration_in_seconds: The duration in seconds that your MLflow UI session is valid.
+            session: Boto3 session.
+            region: Region name.
+
+        Returns:
+            The PresignedMlflowTrackingServerUrl resource.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceNotFound: Resource being access is not found.
+            ConfigSchemaValidationError: Raised when a configuration file does not adhere to the schema
+            LocalConfigNotFoundError: Raised when a configuration file is not found in local file system
+            S3ConfigNotFoundError: Raised when a configuration file is not found in S3
+        """
+
+        operation_input_args = {
+            "TrackingServerName": tracking_server_name,
+            "ExpiresInSeconds": expires_in_seconds,
+            "SessionExpirationDurationInSeconds": session_expiration_duration_in_seconds,
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
+
+        logger.debug(f"Calling create_presigned_mlflow_tracking_server_url API")
+        response = client.create_presigned_mlflow_tracking_server_url(**operation_input_args)
+        logger.debug(f"Response: {response}")
+
+        transformed_response = transform(response, "CreatePresignedMlflowTrackingServerUrlResponse")
         return cls(**operation_input_args, **transformed_response)
 
 
@@ -22086,7 +23211,7 @@ class Space(Base):
 
         Parameters:
             next_token: If the previous response was truncated, you will receive this token. Use it in your next request to receive the next set of results.
-            max_results: The total number of items to return in the response. If the total number of items available is more than the value specified, a NextToken is provided in the response. To resume pagination, provide the NextToken value in the as part of a subsequent call. The default value is 10.
+            max_results: This parameter defines the maximum number of results that can be return in a single response. The MaxResults parameter is an upper bound, not a target. If there are more results available than the value specified, a NextToken is provided in the response. The NextToken indicates that the user should get the next set of results by providing this token as a part of a subsequent call. The default value for MaxResults is 10.
             sort_order: The sort order for the results. The default is Ascending.
             sort_by: The parameter by which to sort the results. The default is CreationTime.
             domain_id_equals: A parameter to search for the domain ID.
@@ -22928,6 +24053,7 @@ class TrainingJob(Base):
         retry_strategy: Optional[RetryStrategy] = Unassigned(),
         remote_debug_config: Optional[RemoteDebugConfig] = Unassigned(),
         infra_check_config: Optional[InfraCheckConfig] = Unassigned(),
+        session_chaining_config: Optional[SessionChainingConfig] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["TrainingJob"]:
@@ -22959,6 +24085,7 @@ class TrainingJob(Base):
             retry_strategy: The number of times to retry the job when the job fails due to an InternalServerError.
             remote_debug_config: Configuration for remote debugging. To learn more about the remote debugging functionality of SageMaker, see Access a training container through Amazon Web Services Systems Manager (SSM) for remote debugging.
             infra_check_config: Contains information about the infrastructure health check configuration for the training job.
+            session_chaining_config: Contains information about attribute-based access control (ABAC) for the training job.
             session: Boto3 session.
             region: Region name.
 
@@ -23013,6 +24140,7 @@ class TrainingJob(Base):
             "RetryStrategy": retry_strategy,
             "RemoteDebugConfig": remote_debug_config,
             "InfraCheckConfig": infra_check_config,
+            "SessionChainingConfig": session_chaining_config,
         }
 
         operation_input_args = Base.populate_chained_attributes(
@@ -25002,7 +26130,7 @@ class UserProfile(Base):
 
         Parameters:
             next_token: If the previous response was truncated, you will receive this token. Use it in your next request to receive the next set of results.
-            max_results: The total number of items to return in the response. If the total number of items available is more than the value specified, a NextToken is provided in the response. To resume pagination, provide the NextToken value in the as part of a subsequent call. The default value is 10.
+            max_results: This parameter defines the maximum number of results that can be return in a single response. The MaxResults parameter is an upper bound, not a target. If there are more results available than the value specified, a NextToken is provided in the response. The NextToken indicates that the user should get the next set of results by providing this token as a part of a subsequent call. The default value for MaxResults is 10.
             sort_order: The sort order for the results. The default is Ascending.
             sort_by: The parameter by which to sort the results. The default is CreationTime.
             domain_id_equals: A parameter by which to filter the results.
@@ -25511,6 +26639,7 @@ class Workteam(Base):
         description: str,
         workforce_name: Optional[Union[str, object]] = Unassigned(),
         notification_configuration: Optional[NotificationConfiguration] = Unassigned(),
+        worker_access_configuration: Optional[WorkerAccessConfiguration] = Unassigned(),
         tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
@@ -25524,6 +26653,7 @@ class Workteam(Base):
             description: A description of the work team.
             workforce_name: The name of the workforce.
             notification_configuration: Configures notification of workers regarding available or expiring work items.
+            worker_access_configuration: Use this optional parameter to constrain access to an Amazon S3 resource based on the IP address using supported IAM global condition keys. The Amazon S3 resource is accessed in the worker portal using a Amazon S3 presigned URL.
             tags: An array of key-value pairs. For more information, see Resource Tag and Using Cost Allocation Tags in the  Amazon Web Services Billing and Cost Management User Guide.
             session: Boto3 session.
             region: Region name.
@@ -25559,6 +26689,7 @@ class Workteam(Base):
             "MemberDefinitions": member_definitions,
             "Description": description,
             "NotificationConfiguration": notification_configuration,
+            "WorkerAccessConfiguration": worker_access_configuration,
             "Tags": tags,
         }
 
@@ -25658,6 +26789,7 @@ class Workteam(Base):
         member_definitions: Optional[List[MemberDefinition]] = Unassigned(),
         description: Optional[str] = Unassigned(),
         notification_configuration: Optional[NotificationConfiguration] = Unassigned(),
+        worker_access_configuration: Optional[WorkerAccessConfiguration] = Unassigned(),
     ) -> Optional["Workteam"]:
         """
         Update a Workteam resource
@@ -25666,6 +26798,7 @@ class Workteam(Base):
             member_definitions: A list of MemberDefinition objects that contains objects that identify the workers that make up the work team.  Workforces can be created using Amazon Cognito or your own OIDC Identity Provider (IdP). For private workforces created using Amazon Cognito use CognitoMemberDefinition. For workforces created using your own OIDC identity provider (IdP) use OidcMemberDefinition. You should not provide input for both of these parameters in a single request. For workforces created using Amazon Cognito, private work teams correspond to Amazon Cognito user groups within the user pool used to create a workforce. All of the CognitoMemberDefinition objects that make up the member definition must have the same ClientId and UserPool values. To add a Amazon Cognito user group to an existing worker pool, see Adding groups to a User Pool. For more information about user pools, see Amazon Cognito User Pools. For workforces created using your own OIDC IdP, specify the user groups that you want to include in your private work team in OidcMemberDefinition by listing those groups in Groups. Be aware that user groups that are already in the work team must also be listed in Groups when you make this request to remain on the work team. If you do not include these user groups, they will no longer be associated with the work team you update.
             description: An updated description for the work team.
             notification_configuration: Configures SNS topic notifications for available or expiring work items
+            worker_access_configuration: Use this optional parameter to constrain access to an Amazon S3 resource based on the IP address using supported IAM global condition keys. The Amazon S3 resource is accessed in the worker portal using a Amazon S3 presigned URL.
 
         Returns:
             The Workteam resource.
@@ -25691,6 +26824,7 @@ class Workteam(Base):
             "MemberDefinitions": member_definitions,
             "Description": description,
             "NotificationConfiguration": notification_configuration,
+            "WorkerAccessConfiguration": worker_access_configuration,
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
