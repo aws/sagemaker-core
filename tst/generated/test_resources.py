@@ -112,6 +112,8 @@ class ResourcesTest(unittest.TestCase):
                             f"{name}SummaryList": [summary],
                             f"{name}s": [summary],
                         }
+                        if name == "MlflowTrackingServer":
+                            summary_response = {"TrackingServerSummaries": [summary]}
                         with patch.object(
                             client, function_name, return_value=summary_response
                         ) as mock_method:
@@ -286,7 +288,6 @@ class ResourcesTest(unittest.TestCase):
                                 )
                                 return_value = {summaries_key: [summary]}
                                 mock_transform.return_value = summary
-                                print(return_value)
                         elif operation_info["return_type"] in BASIC_RETURN_TYPES:
                             return_value = {
                                 "return_value": self.PARAM_CONSTANTS_BY_TYPE[
@@ -407,7 +408,6 @@ class ResourcesTest(unittest.TestCase):
             return None
         for key, val in inspect.signature(shape_cls).parameters.items():
             attribute_type = str(val.annotation)
-            print(key, attribute_type, self._generate_default_value(attribute_type))
             if "Optional" not in attribute_type and "utils.Unassigned" not in str(val):
                 default_value = self._generate_default_value(attribute_type)
                 if default_value is not None:
@@ -417,7 +417,6 @@ class ResourcesTest(unittest.TestCase):
                     params[key] = self._generate_test_shape(
                         self.SHAPE_CLASSES_BY_SHAPE_NAME.get(shape)
                     )
-        print(params)
         return shape_cls(**params)
 
     def _generate_test_shape_dict(self, shape_cls):

@@ -2,9 +2,8 @@ name: Daily Sync with Botocore
 
 on:
   schedule:
-    # Everyday at 10:00 UTC
-    - cron: 00 10 * * *
-  workflow_dispatch: {}
+    # Every Monday to Friday at 10:00 UTC (3:00 PDT)
+    - cron: 00 10 * * 1-5
 
 jobs:
   sync-with-botocore:
@@ -20,5 +19,5 @@ jobs:
       - name: Run CodeBuild
         uses: aws-actions/aws-codebuild-run-build@v1
         with:
-          project-name: CodeBuildScheduleTest
+          project-name: sagemaker-core-botocore-sync
   
