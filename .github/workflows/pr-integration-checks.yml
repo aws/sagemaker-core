@@ -49,14 +49,14 @@ jobs:
       - name: Put Failure Metrics to CloudWatch
         if: ${{ failure() }}
         run: |
-          if [[ "$(github.event.pull_request.title)" == "Daily Sync with Botocore"* ]]; then
+          if [[ "${{ github.event.pull_request.title }}" == "Daily Sync with Botocore"* ]]; then
             echo "Integration test Failed. Putting Failure Metrics onto Cloudwatch"
             aws cloudwatch put-metric-data --metric-name IntegrationTestFailure --namespace SageMakerPySdkCoreMonitoringMetrics --value 1 --unit Count --dimensions MetricCategory=Integration
           fi
       - name: Put Success Metrics to CloudWatch
         if: ${{ success() }}
         run: |
-          if [[ "$(github.event.pull_request.title)" == "Daily Sync with Botocore"* ]]; then
+          if [[ "${{ github.event.pull_request.title }}" == "Daily Sync with Botocore"* ]]; then
             echo "Integration test Succeeded. Putting Success Metrics onto Cloudwatch"
             aws cloudwatch put-metric-data --metric-name IntegrationTestSuccess --namespace SageMakerPySdkCoreMonitoringMetrics --value 1 --unit Count --dimensions MetricCategory=Integration
           fi
