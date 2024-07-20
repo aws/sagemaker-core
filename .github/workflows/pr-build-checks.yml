@@ -46,12 +46,14 @@ jobs:
           if [[ "$(github.event.pull_request.title)" == "Daily Sync with Botocore"* ]]; then
             echo "Unit test run Failed. Putting Failure Metrics onto Cloudwatch"
             aws cloudwatch put-metric-data --metric-name UnitTestFailure --namespace SageMakerPySdkCoreMonitoringMetrics --value 1 --unit Count --dimensions MetricCategory=Unit-${{ matrix.python-version }}
+          fi
       - name: Put Success Metrics
         if: ${{ success() }}
         run: |
           if [[ "$(github.event.pull_request.title)" == "Daily Sync with Botocore"* ]]; then
             echo "Unit test run Succeeded. Putting Success Metrics onto Cloudwatch"
             aws cloudwatch put-metric-data --metric-name UnitTestSuccess --namespace SageMakerPySdkCoreMonitoringMetrics --value 1 --unit Count --dimensions MetricCategory=Unit-${{ matrix.python-version }}
+          fi
 
   resources-coverage:
     runs-on: ubuntu-latest
@@ -88,6 +90,7 @@ jobs:
         run: |
           if [[ "$(github.event.pull_request.title)" == "Daily Sync with Botocore"* ]]; then
             aws cloudwatch put-metric-data --metric-name UnitTestCoverage --namespace SageMakerPySdkCoreMonitoringMetrics --value $(python workflow_helper/compute_resource_coverage.py) --unit Count --dimensions MetricCategory=Unit-${{ matrix.python-version }}
+          fi
 
   pylint:
     runs-on: ubuntu-latest
