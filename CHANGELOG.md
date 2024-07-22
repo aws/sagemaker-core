@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.1.4 (2024-07-22)
+
+ * Cleanup Resources created by Integration tests (#120)
+ * Enable Botocore sync workflow (#92)
+
 ## v0.1.3 (2024-07-18)
 
  * Daily Sync with Botocore v1.34.143 on 2024/07/11 (#91)
