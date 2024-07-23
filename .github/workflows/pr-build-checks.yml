@@ -117,4 +117,3 @@ jobs:
         run: |
           python_files=$(find . -name '*.py')
           pylint $python_files --persistent=y --fail-under=8
-
