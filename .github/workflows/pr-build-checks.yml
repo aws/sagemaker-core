@@ -110,6 +110,12 @@ jobs:
           pip install coverage
           pip install pytest-cov
           pip install -e ".[codegen]"
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.INTEG_TEST_ROLE_ARN }}
+          aws-region: us-west-2
+          role-duration-seconds: 10800
       - name: Execute Boto API Coverage compute script and capture output
         run: |
           if [[ "${{ github.event.pull_request.user.login }}" == ${{ secrets.SAGEMAKER_BOT_USER_LOGIN }}* ]]; then
