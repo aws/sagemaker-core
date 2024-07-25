@@ -97,7 +97,16 @@ jobs:
           else
             echo "Putting metrics has been skipped"
           fi
-          
+  put-api-coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Execute Boto API Coverage compute script and capture output
+        run: |
+          if [[ "${{ github.event.pull_request.user.login }}" == ${{ secrets.SAGEMAKER_BOT_USER_LOGIN }}* ]]; then
+            aws cloudwatch put-metric-data --metric-name CoveragePercent --namespace SageMakerPySdkCoreMonitoringMetrics --value $(python workflow_helper/compute_boto_api_coverage.py) --unit Count --dimensions MetricCategory=BotoApiCoverage
+          else
+            echo "Putting metrics has been skipped"
+          fi
   pylint:
     runs-on: ubuntu-latest
     steps:
