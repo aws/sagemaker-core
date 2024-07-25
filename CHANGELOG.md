@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.1.6 (2024-07-25)
+
+ * Add private preview feedback for denesting simplifications (#128)
+ * Put Metrics only for Daily Sync API (#125)
+
+## v0.1.5 (2024-07-22)
+
+ * Daily Sync with Botocore v1.34.145 on 2024/07/22 (#127)
+
+## v0.1.4 (2024-07-22)
+
+ * Cleanup Resources created by Integration tests (#120)
+ * Enable Botocore sync workflow (#92)
+
 ## v0.1.3 (2024-07-18)
 
  * Daily Sync with Botocore v1.34.143 on 2024/07/11 (#91)
