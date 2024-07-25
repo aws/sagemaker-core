@@ -14,6 +14,7 @@
 from collections import OrderedDict
 import logging
 from functools import lru_cache
+from rich.logging import RichHandler
 
 import os
 import json
@@ -82,7 +83,8 @@ from sagemaker_core.tools.data_extractor import (
     load_combined_operations_data,
 )
 
-logging.basicConfig(level=logging.INFO)
+handler = RichHandler()
+logging.basicConfig(level=logging.INFO, handlers=[handler])
 log = logging.getLogger(__name__)
 
 TYPE = "type"

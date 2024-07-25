@@ -12,6 +12,7 @@
 # language governing permissions and limitations under the License.
 """A class for extracting resource information from a service JSON."""
 import logging
+from rich.logging import RichHandler
 from typing import Optional
 
 import pandas as pd
@@ -24,7 +25,7 @@ from sagemaker_core.tools.data_extractor import (
 )
 from sagemaker_core.tools.method import Method
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.INFO, handlers=[RichHandler()])
 log = logging.getLogger(__name__)
 """
 This class is used to extract the resources and its actions from the service-2.json file.

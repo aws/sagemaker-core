@@ -40,9 +40,12 @@ from sagemaker_core.generated.intelligent_defaults_helper import (
 )
 from sagemaker_core.generated.shapes import *
 from sagemaker_core.generated.exceptions import *
+from rich.logging import RichHandler
+from rich.progress import *
+from rich.console import Console
 
-
-logging.basicConfig(level=logging.INFO)
+# handlers=[RichHandler(markup=True)
+# logging.basicConfig(level=logging.INFO, handlers=[handler])
 logger = logging.getLogger(__name__)
 
 
@@ -24109,8 +24112,7 @@ class TrainingJob(Base):
             LocalConfigNotFoundError: Raised when a configuration file is not found in local file system
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
         """
-
-        logger.debug("Creating training_job resource.")
+        logger.info("Creating training_job resource.")
         client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
         )
@@ -24197,7 +24199,7 @@ class TrainingJob(Base):
         )
         response = client.describe_training_job(**operation_input_args)
 
-        pprint(response)
+        # pprint(response)
 
         # deserialize the response
         transformed_response = transform(response, "DescribeTrainingJobResponse")
@@ -24327,26 +24329,33 @@ class TrainingJob(Base):
         terminal_states = ["Completed", "Failed", "Stopped"]
         start_time = time.time()
 
-        while True:
-            self.refresh()
-            current_status = self.training_job_status
+        with Progress(
+            SpinnerColumn("bouncingBar"),
+            TextColumn("{task.description}"),
+            TimeElapsedColumn(),
+        ) as progress:
+            progress.add_task(f"Waiting for TrainingJob...")
+            status_task = progress.add_task("Current status:")
+            while True:
+                self.refresh()
+                current_status = self.training_job_status
+                status_description = f"Current status: [bold]{current_status}"
+                progress.update(status_task, description=status_description)
+                if current_status in terminal_states:
+                    logger.info(f"Final Resource Status: [bold]{current_status}")
 
-            if current_status in terminal_states:
-                print(f"\nFinal Resource Status: {current_status}")
+                    if "failed" in current_status.lower():
+                        raise FailedStatusError(
+                            resource_type="TrainingJob",
+                            status=current_status,
+                            reason=self.failure_reason,
+                        )
 
-                if "failed" in current_status.lower():
-                    raise FailedStatusError(
-                        resource_type="TrainingJob",
-                        status=current_status,
-                        reason=self.failure_reason,
-                    )
+                    return
 
-                return
-
-            if timeout is not None and time.time() - start_time >= timeout:
-                raise TimeoutExceededError(resouce_type="TrainingJob", status=current_status)
-            print("-", end="")
-            time.sleep(poll)
+                if timeout is not None and time.time() - start_time >= timeout:
+                    raise TimeoutExceededError(resouce_type="TrainingJob", status=current_status)
+                time.sleep(poll)
 
     @classmethod
     def get_all(
