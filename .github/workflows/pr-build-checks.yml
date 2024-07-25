@@ -100,6 +100,13 @@ jobs:
   put-api-coverage:
     runs-on: ubuntu-latest
     steps:
+      - name: Install dependencies
+        run: |
+          export PYTHONPATH="$PYTHONPATH:$PWD"
+          python -m pip install --upgrade pip
+          pip install coverage
+          pip install pytest-cov
+          pip install -e ".[codegen]"
       - name: Execute Boto API Coverage compute script and capture output
         run: |
           if [[ "${{ github.event.pull_request.user.login }}" == ${{ secrets.SAGEMAKER_BOT_USER_LOGIN }}* ]]; then
