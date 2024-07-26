@@ -286,7 +286,7 @@ def get(
     client = Base.get_sagemaker_client(session=session, region_name=region, service_name='{service_name}')
     response = client.{operation}(**operation_input_args)
 
-    pprint(response)
+    logger.debug(response)
 
     # deserialize the response
     transformed_response = transform(response, '{describe_operation_output_shape}')

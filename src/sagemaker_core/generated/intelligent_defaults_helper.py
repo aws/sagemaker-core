@@ -32,9 +32,9 @@ from sagemaker_core.generated.exceptions import (
     IntelligentDefaultsError,
     ConfigSchemaValidationError,
 )
+from sagemaker_core.generated.utils import get_textual_rich_logger
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+logger = get_textual_rich_logger(__name__)
 
 
 _APP_NAME = "sagemaker"

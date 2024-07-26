@@ -43,4 +43,31 @@ def wait(timeout):
         log.info("[bold green]TrainingJob has been deleted successfully")
 
 
+with Progress(
+    SpinnerColumn("bouncingBar"),
+    TextColumn("{task.description}"),
+    TimeElapsedColumn(),
+) as progress:
+    progress.add_task(f"Waiting for TrainingJob...")
+    status_task = progress.add_task("Current status:")
+    while True:
+        self.refresh()
+        current_status = self.training_job_status
+        status_description = f"Current status: [bold]{current_status}"
+        progress.update(status_task, description=status_description)
+        if current_status in terminal_states:
+            logger.info(f"Final Resource Status: [bold]{current_status}")
+
+            if "failed" in current_status.lower():
+                raise FailedStatusError(
+                    resource_type="TrainingJob",
+                    status=current_status,
+                    reason=self.failure_reason,
+                )
+
+            return
+
+        if timeout is not None and time.time() - start_time >= timeout:
+            raise TimeoutExceededError(resouce_type="TrainingJob", status=current_status)
+        time.sleep(poll)
 wait(6)
