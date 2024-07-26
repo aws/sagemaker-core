@@ -5,7 +5,7 @@ on:
 
 jobs:
   auto-approve:
-    if: contains(github.event.pull_request.labels.*.name, 'auto-approve') && github.event.pull_request.user.login == 'pintaoz-aws'
+    if: contains(github.event.pull_request.labels.*.name, 'auto-approve') && github.event.pull_request.user.login == secrets.SAGEMAKER_BOT_USER_LOGIN
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
