@@ -192,7 +192,7 @@ def get_config_value(attribute, resource_defaults, global_defaults):
         return resource_defaults[attribute]
     if global_defaults and attribute in global_defaults:
         return global_defaults[attribute]
-    logger.info(
+    logger.debug(
         f"Configurable value {attribute} not entered in parameters or present in the Config"
     )
     return None

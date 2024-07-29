@@ -42,7 +42,7 @@ def create(
     region: Optional[str] = None,
 ) -> Optional["{resource_name}"]:
 {docstring}
-    logger.debug("Creating {resource_lower} resource.")
+    logger.info("Creating {resource_lower} resource.")
     client = Base.get_sagemaker_client(session=session, region_name=region, service_name='{service_name}')
 
     operation_input_args = {{
@@ -72,7 +72,7 @@ def create(
     region: Optional[str] = None,
 ) -> Optional["{resource_name}"]:
 {docstring}
-    logger.debug("Creating {resource_lower} resource.")
+    logger.info("Creating {resource_lower} resource.")
     client =Base.get_sagemaker_client(session=session, region_name=region, service_name='{service_name}')
 
     operation_input_args = {{
@@ -102,7 +102,7 @@ def load(
     region: Optional[str] = None,
 ) -> Optional["{resource_name}"]:
 {docstring}
-    logger.debug(f"Importing {resource_lower} resource.")
+    logger.info(f"Importing {resource_lower} resource.")
     client = SageMakerClient(session=session, region_name=region, service_name='{service_name}').client
 
     operation_input_args = {{
@@ -147,7 +147,7 @@ def update(
 {update_args}
 ) -> Optional["{resource_name}"]:
 {docstring}
-    logger.debug("Updating {resource_lower} resource.")
+    logger.info("Updating {resource_lower} resource.")
     client = Base.get_sagemaker_client()
 
     operation_input_args = {{
@@ -173,7 +173,7 @@ def update(
 {update_args}
 ) -> Optional["{resource_name}"]:
 {docstring}
-    logger.debug("Updating {resource_lower} resource.")
+    logger.info("Updating {resource_lower} resource.")
     client = Base.get_sagemaker_client()
 
     operation_input_args = {{
@@ -197,7 +197,7 @@ def invoke(self,
 {invoke_args}
 ) -> Optional[object]:
 {docstring}
-    logger.debug(f"Invoking {resource_lower} resource.")
+    logger.info(f"Invoking {resource_lower} resource.")
     client = SageMakerRuntimeClient(service_name="{service_name}").client
     operation_input_args = {{
 {operation_input_args}
@@ -219,7 +219,7 @@ def invoke_async(self,
 {create_args}
 ) -> Optional[object]:
 {docstring}
-    logger.debug(f"Invoking {resource_lower} resource Async.")
+    logger.info(f"Invoking {resource_lower} resource Async.")
     client = SageMakerRuntimeClient(service_name="{service_name}").client
     
     operation_input_args = {{
@@ -242,7 +242,7 @@ def invoke_with_response_stream(self,
 {create_args}
 ) -> Optional[object]:
 {docstring}
-    logger.debug(f"Invoking {resource_lower} resource with Response Stream.")
+    logger.info(f"Invoking {resource_lower} resource with Response Stream.")
     client = SageMakerRuntimeClient(service_name="{service_name}").client
 
     operation_input_args = {{
@@ -475,6 +475,8 @@ def stop(self) -> None:
 {operation_input_args}
     }}
     client.{operation}(**operation_input_args)
+
+    logger.info(f"Deleting {{self.__class__.__name__}} - {{self.get_name()}}")
 """
 
 GET_ALL_METHOD_WITH_ARGS_TEMPLATE = """
@@ -644,7 +646,7 @@ class Base(BaseModel):
                         class_object = globals()[resource_name]
                         kwargs[configurable_attribute] = class_object(**config_value)
         except BaseException as e:
-            logger.info("Could not load Default Configs. Continuing.", exc_info=True)
+            logger.debug("Could not load Default Configs. Continuing.", exc_info=True)
             # Continue with existing kwargs if no default configs found
         return kwargs 
         

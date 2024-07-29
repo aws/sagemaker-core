@@ -2069,7 +2069,7 @@ class ResourcesCodeGen:
                                 TYPE: self._get_json_schema_type_from_python_type(value) or value
                             }
             elif value.startswith("List") or value.startswith("Dict"):
-                log.info("Script does not currently support list of objects as configurable")
+                log.debug("Script does not currently support list of objects as configurable")
                 continue
             else:
                 class_attributes = self.shapes_extractor.generate_shape_members(value)
