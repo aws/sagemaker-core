@@ -2510,7 +2510,7 @@ class AutoMLJob(Base):
         }
         client.stop_auto_ml_job(**operation_input_args)
 
-        logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+        logger.info(f"Stopping {self.__class__.__name__} - {self.get_name()}")
 
     def wait(self, poll: int = 5, timeout: Optional[int] = None) -> None:
         """
@@ -4202,7 +4202,7 @@ class CompilationJob(Base):
         }
         client.stop_compilation_job(**operation_input_args)
 
-        logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+        logger.info(f"Stopping {self.__class__.__name__} - {self.get_name()}")
 
     def wait(self, poll: int = 5, timeout: Optional[int] = None) -> None:
         """
@@ -7046,7 +7046,7 @@ class EdgePackagingJob(Base):
         }
         client.stop_edge_packaging_job(**operation_input_args)
 
-        logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+        logger.info(f"Stopping {self.__class__.__name__} - {self.get_name()}")
 
     def wait(self, poll: int = 5, timeout: Optional[int] = None) -> None:
         """
@@ -11243,7 +11243,7 @@ class HyperParameterTuningJob(Base):
         }
         client.stop_hyper_parameter_tuning_job(**operation_input_args)
 
-        logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+        logger.info(f"Stopping {self.__class__.__name__} - {self.get_name()}")
 
     def wait(self, poll: int = 5, timeout: Optional[int] = None) -> None:
         """
@@ -13255,7 +13255,7 @@ class InferenceExperiment(Base):
         }
         client.stop_inference_experiment(**operation_input_args)
 
-        logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+        logger.info(f"Stopping {self.__class__.__name__} - {self.get_name()}")
 
     def wait_for_status(
         self,
@@ -13640,7 +13640,7 @@ class InferenceRecommendationsJob(Base):
         }
         client.stop_inference_recommendations_job(**operation_input_args)
 
-        logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+        logger.info(f"Stopping {self.__class__.__name__} - {self.get_name()}")
 
     def wait(self, poll: int = 5, timeout: Optional[int] = None) -> None:
         """
@@ -14158,7 +14158,7 @@ class LabelingJob(Base):
         }
         client.stop_labeling_job(**operation_input_args)
 
-        logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+        logger.info(f"Stopping {self.__class__.__name__} - {self.get_name()}")
 
     def wait(self, poll: int = 5, timeout: Optional[int] = None) -> None:
         """
@@ -14833,7 +14833,7 @@ class MlflowTrackingServer(Base):
         }
         client.stop_mlflow_tracking_server(**operation_input_args)
 
-        logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+        logger.info(f"Stopping {self.__class__.__name__} - {self.get_name()}")
 
     def wait_for_status(
         self,
@@ -19040,7 +19040,7 @@ class MonitoringSchedule(Base):
         }
         client.stop_monitoring_schedule(**operation_input_args)
 
-        logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+        logger.info(f"Stopping {self.__class__.__name__} - {self.get_name()}")
 
     def wait_for_status(
         self,
@@ -19568,7 +19568,7 @@ class NotebookInstance(Base):
         }
         client.stop_notebook_instance(**operation_input_args)
 
-        logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+        logger.info(f"Stopping {self.__class__.__name__} - {self.get_name()}")
 
     def wait_for_status(
         self,
@@ -20374,7 +20374,7 @@ class OptimizationJob(Base):
         }
         client.stop_optimization_job(**operation_input_args)
 
-        logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+        logger.info(f"Stopping {self.__class__.__name__} - {self.get_name()}")
 
     def wait(self, poll: int = 5, timeout: Optional[int] = None) -> None:
         """
@@ -21156,7 +21156,7 @@ class PipelineExecution(Base):
         }
         client.stop_pipeline_execution(**operation_input_args)
 
-        logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+        logger.info(f"Stopping {self.__class__.__name__} - {self.get_name()}")
 
     def wait_for_status(
         self,
@@ -22117,7 +22117,7 @@ class ProcessingJob(Base):
         }
         client.stop_processing_job(**operation_input_args)
 
-        logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+        logger.info(f"Stopping {self.__class__.__name__} - {self.get_name()}")
 
     def wait(self, poll: int = 5, timeout: Optional[int] = None) -> None:
         """
@@ -24333,7 +24333,7 @@ class TrainingJob(Base):
         }
         client.stop_training_job(**operation_input_args)
 
-        logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+        logger.info(f"Stopping {self.__class__.__name__} - {self.get_name()}")
 
     def wait(self, poll: int = 5, timeout: Optional[int] = None) -> None:
         """
@@ -24753,7 +24753,7 @@ class TransformJob(Base):
         }
         client.stop_transform_job(**operation_input_args)
 
-        logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+        logger.info(f"Stopping {self.__class__.__name__} - {self.get_name()}")
 
     def wait(self, poll: int = 5, timeout: Optional[int] = None) -> None:
         """

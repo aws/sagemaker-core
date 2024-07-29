@@ -476,7 +476,7 @@ def stop(self) -> None:
     }}
     client.{operation}(**operation_input_args)
 
-    logger.info(f"Deleting {{self.__class__.__name__}} - {{self.get_name()}}")
+    logger.info(f"Stopping {{self.__class__.__name__}} - {{self.get_name()}}")
 """
 
 GET_ALL_METHOD_WITH_ARGS_TEMPLATE = """
