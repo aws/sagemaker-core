@@ -20,6 +20,7 @@ from boto3.session import Session
 from botocore.config import Config
 from typing import TypeVar, Generic, Type
 from sagemaker_core.code_injection.codec import transform
+from sagemaker_core.generated.user_agent import get_user_agent_extra_suffix
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -182,10 +183,11 @@ class SageMakerClient(metaclass=SingletonMeta):
             logger.warning("No config provided. Using default config.")
             config = Config(retries={"max_attempts": 10, "mode": "standard"})
 
+        self.config = Config(user_agent_extra=get_user_agent_extra_suffix())
         self.session = session
         self.region_name = region_name
         self.service_name = service_name
-        self.client = session.client(service_name, region_name, config=config)
+        self.client = session.client(service_name, region_name, config=self.config)
 
 
 class SageMakerRuntimeClient(metaclass=SingletonMeta):
@@ -216,10 +218,11 @@ class SageMakerRuntimeClient(metaclass=SingletonMeta):
             logger.warning("No config provided. Using default config.")
             config = Config(retries={"max_attempts": 10, "mode": "standard"})
 
+        self.config = Config(user_agent_extra=get_user_agent_extra_suffix())
         self.session = session
         self.region_name = region_name
         self.service_name = service_name
-        self.client = session.client(service_name, region_name, config=config)
+        self.client = session.client(service_name, region_name, config=self.config)
 
 
 class ResourceIterator(Generic[T]):
