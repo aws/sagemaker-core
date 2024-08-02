@@ -18,12 +18,34 @@ import re
 
 from boto3.session import Session
 from botocore.config import Config
+from rich.logging import RichHandler
 from typing import TypeVar, Generic, Type
 from sagemaker_core.code_injection.codec import transform
 from sagemaker_core.generated.user_agent import get_user_agent_extra_suffix
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+
+def get_textual_rich_logger(name: str, log_level: str = "INFO") -> logging.Logger:
+    """
+    Get a logger with textual rich handler.
+
+    Args:
+        name (str): The name of the logger
+        log_level (str): The log level to set.
+            Accepted values are: "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL".
+            Defaults to the value of "INFO".
+
+    Return:
+        logging.Logger: A textial rich logger.
+
+    """
+    handler = RichHandler(markup=True)
+    logging.basicConfig(level=getattr(logging, log_level), handlers=[handler])
+    logger = logging.getLogger(name)
+
+    return logger
+
+
+logger = get_textual_rich_logger(__name__)
 
 T = TypeVar("T")
 
@@ -58,10 +80,7 @@ def configure_logging(log_level=None):
     # reset any currently associated handlers with log level
     for handler in _logger.handlers:
         _logger.removeHandler(handler)
-    console_handler = logging.StreamHandler()
-    console_handler.setFormatter(
-        logging.Formatter("%(asctime)s : %(levelname)s : %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
-    )
+    console_handler = RichHandler(markup=True)
     _logger.addHandler(console_handler)
 
 
