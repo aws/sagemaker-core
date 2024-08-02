@@ -11,8 +11,6 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 """Generates the resource classes for the service model."""
-from collections import OrderedDict
-import logging
 from functools import lru_cache
 
 import os
@@ -20,13 +18,13 @@ import json
 from sagemaker_core.code_injection.codec import pascal_to_snake
 from sagemaker_core.generated.config_schema import SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA
 from sagemaker_core.generated.exceptions import IntelligentDefaultsError
+from sagemaker_core.generated.utils import get_textual_rich_logger
 from sagemaker_core.tools.constants import (
     BASIC_RETURN_TYPES,
     GENERATED_CLASSES_LOCATION,
     RESOURCES_CODEGEN_FILE_NAME,
     LICENCES_STRING,
     TERMINAL_STATES,
-    BASIC_IMPORTS_STRING,
     LOGGER_STRING,
     CONFIG_SCHEMA_FILE_NAME,
     PYTHON_TYPES_TO_BASIC_JSON_TYPES,
@@ -82,8 +80,7 @@ from sagemaker_core.tools.data_extractor import (
     load_combined_operations_data,
 )
 
-logging.basicConfig(level=logging.INFO)
-log = logging.getLogger(__name__)
+log = get_textual_rich_logger(__name__)
 
 TYPE = "type"
 OBJECT = "object"
@@ -176,7 +173,6 @@ class ResourcesCodeGen:
         """
         # List of import statements
         imports = [
-            BASIC_IMPORTS_STRING,
             "import botocore",
             "import datetime",
             "import time",
@@ -186,8 +182,8 @@ class ResourcesCodeGen:
             "from typing import Dict, List, Literal, Optional, Union\n"
             "from boto3.session import Session",
             "from sagemaker_core.code_injection.codec import transform",
-            "from sagemaker_core.generated.utils import SageMakerClient, SageMakerRuntimeClient, ResourceIterator,"
-            " Unassigned, snake_to_pascal, pascal_to_snake, is_not_primitive, is_not_str_dict, is_snake_case, is_primitive_list",
+            "from sagemaker_core.generated.utils import SageMakerClient, SageMakerRuntimeClient, ResourceIterator, Unassigned,"
+            "get_textual_rich_logger, snake_to_pascal, pascal_to_snake, is_not_primitive, is_not_str_dict, is_snake_case, is_primitive_list",
             "from sagemaker_core.generated.intelligent_defaults_helper import load_default_configs_for_resource_name, get_config_value",
             "from sagemaker_core.generated.shapes import *",
             "from sagemaker_core.generated.exceptions import *",
@@ -2073,7 +2069,7 @@ class ResourcesCodeGen:
                                 TYPE: self._get_json_schema_type_from_python_type(value) or value
                             }
             elif value.startswith("List") or value.startswith("Dict"):
-                log.info("Script does not currently support list of objects as configurable")
+                log.debug("Script does not currently support list of objects as configurable")
                 continue
             else:
                 class_attributes = self.shapes_extractor.generate_shape_members(value)

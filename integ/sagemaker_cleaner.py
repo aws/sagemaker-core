@@ -2,7 +2,7 @@ import datetime
 from sagemaker_core.generated.resources import Model, EndpointConfig, Endpoint
 
 
-class SageMakerCleaner():
+class SageMakerCleaner:
     """Provides methods to cleanup SageMaker resources"""
 
     def __init__(self):
@@ -29,7 +29,7 @@ class SageMakerCleaner():
         CLEANUP_METHODS = {
             "Endpoints": self.cleanup_endpoints,
             "EndpointConfigs": self.cleanup_endpoint_configs,
-            "Models": self.cleanup_models
+            "Models": self.cleanup_models,
         }
         for resource_type in RESOURCE_TYPE_ORDER:
             CLEANUP_METHODS[resource_type](before_timestamp, after_timestamp)
@@ -41,8 +41,9 @@ class SageMakerCleaner():
             creation_time_before (datetime): timestamp for 'CreationTimeBefore' or 'CreatedBefore' boto3 parameter
             creation_time_after (datetime): timestamp for 'CreationTimeAfter' or 'CreatedAfter' boto3 parameter
         """
-        endpoints = Endpoint.get_all(creation_time_before=creation_time_before,
-                                     creation_time_after=creation_time_after)
+        endpoints = Endpoint.get_all(
+            creation_time_before=creation_time_before, creation_time_after=creation_time_after
+        )
         for endpoint in endpoints:
             try:
                 endpoint.delete()
@@ -57,8 +58,9 @@ class SageMakerCleaner():
             creation_time_before (datetime): timestamp for 'CreationTimeBefore' or 'CreatedBefore' boto3 parameter
             creation_time_after (datetime): timestamp for 'CreationTimeAfter' or 'CreatedAfter' boto3 parameter
         """
-        endpoint_configs = EndpointConfig.get_all(creation_time_before=creation_time_before,
-                                                  creation_time_after=creation_time_after)
+        endpoint_configs = EndpointConfig.get_all(
+            creation_time_before=creation_time_before, creation_time_after=creation_time_after
+        )
         for endpoint_config in endpoint_configs:
             try:
                 endpoint_config.delete()
@@ -73,8 +75,9 @@ class SageMakerCleaner():
             creation_time_before (datetime): timestamp for 'CreationTimeBefore' or 'CreatedBefore' boto3 parameter
             creation_time_after (datetime): timestamp for 'CreationTimeAfter' or 'CreatedAfter' boto3 parameter
         """
-        models = Model.get_all(creation_time_before=creation_time_before,
-                               creation_time_after=creation_time_after)
+        models = Model.get_all(
+            creation_time_before=creation_time_before, creation_time_after=creation_time_after
+        )
         for model in models:
             try:
                 model.delete()
@@ -94,12 +97,10 @@ class SageMakerCleaner():
 
 
 def handle_cleanup():
-    region = 'us-west-2'
+    region = "us-west-2"
     print(f"\n\n=========== Cleaning SageMaker Resources in {region} ===========")
     before_timestamp = datetime.datetime.now(datetime.timezone.utc)
-    after_timestamp = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(
-        weeks=2
-    )
+    after_timestamp = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(weeks=2)
 
     sagemaker_cleaner = SageMakerCleaner()
     sagemaker_cleaner.handle_cleanup(before_timestamp, after_timestamp)

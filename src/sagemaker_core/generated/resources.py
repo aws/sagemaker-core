@@ -10,9 +10,6 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-
-import logging
-
 import botocore
 import datetime
 import time
@@ -27,6 +24,7 @@ from sagemaker_core.generated.utils import (
     SageMakerRuntimeClient,
     ResourceIterator,
     Unassigned,
+    get_textual_rich_logger,
     snake_to_pascal,
     pascal_to_snake,
     is_not_primitive,
@@ -42,8 +40,7 @@ from sagemaker_core.generated.shapes import *
 from sagemaker_core.generated.exceptions import *
 
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+logger = get_textual_rich_logger(__name__)
 
 
 class Base(BaseModel):
@@ -113,7 +110,7 @@ class Base(BaseModel):
                         class_object = globals()[resource_name]
                         kwargs[configurable_attribute] = class_object(**config_value)
         except BaseException as e:
-            logger.info("Could not load Default Configs. Continuing.", exc_info=True)
+            logger.debug("Could not load Default Configs. Continuing.", exc_info=True)
             # Continue with existing kwargs if no default configs found
         return kwargs
 
@@ -263,7 +260,7 @@ class Action(Base):
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
         """
 
-        logger.debug("Creating action resource.")
+        logger.info("Creating action resource.")
         client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
         )
@@ -333,7 +330,7 @@ class Action(Base):
         )
         response = client.describe_action(**operation_input_args)
 
-        pprint(response)
+        logger.debug(response)
 
         # deserialize the response
         transformed_response = transform(response, "DescribeActionResponse")
@@ -402,7 +399,7 @@ class Action(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        logger.debug("Updating action resource.")
+        logger.info("Updating action resource.")
         client = Base.get_sagemaker_client()
 
         operation_input_args = {
@@ -638,7 +635,7 @@ class Algorithm(Base):
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
         """
 
-        logger.debug("Creating algorithm resource.")
+        logger.info("Creating algorithm resource.")
         client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
         )
@@ -706,7 +703,7 @@ class Algorithm(Base):
         )
         response = client.describe_algorithm(**operation_input_args)
 
-        pprint(response)
+        logger.debug(response)
 
         # deserialize the response
         transformed_response = transform(response, "DescribeAlgorithmOutput")
@@ -1021,7 +1018,7 @@ class App(Base):
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
         """
 
-        logger.debug("Creating app resource.")
+        logger.info("Creating app resource.")
         client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
         )
@@ -1108,7 +1105,7 @@ class App(Base):
         )
         response = client.describe_app(**operation_input_args)
 
-        pprint(response)
+        logger.debug(response)
 
         # deserialize the response
         transformed_response = transform(response, "DescribeAppResponse")
@@ -1422,7 +1419,7 @@ class AppImageConfig(Base):
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
         """
 
-        logger.debug("Creating app_image_config resource.")
+        logger.info("Creating app_image_config resource.")
         client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
         )
@@ -1489,7 +1486,7 @@ class AppImageConfig(Base):
         )
         response = client.describe_app_image_config(**operation_input_args)
 
-        pprint(response)
+        logger.debug(response)
 
         # deserialize the response
         transformed_response = transform(response, "DescribeAppImageConfigResponse")
@@ -1553,7 +1550,7 @@ class AppImageConfig(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        logger.debug("Updating app_image_config resource.")
+        logger.info("Updating app_image_config resource.")
         client = Base.get_sagemaker_client()
 
         operation_input_args = {
@@ -1767,7 +1764,7 @@ class Artifact(Base):
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
         """
 
-        logger.debug("Creating artifact resource.")
+        logger.info("Creating artifact resource.")
         client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
         )
@@ -1835,7 +1832,7 @@ class Artifact(Base):
         )
         response = client.describe_artifact(**operation_input_args)
 
-        pprint(response)
+        logger.debug(response)
 
         # deserialize the response
         transformed_response = transform(response, "DescribeArtifactResponse")
@@ -1903,7 +1900,7 @@ class Artifact(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        logger.debug("Updating artifact resource.")
+        logger.info("Updating artifact resource.")
         client = Base.get_sagemaker_client()
 
         operation_input_args = {
@@ -2378,7 +2375,7 @@ class AutoMLJob(Base):
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
         """
 
-        logger.debug("Creating auto_ml_job resource.")
+        logger.info("Creating auto_ml_job resource.")
         client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
         )
@@ -2450,7 +2447,7 @@ class AutoMLJob(Base):
         )
         response = client.describe_auto_ml_job(**operation_input_args)
 
-        pprint(response)
+        logger.debug(response)
 
         # deserialize the response
         transformed_response = transform(response, "DescribeAutoMLJobResponse")
@@ -2512,6 +2509,8 @@ class AutoMLJob(Base):
             "AutoMLJobName": self.auto_ml_job_name,
         }
         client.stop_auto_ml_job(**operation_input_args)
+
+        logger.info(f"Stopping {self.__class__.__name__} - {self.get_name()}")
 
     def wait(self, poll: int = 5, timeout: Optional[int] = None) -> None:
         """
@@ -2846,7 +2845,7 @@ class AutoMLJobV2(Base):
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
         """
 
-        logger.debug("Creating auto_ml_job_v2 resource.")
+        logger.info("Creating auto_ml_job_v2 resource.")
         client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
         )
@@ -2918,7 +2917,7 @@ class AutoMLJobV2(Base):
         )
         response = client.describe_auto_ml_job_v2(**operation_input_args)
 
-        pprint(response)
+        logger.debug(response)
 
         # deserialize the response
         transformed_response = transform(response, "DescribeAutoMLJobV2Response")
@@ -3095,7 +3094,7 @@ class Cluster(Base):
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
         """
 
-        logger.debug("Creating cluster resource.")
+        logger.info("Creating cluster resource.")
         client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
         )
@@ -3161,7 +3160,7 @@ class Cluster(Base):
         )
         response = client.describe_cluster(**operation_input_args)
 
-        pprint(response)
+        logger.debug(response)
 
         # deserialize the response
         transformed_response = transform(response, "DescribeClusterResponse")
@@ -3226,7 +3225,7 @@ class Cluster(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        logger.debug("Updating cluster resource.")
+        logger.info("Updating cluster resource.")
         client = Base.get_sagemaker_client()
 
         operation_input_args = {
@@ -3661,7 +3660,7 @@ class CodeRepository(Base):
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
         """
 
-        logger.debug("Creating code_repository resource.")
+        logger.info("Creating code_repository resource.")
         client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
         )
@@ -3725,7 +3724,7 @@ class CodeRepository(Base):
         )
         response = client.describe_code_repository(**operation_input_args)
 
-        pprint(response)
+        logger.debug(response)
 
         # deserialize the response
         transformed_response = transform(response, "DescribeCodeRepositoryOutput")
@@ -3786,7 +3785,7 @@ class CodeRepository(Base):
             ConflictException: There was a conflict when you attempted to modify a SageMaker entity such as an Experiment or Artifact.
         """
 
-        logger.debug("Updating code_repository resource.")
+        logger.info("Updating code_repository resource.")
         client = Base.get_sagemaker_client()
 
         operation_input_args = {
@@ -4042,7 +4041,7 @@ class CompilationJob(Base):
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
         """
 
-        logger.debug("Creating compilation_job resource.")
+        logger.info("Creating compilation_job resource.")
         client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
         )
@@ -4112,7 +4111,7 @@ class CompilationJob(Base):
         )
         response = client.describe_compilation_job(**operation_input_args)
 
-        pprint(response)
+        logger.debug(response)
 
         # deserialize the response
         transformed_response = transform(response, "DescribeCompilationJobResponse")
@@ -4202,6 +4201,8 @@ class CompilationJob(Base):
             "CompilationJobName": self.compilation_job_name,
         }
         client.stop_compilation_job(**operation_input_args)
+
+        logger.info(f"Stopping {self.__class__.__name__} - {self.get_name()}")
 
     def wait(self, poll: int = 5, timeout: Optional[int] = None) -> None:
         """
@@ -4409,7 +4410,7 @@ class Context(Base):
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
         """
 
-        logger.debug("Creating context resource.")
+        logger.info("Creating context resource.")
         client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
         )
@@ -4477,7 +4478,7 @@ class Context(Base):
         )
         response = client.describe_context(**operation_input_args)
 
-        pprint(response)
+        logger.debug(response)
 
         # deserialize the response
         transformed_response = transform(response, "DescribeContextResponse")
@@ -4545,7 +4546,7 @@ class Context(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        logger.debug("Updating context resource.")
+        logger.info("Updating context resource.")
         client = Base.get_sagemaker_client()
 
         operation_input_args = {
@@ -4805,7 +4806,7 @@ class DataQualityJobDefinition(Base):
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
         """
 
-        logger.debug("Creating data_quality_job_definition resource.")
+        logger.info("Creating data_quality_job_definition resource.")
         client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
         )
@@ -4877,7 +4878,7 @@ class DataQualityJobDefinition(Base):
         )
         response = client.describe_data_quality_job_definition(**operation_input_args)
 
-        pprint(response)
+        logger.debug(response)
 
         # deserialize the response
         transformed_response = transform(response, "DescribeDataQualityJobDefinitionResponse")
@@ -5111,7 +5112,7 @@ class Device(Base):
         )
         response = client.describe_device(**operation_input_args)
 
-        pprint(response)
+        logger.debug(response)
 
         # deserialize the response
         transformed_response = transform(response, "DescribeDeviceResponse")
@@ -5321,7 +5322,7 @@ class DeviceFleet(Base):
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
         """
 
-        logger.debug("Creating device_fleet resource.")
+        logger.info("Creating device_fleet resource.")
         client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
         )
@@ -5389,7 +5390,7 @@ class DeviceFleet(Base):
         )
         response = client.describe_device_fleet(**operation_input_args)
 
-        pprint(response)
+        logger.debug(response)
 
         # deserialize the response
         transformed_response = transform(response, "DescribeDeviceFleetResponse")
@@ -5458,7 +5459,7 @@ class DeviceFleet(Base):
             ResourceInUse: Resource being accessed is in use.
         """
 
-        logger.debug("Updating device_fleet resource.")
+        logger.info("Updating device_fleet resource.")
         client = Base.get_sagemaker_client()
 
         operation_input_args = {
@@ -5927,7 +5928,7 @@ class Domain(Base):
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
         """
 
-        logger.debug("Creating domain resource.")
+        logger.info("Creating domain resource.")
         client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
         )
@@ -6001,7 +6002,7 @@ class Domain(Base):
         )
         response = client.describe_domain(**operation_input_args)
 
-        pprint(response)
+        logger.debug(response)
 
         # deserialize the response
         transformed_response = transform(response, "DescribeDomainResponse")
@@ -6074,7 +6075,7 @@ class Domain(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        logger.debug("Updating domain resource.")
+        logger.info("Updating domain resource.")
         client = Base.get_sagemaker_client()
 
         operation_input_args = {
@@ -6349,7 +6350,7 @@ class EdgeDeploymentPlan(Base):
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
         """
 
-        logger.debug("Creating edge_deployment_plan resource.")
+        logger.info("Creating edge_deployment_plan resource.")
         client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
         )
@@ -6424,7 +6425,7 @@ class EdgeDeploymentPlan(Base):
         )
         response = client.describe_edge_deployment_plan(**operation_input_args)
 
-        pprint(response)
+        logger.debug(response)
 
         # deserialize the response
         transformed_response = transform(response, "DescribeEdgeDeploymentPlanResponse")
@@ -6911,7 +6912,7 @@ class EdgePackagingJob(Base):
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
         """
 
-        logger.debug("Creating edge_packaging_job resource.")
+        logger.info("Creating edge_packaging_job resource.")
         client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
         )
@@ -6983,7 +6984,7 @@ class EdgePackagingJob(Base):
         )
         response = client.describe_edge_packaging_job(**operation_input_args)
 
-        pprint(response)
+        logger.debug(response)
 
         # deserialize the response
         transformed_response = transform(response, "DescribeEdgePackagingJobResponse")
@@ -7044,6 +7045,8 @@ class EdgePackagingJob(Base):
             "EdgePackagingJobName": self.edge_packaging_job_name,
         }
         client.stop_edge_packaging_job(**operation_input_args)
+
+        logger.info(f"Stopping {self.__class__.__name__} - {self.get_name()}")
 
     def wait(self, poll: int = 5, timeout: Optional[int] = None) -> None:
         """
@@ -7282,7 +7285,7 @@ class Endpoint(Base):
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
         """
 
-        logger.debug("Creating endpoint resource.")
+        logger.info("Creating endpoint resource.")
         client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
         )
@@ -7347,7 +7350,7 @@ class Endpoint(Base):
         )
         response = client.describe_endpoint(**operation_input_args)
 
-        pprint(response)
+        logger.debug(response)
 
         # deserialize the response
         transformed_response = transform(response, "DescribeEndpointOutput")
@@ -7418,7 +7421,7 @@ class Endpoint(Base):
             ResourceLimitExceeded: You have exceeded an SageMaker resource limit. For example, you might have too many training jobs created.
         """
 
-        logger.debug("Updating endpoint resource.")
+        logger.info("Updating endpoint resource.")
         client = Base.get_sagemaker_client()
 
         operation_input_args = {
@@ -7612,7 +7615,7 @@ class Endpoint(Base):
             ValidationError: Inspect your request and try again.
         """
 
-        logger.debug(f"Invoking endpoint resource.")
+        logger.info(f"Invoking endpoint resource.")
         client = SageMakerRuntimeClient(service_name="sagemaker-runtime").client
         operation_input_args = {
             "EndpointName": self.endpoint_name,
@@ -7678,7 +7681,7 @@ class Endpoint(Base):
             ValidationError: Inspect your request and try again.
         """
 
-        logger.debug(f"Invoking endpoint resource Async.")
+        logger.info(f"Invoking endpoint resource Async.")
         client = SageMakerRuntimeClient(service_name="sagemaker-runtime").client
 
         operation_input_args = {
@@ -7747,7 +7750,7 @@ class Endpoint(Base):
             ValidationError: Inspect your request and try again.
         """
 
-        logger.debug(f"Invoking endpoint resource with Response Stream.")
+        logger.info(f"Invoking endpoint resource with Response Stream.")
         client = SageMakerRuntimeClient(service_name="sagemaker-runtime").client
 
         operation_input_args = {
@@ -8025,7 +8028,7 @@ class EndpointConfig(Base):
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
         """
 
-        logger.debug("Creating endpoint_config resource.")
+        logger.info("Creating endpoint_config resource.")
         client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
         )
@@ -8097,7 +8100,7 @@ class EndpointConfig(Base):
         )
         response = client.describe_endpoint_config(**operation_input_args)
 
-        pprint(response)
+        logger.debug(response)
 
         # deserialize the response
         transformed_response = transform(response, "DescribeEndpointConfigOutput")
@@ -8313,7 +8316,7 @@ class Experiment(Base):
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
         """
 
-        logger.debug("Creating experiment resource.")
+        logger.info("Creating experiment resource.")
         client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
         )
@@ -8379,7 +8382,7 @@ class Experiment(Base):
         )
         response = client.describe_experiment(**operation_input_args)
 
-        pprint(response)
+        logger.debug(response)
 
         # deserialize the response
         transformed_response = transform(response, "DescribeExperimentResponse")
@@ -8443,7 +8446,7 @@ class Experiment(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        logger.debug("Updating experiment resource.")
+        logger.info("Updating experiment resource.")
         client = Base.get_sagemaker_client()
 
         operation_input_args = {
@@ -8694,7 +8697,7 @@ class FeatureGroup(Base):
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
         """
 
-        logger.debug("Creating feature_group resource.")
+        logger.info("Creating feature_group resource.")
         client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
         )
@@ -8769,7 +8772,7 @@ class FeatureGroup(Base):
         )
         response = client.describe_feature_group(**operation_input_args)
 
-        pprint(response)
+        logger.debug(response)
 
         # deserialize the response
         transformed_response = transform(response, "DescribeFeatureGroupResponse")
@@ -8839,7 +8842,7 @@ class FeatureGroup(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        logger.debug("Updating feature_group resource.")
+        logger.info("Updating feature_group resource.")
         client = Base.get_sagemaker_client()
 
         operation_input_args = {
@@ -9130,7 +9133,7 @@ class FeatureMetadata(Base):
         )
         response = client.describe_feature_metadata(**operation_input_args)
 
-        pprint(response)
+        logger.debug(response)
 
         # deserialize the response
         transformed_response = transform(response, "DescribeFeatureMetadataResponse")
@@ -9199,7 +9202,7 @@ class FeatureMetadata(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        logger.debug("Updating feature_metadata resource.")
+        logger.info("Updating feature_metadata resource.")
         client = Base.get_sagemaker_client()
 
         operation_input_args = {
@@ -9334,7 +9337,7 @@ class FlowDefinition(Base):
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
         """
 
-        logger.debug("Creating flow_definition resource.")
+        logger.info("Creating flow_definition resource.")
         client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
         )
@@ -9403,7 +9406,7 @@ class FlowDefinition(Base):
         )
         response = client.describe_flow_definition(**operation_input_args)
 
-        pprint(response)
+        logger.debug(response)
 
         # deserialize the response
         transformed_response = transform(response, "DescribeFlowDefinitionResponse")
@@ -9726,7 +9729,7 @@ class Hub(Base):
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
         """
 
-        logger.debug("Creating hub resource.")
+        logger.info("Creating hub resource.")
         client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
         )
@@ -9794,7 +9797,7 @@ class Hub(Base):
         )
         response = client.describe_hub(**operation_input_args)
 
-        pprint(response)
+        logger.debug(response)
 
         # deserialize the response
         transformed_response = transform(response, "DescribeHubResponse")
@@ -9859,7 +9862,7 @@ class Hub(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        logger.debug("Updating hub resource.")
+        logger.info("Updating hub resource.")
         client = Base.get_sagemaker_client()
 
         operation_input_args = {
@@ -10187,7 +10190,7 @@ class HubContent(Base):
         )
         response = client.describe_hub_content(**operation_input_args)
 
-        pprint(response)
+        logger.debug(response)
 
         # deserialize the response
         transformed_response = transform(response, "DescribeHubContentResponse")
@@ -10348,7 +10351,7 @@ class HubContent(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        logger.debug(f"Importing hub_content resource.")
+        logger.info(f"Importing hub_content resource.")
         client = SageMakerClient(
             session=session, region_name=region, service_name="sagemaker"
         ).client
@@ -10665,7 +10668,7 @@ class HumanTaskUi(Base):
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
         """
 
-        logger.debug("Creating human_task_ui resource.")
+        logger.info("Creating human_task_ui resource.")
         client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
         )
@@ -10730,7 +10733,7 @@ class HumanTaskUi(Base):
         )
         response = client.describe_human_task_ui(**operation_input_args)
 
-        pprint(response)
+        logger.debug(response)
 
         # deserialize the response
         transformed_response = transform(response, "DescribeHumanTaskUiResponse")
@@ -11077,7 +11080,7 @@ class HyperParameterTuningJob(Base):
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
         """
 
-        logger.debug("Creating hyper_parameter_tuning_job resource.")
+        logger.info("Creating hyper_parameter_tuning_job resource.")
         client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
         )
@@ -11150,7 +11153,7 @@ class HyperParameterTuningJob(Base):
         )
         response = client.describe_hyper_parameter_tuning_job(**operation_input_args)
 
-        pprint(response)
+        logger.debug(response)
 
         # deserialize the response
         transformed_response = transform(response, "DescribeHyperParameterTuningJobResponse")
@@ -11239,6 +11242,8 @@ class HyperParameterTuningJob(Base):
             "HyperParameterTuningJobName": self.hyper_parameter_tuning_job_name,
         }
         client.stop_hyper_parameter_tuning_job(**operation_input_args)
+
+        logger.info(f"Stopping {self.__class__.__name__} - {self.get_name()}")
 
     def wait(self, poll: int = 5, timeout: Optional[int] = None) -> None:
         """
@@ -11567,7 +11572,7 @@ class Image(Base):
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
         """
 
-        logger.debug("Creating image resource.")
+        logger.info("Creating image resource.")
         client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
         )
@@ -11634,7 +11639,7 @@ class Image(Base):
         )
         response = client.describe_image(**operation_input_args)
 
-        pprint(response)
+        logger.debug(response)
 
         # deserialize the response
         transformed_response = transform(response, "DescribeImageResponse")
@@ -11704,7 +11709,7 @@ class Image(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        logger.debug("Updating image resource.")
+        logger.info("Updating image resource.")
         client = Base.get_sagemaker_client()
 
         operation_input_args = {
@@ -12101,7 +12106,7 @@ class ImageVersion(Base):
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
         """
 
-        logger.debug("Creating image_version resource.")
+        logger.info("Creating image_version resource.")
         client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
         )
@@ -12180,7 +12185,7 @@ class ImageVersion(Base):
         )
         response = client.describe_image_version(**operation_input_args)
 
-        pprint(response)
+        logger.debug(response)
 
         # deserialize the response
         transformed_response = transform(response, "DescribeImageVersionResponse")
@@ -12261,7 +12266,7 @@ class ImageVersion(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        logger.debug("Updating image_version resource.")
+        logger.info("Updating image_version resource.")
         client = Base.get_sagemaker_client()
 
         operation_input_args = {
@@ -12507,7 +12512,7 @@ class InferenceComponent(Base):
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
         """
 
-        logger.debug("Creating inference_component resource.")
+        logger.info("Creating inference_component resource.")
         client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
         )
@@ -12576,7 +12581,7 @@ class InferenceComponent(Base):
         )
         response = client.describe_inference_component(**operation_input_args)
 
-        pprint(response)
+        logger.debug(response)
 
         # deserialize the response
         transformed_response = transform(response, "DescribeInferenceComponentOutput")
@@ -12638,7 +12643,7 @@ class InferenceComponent(Base):
             ResourceLimitExceeded: You have exceeded an SageMaker resource limit. For example, you might have too many training jobs created.
         """
 
-        logger.debug("Updating inference_component resource.")
+        logger.info("Updating inference_component resource.")
         client = Base.get_sagemaker_client()
 
         operation_input_args = {
@@ -13028,7 +13033,7 @@ class InferenceExperiment(Base):
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
         """
 
-        logger.debug("Creating inference_experiment resource.")
+        logger.info("Creating inference_experiment resource.")
         client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
         )
@@ -13101,7 +13106,7 @@ class InferenceExperiment(Base):
         )
         response = client.describe_inference_experiment(**operation_input_args)
 
-        pprint(response)
+        logger.debug(response)
 
         # deserialize the response
         transformed_response = transform(response, "DescribeInferenceExperimentResponse")
@@ -13169,7 +13174,7 @@ class InferenceExperiment(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        logger.debug("Updating inference_experiment resource.")
+        logger.info("Updating inference_experiment resource.")
         client = Base.get_sagemaker_client()
 
         operation_input_args = {
@@ -13249,6 +13254,8 @@ class InferenceExperiment(Base):
             "Reason": self.reason,
         }
         client.stop_inference_experiment(**operation_input_args)
+
+        logger.info(f"Stopping {self.__class__.__name__} - {self.get_name()}")
 
     def wait_for_status(
         self,
@@ -13500,7 +13507,7 @@ class InferenceRecommendationsJob(Base):
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
         """
 
-        logger.debug("Creating inference_recommendations_job resource.")
+        logger.info("Creating inference_recommendations_job resource.")
         client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
         )
@@ -13570,7 +13577,7 @@ class InferenceRecommendationsJob(Base):
         )
         response = client.describe_inference_recommendations_job(**operation_input_args)
 
-        pprint(response)
+        logger.debug(response)
 
         # deserialize the response
         transformed_response = transform(response, "DescribeInferenceRecommendationsJobResponse")
@@ -13632,6 +13639,8 @@ class InferenceRecommendationsJob(Base):
             "JobName": self.job_name,
         }
         client.stop_inference_recommendations_job(**operation_input_args)
+
+        logger.info(f"Stopping {self.__class__.__name__} - {self.get_name()}")
 
     def wait(self, poll: int = 5, timeout: Optional[int] = None) -> None:
         """
@@ -14014,7 +14023,7 @@ class LabelingJob(Base):
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
         """
 
-        logger.debug("Creating labeling_job resource.")
+        logger.info("Creating labeling_job resource.")
         client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
         )
@@ -14086,7 +14095,7 @@ class LabelingJob(Base):
         )
         response = client.describe_labeling_job(**operation_input_args)
 
-        pprint(response)
+        logger.debug(response)
 
         # deserialize the response
         transformed_response = transform(response, "DescribeLabelingJobResponse")
@@ -14148,6 +14157,8 @@ class LabelingJob(Base):
             "LabelingJobName": self.labeling_job_name,
         }
         client.stop_labeling_job(**operation_input_args)
+
+        logger.info(f"Stopping {self.__class__.__name__} - {self.get_name()}")
 
     def wait(self, poll: int = 5, timeout: Optional[int] = None) -> None:
         """
@@ -14344,7 +14355,7 @@ class LineageGroup(Base):
         )
         response = client.describe_lineage_group(**operation_input_args)
 
-        pprint(response)
+        logger.debug(response)
 
         # deserialize the response
         transformed_response = transform(response, "DescribeLineageGroupResponse")
@@ -14609,7 +14620,7 @@ class MlflowTrackingServer(Base):
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
         """
 
-        logger.debug("Creating mlflow_tracking_server resource.")
+        logger.info("Creating mlflow_tracking_server resource.")
         client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
         )
@@ -14679,7 +14690,7 @@ class MlflowTrackingServer(Base):
         )
         response = client.describe_mlflow_tracking_server(**operation_input_args)
 
-        pprint(response)
+        logger.debug(response)
 
         # deserialize the response
         transformed_response = transform(response, "DescribeMlflowTrackingServerResponse")
@@ -14747,7 +14758,7 @@ class MlflowTrackingServer(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        logger.debug("Updating mlflow_tracking_server resource.")
+        logger.info("Updating mlflow_tracking_server resource.")
         client = Base.get_sagemaker_client()
 
         operation_input_args = {
@@ -14821,6 +14832,8 @@ class MlflowTrackingServer(Base):
             "TrackingServerName": self.tracking_server_name,
         }
         client.stop_mlflow_tracking_server(**operation_input_args)
+
+        logger.info(f"Stopping {self.__class__.__name__} - {self.get_name()}")
 
     def wait_for_status(
         self,
@@ -15121,7 +15134,7 @@ class Model(Base):
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
         """
 
-        logger.debug("Creating model resource.")
+        logger.info("Creating model resource.")
         client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
         )
@@ -15190,7 +15203,7 @@ class Model(Base):
         )
         response = client.describe_model(**operation_input_args)
 
-        pprint(response)
+        logger.debug(response)
 
         # deserialize the response
         transformed_response = transform(response, "DescribeModelOutput")
@@ -15516,7 +15529,7 @@ class ModelBiasJobDefinition(Base):
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
         """
 
-        logger.debug("Creating model_bias_job_definition resource.")
+        logger.info("Creating model_bias_job_definition resource.")
         client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
         )
@@ -15588,7 +15601,7 @@ class ModelBiasJobDefinition(Base):
         )
         response = client.describe_model_bias_job_definition(**operation_input_args)
 
-        pprint(response)
+        logger.debug(response)
 
         # deserialize the response
         transformed_response = transform(response, "DescribeModelBiasJobDefinitionResponse")
@@ -15834,7 +15847,7 @@ class ModelCard(Base):
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
         """
 
-        logger.debug("Creating model_card resource.")
+        logger.info("Creating model_card resource.")
         client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
         )
@@ -15904,7 +15917,7 @@ class ModelCard(Base):
         )
         response = client.describe_model_card(**operation_input_args)
 
-        pprint(response)
+        logger.debug(response)
 
         # deserialize the response
         transformed_response = transform(response, "DescribeModelCardResponse")
@@ -15971,7 +15984,7 @@ class ModelCard(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        logger.debug("Updating model_card resource.")
+        logger.info("Updating model_card resource.")
         client = Base.get_sagemaker_client()
 
         operation_input_args = {
@@ -16295,7 +16308,7 @@ class ModelCardExportJob(Base):
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
         """
 
-        logger.debug("Creating model_card_export_job resource.")
+        logger.info("Creating model_card_export_job resource.")
         client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
         )
@@ -16365,7 +16378,7 @@ class ModelCardExportJob(Base):
         )
         response = client.describe_model_card_export_job(**operation_input_args)
 
-        pprint(response)
+        logger.debug(response)
 
         # deserialize the response
         transformed_response = transform(response, "DescribeModelCardExportJobResponse")
@@ -16661,7 +16674,7 @@ class ModelExplainabilityJobDefinition(Base):
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
         """
 
-        logger.debug("Creating model_explainability_job_definition resource.")
+        logger.info("Creating model_explainability_job_definition resource.")
         client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
         )
@@ -16734,7 +16747,7 @@ class ModelExplainabilityJobDefinition(Base):
         )
         response = client.describe_model_explainability_job_definition(**operation_input_args)
 
-        pprint(response)
+        logger.debug(response)
 
         # deserialize the response
         transformed_response = transform(
@@ -17094,7 +17107,7 @@ class ModelPackage(Base):
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
         """
 
-        logger.debug("Creating model_package resource.")
+        logger.info("Creating model_package resource.")
         client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
         )
@@ -17179,7 +17192,7 @@ class ModelPackage(Base):
         )
         response = client.describe_model_package(**operation_input_args)
 
-        pprint(response)
+        logger.debug(response)
 
         # deserialize the response
         transformed_response = transform(response, "DescribeModelPackageOutput")
@@ -17254,7 +17267,7 @@ class ModelPackage(Base):
             ConflictException: There was a conflict when you attempted to modify a SageMaker entity such as an Experiment or Artifact.
         """
 
-        logger.debug("Updating model_package resource.")
+        logger.info("Updating model_package resource.")
         client = Base.get_sagemaker_client()
 
         operation_input_args = {
@@ -17590,7 +17603,7 @@ class ModelPackageGroup(Base):
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
         """
 
-        logger.debug("Creating model_package_group resource.")
+        logger.info("Creating model_package_group resource.")
         client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
         )
@@ -17656,7 +17669,7 @@ class ModelPackageGroup(Base):
         )
         response = client.describe_model_package_group(**operation_input_args)
 
-        pprint(response)
+        logger.debug(response)
 
         # deserialize the response
         transformed_response = transform(response, "DescribeModelPackageGroupOutput")
@@ -18139,7 +18152,7 @@ class ModelQualityJobDefinition(Base):
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
         """
 
-        logger.debug("Creating model_quality_job_definition resource.")
+        logger.info("Creating model_quality_job_definition resource.")
         client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
         )
@@ -18211,7 +18224,7 @@ class ModelQualityJobDefinition(Base):
         )
         response = client.describe_model_quality_job_definition(**operation_input_args)
 
-        pprint(response)
+        logger.debug(response)
 
         # deserialize the response
         transformed_response = transform(response, "DescribeModelQualityJobDefinitionResponse")
@@ -18421,7 +18434,7 @@ class MonitoringAlert(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        logger.debug("Updating monitoring_alert resource.")
+        logger.info("Updating monitoring_alert resource.")
         client = Base.get_sagemaker_client()
 
         operation_input_args = {
@@ -18825,7 +18838,7 @@ class MonitoringSchedule(Base):
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
         """
 
-        logger.debug("Creating monitoring_schedule resource.")
+        logger.info("Creating monitoring_schedule resource.")
         client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
         )
@@ -18892,7 +18905,7 @@ class MonitoringSchedule(Base):
         )
         response = client.describe_monitoring_schedule(**operation_input_args)
 
-        pprint(response)
+        logger.debug(response)
 
         # deserialize the response
         transformed_response = transform(response, "DescribeMonitoringScheduleResponse")
@@ -18956,7 +18969,7 @@ class MonitoringSchedule(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        logger.debug("Updating monitoring_schedule resource.")
+        logger.info("Updating monitoring_schedule resource.")
         client = Base.get_sagemaker_client()
 
         operation_input_args = {
@@ -19026,6 +19039,8 @@ class MonitoringSchedule(Base):
             "MonitoringScheduleName": self.monitoring_schedule_name,
         }
         client.stop_monitoring_schedule(**operation_input_args)
+
+        logger.info(f"Stopping {self.__class__.__name__} - {self.get_name()}")
 
     def wait_for_status(
         self,
@@ -19310,7 +19325,7 @@ class NotebookInstance(Base):
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
         """
 
-        logger.debug("Creating notebook_instance resource.")
+        logger.info("Creating notebook_instance resource.")
         client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
         )
@@ -19389,7 +19404,7 @@ class NotebookInstance(Base):
         )
         response = client.describe_notebook_instance(**operation_input_args)
 
-        pprint(response)
+        logger.debug(response)
 
         # deserialize the response
         transformed_response = transform(response, "DescribeNotebookInstanceOutput")
@@ -19472,7 +19487,7 @@ class NotebookInstance(Base):
             ResourceLimitExceeded: You have exceeded an SageMaker resource limit. For example, you might have too many training jobs created.
         """
 
-        logger.debug("Updating notebook_instance resource.")
+        logger.info("Updating notebook_instance resource.")
         client = Base.get_sagemaker_client()
 
         operation_input_args = {
@@ -19552,6 +19567,8 @@ class NotebookInstance(Base):
             "NotebookInstanceName": self.notebook_instance_name,
         }
         client.stop_notebook_instance(**operation_input_args)
+
+        logger.info(f"Stopping {self.__class__.__name__} - {self.get_name()}")
 
     def wait_for_status(
         self,
@@ -19805,7 +19822,7 @@ class NotebookInstanceLifecycleConfig(Base):
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
         """
 
-        logger.debug("Creating notebook_instance_lifecycle_config resource.")
+        logger.info("Creating notebook_instance_lifecycle_config resource.")
         client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
         )
@@ -19874,7 +19891,7 @@ class NotebookInstanceLifecycleConfig(Base):
         )
         response = client.describe_notebook_instance_lifecycle_config(**operation_input_args)
 
-        pprint(response)
+        logger.debug(response)
 
         # deserialize the response
         transformed_response = transform(response, "DescribeNotebookInstanceLifecycleConfigOutput")
@@ -19936,7 +19953,7 @@ class NotebookInstanceLifecycleConfig(Base):
             ResourceLimitExceeded: You have exceeded an SageMaker resource limit. For example, you might have too many training jobs created.
         """
 
-        logger.debug("Updating notebook_instance_lifecycle_config resource.")
+        logger.info("Updating notebook_instance_lifecycle_config resource.")
         client = Base.get_sagemaker_client()
 
         operation_input_args = {
@@ -20194,7 +20211,7 @@ class OptimizationJob(Base):
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
         """
 
-        logger.debug("Creating optimization_job resource.")
+        logger.info("Creating optimization_job resource.")
         client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
         )
@@ -20266,7 +20283,7 @@ class OptimizationJob(Base):
         )
         response = client.describe_optimization_job(**operation_input_args)
 
-        pprint(response)
+        logger.debug(response)
 
         # deserialize the response
         transformed_response = transform(response, "DescribeOptimizationJobResponse")
@@ -20356,6 +20373,8 @@ class OptimizationJob(Base):
             "OptimizationJobName": self.optimization_job_name,
         }
         client.stop_optimization_job(**operation_input_args)
+
+        logger.info(f"Stopping {self.__class__.__name__} - {self.get_name()}")
 
     def wait(self, poll: int = 5, timeout: Optional[int] = None) -> None:
         """
@@ -20592,7 +20611,7 @@ class Pipeline(Base):
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
         """
 
-        logger.debug("Creating pipeline resource.")
+        logger.info("Creating pipeline resource.")
         client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
         )
@@ -20663,7 +20682,7 @@ class Pipeline(Base):
         )
         response = client.describe_pipeline(**operation_input_args)
 
-        pprint(response)
+        logger.debug(response)
 
         # deserialize the response
         transformed_response = transform(response, "DescribePipelineResponse")
@@ -20735,7 +20754,7 @@ class Pipeline(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        logger.debug("Updating pipeline resource.")
+        logger.info("Updating pipeline resource.")
         client = Base.get_sagemaker_client()
 
         operation_input_args = {
@@ -21025,7 +21044,7 @@ class PipelineExecution(Base):
         )
         response = client.describe_pipeline_execution(**operation_input_args)
 
-        pprint(response)
+        logger.debug(response)
 
         # deserialize the response
         transformed_response = transform(response, "DescribePipelineExecutionResponse")
@@ -21090,7 +21109,7 @@ class PipelineExecution(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        logger.debug("Updating pipeline_execution resource.")
+        logger.info("Updating pipeline_execution resource.")
         client = Base.get_sagemaker_client()
 
         operation_input_args = {
@@ -21136,6 +21155,8 @@ class PipelineExecution(Base):
             "ClientRequestToken": self.client_request_token,
         }
         client.stop_pipeline_execution(**operation_input_args)
+
+        logger.info(f"Stopping {self.__class__.__name__} - {self.get_name()}")
 
     def wait_for_status(
         self,
@@ -21960,7 +21981,7 @@ class ProcessingJob(Base):
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
         """
 
-        logger.debug("Creating processing_job resource.")
+        logger.info("Creating processing_job resource.")
         client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
         )
@@ -22033,7 +22054,7 @@ class ProcessingJob(Base):
         )
         response = client.describe_processing_job(**operation_input_args)
 
-        pprint(response)
+        logger.debug(response)
 
         # deserialize the response
         transformed_response = transform(response, "DescribeProcessingJobResponse")
@@ -22095,6 +22116,8 @@ class ProcessingJob(Base):
             "ProcessingJobName": self.processing_job_name,
         }
         client.stop_processing_job(**operation_input_args)
+
+        logger.info(f"Stopping {self.__class__.__name__} - {self.get_name()}")
 
     def wait(self, poll: int = 5, timeout: Optional[int] = None) -> None:
         """
@@ -22300,7 +22323,7 @@ class Project(Base):
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
         """
 
-        logger.debug("Creating project resource.")
+        logger.info("Creating project resource.")
         client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
         )
@@ -22365,7 +22388,7 @@ class Project(Base):
         )
         response = client.describe_project(**operation_input_args)
 
-        pprint(response)
+        logger.debug(response)
 
         # deserialize the response
         transformed_response = transform(response, "DescribeProjectOutput")
@@ -22434,7 +22457,7 @@ class Project(Base):
             ConflictException: There was a conflict when you attempted to modify a SageMaker entity such as an Experiment or Artifact.
         """
 
-        logger.debug("Updating project resource.")
+        logger.info("Updating project resource.")
         client = Base.get_sagemaker_client()
 
         operation_input_args = {
@@ -22908,7 +22931,7 @@ class Space(Base):
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
         """
 
-        logger.debug("Creating space resource.")
+        logger.info("Creating space resource.")
         client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
         )
@@ -22980,7 +23003,7 @@ class Space(Base):
         )
         response = client.describe_space(**operation_input_args)
 
-        pprint(response)
+        logger.debug(response)
 
         # deserialize the response
         transformed_response = transform(response, "DescribeSpaceResponse")
@@ -23046,7 +23069,7 @@ class Space(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        logger.debug("Updating space resource.")
+        logger.info("Updating space resource.")
         client = Base.get_sagemaker_client()
 
         operation_input_args = {
@@ -23338,7 +23361,7 @@ class StudioLifecycleConfig(Base):
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
         """
 
-        logger.debug("Creating studio_lifecycle_config resource.")
+        logger.info("Creating studio_lifecycle_config resource.")
         client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
         )
@@ -23408,7 +23431,7 @@ class StudioLifecycleConfig(Base):
         )
         response = client.describe_studio_lifecycle_config(**operation_input_args)
 
-        pprint(response)
+        logger.debug(response)
 
         # deserialize the response
         transformed_response = transform(response, "DescribeStudioLifecycleConfigResponse")
@@ -23620,7 +23643,7 @@ class SubscribedWorkteam(Base):
         )
         response = client.describe_subscribed_workteam(**operation_input_args)
 
-        pprint(response)
+        logger.debug(response)
 
         # deserialize the response
         transformed_response = transform(response, "DescribeSubscribedWorkteamResponse")
@@ -24110,7 +24133,7 @@ class TrainingJob(Base):
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
         """
 
-        logger.debug("Creating training_job resource.")
+        logger.info("Creating training_job resource.")
         client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
         )
@@ -24197,7 +24220,7 @@ class TrainingJob(Base):
         )
         response = client.describe_training_job(**operation_input_args)
 
-        pprint(response)
+        logger.debug(response)
 
         # deserialize the response
         transformed_response = transform(response, "DescribeTrainingJobResponse")
@@ -24264,7 +24287,7 @@ class TrainingJob(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        logger.debug("Updating training_job resource.")
+        logger.info("Updating training_job resource.")
         client = Base.get_sagemaker_client()
 
         operation_input_args = {
@@ -24309,6 +24332,8 @@ class TrainingJob(Base):
             "TrainingJobName": self.training_job_name,
         }
         client.stop_training_job(**operation_input_args)
+
+        logger.info(f"Stopping {self.__class__.__name__} - {self.get_name()}")
 
     def wait(self, poll: int = 5, timeout: Optional[int] = None) -> None:
         """
@@ -24589,7 +24614,7 @@ class TransformJob(Base):
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
         """
 
-        logger.debug("Creating transform_job resource.")
+        logger.info("Creating transform_job resource.")
         client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
         )
@@ -24665,7 +24690,7 @@ class TransformJob(Base):
         )
         response = client.describe_transform_job(**operation_input_args)
 
-        pprint(response)
+        logger.debug(response)
 
         # deserialize the response
         transformed_response = transform(response, "DescribeTransformJobResponse")
@@ -24727,6 +24752,8 @@ class TransformJob(Base):
             "TransformJobName": self.transform_job_name,
         }
         client.stop_transform_job(**operation_input_args)
+
+        logger.info(f"Stopping {self.__class__.__name__} - {self.get_name()}")
 
     def wait(self, poll: int = 5, timeout: Optional[int] = None) -> None:
         """
@@ -24931,7 +24958,7 @@ class Trial(Base):
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
         """
 
-        logger.debug("Creating trial resource.")
+        logger.info("Creating trial resource.")
         client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
         )
@@ -24998,7 +25025,7 @@ class Trial(Base):
         )
         response = client.describe_trial(**operation_input_args)
 
-        pprint(response)
+        logger.debug(response)
 
         # deserialize the response
         transformed_response = transform(response, "DescribeTrialResponse")
@@ -25061,7 +25088,7 @@ class Trial(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        logger.debug("Updating trial resource.")
+        logger.info("Updating trial resource.")
         client = Base.get_sagemaker_client()
 
         operation_input_args = {
@@ -25293,7 +25320,7 @@ class TrialComponent(Base):
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
         """
 
-        logger.debug("Creating trial_component resource.")
+        logger.info("Creating trial_component resource.")
         client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
         )
@@ -25365,7 +25392,7 @@ class TrialComponent(Base):
         )
         response = client.describe_trial_component(**operation_input_args)
 
-        pprint(response)
+        logger.debug(response)
 
         # deserialize the response
         transformed_response = transform(response, "DescribeTrialComponentResponse")
@@ -25442,7 +25469,7 @@ class TrialComponent(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        logger.debug("Updating trial_component resource.")
+        logger.info("Updating trial_component resource.")
         client = Base.get_sagemaker_client()
 
         operation_input_args = {
@@ -25823,7 +25850,7 @@ class UserProfile(Base):
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
         """
 
-        logger.debug("Creating user_profile resource.")
+        logger.info("Creating user_profile resource.")
         client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
         )
@@ -25897,7 +25924,7 @@ class UserProfile(Base):
         )
         response = client.describe_user_profile(**operation_input_args)
 
-        pprint(response)
+        logger.debug(response)
 
         # deserialize the response
         transformed_response = transform(response, "DescribeUserProfileResponse")
@@ -25964,7 +25991,7 @@ class UserProfile(Base):
             ResourceNotFound: Resource being access is not found.
         """
 
-        logger.debug("Updating user_profile resource.")
+        logger.info("Updating user_profile resource.")
         client = Base.get_sagemaker_client()
 
         operation_input_args = {
@@ -26272,7 +26299,7 @@ class Workforce(Base):
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
         """
 
-        logger.debug("Creating workforce resource.")
+        logger.info("Creating workforce resource.")
         client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
         )
@@ -26339,7 +26366,7 @@ class Workforce(Base):
         )
         response = client.describe_workforce(**operation_input_args)
 
-        pprint(response)
+        logger.debug(response)
 
         # deserialize the response
         transformed_response = transform(response, "DescribeWorkforceResponse")
@@ -26408,7 +26435,7 @@ class Workforce(Base):
             ConflictException: There was a conflict when you attempted to modify a SageMaker entity such as an Experiment or Artifact.
         """
 
-        logger.debug("Updating workforce resource.")
+        logger.info("Updating workforce resource.")
         client = Base.get_sagemaker_client()
 
         operation_input_args = {
@@ -26678,7 +26705,7 @@ class Workteam(Base):
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
         """
 
-        logger.debug("Creating workteam resource.")
+        logger.info("Creating workteam resource.")
         client = Base.get_sagemaker_client(
             session=session, region_name=region, service_name="sagemaker"
         )
@@ -26746,7 +26773,7 @@ class Workteam(Base):
         )
         response = client.describe_workteam(**operation_input_args)
 
-        pprint(response)
+        logger.debug(response)
 
         # deserialize the response
         transformed_response = transform(response, "DescribeWorkteamResponse")
@@ -26816,7 +26843,7 @@ class Workteam(Base):
             ResourceLimitExceeded: You have exceeded an SageMaker resource limit. For example, you might have too many training jobs created.
         """
 
-        logger.debug("Updating workteam resource.")
+        logger.info("Updating workteam resource.")
         client = Base.get_sagemaker_client()
 
         operation_input_args = {

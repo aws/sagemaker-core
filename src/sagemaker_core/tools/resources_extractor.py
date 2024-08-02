@@ -11,11 +11,11 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 """A class for extracting resource information from a service JSON."""
-import logging
 from typing import Optional
 
 import pandas as pd
 
+from sagemaker_core.generated.utils import get_textual_rich_logger
 from sagemaker_core.tools.constants import CLASS_METHODS, OBJECT_METHODS
 from sagemaker_core.tools.data_extractor import (
     load_additional_operations_data,
@@ -24,8 +24,7 @@ from sagemaker_core.tools.data_extractor import (
 )
 from sagemaker_core.tools.method import Method
 
-logging.basicConfig(level=logging.INFO)
-log = logging.getLogger(__name__)
+log = get_textual_rich_logger(__name__)
 """
 This class is used to extract the resources and its actions from the service-2.json file.
 """

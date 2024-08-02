@@ -68,13 +68,8 @@ LICENCES_STRING = """
 # language governing permissions and limitations under the License.
 """
 
-BASIC_IMPORTS_STRING = """
-import logging
-"""
-
 LOGGER_STRING = """
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+logger = get_textual_rich_logger(__name__)
 
 """
 
