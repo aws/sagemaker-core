@@ -339,6 +339,7 @@ SHAPE_DAG = {
         ],
         "type": "structure",
     },
+    "AssumableRoleArns": {"member_shape": "RoleArn", "member_type": "string", "type": "list"},
     "AsyncInferenceClientConfig": {
         "members": [
             {
@@ -5808,6 +5809,13 @@ SHAPE_DAG = {
         "type": "structure",
     },
     "Edges": {"member_shape": "Edge", "member_type": "structure", "type": "list"},
+    "EmrSettings": {
+        "members": [
+            {"name": "AssumableRoleArns", "shape": "AssumableRoleArns", "type": "list"},
+            {"name": "ExecutionRoleArns", "shape": "ExecutionRoleArns", "type": "list"},
+        ],
+        "type": "structure",
+    },
     "EnableSagemakerServicecatalogPortfolioInput": {"members": [], "type": "structure"},
     "EnableSagemakerServicecatalogPortfolioOutput": {"members": [], "type": "structure"},
     "Endpoint": {
@@ -5979,6 +5987,7 @@ SHAPE_DAG = {
         "member_type": "structure",
         "type": "list",
     },
+    "ExecutionRoleArns": {"member_shape": "RoleArn", "member_type": "string", "type": "list"},
     "Experiment": {
         "members": [
             {"name": "ExperimentName", "shape": "ExperimentEntityName", "type": "string"},
@@ -7461,6 +7470,7 @@ SHAPE_DAG = {
             {"name": "CustomImages", "shape": "CustomImages", "type": "list"},
             {"name": "LifecycleConfigArns", "shape": "LifecycleConfigArns", "type": "list"},
             {"name": "CodeRepositories", "shape": "CodeRepositories", "type": "list"},
+            {"name": "EmrSettings", "shape": "EmrSettings", "type": "structure"},
         ],
         "type": "structure",
     },
