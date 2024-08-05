@@ -213,6 +213,18 @@ SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA = {
                                                     "amazon_bedrock_role_arn": {"type": "string"}
                                                 },
                                             },
+                                            "jupyter_lab_app_settings": {
+                                                "emr_settings": {
+                                                    "assumable_role_arns": {
+                                                        "type": "array",
+                                                        "items": {"type": "string"},
+                                                    },
+                                                    "execution_role_arns": {
+                                                        "type": "array",
+                                                        "items": {"type": "string"},
+                                                    },
+                                                }
+                                            },
                                         },
                                         "domain_settings": {
                                             "security_group_ids": {
@@ -236,6 +248,18 @@ SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA = {
                                             "security_groups": {
                                                 "type": "array",
                                                 "items": {"type": "string"},
+                                            },
+                                            "jupyter_lab_app_settings": {
+                                                "emr_settings": {
+                                                    "assumable_role_arns": {
+                                                        "type": "array",
+                                                        "items": {"type": "string"},
+                                                    },
+                                                    "execution_role_arns": {
+                                                        "type": "array",
+                                                        "items": {"type": "string"},
+                                                    },
+                                                }
                                             },
                                         },
                                     },
@@ -836,6 +860,18 @@ SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA = {
                                                 "generative_ai_settings": {
                                                     "amazon_bedrock_role_arn": {"type": "string"}
                                                 },
+                                            },
+                                            "jupyter_lab_app_settings": {
+                                                "emr_settings": {
+                                                    "assumable_role_arns": {
+                                                        "type": "array",
+                                                        "items": {"type": "string"},
+                                                    },
+                                                    "execution_role_arns": {
+                                                        "type": "array",
+                                                        "items": {"type": "string"},
+                                                    },
+                                                }
                                             },
                                         }
                                     },
