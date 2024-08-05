@@ -66,7 +66,7 @@ def create(
         S3ConfigNotFoundError: Raised when a configuration file is not found in S3
     """
 
-    logger.debug("Creating compilation_job resource.")
+    logger.info("Creating compilation_job resource.")
     client =Base.get_sagemaker_client(session=session, region_name=region, service_name='sagemaker')
 
     operation_input_args = {
@@ -155,7 +155,7 @@ def load(
         ResourceNotFound: Resource being access is not found.
     """
 
-    logger.debug(f"Importing hub_content resource.")
+    logger.info(f"Importing hub_content resource.")
     client = SageMakerClient(session=session, region_name=region, service_name='sagemaker').client
 
     operation_input_args = {
@@ -220,7 +220,7 @@ def update(
         ResourceLimitExceeded: You have exceeded an SageMaker resource limit. For example, you might have too many training jobs created.
     """
 
-    logger.debug("Updating endpoint resource.")
+    logger.info("Updating endpoint resource.")
     client = Base.get_sagemaker_client()
 
     operation_input_args = {
@@ -286,7 +286,7 @@ def update(
         ResourceLimitExceeded: You have exceeded an SageMaker resource limit. For example, you might have too many training jobs created.
     """
 
-    logger.debug("Updating endpoint resource.")
+    logger.info("Updating endpoint resource.")
     client = Base.get_sagemaker_client()
 
     operation_input_args = {
@@ -369,7 +369,7 @@ def get(
     client = Base.get_sagemaker_client(session=session, region_name=region, service_name='sagemaker')
     response = client.describe_app(**operation_input_args)
 
-    pprint(response)
+    logger.debug(response)
 
     # deserialize the response
     transformed_response = transform(response, 'DescribeAppResponse')
@@ -496,6 +496,8 @@ def stop(self) -> None:
         'CompilationJobName': self.compilation_job_name,
     }
     client.stop_compilation_job(**operation_input_args)
+
+    logger.info(f"Stopping {self.__class__.__name__} - {self.get_name()}")
 '''
         assert self.resource_generator.generate_stop_method("CompilationJob") == expected_output
 
@@ -676,7 +678,7 @@ def invoke(self,
         ValidationError: Inspect your request and try again.
     """
 
-    logger.debug(f"Invoking endpoint resource.")
+    logger.info(f"Invoking endpoint resource.")
     client = SageMakerRuntimeClient(service_name="sagemaker-runtime").client
     operation_input_args = {
         'EndpointName': self.endpoint_name,
@@ -750,7 +752,7 @@ def invoke_async(self,
         ValidationError: Inspect your request and try again.
     """
 
-    logger.debug(f"Invoking endpoint resource Async.")
+    logger.info(f"Invoking endpoint resource Async.")
     client = SageMakerRuntimeClient(service_name="sagemaker-runtime").client
     
     operation_input_args = {
@@ -827,7 +829,7 @@ def invoke_with_response_stream(self,
         ValidationError: Inspect your request and try again.
     """
 
-    logger.debug(f"Invoking endpoint resource with Response Stream.")
+    logger.info(f"Invoking endpoint resource with Response Stream.")
     client = SageMakerRuntimeClient(service_name="sagemaker-runtime").client
 
     operation_input_args = {
