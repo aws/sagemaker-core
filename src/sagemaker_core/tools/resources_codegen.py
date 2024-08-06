@@ -15,10 +15,10 @@ from functools import lru_cache
 
 import os
 import json
-from sagemaker_core.code_injection.codec import pascal_to_snake
-from sagemaker_core.generated.config_schema import SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA
-from sagemaker_core.generated.exceptions import IntelligentDefaultsError
-from sagemaker_core.generated.utils import get_textual_rich_logger
+from sagemaker_core.main.code_injection.codec import pascal_to_snake
+from sagemaker_core.main.config_schema import SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA
+from sagemaker_core.main.exceptions import IntelligentDefaultsError
+from sagemaker_core.main.utils import get_textual_rich_logger
 from sagemaker_core.tools.constants import (
     BASIC_RETURN_TYPES,
     GENERATED_CLASSES_LOCATION,
@@ -31,7 +31,7 @@ from sagemaker_core.tools.constants import (
     CONFIGURABLE_ATTRIBUTE_SUBSTRINGS,
 )
 from sagemaker_core.tools.method import Method, MethodType
-from sagemaker_core.util.util import (
+from sagemaker_core.main.utils import (
     add_indent,
     convert_to_snake_case,
     snake_to_pascal,
@@ -181,12 +181,12 @@ class ResourcesCodeGen:
             "from pydantic import validate_call",
             "from typing import Dict, List, Literal, Optional, Union\n"
             "from boto3.session import Session",
-            "from sagemaker_core.code_injection.codec import transform",
-            "from sagemaker_core.generated.utils import SageMakerClient, SageMakerRuntimeClient, ResourceIterator, Unassigned,"
+            "from sagemaker_core.main.code_injection.codec import transform",
+            "from sagemaker_core.main.utils import SageMakerClient, SageMakerRuntimeClient, ResourceIterator, Unassigned,"
             "get_textual_rich_logger, snake_to_pascal, pascal_to_snake, is_not_primitive, is_not_str_dict, is_snake_case, is_primitive_list",
-            "from sagemaker_core.generated.intelligent_defaults_helper import load_default_configs_for_resource_name, get_config_value",
-            "from sagemaker_core.generated.shapes import *",
-            "from sagemaker_core.generated.exceptions import *",
+            "from sagemaker_core.main.intelligent_defaults_helper import load_default_configs_for_resource_name, get_config_value",
+            "from sagemaker_core.main.shapes import *",
+            "from sagemaker_core.main.exceptions import *",
         ]
 
         formated_imports = "\n".join(imports)

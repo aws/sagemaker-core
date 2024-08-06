@@ -16,7 +16,7 @@ import json
 from mock import patch, mock_open
 
 
-from sagemaker_core.generated.user_agent import (
+from sagemaker_core.main.user_agent import (
     SagemakerCore_PREFIX,
     SagemakerCore_VERSION,
     NOTEBOOK_PREFIX,
@@ -25,7 +25,7 @@ from sagemaker_core.generated.user_agent import (
     process_studio_metadata_file,
     get_user_agent_extra_suffix,
 )
-from sagemaker_core.generated.user_agent import SagemakerCore_PREFIX
+from sagemaker_core.main.user_agent import SagemakerCore_PREFIX
 
 
 # Test process_notebook_metadata_file function
@@ -62,13 +62,18 @@ def test_process_studio_metadata_file_not_exists(tmp_path):
 def test_get_user_agent_extra_suffix():
     assert get_user_agent_extra_suffix() == f"lib/{SagemakerCore_PREFIX}#{SagemakerCore_VERSION}"
 
-    with patch("sagemaker_core.generated.user_agent.process_notebook_metadata_file", return_value="instance_type"):
+    with patch(
+        "sagemaker_core.main.user_agent.process_notebook_metadata_file",
+        return_value="instance_type",
+    ):
         assert (
             get_user_agent_extra_suffix()
             == f"lib/{SagemakerCore_PREFIX}#{SagemakerCore_VERSION} md/{NOTEBOOK_PREFIX}#instance_type"
         )
 
-    with patch("sagemaker_core.generated.user_agent.process_studio_metadata_file", return_value="studio_type"):
+    with patch(
+        "sagemaker_core.main.user_agent.process_studio_metadata_file", return_value="studio_type"
+    ):
         assert (
             get_user_agent_extra_suffix()
             == f"lib/{SagemakerCore_PREFIX}#{SagemakerCore_VERSION} md/{STUDIO_PREFIX}#studio_type"
