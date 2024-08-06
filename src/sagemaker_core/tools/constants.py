@@ -13,7 +13,6 @@
 """Constants used in the code_generator modules."""
 import os
 
-os.chdir("/Users/nargokul/workspace/sagemaker-core-demo/sagemaker-core")
 CLASS_METHODS = set(["create", "add", "start", "register", "import", "list", "get"])
 OBJECT_METHODS = set(
     ["refresh", "delete", "update", "stop", "deregister", "wait", "wait_for_status"]
