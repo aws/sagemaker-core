@@ -18,10 +18,68 @@ import re
 
 from boto3.session import Session
 from botocore.config import Config
+from rich import reconfigure
+from rich.console import Console
 from rich.logging import RichHandler
+from rich.style import Style
+from rich.theme import Theme
+from rich.traceback import install
 from typing import TypeVar, Generic, Type
 from sagemaker_core.code_injection.codec import transform
+from sagemaker_core.code_injection.constants import Color
 from sagemaker_core.generated.user_agent import get_user_agent_extra_suffix
+
+
+def get_textual_rich_theme() -> Console:
+    """
+    Get a textual rich theme with customized styling.
+
+    Returns:
+        Theme: A textual rich theme
+    """
+    return Theme(
+        {
+            "logging.level.info": Style(color=Color.BLUE.value, bold=True),
+            "logging.level.debug": Style(color=Color.GREEN.value, bold=True),
+            "logging.level.warning": Style(color=Color.YELLOW.value, bold=True),
+            "logging.level.error": Style(color=Color.RED.value, bold=True),
+            "logging.keyword": Style(color=Color.YELLOW.value, bold=True),
+            "repr.attrib_name": Style(color=Color.YELLOW.value, italic=False),
+            "repr.attrib_value": Style(color=Color.PURPLE.value, italic=False),
+            "repr.bool_true": Style(color=Color.GREEN.value, italic=True),
+            "repr.bool_false": Style(color=Color.RED.value, italic=True),
+            "repr.call": Style(color=Color.PURPLE.value, bold=True),
+            "repr.none": Style(color=Color.PURPLE.value, italic=True),
+            "repr.str": Style(color=Color.GREEN.value),
+            "repr.path": Style(color=Color.PURPLE.value),
+            "repr.filename": Style(color=Color.PURPLE.value),
+            "repr.url": Style(color=Color.BLUE.value, underline=True),
+            "repr.tag_name": Style(color=Color.PURPLE.value, bold=True),
+            "repr.ipv4": Style.null(),
+            "repr.ipv6": Style.null(),
+            "repr.eui48": Style.null(),
+            "repr.eui64": Style.null(),
+            "json.bool_true": Style(color=Color.GREEN.value, italic=True),
+            "json.bool_false": Style(color=Color.RED.value, italic=True),
+            "json.null": Style(color=Color.PURPLE.value, italic=True),
+            "json.str": Style(color=Color.GREEN.value),
+            "json.key": Style(color=Color.BLUE.value, bold=True),
+            "traceback.error": Style(color=Color.BRIGHT_RED.value, italic=True),
+            "traceback.border": Style(color=Color.BRIGHT_RED.value),
+            "traceback.title": Style(color=Color.BRIGHT_RED.value, bold=True),
+        }
+    )
+
+
+def enable_textual_rich_console_and_traceback():
+    """
+    Reconfigure the global textual rich console with the customized theme
+        and enable textual rich error traceback
+    """
+    theme = get_textual_rich_theme()
+    reconfigure(theme=theme)
+    console = Console(theme=theme)
+    install(console=console)
 
 
 def get_textual_rich_logger(name: str, log_level: str = "INFO") -> logging.Logger:
@@ -38,6 +96,7 @@ def get_textual_rich_logger(name: str, log_level: str = "INFO") -> logging.Logge
         logging.Logger: A textial rich logger.
 
     """
+    enable_textual_rich_console_and_traceback()
     handler = RichHandler(markup=True)
     logging.basicConfig(level=getattr(logging, log_level), handlers=[handler])
     logger = logging.getLogger(name)
