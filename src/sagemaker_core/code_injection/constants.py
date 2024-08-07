@@ -18,6 +18,7 @@ STRUCTURE_TYPE = "structure"
 MAP_TYPE = "map"
 LIST_TYPE = "list"
 
+
 class Color(Enum):
     RED = "rgb(215,0,0)"
     GREEN = "rgb(0,135,0)"

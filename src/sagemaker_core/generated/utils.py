@@ -30,7 +30,7 @@ from sagemaker_core.code_injection.constants import Color
 from sagemaker_core.generated.user_agent import get_user_agent_extra_suffix
 
 
-def get_textual_rich_theme() -> Console:
+def get_textual_rich_theme() -> Theme:
     """
     Get a textual rich theme with customized styling.
 
@@ -71,15 +71,21 @@ def get_textual_rich_theme() -> Console:
     )
 
 
+textual_rich_console_and_traceback_enabled = False
+
+
 def enable_textual_rich_console_and_traceback():
     """
     Reconfigure the global textual rich console with the customized theme
         and enable textual rich error traceback
     """
-    theme = get_textual_rich_theme()
-    reconfigure(theme=theme)
-    console = Console(theme=theme)
-    install(console=console)
+    global textual_rich_console_and_traceback_enabled
+    if not textual_rich_console_and_traceback_enabled:
+        theme = get_textual_rich_theme()
+        reconfigure(theme=theme)
+        console = Console(theme=theme)
+        install(console=console)
+        textual_rich_console_and_traceback_enabled = True
 
 
 def get_textual_rich_logger(name: str, log_level: str = "INFO") -> logging.Logger:
