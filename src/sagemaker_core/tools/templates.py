@@ -364,7 +364,7 @@ def wait(
 WAIT_FOR_STATUS_METHOD_TEMPLATE = '''
 def wait_for_status(
     self,
-    status: Literal{resource_states},
+    target_status: Literal{resource_states},
     poll: int = 5,
     timeout: Optional[int] = None
 ) -> None:
@@ -372,7 +372,7 @@ def wait_for_status(
     Wait for a {resource_name} resource to reach certain status.
     
     Parameters:
-        status: The status to wait for.
+        target_status: The status to wait for.
         poll: The number of seconds to wait between each poll.
         timeout: The maximum number of seconds to wait before timing out.
     
@@ -387,7 +387,7 @@ def wait_for_status(
         TextColumn("{{task.description}}"),
         TimeElapsedColumn(),
     )
-    progress.add_task(f"Waiting for {resource_name} to reach [bold]{{status}} status...")
+    progress.add_task(f"Waiting for {resource_name} to reach [bold]{{target_status}} status...")
     status = Status("Current status:")
 
     with Live(Panel(Group(progress, status), title="Wait Log Panel", border_style=Style(color=Color.BLUE.value))):
@@ -396,7 +396,7 @@ def wait_for_status(
             current_status = self{status_key_path}
             status.update(f"Current status: [bold]{{current_status}}")
 
-            if status == current_status:
+            if target_status == current_status:
                 logger.info(f"Final Resource Status: [bold]{{current_status}}")
                 return
 {failed_error_block}

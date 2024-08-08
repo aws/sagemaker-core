@@ -777,7 +777,7 @@ class Algorithm(Base):
 
     def wait_for_status(
         self,
-        status: Literal["Pending", "InProgress", "Completed", "Failed", "Deleting"],
+        target_status: Literal["Pending", "InProgress", "Completed", "Failed", "Deleting"],
         poll: int = 5,
         timeout: Optional[int] = None,
     ) -> None:
@@ -785,7 +785,7 @@ class Algorithm(Base):
         Wait for a Algorithm resource to reach certain status.
 
         Parameters:
-            status: The status to wait for.
+            target_status: The status to wait for.
             poll: The number of seconds to wait between each poll.
             timeout: The maximum number of seconds to wait before timing out.
 
@@ -801,7 +801,7 @@ class Algorithm(Base):
             TextColumn("{task.description}"),
             TimeElapsedColumn(),
         )
-        progress.add_task(f"Waiting for Algorithm to reach [bold]{status} status...")
+        progress.add_task(f"Waiting for Algorithm to reach [bold]{target_status} status...")
         status = Status("Current status:")
 
         with Live(
@@ -816,7 +816,7 @@ class Algorithm(Base):
                 current_status = self.algorithm_status
                 status.update(f"Current status: [bold]{current_status}")
 
-                if status == current_status:
+                if target_status == current_status:
                     logger.info(f"Final Resource Status: [bold]{current_status}")
                     return
 
@@ -1218,7 +1218,7 @@ class App(Base):
 
     def wait_for_status(
         self,
-        status: Literal["Deleted", "Deleting", "Failed", "InService", "Pending"],
+        target_status: Literal["Deleted", "Deleting", "Failed", "InService", "Pending"],
         poll: int = 5,
         timeout: Optional[int] = None,
     ) -> None:
@@ -1226,7 +1226,7 @@ class App(Base):
         Wait for a App resource to reach certain status.
 
         Parameters:
-            status: The status to wait for.
+            target_status: The status to wait for.
             poll: The number of seconds to wait between each poll.
             timeout: The maximum number of seconds to wait before timing out.
 
@@ -1242,7 +1242,7 @@ class App(Base):
             TextColumn("{task.description}"),
             TimeElapsedColumn(),
         )
-        progress.add_task(f"Waiting for App to reach [bold]{status} status...")
+        progress.add_task(f"Waiting for App to reach [bold]{target_status} status...")
         status = Status("Current status:")
 
         with Live(
@@ -1257,7 +1257,7 @@ class App(Base):
                 current_status = self.status
                 status.update(f"Current status: [bold]{current_status}")
 
-                if status == current_status:
+                if target_status == current_status:
                     logger.info(f"Final Resource Status: [bold]{current_status}")
                     return
 
@@ -3371,7 +3371,7 @@ class Cluster(Base):
 
     def wait_for_status(
         self,
-        status: Literal[
+        target_status: Literal[
             "Creating",
             "Deleting",
             "Failed",
@@ -3387,7 +3387,7 @@ class Cluster(Base):
         Wait for a Cluster resource to reach certain status.
 
         Parameters:
-            status: The status to wait for.
+            target_status: The status to wait for.
             poll: The number of seconds to wait between each poll.
             timeout: The maximum number of seconds to wait before timing out.
 
@@ -3403,7 +3403,7 @@ class Cluster(Base):
             TextColumn("{task.description}"),
             TimeElapsedColumn(),
         )
-        progress.add_task(f"Waiting for Cluster to reach [bold]{status} status...")
+        progress.add_task(f"Waiting for Cluster to reach [bold]{target_status} status...")
         status = Status("Current status:")
 
         with Live(
@@ -3418,7 +3418,7 @@ class Cluster(Base):
                 current_status = self.cluster_status
                 status.update(f"Current status: [bold]{current_status}")
 
-                if status == current_status:
+                if target_status == current_status:
                     logger.info(f"Final Resource Status: [bold]{current_status}")
                     return
 
@@ -6284,7 +6284,7 @@ class Domain(Base):
 
     def wait_for_status(
         self,
-        status: Literal[
+        target_status: Literal[
             "Deleting",
             "Failed",
             "InService",
@@ -6300,7 +6300,7 @@ class Domain(Base):
         Wait for a Domain resource to reach certain status.
 
         Parameters:
-            status: The status to wait for.
+            target_status: The status to wait for.
             poll: The number of seconds to wait between each poll.
             timeout: The maximum number of seconds to wait before timing out.
 
@@ -6316,7 +6316,7 @@ class Domain(Base):
             TextColumn("{task.description}"),
             TimeElapsedColumn(),
         )
-        progress.add_task(f"Waiting for Domain to reach [bold]{status} status...")
+        progress.add_task(f"Waiting for Domain to reach [bold]{target_status} status...")
         status = Status("Current status:")
 
         with Live(
@@ -6331,7 +6331,7 @@ class Domain(Base):
                 current_status = self.status
                 status.update(f"Current status: [bold]{current_status}")
 
-                if status == current_status:
+                if target_status == current_status:
                     logger.info(f"Final Resource Status: [bold]{current_status}")
                     return
 
@@ -7671,7 +7671,7 @@ class Endpoint(Base):
 
     def wait_for_status(
         self,
-        status: Literal[
+        target_status: Literal[
             "OutOfService",
             "Creating",
             "Updating",
@@ -7689,7 +7689,7 @@ class Endpoint(Base):
         Wait for a Endpoint resource to reach certain status.
 
         Parameters:
-            status: The status to wait for.
+            target_status: The status to wait for.
             poll: The number of seconds to wait between each poll.
             timeout: The maximum number of seconds to wait before timing out.
 
@@ -7705,7 +7705,7 @@ class Endpoint(Base):
             TextColumn("{task.description}"),
             TimeElapsedColumn(),
         )
-        progress.add_task(f"Waiting for Endpoint to reach [bold]{status} status...")
+        progress.add_task(f"Waiting for Endpoint to reach [bold]{target_status} status...")
         status = Status("Current status:")
 
         with Live(
@@ -7720,7 +7720,7 @@ class Endpoint(Base):
                 current_status = self.endpoint_status
                 status.update(f"Current status: [bold]{current_status}")
 
-                if status == current_status:
+                if target_status == current_status:
                     logger.info(f"Final Resource Status: [bold]{current_status}")
                     return
 
@@ -9120,7 +9120,7 @@ class FeatureGroup(Base):
 
     def wait_for_status(
         self,
-        status: Literal["Creating", "Created", "CreateFailed", "Deleting", "DeleteFailed"],
+        target_status: Literal["Creating", "Created", "CreateFailed", "Deleting", "DeleteFailed"],
         poll: int = 5,
         timeout: Optional[int] = None,
     ) -> None:
@@ -9128,7 +9128,7 @@ class FeatureGroup(Base):
         Wait for a FeatureGroup resource to reach certain status.
 
         Parameters:
-            status: The status to wait for.
+            target_status: The status to wait for.
             poll: The number of seconds to wait between each poll.
             timeout: The maximum number of seconds to wait before timing out.
 
@@ -9144,7 +9144,7 @@ class FeatureGroup(Base):
             TextColumn("{task.description}"),
             TimeElapsedColumn(),
         )
-        progress.add_task(f"Waiting for FeatureGroup to reach [bold]{status} status...")
+        progress.add_task(f"Waiting for FeatureGroup to reach [bold]{target_status} status...")
         status = Status("Current status:")
 
         with Live(
@@ -9159,7 +9159,7 @@ class FeatureGroup(Base):
                 current_status = self.feature_group_status
                 status.update(f"Current status: [bold]{current_status}")
 
-                if status == current_status:
+                if target_status == current_status:
                     logger.info(f"Final Resource Status: [bold]{current_status}")
                     return
 
@@ -9736,7 +9736,7 @@ class FlowDefinition(Base):
 
     def wait_for_status(
         self,
-        status: Literal["Initializing", "Active", "Failed", "Deleting"],
+        target_status: Literal["Initializing", "Active", "Failed", "Deleting"],
         poll: int = 5,
         timeout: Optional[int] = None,
     ) -> None:
@@ -9744,7 +9744,7 @@ class FlowDefinition(Base):
         Wait for a FlowDefinition resource to reach certain status.
 
         Parameters:
-            status: The status to wait for.
+            target_status: The status to wait for.
             poll: The number of seconds to wait between each poll.
             timeout: The maximum number of seconds to wait before timing out.
 
@@ -9760,7 +9760,7 @@ class FlowDefinition(Base):
             TextColumn("{task.description}"),
             TimeElapsedColumn(),
         )
-        progress.add_task(f"Waiting for FlowDefinition to reach [bold]{status} status...")
+        progress.add_task(f"Waiting for FlowDefinition to reach [bold]{target_status} status...")
         status = Status("Current status:")
 
         with Live(
@@ -9775,7 +9775,7 @@ class FlowDefinition(Base):
                 current_status = self.flow_definition_status
                 status.update(f"Current status: [bold]{current_status}")
 
-                if status == current_status:
+                if target_status == current_status:
                     logger.info(f"Final Resource Status: [bold]{current_status}")
                     return
 
@@ -10205,7 +10205,7 @@ class Hub(Base):
 
     def wait_for_status(
         self,
-        status: Literal[
+        target_status: Literal[
             "InService",
             "Creating",
             "Updating",
@@ -10221,7 +10221,7 @@ class Hub(Base):
         Wait for a Hub resource to reach certain status.
 
         Parameters:
-            status: The status to wait for.
+            target_status: The status to wait for.
             poll: The number of seconds to wait between each poll.
             timeout: The maximum number of seconds to wait before timing out.
 
@@ -10237,7 +10237,7 @@ class Hub(Base):
             TextColumn("{task.description}"),
             TimeElapsedColumn(),
         )
-        progress.add_task(f"Waiting for Hub to reach [bold]{status} status...")
+        progress.add_task(f"Waiting for Hub to reach [bold]{target_status} status...")
         status = Status("Current status:")
 
         with Live(
@@ -10252,7 +10252,7 @@ class Hub(Base):
                 current_status = self.hub_status
                 status.update(f"Current status: [bold]{current_status}")
 
-                if status == current_status:
+                if target_status == current_status:
                     logger.info(f"Final Resource Status: [bold]{current_status}")
                     return
 
@@ -10586,7 +10586,7 @@ class HubContent(Base):
 
     def wait_for_status(
         self,
-        status: Literal["Supported", "Deprecated"],
+        target_status: Literal["Supported", "Deprecated"],
         poll: int = 5,
         timeout: Optional[int] = None,
     ) -> None:
@@ -10594,7 +10594,7 @@ class HubContent(Base):
         Wait for a HubContent resource to reach certain status.
 
         Parameters:
-            status: The status to wait for.
+            target_status: The status to wait for.
             poll: The number of seconds to wait between each poll.
             timeout: The maximum number of seconds to wait before timing out.
 
@@ -10610,7 +10610,7 @@ class HubContent(Base):
             TextColumn("{task.description}"),
             TimeElapsedColumn(),
         )
-        progress.add_task(f"Waiting for HubContent to reach [bold]{status} status...")
+        progress.add_task(f"Waiting for HubContent to reach [bold]{target_status} status...")
         status = Status("Current status:")
 
         with Live(
@@ -10625,7 +10625,7 @@ class HubContent(Base):
                 current_status = self.support_status
                 status.update(f"Current status: [bold]{current_status}")
 
-                if status == current_status:
+                if target_status == current_status:
                     logger.info(f"Final Resource Status: [bold]{current_status}")
                     return
 
@@ -11136,13 +11136,16 @@ class HumanTaskUi(Base):
         logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
     def wait_for_status(
-        self, status: Literal["Active", "Deleting"], poll: int = 5, timeout: Optional[int] = None
+        self,
+        target_status: Literal["Active", "Deleting"],
+        poll: int = 5,
+        timeout: Optional[int] = None,
     ) -> None:
         """
         Wait for a HumanTaskUi resource to reach certain status.
 
         Parameters:
-            status: The status to wait for.
+            target_status: The status to wait for.
             poll: The number of seconds to wait between each poll.
             timeout: The maximum number of seconds to wait before timing out.
 
@@ -11158,7 +11161,7 @@ class HumanTaskUi(Base):
             TextColumn("{task.description}"),
             TimeElapsedColumn(),
         )
-        progress.add_task(f"Waiting for HumanTaskUi to reach [bold]{status} status...")
+        progress.add_task(f"Waiting for HumanTaskUi to reach [bold]{target_status} status...")
         status = Status("Current status:")
 
         with Live(
@@ -11173,7 +11176,7 @@ class HumanTaskUi(Base):
                 current_status = self.human_task_ui_status
                 status.update(f"Current status: [bold]{current_status}")
 
-                if status == current_status:
+                if target_status == current_status:
                     logger.info(f"Final Resource Status: [bold]{current_status}")
                     return
 
@@ -12157,7 +12160,7 @@ class Image(Base):
 
     def wait_for_status(
         self,
-        status: Literal[
+        target_status: Literal[
             "CREATING",
             "CREATED",
             "CREATE_FAILED",
@@ -12173,7 +12176,7 @@ class Image(Base):
         Wait for a Image resource to reach certain status.
 
         Parameters:
-            status: The status to wait for.
+            target_status: The status to wait for.
             poll: The number of seconds to wait between each poll.
             timeout: The maximum number of seconds to wait before timing out.
 
@@ -12189,7 +12192,7 @@ class Image(Base):
             TextColumn("{task.description}"),
             TimeElapsedColumn(),
         )
-        progress.add_task(f"Waiting for Image to reach [bold]{status} status...")
+        progress.add_task(f"Waiting for Image to reach [bold]{target_status} status...")
         status = Status("Current status:")
 
         with Live(
@@ -12204,7 +12207,7 @@ class Image(Base):
                 current_status = self.image_status
                 status.update(f"Current status: [bold]{current_status}")
 
-                if status == current_status:
+                if target_status == current_status:
                     logger.info(f"Final Resource Status: [bold]{current_status}")
                     return
 
@@ -12755,7 +12758,7 @@ class ImageVersion(Base):
 
     def wait_for_status(
         self,
-        status: Literal["CREATING", "CREATED", "CREATE_FAILED", "DELETING", "DELETE_FAILED"],
+        target_status: Literal["CREATING", "CREATED", "CREATE_FAILED", "DELETING", "DELETE_FAILED"],
         poll: int = 5,
         timeout: Optional[int] = None,
     ) -> None:
@@ -12763,7 +12766,7 @@ class ImageVersion(Base):
         Wait for a ImageVersion resource to reach certain status.
 
         Parameters:
-            status: The status to wait for.
+            target_status: The status to wait for.
             poll: The number of seconds to wait between each poll.
             timeout: The maximum number of seconds to wait before timing out.
 
@@ -12779,7 +12782,7 @@ class ImageVersion(Base):
             TextColumn("{task.description}"),
             TimeElapsedColumn(),
         )
-        progress.add_task(f"Waiting for ImageVersion to reach [bold]{status} status...")
+        progress.add_task(f"Waiting for ImageVersion to reach [bold]{target_status} status...")
         status = Status("Current status:")
 
         with Live(
@@ -12794,7 +12797,7 @@ class ImageVersion(Base):
                 current_status = self.image_version_status
                 status.update(f"Current status: [bold]{current_status}")
 
-                if status == current_status:
+                if target_status == current_status:
                     logger.info(f"Final Resource Status: [bold]{current_status}")
                     return
 
@@ -13151,7 +13154,7 @@ class InferenceComponent(Base):
 
     def wait_for_status(
         self,
-        status: Literal["InService", "Creating", "Updating", "Failed", "Deleting"],
+        target_status: Literal["InService", "Creating", "Updating", "Failed", "Deleting"],
         poll: int = 5,
         timeout: Optional[int] = None,
     ) -> None:
@@ -13159,7 +13162,7 @@ class InferenceComponent(Base):
         Wait for a InferenceComponent resource to reach certain status.
 
         Parameters:
-            status: The status to wait for.
+            target_status: The status to wait for.
             poll: The number of seconds to wait between each poll.
             timeout: The maximum number of seconds to wait before timing out.
 
@@ -13175,7 +13178,9 @@ class InferenceComponent(Base):
             TextColumn("{task.description}"),
             TimeElapsedColumn(),
         )
-        progress.add_task(f"Waiting for InferenceComponent to reach [bold]{status} status...")
+        progress.add_task(
+            f"Waiting for InferenceComponent to reach [bold]{target_status} status..."
+        )
         status = Status("Current status:")
 
         with Live(
@@ -13190,7 +13195,7 @@ class InferenceComponent(Base):
                 current_status = self.inference_component_status
                 status.update(f"Current status: [bold]{current_status}")
 
-                if status == current_status:
+                if target_status == current_status:
                     logger.info(f"Final Resource Status: [bold]{current_status}")
                     return
 
@@ -13749,7 +13754,7 @@ class InferenceExperiment(Base):
 
     def wait_for_status(
         self,
-        status: Literal[
+        target_status: Literal[
             "Creating",
             "Created",
             "Updating",
@@ -13766,7 +13771,7 @@ class InferenceExperiment(Base):
         Wait for a InferenceExperiment resource to reach certain status.
 
         Parameters:
-            status: The status to wait for.
+            target_status: The status to wait for.
             poll: The number of seconds to wait between each poll.
             timeout: The maximum number of seconds to wait before timing out.
 
@@ -13782,7 +13787,9 @@ class InferenceExperiment(Base):
             TextColumn("{task.description}"),
             TimeElapsedColumn(),
         )
-        progress.add_task(f"Waiting for InferenceExperiment to reach [bold]{status} status...")
+        progress.add_task(
+            f"Waiting for InferenceExperiment to reach [bold]{target_status} status..."
+        )
         status = Status("Current status:")
 
         with Live(
@@ -13797,7 +13804,7 @@ class InferenceExperiment(Base):
                 current_status = self.status
                 status.update(f"Current status: [bold]{current_status}")
 
-                if status == current_status:
+                if target_status == current_status:
                     logger.info(f"Final Resource Status: [bold]{current_status}")
                     return
 
@@ -15386,7 +15393,7 @@ class MlflowTrackingServer(Base):
 
     def wait_for_status(
         self,
-        status: Literal[
+        target_status: Literal[
             "Creating",
             "Created",
             "CreateFailed",
@@ -15412,7 +15419,7 @@ class MlflowTrackingServer(Base):
         Wait for a MlflowTrackingServer resource to reach certain status.
 
         Parameters:
-            status: The status to wait for.
+            target_status: The status to wait for.
             poll: The number of seconds to wait between each poll.
             timeout: The maximum number of seconds to wait before timing out.
 
@@ -15428,7 +15435,9 @@ class MlflowTrackingServer(Base):
             TextColumn("{task.description}"),
             TimeElapsedColumn(),
         )
-        progress.add_task(f"Waiting for MlflowTrackingServer to reach [bold]{status} status...")
+        progress.add_task(
+            f"Waiting for MlflowTrackingServer to reach [bold]{target_status} status..."
+        )
         status = Status("Current status:")
 
         with Live(
@@ -15443,7 +15452,7 @@ class MlflowTrackingServer(Base):
                 current_status = self.tracking_server_status
                 status.update(f"Current status: [bold]{current_status}")
 
-                if status == current_status:
+                if target_status == current_status:
                     logger.info(f"Final Resource Status: [bold]{current_status}")
                     return
 
@@ -16615,7 +16624,7 @@ class ModelCard(Base):
 
     def wait_for_status(
         self,
-        status: Literal["Draft", "PendingReview", "Approved", "Archived"],
+        target_status: Literal["Draft", "PendingReview", "Approved", "Archived"],
         poll: int = 5,
         timeout: Optional[int] = None,
     ) -> None:
@@ -16623,7 +16632,7 @@ class ModelCard(Base):
         Wait for a ModelCard resource to reach certain status.
 
         Parameters:
-            status: The status to wait for.
+            target_status: The status to wait for.
             poll: The number of seconds to wait between each poll.
             timeout: The maximum number of seconds to wait before timing out.
 
@@ -16639,7 +16648,7 @@ class ModelCard(Base):
             TextColumn("{task.description}"),
             TimeElapsedColumn(),
         )
-        progress.add_task(f"Waiting for ModelCard to reach [bold]{status} status...")
+        progress.add_task(f"Waiting for ModelCard to reach [bold]{target_status} status...")
         status = Status("Current status:")
 
         with Live(
@@ -16654,7 +16663,7 @@ class ModelCard(Base):
                 current_status = self.model_card_status
                 status.update(f"Current status: [bold]{current_status}")
 
-                if status == current_status:
+                if target_status == current_status:
                     logger.info(f"Final Resource Status: [bold]{current_status}")
                     return
 
@@ -17935,7 +17944,7 @@ class ModelPackage(Base):
 
     def wait_for_status(
         self,
-        status: Literal["Pending", "InProgress", "Completed", "Failed", "Deleting"],
+        target_status: Literal["Pending", "InProgress", "Completed", "Failed", "Deleting"],
         poll: int = 5,
         timeout: Optional[int] = None,
     ) -> None:
@@ -17943,7 +17952,7 @@ class ModelPackage(Base):
         Wait for a ModelPackage resource to reach certain status.
 
         Parameters:
-            status: The status to wait for.
+            target_status: The status to wait for.
             poll: The number of seconds to wait between each poll.
             timeout: The maximum number of seconds to wait before timing out.
 
@@ -17959,7 +17968,7 @@ class ModelPackage(Base):
             TextColumn("{task.description}"),
             TimeElapsedColumn(),
         )
-        progress.add_task(f"Waiting for ModelPackage to reach [bold]{status} status...")
+        progress.add_task(f"Waiting for ModelPackage to reach [bold]{target_status} status...")
         status = Status("Current status:")
 
         with Live(
@@ -17974,7 +17983,7 @@ class ModelPackage(Base):
                 current_status = self.model_package_status
                 status.update(f"Current status: [bold]{current_status}")
 
-                if status == current_status:
+                if target_status == current_status:
                     logger.info(f"Final Resource Status: [bold]{current_status}")
                     return
 
@@ -18380,7 +18389,9 @@ class ModelPackageGroup(Base):
 
     def wait_for_status(
         self,
-        status: Literal["Pending", "InProgress", "Completed", "Failed", "Deleting", "DeleteFailed"],
+        target_status: Literal[
+            "Pending", "InProgress", "Completed", "Failed", "Deleting", "DeleteFailed"
+        ],
         poll: int = 5,
         timeout: Optional[int] = None,
     ) -> None:
@@ -18388,7 +18399,7 @@ class ModelPackageGroup(Base):
         Wait for a ModelPackageGroup resource to reach certain status.
 
         Parameters:
-            status: The status to wait for.
+            target_status: The status to wait for.
             poll: The number of seconds to wait between each poll.
             timeout: The maximum number of seconds to wait before timing out.
 
@@ -18404,7 +18415,7 @@ class ModelPackageGroup(Base):
             TextColumn("{task.description}"),
             TimeElapsedColumn(),
         )
-        progress.add_task(f"Waiting for ModelPackageGroup to reach [bold]{status} status...")
+        progress.add_task(f"Waiting for ModelPackageGroup to reach [bold]{target_status} status...")
         status = Status("Current status:")
 
         with Live(
@@ -18419,7 +18430,7 @@ class ModelPackageGroup(Base):
                 current_status = self.model_package_group_status
                 status.update(f"Current status: [bold]{current_status}")
 
-                if status == current_status:
+                if target_status == current_status:
                     logger.info(f"Final Resource Status: [bold]{current_status}")
                     return
 
@@ -19718,7 +19729,7 @@ class MonitoringSchedule(Base):
 
     def wait_for_status(
         self,
-        status: Literal["Pending", "Failed", "Scheduled", "Stopped"],
+        target_status: Literal["Pending", "Failed", "Scheduled", "Stopped"],
         poll: int = 5,
         timeout: Optional[int] = None,
     ) -> None:
@@ -19726,7 +19737,7 @@ class MonitoringSchedule(Base):
         Wait for a MonitoringSchedule resource to reach certain status.
 
         Parameters:
-            status: The status to wait for.
+            target_status: The status to wait for.
             poll: The number of seconds to wait between each poll.
             timeout: The maximum number of seconds to wait before timing out.
 
@@ -19742,7 +19753,9 @@ class MonitoringSchedule(Base):
             TextColumn("{task.description}"),
             TimeElapsedColumn(),
         )
-        progress.add_task(f"Waiting for MonitoringSchedule to reach [bold]{status} status...")
+        progress.add_task(
+            f"Waiting for MonitoringSchedule to reach [bold]{target_status} status..."
+        )
         status = Status("Current status:")
 
         with Live(
@@ -19757,7 +19770,7 @@ class MonitoringSchedule(Base):
                 current_status = self.monitoring_schedule_status
                 status.update(f"Current status: [bold]{current_status}")
 
-                if status == current_status:
+                if target_status == current_status:
                     logger.info(f"Final Resource Status: [bold]{current_status}")
                     return
 
@@ -20263,7 +20276,7 @@ class NotebookInstance(Base):
 
     def wait_for_status(
         self,
-        status: Literal[
+        target_status: Literal[
             "Pending", "InService", "Stopping", "Stopped", "Failed", "Deleting", "Updating"
         ],
         poll: int = 5,
@@ -20273,7 +20286,7 @@ class NotebookInstance(Base):
         Wait for a NotebookInstance resource to reach certain status.
 
         Parameters:
-            status: The status to wait for.
+            target_status: The status to wait for.
             poll: The number of seconds to wait between each poll.
             timeout: The maximum number of seconds to wait before timing out.
 
@@ -20289,7 +20302,7 @@ class NotebookInstance(Base):
             TextColumn("{task.description}"),
             TimeElapsedColumn(),
         )
-        progress.add_task(f"Waiting for NotebookInstance to reach [bold]{status} status...")
+        progress.add_task(f"Waiting for NotebookInstance to reach [bold]{target_status} status...")
         status = Status("Current status:")
 
         with Live(
@@ -20304,7 +20317,7 @@ class NotebookInstance(Base):
                 current_status = self.notebook_instance_status
                 status.update(f"Current status: [bold]{current_status}")
 
-                if status == current_status:
+                if target_status == current_status:
                     logger.info(f"Final Resource Status: [bold]{current_status}")
                     return
 
@@ -21549,13 +21562,16 @@ class Pipeline(Base):
         logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
     def wait_for_status(
-        self, status: Literal["Active", "Deleting"], poll: int = 5, timeout: Optional[int] = None
+        self,
+        target_status: Literal["Active", "Deleting"],
+        poll: int = 5,
+        timeout: Optional[int] = None,
     ) -> None:
         """
         Wait for a Pipeline resource to reach certain status.
 
         Parameters:
-            status: The status to wait for.
+            target_status: The status to wait for.
             poll: The number of seconds to wait between each poll.
             timeout: The maximum number of seconds to wait before timing out.
 
@@ -21571,7 +21587,7 @@ class Pipeline(Base):
             TextColumn("{task.description}"),
             TimeElapsedColumn(),
         )
-        progress.add_task(f"Waiting for Pipeline to reach [bold]{status} status...")
+        progress.add_task(f"Waiting for Pipeline to reach [bold]{target_status} status...")
         status = Status("Current status:")
 
         with Live(
@@ -21586,7 +21602,7 @@ class Pipeline(Base):
                 current_status = self.pipeline_status
                 status.update(f"Current status: [bold]{current_status}")
 
-                if status == current_status:
+                if target_status == current_status:
                     logger.info(f"Final Resource Status: [bold]{current_status}")
                     return
 
@@ -21928,7 +21944,7 @@ class PipelineExecution(Base):
 
     def wait_for_status(
         self,
-        status: Literal["Executing", "Stopping", "Stopped", "Failed", "Succeeded"],
+        target_status: Literal["Executing", "Stopping", "Stopped", "Failed", "Succeeded"],
         poll: int = 5,
         timeout: Optional[int] = None,
     ) -> None:
@@ -21936,7 +21952,7 @@ class PipelineExecution(Base):
         Wait for a PipelineExecution resource to reach certain status.
 
         Parameters:
-            status: The status to wait for.
+            target_status: The status to wait for.
             poll: The number of seconds to wait between each poll.
             timeout: The maximum number of seconds to wait before timing out.
 
@@ -21952,7 +21968,7 @@ class PipelineExecution(Base):
             TextColumn("{task.description}"),
             TimeElapsedColumn(),
         )
-        progress.add_task(f"Waiting for PipelineExecution to reach [bold]{status} status...")
+        progress.add_task(f"Waiting for PipelineExecution to reach [bold]{target_status} status...")
         status = Status("Current status:")
 
         with Live(
@@ -21967,7 +21983,7 @@ class PipelineExecution(Base):
                 current_status = self.pipeline_execution_status
                 status.update(f"Current status: [bold]{current_status}")
 
-                if status == current_status:
+                if target_status == current_status:
                     logger.info(f"Final Resource Status: [bold]{current_status}")
                     return
 
@@ -23308,7 +23324,7 @@ class Project(Base):
 
     def wait_for_status(
         self,
-        status: Literal[
+        target_status: Literal[
             "Pending",
             "CreateInProgress",
             "CreateCompleted",
@@ -23327,7 +23343,7 @@ class Project(Base):
         Wait for a Project resource to reach certain status.
 
         Parameters:
-            status: The status to wait for.
+            target_status: The status to wait for.
             poll: The number of seconds to wait between each poll.
             timeout: The maximum number of seconds to wait before timing out.
 
@@ -23343,7 +23359,7 @@ class Project(Base):
             TextColumn("{task.description}"),
             TimeElapsedColumn(),
         )
-        progress.add_task(f"Waiting for Project to reach [bold]{status} status...")
+        progress.add_task(f"Waiting for Project to reach [bold]{target_status} status...")
         status = Status("Current status:")
 
         with Live(
@@ -23358,7 +23374,7 @@ class Project(Base):
                 current_status = self.project_status
                 status.update(f"Current status: [bold]{current_status}")
 
-                if status == current_status:
+                if target_status == current_status:
                     logger.info(f"Final Resource Status: [bold]{current_status}")
                     return
 
@@ -23937,7 +23953,7 @@ class Space(Base):
 
     def wait_for_status(
         self,
-        status: Literal[
+        target_status: Literal[
             "Deleting",
             "Failed",
             "InService",
@@ -23953,7 +23969,7 @@ class Space(Base):
         Wait for a Space resource to reach certain status.
 
         Parameters:
-            status: The status to wait for.
+            target_status: The status to wait for.
             poll: The number of seconds to wait between each poll.
             timeout: The maximum number of seconds to wait before timing out.
 
@@ -23969,7 +23985,7 @@ class Space(Base):
             TextColumn("{task.description}"),
             TimeElapsedColumn(),
         )
-        progress.add_task(f"Waiting for Space to reach [bold]{status} status...")
+        progress.add_task(f"Waiting for Space to reach [bold]{target_status} status...")
         status = Status("Current status:")
 
         with Live(
@@ -23984,7 +24000,7 @@ class Space(Base):
                 current_status = self.status
                 status.update(f"Current status: [bold]{current_status}")
 
-                if status == current_status:
+                if target_status == current_status:
                     logger.info(f"Final Resource Status: [bold]{current_status}")
                     return
 
@@ -26403,7 +26419,7 @@ class TrialComponent(Base):
 
     def wait_for_status(
         self,
-        status: Literal["InProgress", "Completed", "Failed", "Stopping", "Stopped"],
+        target_status: Literal["InProgress", "Completed", "Failed", "Stopping", "Stopped"],
         poll: int = 5,
         timeout: Optional[int] = None,
     ) -> None:
@@ -26411,7 +26427,7 @@ class TrialComponent(Base):
         Wait for a TrialComponent resource to reach certain status.
 
         Parameters:
-            status: The status to wait for.
+            target_status: The status to wait for.
             poll: The number of seconds to wait between each poll.
             timeout: The maximum number of seconds to wait before timing out.
 
@@ -26427,7 +26443,7 @@ class TrialComponent(Base):
             TextColumn("{task.description}"),
             TimeElapsedColumn(),
         )
-        progress.add_task(f"Waiting for TrialComponent to reach [bold]{status} status...")
+        progress.add_task(f"Waiting for TrialComponent to reach [bold]{target_status} status...")
         status = Status("Current status:")
 
         with Live(
@@ -26442,7 +26458,7 @@ class TrialComponent(Base):
                 current_status = self.status.primary_status
                 status.update(f"Current status: [bold]{current_status}")
 
-                if status == current_status:
+                if target_status == current_status:
                     logger.info(f"Final Resource Status: [bold]{current_status}")
                     return
 
@@ -26940,7 +26956,7 @@ class UserProfile(Base):
 
     def wait_for_status(
         self,
-        status: Literal[
+        target_status: Literal[
             "Deleting",
             "Failed",
             "InService",
@@ -26956,7 +26972,7 @@ class UserProfile(Base):
         Wait for a UserProfile resource to reach certain status.
 
         Parameters:
-            status: The status to wait for.
+            target_status: The status to wait for.
             poll: The number of seconds to wait between each poll.
             timeout: The maximum number of seconds to wait before timing out.
 
@@ -26972,7 +26988,7 @@ class UserProfile(Base):
             TextColumn("{task.description}"),
             TimeElapsedColumn(),
         )
-        progress.add_task(f"Waiting for UserProfile to reach [bold]{status} status...")
+        progress.add_task(f"Waiting for UserProfile to reach [bold]{target_status} status...")
         status = Status("Current status:")
 
         with Live(
@@ -26987,7 +27003,7 @@ class UserProfile(Base):
                 current_status = self.status
                 status.update(f"Current status: [bold]{current_status}")
 
-                if status == current_status:
+                if target_status == current_status:
                     logger.info(f"Final Resource Status: [bold]{current_status}")
                     return
 
@@ -27415,7 +27431,7 @@ class Workforce(Base):
 
     def wait_for_status(
         self,
-        status: Literal["Initializing", "Updating", "Deleting", "Failed", "Active"],
+        target_status: Literal["Initializing", "Updating", "Deleting", "Failed", "Active"],
         poll: int = 5,
         timeout: Optional[int] = None,
     ) -> None:
@@ -27423,7 +27439,7 @@ class Workforce(Base):
         Wait for a Workforce resource to reach certain status.
 
         Parameters:
-            status: The status to wait for.
+            target_status: The status to wait for.
             poll: The number of seconds to wait between each poll.
             timeout: The maximum number of seconds to wait before timing out.
 
@@ -27439,7 +27455,7 @@ class Workforce(Base):
             TextColumn("{task.description}"),
             TimeElapsedColumn(),
         )
-        progress.add_task(f"Waiting for Workforce to reach [bold]{status} status...")
+        progress.add_task(f"Waiting for Workforce to reach [bold]{target_status} status...")
         status = Status("Current status:")
 
         with Live(
@@ -27454,7 +27470,7 @@ class Workforce(Base):
                 current_status = self.workforce.status
                 status.update(f"Current status: [bold]{current_status}")
 
-                if status == current_status:
+                if target_status == current_status:
                     logger.info(f"Final Resource Status: [bold]{current_status}")
                     return
 

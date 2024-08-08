@@ -555,7 +555,7 @@ def wait(
         expected_output = '''
 def wait_for_status(
     self,
-    status: Literal['InService', 'Creating', 'Updating', 'Failed', 'Deleting'],
+    target_status: Literal['InService', 'Creating', 'Updating', 'Failed', 'Deleting'],
     poll: int = 5,
     timeout: Optional[int] = None
 ) -> None:
@@ -563,7 +563,7 @@ def wait_for_status(
     Wait for a InferenceComponent resource to reach certain status.
     
     Parameters:
-        status: The status to wait for.
+        target_status: The status to wait for.
         poll: The number of seconds to wait between each poll.
         timeout: The maximum number of seconds to wait before timing out.
     
@@ -578,7 +578,7 @@ def wait_for_status(
         TextColumn("{task.description}"),
         TimeElapsedColumn(),
     )
-    progress.add_task(f"Waiting for InferenceComponent to reach [bold]{status} status...")
+    progress.add_task(f"Waiting for InferenceComponent to reach [bold]{target_status} status...")
     status = Status("Current status:")
 
     with Live(Panel(Group(progress, status), title="Wait Log Panel", border_style=Style(color=Color.BLUE.value))):
@@ -587,7 +587,7 @@ def wait_for_status(
             current_status = self.inference_component_status
             status.update(f"Current status: [bold]{current_status}")
 
-            if status == current_status:
+            if target_status == current_status:
                 logger.info(f"Final Resource Status: [bold]{current_status}")
                 return
             
@@ -607,7 +607,7 @@ def wait_for_status(
         expected_output = '''
 def wait_for_status(
     self,
-    status: Literal['Creating', 'Created', 'Updating', 'Running', 'Starting', 'Stopping', 'Completed', 'Cancelled'],
+    target_status: Literal['Creating', 'Created', 'Updating', 'Running', 'Starting', 'Stopping', 'Completed', 'Cancelled'],
     poll: int = 5,
     timeout: Optional[int] = None
 ) -> None:
@@ -615,7 +615,7 @@ def wait_for_status(
     Wait for a InferenceExperiment resource to reach certain status.
     
     Parameters:
-        status: The status to wait for.
+        target_status: The status to wait for.
         poll: The number of seconds to wait between each poll.
         timeout: The maximum number of seconds to wait before timing out.
     
@@ -630,7 +630,7 @@ def wait_for_status(
         TextColumn("{task.description}"),
         TimeElapsedColumn(),
     )
-    progress.add_task(f"Waiting for InferenceExperiment to reach [bold]{status} status...")
+    progress.add_task(f"Waiting for InferenceExperiment to reach [bold]{target_status} status...")
     status = Status("Current status:")
 
     with Live(Panel(Group(progress, status), title="Wait Log Panel", border_style=Style(color=Color.BLUE.value))):
@@ -639,7 +639,7 @@ def wait_for_status(
             current_status = self.status
             status.update(f"Current status: [bold]{current_status}")
 
-            if status == current_status:
+            if target_status == current_status:
                 logger.info(f"Final Resource Status: [bold]{current_status}")
                 return
 
