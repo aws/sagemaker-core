@@ -11,8 +11,18 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 """Constants used in the code_injection modules."""
+from enum import Enum
 
 BASIC_TYPES = ["string", "boolean", "integer", "long", "double", "timestamp", "float"]
 STRUCTURE_TYPE = "structure"
 MAP_TYPE = "map"
 LIST_TYPE = "list"
+
+
+class Color(Enum):
+    RED = "rgb(215,0,0)"
+    GREEN = "rgb(0,135,0)"
+    BLUE = "rgb(0,105,255)"
+    YELLOW = "rgb(215,175,0)"
+    PURPLE = "rgb(225,0,225)"
+    BRIGHT_RED = "rgb(255,0,0)"
