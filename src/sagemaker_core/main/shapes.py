@@ -14,7 +14,7 @@ import datetime
 
 from pydantic import BaseModel, ConfigDict
 from typing import List, Dict, Optional, Any, Union
-from sagemaker_core.generated.utils import Unassigned
+from sagemaker_core.main.utils import Unassigned
 
 
 class Base(BaseModel):

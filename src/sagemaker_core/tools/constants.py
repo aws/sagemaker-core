@@ -44,7 +44,7 @@ BASIC_JSON_TYPES_TO_PYTHON_TYPES = {
 
 BASIC_RETURN_TYPES = {"str", "int", "bool", "float", "datetime.datetime"}
 
-SHAPE_DAG_FILE_PATH = os.getcwd() + "/src/sagemaker_core/code_injection/shape_dag.py"
+SHAPE_DAG_FILE_PATH = os.getcwd() + "/src/sagemaker_core/main/code_injection/shape_dag.py"
 PYTHON_TYPES_TO_BASIC_JSON_TYPES = {
     "str": "string",
     "int": "integer",
@@ -80,7 +80,7 @@ ADDITIONAL_OPERATION_FILE_PATH = (
 SERVICE_JSON_FILE_PATH = os.getcwd() + "/sample/sagemaker/2017-07-24/service-2.json"
 RUNTIME_SERVICE_JSON_FILE_PATH = os.getcwd() + "/sample/sagemaker-runtime/2017-05-13/service-2.json"
 
-GENERATED_CLASSES_LOCATION = os.getcwd() + "/src/sagemaker_core/generated"
+GENERATED_CLASSES_LOCATION = os.getcwd() + "/src/sagemaker_core/main"
 UTILS_CODEGEN_FILE_NAME = "utils.py"
 INTELLIGENT_DEFAULTS_HELPER_CODEGEN_FILE_NAME = "intelligent_defaults_helper.py"
 

@@ -17,14 +17,14 @@ export PYTHONPATH=<sagemaker-code-gen repo directory>:$PYTHONPATH
 """
 import os
 
-from sagemaker_core.code_injection.codec import pascal_to_snake
+from sagemaker_core.main.code_injection.codec import pascal_to_snake
 from sagemaker_core.tools.constants import (
     LICENCES_STRING,
     GENERATED_CLASSES_LOCATION,
     SHAPES_CODEGEN_FILE_NAME,
 )
 from sagemaker_core.tools.shapes_extractor import ShapesExtractor
-from sagemaker_core.util.util import add_indent, convert_to_snake_case, remove_html_tags
+from sagemaker_core.main.utils import add_indent, convert_to_snake_case, remove_html_tags
 from sagemaker_core.tools.templates import SHAPE_CLASS_TEMPLATE, SHAPE_BASE_CLASS_TEMPLATE
 from sagemaker_core.tools.data_extractor import (
     load_combined_shapes_data,
@@ -200,7 +200,7 @@ class ShapesCodeGen:
         imports += "\n"
         imports += "from pydantic import BaseModel, ConfigDict\n"
         imports += "from typing import List, Dict, Optional, Any, Union\n"
-        imports += "from sagemaker_core.generated.utils import Unassigned"
+        imports += "from sagemaker_core.main.utils import Unassigned"
         imports += "\n"
         return imports
 

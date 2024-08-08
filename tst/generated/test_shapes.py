@@ -3,7 +3,8 @@ import unittest
 
 from pydantic import BaseModel, ValidationError
 
-from sagemaker_core.generated.shapes import Base, AdditionalS3DataSource, Unassigned
+from sagemaker_core.main.shapes import Base, AdditionalS3DataSource
+from sagemaker_core.main.utils import Unassigned
 from sagemaker_core.tools.constants import GENERATED_CLASSES_LOCATION, SHAPES_CODEGEN_FILE_NAME
 
 FILE_NAME = GENERATED_CLASSES_LOCATION + "/" + SHAPES_CODEGEN_FILE_NAME
@@ -11,7 +12,7 @@ FILE_NAME = GENERATED_CLASSES_LOCATION + "/" + SHAPES_CODEGEN_FILE_NAME
 
 class TestGeneratedShape(unittest.TestCase):
     def test_generated_shapes_have_pydantic_enabled(self):
-        # This test ensures that all generated shapes inherit Base which inherits BaseModel, thereby forcing pydantic validiation
+        # This test ensures that all main shapes inherit Base which inherits BaseModel, thereby forcing pydantic validiation
         assert issubclass(Base, BaseModel)
         assert (
             self._fetch_number_of_classes_in_file_not_inheriting_a_class(FILE_NAME, "Base") == 1

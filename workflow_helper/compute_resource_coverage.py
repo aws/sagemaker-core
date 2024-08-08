@@ -10,9 +10,7 @@ def main():
 
     with open(json_file, "r") as f:
         data = json.load(f)
-        print(
-            data["files"]["src/sagemaker_core/generated/resources.py"]["summary"]["percent_covered"]
-        )
+        print(data["files"]["src/sagemaker_core/main/resources.py"]["summary"]["percent_covered"])
 
 
 if __name__ == "__main__":
