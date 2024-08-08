@@ -14,11 +14,17 @@ import botocore
 import datetime
 import time
 import functools
-from pprint import pprint
 from pydantic import validate_call
 from typing import Dict, List, Literal, Optional, Union
 from boto3.session import Session
+from rich.console import Group
+from rich.live import Live
+from rich.panel import Panel
+from rich.progress import Progress, SpinnerColumn, TextColumn, TimeElapsedColumn
+from rich.status import Status
+from rich.style import Style
 from sagemaker_core.code_injection.codec import transform
+from sagemaker_core.code_injection.constants import Color
 from sagemaker_core.generated.utils import (
     SageMakerClient,
     SageMakerRuntimeClient,
@@ -790,23 +796,38 @@ class Algorithm(Base):
         """
         start_time = time.time()
 
-        while True:
-            self.refresh()
-            current_status = self.algorithm_status
+        progress = Progress(
+            SpinnerColumn("bouncingBar"),
+            TextColumn("{task.description}"),
+            TimeElapsedColumn(),
+        )
+        progress.add_task(f"Waiting for Algorithm to reach [bold]{status} status...")
+        status = Status("Current status:")
 
-            if status == current_status:
-                print(f"\nFinal Resource Status: {current_status}")
-                return
+        with Live(
+            Panel(
+                Group(progress, status),
+                title="Wait Log Panel",
+                border_style=Style(color=Color.BLUE.value),
+            )
+        ):
+            while True:
+                self.refresh()
+                current_status = self.algorithm_status
+                status.update(f"Current status: [bold]{current_status}")
 
-            if "failed" in current_status.lower():
-                raise FailedStatusError(
-                    resource_type="Algorithm", status=current_status, reason="(Unknown)"
-                )
+                if status == current_status:
+                    logger.info(f"Final Resource Status: [bold]{current_status}")
+                    return
 
-            if timeout is not None and time.time() - start_time >= timeout:
-                raise TimeoutExceededError(resouce_type="Algorithm", status=current_status)
-            print("-", end="")
-            time.sleep(poll)
+                if "failed" in current_status.lower():
+                    raise FailedStatusError(
+                        resource_type="Algorithm", status=current_status, reason="(Unknown)"
+                    )
+
+                if timeout is not None and time.time() - start_time >= timeout:
+                    raise TimeoutExceededError(resouce_type="Algorithm", status=current_status)
+                time.sleep(poll)
 
     def wait_for_delete(
         self,
@@ -836,23 +857,37 @@ class Algorithm(Base):
         """
         start_time = time.time()
 
-        while True:
-            try:
-                self.refresh()
-                current_status = self.algorithm_status
+        progress = Progress(
+            SpinnerColumn("bouncingBar"),
+            TextColumn("{task.description}"),
+            TimeElapsedColumn(),
+        )
+        progress.add_task("Waiting for Algorithm to be deleted...")
+        status = Status("Current status:")
 
-                if timeout is not None and time.time() - start_time >= timeout:
-                    raise TimeoutExceededError(resouce_type="Algorithm", status=current_status)
-            except botocore.exceptions.ClientError as e:
-                error_code = e.response["Error"]["Code"]
+        with Live(
+            Panel(
+                Group(progress, status),
+                title="Wait Log Panel",
+                border_style=Style(color=Color.BLUE.value),
+            )
+        ):
+            while True:
+                try:
+                    self.refresh()
+                    current_status = self.algorithm_status
+                    status.update(f"Current status: [bold]{current_status}")
 
-                if "ResourceNotFound" in error_code or "ValidationException" in error_code:
-                    print("Resource was not found. It may have been deleted.")
-                    return
-                raise e
+                    if timeout is not None and time.time() - start_time >= timeout:
+                        raise TimeoutExceededError(resouce_type="Algorithm", status=current_status)
+                except botocore.exceptions.ClientError as e:
+                    error_code = e.response["Error"]["Code"]
 
-            print("-", end="")
-            time.sleep(poll)
+                    if "ResourceNotFound" in error_code or "ValidationException" in error_code:
+                        logger.info("Resource was not found. It may have been deleted.")
+                        return
+                    raise e
+                time.sleep(poll)
 
     @classmethod
     def get_all(
@@ -1202,23 +1237,38 @@ class App(Base):
         """
         start_time = time.time()
 
-        while True:
-            self.refresh()
-            current_status = self.status
+        progress = Progress(
+            SpinnerColumn("bouncingBar"),
+            TextColumn("{task.description}"),
+            TimeElapsedColumn(),
+        )
+        progress.add_task(f"Waiting for App to reach [bold]{status} status...")
+        status = Status("Current status:")
 
-            if status == current_status:
-                print(f"\nFinal Resource Status: {current_status}")
-                return
+        with Live(
+            Panel(
+                Group(progress, status),
+                title="Wait Log Panel",
+                border_style=Style(color=Color.BLUE.value),
+            )
+        ):
+            while True:
+                self.refresh()
+                current_status = self.status
+                status.update(f"Current status: [bold]{current_status}")
 
-            if "failed" in current_status.lower():
-                raise FailedStatusError(
-                    resource_type="App", status=current_status, reason=self.failure_reason
-                )
+                if status == current_status:
+                    logger.info(f"Final Resource Status: [bold]{current_status}")
+                    return
 
-            if timeout is not None and time.time() - start_time >= timeout:
-                raise TimeoutExceededError(resouce_type="App", status=current_status)
-            print("-", end="")
-            time.sleep(poll)
+                if "failed" in current_status.lower():
+                    raise FailedStatusError(
+                        resource_type="App", status=current_status, reason=self.failure_reason
+                    )
+
+                if timeout is not None and time.time() - start_time >= timeout:
+                    raise TimeoutExceededError(resouce_type="App", status=current_status)
+                time.sleep(poll)
 
     def wait_for_delete(
         self,
@@ -1248,27 +1298,41 @@ class App(Base):
         """
         start_time = time.time()
 
-        while True:
-            try:
-                self.refresh()
-                current_status = self.status
+        progress = Progress(
+            SpinnerColumn("bouncingBar"),
+            TextColumn("{task.description}"),
+            TimeElapsedColumn(),
+        )
+        progress.add_task("Waiting for App to be deleted...")
+        status = Status("Current status:")
 
-                if current_status.lower() == "deleted":
-                    print("Resource was deleted.")
-                    return
+        with Live(
+            Panel(
+                Group(progress, status),
+                title="Wait Log Panel",
+                border_style=Style(color=Color.BLUE.value),
+            )
+        ):
+            while True:
+                try:
+                    self.refresh()
+                    current_status = self.status
+                    status.update(f"Current status: [bold]{current_status}")
 
-                if timeout is not None and time.time() - start_time >= timeout:
-                    raise TimeoutExceededError(resouce_type="App", status=current_status)
-            except botocore.exceptions.ClientError as e:
-                error_code = e.response["Error"]["Code"]
+                    if current_status.lower() == "deleted":
+                        print("Resource was deleted.")
+                        return
 
-                if "ResourceNotFound" in error_code or "ValidationException" in error_code:
-                    print("Resource was not found. It may have been deleted.")
-                    return
-                raise e
+                    if timeout is not None and time.time() - start_time >= timeout:
+                        raise TimeoutExceededError(resouce_type="App", status=current_status)
+                except botocore.exceptions.ClientError as e:
+                    error_code = e.response["Error"]["Code"]
 
-            print("-", end="")
-            time.sleep(poll)
+                    if "ResourceNotFound" in error_code or "ValidationException" in error_code:
+                        logger.info("Resource was not found. It may have been deleted.")
+                        return
+                    raise e
+                time.sleep(poll)
 
     @classmethod
     def get_all(
@@ -2529,24 +2593,41 @@ class AutoMLJob(Base):
         terminal_states = ["Completed", "Failed", "Stopped"]
         start_time = time.time()
 
-        while True:
-            self.refresh()
-            current_status = self.auto_ml_job_status
+        progress = Progress(
+            SpinnerColumn("bouncingBar"),
+            TextColumn("{task.description}"),
+            TimeElapsedColumn(),
+        )
+        progress.add_task("Waiting for AutoMLJob...")
+        status = Status("Current status:")
 
-            if current_status in terminal_states:
-                print(f"\nFinal Resource Status: {current_status}")
+        with Live(
+            Panel(
+                Group(progress, status),
+                title="Wait Log Panel",
+                border_style=Style(color=Color.BLUE.value),
+            )
+        ):
+            while True:
+                self.refresh()
+                current_status = self.auto_ml_job_status
+                status.update(f"Current status: [bold]{current_status}")
 
-                if "failed" in current_status.lower():
-                    raise FailedStatusError(
-                        resource_type="AutoMLJob", status=current_status, reason=self.failure_reason
-                    )
+                if current_status in terminal_states:
+                    logger.info(f"Final Resource Status: [bold]{current_status}")
 
-                return
+                    if "failed" in current_status.lower():
+                        raise FailedStatusError(
+                            resource_type="AutoMLJob",
+                            status=current_status,
+                            reason=self.failure_reason,
+                        )
 
-            if timeout is not None and time.time() - start_time >= timeout:
-                raise TimeoutExceededError(resouce_type="AutoMLJob", status=current_status)
-            print("-", end="")
-            time.sleep(poll)
+                    return
+
+                if timeout is not None and time.time() - start_time >= timeout:
+                    raise TimeoutExceededError(resouce_type="AutoMLJob", status=current_status)
+                time.sleep(poll)
 
     @classmethod
     def get_all(
@@ -2973,26 +3054,41 @@ class AutoMLJobV2(Base):
         terminal_states = ["Completed", "Failed", "Stopped"]
         start_time = time.time()
 
-        while True:
-            self.refresh()
-            current_status = self.auto_ml_job_status
+        progress = Progress(
+            SpinnerColumn("bouncingBar"),
+            TextColumn("{task.description}"),
+            TimeElapsedColumn(),
+        )
+        progress.add_task("Waiting for AutoMLJobV2...")
+        status = Status("Current status:")
 
-            if current_status in terminal_states:
-                print(f"\nFinal Resource Status: {current_status}")
+        with Live(
+            Panel(
+                Group(progress, status),
+                title="Wait Log Panel",
+                border_style=Style(color=Color.BLUE.value),
+            )
+        ):
+            while True:
+                self.refresh()
+                current_status = self.auto_ml_job_status
+                status.update(f"Current status: [bold]{current_status}")
 
-                if "failed" in current_status.lower():
-                    raise FailedStatusError(
-                        resource_type="AutoMLJobV2",
-                        status=current_status,
-                        reason=self.failure_reason,
-                    )
+                if current_status in terminal_states:
+                    logger.info(f"Final Resource Status: [bold]{current_status}")
 
-                return
+                    if "failed" in current_status.lower():
+                        raise FailedStatusError(
+                            resource_type="AutoMLJobV2",
+                            status=current_status,
+                            reason=self.failure_reason,
+                        )
 
-            if timeout is not None and time.time() - start_time >= timeout:
-                raise TimeoutExceededError(resouce_type="AutoMLJobV2", status=current_status)
-            print("-", end="")
-            time.sleep(poll)
+                    return
+
+                if timeout is not None and time.time() - start_time >= timeout:
+                    raise TimeoutExceededError(resouce_type="AutoMLJobV2", status=current_status)
+                time.sleep(poll)
 
 
 class Cluster(Base):
@@ -3302,23 +3398,38 @@ class Cluster(Base):
         """
         start_time = time.time()
 
-        while True:
-            self.refresh()
-            current_status = self.cluster_status
+        progress = Progress(
+            SpinnerColumn("bouncingBar"),
+            TextColumn("{task.description}"),
+            TimeElapsedColumn(),
+        )
+        progress.add_task(f"Waiting for Cluster to reach [bold]{status} status...")
+        status = Status("Current status:")
 
-            if status == current_status:
-                print(f"\nFinal Resource Status: {current_status}")
-                return
+        with Live(
+            Panel(
+                Group(progress, status),
+                title="Wait Log Panel",
+                border_style=Style(color=Color.BLUE.value),
+            )
+        ):
+            while True:
+                self.refresh()
+                current_status = self.cluster_status
+                status.update(f"Current status: [bold]{current_status}")
 
-            if "failed" in current_status.lower():
-                raise FailedStatusError(
-                    resource_type="Cluster", status=current_status, reason="(Unknown)"
-                )
+                if status == current_status:
+                    logger.info(f"Final Resource Status: [bold]{current_status}")
+                    return
 
-            if timeout is not None and time.time() - start_time >= timeout:
-                raise TimeoutExceededError(resouce_type="Cluster", status=current_status)
-            print("-", end="")
-            time.sleep(poll)
+                if "failed" in current_status.lower():
+                    raise FailedStatusError(
+                        resource_type="Cluster", status=current_status, reason="(Unknown)"
+                    )
+
+                if timeout is not None and time.time() - start_time >= timeout:
+                    raise TimeoutExceededError(resouce_type="Cluster", status=current_status)
+                time.sleep(poll)
 
     def wait_for_delete(
         self,
@@ -3348,23 +3459,37 @@ class Cluster(Base):
         """
         start_time = time.time()
 
-        while True:
-            try:
-                self.refresh()
-                current_status = self.cluster_status
+        progress = Progress(
+            SpinnerColumn("bouncingBar"),
+            TextColumn("{task.description}"),
+            TimeElapsedColumn(),
+        )
+        progress.add_task("Waiting for Cluster to be deleted...")
+        status = Status("Current status:")
 
-                if timeout is not None and time.time() - start_time >= timeout:
-                    raise TimeoutExceededError(resouce_type="Cluster", status=current_status)
-            except botocore.exceptions.ClientError as e:
-                error_code = e.response["Error"]["Code"]
+        with Live(
+            Panel(
+                Group(progress, status),
+                title="Wait Log Panel",
+                border_style=Style(color=Color.BLUE.value),
+            )
+        ):
+            while True:
+                try:
+                    self.refresh()
+                    current_status = self.cluster_status
+                    status.update(f"Current status: [bold]{current_status}")
 
-                if "ResourceNotFound" in error_code or "ValidationException" in error_code:
-                    print("Resource was not found. It may have been deleted.")
-                    return
-                raise e
+                    if timeout is not None and time.time() - start_time >= timeout:
+                        raise TimeoutExceededError(resouce_type="Cluster", status=current_status)
+                except botocore.exceptions.ClientError as e:
+                    error_code = e.response["Error"]["Code"]
 
-            print("-", end="")
-            time.sleep(poll)
+                    if "ResourceNotFound" in error_code or "ValidationException" in error_code:
+                        logger.info("Resource was not found. It may have been deleted.")
+                        return
+                    raise e
+                time.sleep(poll)
 
     @classmethod
     def get_all(
@@ -4221,26 +4346,41 @@ class CompilationJob(Base):
         terminal_states = ["COMPLETED", "FAILED", "STOPPED"]
         start_time = time.time()
 
-        while True:
-            self.refresh()
-            current_status = self.compilation_job_status
+        progress = Progress(
+            SpinnerColumn("bouncingBar"),
+            TextColumn("{task.description}"),
+            TimeElapsedColumn(),
+        )
+        progress.add_task("Waiting for CompilationJob...")
+        status = Status("Current status:")
 
-            if current_status in terminal_states:
-                print(f"\nFinal Resource Status: {current_status}")
+        with Live(
+            Panel(
+                Group(progress, status),
+                title="Wait Log Panel",
+                border_style=Style(color=Color.BLUE.value),
+            )
+        ):
+            while True:
+                self.refresh()
+                current_status = self.compilation_job_status
+                status.update(f"Current status: [bold]{current_status}")
 
-                if "failed" in current_status.lower():
-                    raise FailedStatusError(
-                        resource_type="CompilationJob",
-                        status=current_status,
-                        reason=self.failure_reason,
-                    )
+                if current_status in terminal_states:
+                    logger.info(f"Final Resource Status: [bold]{current_status}")
 
-                return
+                    if "failed" in current_status.lower():
+                        raise FailedStatusError(
+                            resource_type="CompilationJob",
+                            status=current_status,
+                            reason=self.failure_reason,
+                        )
 
-            if timeout is not None and time.time() - start_time >= timeout:
-                raise TimeoutExceededError(resouce_type="CompilationJob", status=current_status)
-            print("-", end="")
-            time.sleep(poll)
+                    return
+
+                if timeout is not None and time.time() - start_time >= timeout:
+                    raise TimeoutExceededError(resouce_type="CompilationJob", status=current_status)
+                time.sleep(poll)
 
     @classmethod
     def get_all(
@@ -5844,6 +5984,12 @@ class Domain(Base):
                         },
                         "generative_ai_settings": {"amazon_bedrock_role_arn": {"type": "string"}},
                     },
+                    "jupyter_lab_app_settings": {
+                        "emr_settings": {
+                            "assumable_role_arns": {"type": "array", "items": {"type": "string"}},
+                            "execution_role_arns": {"type": "array", "items": {"type": "string"}},
+                        }
+                    },
                 },
                 "domain_settings": {
                     "security_group_ids": {"type": "array", "items": {"type": "string"}},
@@ -5859,6 +6005,12 @@ class Domain(Base):
                 "default_space_settings": {
                     "execution_role": {"type": "string"},
                     "security_groups": {"type": "array", "items": {"type": "string"}},
+                    "jupyter_lab_app_settings": {
+                        "emr_settings": {
+                            "assumable_role_arns": {"type": "array", "items": {"type": "string"}},
+                            "execution_role_arns": {"type": "array", "items": {"type": "string"}},
+                        }
+                    },
                 },
             }
             return create_func(
@@ -6159,23 +6311,38 @@ class Domain(Base):
         """
         start_time = time.time()
 
-        while True:
-            self.refresh()
-            current_status = self.status
+        progress = Progress(
+            SpinnerColumn("bouncingBar"),
+            TextColumn("{task.description}"),
+            TimeElapsedColumn(),
+        )
+        progress.add_task(f"Waiting for Domain to reach [bold]{status} status...")
+        status = Status("Current status:")
 
-            if status == current_status:
-                print(f"\nFinal Resource Status: {current_status}")
-                return
+        with Live(
+            Panel(
+                Group(progress, status),
+                title="Wait Log Panel",
+                border_style=Style(color=Color.BLUE.value),
+            )
+        ):
+            while True:
+                self.refresh()
+                current_status = self.status
+                status.update(f"Current status: [bold]{current_status}")
 
-            if "failed" in current_status.lower():
-                raise FailedStatusError(
-                    resource_type="Domain", status=current_status, reason=self.failure_reason
-                )
+                if status == current_status:
+                    logger.info(f"Final Resource Status: [bold]{current_status}")
+                    return
 
-            if timeout is not None and time.time() - start_time >= timeout:
-                raise TimeoutExceededError(resouce_type="Domain", status=current_status)
-            print("-", end="")
-            time.sleep(poll)
+                if "failed" in current_status.lower():
+                    raise FailedStatusError(
+                        resource_type="Domain", status=current_status, reason=self.failure_reason
+                    )
+
+                if timeout is not None and time.time() - start_time >= timeout:
+                    raise TimeoutExceededError(resouce_type="Domain", status=current_status)
+                time.sleep(poll)
 
     def wait_for_delete(
         self,
@@ -6205,31 +6372,45 @@ class Domain(Base):
         """
         start_time = time.time()
 
-        while True:
-            try:
-                self.refresh()
-                current_status = self.status
+        progress = Progress(
+            SpinnerColumn("bouncingBar"),
+            TextColumn("{task.description}"),
+            TimeElapsedColumn(),
+        )
+        progress.add_task("Waiting for Domain to be deleted...")
+        status = Status("Current status:")
 
-                if (
-                    "delete_failed" in current_status.lower()
-                    or "deletefailed" in current_status.lower()
-                ):
-                    raise DeleteFailedStatusError(
-                        resource_type="Domain", reason=self.failure_reason
-                    )
+        with Live(
+            Panel(
+                Group(progress, status),
+                title="Wait Log Panel",
+                border_style=Style(color=Color.BLUE.value),
+            )
+        ):
+            while True:
+                try:
+                    self.refresh()
+                    current_status = self.status
+                    status.update(f"Current status: [bold]{current_status}")
 
-                if timeout is not None and time.time() - start_time >= timeout:
-                    raise TimeoutExceededError(resouce_type="Domain", status=current_status)
-            except botocore.exceptions.ClientError as e:
-                error_code = e.response["Error"]["Code"]
+                    if (
+                        "delete_failed" in current_status.lower()
+                        or "deletefailed" in current_status.lower()
+                    ):
+                        raise DeleteFailedStatusError(
+                            resource_type="Domain", reason=self.failure_reason
+                        )
 
-                if "ResourceNotFound" in error_code or "ValidationException" in error_code:
-                    print("Resource was not found. It may have been deleted.")
-                    return
-                raise e
+                    if timeout is not None and time.time() - start_time >= timeout:
+                        raise TimeoutExceededError(resouce_type="Domain", status=current_status)
+                except botocore.exceptions.ClientError as e:
+                    error_code = e.response["Error"]["Code"]
 
-            print("-", end="")
-            time.sleep(poll)
+                    if "ResourceNotFound" in error_code or "ValidationException" in error_code:
+                        logger.info("Resource was not found. It may have been deleted.")
+                        return
+                    raise e
+                time.sleep(poll)
 
     @classmethod
     def get_all(
@@ -7065,26 +7246,43 @@ class EdgePackagingJob(Base):
         terminal_states = ["COMPLETED", "FAILED", "STOPPED"]
         start_time = time.time()
 
-        while True:
-            self.refresh()
-            current_status = self.edge_packaging_job_status
+        progress = Progress(
+            SpinnerColumn("bouncingBar"),
+            TextColumn("{task.description}"),
+            TimeElapsedColumn(),
+        )
+        progress.add_task("Waiting for EdgePackagingJob...")
+        status = Status("Current status:")
 
-            if current_status in terminal_states:
-                print(f"\nFinal Resource Status: {current_status}")
+        with Live(
+            Panel(
+                Group(progress, status),
+                title="Wait Log Panel",
+                border_style=Style(color=Color.BLUE.value),
+            )
+        ):
+            while True:
+                self.refresh()
+                current_status = self.edge_packaging_job_status
+                status.update(f"Current status: [bold]{current_status}")
 
-                if "failed" in current_status.lower():
-                    raise FailedStatusError(
-                        resource_type="EdgePackagingJob",
-                        status=current_status,
-                        reason=self.edge_packaging_job_status_message,
+                if current_status in terminal_states:
+                    logger.info(f"Final Resource Status: [bold]{current_status}")
+
+                    if "failed" in current_status.lower():
+                        raise FailedStatusError(
+                            resource_type="EdgePackagingJob",
+                            status=current_status,
+                            reason=self.edge_packaging_job_status_message,
+                        )
+
+                    return
+
+                if timeout is not None and time.time() - start_time >= timeout:
+                    raise TimeoutExceededError(
+                        resouce_type="EdgePackagingJob", status=current_status
                     )
-
-                return
-
-            if timeout is not None and time.time() - start_time >= timeout:
-                raise TimeoutExceededError(resouce_type="EdgePackagingJob", status=current_status)
-            print("-", end="")
-            time.sleep(poll)
+                time.sleep(poll)
 
     @classmethod
     def get_all(
@@ -7502,23 +7700,38 @@ class Endpoint(Base):
         """
         start_time = time.time()
 
-        while True:
-            self.refresh()
-            current_status = self.endpoint_status
+        progress = Progress(
+            SpinnerColumn("bouncingBar"),
+            TextColumn("{task.description}"),
+            TimeElapsedColumn(),
+        )
+        progress.add_task(f"Waiting for Endpoint to reach [bold]{status} status...")
+        status = Status("Current status:")
 
-            if status == current_status:
-                print(f"\nFinal Resource Status: {current_status}")
-                return
+        with Live(
+            Panel(
+                Group(progress, status),
+                title="Wait Log Panel",
+                border_style=Style(color=Color.BLUE.value),
+            )
+        ):
+            while True:
+                self.refresh()
+                current_status = self.endpoint_status
+                status.update(f"Current status: [bold]{current_status}")
 
-            if "failed" in current_status.lower():
-                raise FailedStatusError(
-                    resource_type="Endpoint", status=current_status, reason=self.failure_reason
-                )
+                if status == current_status:
+                    logger.info(f"Final Resource Status: [bold]{current_status}")
+                    return
 
-            if timeout is not None and time.time() - start_time >= timeout:
-                raise TimeoutExceededError(resouce_type="Endpoint", status=current_status)
-            print("-", end="")
-            time.sleep(poll)
+                if "failed" in current_status.lower():
+                    raise FailedStatusError(
+                        resource_type="Endpoint", status=current_status, reason=self.failure_reason
+                    )
+
+                if timeout is not None and time.time() - start_time >= timeout:
+                    raise TimeoutExceededError(resouce_type="Endpoint", status=current_status)
+                time.sleep(poll)
 
     def wait_for_delete(
         self,
@@ -7548,23 +7761,37 @@ class Endpoint(Base):
         """
         start_time = time.time()
 
-        while True:
-            try:
-                self.refresh()
-                current_status = self.endpoint_status
+        progress = Progress(
+            SpinnerColumn("bouncingBar"),
+            TextColumn("{task.description}"),
+            TimeElapsedColumn(),
+        )
+        progress.add_task("Waiting for Endpoint to be deleted...")
+        status = Status("Current status:")
 
-                if timeout is not None and time.time() - start_time >= timeout:
-                    raise TimeoutExceededError(resouce_type="Endpoint", status=current_status)
-            except botocore.exceptions.ClientError as e:
-                error_code = e.response["Error"]["Code"]
+        with Live(
+            Panel(
+                Group(progress, status),
+                title="Wait Log Panel",
+                border_style=Style(color=Color.BLUE.value),
+            )
+        ):
+            while True:
+                try:
+                    self.refresh()
+                    current_status = self.endpoint_status
+                    status.update(f"Current status: [bold]{current_status}")
 
-                if "ResourceNotFound" in error_code or "ValidationException" in error_code:
-                    print("Resource was not found. It may have been deleted.")
-                    return
-                raise e
+                    if timeout is not None and time.time() - start_time >= timeout:
+                        raise TimeoutExceededError(resouce_type="Endpoint", status=current_status)
+                except botocore.exceptions.ClientError as e:
+                    error_code = e.response["Error"]["Code"]
 
-            print("-", end="")
-            time.sleep(poll)
+                    if "ResourceNotFound" in error_code or "ValidationException" in error_code:
+                        logger.info("Resource was not found. It may have been deleted.")
+                        return
+                    raise e
+                time.sleep(poll)
 
     def invoke(
         self,
@@ -8912,23 +9139,40 @@ class FeatureGroup(Base):
         """
         start_time = time.time()
 
-        while True:
-            self.refresh()
-            current_status = self.feature_group_status
+        progress = Progress(
+            SpinnerColumn("bouncingBar"),
+            TextColumn("{task.description}"),
+            TimeElapsedColumn(),
+        )
+        progress.add_task(f"Waiting for FeatureGroup to reach [bold]{status} status...")
+        status = Status("Current status:")
 
-            if status == current_status:
-                print(f"\nFinal Resource Status: {current_status}")
-                return
+        with Live(
+            Panel(
+                Group(progress, status),
+                title="Wait Log Panel",
+                border_style=Style(color=Color.BLUE.value),
+            )
+        ):
+            while True:
+                self.refresh()
+                current_status = self.feature_group_status
+                status.update(f"Current status: [bold]{current_status}")
 
-            if "failed" in current_status.lower():
-                raise FailedStatusError(
-                    resource_type="FeatureGroup", status=current_status, reason=self.failure_reason
-                )
+                if status == current_status:
+                    logger.info(f"Final Resource Status: [bold]{current_status}")
+                    return
 
-            if timeout is not None and time.time() - start_time >= timeout:
-                raise TimeoutExceededError(resouce_type="FeatureGroup", status=current_status)
-            print("-", end="")
-            time.sleep(poll)
+                if "failed" in current_status.lower():
+                    raise FailedStatusError(
+                        resource_type="FeatureGroup",
+                        status=current_status,
+                        reason=self.failure_reason,
+                    )
+
+                if timeout is not None and time.time() - start_time >= timeout:
+                    raise TimeoutExceededError(resouce_type="FeatureGroup", status=current_status)
+                time.sleep(poll)
 
     def wait_for_delete(
         self,
@@ -8958,23 +9202,39 @@ class FeatureGroup(Base):
         """
         start_time = time.time()
 
-        while True:
-            try:
-                self.refresh()
-                current_status = self.feature_group_status
+        progress = Progress(
+            SpinnerColumn("bouncingBar"),
+            TextColumn("{task.description}"),
+            TimeElapsedColumn(),
+        )
+        progress.add_task("Waiting for FeatureGroup to be deleted...")
+        status = Status("Current status:")
 
-                if timeout is not None and time.time() - start_time >= timeout:
-                    raise TimeoutExceededError(resouce_type="FeatureGroup", status=current_status)
-            except botocore.exceptions.ClientError as e:
-                error_code = e.response["Error"]["Code"]
+        with Live(
+            Panel(
+                Group(progress, status),
+                title="Wait Log Panel",
+                border_style=Style(color=Color.BLUE.value),
+            )
+        ):
+            while True:
+                try:
+                    self.refresh()
+                    current_status = self.feature_group_status
+                    status.update(f"Current status: [bold]{current_status}")
 
-                if "ResourceNotFound" in error_code or "ValidationException" in error_code:
-                    print("Resource was not found. It may have been deleted.")
-                    return
-                raise e
+                    if timeout is not None and time.time() - start_time >= timeout:
+                        raise TimeoutExceededError(
+                            resouce_type="FeatureGroup", status=current_status
+                        )
+                except botocore.exceptions.ClientError as e:
+                    error_code = e.response["Error"]["Code"]
 
-            print("-", end="")
-            time.sleep(poll)
+                    if "ResourceNotFound" in error_code or "ValidationException" in error_code:
+                        logger.info("Resource was not found. It may have been deleted.")
+                        return
+                    raise e
+                time.sleep(poll)
 
     @classmethod
     def get_all(
@@ -9495,25 +9755,40 @@ class FlowDefinition(Base):
         """
         start_time = time.time()
 
-        while True:
-            self.refresh()
-            current_status = self.flow_definition_status
+        progress = Progress(
+            SpinnerColumn("bouncingBar"),
+            TextColumn("{task.description}"),
+            TimeElapsedColumn(),
+        )
+        progress.add_task(f"Waiting for FlowDefinition to reach [bold]{status} status...")
+        status = Status("Current status:")
 
-            if status == current_status:
-                print(f"\nFinal Resource Status: {current_status}")
-                return
+        with Live(
+            Panel(
+                Group(progress, status),
+                title="Wait Log Panel",
+                border_style=Style(color=Color.BLUE.value),
+            )
+        ):
+            while True:
+                self.refresh()
+                current_status = self.flow_definition_status
+                status.update(f"Current status: [bold]{current_status}")
 
-            if "failed" in current_status.lower():
-                raise FailedStatusError(
-                    resource_type="FlowDefinition",
-                    status=current_status,
-                    reason=self.failure_reason,
-                )
+                if status == current_status:
+                    logger.info(f"Final Resource Status: [bold]{current_status}")
+                    return
 
-            if timeout is not None and time.time() - start_time >= timeout:
-                raise TimeoutExceededError(resouce_type="FlowDefinition", status=current_status)
-            print("-", end="")
-            time.sleep(poll)
+                if "failed" in current_status.lower():
+                    raise FailedStatusError(
+                        resource_type="FlowDefinition",
+                        status=current_status,
+                        reason=self.failure_reason,
+                    )
+
+                if timeout is not None and time.time() - start_time >= timeout:
+                    raise TimeoutExceededError(resouce_type="FlowDefinition", status=current_status)
+                time.sleep(poll)
 
     def wait_for_delete(
         self,
@@ -9543,23 +9818,39 @@ class FlowDefinition(Base):
         """
         start_time = time.time()
 
-        while True:
-            try:
-                self.refresh()
-                current_status = self.flow_definition_status
+        progress = Progress(
+            SpinnerColumn("bouncingBar"),
+            TextColumn("{task.description}"),
+            TimeElapsedColumn(),
+        )
+        progress.add_task("Waiting for FlowDefinition to be deleted...")
+        status = Status("Current status:")
 
-                if timeout is not None and time.time() - start_time >= timeout:
-                    raise TimeoutExceededError(resouce_type="FlowDefinition", status=current_status)
-            except botocore.exceptions.ClientError as e:
-                error_code = e.response["Error"]["Code"]
+        with Live(
+            Panel(
+                Group(progress, status),
+                title="Wait Log Panel",
+                border_style=Style(color=Color.BLUE.value),
+            )
+        ):
+            while True:
+                try:
+                    self.refresh()
+                    current_status = self.flow_definition_status
+                    status.update(f"Current status: [bold]{current_status}")
 
-                if "ResourceNotFound" in error_code or "ValidationException" in error_code:
-                    print("Resource was not found. It may have been deleted.")
-                    return
-                raise e
+                    if timeout is not None and time.time() - start_time >= timeout:
+                        raise TimeoutExceededError(
+                            resouce_type="FlowDefinition", status=current_status
+                        )
+                except botocore.exceptions.ClientError as e:
+                    error_code = e.response["Error"]["Code"]
 
-            print("-", end="")
-            time.sleep(poll)
+                    if "ResourceNotFound" in error_code or "ValidationException" in error_code:
+                        logger.info("Resource was not found. It may have been deleted.")
+                        return
+                    raise e
+                time.sleep(poll)
 
     @classmethod
     def get_all(
@@ -9941,23 +10232,38 @@ class Hub(Base):
         """
         start_time = time.time()
 
-        while True:
-            self.refresh()
-            current_status = self.hub_status
+        progress = Progress(
+            SpinnerColumn("bouncingBar"),
+            TextColumn("{task.description}"),
+            TimeElapsedColumn(),
+        )
+        progress.add_task(f"Waiting for Hub to reach [bold]{status} status...")
+        status = Status("Current status:")
 
-            if status == current_status:
-                print(f"\nFinal Resource Status: {current_status}")
-                return
+        with Live(
+            Panel(
+                Group(progress, status),
+                title="Wait Log Panel",
+                border_style=Style(color=Color.BLUE.value),
+            )
+        ):
+            while True:
+                self.refresh()
+                current_status = self.hub_status
+                status.update(f"Current status: [bold]{current_status}")
 
-            if "failed" in current_status.lower():
-                raise FailedStatusError(
-                    resource_type="Hub", status=current_status, reason=self.failure_reason
-                )
+                if status == current_status:
+                    logger.info(f"Final Resource Status: [bold]{current_status}")
+                    return
 
-            if timeout is not None and time.time() - start_time >= timeout:
-                raise TimeoutExceededError(resouce_type="Hub", status=current_status)
-            print("-", end="")
-            time.sleep(poll)
+                if "failed" in current_status.lower():
+                    raise FailedStatusError(
+                        resource_type="Hub", status=current_status, reason=self.failure_reason
+                    )
+
+                if timeout is not None and time.time() - start_time >= timeout:
+                    raise TimeoutExceededError(resouce_type="Hub", status=current_status)
+                time.sleep(poll)
 
     def wait_for_delete(
         self,
@@ -9987,23 +10293,37 @@ class Hub(Base):
         """
         start_time = time.time()
 
-        while True:
-            try:
-                self.refresh()
-                current_status = self.hub_status
+        progress = Progress(
+            SpinnerColumn("bouncingBar"),
+            TextColumn("{task.description}"),
+            TimeElapsedColumn(),
+        )
+        progress.add_task("Waiting for Hub to be deleted...")
+        status = Status("Current status:")
 
-                if timeout is not None and time.time() - start_time >= timeout:
-                    raise TimeoutExceededError(resouce_type="Hub", status=current_status)
-            except botocore.exceptions.ClientError as e:
-                error_code = e.response["Error"]["Code"]
+        with Live(
+            Panel(
+                Group(progress, status),
+                title="Wait Log Panel",
+                border_style=Style(color=Color.BLUE.value),
+            )
+        ):
+            while True:
+                try:
+                    self.refresh()
+                    current_status = self.hub_status
+                    status.update(f"Current status: [bold]{current_status}")
 
-                if "ResourceNotFound" in error_code or "ValidationException" in error_code:
-                    print("Resource was not found. It may have been deleted.")
-                    return
-                raise e
+                    if timeout is not None and time.time() - start_time >= timeout:
+                        raise TimeoutExceededError(resouce_type="Hub", status=current_status)
+                except botocore.exceptions.ClientError as e:
+                    error_code = e.response["Error"]["Code"]
 
-            print("-", end="")
-            time.sleep(poll)
+                    if "ResourceNotFound" in error_code or "ValidationException" in error_code:
+                        logger.info("Resource was not found. It may have been deleted.")
+                        return
+                    raise e
+                time.sleep(poll)
 
     @classmethod
     def get_all(
@@ -10285,18 +10605,33 @@ class HubContent(Base):
         """
         start_time = time.time()
 
-        while True:
-            self.refresh()
-            current_status = self.support_status
+        progress = Progress(
+            SpinnerColumn("bouncingBar"),
+            TextColumn("{task.description}"),
+            TimeElapsedColumn(),
+        )
+        progress.add_task(f"Waiting for HubContent to reach [bold]{status} status...")
+        status = Status("Current status:")
 
-            if status == current_status:
-                print(f"\nFinal Resource Status: {current_status}")
-                return
+        with Live(
+            Panel(
+                Group(progress, status),
+                title="Wait Log Panel",
+                border_style=Style(color=Color.BLUE.value),
+            )
+        ):
+            while True:
+                self.refresh()
+                current_status = self.support_status
+                status.update(f"Current status: [bold]{current_status}")
 
-            if timeout is not None and time.time() - start_time >= timeout:
-                raise TimeoutExceededError(resouce_type="HubContent", status=current_status)
-            print("-", end="")
-            time.sleep(poll)
+                if status == current_status:
+                    logger.info(f"Final Resource Status: [bold]{current_status}")
+                    return
+
+                if timeout is not None and time.time() - start_time >= timeout:
+                    raise TimeoutExceededError(resouce_type="HubContent", status=current_status)
+                time.sleep(poll)
 
     @classmethod
     def load(
@@ -10818,18 +11153,33 @@ class HumanTaskUi(Base):
         """
         start_time = time.time()
 
-        while True:
-            self.refresh()
-            current_status = self.human_task_ui_status
+        progress = Progress(
+            SpinnerColumn("bouncingBar"),
+            TextColumn("{task.description}"),
+            TimeElapsedColumn(),
+        )
+        progress.add_task(f"Waiting for HumanTaskUi to reach [bold]{status} status...")
+        status = Status("Current status:")
 
-            if status == current_status:
-                print(f"\nFinal Resource Status: {current_status}")
-                return
+        with Live(
+            Panel(
+                Group(progress, status),
+                title="Wait Log Panel",
+                border_style=Style(color=Color.BLUE.value),
+            )
+        ):
+            while True:
+                self.refresh()
+                current_status = self.human_task_ui_status
+                status.update(f"Current status: [bold]{current_status}")
 
-            if timeout is not None and time.time() - start_time >= timeout:
-                raise TimeoutExceededError(resouce_type="HumanTaskUi", status=current_status)
-            print("-", end="")
-            time.sleep(poll)
+                if status == current_status:
+                    logger.info(f"Final Resource Status: [bold]{current_status}")
+                    return
+
+                if timeout is not None and time.time() - start_time >= timeout:
+                    raise TimeoutExceededError(resouce_type="HumanTaskUi", status=current_status)
+                time.sleep(poll)
 
     def wait_for_delete(
         self,
@@ -10859,23 +11209,39 @@ class HumanTaskUi(Base):
         """
         start_time = time.time()
 
-        while True:
-            try:
-                self.refresh()
-                current_status = self.human_task_ui_status
+        progress = Progress(
+            SpinnerColumn("bouncingBar"),
+            TextColumn("{task.description}"),
+            TimeElapsedColumn(),
+        )
+        progress.add_task("Waiting for HumanTaskUi to be deleted...")
+        status = Status("Current status:")
 
-                if timeout is not None and time.time() - start_time >= timeout:
-                    raise TimeoutExceededError(resouce_type="HumanTaskUi", status=current_status)
-            except botocore.exceptions.ClientError as e:
-                error_code = e.response["Error"]["Code"]
+        with Live(
+            Panel(
+                Group(progress, status),
+                title="Wait Log Panel",
+                border_style=Style(color=Color.BLUE.value),
+            )
+        ):
+            while True:
+                try:
+                    self.refresh()
+                    current_status = self.human_task_ui_status
+                    status.update(f"Current status: [bold]{current_status}")
 
-                if "ResourceNotFound" in error_code or "ValidationException" in error_code:
-                    print("Resource was not found. It may have been deleted.")
-                    return
-                raise e
+                    if timeout is not None and time.time() - start_time >= timeout:
+                        raise TimeoutExceededError(
+                            resouce_type="HumanTaskUi", status=current_status
+                        )
+                except botocore.exceptions.ClientError as e:
+                    error_code = e.response["Error"]["Code"]
 
-            print("-", end="")
-            time.sleep(poll)
+                    if "ResourceNotFound" in error_code or "ValidationException" in error_code:
+                        logger.info("Resource was not found. It may have been deleted.")
+                        return
+                    raise e
+                time.sleep(poll)
 
     @classmethod
     def get_all(
@@ -11262,28 +11628,43 @@ class HyperParameterTuningJob(Base):
         terminal_states = ["Completed", "Failed", "Stopped", "DeleteFailed"]
         start_time = time.time()
 
-        while True:
-            self.refresh()
-            current_status = self.hyper_parameter_tuning_job_status
+        progress = Progress(
+            SpinnerColumn("bouncingBar"),
+            TextColumn("{task.description}"),
+            TimeElapsedColumn(),
+        )
+        progress.add_task("Waiting for HyperParameterTuningJob...")
+        status = Status("Current status:")
 
-            if current_status in terminal_states:
-                print(f"\nFinal Resource Status: {current_status}")
+        with Live(
+            Panel(
+                Group(progress, status),
+                title="Wait Log Panel",
+                border_style=Style(color=Color.BLUE.value),
+            )
+        ):
+            while True:
+                self.refresh()
+                current_status = self.hyper_parameter_tuning_job_status
+                status.update(f"Current status: [bold]{current_status}")
 
-                if "failed" in current_status.lower():
-                    raise FailedStatusError(
-                        resource_type="HyperParameterTuningJob",
-                        status=current_status,
-                        reason=self.failure_reason,
+                if current_status in terminal_states:
+                    logger.info(f"Final Resource Status: [bold]{current_status}")
+
+                    if "failed" in current_status.lower():
+                        raise FailedStatusError(
+                            resource_type="HyperParameterTuningJob",
+                            status=current_status,
+                            reason=self.failure_reason,
+                        )
+
+                    return
+
+                if timeout is not None and time.time() - start_time >= timeout:
+                    raise TimeoutExceededError(
+                        resouce_type="HyperParameterTuningJob", status=current_status
                     )
-
-                return
-
-            if timeout is not None and time.time() - start_time >= timeout:
-                raise TimeoutExceededError(
-                    resouce_type="HyperParameterTuningJob", status=current_status
-                )
-            print("-", end="")
-            time.sleep(poll)
+                time.sleep(poll)
 
     def wait_for_delete(
         self,
@@ -11313,25 +11694,39 @@ class HyperParameterTuningJob(Base):
         """
         start_time = time.time()
 
-        while True:
-            try:
-                self.refresh()
-                current_status = self.hyper_parameter_tuning_job_status
+        progress = Progress(
+            SpinnerColumn("bouncingBar"),
+            TextColumn("{task.description}"),
+            TimeElapsedColumn(),
+        )
+        progress.add_task("Waiting for HyperParameterTuningJob to be deleted...")
+        status = Status("Current status:")
 
-                if timeout is not None and time.time() - start_time >= timeout:
-                    raise TimeoutExceededError(
-                        resouce_type="HyperParameterTuningJob", status=current_status
-                    )
-            except botocore.exceptions.ClientError as e:
-                error_code = e.response["Error"]["Code"]
+        with Live(
+            Panel(
+                Group(progress, status),
+                title="Wait Log Panel",
+                border_style=Style(color=Color.BLUE.value),
+            )
+        ):
+            while True:
+                try:
+                    self.refresh()
+                    current_status = self.hyper_parameter_tuning_job_status
+                    status.update(f"Current status: [bold]{current_status}")
 
-                if "ResourceNotFound" in error_code or "ValidationException" in error_code:
-                    print("Resource was not found. It may have been deleted.")
-                    return
-                raise e
+                    if timeout is not None and time.time() - start_time >= timeout:
+                        raise TimeoutExceededError(
+                            resouce_type="HyperParameterTuningJob", status=current_status
+                        )
+                except botocore.exceptions.ClientError as e:
+                    error_code = e.response["Error"]["Code"]
 
-            print("-", end="")
-            time.sleep(poll)
+                    if "ResourceNotFound" in error_code or "ValidationException" in error_code:
+                        logger.info("Resource was not found. It may have been deleted.")
+                        return
+                    raise e
+                time.sleep(poll)
 
     @classmethod
     def get_all(
@@ -11789,23 +12184,38 @@ class Image(Base):
         """
         start_time = time.time()
 
-        while True:
-            self.refresh()
-            current_status = self.image_status
+        progress = Progress(
+            SpinnerColumn("bouncingBar"),
+            TextColumn("{task.description}"),
+            TimeElapsedColumn(),
+        )
+        progress.add_task(f"Waiting for Image to reach [bold]{status} status...")
+        status = Status("Current status:")
 
-            if status == current_status:
-                print(f"\nFinal Resource Status: {current_status}")
-                return
+        with Live(
+            Panel(
+                Group(progress, status),
+                title="Wait Log Panel",
+                border_style=Style(color=Color.BLUE.value),
+            )
+        ):
+            while True:
+                self.refresh()
+                current_status = self.image_status
+                status.update(f"Current status: [bold]{current_status}")
 
-            if "failed" in current_status.lower():
-                raise FailedStatusError(
-                    resource_type="Image", status=current_status, reason=self.failure_reason
-                )
+                if status == current_status:
+                    logger.info(f"Final Resource Status: [bold]{current_status}")
+                    return
 
-            if timeout is not None and time.time() - start_time >= timeout:
-                raise TimeoutExceededError(resouce_type="Image", status=current_status)
-            print("-", end="")
-            time.sleep(poll)
+                if "failed" in current_status.lower():
+                    raise FailedStatusError(
+                        resource_type="Image", status=current_status, reason=self.failure_reason
+                    )
+
+                if timeout is not None and time.time() - start_time >= timeout:
+                    raise TimeoutExceededError(resouce_type="Image", status=current_status)
+                time.sleep(poll)
 
     def wait_for_delete(
         self,
@@ -11835,29 +12245,45 @@ class Image(Base):
         """
         start_time = time.time()
 
-        while True:
-            try:
-                self.refresh()
-                current_status = self.image_status
+        progress = Progress(
+            SpinnerColumn("bouncingBar"),
+            TextColumn("{task.description}"),
+            TimeElapsedColumn(),
+        )
+        progress.add_task("Waiting for Image to be deleted...")
+        status = Status("Current status:")
 
-                if (
-                    "delete_failed" in current_status.lower()
-                    or "deletefailed" in current_status.lower()
-                ):
-                    raise DeleteFailedStatusError(resource_type="Image", reason=self.failure_reason)
+        with Live(
+            Panel(
+                Group(progress, status),
+                title="Wait Log Panel",
+                border_style=Style(color=Color.BLUE.value),
+            )
+        ):
+            while True:
+                try:
+                    self.refresh()
+                    current_status = self.image_status
+                    status.update(f"Current status: [bold]{current_status}")
 
-                if timeout is not None and time.time() - start_time >= timeout:
-                    raise TimeoutExceededError(resouce_type="Image", status=current_status)
-            except botocore.exceptions.ClientError as e:
-                error_code = e.response["Error"]["Code"]
+                    if (
+                        "delete_failed" in current_status.lower()
+                        or "deletefailed" in current_status.lower()
+                    ):
+                        raise DeleteFailedStatusError(
+                            resource_type="Image", reason=self.failure_reason
+                        )
 
-                if "ResourceNotFound" in error_code or "ValidationException" in error_code:
-                    print("Resource was not found. It may have been deleted.")
-                    return
-                raise e
+                    if timeout is not None and time.time() - start_time >= timeout:
+                        raise TimeoutExceededError(resouce_type="Image", status=current_status)
+                except botocore.exceptions.ClientError as e:
+                    error_code = e.response["Error"]["Code"]
 
-            print("-", end="")
-            time.sleep(poll)
+                    if "ResourceNotFound" in error_code or "ValidationException" in error_code:
+                        logger.info("Resource was not found. It may have been deleted.")
+                        return
+                    raise e
+                time.sleep(poll)
 
     @classmethod
     def get_all(
@@ -12348,23 +12774,40 @@ class ImageVersion(Base):
         """
         start_time = time.time()
 
-        while True:
-            self.refresh()
-            current_status = self.image_version_status
+        progress = Progress(
+            SpinnerColumn("bouncingBar"),
+            TextColumn("{task.description}"),
+            TimeElapsedColumn(),
+        )
+        progress.add_task(f"Waiting for ImageVersion to reach [bold]{status} status...")
+        status = Status("Current status:")
 
-            if status == current_status:
-                print(f"\nFinal Resource Status: {current_status}")
-                return
+        with Live(
+            Panel(
+                Group(progress, status),
+                title="Wait Log Panel",
+                border_style=Style(color=Color.BLUE.value),
+            )
+        ):
+            while True:
+                self.refresh()
+                current_status = self.image_version_status
+                status.update(f"Current status: [bold]{current_status}")
 
-            if "failed" in current_status.lower():
-                raise FailedStatusError(
-                    resource_type="ImageVersion", status=current_status, reason=self.failure_reason
-                )
+                if status == current_status:
+                    logger.info(f"Final Resource Status: [bold]{current_status}")
+                    return
 
-            if timeout is not None and time.time() - start_time >= timeout:
-                raise TimeoutExceededError(resouce_type="ImageVersion", status=current_status)
-            print("-", end="")
-            time.sleep(poll)
+                if "failed" in current_status.lower():
+                    raise FailedStatusError(
+                        resource_type="ImageVersion",
+                        status=current_status,
+                        reason=self.failure_reason,
+                    )
+
+                if timeout is not None and time.time() - start_time >= timeout:
+                    raise TimeoutExceededError(resouce_type="ImageVersion", status=current_status)
+                time.sleep(poll)
 
     def wait_for_delete(
         self,
@@ -12394,31 +12837,47 @@ class ImageVersion(Base):
         """
         start_time = time.time()
 
-        while True:
-            try:
-                self.refresh()
-                current_status = self.image_version_status
+        progress = Progress(
+            SpinnerColumn("bouncingBar"),
+            TextColumn("{task.description}"),
+            TimeElapsedColumn(),
+        )
+        progress.add_task("Waiting for ImageVersion to be deleted...")
+        status = Status("Current status:")
 
-                if (
-                    "delete_failed" in current_status.lower()
-                    or "deletefailed" in current_status.lower()
-                ):
-                    raise DeleteFailedStatusError(
-                        resource_type="ImageVersion", reason=self.failure_reason
-                    )
+        with Live(
+            Panel(
+                Group(progress, status),
+                title="Wait Log Panel",
+                border_style=Style(color=Color.BLUE.value),
+            )
+        ):
+            while True:
+                try:
+                    self.refresh()
+                    current_status = self.image_version_status
+                    status.update(f"Current status: [bold]{current_status}")
 
-                if timeout is not None and time.time() - start_time >= timeout:
-                    raise TimeoutExceededError(resouce_type="ImageVersion", status=current_status)
-            except botocore.exceptions.ClientError as e:
-                error_code = e.response["Error"]["Code"]
+                    if (
+                        "delete_failed" in current_status.lower()
+                        or "deletefailed" in current_status.lower()
+                    ):
+                        raise DeleteFailedStatusError(
+                            resource_type="ImageVersion", reason=self.failure_reason
+                        )
 
-                if "ResourceNotFound" in error_code or "ValidationException" in error_code:
-                    print("Resource was not found. It may have been deleted.")
-                    return
-                raise e
+                    if timeout is not None and time.time() - start_time >= timeout:
+                        raise TimeoutExceededError(
+                            resouce_type="ImageVersion", status=current_status
+                        )
+                except botocore.exceptions.ClientError as e:
+                    error_code = e.response["Error"]["Code"]
 
-            print("-", end="")
-            time.sleep(poll)
+                    if "ResourceNotFound" in error_code or "ValidationException" in error_code:
+                        logger.info("Resource was not found. It may have been deleted.")
+                        return
+                    raise e
+                time.sleep(poll)
 
 
 class InferenceComponent(Base):
@@ -12711,25 +13170,42 @@ class InferenceComponent(Base):
         """
         start_time = time.time()
 
-        while True:
-            self.refresh()
-            current_status = self.inference_component_status
+        progress = Progress(
+            SpinnerColumn("bouncingBar"),
+            TextColumn("{task.description}"),
+            TimeElapsedColumn(),
+        )
+        progress.add_task(f"Waiting for InferenceComponent to reach [bold]{status} status...")
+        status = Status("Current status:")
 
-            if status == current_status:
-                print(f"\nFinal Resource Status: {current_status}")
-                return
+        with Live(
+            Panel(
+                Group(progress, status),
+                title="Wait Log Panel",
+                border_style=Style(color=Color.BLUE.value),
+            )
+        ):
+            while True:
+                self.refresh()
+                current_status = self.inference_component_status
+                status.update(f"Current status: [bold]{current_status}")
 
-            if "failed" in current_status.lower():
-                raise FailedStatusError(
-                    resource_type="InferenceComponent",
-                    status=current_status,
-                    reason=self.failure_reason,
-                )
+                if status == current_status:
+                    logger.info(f"Final Resource Status: [bold]{current_status}")
+                    return
 
-            if timeout is not None and time.time() - start_time >= timeout:
-                raise TimeoutExceededError(resouce_type="InferenceComponent", status=current_status)
-            print("-", end="")
-            time.sleep(poll)
+                if "failed" in current_status.lower():
+                    raise FailedStatusError(
+                        resource_type="InferenceComponent",
+                        status=current_status,
+                        reason=self.failure_reason,
+                    )
+
+                if timeout is not None and time.time() - start_time >= timeout:
+                    raise TimeoutExceededError(
+                        resouce_type="InferenceComponent", status=current_status
+                    )
+                time.sleep(poll)
 
     def wait_for_delete(
         self,
@@ -12759,25 +13235,39 @@ class InferenceComponent(Base):
         """
         start_time = time.time()
 
-        while True:
-            try:
-                self.refresh()
-                current_status = self.inference_component_status
+        progress = Progress(
+            SpinnerColumn("bouncingBar"),
+            TextColumn("{task.description}"),
+            TimeElapsedColumn(),
+        )
+        progress.add_task("Waiting for InferenceComponent to be deleted...")
+        status = Status("Current status:")
 
-                if timeout is not None and time.time() - start_time >= timeout:
-                    raise TimeoutExceededError(
-                        resouce_type="InferenceComponent", status=current_status
-                    )
-            except botocore.exceptions.ClientError as e:
-                error_code = e.response["Error"]["Code"]
+        with Live(
+            Panel(
+                Group(progress, status),
+                title="Wait Log Panel",
+                border_style=Style(color=Color.BLUE.value),
+            )
+        ):
+            while True:
+                try:
+                    self.refresh()
+                    current_status = self.inference_component_status
+                    status.update(f"Current status: [bold]{current_status}")
 
-                if "ResourceNotFound" in error_code or "ValidationException" in error_code:
-                    print("Resource was not found. It may have been deleted.")
-                    return
-                raise e
+                    if timeout is not None and time.time() - start_time >= timeout:
+                        raise TimeoutExceededError(
+                            resouce_type="InferenceComponent", status=current_status
+                        )
+                except botocore.exceptions.ClientError as e:
+                    error_code = e.response["Error"]["Code"]
 
-            print("-", end="")
-            time.sleep(poll)
+                    if "ResourceNotFound" in error_code or "ValidationException" in error_code:
+                        logger.info("Resource was not found. It may have been deleted.")
+                        return
+                    raise e
+                time.sleep(poll)
 
     @classmethod
     def get_all(
@@ -13287,20 +13777,35 @@ class InferenceExperiment(Base):
         """
         start_time = time.time()
 
-        while True:
-            self.refresh()
-            current_status = self.status
+        progress = Progress(
+            SpinnerColumn("bouncingBar"),
+            TextColumn("{task.description}"),
+            TimeElapsedColumn(),
+        )
+        progress.add_task(f"Waiting for InferenceExperiment to reach [bold]{status} status...")
+        status = Status("Current status:")
 
-            if status == current_status:
-                print(f"\nFinal Resource Status: {current_status}")
-                return
+        with Live(
+            Panel(
+                Group(progress, status),
+                title="Wait Log Panel",
+                border_style=Style(color=Color.BLUE.value),
+            )
+        ):
+            while True:
+                self.refresh()
+                current_status = self.status
+                status.update(f"Current status: [bold]{current_status}")
 
-            if timeout is not None and time.time() - start_time >= timeout:
-                raise TimeoutExceededError(
-                    resouce_type="InferenceExperiment", status=current_status
-                )
-            print("-", end="")
-            time.sleep(poll)
+                if status == current_status:
+                    logger.info(f"Final Resource Status: [bold]{current_status}")
+                    return
+
+                if timeout is not None and time.time() - start_time >= timeout:
+                    raise TimeoutExceededError(
+                        resouce_type="InferenceExperiment", status=current_status
+                    )
+                time.sleep(poll)
 
     @classmethod
     def get_all(
@@ -13659,28 +14164,43 @@ class InferenceRecommendationsJob(Base):
         terminal_states = ["COMPLETED", "FAILED", "STOPPED", "DELETED"]
         start_time = time.time()
 
-        while True:
-            self.refresh()
-            current_status = self.status
+        progress = Progress(
+            SpinnerColumn("bouncingBar"),
+            TextColumn("{task.description}"),
+            TimeElapsedColumn(),
+        )
+        progress.add_task("Waiting for InferenceRecommendationsJob...")
+        status = Status("Current status:")
 
-            if current_status in terminal_states:
-                print(f"\nFinal Resource Status: {current_status}")
+        with Live(
+            Panel(
+                Group(progress, status),
+                title="Wait Log Panel",
+                border_style=Style(color=Color.BLUE.value),
+            )
+        ):
+            while True:
+                self.refresh()
+                current_status = self.status
+                status.update(f"Current status: [bold]{current_status}")
 
-                if "failed" in current_status.lower():
-                    raise FailedStatusError(
-                        resource_type="InferenceRecommendationsJob",
-                        status=current_status,
-                        reason=self.failure_reason,
+                if current_status in terminal_states:
+                    logger.info(f"Final Resource Status: [bold]{current_status}")
+
+                    if "failed" in current_status.lower():
+                        raise FailedStatusError(
+                            resource_type="InferenceRecommendationsJob",
+                            status=current_status,
+                            reason=self.failure_reason,
+                        )
+
+                    return
+
+                if timeout is not None and time.time() - start_time >= timeout:
+                    raise TimeoutExceededError(
+                        resouce_type="InferenceRecommendationsJob", status=current_status
                     )
-
-                return
-
-            if timeout is not None and time.time() - start_time >= timeout:
-                raise TimeoutExceededError(
-                    resouce_type="InferenceRecommendationsJob", status=current_status
-                )
-            print("-", end="")
-            time.sleep(poll)
+                time.sleep(poll)
 
     def wait_for_delete(
         self,
@@ -13710,29 +14230,43 @@ class InferenceRecommendationsJob(Base):
         """
         start_time = time.time()
 
-        while True:
-            try:
-                self.refresh()
-                current_status = self.status
+        progress = Progress(
+            SpinnerColumn("bouncingBar"),
+            TextColumn("{task.description}"),
+            TimeElapsedColumn(),
+        )
+        progress.add_task("Waiting for InferenceRecommendationsJob to be deleted...")
+        status = Status("Current status:")
 
-                if current_status.lower() == "deleted":
-                    print("Resource was deleted.")
-                    return
+        with Live(
+            Panel(
+                Group(progress, status),
+                title="Wait Log Panel",
+                border_style=Style(color=Color.BLUE.value),
+            )
+        ):
+            while True:
+                try:
+                    self.refresh()
+                    current_status = self.status
+                    status.update(f"Current status: [bold]{current_status}")
 
-                if timeout is not None and time.time() - start_time >= timeout:
-                    raise TimeoutExceededError(
-                        resouce_type="InferenceRecommendationsJob", status=current_status
-                    )
-            except botocore.exceptions.ClientError as e:
-                error_code = e.response["Error"]["Code"]
+                    if current_status.lower() == "deleted":
+                        print("Resource was deleted.")
+                        return
 
-                if "ResourceNotFound" in error_code or "ValidationException" in error_code:
-                    print("Resource was not found. It may have been deleted.")
-                    return
-                raise e
+                    if timeout is not None and time.time() - start_time >= timeout:
+                        raise TimeoutExceededError(
+                            resouce_type="InferenceRecommendationsJob", status=current_status
+                        )
+                except botocore.exceptions.ClientError as e:
+                    error_code = e.response["Error"]["Code"]
 
-            print("-", end="")
-            time.sleep(poll)
+                    if "ResourceNotFound" in error_code or "ValidationException" in error_code:
+                        logger.info("Resource was not found. It may have been deleted.")
+                        return
+                    raise e
+                time.sleep(poll)
 
     @classmethod
     def get_all(
@@ -14177,26 +14711,41 @@ class LabelingJob(Base):
         terminal_states = ["Completed", "Failed", "Stopped"]
         start_time = time.time()
 
-        while True:
-            self.refresh()
-            current_status = self.labeling_job_status
+        progress = Progress(
+            SpinnerColumn("bouncingBar"),
+            TextColumn("{task.description}"),
+            TimeElapsedColumn(),
+        )
+        progress.add_task("Waiting for LabelingJob...")
+        status = Status("Current status:")
 
-            if current_status in terminal_states:
-                print(f"\nFinal Resource Status: {current_status}")
+        with Live(
+            Panel(
+                Group(progress, status),
+                title="Wait Log Panel",
+                border_style=Style(color=Color.BLUE.value),
+            )
+        ):
+            while True:
+                self.refresh()
+                current_status = self.labeling_job_status
+                status.update(f"Current status: [bold]{current_status}")
 
-                if "failed" in current_status.lower():
-                    raise FailedStatusError(
-                        resource_type="LabelingJob",
-                        status=current_status,
-                        reason=self.failure_reason,
-                    )
+                if current_status in terminal_states:
+                    logger.info(f"Final Resource Status: [bold]{current_status}")
 
-                return
+                    if "failed" in current_status.lower():
+                        raise FailedStatusError(
+                            resource_type="LabelingJob",
+                            status=current_status,
+                            reason=self.failure_reason,
+                        )
 
-            if timeout is not None and time.time() - start_time >= timeout:
-                raise TimeoutExceededError(resouce_type="LabelingJob", status=current_status)
-            print("-", end="")
-            time.sleep(poll)
+                    return
+
+                if timeout is not None and time.time() - start_time >= timeout:
+                    raise TimeoutExceededError(resouce_type="LabelingJob", status=current_status)
+                time.sleep(poll)
 
     @classmethod
     def get_all(
@@ -14874,25 +15423,42 @@ class MlflowTrackingServer(Base):
         """
         start_time = time.time()
 
-        while True:
-            self.refresh()
-            current_status = self.tracking_server_status
+        progress = Progress(
+            SpinnerColumn("bouncingBar"),
+            TextColumn("{task.description}"),
+            TimeElapsedColumn(),
+        )
+        progress.add_task(f"Waiting for MlflowTrackingServer to reach [bold]{status} status...")
+        status = Status("Current status:")
 
-            if status == current_status:
-                print(f"\nFinal Resource Status: {current_status}")
-                return
+        with Live(
+            Panel(
+                Group(progress, status),
+                title="Wait Log Panel",
+                border_style=Style(color=Color.BLUE.value),
+            )
+        ):
+            while True:
+                self.refresh()
+                current_status = self.tracking_server_status
+                status.update(f"Current status: [bold]{current_status}")
 
-            if "failed" in current_status.lower():
-                raise FailedStatusError(
-                    resource_type="MlflowTrackingServer", status=current_status, reason="(Unknown)"
-                )
+                if status == current_status:
+                    logger.info(f"Final Resource Status: [bold]{current_status}")
+                    return
 
-            if timeout is not None and time.time() - start_time >= timeout:
-                raise TimeoutExceededError(
-                    resouce_type="MlflowTrackingServer", status=current_status
-                )
-            print("-", end="")
-            time.sleep(poll)
+                if "failed" in current_status.lower():
+                    raise FailedStatusError(
+                        resource_type="MlflowTrackingServer",
+                        status=current_status,
+                        reason="(Unknown)",
+                    )
+
+                if timeout is not None and time.time() - start_time >= timeout:
+                    raise TimeoutExceededError(
+                        resouce_type="MlflowTrackingServer", status=current_status
+                    )
+                time.sleep(poll)
 
     def wait_for_delete(
         self,
@@ -14922,25 +15488,39 @@ class MlflowTrackingServer(Base):
         """
         start_time = time.time()
 
-        while True:
-            try:
-                self.refresh()
-                current_status = self.tracking_server_status
+        progress = Progress(
+            SpinnerColumn("bouncingBar"),
+            TextColumn("{task.description}"),
+            TimeElapsedColumn(),
+        )
+        progress.add_task("Waiting for MlflowTrackingServer to be deleted...")
+        status = Status("Current status:")
 
-                if timeout is not None and time.time() - start_time >= timeout:
-                    raise TimeoutExceededError(
-                        resouce_type="MlflowTrackingServer", status=current_status
-                    )
-            except botocore.exceptions.ClientError as e:
-                error_code = e.response["Error"]["Code"]
+        with Live(
+            Panel(
+                Group(progress, status),
+                title="Wait Log Panel",
+                border_style=Style(color=Color.BLUE.value),
+            )
+        ):
+            while True:
+                try:
+                    self.refresh()
+                    current_status = self.tracking_server_status
+                    status.update(f"Current status: [bold]{current_status}")
 
-                if "ResourceNotFound" in error_code or "ValidationException" in error_code:
-                    print("Resource was not found. It may have been deleted.")
-                    return
-                raise e
+                    if timeout is not None and time.time() - start_time >= timeout:
+                        raise TimeoutExceededError(
+                            resouce_type="MlflowTrackingServer", status=current_status
+                        )
+                except botocore.exceptions.ClientError as e:
+                    error_code = e.response["Error"]["Code"]
 
-            print("-", end="")
-            time.sleep(poll)
+                    if "ResourceNotFound" in error_code or "ValidationException" in error_code:
+                        logger.info("Resource was not found. It may have been deleted.")
+                        return
+                    raise e
+                time.sleep(poll)
 
     @classmethod
     def get_all(
@@ -16054,18 +16634,33 @@ class ModelCard(Base):
         """
         start_time = time.time()
 
-        while True:
-            self.refresh()
-            current_status = self.model_card_status
+        progress = Progress(
+            SpinnerColumn("bouncingBar"),
+            TextColumn("{task.description}"),
+            TimeElapsedColumn(),
+        )
+        progress.add_task(f"Waiting for ModelCard to reach [bold]{status} status...")
+        status = Status("Current status:")
 
-            if status == current_status:
-                print(f"\nFinal Resource Status: {current_status}")
-                return
+        with Live(
+            Panel(
+                Group(progress, status),
+                title="Wait Log Panel",
+                border_style=Style(color=Color.BLUE.value),
+            )
+        ):
+            while True:
+                self.refresh()
+                current_status = self.model_card_status
+                status.update(f"Current status: [bold]{current_status}")
 
-            if timeout is not None and time.time() - start_time >= timeout:
-                raise TimeoutExceededError(resouce_type="ModelCard", status=current_status)
-            print("-", end="")
-            time.sleep(poll)
+                if status == current_status:
+                    logger.info(f"Final Resource Status: [bold]{current_status}")
+                    return
+
+                if timeout is not None and time.time() - start_time >= timeout:
+                    raise TimeoutExceededError(resouce_type="ModelCard", status=current_status)
+                time.sleep(poll)
 
     @classmethod
     def get_all(
@@ -16434,26 +17029,43 @@ class ModelCardExportJob(Base):
         terminal_states = ["Completed", "Failed"]
         start_time = time.time()
 
-        while True:
-            self.refresh()
-            current_status = self.status
+        progress = Progress(
+            SpinnerColumn("bouncingBar"),
+            TextColumn("{task.description}"),
+            TimeElapsedColumn(),
+        )
+        progress.add_task("Waiting for ModelCardExportJob...")
+        status = Status("Current status:")
 
-            if current_status in terminal_states:
-                print(f"\nFinal Resource Status: {current_status}")
+        with Live(
+            Panel(
+                Group(progress, status),
+                title="Wait Log Panel",
+                border_style=Style(color=Color.BLUE.value),
+            )
+        ):
+            while True:
+                self.refresh()
+                current_status = self.status
+                status.update(f"Current status: [bold]{current_status}")
 
-                if "failed" in current_status.lower():
-                    raise FailedStatusError(
-                        resource_type="ModelCardExportJob",
-                        status=current_status,
-                        reason=self.failure_reason,
+                if current_status in terminal_states:
+                    logger.info(f"Final Resource Status: [bold]{current_status}")
+
+                    if "failed" in current_status.lower():
+                        raise FailedStatusError(
+                            resource_type="ModelCardExportJob",
+                            status=current_status,
+                            reason=self.failure_reason,
+                        )
+
+                    return
+
+                if timeout is not None and time.time() - start_time >= timeout:
+                    raise TimeoutExceededError(
+                        resouce_type="ModelCardExportJob", status=current_status
                     )
-
-                return
-
-            if timeout is not None and time.time() - start_time >= timeout:
-                raise TimeoutExceededError(resouce_type="ModelCardExportJob", status=current_status)
-            print("-", end="")
-            time.sleep(poll)
+                time.sleep(poll)
 
     @classmethod
     def get_all(
@@ -17342,23 +17954,38 @@ class ModelPackage(Base):
         """
         start_time = time.time()
 
-        while True:
-            self.refresh()
-            current_status = self.model_package_status
+        progress = Progress(
+            SpinnerColumn("bouncingBar"),
+            TextColumn("{task.description}"),
+            TimeElapsedColumn(),
+        )
+        progress.add_task(f"Waiting for ModelPackage to reach [bold]{status} status...")
+        status = Status("Current status:")
 
-            if status == current_status:
-                print(f"\nFinal Resource Status: {current_status}")
-                return
+        with Live(
+            Panel(
+                Group(progress, status),
+                title="Wait Log Panel",
+                border_style=Style(color=Color.BLUE.value),
+            )
+        ):
+            while True:
+                self.refresh()
+                current_status = self.model_package_status
+                status.update(f"Current status: [bold]{current_status}")
 
-            if "failed" in current_status.lower():
-                raise FailedStatusError(
-                    resource_type="ModelPackage", status=current_status, reason="(Unknown)"
-                )
+                if status == current_status:
+                    logger.info(f"Final Resource Status: [bold]{current_status}")
+                    return
 
-            if timeout is not None and time.time() - start_time >= timeout:
-                raise TimeoutExceededError(resouce_type="ModelPackage", status=current_status)
-            print("-", end="")
-            time.sleep(poll)
+                if "failed" in current_status.lower():
+                    raise FailedStatusError(
+                        resource_type="ModelPackage", status=current_status, reason="(Unknown)"
+                    )
+
+                if timeout is not None and time.time() - start_time >= timeout:
+                    raise TimeoutExceededError(resouce_type="ModelPackage", status=current_status)
+                time.sleep(poll)
 
     def wait_for_delete(
         self,
@@ -17388,23 +18015,39 @@ class ModelPackage(Base):
         """
         start_time = time.time()
 
-        while True:
-            try:
-                self.refresh()
-                current_status = self.model_package_status
+        progress = Progress(
+            SpinnerColumn("bouncingBar"),
+            TextColumn("{task.description}"),
+            TimeElapsedColumn(),
+        )
+        progress.add_task("Waiting for ModelPackage to be deleted...")
+        status = Status("Current status:")
 
-                if timeout is not None and time.time() - start_time >= timeout:
-                    raise TimeoutExceededError(resouce_type="ModelPackage", status=current_status)
-            except botocore.exceptions.ClientError as e:
-                error_code = e.response["Error"]["Code"]
+        with Live(
+            Panel(
+                Group(progress, status),
+                title="Wait Log Panel",
+                border_style=Style(color=Color.BLUE.value),
+            )
+        ):
+            while True:
+                try:
+                    self.refresh()
+                    current_status = self.model_package_status
+                    status.update(f"Current status: [bold]{current_status}")
 
-                if "ResourceNotFound" in error_code or "ValidationException" in error_code:
-                    print("Resource was not found. It may have been deleted.")
-                    return
-                raise e
+                    if timeout is not None and time.time() - start_time >= timeout:
+                        raise TimeoutExceededError(
+                            resouce_type="ModelPackage", status=current_status
+                        )
+                except botocore.exceptions.ClientError as e:
+                    error_code = e.response["Error"]["Code"]
 
-            print("-", end="")
-            time.sleep(poll)
+                    if "ResourceNotFound" in error_code or "ValidationException" in error_code:
+                        logger.info("Resource was not found. It may have been deleted.")
+                        return
+                    raise e
+                time.sleep(poll)
 
     @classmethod
     def get_all(
@@ -17756,23 +18399,40 @@ class ModelPackageGroup(Base):
         """
         start_time = time.time()
 
-        while True:
-            self.refresh()
-            current_status = self.model_package_group_status
+        progress = Progress(
+            SpinnerColumn("bouncingBar"),
+            TextColumn("{task.description}"),
+            TimeElapsedColumn(),
+        )
+        progress.add_task(f"Waiting for ModelPackageGroup to reach [bold]{status} status...")
+        status = Status("Current status:")
 
-            if status == current_status:
-                print(f"\nFinal Resource Status: {current_status}")
-                return
+        with Live(
+            Panel(
+                Group(progress, status),
+                title="Wait Log Panel",
+                border_style=Style(color=Color.BLUE.value),
+            )
+        ):
+            while True:
+                self.refresh()
+                current_status = self.model_package_group_status
+                status.update(f"Current status: [bold]{current_status}")
 
-            if "failed" in current_status.lower():
-                raise FailedStatusError(
-                    resource_type="ModelPackageGroup", status=current_status, reason="(Unknown)"
-                )
+                if status == current_status:
+                    logger.info(f"Final Resource Status: [bold]{current_status}")
+                    return
 
-            if timeout is not None and time.time() - start_time >= timeout:
-                raise TimeoutExceededError(resouce_type="ModelPackageGroup", status=current_status)
-            print("-", end="")
-            time.sleep(poll)
+                if "failed" in current_status.lower():
+                    raise FailedStatusError(
+                        resource_type="ModelPackageGroup", status=current_status, reason="(Unknown)"
+                    )
+
+                if timeout is not None and time.time() - start_time >= timeout:
+                    raise TimeoutExceededError(
+                        resouce_type="ModelPackageGroup", status=current_status
+                    )
+                time.sleep(poll)
 
     def wait_for_delete(
         self,
@@ -17802,25 +18462,39 @@ class ModelPackageGroup(Base):
         """
         start_time = time.time()
 
-        while True:
-            try:
-                self.refresh()
-                current_status = self.model_package_group_status
+        progress = Progress(
+            SpinnerColumn("bouncingBar"),
+            TextColumn("{task.description}"),
+            TimeElapsedColumn(),
+        )
+        progress.add_task("Waiting for ModelPackageGroup to be deleted...")
+        status = Status("Current status:")
 
-                if timeout is not None and time.time() - start_time >= timeout:
-                    raise TimeoutExceededError(
-                        resouce_type="ModelPackageGroup", status=current_status
-                    )
-            except botocore.exceptions.ClientError as e:
-                error_code = e.response["Error"]["Code"]
+        with Live(
+            Panel(
+                Group(progress, status),
+                title="Wait Log Panel",
+                border_style=Style(color=Color.BLUE.value),
+            )
+        ):
+            while True:
+                try:
+                    self.refresh()
+                    current_status = self.model_package_group_status
+                    status.update(f"Current status: [bold]{current_status}")
 
-                if "ResourceNotFound" in error_code or "ValidationException" in error_code:
-                    print("Resource was not found. It may have been deleted.")
-                    return
-                raise e
+                    if timeout is not None and time.time() - start_time >= timeout:
+                        raise TimeoutExceededError(
+                            resouce_type="ModelPackageGroup", status=current_status
+                        )
+                except botocore.exceptions.ClientError as e:
+                    error_code = e.response["Error"]["Code"]
 
-            print("-", end="")
-            time.sleep(poll)
+                    if "ResourceNotFound" in error_code or "ValidationException" in error_code:
+                        logger.info("Resource was not found. It may have been deleted.")
+                        return
+                    raise e
+                time.sleep(poll)
 
     @classmethod
     def get_all(
@@ -19063,25 +19737,42 @@ class MonitoringSchedule(Base):
         """
         start_time = time.time()
 
-        while True:
-            self.refresh()
-            current_status = self.monitoring_schedule_status
+        progress = Progress(
+            SpinnerColumn("bouncingBar"),
+            TextColumn("{task.description}"),
+            TimeElapsedColumn(),
+        )
+        progress.add_task(f"Waiting for MonitoringSchedule to reach [bold]{status} status...")
+        status = Status("Current status:")
 
-            if status == current_status:
-                print(f"\nFinal Resource Status: {current_status}")
-                return
+        with Live(
+            Panel(
+                Group(progress, status),
+                title="Wait Log Panel",
+                border_style=Style(color=Color.BLUE.value),
+            )
+        ):
+            while True:
+                self.refresh()
+                current_status = self.monitoring_schedule_status
+                status.update(f"Current status: [bold]{current_status}")
 
-            if "failed" in current_status.lower():
-                raise FailedStatusError(
-                    resource_type="MonitoringSchedule",
-                    status=current_status,
-                    reason=self.failure_reason,
-                )
+                if status == current_status:
+                    logger.info(f"Final Resource Status: [bold]{current_status}")
+                    return
 
-            if timeout is not None and time.time() - start_time >= timeout:
-                raise TimeoutExceededError(resouce_type="MonitoringSchedule", status=current_status)
-            print("-", end="")
-            time.sleep(poll)
+                if "failed" in current_status.lower():
+                    raise FailedStatusError(
+                        resource_type="MonitoringSchedule",
+                        status=current_status,
+                        reason=self.failure_reason,
+                    )
+
+                if timeout is not None and time.time() - start_time >= timeout:
+                    raise TimeoutExceededError(
+                        resouce_type="MonitoringSchedule", status=current_status
+                    )
+                time.sleep(poll)
 
     @classmethod
     def get_all(
@@ -19593,25 +20284,42 @@ class NotebookInstance(Base):
         """
         start_time = time.time()
 
-        while True:
-            self.refresh()
-            current_status = self.notebook_instance_status
+        progress = Progress(
+            SpinnerColumn("bouncingBar"),
+            TextColumn("{task.description}"),
+            TimeElapsedColumn(),
+        )
+        progress.add_task(f"Waiting for NotebookInstance to reach [bold]{status} status...")
+        status = Status("Current status:")
 
-            if status == current_status:
-                print(f"\nFinal Resource Status: {current_status}")
-                return
+        with Live(
+            Panel(
+                Group(progress, status),
+                title="Wait Log Panel",
+                border_style=Style(color=Color.BLUE.value),
+            )
+        ):
+            while True:
+                self.refresh()
+                current_status = self.notebook_instance_status
+                status.update(f"Current status: [bold]{current_status}")
 
-            if "failed" in current_status.lower():
-                raise FailedStatusError(
-                    resource_type="NotebookInstance",
-                    status=current_status,
-                    reason=self.failure_reason,
-                )
+                if status == current_status:
+                    logger.info(f"Final Resource Status: [bold]{current_status}")
+                    return
 
-            if timeout is not None and time.time() - start_time >= timeout:
-                raise TimeoutExceededError(resouce_type="NotebookInstance", status=current_status)
-            print("-", end="")
-            time.sleep(poll)
+                if "failed" in current_status.lower():
+                    raise FailedStatusError(
+                        resource_type="NotebookInstance",
+                        status=current_status,
+                        reason=self.failure_reason,
+                    )
+
+                if timeout is not None and time.time() - start_time >= timeout:
+                    raise TimeoutExceededError(
+                        resouce_type="NotebookInstance", status=current_status
+                    )
+                time.sleep(poll)
 
     def wait_for_delete(
         self,
@@ -19641,25 +20349,39 @@ class NotebookInstance(Base):
         """
         start_time = time.time()
 
-        while True:
-            try:
-                self.refresh()
-                current_status = self.notebook_instance_status
+        progress = Progress(
+            SpinnerColumn("bouncingBar"),
+            TextColumn("{task.description}"),
+            TimeElapsedColumn(),
+        )
+        progress.add_task("Waiting for NotebookInstance to be deleted...")
+        status = Status("Current status:")
 
-                if timeout is not None and time.time() - start_time >= timeout:
-                    raise TimeoutExceededError(
-                        resouce_type="NotebookInstance", status=current_status
-                    )
-            except botocore.exceptions.ClientError as e:
-                error_code = e.response["Error"]["Code"]
+        with Live(
+            Panel(
+                Group(progress, status),
+                title="Wait Log Panel",
+                border_style=Style(color=Color.BLUE.value),
+            )
+        ):
+            while True:
+                try:
+                    self.refresh()
+                    current_status = self.notebook_instance_status
+                    status.update(f"Current status: [bold]{current_status}")
 
-                if "ResourceNotFound" in error_code or "ValidationException" in error_code:
-                    print("Resource was not found. It may have been deleted.")
-                    return
-                raise e
+                    if timeout is not None and time.time() - start_time >= timeout:
+                        raise TimeoutExceededError(
+                            resouce_type="NotebookInstance", status=current_status
+                        )
+                except botocore.exceptions.ClientError as e:
+                    error_code = e.response["Error"]["Code"]
 
-            print("-", end="")
-            time.sleep(poll)
+                    if "ResourceNotFound" in error_code or "ValidationException" in error_code:
+                        logger.info("Resource was not found. It may have been deleted.")
+                        return
+                    raise e
+                time.sleep(poll)
 
     @classmethod
     def get_all(
@@ -20393,26 +21115,43 @@ class OptimizationJob(Base):
         terminal_states = ["COMPLETED", "FAILED", "STOPPED"]
         start_time = time.time()
 
-        while True:
-            self.refresh()
-            current_status = self.optimization_job_status
+        progress = Progress(
+            SpinnerColumn("bouncingBar"),
+            TextColumn("{task.description}"),
+            TimeElapsedColumn(),
+        )
+        progress.add_task("Waiting for OptimizationJob...")
+        status = Status("Current status:")
 
-            if current_status in terminal_states:
-                print(f"\nFinal Resource Status: {current_status}")
+        with Live(
+            Panel(
+                Group(progress, status),
+                title="Wait Log Panel",
+                border_style=Style(color=Color.BLUE.value),
+            )
+        ):
+            while True:
+                self.refresh()
+                current_status = self.optimization_job_status
+                status.update(f"Current status: [bold]{current_status}")
 
-                if "failed" in current_status.lower():
-                    raise FailedStatusError(
-                        resource_type="OptimizationJob",
-                        status=current_status,
-                        reason=self.failure_reason,
+                if current_status in terminal_states:
+                    logger.info(f"Final Resource Status: [bold]{current_status}")
+
+                    if "failed" in current_status.lower():
+                        raise FailedStatusError(
+                            resource_type="OptimizationJob",
+                            status=current_status,
+                            reason=self.failure_reason,
+                        )
+
+                    return
+
+                if timeout is not None and time.time() - start_time >= timeout:
+                    raise TimeoutExceededError(
+                        resouce_type="OptimizationJob", status=current_status
                     )
-
-                return
-
-            if timeout is not None and time.time() - start_time >= timeout:
-                raise TimeoutExceededError(resouce_type="OptimizationJob", status=current_status)
-            print("-", end="")
-            time.sleep(poll)
+                time.sleep(poll)
 
     @classmethod
     def get_all(
@@ -20827,18 +21566,33 @@ class Pipeline(Base):
         """
         start_time = time.time()
 
-        while True:
-            self.refresh()
-            current_status = self.pipeline_status
+        progress = Progress(
+            SpinnerColumn("bouncingBar"),
+            TextColumn("{task.description}"),
+            TimeElapsedColumn(),
+        )
+        progress.add_task(f"Waiting for Pipeline to reach [bold]{status} status...")
+        status = Status("Current status:")
 
-            if status == current_status:
-                print(f"\nFinal Resource Status: {current_status}")
-                return
+        with Live(
+            Panel(
+                Group(progress, status),
+                title="Wait Log Panel",
+                border_style=Style(color=Color.BLUE.value),
+            )
+        ):
+            while True:
+                self.refresh()
+                current_status = self.pipeline_status
+                status.update(f"Current status: [bold]{current_status}")
 
-            if timeout is not None and time.time() - start_time >= timeout:
-                raise TimeoutExceededError(resouce_type="Pipeline", status=current_status)
-            print("-", end="")
-            time.sleep(poll)
+                if status == current_status:
+                    logger.info(f"Final Resource Status: [bold]{current_status}")
+                    return
+
+                if timeout is not None and time.time() - start_time >= timeout:
+                    raise TimeoutExceededError(resouce_type="Pipeline", status=current_status)
+                time.sleep(poll)
 
     def wait_for_delete(
         self,
@@ -20868,23 +21622,37 @@ class Pipeline(Base):
         """
         start_time = time.time()
 
-        while True:
-            try:
-                self.refresh()
-                current_status = self.pipeline_status
+        progress = Progress(
+            SpinnerColumn("bouncingBar"),
+            TextColumn("{task.description}"),
+            TimeElapsedColumn(),
+        )
+        progress.add_task("Waiting for Pipeline to be deleted...")
+        status = Status("Current status:")
 
-                if timeout is not None and time.time() - start_time >= timeout:
-                    raise TimeoutExceededError(resouce_type="Pipeline", status=current_status)
-            except botocore.exceptions.ClientError as e:
-                error_code = e.response["Error"]["Code"]
+        with Live(
+            Panel(
+                Group(progress, status),
+                title="Wait Log Panel",
+                border_style=Style(color=Color.BLUE.value),
+            )
+        ):
+            while True:
+                try:
+                    self.refresh()
+                    current_status = self.pipeline_status
+                    status.update(f"Current status: [bold]{current_status}")
 
-                if "ResourceNotFound" in error_code or "ValidationException" in error_code:
-                    print("Resource was not found. It may have been deleted.")
-                    return
-                raise e
+                    if timeout is not None and time.time() - start_time >= timeout:
+                        raise TimeoutExceededError(resouce_type="Pipeline", status=current_status)
+                except botocore.exceptions.ClientError as e:
+                    error_code = e.response["Error"]["Code"]
 
-            print("-", end="")
-            time.sleep(poll)
+                    if "ResourceNotFound" in error_code or "ValidationException" in error_code:
+                        logger.info("Resource was not found. It may have been deleted.")
+                        return
+                    raise e
+                time.sleep(poll)
 
     @classmethod
     def get_all(
@@ -21179,25 +21947,42 @@ class PipelineExecution(Base):
         """
         start_time = time.time()
 
-        while True:
-            self.refresh()
-            current_status = self.pipeline_execution_status
+        progress = Progress(
+            SpinnerColumn("bouncingBar"),
+            TextColumn("{task.description}"),
+            TimeElapsedColumn(),
+        )
+        progress.add_task(f"Waiting for PipelineExecution to reach [bold]{status} status...")
+        status = Status("Current status:")
 
-            if status == current_status:
-                print(f"\nFinal Resource Status: {current_status}")
-                return
+        with Live(
+            Panel(
+                Group(progress, status),
+                title="Wait Log Panel",
+                border_style=Style(color=Color.BLUE.value),
+            )
+        ):
+            while True:
+                self.refresh()
+                current_status = self.pipeline_execution_status
+                status.update(f"Current status: [bold]{current_status}")
 
-            if "failed" in current_status.lower():
-                raise FailedStatusError(
-                    resource_type="PipelineExecution",
-                    status=current_status,
-                    reason=self.failure_reason,
-                )
+                if status == current_status:
+                    logger.info(f"Final Resource Status: [bold]{current_status}")
+                    return
 
-            if timeout is not None and time.time() - start_time >= timeout:
-                raise TimeoutExceededError(resouce_type="PipelineExecution", status=current_status)
-            print("-", end="")
-            time.sleep(poll)
+                if "failed" in current_status.lower():
+                    raise FailedStatusError(
+                        resource_type="PipelineExecution",
+                        status=current_status,
+                        reason=self.failure_reason,
+                    )
+
+                if timeout is not None and time.time() - start_time >= timeout:
+                    raise TimeoutExceededError(
+                        resouce_type="PipelineExecution", status=current_status
+                    )
+                time.sleep(poll)
 
     @classmethod
     def get_all(
@@ -22136,26 +22921,41 @@ class ProcessingJob(Base):
         terminal_states = ["Completed", "Failed", "Stopped"]
         start_time = time.time()
 
-        while True:
-            self.refresh()
-            current_status = self.processing_job_status
+        progress = Progress(
+            SpinnerColumn("bouncingBar"),
+            TextColumn("{task.description}"),
+            TimeElapsedColumn(),
+        )
+        progress.add_task("Waiting for ProcessingJob...")
+        status = Status("Current status:")
 
-            if current_status in terminal_states:
-                print(f"\nFinal Resource Status: {current_status}")
+        with Live(
+            Panel(
+                Group(progress, status),
+                title="Wait Log Panel",
+                border_style=Style(color=Color.BLUE.value),
+            )
+        ):
+            while True:
+                self.refresh()
+                current_status = self.processing_job_status
+                status.update(f"Current status: [bold]{current_status}")
 
-                if "failed" in current_status.lower():
-                    raise FailedStatusError(
-                        resource_type="ProcessingJob",
-                        status=current_status,
-                        reason=self.failure_reason,
-                    )
+                if current_status in terminal_states:
+                    logger.info(f"Final Resource Status: [bold]{current_status}")
 
-                return
+                    if "failed" in current_status.lower():
+                        raise FailedStatusError(
+                            resource_type="ProcessingJob",
+                            status=current_status,
+                            reason=self.failure_reason,
+                        )
 
-            if timeout is not None and time.time() - start_time >= timeout:
-                raise TimeoutExceededError(resouce_type="ProcessingJob", status=current_status)
-            print("-", end="")
-            time.sleep(poll)
+                    return
+
+                if timeout is not None and time.time() - start_time >= timeout:
+                    raise TimeoutExceededError(resouce_type="ProcessingJob", status=current_status)
+                time.sleep(poll)
 
     @classmethod
     def get_all(
@@ -22538,23 +23338,38 @@ class Project(Base):
         """
         start_time = time.time()
 
-        while True:
-            self.refresh()
-            current_status = self.project_status
+        progress = Progress(
+            SpinnerColumn("bouncingBar"),
+            TextColumn("{task.description}"),
+            TimeElapsedColumn(),
+        )
+        progress.add_task(f"Waiting for Project to reach [bold]{status} status...")
+        status = Status("Current status:")
 
-            if status == current_status:
-                print(f"\nFinal Resource Status: {current_status}")
-                return
+        with Live(
+            Panel(
+                Group(progress, status),
+                title="Wait Log Panel",
+                border_style=Style(color=Color.BLUE.value),
+            )
+        ):
+            while True:
+                self.refresh()
+                current_status = self.project_status
+                status.update(f"Current status: [bold]{current_status}")
 
-            if "failed" in current_status.lower():
-                raise FailedStatusError(
-                    resource_type="Project", status=current_status, reason="(Unknown)"
-                )
+                if status == current_status:
+                    logger.info(f"Final Resource Status: [bold]{current_status}")
+                    return
 
-            if timeout is not None and time.time() - start_time >= timeout:
-                raise TimeoutExceededError(resouce_type="Project", status=current_status)
-            print("-", end="")
-            time.sleep(poll)
+                if "failed" in current_status.lower():
+                    raise FailedStatusError(
+                        resource_type="Project", status=current_status, reason="(Unknown)"
+                    )
+
+                if timeout is not None and time.time() - start_time >= timeout:
+                    raise TimeoutExceededError(resouce_type="Project", status=current_status)
+                time.sleep(poll)
 
     @classmethod
     def get_all(
@@ -23149,23 +23964,38 @@ class Space(Base):
         """
         start_time = time.time()
 
-        while True:
-            self.refresh()
-            current_status = self.status
+        progress = Progress(
+            SpinnerColumn("bouncingBar"),
+            TextColumn("{task.description}"),
+            TimeElapsedColumn(),
+        )
+        progress.add_task(f"Waiting for Space to reach [bold]{status} status...")
+        status = Status("Current status:")
 
-            if status == current_status:
-                print(f"\nFinal Resource Status: {current_status}")
-                return
+        with Live(
+            Panel(
+                Group(progress, status),
+                title="Wait Log Panel",
+                border_style=Style(color=Color.BLUE.value),
+            )
+        ):
+            while True:
+                self.refresh()
+                current_status = self.status
+                status.update(f"Current status: [bold]{current_status}")
 
-            if "failed" in current_status.lower():
-                raise FailedStatusError(
-                    resource_type="Space", status=current_status, reason=self.failure_reason
-                )
+                if status == current_status:
+                    logger.info(f"Final Resource Status: [bold]{current_status}")
+                    return
 
-            if timeout is not None and time.time() - start_time >= timeout:
-                raise TimeoutExceededError(resouce_type="Space", status=current_status)
-            print("-", end="")
-            time.sleep(poll)
+                if "failed" in current_status.lower():
+                    raise FailedStatusError(
+                        resource_type="Space", status=current_status, reason=self.failure_reason
+                    )
+
+                if timeout is not None and time.time() - start_time >= timeout:
+                    raise TimeoutExceededError(resouce_type="Space", status=current_status)
+                time.sleep(poll)
 
     def wait_for_delete(
         self,
@@ -23195,29 +24025,45 @@ class Space(Base):
         """
         start_time = time.time()
 
-        while True:
-            try:
-                self.refresh()
-                current_status = self.status
+        progress = Progress(
+            SpinnerColumn("bouncingBar"),
+            TextColumn("{task.description}"),
+            TimeElapsedColumn(),
+        )
+        progress.add_task("Waiting for Space to be deleted...")
+        status = Status("Current status:")
 
-                if (
-                    "delete_failed" in current_status.lower()
-                    or "deletefailed" in current_status.lower()
-                ):
-                    raise DeleteFailedStatusError(resource_type="Space", reason=self.failure_reason)
+        with Live(
+            Panel(
+                Group(progress, status),
+                title="Wait Log Panel",
+                border_style=Style(color=Color.BLUE.value),
+            )
+        ):
+            while True:
+                try:
+                    self.refresh()
+                    current_status = self.status
+                    status.update(f"Current status: [bold]{current_status}")
 
-                if timeout is not None and time.time() - start_time >= timeout:
-                    raise TimeoutExceededError(resouce_type="Space", status=current_status)
-            except botocore.exceptions.ClientError as e:
-                error_code = e.response["Error"]["Code"]
+                    if (
+                        "delete_failed" in current_status.lower()
+                        or "deletefailed" in current_status.lower()
+                    ):
+                        raise DeleteFailedStatusError(
+                            resource_type="Space", reason=self.failure_reason
+                        )
 
-                if "ResourceNotFound" in error_code or "ValidationException" in error_code:
-                    print("Resource was not found. It may have been deleted.")
-                    return
-                raise e
+                    if timeout is not None and time.time() - start_time >= timeout:
+                        raise TimeoutExceededError(resouce_type="Space", status=current_status)
+                except botocore.exceptions.ClientError as e:
+                    error_code = e.response["Error"]["Code"]
 
-            print("-", end="")
-            time.sleep(poll)
+                    if "ResourceNotFound" in error_code or "ValidationException" in error_code:
+                        logger.info("Resource was not found. It may have been deleted.")
+                        return
+                    raise e
+                time.sleep(poll)
 
     @classmethod
     def get_all(
@@ -24352,26 +25198,41 @@ class TrainingJob(Base):
         terminal_states = ["Completed", "Failed", "Stopped"]
         start_time = time.time()
 
-        while True:
-            self.refresh()
-            current_status = self.training_job_status
+        progress = Progress(
+            SpinnerColumn("bouncingBar"),
+            TextColumn("{task.description}"),
+            TimeElapsedColumn(),
+        )
+        progress.add_task("Waiting for TrainingJob...")
+        status = Status("Current status:")
 
-            if current_status in terminal_states:
-                print(f"\nFinal Resource Status: {current_status}")
+        with Live(
+            Panel(
+                Group(progress, status),
+                title="Wait Log Panel",
+                border_style=Style(color=Color.BLUE.value),
+            )
+        ):
+            while True:
+                self.refresh()
+                current_status = self.training_job_status
+                status.update(f"Current status: [bold]{current_status}")
 
-                if "failed" in current_status.lower():
-                    raise FailedStatusError(
-                        resource_type="TrainingJob",
-                        status=current_status,
-                        reason=self.failure_reason,
-                    )
+                if current_status in terminal_states:
+                    logger.info(f"Final Resource Status: [bold]{current_status}")
 
-                return
+                    if "failed" in current_status.lower():
+                        raise FailedStatusError(
+                            resource_type="TrainingJob",
+                            status=current_status,
+                            reason=self.failure_reason,
+                        )
 
-            if timeout is not None and time.time() - start_time >= timeout:
-                raise TimeoutExceededError(resouce_type="TrainingJob", status=current_status)
-            print("-", end="")
-            time.sleep(poll)
+                    return
+
+                if timeout is not None and time.time() - start_time >= timeout:
+                    raise TimeoutExceededError(resouce_type="TrainingJob", status=current_status)
+                time.sleep(poll)
 
     @classmethod
     def get_all(
@@ -24772,26 +25633,41 @@ class TransformJob(Base):
         terminal_states = ["Completed", "Failed", "Stopped"]
         start_time = time.time()
 
-        while True:
-            self.refresh()
-            current_status = self.transform_job_status
+        progress = Progress(
+            SpinnerColumn("bouncingBar"),
+            TextColumn("{task.description}"),
+            TimeElapsedColumn(),
+        )
+        progress.add_task("Waiting for TransformJob...")
+        status = Status("Current status:")
 
-            if current_status in terminal_states:
-                print(f"\nFinal Resource Status: {current_status}")
+        with Live(
+            Panel(
+                Group(progress, status),
+                title="Wait Log Panel",
+                border_style=Style(color=Color.BLUE.value),
+            )
+        ):
+            while True:
+                self.refresh()
+                current_status = self.transform_job_status
+                status.update(f"Current status: [bold]{current_status}")
 
-                if "failed" in current_status.lower():
-                    raise FailedStatusError(
-                        resource_type="TransformJob",
-                        status=current_status,
-                        reason=self.failure_reason,
-                    )
+                if current_status in terminal_states:
+                    logger.info(f"Final Resource Status: [bold]{current_status}")
 
-                return
+                    if "failed" in current_status.lower():
+                        raise FailedStatusError(
+                            resource_type="TransformJob",
+                            status=current_status,
+                            reason=self.failure_reason,
+                        )
 
-            if timeout is not None and time.time() - start_time >= timeout:
-                raise TimeoutExceededError(resouce_type="TransformJob", status=current_status)
-            print("-", end="")
-            time.sleep(poll)
+                    return
+
+                if timeout is not None and time.time() - start_time >= timeout:
+                    raise TimeoutExceededError(resouce_type="TransformJob", status=current_status)
+                time.sleep(poll)
 
     @classmethod
     def get_all(
@@ -25546,23 +26422,38 @@ class TrialComponent(Base):
         """
         start_time = time.time()
 
-        while True:
-            self.refresh()
-            current_status = self.status.primary_status
+        progress = Progress(
+            SpinnerColumn("bouncingBar"),
+            TextColumn("{task.description}"),
+            TimeElapsedColumn(),
+        )
+        progress.add_task(f"Waiting for TrialComponent to reach [bold]{status} status...")
+        status = Status("Current status:")
 
-            if status == current_status:
-                print(f"\nFinal Resource Status: {current_status}")
-                return
+        with Live(
+            Panel(
+                Group(progress, status),
+                title="Wait Log Panel",
+                border_style=Style(color=Color.BLUE.value),
+            )
+        ):
+            while True:
+                self.refresh()
+                current_status = self.status.primary_status
+                status.update(f"Current status: [bold]{current_status}")
 
-            if "failed" in current_status.lower():
-                raise FailedStatusError(
-                    resource_type="TrialComponent", status=current_status, reason="(Unknown)"
-                )
+                if status == current_status:
+                    logger.info(f"Final Resource Status: [bold]{current_status}")
+                    return
 
-            if timeout is not None and time.time() - start_time >= timeout:
-                raise TimeoutExceededError(resouce_type="TrialComponent", status=current_status)
-            print("-", end="")
-            time.sleep(poll)
+                if "failed" in current_status.lower():
+                    raise FailedStatusError(
+                        resource_type="TrialComponent", status=current_status, reason="(Unknown)"
+                    )
+
+                if timeout is not None and time.time() - start_time >= timeout:
+                    raise TimeoutExceededError(resouce_type="TrialComponent", status=current_status)
+                time.sleep(poll)
 
     @classmethod
     def get_all(
@@ -25792,6 +26683,12 @@ class UserProfile(Base):
                             "s3_kms_key_id": {"type": "string"},
                         },
                         "generative_ai_settings": {"amazon_bedrock_role_arn": {"type": "string"}},
+                    },
+                    "jupyter_lab_app_settings": {
+                        "emr_settings": {
+                            "assumable_role_arns": {"type": "array", "items": {"type": "string"}},
+                            "execution_role_arns": {"type": "array", "items": {"type": "string"}},
+                        }
                     },
                 }
             }
@@ -26070,23 +26967,40 @@ class UserProfile(Base):
         """
         start_time = time.time()
 
-        while True:
-            self.refresh()
-            current_status = self.status
+        progress = Progress(
+            SpinnerColumn("bouncingBar"),
+            TextColumn("{task.description}"),
+            TimeElapsedColumn(),
+        )
+        progress.add_task(f"Waiting for UserProfile to reach [bold]{status} status...")
+        status = Status("Current status:")
 
-            if status == current_status:
-                print(f"\nFinal Resource Status: {current_status}")
-                return
+        with Live(
+            Panel(
+                Group(progress, status),
+                title="Wait Log Panel",
+                border_style=Style(color=Color.BLUE.value),
+            )
+        ):
+            while True:
+                self.refresh()
+                current_status = self.status
+                status.update(f"Current status: [bold]{current_status}")
 
-            if "failed" in current_status.lower():
-                raise FailedStatusError(
-                    resource_type="UserProfile", status=current_status, reason=self.failure_reason
-                )
+                if status == current_status:
+                    logger.info(f"Final Resource Status: [bold]{current_status}")
+                    return
 
-            if timeout is not None and time.time() - start_time >= timeout:
-                raise TimeoutExceededError(resouce_type="UserProfile", status=current_status)
-            print("-", end="")
-            time.sleep(poll)
+                if "failed" in current_status.lower():
+                    raise FailedStatusError(
+                        resource_type="UserProfile",
+                        status=current_status,
+                        reason=self.failure_reason,
+                    )
+
+                if timeout is not None and time.time() - start_time >= timeout:
+                    raise TimeoutExceededError(resouce_type="UserProfile", status=current_status)
+                time.sleep(poll)
 
     def wait_for_delete(
         self,
@@ -26116,31 +27030,47 @@ class UserProfile(Base):
         """
         start_time = time.time()
 
-        while True:
-            try:
-                self.refresh()
-                current_status = self.status
+        progress = Progress(
+            SpinnerColumn("bouncingBar"),
+            TextColumn("{task.description}"),
+            TimeElapsedColumn(),
+        )
+        progress.add_task("Waiting for UserProfile to be deleted...")
+        status = Status("Current status:")
 
-                if (
-                    "delete_failed" in current_status.lower()
-                    or "deletefailed" in current_status.lower()
-                ):
-                    raise DeleteFailedStatusError(
-                        resource_type="UserProfile", reason=self.failure_reason
-                    )
+        with Live(
+            Panel(
+                Group(progress, status),
+                title="Wait Log Panel",
+                border_style=Style(color=Color.BLUE.value),
+            )
+        ):
+            while True:
+                try:
+                    self.refresh()
+                    current_status = self.status
+                    status.update(f"Current status: [bold]{current_status}")
 
-                if timeout is not None and time.time() - start_time >= timeout:
-                    raise TimeoutExceededError(resouce_type="UserProfile", status=current_status)
-            except botocore.exceptions.ClientError as e:
-                error_code = e.response["Error"]["Code"]
+                    if (
+                        "delete_failed" in current_status.lower()
+                        or "deletefailed" in current_status.lower()
+                    ):
+                        raise DeleteFailedStatusError(
+                            resource_type="UserProfile", reason=self.failure_reason
+                        )
 
-                if "ResourceNotFound" in error_code or "ValidationException" in error_code:
-                    print("Resource was not found. It may have been deleted.")
-                    return
-                raise e
+                    if timeout is not None and time.time() - start_time >= timeout:
+                        raise TimeoutExceededError(
+                            resouce_type="UserProfile", status=current_status
+                        )
+                except botocore.exceptions.ClientError as e:
+                    error_code = e.response["Error"]["Code"]
 
-            print("-", end="")
-            time.sleep(poll)
+                    if "ResourceNotFound" in error_code or "ValidationException" in error_code:
+                        logger.info("Resource was not found. It may have been deleted.")
+                        return
+                    raise e
+                time.sleep(poll)
 
     @classmethod
     def get_all(
@@ -26504,23 +27434,38 @@ class Workforce(Base):
         """
         start_time = time.time()
 
-        while True:
-            self.refresh()
-            current_status = self.workforce.status
+        progress = Progress(
+            SpinnerColumn("bouncingBar"),
+            TextColumn("{task.description}"),
+            TimeElapsedColumn(),
+        )
+        progress.add_task(f"Waiting for Workforce to reach [bold]{status} status...")
+        status = Status("Current status:")
 
-            if status == current_status:
-                print(f"\nFinal Resource Status: {current_status}")
-                return
+        with Live(
+            Panel(
+                Group(progress, status),
+                title="Wait Log Panel",
+                border_style=Style(color=Color.BLUE.value),
+            )
+        ):
+            while True:
+                self.refresh()
+                current_status = self.workforce.status
+                status.update(f"Current status: [bold]{current_status}")
 
-            if "failed" in current_status.lower():
-                raise FailedStatusError(
-                    resource_type="Workforce", status=current_status, reason="(Unknown)"
-                )
+                if status == current_status:
+                    logger.info(f"Final Resource Status: [bold]{current_status}")
+                    return
 
-            if timeout is not None and time.time() - start_time >= timeout:
-                raise TimeoutExceededError(resouce_type="Workforce", status=current_status)
-            print("-", end="")
-            time.sleep(poll)
+                if "failed" in current_status.lower():
+                    raise FailedStatusError(
+                        resource_type="Workforce", status=current_status, reason="(Unknown)"
+                    )
+
+                if timeout is not None and time.time() - start_time >= timeout:
+                    raise TimeoutExceededError(resouce_type="Workforce", status=current_status)
+                time.sleep(poll)
 
     def wait_for_delete(
         self,
@@ -26550,23 +27495,37 @@ class Workforce(Base):
         """
         start_time = time.time()
 
-        while True:
-            try:
-                self.refresh()
-                current_status = self.workforce.status
+        progress = Progress(
+            SpinnerColumn("bouncingBar"),
+            TextColumn("{task.description}"),
+            TimeElapsedColumn(),
+        )
+        progress.add_task("Waiting for Workforce to be deleted...")
+        status = Status("Current status:")
 
-                if timeout is not None and time.time() - start_time >= timeout:
-                    raise TimeoutExceededError(resouce_type="Workforce", status=current_status)
-            except botocore.exceptions.ClientError as e:
-                error_code = e.response["Error"]["Code"]
+        with Live(
+            Panel(
+                Group(progress, status),
+                title="Wait Log Panel",
+                border_style=Style(color=Color.BLUE.value),
+            )
+        ):
+            while True:
+                try:
+                    self.refresh()
+                    current_status = self.workforce.status
+                    status.update(f"Current status: [bold]{current_status}")
 
-                if "ResourceNotFound" in error_code or "ValidationException" in error_code:
-                    print("Resource was not found. It may have been deleted.")
-                    return
-                raise e
+                    if timeout is not None and time.time() - start_time >= timeout:
+                        raise TimeoutExceededError(resouce_type="Workforce", status=current_status)
+                except botocore.exceptions.ClientError as e:
+                    error_code = e.response["Error"]["Code"]
 
-            print("-", end="")
-            time.sleep(poll)
+                    if "ResourceNotFound" in error_code or "ValidationException" in error_code:
+                        logger.info("Resource was not found. It may have been deleted.")
+                        return
+                    raise e
+                time.sleep(poll)
 
     @classmethod
     def get_all(

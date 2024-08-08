@@ -177,11 +177,17 @@ class ResourcesCodeGen:
             "import datetime",
             "import time",
             "import functools",
-            "from pprint import pprint",
             "from pydantic import validate_call",
             "from typing import Dict, List, Literal, Optional, Union\n"
             "from boto3.session import Session",
+            "from rich.console import Group",
+            "from rich.live import Live",
+            "from rich.panel import Panel",
+            "from rich.progress import Progress, SpinnerColumn, TextColumn, TimeElapsedColumn",
+            "from rich.status import Status",
+            "from rich.style import Style",
             "from sagemaker_core.code_injection.codec import transform",
+            "from sagemaker_core.code_injection.constants import Color",
             "from sagemaker_core.generated.utils import SageMakerClient, SageMakerRuntimeClient, ResourceIterator, Unassigned,"
             "get_textual_rich_logger, snake_to_pascal, pascal_to_snake, is_not_primitive, is_not_str_dict, is_snake_case, is_primitive_list",
             "from sagemaker_core.generated.intelligent_defaults_helper import load_default_configs_for_resource_name, get_config_value",
@@ -1754,7 +1760,7 @@ class ResourcesCodeGen:
         formatted_failed_block = FAILED_STATUS_ERROR_TEMPLATE.format(
             resource_name=resource_name, reason=failure_reason
         )
-        formatted_failed_block = add_indent(formatted_failed_block, 12)
+        formatted_failed_block = add_indent(formatted_failed_block, 16)
 
         formatted_method = WAIT_METHOD_TEMPLATE.format(
             terminal_resource_states=terminal_resource_states,
@@ -1788,7 +1794,7 @@ class ResourcesCodeGen:
             formatted_failed_block = FAILED_STATUS_ERROR_TEMPLATE.format(
                 resource_name=resource_name, reason=failure_reason
             )
-            formatted_failed_block = add_indent(formatted_failed_block, 8)
+            formatted_failed_block = add_indent(formatted_failed_block, 12)
 
         formatted_method = WAIT_FOR_STATUS_METHOD_TEMPLATE.format(
             resource_states=resource_states,
@@ -1822,10 +1828,10 @@ class ResourcesCodeGen:
             formatted_failed_block = DELETE_FAILED_STATUS_CHECK.format(
                 resource_name=resource_name, reason=failure_reason
             )
-            formatted_failed_block = add_indent(formatted_failed_block, 12)
+            formatted_failed_block = add_indent(formatted_failed_block, 16)
 
         if any(state.lower() == "deleted" for state in resource_states):
-            deleted_status_check = add_indent(DELETED_STATUS_CHECK, 12)
+            deleted_status_check = add_indent(DELETED_STATUS_CHECK, 16)
         else:
             deleted_status_check = ""
 

@@ -67,6 +67,9 @@ def get_textual_rich_theme() -> Theme:
             "traceback.error": Style(color=Color.BRIGHT_RED.value, italic=True),
             "traceback.border": Style(color=Color.BRIGHT_RED.value),
             "traceback.title": Style(color=Color.BRIGHT_RED.value, bold=True),
+            "progress.elapsed": Style(color=Color.YELLOW.value),
+            "progress.spinner": Style(color=Color.GREEN.value),
+            "status.spinner": Style(color=Color.GREEN.value),
         }
     )
 
