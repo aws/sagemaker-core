@@ -35,6 +35,7 @@ Raises:
 CREATE_METHOD_TEMPLATE = """
 @classmethod
 @populate_inputs_decorator
+@validate_call
 def create(
     cls,
 {create_args}
@@ -65,6 +66,7 @@ def create(
 
 CREATE_METHOD_TEMPLATE_WITHOUT_DEFAULTS = """
 @classmethod
+@validate_call
 def create(
     cls,
 {create_args}
@@ -95,6 +97,7 @@ def create(
 
 IMPORT_METHOD_TEMPLATE = """
 @classmethod
+@validate_call
 def load(
     cls,
 {import_args}
@@ -142,6 +145,7 @@ def get_name(self) -> str:
 
 UPDATE_METHOD_TEMPLATE = """
 @populate_inputs_decorator
+@validate_call
 def update(
     self,
 {update_args}
@@ -168,6 +172,7 @@ def update(
 
 
 UPDATE_METHOD_TEMPLATE_WITHOUT_DECORATOR = """
+@validate_call
 def update(
     self,
 {update_args}
@@ -193,6 +198,7 @@ def update(
 """
 
 INVOKE_METHOD_TEMPLATE = """
+@validate_call
 def invoke(self, 
 {invoke_args}
 ) -> Optional[object]:
@@ -215,6 +221,7 @@ def invoke(self,
 """
 
 INVOKE_ASYNC_METHOD_TEMPLATE = """
+@validate_call
 def invoke_async(self, 
 {create_args}
 ) -> Optional[object]:
@@ -238,6 +245,7 @@ def invoke_async(self,
 """
 
 INVOKE_WITH_RESPONSE_STREAM_METHOD_TEMPLATE = """
+@validate_call
 def invoke_with_response_stream(self, 
 {create_args}
 ) -> Optional[object]:
@@ -273,6 +281,7 @@ def populate_inputs_decorator(create_func):
 
 GET_METHOD_TEMPLATE = """
 @classmethod
+@validate_call
 def get(
     cls,
 {describe_args}
@@ -295,6 +304,7 @@ def get(
 """
 
 REFRESH_METHOD_TEMPLATE = """
+@validate_call
 def refresh(
     self,
  {refresh_args}   
@@ -317,6 +327,7 @@ if "failed" in current_status.lower():
 """
 
 WAIT_METHOD_TEMPLATE = '''
+@validate_call
 def wait(
     self,
     poll: int = 5,
@@ -354,6 +365,7 @@ def wait(
 '''
 
 WAIT_FOR_STATUS_METHOD_TEMPLATE = '''
+@validate_call
 def wait_for_status(
     self,
     status: Literal{resource_states},
@@ -390,6 +402,7 @@ def wait_for_status(
 '''
 
 WAIT_FOR_DELETE_METHOD_TEMPLATE = '''
+@validate_call
 def wait_for_delete(
     self,
     poll: int = 5,
@@ -451,6 +464,7 @@ if current_status.lower() == "deleted":
 """
 
 DELETE_METHOD_TEMPLATE = """
+@validate_call
 def delete(
     self,
 {delete_args}
@@ -467,6 +481,7 @@ def delete(
 """
 
 STOP_METHOD_TEMPLATE = """
+@validate_call
 def stop(self) -> None:
 {docstring}
     client = SageMakerClient().client
@@ -481,6 +496,7 @@ def stop(self) -> None:
 
 GET_ALL_METHOD_WITH_ARGS_TEMPLATE = """
 @classmethod
+@validate_call
 def get_all(
     cls,
 {get_all_args}
@@ -503,6 +519,7 @@ def get_all(
 
 GET_ALL_METHOD_NO_ARGS_TEMPLATE = '''
 @classmethod
+@validate_call
 def get_all(
     cls,
     session: Optional[Session] = None,
@@ -528,6 +545,7 @@ def get_all(
 
 GENERIC_METHOD_TEMPLATE = """
 {decorator}
+@validate_call
 def {method_name}(
 {method_args}
 ) -> {return_type}:
