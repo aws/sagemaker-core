@@ -24,7 +24,7 @@ NOTEBOOK_PREFIX = "AWS-SageMaker-Notebook-Instance"
 NOTEBOOK_METADATA_FILE = "/etc/opt/ml/sagemaker-notebook-instance-version.txt"
 STUDIO_METADATA_FILE = "/opt/ml/metadata/resource-metadata.json"
 
-SagemakerCore_VERSION = importlib_metadata.version("sagemaker_core")
+SagemakerCore_VERSION = "v0.1.6"
 
 
 def process_notebook_metadata_file() -> str:

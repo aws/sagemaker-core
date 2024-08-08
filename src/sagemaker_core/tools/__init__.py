@@ -1,1 +1,1 @@
-from ..code_injection.codec import pascal_to_snake
+from ..main.code_injection.codec import pascal_to_snake

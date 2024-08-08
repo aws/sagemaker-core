@@ -1,5 +1,5 @@
 import datetime
-from sagemaker_core.generated.resources import Model, EndpointConfig, Endpoint
+from sagemaker_core.main.resources import Model, EndpointConfig, Endpoint
 
 
 class SageMakerCleaner:

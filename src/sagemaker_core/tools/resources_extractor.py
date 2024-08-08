@@ -15,7 +15,7 @@ from typing import Optional
 
 import pandas as pd
 
-from sagemaker_core.generated.utils import get_textual_rich_logger
+from sagemaker_core.main.utils import get_textual_rich_logger
 from sagemaker_core.tools.constants import CLASS_METHODS, OBJECT_METHODS
 from sagemaker_core.tools.data_extractor import (
     load_additional_operations_data,

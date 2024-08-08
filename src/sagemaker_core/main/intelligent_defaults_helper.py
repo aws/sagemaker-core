@@ -25,14 +25,14 @@ from platformdirs import site_config_dir, user_config_dir
 
 from botocore.utils import merge_dicts
 from six.moves.urllib.parse import urlparse
-from sagemaker_core.generated.config_schema import SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA
-from sagemaker_core.generated.exceptions import (
+from sagemaker_core.main.config_schema import SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA
+from sagemaker_core.main.exceptions import (
     LocalConfigNotFoundError,
     S3ConfigNotFoundError,
     IntelligentDefaultsError,
     ConfigSchemaValidationError,
 )
-from sagemaker_core.generated.utils import get_textual_rich_logger
+from sagemaker_core.main.utils import get_textual_rich_logger
 
 logger = get_textual_rich_logger(__name__)
 
@@ -41,7 +41,7 @@ _APP_NAME = "sagemaker"
 # The default name of the config file.
 _CONFIG_FILE_NAME = "config.yaml"
 # The default config file location of the Administrator provided config file. This path can be
-# overridden with `SAGEMAKER_ADMIN_CONFIG_OVERRIDE` environment variable.
+# overridden with `SAGEMAKER_CORE_ADMIN_CONFIG_OVERRIDE` environment variable.
 _DEFAULT_ADMIN_CONFIG_FILE_PATH = os.path.join(site_config_dir(_APP_NAME), _CONFIG_FILE_NAME)
 # The default config file location of the user provided config file. This path can be
 # overridden with `SAGEMAKER_USER_CONFIG_OVERRIDE` environment variable.
@@ -50,8 +50,8 @@ _DEFAULT_USER_CONFIG_FILE_PATH = os.path.join(user_config_dir(_APP_NAME), _CONFI
 _DEFAULT_LOCAL_MODE_CONFIG_FILE_PATH = os.path.join(
     os.path.expanduser("~"), ".sagemaker", _CONFIG_FILE_NAME
 )
-ENV_VARIABLE_ADMIN_CONFIG_OVERRIDE = "SAGEMAKER_ADMIN_CONFIG_OVERRIDE"
-ENV_VARIABLE_USER_CONFIG_OVERRIDE = "SAGEMAKER_USER_CONFIG_OVERRIDE"
+ENV_VARIABLE_ADMIN_CONFIG_OVERRIDE = "SAGEMAKER_CORE_ADMIN_CONFIG_OVERRIDE"
+ENV_VARIABLE_USER_CONFIG_OVERRIDE = "SAGEMAKER_CORE_USER_CONFIG_OVERRIDE"
 
 S3_PREFIX = "s3://"
 

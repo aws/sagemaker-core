@@ -1,4 +1,4 @@
-from sagemaker_core.generated.config_schema import SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA
+from sagemaker_core.main.config_schema import SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA
 
 
 def test_config_schema():

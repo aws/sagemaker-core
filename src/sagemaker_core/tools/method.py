@@ -1,6 +1,6 @@
 from enum import Enum
 
-from sagemaker_core.util.util import remove_html_tags
+from sagemaker_core.main.utils import remove_html_tags
 
 
 class MethodType(Enum):

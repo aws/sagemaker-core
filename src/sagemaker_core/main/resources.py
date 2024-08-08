@@ -23,9 +23,9 @@ from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn, TimeElapsedColumn
 from rich.status import Status
 from rich.style import Style
-from sagemaker_core.code_injection.codec import transform
-from sagemaker_core.code_injection.constants import Color
-from sagemaker_core.generated.utils import (
+from sagemaker_core.main.code_injection.codec import transform
+from sagemaker_core.main.code_injection.constants import Color
+from sagemaker_core.main.utils import (
     SageMakerClient,
     SageMakerRuntimeClient,
     ResourceIterator,
@@ -38,12 +38,12 @@ from sagemaker_core.generated.utils import (
     is_snake_case,
     is_primitive_list,
 )
-from sagemaker_core.generated.intelligent_defaults_helper import (
+from sagemaker_core.main.intelligent_defaults_helper import (
     load_default_configs_for_resource_name,
     get_config_value,
 )
-from sagemaker_core.generated.shapes import *
-from sagemaker_core.generated.exceptions import *
+from sagemaker_core.main.shapes import *
+from sagemaker_core.main.exceptions import *
 
 
 logger = get_textual_rich_logger(__name__)
