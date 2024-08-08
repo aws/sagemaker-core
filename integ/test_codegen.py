@@ -64,7 +64,7 @@ SECURITY_GROUP_ONE = os.environ["SECURITY_GROUP_ONE"]
 class TestSageMakerCore(unittest.TestCase):
 
     def test_training_and_inference(self):
-        os.environ["SAGEMAKER_ADMIN_CONFIG_OVERRIDE"] = ""
+        os.environ["SAGEMAKER_CORE_ADMIN_CONFIG_OVERRIDE"] = ""
         job_name_v3 = "xgboost-iris-" + time.strftime("%Y-%m-%d-%H-%M-%S", time.gmtime())
         training_job = TrainingJob.create(
             training_job_name=job_name_v3,
@@ -149,7 +149,7 @@ class TestSageMakerCore(unittest.TestCase):
         endpoint.wait_for_status("InService")
 
     def test_intelligent_defaults(self):
-        os.environ["SAGEMAKER_ADMIN_CONFIG_OVERRIDE"] = (
+        os.environ["SAGEMAKER_CORE_ADMIN_CONFIG_OVERRIDE"] = (
             self._setup_intelligent_default_configs_and_fetch_path()
         )
         job_name_v3 = "xgboost-test-intelligent-default-" + time.strftime(
