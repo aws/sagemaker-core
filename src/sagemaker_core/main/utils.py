@@ -19,77 +19,74 @@ import subprocess
 
 from boto3.session import Session
 from botocore.config import Config
+from rich import reconfigure
+from rich.console import Console
 from rich.logging import RichHandler
+from rich.style import Style
+from rich.theme import Theme
+from rich.traceback import install
 from typing import TypeVar, Generic, Type
-
 from sagemaker_core.main.code_injection.codec import transform
+from sagemaker_core.main.code_injection.constants import Color
 from sagemaker_core.main.user_agent import get_user_agent_extra_suffix
 
 
-def add_indent(text, num_spaces=4):
+def get_textual_rich_theme() -> Theme:
     """
-    Add customizable indent spaces to a given text.
-
-    Parameters:
-        text (str): The text to which the indent spaces will be added.
-        num_spaces (int): Number of spaces to be added for each level of indentation. Default is 4.
+    Get a textual rich theme with customized styling.
 
     Returns:
-        str: The text with added indent spaces.
+        Theme: A textual rich theme
     """
-    indent = " " * num_spaces
-    lines = text.split("\n")
-    indented_text = "\n".join(indent + line for line in lines)
-    return indented_text.rstrip(" ")
+    return Theme(
+        {
+            "logging.level.info": Style(color=Color.BLUE.value, bold=True),
+            "logging.level.debug": Style(color=Color.GREEN.value, bold=True),
+            "logging.level.warning": Style(color=Color.YELLOW.value, bold=True),
+            "logging.level.error": Style(color=Color.RED.value, bold=True),
+            "logging.keyword": Style(color=Color.YELLOW.value, bold=True),
+            "repr.attrib_name": Style(color=Color.YELLOW.value, italic=False),
+            "repr.attrib_value": Style(color=Color.PURPLE.value, italic=False),
+            "repr.bool_true": Style(color=Color.GREEN.value, italic=True),
+            "repr.bool_false": Style(color=Color.RED.value, italic=True),
+            "repr.call": Style(color=Color.PURPLE.value, bold=True),
+            "repr.none": Style(color=Color.PURPLE.value, italic=True),
+            "repr.str": Style(color=Color.GREEN.value),
+            "repr.path": Style(color=Color.PURPLE.value),
+            "repr.filename": Style(color=Color.PURPLE.value),
+            "repr.url": Style(color=Color.BLUE.value, underline=True),
+            "repr.tag_name": Style(color=Color.PURPLE.value, bold=True),
+            "repr.ipv4": Style.null(),
+            "repr.ipv6": Style.null(),
+            "repr.eui48": Style.null(),
+            "repr.eui64": Style.null(),
+            "json.bool_true": Style(color=Color.GREEN.value, italic=True),
+            "json.bool_false": Style(color=Color.RED.value, italic=True),
+            "json.null": Style(color=Color.PURPLE.value, italic=True),
+            "json.str": Style(color=Color.GREEN.value),
+            "json.key": Style(color=Color.BLUE.value, bold=True),
+            "traceback.error": Style(color=Color.BRIGHT_RED.value, italic=True),
+            "traceback.border": Style(color=Color.BRIGHT_RED.value),
+            "traceback.title": Style(color=Color.BRIGHT_RED.value, bold=True),
+        }
+    )
 
 
-def clean_documentaion(documentation):
-    documentation = re.sub(r"<\/?p>", "", documentation)
-    documentation = re.sub(r"<\/?code>", "'", documentation)
-    return documentation
+textual_rich_console_and_traceback_enabled = False
 
 
-def convert_to_snake_case(entity_name):
+def enable_textual_rich_console_and_traceback():
     """
-    Convert a string to snake_case.
-
-    Args:
-        entity_name (str): The string to convert.
-
-    Returns:
-        str: The converted string in snake_case.
+    Reconfigure the global textual rich console with the customized theme
+        and enable textual rich error traceback
     """
-    snake_case = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", entity_name)
-    return re.sub("([a-z0-9])([A-Z])", r"\1_\2", snake_case).lower()
-
-
-def snake_to_pascal(snake_str):
-    """
-    Convert a snake_case string to PascalCase.
-
-    Args:
-        snake_str (str): The snake_case string to be converted.
-
-    Returns:
-        str: The PascalCase string.
-
-    """
-    components = snake_str.split("_")
-    return "".join(x.title() for x in components[0:])
-
-
-def reformat_file_with_black(filename):
-    try:
-        # Run black with specific options using subprocess
-        subprocess.run(["black", "-l", "100", filename], check=True)
-        print(f"File '{filename}' reformatted successfully.")
-    except subprocess.CalledProcessError as e:
-        print(f"An error occurred while reformatting '{filename}': {e}")
-
-
-def remove_html_tags(text):
-    clean = re.compile("<.*?>")
-    return re.sub(clean, "", text)
+    global textual_rich_console_and_traceback_enabled
+    if not textual_rich_console_and_traceback_enabled:
+        theme = get_textual_rich_theme()
+        reconfigure(theme=theme)
+        console = Console(theme=theme)
+        install(console=console)
+        textual_rich_console_and_traceback_enabled = True
 
 
 def get_textual_rich_logger(name: str, log_level: str = "INFO") -> logging.Logger:
@@ -106,6 +103,7 @@ def get_textual_rich_logger(name: str, log_level: str = "INFO") -> logging.Logge
         logging.Logger: A textial rich logger.
 
     """
+    enable_textual_rich_console_and_traceback()
     handler = RichHandler(markup=True)
     logging.basicConfig(level=getattr(logging, log_level), handlers=[handler])
     logger = logging.getLogger(name)
