@@ -30,6 +30,7 @@ from sagemaker_core.main.code_injection.codec import transform
 from sagemaker_core.main.code_injection.constants import Color
 from sagemaker_core.main.user_agent import get_user_agent_extra_suffix
 
+
 def add_indent(text, num_spaces=4):
     """
     Add customizable indent spaces to a given text.
@@ -87,6 +88,7 @@ def reformat_file_with_black(filename):
 def remove_html_tags(text):
     clean = re.compile("<.*?>")
     return re.sub(clean, "", text)
+
 
 def get_textual_rich_theme() -> Theme:
     """

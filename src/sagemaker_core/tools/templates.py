@@ -338,25 +338,33 @@ def wait(
     terminal_states = {terminal_resource_states}
     start_time = time.time()
 
-    while True:
-        self.refresh()
-        current_status = self{status_key_path}
+    progress = Progress(SpinnerColumn("bouncingBar"),
+        TextColumn("{{task.description}}"),
+        TimeElapsedColumn(),
+    )
+    progress.add_task("Waiting for {resource_name}...")
+    status = Status("Current status:")
 
-        if current_status in terminal_states:
-            print(f"\\nFinal Resource Status: {{current_status}}")
+    with Live(Panel(Group(progress, status), title="Wait Log Panel", border_style=Style(color=Color.BLUE.value))):
+        while True:
+            self.refresh()
+            current_status = self{status_key_path}
+            status.update(f"Current status: [bold]{{current_status}}")
+
+            if current_status in terminal_states:
+                logger.info(f"Final Resource Status: [bold]{{current_status}}")
 {failed_error_block}
-            return
+                return
 
-        if timeout is not None and time.time() - start_time >= timeout:
-            raise TimeoutExceededError(resouce_type="{resource_name}", status=current_status)
-        print("-", end="")
-        time.sleep(poll)
+            if timeout is not None and time.time() - start_time >= timeout:
+                raise TimeoutExceededError(resouce_type="{resource_name}", status=current_status)
+            time.sleep(poll)
 '''
 
 WAIT_FOR_STATUS_METHOD_TEMPLATE = '''
 def wait_for_status(
     self,
-    status: Literal{resource_states},
+    target_status: Literal{resource_states},
     poll: int = 5,
     timeout: Optional[int] = None
 ) -> None:
@@ -364,7 +372,7 @@ def wait_for_status(
     Wait for a {resource_name} resource to reach certain status.
     
     Parameters:
-        status: The status to wait for.
+        target_status: The status to wait for.
         poll: The number of seconds to wait between each poll.
         timeout: The maximum number of seconds to wait before timing out.
     
@@ -375,18 +383,26 @@ def wait_for_status(
     """
     start_time = time.time()
 
-    while True:
-        self.refresh()
-        current_status = self{status_key_path}
+    progress = Progress(SpinnerColumn("bouncingBar"),
+        TextColumn("{{task.description}}"),
+        TimeElapsedColumn(),
+    )
+    progress.add_task(f"Waiting for {resource_name} to reach [bold]{{target_status}} status...")
+    status = Status("Current status:")
 
-        if status == current_status:
-            print(f"\\nFinal Resource Status: {{current_status}}")
-            return
+    with Live(Panel(Group(progress, status), title="Wait Log Panel", border_style=Style(color=Color.BLUE.value))):
+        while True:
+            self.refresh()
+            current_status = self{status_key_path}
+            status.update(f"Current status: [bold]{{current_status}}")
+
+            if target_status == current_status:
+                logger.info(f"Final Resource Status: [bold]{{current_status}}")
+                return
 {failed_error_block}
-        if timeout is not None and time.time() - start_time >= timeout:
-            raise TimeoutExceededError(resouce_type="{resource_name}", status=current_status)
-        print("-", end="")
-        time.sleep(poll)
+            if timeout is not None and time.time() - start_time >= timeout:
+                raise TimeoutExceededError(resouce_type="{resource_name}", status=current_status)
+            time.sleep(poll)
 '''
 
 WAIT_FOR_DELETE_METHOD_TEMPLATE = '''
@@ -418,25 +434,32 @@ def wait_for_delete(
     """
     start_time = time.time()
 
-    while True:
-        try:
-            self.refresh()
-            current_status = self{status_key_path}
+    progress = Progress(SpinnerColumn("bouncingBar"),
+        TextColumn("{{task.description}}"),
+        TimeElapsedColumn(),
+    )
+    progress.add_task("Waiting for {resource_name} to be deleted...")
+    status = Status("Current status:")
+
+    with Live(Panel(Group(progress, status), title="Wait Log Panel", border_style=Style(color=Color.BLUE.value))):
+        while True:
+            try:
+                self.refresh()
+                current_status = self{status_key_path}
+                status.update(f"Current status: [bold]{{current_status}}")
 {delete_failed_error_block}
 {deleted_status_check}
 
-            if timeout is not None and time.time() - start_time >= timeout:
-                raise TimeoutExceededError(resouce_type="{resource_name}", status=current_status)
-        except botocore.exceptions.ClientError as e:
-            error_code = e.response["Error"]["Code"]
-            
-            if "ResourceNotFound" in error_code or "ValidationException" in error_code:
-                print("Resource was not found. It may have been deleted.")
-                return
-            raise e
-        
-        print("-", end="")
-        time.sleep(poll)
+                if timeout is not None and time.time() - start_time >= timeout:
+                    raise TimeoutExceededError(resouce_type="{resource_name}", status=current_status)
+            except botocore.exceptions.ClientError as e:
+                error_code = e.response["Error"]["Code"]
+                
+                if "ResourceNotFound" in error_code or "ValidationException" in error_code:
+                    logger.info("Resource was not found. It may have been deleted.")
+                    return
+                raise e
+            time.sleep(poll)
 '''
 
 DELETE_FAILED_STATUS_CHECK = """

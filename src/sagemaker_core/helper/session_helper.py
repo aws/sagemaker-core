@@ -65,14 +65,14 @@ class Session(object):  # pylint: disable=too-many-public-methods
     """
 
     def __init__(
-            self,
-            boto_session=None,
-            sagemaker_client=None,
-            sagemaker_runtime_client=None,
-            sagemaker_featurestore_runtime_client=None,
-            default_bucket=None,
-            sagemaker_metrics_client=None,
-            default_bucket_prefix: str = None,
+        self,
+        boto_session=None,
+        sagemaker_client=None,
+        sagemaker_runtime_client=None,
+        sagemaker_featurestore_runtime_client=None,
+        default_bucket=None,
+        sagemaker_metrics_client=None,
+        default_bucket_prefix: str = None,
     ):
         """Initialize a SageMaker ``Session``.
 
@@ -138,12 +138,12 @@ class Session(object):  # pylint: disable=too-many-public-methods
         )
 
     def _initialize(
-            self,
-            boto_session,
-            sagemaker_client,
-            sagemaker_runtime_client,
-            sagemaker_featurestore_runtime_client,
-            sagemaker_metrics_client,
+        self,
+        boto_session,
+        sagemaker_client,
+        sagemaker_runtime_client,
+        sagemaker_featurestore_runtime_client,
+        sagemaker_metrics_client,
     ):
         """Initialize this SageMaker Session.
 
@@ -168,16 +168,12 @@ class Session(object):  # pylint: disable=too-many-public-methods
 
         # Create sagemaker_client with the botocore_config object
         # This config is customized to append SageMaker Python SDK specific user_agent suffix
-        self.sagemaker_client = sagemaker_client or self.boto_session.client(
-            "sagemaker"
-        )
+        self.sagemaker_client = sagemaker_client or self.boto_session.client("sagemaker")
 
         if sagemaker_runtime_client is not None:
             self.sagemaker_runtime_client = sagemaker_runtime_client
         else:
-            config = botocore.config.Config(
-                read_timeout=80
-            )
+            config = botocore.config.Config(read_timeout=80)
             self.sagemaker_runtime_client = self.boto_session.client(
                 "runtime.sagemaker", config=config
             )
@@ -192,9 +188,7 @@ class Session(object):  # pylint: disable=too-many-public-methods
         if sagemaker_metrics_client:
             self.sagemaker_metrics_client = sagemaker_metrics_client
         else:
-            self.sagemaker_metrics_client = self.boto_session.client(
-                "sagemaker-metrics"
-            )
+            self.sagemaker_metrics_client = self.boto_session.client("sagemaker-metrics")
 
         self.s3_client = self.boto_session.client("s3", region_name=self.boto_region_name)
         self.s3_resource = self.boto_session.resource("s3", region_name=self.boto_region_name)
@@ -279,7 +273,7 @@ class Session(object):  # pylint: disable=too-many-public-methods
         role = re.sub(r"^(.+)sts::(\d+):assumed-role/(.+?)/.*$", r"\1iam::\2:role/\3", assumed_role)
 
         # Call IAM to get the role's path
-        role_name = role[role.rfind("/") + 1:]
+        role_name = role[role.rfind("/") + 1 :]
         try:
             role = self.boto_session.client("iam").get_role(RoleName=role_name)["Role"]["Arn"]
         except ClientError:
@@ -486,7 +480,7 @@ class Session(object):  # pylint: disable=too-many-public-methods
                 raise
 
     def general_bucket_check_if_user_has_permission(
-            self, bucket_name, s3, bucket, region, bucket_creation_date_none
+        self, bucket_name, s3, bucket, region, bucket_creation_date_none
     ):
         """Checks if the person running has the permissions to the bucket
 
@@ -562,10 +556,9 @@ class Session(object):  # pylint: disable=too-many-public-methods
         ).get_caller_identity()["Account"]
         return "sagemaker-{}-{}".format(region, account)
 
-    def determine_bucket_and_prefix(self,
-                                    bucket: Optional[str] = None,
-                                    key_prefix: Optional[str] = None,
-                                    sagemaker_session=None):
+    def determine_bucket_and_prefix(
+        self, bucket: Optional[str] = None, key_prefix: Optional[str] = None, sagemaker_session=None
+    ):
         """Helper function that returns the correct S3 bucket and prefix to use depending on the inputs.
 
         Args:
@@ -634,9 +627,9 @@ def s3_path_join(*args, with_end_slash: bool = False):
     merged_path = ""
     for index, path in enumerate(non_empty_args):
         if (
-                index == 0
-                or (merged_path and merged_path[-1] == delimiter)
-                or (path and path[0] == delimiter)
+            index == 0
+            or (merged_path and merged_path[-1] == delimiter)
+            or (path and path[0] == delimiter)
         ):
             # dont need to add an extra slash because either this is the beginning of the string,
             # or one (or more) slash already exists
