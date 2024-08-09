@@ -1072,6 +1072,7 @@ def get_all(
 
     def test_get_node(self):
         expected_output = '''
+
 @Base.add_validate_call
 def get_node(
     self,
@@ -1134,6 +1135,7 @@ def get_node(
 
     def test_update_weights_and_capacities(self):
         expected_output = '''
+
 @Base.add_validate_call
 def update_weights_and_capacities(
     self,
@@ -1193,6 +1195,7 @@ def update_weights_and_capacities(
 
     def test_get_all_training_jobs(self):
         expected_output = '''
+
 @Base.add_validate_call
 def get_all_training_jobs(
     self,
@@ -1318,7 +1321,7 @@ def get_all_training_jobs(
         expires_in_seconds: Optional[int] = Unassigned(),
         space_name: Optional[Union[str, object]] = Unassigned(),
         landing_uri: Optional[str] = Unassigned(),
-    ) -> Optional["resource_name"]:
+    ) -> Optional["PresignedDomainUrl"]:
         """
         Create a PresignedDomainUrl resource
         

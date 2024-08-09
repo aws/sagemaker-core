@@ -2288,7 +2288,7 @@ class Association(Base):
         source_arn: str,
         destination_arn: str,
         association_type: Optional[str] = Unassigned(),
-        session: Optional[Any] = None,
+        session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> None:
         """
@@ -2597,6 +2597,7 @@ class AutoMLJob(Base):
         transform(response, "DescribeAutoMLJobResponse", self)
         return self
 
+    @Base.add_validate_call
     def stop(self) -> None:
         """
         Stop a AutoMLJob resource
@@ -2761,7 +2762,7 @@ class AutoMLJob(Base):
         candidate_name_equals: Optional[str] = Unassigned(),
         sort_order: Optional[str] = Unassigned(),
         sort_by: Optional[str] = Unassigned(),
-        session: Optional[Any] = None,
+        session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> ResourceIterator[AutoMLCandidate]:
         """
@@ -3624,7 +3625,7 @@ class Cluster(Base):
     def get_node(
         self,
         node_id: str,
-        session: Optional[Any] = None,
+        session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[ClusterNodeDetails]:
         """
@@ -3676,7 +3677,7 @@ class Cluster(Base):
         instance_group_name_contains: Optional[str] = Unassigned(),
         sort_by: Optional[str] = Unassigned(),
         sort_order: Optional[str] = Unassigned(),
-        session: Optional[Any] = None,
+        session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> ResourceIterator[ClusterNodeDetails]:
         """
@@ -3740,7 +3741,7 @@ class Cluster(Base):
     @Base.add_validate_call
     def update_software(
         self,
-        session: Optional[Any] = None,
+        session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> None:
         """
@@ -4037,7 +4038,7 @@ class CodeRepository(Base):
         name_contains: Optional[str] = Unassigned(),
         sort_by: Optional[str] = Unassigned(),
         sort_order: Optional[str] = Unassigned(),
-        session: Optional[Any] = None,
+        session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> ResourceIterator["CodeRepository"]:
         """
@@ -4378,6 +4379,7 @@ class CompilationJob(Base):
 
         logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
+    @Base.add_validate_call
     def stop(self) -> None:
         """
         Stop a CompilationJob resource
@@ -5823,7 +5825,7 @@ class DeviceFleet(Base):
     def deregister_devices(
         self,
         device_names: List[str],
-        session: Optional[Any] = None,
+        session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> None:
         """
@@ -5863,7 +5865,7 @@ class DeviceFleet(Base):
     @Base.add_validate_call
     def get_report(
         self,
-        session: Optional[Any] = None,
+        session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[GetDeviceFleetReportResponse]:
         """
@@ -5909,7 +5911,7 @@ class DeviceFleet(Base):
         self,
         devices: List[Device],
         tags: Optional[List[Tag]] = Unassigned(),
-        session: Optional[Any] = None,
+        session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> None:
         """
@@ -5953,7 +5955,7 @@ class DeviceFleet(Base):
     def update_devices(
         self,
         devices: List[Device],
-        session: Optional[Any] = None,
+        session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> None:
         """
@@ -6869,7 +6871,7 @@ class EdgeDeploymentPlan(Base):
     @Base.add_validate_call
     def create_stage(
         self,
-        session: Optional[Any] = None,
+        session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> None:
         """
@@ -6910,7 +6912,7 @@ class EdgeDeploymentPlan(Base):
     def delete_stage(
         self,
         stage_name: str,
-        session: Optional[Any] = None,
+        session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> None:
         """
@@ -6952,7 +6954,7 @@ class EdgeDeploymentPlan(Base):
     def start_stage(
         self,
         stage_name: str,
-        session: Optional[Any] = None,
+        session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> None:
         """
@@ -6993,7 +6995,7 @@ class EdgeDeploymentPlan(Base):
     def stop_stage(
         self,
         stage_name: str,
-        session: Optional[Any] = None,
+        session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> None:
         """
@@ -7035,7 +7037,7 @@ class EdgeDeploymentPlan(Base):
         self,
         stage_name: str,
         exclude_devices_deployed_in_other_stage: Optional[bool] = Unassigned(),
-        session: Optional[Any] = None,
+        session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> ResourceIterator[DeviceDeploymentSummary]:
         """
@@ -7326,6 +7328,7 @@ class EdgePackagingJob(Base):
         transform(response, "DescribeEdgePackagingJobResponse", self)
         return self
 
+    @Base.add_validate_call
     def stop(self) -> None:
         """
         Stop a EdgePackagingJob resource
@@ -8217,7 +8220,7 @@ class Endpoint(Base):
     def update_weights_and_capacities(
         self,
         desired_weights_and_capacities: List[DesiredWeightAndCapacity],
-        session: Optional[Any] = None,
+        session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> None:
         """
@@ -10909,7 +10912,7 @@ class HubContent(Base):
         creation_time_after: Optional[datetime.datetime] = Unassigned(),
         sort_by: Optional[str] = Unassigned(),
         sort_order: Optional[str] = Unassigned(),
-        session: Optional[Any] = None,
+        session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> ResourceIterator["HubContent"]:
         """
@@ -11780,6 +11783,7 @@ class HyperParameterTuningJob(Base):
 
         logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
+    @Base.add_validate_call
     def stop(self) -> None:
         """
         Stop a HyperParameterTuningJob resource
@@ -12008,7 +12012,7 @@ class HyperParameterTuningJob(Base):
         status_equals: Optional[str] = Unassigned(),
         sort_by: Optional[str] = Unassigned(),
         sort_order: Optional[str] = Unassigned(),
-        session: Optional[Any] = None,
+        session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> ResourceIterator[HyperParameterTrainingJobSummary]:
         """
@@ -12570,7 +12574,7 @@ class Image(Base):
         self,
         alias: Optional[str] = Unassigned(),
         version: Optional[int] = Unassigned(),
-        session: Optional[Any] = None,
+        session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> ResourceIterator[str]:
         """
@@ -13580,7 +13584,7 @@ class InferenceComponent(Base):
     def update_runtime_configs(
         self,
         desired_runtime_config: InferenceComponentRuntimeConfig,
-        session: Optional[Any] = None,
+        session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> None:
         """
@@ -13947,6 +13951,7 @@ class InferenceExperiment(Base):
 
         logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
+    @Base.add_validate_call
     def stop(self) -> None:
         """
         Stop a InferenceExperiment resource
@@ -14359,6 +14364,7 @@ class InferenceRecommendationsJob(Base):
         transform(response, "DescribeInferenceRecommendationsJobResponse", self)
         return self
 
+    @Base.add_validate_call
     def stop(self) -> None:
         """
         Stop a InferenceRecommendationsJob resource
@@ -14595,7 +14601,7 @@ class InferenceRecommendationsJob(Base):
     def get_all_steps(
         self,
         step_type: Optional[str] = Unassigned(),
-        session: Optional[Any] = None,
+        session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> ResourceIterator[InferenceRecommendationsJobStep]:
         """
@@ -14913,6 +14919,7 @@ class LabelingJob(Base):
         transform(response, "DescribeLabelingJobResponse", self)
         return self
 
+    @Base.add_validate_call
     def stop(self) -> None:
         """
         Stop a LabelingJob resource
@@ -15260,7 +15267,7 @@ class LineageGroup(Base):
     @Base.add_validate_call
     def get_policy(
         self,
-        session: Optional[Any] = None,
+        session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[GetLineageGroupPolicyResponse]:
         """
@@ -15613,6 +15620,7 @@ class MlflowTrackingServer(Base):
 
         logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
+    @Base.add_validate_call
     def stop(self) -> None:
         """
         Stop a MlflowTrackingServer resource
@@ -16185,7 +16193,7 @@ class Model(Base):
     def get_all_metadata(
         self,
         search_expression: Optional[ModelMetadataSearchExpression] = Unassigned(),
-        session: Optional[Any] = None,
+        session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> ResourceIterator[ModelMetadataSummary]:
         """
@@ -17018,7 +17026,7 @@ class ModelCard(Base):
         creation_time_before: Optional[datetime.datetime] = Unassigned(),
         sort_by: Optional[str] = Unassigned(),
         sort_order: Optional[str] = Unassigned(),
-        session: Optional[Any] = None,
+        session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> ResourceIterator[ModelCardVersionSummary]:
         """
@@ -18427,7 +18435,7 @@ class ModelPackage(Base):
     def batch_get(
         self,
         model_package_arn_list: List[str],
-        session: Optional[Any] = None,
+        session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[BatchDescribeModelPackageOutput]:
         """
@@ -18877,7 +18885,7 @@ class ModelPackageGroup(Base):
     @Base.add_validate_call
     def get_policy(
         self,
-        session: Optional[Any] = None,
+        session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[str]:
         """
@@ -18920,7 +18928,7 @@ class ModelPackageGroup(Base):
     @Base.add_validate_call
     def delete_policy(
         self,
-        session: Optional[Any] = None,
+        session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> None:
         """
@@ -18959,7 +18967,7 @@ class ModelPackageGroup(Base):
     def put_policy(
         self,
         resource_policy: str,
-        session: Optional[Any] = None,
+        session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> None:
         """
@@ -19514,7 +19522,7 @@ class MonitoringAlert(Base):
         creation_time_before: Optional[datetime.datetime] = Unassigned(),
         creation_time_after: Optional[datetime.datetime] = Unassigned(),
         status_equals: Optional[str] = Unassigned(),
-        session: Optional[Any] = None,
+        session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[MonitoringAlertHistorySummary]:
         """
@@ -20015,6 +20023,7 @@ class MonitoringSchedule(Base):
 
         logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
+    @Base.add_validate_call
     def stop(self) -> None:
         """
         Stop a MonitoringSchedule resource
@@ -20570,6 +20579,7 @@ class NotebookInstance(Base):
 
         logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
+    @Base.add_validate_call
     def stop(self) -> None:
         """
         Stop a NotebookInstance resource
@@ -21419,6 +21429,7 @@ class OptimizationJob(Base):
 
         logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
+    @Base.add_validate_call
     def stop(self) -> None:
         """
         Stop a OptimizationJob resource
@@ -22261,6 +22272,7 @@ class PipelineExecution(Base):
 
         return self
 
+    @Base.add_validate_call
     def stop(self) -> None:
         """
         Stop a PipelineExecution resource
@@ -22420,7 +22432,7 @@ class PipelineExecution(Base):
     @Base.add_validate_call
     def get_pipeline_definition(
         self,
-        session: Optional[Any] = None,
+        session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[DescribePipelineDefinitionForExecutionResponse]:
         """
@@ -22466,7 +22478,7 @@ class PipelineExecution(Base):
     def get_all_steps(
         self,
         sort_order: Optional[str] = Unassigned(),
-        session: Optional[Any] = None,
+        session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> ResourceIterator[PipelineExecutionStep]:
         """
@@ -22522,7 +22534,7 @@ class PipelineExecution(Base):
     @Base.add_validate_call
     def get_all_parameters(
         self,
-        session: Optional[Any] = None,
+        session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> ResourceIterator[Parameter]:
         """
@@ -22577,7 +22589,7 @@ class PipelineExecution(Base):
     def retry(
         self,
         client_request_token: str,
-        session: Optional[Any] = None,
+        session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> None:
         """
@@ -22623,7 +22635,7 @@ class PipelineExecution(Base):
         self,
         callback_token: str,
         client_request_token: Optional[str] = Unassigned(),
-        session: Optional[Any] = None,
+        session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> None:
         """
@@ -22671,7 +22683,7 @@ class PipelineExecution(Base):
         callback_token: str,
         output_parameters: Optional[List[OutputParameter]] = Unassigned(),
         client_request_token: Optional[str] = Unassigned(),
-        session: Optional[Any] = None,
+        session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> None:
         """
@@ -23255,6 +23267,7 @@ class ProcessingJob(Base):
         transform(response, "DescribeProcessingJobResponse", self)
         return self
 
+    @Base.add_validate_call
     def stop(self) -> None:
         """
         Stop a ProcessingJob resource
@@ -23936,7 +23949,7 @@ class SagemakerServicecatalogPortfolio(Base):
     @staticmethod
     @Base.add_validate_call
     def disable(
-        session: Optional[Any] = None,
+        session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> None:
         """
@@ -23969,7 +23982,7 @@ class SagemakerServicecatalogPortfolio(Base):
     @staticmethod
     @Base.add_validate_call
     def enable(
-        session: Optional[Any] = None,
+        session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> None:
         """
@@ -24002,7 +24015,7 @@ class SagemakerServicecatalogPortfolio(Base):
     @staticmethod
     @Base.add_validate_call
     def get_status(
-        session: Optional[Any] = None,
+        session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[str]:
         """
@@ -25080,7 +25093,7 @@ class Tag(Base):
         cls,
         resource_arn: str,
         tags: List[Tag],
-        session: Optional[Any] = None,
+        session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> None:
         """
@@ -25124,7 +25137,7 @@ class Tag(Base):
         cls,
         resource_arn: str,
         tag_keys: List[str],
-        session: Optional[Any] = None,
+        session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> None:
         """
@@ -25568,6 +25581,7 @@ class TrainingJob(Base):
 
         return self
 
+    @Base.add_validate_call
     def stop(self) -> None:
         """
         Stop a TrainingJob resource
@@ -26008,6 +26022,7 @@ class TransformJob(Base):
         transform(response, "DescribeTransformJobResponse", self)
         return self
 
+    @Base.add_validate_call
     def stop(self) -> None:
         """
         Stop a TransformJob resource
@@ -26966,7 +26981,7 @@ class TrialComponent(Base):
     def associate_trail(
         self,
         trial_name: str,
-        session: Optional[Any] = None,
+        session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> None:
         """
@@ -27009,7 +27024,7 @@ class TrialComponent(Base):
     def disassociate_trail(
         self,
         trial_name: str,
-        session: Optional[Any] = None,
+        session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> None:
         """
@@ -28379,7 +28394,7 @@ class Workteam(Base):
         job_reference_code_contains: Optional[str] = Unassigned(),
         sort_by: Optional[str] = Unassigned(),
         sort_order: Optional[str] = Unassigned(),
-        session: Optional[Any] = None,
+        session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> ResourceIterator[LabelingJob]:
         """
