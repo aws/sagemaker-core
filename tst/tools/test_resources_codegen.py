@@ -18,6 +18,7 @@ class TestGenerateResource:
     def test_generate_create_method(self):
         expected_output = '''
 @classmethod
+@Base.add_validate_call
 def create(
     cls,
     compilation_job_name: str,
@@ -103,6 +104,7 @@ def create(
     def test_generate_import_method(self):
         expected_output = '''
 @classmethod
+@Base.add_validate_call
 def load(
     cls,
     hub_content_name: str,
@@ -188,6 +190,7 @@ def load(
     def test_generate_update_method_with_decorator(self):
         expected_output = '''
 @populate_inputs_decorator
+@Base.add_validate_call
 def update(
     self,
     retain_all_variant_properties: Optional[bool] = Unassigned(),
@@ -254,6 +257,7 @@ def update(
 
     def test_generate_update_method(self):
         expected_output = '''
+@Base.add_validate_call
 def update(
     self,
     retain_all_variant_properties: Optional[bool] = Unassigned(),
@@ -321,6 +325,7 @@ def update(
     def test_generate_get_method(self):
         expected_output = '''
 @classmethod
+@Base.add_validate_call
 def get(
     cls,
     domain_id: str,
@@ -380,6 +385,7 @@ def get(
 
     def test_generate_refresh_method(self):
         expected_output = '''
+@Base.add_validate_call
 def refresh(
     self,
     
@@ -434,6 +440,7 @@ def refresh(
 
     def test_generate_delete_method(self):
         expected_output = '''
+@Base.add_validate_call
 def delete(
     self,
 
@@ -473,6 +480,7 @@ def delete(
     # create a unit test for generate_stop_method
     def test_generate_stop_method(self):
         expected_output = '''
+@Base.add_validate_call
 def stop(self) -> None:
     """
     Stop a CompilationJob resource
@@ -503,6 +511,7 @@ def stop(self) -> None:
 
     def test_generate_wait_method(self):
         expected_output = '''
+@Base.add_validate_call
 def wait(
     self,
     poll: int = 5,
@@ -553,6 +562,7 @@ def wait(
 
     def test_generate_wait_for_status_method(self):
         expected_output = '''
+@Base.add_validate_call
 def wait_for_status(
     self,
     target_status: Literal['InService', 'Creating', 'Updating', 'Failed', 'Deleting'],
@@ -605,6 +615,7 @@ def wait_for_status(
 
     def test_generate_wait_for_status_method_without_failed_state(self):
         expected_output = '''
+@Base.add_validate_call
 def wait_for_status(
     self,
     target_status: Literal['Creating', 'Created', 'Updating', 'Running', 'Starting', 'Stopping', 'Completed', 'Cancelled'],
@@ -654,6 +665,7 @@ def wait_for_status(
 
     def test_generate_invoke_method(self):
         expected_output = '''
+@Base.add_validate_call
 def invoke(self, 
     body: Any,
     content_type: Optional[str] = Unassigned(),
@@ -737,6 +749,7 @@ def invoke(self,
 
     def test_generate_invoke_async_method(self):
         expected_output = '''
+@Base.add_validate_call
 def invoke_async(self, 
     input_location: str,
     content_type: Optional[str] = Unassigned(),
@@ -809,6 +822,7 @@ def invoke_async(self,
 
     def test_generate_invoke_with_response_stream_method(self):
         expected_output = '''
+@Base.add_validate_call
 def invoke_with_response_stream(self, 
     body: Any,
     content_type: Optional[str] = Unassigned(),
@@ -888,6 +902,7 @@ def invoke_with_response_stream(self,
     def test_get_all_method(self):
         expected_output = '''
 @classmethod
+@Base.add_validate_call
 def get_all(
     cls,
     sort_order: Optional[str] = Unassigned(),
@@ -953,6 +968,7 @@ def get_all(
     def test_get_all_method_with_no_args(self):
         expected_output = '''
 @classmethod
+@Base.add_validate_call
 def get_all(
     cls,
     session: Optional[Session] = None,
@@ -984,6 +1000,7 @@ def get_all(
     def test_get_all_method_with_custom_key_mapping(self):
         expected_output = '''
 @classmethod
+@Base.add_validate_call
 def get_all(
     cls,
     endpoint_name: Optional[str] = Unassigned(),
@@ -1055,7 +1072,7 @@ def get_all(
 
     def test_get_node(self):
         expected_output = '''
-
+@Base.add_validate_call
 def get_node(
     self,
     node_id: str,
@@ -1117,7 +1134,7 @@ def get_node(
 
     def test_update_weights_and_capacities(self):
         expected_output = '''
-
+@Base.add_validate_call
 def update_weights_and_capacities(
     self,
     desired_weights_and_capacities: List[DesiredWeightAndCapacity],
@@ -1176,7 +1193,7 @@ def update_weights_and_capacities(
 
     def test_get_all_training_jobs(self):
         expected_output = '''
-
+@Base.add_validate_call
 def get_all_training_jobs(
     self,
     status_equals: Optional[str] = Unassigned(),
@@ -1292,6 +1309,7 @@ def get_all_training_jobs(
         return None
     
     @classmethod
+    @Base.add_validate_call
     def create(
         cls,
         domain_id: str,
@@ -1368,6 +1386,7 @@ def get_all_training_jobs(
     """
     
     @staticmethod
+    @Base.add_validate_call
     def disable(
         session: Optional[Session] = None,
         region: Optional[str] = None,
@@ -1401,6 +1420,7 @@ def get_all_training_jobs(
     
     
     @staticmethod
+    @Base.add_validate_call
     def enable(
         session: Optional[Session] = None,
         region: Optional[str] = None,
@@ -1434,6 +1454,7 @@ def get_all_training_jobs(
     
     
     @staticmethod
+    @Base.add_validate_call
     def get_status(
         session: Optional[Session] = None,
         region: Optional[str] = None,
@@ -1479,6 +1500,7 @@ def get_all_training_jobs(
 
     def test_generate_wait_for_delete_method(self):
         expected_output = '''
+@Base.add_validate_call
 def wait_for_delete(
     self,
     poll: int = 5,
@@ -1541,6 +1563,7 @@ def wait_for_delete(
 
     def test_generate_wait_for_delete_method_without_failed_state(self):
         expected_output = '''
+@Base.add_validate_call
 def wait_for_delete(
     self,
     poll: int = 5,
@@ -1602,6 +1625,7 @@ def wait_for_delete(
 
     def test_generate_wait_for_delete_method_with_deleted_state(self):
         expected_output = '''
+@Base.add_validate_call
 def wait_for_delete(
     self,
     poll: int = 5,

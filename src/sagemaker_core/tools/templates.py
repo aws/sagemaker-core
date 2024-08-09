@@ -503,6 +503,7 @@ def delete(
 """
 
 STOP_METHOD_TEMPLATE = """
+@Base.add_validate_call
 def stop(self) -> None:
 {docstring}
     client = SageMakerClient().client
