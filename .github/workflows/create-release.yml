@@ -8,7 +8,7 @@ on:
 
 jobs:
   create-release:
-    if: github.event.pull_request.merged == true && startsWith(github.event.pull_request.title, 'Daily Sync with Botocore') && github.event.pull_request.user.login == secrets.SAGEMAKER_BOT_USER_LOGIN
+    if: github.event.pull_request.merged == true && startsWith(github.event.pull_request.title, 'Daily Sync with Botocore') && github.event.pull_request.user.login == 'sagemaker-bot'
     runs-on: ubuntu-latest
     steps:
       - name: Configure AWS Credentials
