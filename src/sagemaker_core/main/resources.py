@@ -15,7 +15,7 @@ import datetime
 import time
 import functools
 from pydantic import validate_call
-from typing import Dict, List, Literal, Optional, Union
+from typing import Dict, List, Literal, Optional, Union, Any
 from boto3.session import Session
 from rich.console import Group
 from rich.live import Live
@@ -67,7 +67,7 @@ class Base(BaseModel):
         return serialized_dict
 
     @classmethod
-    def _serialize(cls, value: any) -> any:
+    def _serialize(cls, value: Any) -> Any:
         if isinstance(value, Unassigned):
             return None
         elif isinstance(value, List):
@@ -88,7 +88,7 @@ class Base(BaseModel):
         return serialized_list
 
     @classmethod
-    def _serialize_object(cls, value: any):
+    def _serialize_object(cls, value: Any):
         serialized_dict = {}
         for k, v in vars(value).items():
             if serialize_result := cls._serialize(v):
@@ -157,7 +157,7 @@ class Base(BaseModel):
         return updated_args
 
     @staticmethod
-    def _get_chained_attribute(item_value: any):
+    def _get_chained_attribute(item_value: Any):
         resource_name = type(item_value).__name__
         class_object = globals()[resource_name]
         return class_object(
@@ -165,6 +165,15 @@ class Base(BaseModel):
                 resource_name=resource_name, operation_input_args=vars(item_value)
             )
         )
+
+    @staticmethod
+    def add_validate_call(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            config = dict(arbitrary_types_allowed=True)
+            return validate_call(config=config)(func)(*args, **kwargs)
+
+        return wrapper
 
 
 class Action(Base):
@@ -219,6 +228,7 @@ class Action(Base):
         return None
 
     @classmethod
+    @Base.add_validate_call
     def create(
         cls,
         action_name: str,
@@ -298,6 +308,7 @@ class Action(Base):
         return cls.get(action_name=action_name, session=session, region=region)
 
     @classmethod
+    @Base.add_validate_call
     def get(
         cls,
         action_name: str,
@@ -343,6 +354,7 @@ class Action(Base):
         action = cls(**transformed_response)
         return action
 
+    @Base.add_validate_call
     def refresh(
         self,
     ) -> Optional["Action"]:
@@ -375,6 +387,7 @@ class Action(Base):
         transform(response, "DescribeActionResponse", self)
         return self
 
+    @Base.add_validate_call
     def update(
         self,
         description: Optional[str] = Unassigned(),
@@ -427,6 +440,7 @@ class Action(Base):
 
         return self
 
+    @Base.add_validate_call
     def delete(
         self,
     ) -> None:
@@ -456,6 +470,7 @@ class Action(Base):
         logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
     @classmethod
+    @Base.add_validate_call
     def get_all(
         cls,
         source_uri: Optional[str] = Unassigned(),
@@ -597,6 +612,7 @@ class Algorithm(Base):
 
     @classmethod
     @populate_inputs_decorator
+    @Base.add_validate_call
     def create(
         cls,
         algorithm_name: str,
@@ -672,6 +688,7 @@ class Algorithm(Base):
         return cls.get(algorithm_name=algorithm_name, session=session, region=region)
 
     @classmethod
+    @Base.add_validate_call
     def get(
         cls,
         algorithm_name: str,
@@ -716,6 +733,7 @@ class Algorithm(Base):
         algorithm = cls(**transformed_response)
         return algorithm
 
+    @Base.add_validate_call
     def refresh(
         self,
     ) -> Optional["Algorithm"]:
@@ -747,6 +765,7 @@ class Algorithm(Base):
         transform(response, "DescribeAlgorithmOutput", self)
         return self
 
+    @Base.add_validate_call
     def delete(
         self,
     ) -> None:
@@ -775,6 +794,7 @@ class Algorithm(Base):
 
         logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
+    @Base.add_validate_call
     def wait_for_status(
         self,
         target_status: Literal["Pending", "InProgress", "Completed", "Failed", "Deleting"],
@@ -829,6 +849,7 @@ class Algorithm(Base):
                     raise TimeoutExceededError(resouce_type="Algorithm", status=current_status)
                 time.sleep(poll)
 
+    @Base.add_validate_call
     def wait_for_delete(
         self,
         poll: int = 5,
@@ -890,6 +911,7 @@ class Algorithm(Base):
                 time.sleep(poll)
 
     @classmethod
+    @Base.add_validate_call
     def get_all(
         cls,
         creation_time_after: Optional[datetime.datetime] = Unassigned(),
@@ -1007,6 +1029,7 @@ class App(Base):
         return None
 
     @classmethod
+    @Base.add_validate_call
     def create(
         cls,
         domain_id: str,
@@ -1090,6 +1113,7 @@ class App(Base):
         )
 
     @classmethod
+    @Base.add_validate_call
     def get(
         cls,
         domain_id: str,
@@ -1147,6 +1171,7 @@ class App(Base):
         app = cls(**transformed_response)
         return app
 
+    @Base.add_validate_call
     def refresh(
         self,
     ) -> Optional["App"]:
@@ -1183,6 +1208,7 @@ class App(Base):
         transform(response, "DescribeAppResponse", self)
         return self
 
+    @Base.add_validate_call
     def delete(
         self,
     ) -> None:
@@ -1216,6 +1242,7 @@ class App(Base):
 
         logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
+    @Base.add_validate_call
     def wait_for_status(
         self,
         target_status: Literal["Deleted", "Deleting", "Failed", "InService", "Pending"],
@@ -1270,6 +1297,7 @@ class App(Base):
                     raise TimeoutExceededError(resouce_type="App", status=current_status)
                 time.sleep(poll)
 
+    @Base.add_validate_call
     def wait_for_delete(
         self,
         poll: int = 5,
@@ -1335,6 +1363,7 @@ class App(Base):
                 time.sleep(poll)
 
     @classmethod
+    @Base.add_validate_call
     def get_all(
         cls,
         sort_order: Optional[str] = Unassigned(),
@@ -1442,6 +1471,7 @@ class AppImageConfig(Base):
         return None
 
     @classmethod
+    @Base.add_validate_call
     def create(
         cls,
         app_image_config_name: str,
@@ -1512,6 +1542,7 @@ class AppImageConfig(Base):
         return cls.get(app_image_config_name=app_image_config_name, session=session, region=region)
 
     @classmethod
+    @Base.add_validate_call
     def get(
         cls,
         app_image_config_name: str,
@@ -1557,6 +1588,7 @@ class AppImageConfig(Base):
         app_image_config = cls(**transformed_response)
         return app_image_config
 
+    @Base.add_validate_call
     def refresh(
         self,
     ) -> Optional["AppImageConfig"]:
@@ -1589,6 +1621,7 @@ class AppImageConfig(Base):
         transform(response, "DescribeAppImageConfigResponse", self)
         return self
 
+    @Base.add_validate_call
     def update(
         self,
         kernel_gateway_image_config: Optional[KernelGatewayImageConfig] = Unassigned(),
@@ -1635,6 +1668,7 @@ class AppImageConfig(Base):
 
         return self
 
+    @Base.add_validate_call
     def delete(
         self,
     ) -> None:
@@ -1664,6 +1698,7 @@ class AppImageConfig(Base):
         logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
     @classmethod
+    @Base.add_validate_call
     def get_all(
         cls,
         name_contains: Optional[str] = Unassigned(),
@@ -1785,6 +1820,7 @@ class Artifact(Base):
         return None
 
     @classmethod
+    @Base.add_validate_call
     def create(
         cls,
         source: ArtifactSource,
@@ -1858,6 +1894,7 @@ class Artifact(Base):
         return cls.get(artifact_arn=response["ArtifactArn"], session=session, region=region)
 
     @classmethod
+    @Base.add_validate_call
     def get(
         cls,
         artifact_arn: str,
@@ -1903,6 +1940,7 @@ class Artifact(Base):
         artifact = cls(**transformed_response)
         return artifact
 
+    @Base.add_validate_call
     def refresh(
         self,
     ) -> Optional["Artifact"]:
@@ -1935,6 +1973,7 @@ class Artifact(Base):
         transform(response, "DescribeArtifactResponse", self)
         return self
 
+    @Base.add_validate_call
     def update(
         self,
         artifact_name: Optional[str] = Unassigned(),
@@ -1985,6 +2024,7 @@ class Artifact(Base):
 
         return self
 
+    @Base.add_validate_call
     def delete(
         self,
     ) -> None:
@@ -2015,6 +2055,7 @@ class Artifact(Base):
         logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
     @classmethod
+    @Base.add_validate_call
     def get_all(
         cls,
         source_uri: Optional[str] = Unassigned(),
@@ -2129,6 +2170,7 @@ class Association(Base):
         logger.error("Name attribute not found for object association")
         return None
 
+    @Base.add_validate_call
     def delete(
         self,
     ) -> None:
@@ -2159,6 +2201,7 @@ class Association(Base):
         logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
     @classmethod
+    @Base.add_validate_call
     def get_all(
         cls,
         source_arn: Optional[str] = Unassigned(),
@@ -2239,6 +2282,7 @@ class Association(Base):
         )
 
     @classmethod
+    @Base.add_validate_call
     def add(
         cls,
         source_arn: str,
@@ -2387,6 +2431,7 @@ class AutoMLJob(Base):
 
     @classmethod
     @populate_inputs_decorator
+    @Base.add_validate_call
     def create(
         cls,
         auto_ml_job_name: str,
@@ -2473,6 +2518,7 @@ class AutoMLJob(Base):
         return cls.get(auto_ml_job_name=auto_ml_job_name, session=session, region=region)
 
     @classmethod
+    @Base.add_validate_call
     def get(
         cls,
         auto_ml_job_name: str,
@@ -2518,6 +2564,7 @@ class AutoMLJob(Base):
         auto_ml_job = cls(**transformed_response)
         return auto_ml_job
 
+    @Base.add_validate_call
     def refresh(
         self,
     ) -> Optional["AutoMLJob"]:
@@ -2550,6 +2597,7 @@ class AutoMLJob(Base):
         transform(response, "DescribeAutoMLJobResponse", self)
         return self
 
+    @Base.add_validate_call
     def stop(self) -> None:
         """
         Stop a AutoMLJob resource
@@ -2576,6 +2624,7 @@ class AutoMLJob(Base):
 
         logger.info(f"Stopping {self.__class__.__name__} - {self.get_name()}")
 
+    @Base.add_validate_call
     def wait(self, poll: int = 5, timeout: Optional[int] = None) -> None:
         """
         Wait for a AutoMLJob resource.
@@ -2630,6 +2679,7 @@ class AutoMLJob(Base):
                 time.sleep(poll)
 
     @classmethod
+    @Base.add_validate_call
     def get_all(
         cls,
         creation_time_after: Optional[datetime.datetime] = Unassigned(),
@@ -2705,6 +2755,7 @@ class AutoMLJob(Base):
             list_method_kwargs=operation_input_args,
         )
 
+    @Base.add_validate_call
     def get_all_candidates(
         self,
         status_equals: Optional[str] = Unassigned(),
@@ -2874,6 +2925,7 @@ class AutoMLJobV2(Base):
 
     @classmethod
     @populate_inputs_decorator
+    @Base.add_validate_call
     def create(
         cls,
         auto_ml_job_name: str,
@@ -2960,6 +3012,7 @@ class AutoMLJobV2(Base):
         return cls.get(auto_ml_job_name=auto_ml_job_name, session=session, region=region)
 
     @classmethod
+    @Base.add_validate_call
     def get(
         cls,
         auto_ml_job_name: str,
@@ -3005,6 +3058,7 @@ class AutoMLJobV2(Base):
         auto_ml_job_v2 = cls(**transformed_response)
         return auto_ml_job_v2
 
+    @Base.add_validate_call
     def refresh(
         self,
     ) -> Optional["AutoMLJobV2"]:
@@ -3037,6 +3091,7 @@ class AutoMLJobV2(Base):
         transform(response, "DescribeAutoMLJobV2Response", self)
         return self
 
+    @Base.add_validate_call
     def wait(self, poll: int = 5, timeout: Optional[int] = None) -> None:
         """
         Wait for a AutoMLJobV2 resource.
@@ -3150,6 +3205,7 @@ class Cluster(Base):
 
     @classmethod
     @populate_inputs_decorator
+    @Base.add_validate_call
     def create(
         cls,
         cluster_name: str,
@@ -3218,6 +3274,7 @@ class Cluster(Base):
         return cls.get(cluster_name=cluster_name, session=session, region=region)
 
     @classmethod
+    @Base.add_validate_call
     def get(
         cls,
         cluster_name: str,
@@ -3263,6 +3320,7 @@ class Cluster(Base):
         cluster = cls(**transformed_response)
         return cluster
 
+    @Base.add_validate_call
     def refresh(
         self,
     ) -> Optional["Cluster"]:
@@ -3296,6 +3354,7 @@ class Cluster(Base):
         return self
 
     @populate_inputs_decorator
+    @Base.add_validate_call
     def update(
         self,
         instance_groups: List[ClusterInstanceGroupSpecification],
@@ -3340,6 +3399,7 @@ class Cluster(Base):
 
         return self
 
+    @Base.add_validate_call
     def delete(
         self,
     ) -> None:
@@ -3369,6 +3429,7 @@ class Cluster(Base):
 
         logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
+    @Base.add_validate_call
     def wait_for_status(
         self,
         target_status: Literal[
@@ -3431,6 +3492,7 @@ class Cluster(Base):
                     raise TimeoutExceededError(resouce_type="Cluster", status=current_status)
                 time.sleep(poll)
 
+    @Base.add_validate_call
     def wait_for_delete(
         self,
         poll: int = 5,
@@ -3492,6 +3554,7 @@ class Cluster(Base):
                 time.sleep(poll)
 
     @classmethod
+    @Base.add_validate_call
     def get_all(
         cls,
         creation_time_after: Optional[datetime.datetime] = Unassigned(),
@@ -3558,6 +3621,7 @@ class Cluster(Base):
             list_method_kwargs=operation_input_args,
         )
 
+    @Base.add_validate_call
     def get_node(
         self,
         node_id: str,
@@ -3605,6 +3669,7 @@ class Cluster(Base):
         transformed_response = transform(response, "DescribeClusterNodeResponse")
         return ClusterNodeDetails(**transformed_response)
 
+    @Base.add_validate_call
     def get_all_nodes(
         self,
         creation_time_after: Optional[datetime.datetime] = Unassigned(),
@@ -3673,6 +3738,7 @@ class Cluster(Base):
             list_method_kwargs=operation_input_args,
         )
 
+    @Base.add_validate_call
     def update_software(
         self,
         session: Optional[Session] = None,
@@ -3749,6 +3815,7 @@ class CodeRepository(Base):
         return None
 
     @classmethod
+    @Base.add_validate_call
     def create(
         cls,
         code_repository_name: str,
@@ -3812,6 +3879,7 @@ class CodeRepository(Base):
         return cls.get(code_repository_name=code_repository_name, session=session, region=region)
 
     @classmethod
+    @Base.add_validate_call
     def get(
         cls,
         code_repository_name: str,
@@ -3856,6 +3924,7 @@ class CodeRepository(Base):
         code_repository = cls(**transformed_response)
         return code_repository
 
+    @Base.add_validate_call
     def refresh(
         self,
     ) -> Optional["CodeRepository"]:
@@ -3887,6 +3956,7 @@ class CodeRepository(Base):
         transform(response, "DescribeCodeRepositoryOutput", self)
         return self
 
+    @Base.add_validate_call
     def update(
         self,
         git_config: Optional[GitConfigForUpdate] = Unassigned(),
@@ -3929,6 +3999,7 @@ class CodeRepository(Base):
 
         return self
 
+    @Base.add_validate_call
     def delete(
         self,
     ) -> None:
@@ -3957,6 +4028,7 @@ class CodeRepository(Base):
         logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
     @classmethod
+    @Base.add_validate_call
     def get_all(
         cls,
         creation_time_after: Optional[datetime.datetime] = Unassigned(),
@@ -4118,6 +4190,7 @@ class CompilationJob(Base):
 
     @classmethod
     @populate_inputs_decorator
+    @Base.add_validate_call
     def create(
         cls,
         compilation_job_name: str,
@@ -4198,6 +4271,7 @@ class CompilationJob(Base):
         return cls.get(compilation_job_name=compilation_job_name, session=session, region=region)
 
     @classmethod
+    @Base.add_validate_call
     def get(
         cls,
         compilation_job_name: str,
@@ -4243,6 +4317,7 @@ class CompilationJob(Base):
         compilation_job = cls(**transformed_response)
         return compilation_job
 
+    @Base.add_validate_call
     def refresh(
         self,
     ) -> Optional["CompilationJob"]:
@@ -4275,6 +4350,7 @@ class CompilationJob(Base):
         transform(response, "DescribeCompilationJobResponse", self)
         return self
 
+    @Base.add_validate_call
     def delete(
         self,
     ) -> None:
@@ -4303,6 +4379,7 @@ class CompilationJob(Base):
 
         logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
+    @Base.add_validate_call
     def stop(self) -> None:
         """
         Stop a CompilationJob resource
@@ -4329,6 +4406,7 @@ class CompilationJob(Base):
 
         logger.info(f"Stopping {self.__class__.__name__} - {self.get_name()}")
 
+    @Base.add_validate_call
     def wait(self, poll: int = 5, timeout: Optional[int] = None) -> None:
         """
         Wait for a CompilationJob resource.
@@ -4383,6 +4461,7 @@ class CompilationJob(Base):
                 time.sleep(poll)
 
     @classmethod
+    @Base.add_validate_call
     def get_all(
         cls,
         creation_time_after: Optional[datetime.datetime] = Unassigned(),
@@ -4507,6 +4586,7 @@ class Context(Base):
         return None
 
     @classmethod
+    @Base.add_validate_call
     def create(
         cls,
         context_name: str,
@@ -4580,6 +4660,7 @@ class Context(Base):
         return cls.get(context_name=context_name, session=session, region=region)
 
     @classmethod
+    @Base.add_validate_call
     def get(
         cls,
         context_name: str,
@@ -4625,6 +4706,7 @@ class Context(Base):
         context = cls(**transformed_response)
         return context
 
+    @Base.add_validate_call
     def refresh(
         self,
     ) -> Optional["Context"]:
@@ -4657,6 +4739,7 @@ class Context(Base):
         transform(response, "DescribeContextResponse", self)
         return self
 
+    @Base.add_validate_call
     def update(
         self,
         description: Optional[str] = Unassigned(),
@@ -4707,6 +4790,7 @@ class Context(Base):
 
         return self
 
+    @Base.add_validate_call
     def delete(
         self,
     ) -> None:
@@ -4736,6 +4820,7 @@ class Context(Base):
         logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
     @classmethod
+    @Base.add_validate_call
     def get_all(
         cls,
         source_uri: Optional[str] = Unassigned(),
@@ -4894,6 +4979,7 @@ class DataQualityJobDefinition(Base):
 
     @classmethod
     @populate_inputs_decorator
+    @Base.add_validate_call
     def create(
         cls,
         job_definition_name: str,
@@ -4980,6 +5066,7 @@ class DataQualityJobDefinition(Base):
         return cls.get(job_definition_name=job_definition_name, session=session, region=region)
 
     @classmethod
+    @Base.add_validate_call
     def get(
         cls,
         job_definition_name: str,
@@ -5025,6 +5112,7 @@ class DataQualityJobDefinition(Base):
         data_quality_job_definition = cls(**transformed_response)
         return data_quality_job_definition
 
+    @Base.add_validate_call
     def refresh(
         self,
     ) -> Optional["DataQualityJobDefinition"]:
@@ -5057,6 +5145,7 @@ class DataQualityJobDefinition(Base):
         transform(response, "DescribeDataQualityJobDefinitionResponse", self)
         return self
 
+    @Base.add_validate_call
     def delete(
         self,
     ) -> None:
@@ -5086,6 +5175,7 @@ class DataQualityJobDefinition(Base):
         logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
     @classmethod
+    @Base.add_validate_call
     def get_all(
         cls,
         endpoint_name: Optional[str] = Unassigned(),
@@ -5208,6 +5298,7 @@ class Device(Base):
         return None
 
     @classmethod
+    @Base.add_validate_call
     def get(
         cls,
         device_name: str,
@@ -5259,6 +5350,7 @@ class Device(Base):
         device = cls(**transformed_response)
         return device
 
+    @Base.add_validate_call
     def refresh(
         self,
     ) -> Optional["Device"]:
@@ -5294,6 +5386,7 @@ class Device(Base):
         return self
 
     @classmethod
+    @Base.add_validate_call
     def get_all(
         cls,
         latest_heartbeat_after: Optional[datetime.datetime] = Unassigned(),
@@ -5418,6 +5511,7 @@ class DeviceFleet(Base):
 
     @classmethod
     @populate_inputs_decorator
+    @Base.add_validate_call
     def create(
         cls,
         device_fleet_name: str,
@@ -5492,6 +5586,7 @@ class DeviceFleet(Base):
         return cls.get(device_fleet_name=device_fleet_name, session=session, region=region)
 
     @classmethod
+    @Base.add_validate_call
     def get(
         cls,
         device_fleet_name: str,
@@ -5537,6 +5632,7 @@ class DeviceFleet(Base):
         device_fleet = cls(**transformed_response)
         return device_fleet
 
+    @Base.add_validate_call
     def refresh(
         self,
     ) -> Optional["DeviceFleet"]:
@@ -5570,6 +5666,7 @@ class DeviceFleet(Base):
         return self
 
     @populate_inputs_decorator
+    @Base.add_validate_call
     def update(
         self,
         output_config: EdgeOutputConfig,
@@ -5621,6 +5718,7 @@ class DeviceFleet(Base):
 
         return self
 
+    @Base.add_validate_call
     def delete(
         self,
     ) -> None:
@@ -5650,6 +5748,7 @@ class DeviceFleet(Base):
         logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
     @classmethod
+    @Base.add_validate_call
     def get_all(
         cls,
         creation_time_after: Optional[datetime.datetime] = Unassigned(),
@@ -5722,6 +5821,7 @@ class DeviceFleet(Base):
             list_method_kwargs=operation_input_args,
         )
 
+    @Base.add_validate_call
     def deregister_devices(
         self,
         device_names: List[str],
@@ -5762,6 +5862,7 @@ class DeviceFleet(Base):
         response = client.deregister_devices(**operation_input_args)
         logger.debug(f"Response: {response}")
 
+    @Base.add_validate_call
     def get_report(
         self,
         session: Optional[Session] = None,
@@ -5805,6 +5906,7 @@ class DeviceFleet(Base):
         transformed_response = transform(response, "GetDeviceFleetReportResponse")
         return GetDeviceFleetReportResponse(**transformed_response)
 
+    @Base.add_validate_call
     def register_devices(
         self,
         devices: List[Device],
@@ -5849,6 +5951,7 @@ class DeviceFleet(Base):
         response = client.register_devices(**operation_input_args)
         logger.debug(f"Response: {response}")
 
+    @Base.add_validate_call
     def update_devices(
         self,
         devices: List[Device],
@@ -6024,6 +6127,7 @@ class Domain(Base):
 
     @classmethod
     @populate_inputs_decorator
+    @Base.add_validate_call
     def create(
         cls,
         domain_name: str,
@@ -6116,6 +6220,7 @@ class Domain(Base):
         return cls.get(domain_id=response["DomainId"], session=session, region=region)
 
     @classmethod
+    @Base.add_validate_call
     def get(
         cls,
         domain_id: str,
@@ -6161,6 +6266,7 @@ class Domain(Base):
         domain = cls(**transformed_response)
         return domain
 
+    @Base.add_validate_call
     def refresh(
         self,
     ) -> Optional["Domain"]:
@@ -6194,6 +6300,7 @@ class Domain(Base):
         return self
 
     @populate_inputs_decorator
+    @Base.add_validate_call
     def update(
         self,
         default_user_settings: Optional[UserSettings] = Unassigned(),
@@ -6251,6 +6358,7 @@ class Domain(Base):
 
         return self
 
+    @Base.add_validate_call
     def delete(
         self,
         retention_policy: Optional[RetentionPolicy] = Unassigned(),
@@ -6282,6 +6390,7 @@ class Domain(Base):
 
         logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
+    @Base.add_validate_call
     def wait_for_status(
         self,
         target_status: Literal[
@@ -6344,6 +6453,7 @@ class Domain(Base):
                     raise TimeoutExceededError(resouce_type="Domain", status=current_status)
                 time.sleep(poll)
 
+    @Base.add_validate_call
     def wait_for_delete(
         self,
         poll: int = 5,
@@ -6413,6 +6523,7 @@ class Domain(Base):
                 time.sleep(poll)
 
     @classmethod
+    @Base.add_validate_call
     def get_all(
         cls,
         session: Optional[Session] = None,
@@ -6490,6 +6601,7 @@ class EdgeDeploymentPlan(Base):
         return None
 
     @classmethod
+    @Base.add_validate_call
     def create(
         cls,
         edge_deployment_plan_name: str,
@@ -6562,6 +6674,7 @@ class EdgeDeploymentPlan(Base):
         )
 
     @classmethod
+    @Base.add_validate_call
     def get(
         cls,
         edge_deployment_plan_name: str,
@@ -6613,6 +6726,7 @@ class EdgeDeploymentPlan(Base):
         edge_deployment_plan = cls(**transformed_response)
         return edge_deployment_plan
 
+    @Base.add_validate_call
     def refresh(
         self,
         max_results: Optional[int] = Unassigned(),
@@ -6648,6 +6762,7 @@ class EdgeDeploymentPlan(Base):
         transform(response, "DescribeEdgeDeploymentPlanResponse", self)
         return self
 
+    @Base.add_validate_call
     def delete(
         self,
     ) -> None:
@@ -6677,6 +6792,7 @@ class EdgeDeploymentPlan(Base):
         logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
     @classmethod
+    @Base.add_validate_call
     def get_all(
         cls,
         creation_time_after: Optional[datetime.datetime] = Unassigned(),
@@ -6752,6 +6868,7 @@ class EdgeDeploymentPlan(Base):
             list_method_kwargs=operation_input_args,
         )
 
+    @Base.add_validate_call
     def create_stage(
         self,
         session: Optional[Session] = None,
@@ -6791,6 +6908,7 @@ class EdgeDeploymentPlan(Base):
         response = client.create_edge_deployment_stage(**operation_input_args)
         logger.debug(f"Response: {response}")
 
+    @Base.add_validate_call
     def delete_stage(
         self,
         stage_name: str,
@@ -6832,6 +6950,7 @@ class EdgeDeploymentPlan(Base):
         response = client.delete_edge_deployment_stage(**operation_input_args)
         logger.debug(f"Response: {response}")
 
+    @Base.add_validate_call
     def start_stage(
         self,
         stage_name: str,
@@ -6872,6 +6991,7 @@ class EdgeDeploymentPlan(Base):
         response = client.start_edge_deployment_stage(**operation_input_args)
         logger.debug(f"Response: {response}")
 
+    @Base.add_validate_call
     def stop_stage(
         self,
         stage_name: str,
@@ -6912,6 +7032,7 @@ class EdgeDeploymentPlan(Base):
         response = client.stop_edge_deployment_stage(**operation_input_args)
         logger.debug(f"Response: {response}")
 
+    @Base.add_validate_call
     def get_all_stage_devices(
         self,
         stage_name: str,
@@ -7046,6 +7167,7 @@ class EdgePackagingJob(Base):
 
     @classmethod
     @populate_inputs_decorator
+    @Base.add_validate_call
     def create(
         cls,
         edge_packaging_job_name: str,
@@ -7127,6 +7249,7 @@ class EdgePackagingJob(Base):
         )
 
     @classmethod
+    @Base.add_validate_call
     def get(
         cls,
         edge_packaging_job_name: str,
@@ -7172,6 +7295,7 @@ class EdgePackagingJob(Base):
         edge_packaging_job = cls(**transformed_response)
         return edge_packaging_job
 
+    @Base.add_validate_call
     def refresh(
         self,
     ) -> Optional["EdgePackagingJob"]:
@@ -7204,6 +7328,7 @@ class EdgePackagingJob(Base):
         transform(response, "DescribeEdgePackagingJobResponse", self)
         return self
 
+    @Base.add_validate_call
     def stop(self) -> None:
         """
         Stop a EdgePackagingJob resource
@@ -7229,6 +7354,7 @@ class EdgePackagingJob(Base):
 
         logger.info(f"Stopping {self.__class__.__name__} - {self.get_name()}")
 
+    @Base.add_validate_call
     def wait(self, poll: int = 5, timeout: Optional[int] = None) -> None:
         """
         Wait for a EdgePackagingJob resource.
@@ -7285,6 +7411,7 @@ class EdgePackagingJob(Base):
                 time.sleep(poll)
 
     @classmethod
+    @Base.add_validate_call
     def get_all(
         cls,
         creation_time_after: Optional[datetime.datetime] = Unassigned(),
@@ -7444,6 +7571,7 @@ class Endpoint(Base):
 
     @classmethod
     @populate_inputs_decorator
+    @Base.add_validate_call
     def create(
         cls,
         endpoint_name: str,
@@ -7511,6 +7639,7 @@ class Endpoint(Base):
         return cls.get(endpoint_name=endpoint_name, session=session, region=region)
 
     @classmethod
+    @Base.add_validate_call
     def get(
         cls,
         endpoint_name: str,
@@ -7555,6 +7684,7 @@ class Endpoint(Base):
         endpoint = cls(**transformed_response)
         return endpoint
 
+    @Base.add_validate_call
     def refresh(
         self,
     ) -> Optional["Endpoint"]:
@@ -7587,6 +7717,7 @@ class Endpoint(Base):
         return self
 
     @populate_inputs_decorator
+    @Base.add_validate_call
     def update(
         self,
         retain_all_variant_properties: Optional[bool] = Unassigned(),
@@ -7642,6 +7773,7 @@ class Endpoint(Base):
 
         return self
 
+    @Base.add_validate_call
     def delete(
         self,
     ) -> None:
@@ -7669,6 +7801,7 @@ class Endpoint(Base):
 
         logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
+    @Base.add_validate_call
     def wait_for_status(
         self,
         target_status: Literal[
@@ -7733,6 +7866,7 @@ class Endpoint(Base):
                     raise TimeoutExceededError(resouce_type="Endpoint", status=current_status)
                 time.sleep(poll)
 
+    @Base.add_validate_call
     def wait_for_delete(
         self,
         poll: int = 5,
@@ -7793,6 +7927,7 @@ class Endpoint(Base):
                     raise e
                 time.sleep(poll)
 
+    @Base.add_validate_call
     def invoke(
         self,
         body: Any,
@@ -7868,6 +8003,7 @@ class Endpoint(Base):
 
         return response
 
+    @Base.add_validate_call
     def invoke_async(
         self,
         input_location: str,
@@ -7932,6 +8068,7 @@ class Endpoint(Base):
 
         return response
 
+    @Base.add_validate_call
     def invoke_with_response_stream(
         self,
         body: Any,
@@ -8003,6 +8140,7 @@ class Endpoint(Base):
         return response
 
     @classmethod
+    @Base.add_validate_call
     def get_all(
         cls,
         sort_by: Optional[str] = Unassigned(),
@@ -8078,6 +8216,7 @@ class Endpoint(Base):
             list_method_kwargs=operation_input_args,
         )
 
+    @Base.add_validate_call
     def update_weights_and_capacities(
         self,
         desired_weights_and_capacities: List[DesiredWeightAndCapacity],
@@ -8202,6 +8341,7 @@ class EndpointConfig(Base):
 
     @classmethod
     @populate_inputs_decorator
+    @Base.add_validate_call
     def create(
         cls,
         endpoint_config_name: str,
@@ -8290,6 +8430,7 @@ class EndpointConfig(Base):
         return cls.get(endpoint_config_name=endpoint_config_name, session=session, region=region)
 
     @classmethod
+    @Base.add_validate_call
     def get(
         cls,
         endpoint_config_name: str,
@@ -8334,6 +8475,7 @@ class EndpointConfig(Base):
         endpoint_config = cls(**transformed_response)
         return endpoint_config
 
+    @Base.add_validate_call
     def refresh(
         self,
     ) -> Optional["EndpointConfig"]:
@@ -8365,6 +8507,7 @@ class EndpointConfig(Base):
         transform(response, "DescribeEndpointConfigOutput", self)
         return self
 
+    @Base.add_validate_call
     def delete(
         self,
     ) -> None:
@@ -8393,6 +8536,7 @@ class EndpointConfig(Base):
         logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
     @classmethod
+    @Base.add_validate_call
     def get_all(
         cls,
         sort_by: Optional[str] = Unassigned(),
@@ -8504,6 +8648,7 @@ class Experiment(Base):
         return None
 
     @classmethod
+    @Base.add_validate_call
     def create(
         cls,
         experiment_name: str,
@@ -8571,6 +8716,7 @@ class Experiment(Base):
         return cls.get(experiment_name=experiment_name, session=session, region=region)
 
     @classmethod
+    @Base.add_validate_call
     def get(
         cls,
         experiment_name: str,
@@ -8616,6 +8762,7 @@ class Experiment(Base):
         experiment = cls(**transformed_response)
         return experiment
 
+    @Base.add_validate_call
     def refresh(
         self,
     ) -> Optional["Experiment"]:
@@ -8648,6 +8795,7 @@ class Experiment(Base):
         transform(response, "DescribeExperimentResponse", self)
         return self
 
+    @Base.add_validate_call
     def update(
         self,
         display_name: Optional[str] = Unassigned(),
@@ -8693,6 +8841,7 @@ class Experiment(Base):
 
         return self
 
+    @Base.add_validate_call
     def delete(
         self,
     ) -> None:
@@ -8722,6 +8871,7 @@ class Experiment(Base):
         logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
     @classmethod
+    @Base.add_validate_call
     def get_all(
         cls,
         created_after: Optional[datetime.datetime] = Unassigned(),
@@ -8872,6 +9022,7 @@ class FeatureGroup(Base):
 
     @classmethod
     @populate_inputs_decorator
+    @Base.add_validate_call
     def create(
         cls,
         feature_group_name: str,
@@ -8958,6 +9109,7 @@ class FeatureGroup(Base):
         return cls.get(feature_group_name=feature_group_name, session=session, region=region)
 
     @classmethod
+    @Base.add_validate_call
     def get(
         cls,
         feature_group_name: str,
@@ -9006,6 +9158,7 @@ class FeatureGroup(Base):
         feature_group = cls(**transformed_response)
         return feature_group
 
+    @Base.add_validate_call
     def refresh(
         self,
     ) -> Optional["FeatureGroup"]:
@@ -9040,6 +9193,7 @@ class FeatureGroup(Base):
         return self
 
     @populate_inputs_decorator
+    @Base.add_validate_call
     def update(
         self,
         feature_additions: Optional[List[FeatureDefinition]] = Unassigned(),
@@ -9090,6 +9244,7 @@ class FeatureGroup(Base):
 
         return self
 
+    @Base.add_validate_call
     def delete(
         self,
     ) -> None:
@@ -9118,6 +9273,7 @@ class FeatureGroup(Base):
 
         logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
+    @Base.add_validate_call
     def wait_for_status(
         self,
         target_status: Literal["Creating", "Created", "CreateFailed", "Deleting", "DeleteFailed"],
@@ -9174,6 +9330,7 @@ class FeatureGroup(Base):
                     raise TimeoutExceededError(resouce_type="FeatureGroup", status=current_status)
                 time.sleep(poll)
 
+    @Base.add_validate_call
     def wait_for_delete(
         self,
         poll: int = 5,
@@ -9237,6 +9394,7 @@ class FeatureGroup(Base):
                 time.sleep(poll)
 
     @classmethod
+    @Base.add_validate_call
     def get_all(
         cls,
         name_contains: Optional[str] = Unassigned(),
@@ -9352,6 +9510,7 @@ class FeatureMetadata(Base):
         return None
 
     @classmethod
+    @Base.add_validate_call
     def get(
         cls,
         feature_group_name: str,
@@ -9400,6 +9559,7 @@ class FeatureMetadata(Base):
         feature_metadata = cls(**transformed_response)
         return feature_metadata
 
+    @Base.add_validate_call
     def refresh(
         self,
     ) -> Optional["FeatureMetadata"]:
@@ -9433,6 +9593,7 @@ class FeatureMetadata(Base):
         transform(response, "DescribeFeatureMetadataResponse", self)
         return self
 
+    @Base.add_validate_call
     def update(
         self,
         description: Optional[str] = Unassigned(),
@@ -9551,6 +9712,7 @@ class FlowDefinition(Base):
 
     @classmethod
     @populate_inputs_decorator
+    @Base.add_validate_call
     def create(
         cls,
         flow_definition_name: str,
@@ -9628,6 +9790,7 @@ class FlowDefinition(Base):
         return cls.get(flow_definition_name=flow_definition_name, session=session, region=region)
 
     @classmethod
+    @Base.add_validate_call
     def get(
         cls,
         flow_definition_name: str,
@@ -9673,6 +9836,7 @@ class FlowDefinition(Base):
         flow_definition = cls(**transformed_response)
         return flow_definition
 
+    @Base.add_validate_call
     def refresh(
         self,
     ) -> Optional["FlowDefinition"]:
@@ -9705,6 +9869,7 @@ class FlowDefinition(Base):
         transform(response, "DescribeFlowDefinitionResponse", self)
         return self
 
+    @Base.add_validate_call
     def delete(
         self,
     ) -> None:
@@ -9734,6 +9899,7 @@ class FlowDefinition(Base):
 
         logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
+    @Base.add_validate_call
     def wait_for_status(
         self,
         target_status: Literal["Initializing", "Active", "Failed", "Deleting"],
@@ -9790,6 +9956,7 @@ class FlowDefinition(Base):
                     raise TimeoutExceededError(resouce_type="FlowDefinition", status=current_status)
                 time.sleep(poll)
 
+    @Base.add_validate_call
     def wait_for_delete(
         self,
         poll: int = 5,
@@ -9853,6 +10020,7 @@ class FlowDefinition(Base):
                 time.sleep(poll)
 
     @classmethod
+    @Base.add_validate_call
     def get_all(
         cls,
         creation_time_after: Optional[datetime.datetime] = Unassigned(),
@@ -9976,6 +10144,7 @@ class Hub(Base):
 
     @classmethod
     @populate_inputs_decorator
+    @Base.add_validate_call
     def create(
         cls,
         hub_name: str,
@@ -10050,6 +10219,7 @@ class Hub(Base):
         return cls.get(hub_name=hub_name, session=session, region=region)
 
     @classmethod
+    @Base.add_validate_call
     def get(
         cls,
         hub_name: str,
@@ -10095,6 +10265,7 @@ class Hub(Base):
         hub = cls(**transformed_response)
         return hub
 
+    @Base.add_validate_call
     def refresh(
         self,
     ) -> Optional["Hub"]:
@@ -10128,6 +10299,7 @@ class Hub(Base):
         return self
 
     @populate_inputs_decorator
+    @Base.add_validate_call
     def update(
         self,
         hub_description: Optional[str] = Unassigned(),
@@ -10174,6 +10346,7 @@ class Hub(Base):
 
         return self
 
+    @Base.add_validate_call
     def delete(
         self,
     ) -> None:
@@ -10203,6 +10376,7 @@ class Hub(Base):
 
         logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
+    @Base.add_validate_call
     def wait_for_status(
         self,
         target_status: Literal[
@@ -10265,6 +10439,7 @@ class Hub(Base):
                     raise TimeoutExceededError(resouce_type="Hub", status=current_status)
                 time.sleep(poll)
 
+    @Base.add_validate_call
     def wait_for_delete(
         self,
         poll: int = 5,
@@ -10326,6 +10501,7 @@ class Hub(Base):
                 time.sleep(poll)
 
     @classmethod
+    @Base.add_validate_call
     def get_all(
         cls,
         name_contains: Optional[str] = Unassigned(),
@@ -10463,6 +10639,7 @@ class HubContent(Base):
         return None
 
     @classmethod
+    @Base.add_validate_call
     def get(
         cls,
         hub_name: str,
@@ -10517,6 +10694,7 @@ class HubContent(Base):
         hub_content = cls(**transformed_response)
         return hub_content
 
+    @Base.add_validate_call
     def refresh(
         self,
     ) -> Optional["HubContent"]:
@@ -10552,6 +10730,7 @@ class HubContent(Base):
         transform(response, "DescribeHubContentResponse", self)
         return self
 
+    @Base.add_validate_call
     def delete(
         self,
     ) -> None:
@@ -10584,6 +10763,7 @@ class HubContent(Base):
 
         logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
+    @Base.add_validate_call
     def wait_for_status(
         self,
         target_status: Literal["Supported", "Deprecated"],
@@ -10634,6 +10814,7 @@ class HubContent(Base):
                 time.sleep(poll)
 
     @classmethod
+    @Base.add_validate_call
     def load(
         cls,
         hub_content_name: str,
@@ -10722,6 +10903,7 @@ class HubContent(Base):
             region=region,
         )
 
+    @Base.add_validate_call
     def get_all_versions(
         self,
         min_version: Optional[str] = Unassigned(),
@@ -10836,6 +11018,7 @@ class HubContentReference(Base):
         return None
 
     @classmethod
+    @Base.add_validate_call
     def create(
         cls,
         hub_name: Union[str, object],
@@ -10843,7 +11026,7 @@ class HubContentReference(Base):
         hub_content_name: Optional[Union[str, object]] = Unassigned(),
         min_version: Optional[str] = Unassigned(),
         tags: Optional[List[Tag]] = Unassigned(),
-    ) -> Optional["resource_name"]:
+    ) -> Optional["HubContentReference"]:
         """
         Create a HubContentReference resource
 
@@ -10897,6 +11080,7 @@ class HubContentReference(Base):
         transformed_response = transform(response, "CreateHubContentReferenceResponse")
         return cls(**operation_input_args, **transformed_response)
 
+    @Base.add_validate_call
     def delete(
         self,
         hub_content_type: str,
@@ -10965,6 +11149,7 @@ class HumanTaskUi(Base):
         return None
 
     @classmethod
+    @Base.add_validate_call
     def create(
         cls,
         human_task_ui_name: str,
@@ -11030,6 +11215,7 @@ class HumanTaskUi(Base):
         return cls.get(human_task_ui_name=human_task_ui_name, session=session, region=region)
 
     @classmethod
+    @Base.add_validate_call
     def get(
         cls,
         human_task_ui_name: str,
@@ -11075,6 +11261,7 @@ class HumanTaskUi(Base):
         human_task_ui = cls(**transformed_response)
         return human_task_ui
 
+    @Base.add_validate_call
     def refresh(
         self,
     ) -> Optional["HumanTaskUi"]:
@@ -11107,6 +11294,7 @@ class HumanTaskUi(Base):
         transform(response, "DescribeHumanTaskUiResponse", self)
         return self
 
+    @Base.add_validate_call
     def delete(
         self,
     ) -> None:
@@ -11135,6 +11323,7 @@ class HumanTaskUi(Base):
 
         logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
+    @Base.add_validate_call
     def wait_for_status(
         self,
         target_status: Literal["Active", "Deleting"],
@@ -11184,6 +11373,7 @@ class HumanTaskUi(Base):
                     raise TimeoutExceededError(resouce_type="HumanTaskUi", status=current_status)
                 time.sleep(poll)
 
+    @Base.add_validate_call
     def wait_for_delete(
         self,
         poll: int = 5,
@@ -11247,6 +11437,7 @@ class HumanTaskUi(Base):
                 time.sleep(poll)
 
     @classmethod
+    @Base.add_validate_call
     def get_all(
         cls,
         creation_time_after: Optional[datetime.datetime] = Unassigned(),
@@ -11401,6 +11592,7 @@ class HyperParameterTuningJob(Base):
 
     @classmethod
     @populate_inputs_decorator
+    @Base.add_validate_call
     def create(
         cls,
         hyper_parameter_tuning_job_name: str,
@@ -11484,6 +11676,7 @@ class HyperParameterTuningJob(Base):
         )
 
     @classmethod
+    @Base.add_validate_call
     def get(
         cls,
         hyper_parameter_tuning_job_name: str,
@@ -11529,6 +11722,7 @@ class HyperParameterTuningJob(Base):
         hyper_parameter_tuning_job = cls(**transformed_response)
         return hyper_parameter_tuning_job
 
+    @Base.add_validate_call
     def refresh(
         self,
     ) -> Optional["HyperParameterTuningJob"]:
@@ -11561,6 +11755,7 @@ class HyperParameterTuningJob(Base):
         transform(response, "DescribeHyperParameterTuningJobResponse", self)
         return self
 
+    @Base.add_validate_call
     def delete(
         self,
     ) -> None:
@@ -11588,6 +11783,7 @@ class HyperParameterTuningJob(Base):
 
         logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
+    @Base.add_validate_call
     def stop(self) -> None:
         """
         Stop a HyperParameterTuningJob resource
@@ -11614,6 +11810,7 @@ class HyperParameterTuningJob(Base):
 
         logger.info(f"Stopping {self.__class__.__name__} - {self.get_name()}")
 
+    @Base.add_validate_call
     def wait(self, poll: int = 5, timeout: Optional[int] = None) -> None:
         """
         Wait for a HyperParameterTuningJob resource.
@@ -11669,6 +11866,7 @@ class HyperParameterTuningJob(Base):
                     )
                 time.sleep(poll)
 
+    @Base.add_validate_call
     def wait_for_delete(
         self,
         poll: int = 5,
@@ -11732,6 +11930,7 @@ class HyperParameterTuningJob(Base):
                 time.sleep(poll)
 
     @classmethod
+    @Base.add_validate_call
     def get_all(
         cls,
         sort_by: Optional[str] = Unassigned(),
@@ -11807,6 +12006,7 @@ class HyperParameterTuningJob(Base):
             list_method_kwargs=operation_input_args,
         )
 
+    @Base.add_validate_call
     def get_all_training_jobs(
         self,
         status_equals: Optional[str] = Unassigned(),
@@ -11928,6 +12128,7 @@ class Image(Base):
 
     @classmethod
     @populate_inputs_decorator
+    @Base.add_validate_call
     def create(
         cls,
         image_name: str,
@@ -11999,6 +12200,7 @@ class Image(Base):
         return cls.get(image_name=image_name, session=session, region=region)
 
     @classmethod
+    @Base.add_validate_call
     def get(
         cls,
         image_name: str,
@@ -12044,6 +12246,7 @@ class Image(Base):
         image = cls(**transformed_response)
         return image
 
+    @Base.add_validate_call
     def refresh(
         self,
     ) -> Optional["Image"]:
@@ -12077,6 +12280,7 @@ class Image(Base):
         return self
 
     @populate_inputs_decorator
+    @Base.add_validate_call
     def update(
         self,
         delete_properties: Optional[List[str]] = Unassigned(),
@@ -12129,6 +12333,7 @@ class Image(Base):
 
         return self
 
+    @Base.add_validate_call
     def delete(
         self,
     ) -> None:
@@ -12158,6 +12363,7 @@ class Image(Base):
 
         logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
+    @Base.add_validate_call
     def wait_for_status(
         self,
         target_status: Literal[
@@ -12220,6 +12426,7 @@ class Image(Base):
                     raise TimeoutExceededError(resouce_type="Image", status=current_status)
                 time.sleep(poll)
 
+    @Base.add_validate_call
     def wait_for_delete(
         self,
         poll: int = 5,
@@ -12289,6 +12496,7 @@ class Image(Base):
                 time.sleep(poll)
 
     @classmethod
+    @Base.add_validate_call
     def get_all(
         cls,
         creation_time_after: Optional[datetime.datetime] = Unassigned(),
@@ -12361,6 +12569,7 @@ class Image(Base):
             list_method_kwargs=operation_input_args,
         )
 
+    @Base.add_validate_call
     def get_all_aliases(
         self,
         alias: Optional[str] = Unassigned(),
@@ -12480,6 +12689,7 @@ class ImageVersion(Base):
         return None
 
     @classmethod
+    @Base.add_validate_call
     def create(
         cls,
         base_image: str,
@@ -12570,6 +12780,7 @@ class ImageVersion(Base):
         return cls.get(image_name=image_name, session=session, region=region)
 
     @classmethod
+    @Base.add_validate_call
     def get(
         cls,
         image_name: str,
@@ -12621,6 +12832,7 @@ class ImageVersion(Base):
         image_version = cls(**transformed_response)
         return image_version
 
+    @Base.add_validate_call
     def refresh(
         self,
         alias: Optional[str] = Unassigned(),
@@ -12656,6 +12868,7 @@ class ImageVersion(Base):
         transform(response, "DescribeImageVersionResponse", self)
         return self
 
+    @Base.add_validate_call
     def update(
         self,
         alias: Optional[str] = Unassigned(),
@@ -12724,6 +12937,7 @@ class ImageVersion(Base):
 
         return self
 
+    @Base.add_validate_call
     def delete(
         self,
         alias: Optional[str] = Unassigned(),
@@ -12756,6 +12970,7 @@ class ImageVersion(Base):
 
         logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
+    @Base.add_validate_call
     def wait_for_status(
         self,
         target_status: Literal["CREATING", "CREATED", "CREATE_FAILED", "DELETING", "DELETE_FAILED"],
@@ -12812,6 +13027,7 @@ class ImageVersion(Base):
                     raise TimeoutExceededError(resouce_type="ImageVersion", status=current_status)
                 time.sleep(poll)
 
+    @Base.add_validate_call
     def wait_for_delete(
         self,
         poll: int = 5,
@@ -12931,6 +13147,7 @@ class InferenceComponent(Base):
         return None
 
     @classmethod
+    @Base.add_validate_call
     def create(
         cls,
         inference_component_name: str,
@@ -13006,6 +13223,7 @@ class InferenceComponent(Base):
         )
 
     @classmethod
+    @Base.add_validate_call
     def get(
         cls,
         inference_component_name: str,
@@ -13050,6 +13268,7 @@ class InferenceComponent(Base):
         inference_component = cls(**transformed_response)
         return inference_component
 
+    @Base.add_validate_call
     def refresh(
         self,
     ) -> Optional["InferenceComponent"]:
@@ -13081,6 +13300,7 @@ class InferenceComponent(Base):
         transform(response, "DescribeInferenceComponentOutput", self)
         return self
 
+    @Base.add_validate_call
     def update(
         self,
         specification: Optional[InferenceComponentSpecification] = Unassigned(),
@@ -13125,6 +13345,7 @@ class InferenceComponent(Base):
 
         return self
 
+    @Base.add_validate_call
     def delete(
         self,
     ) -> None:
@@ -13152,6 +13373,7 @@ class InferenceComponent(Base):
 
         logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
+    @Base.add_validate_call
     def wait_for_status(
         self,
         target_status: Literal["InService", "Creating", "Updating", "Failed", "Deleting"],
@@ -13212,6 +13434,7 @@ class InferenceComponent(Base):
                     )
                 time.sleep(poll)
 
+    @Base.add_validate_call
     def wait_for_delete(
         self,
         poll: int = 5,
@@ -13275,6 +13498,7 @@ class InferenceComponent(Base):
                 time.sleep(poll)
 
     @classmethod
+    @Base.add_validate_call
     def get_all(
         cls,
         sort_by: Optional[str] = Unassigned(),
@@ -13356,6 +13580,7 @@ class InferenceComponent(Base):
             list_method_kwargs=operation_input_args,
         )
 
+    @Base.add_validate_call
     def update_runtime_configs(
         self,
         desired_runtime_config: InferenceComponentRuntimeConfig,
@@ -13474,6 +13699,7 @@ class InferenceExperiment(Base):
 
     @classmethod
     @populate_inputs_decorator
+    @Base.add_validate_call
     def create(
         cls,
         name: str,
@@ -13563,6 +13789,7 @@ class InferenceExperiment(Base):
         return cls.get(name=name, session=session, region=region)
 
     @classmethod
+    @Base.add_validate_call
     def get(
         cls,
         name: str,
@@ -13608,6 +13835,7 @@ class InferenceExperiment(Base):
         inference_experiment = cls(**transformed_response)
         return inference_experiment
 
+    @Base.add_validate_call
     def refresh(
         self,
     ) -> Optional["InferenceExperiment"]:
@@ -13641,6 +13869,7 @@ class InferenceExperiment(Base):
         return self
 
     @populate_inputs_decorator
+    @Base.add_validate_call
     def update(
         self,
         schedule: Optional[InferenceExperimentSchedule] = Unassigned(),
@@ -13692,6 +13921,7 @@ class InferenceExperiment(Base):
 
         return self
 
+    @Base.add_validate_call
     def delete(
         self,
     ) -> None:
@@ -13721,6 +13951,7 @@ class InferenceExperiment(Base):
 
         logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
+    @Base.add_validate_call
     def stop(self) -> None:
         """
         Stop a InferenceExperiment resource
@@ -13752,6 +13983,7 @@ class InferenceExperiment(Base):
 
         logger.info(f"Stopping {self.__class__.__name__} - {self.get_name()}")
 
+    @Base.add_validate_call
     def wait_for_status(
         self,
         target_status: Literal[
@@ -13815,6 +14047,7 @@ class InferenceExperiment(Base):
                 time.sleep(poll)
 
     @classmethod
+    @Base.add_validate_call
     def get_all(
         cls,
         name_contains: Optional[str] = Unassigned(),
@@ -13971,6 +14204,7 @@ class InferenceRecommendationsJob(Base):
 
     @classmethod
     @populate_inputs_decorator
+    @Base.add_validate_call
     def create(
         cls,
         job_name: str,
@@ -14051,6 +14285,7 @@ class InferenceRecommendationsJob(Base):
         return cls.get(job_name=job_name, session=session, region=region)
 
     @classmethod
+    @Base.add_validate_call
     def get(
         cls,
         job_name: str,
@@ -14096,6 +14331,7 @@ class InferenceRecommendationsJob(Base):
         inference_recommendations_job = cls(**transformed_response)
         return inference_recommendations_job
 
+    @Base.add_validate_call
     def refresh(
         self,
     ) -> Optional["InferenceRecommendationsJob"]:
@@ -14128,6 +14364,7 @@ class InferenceRecommendationsJob(Base):
         transform(response, "DescribeInferenceRecommendationsJobResponse", self)
         return self
 
+    @Base.add_validate_call
     def stop(self) -> None:
         """
         Stop a InferenceRecommendationsJob resource
@@ -14154,6 +14391,7 @@ class InferenceRecommendationsJob(Base):
 
         logger.info(f"Stopping {self.__class__.__name__} - {self.get_name()}")
 
+    @Base.add_validate_call
     def wait(self, poll: int = 5, timeout: Optional[int] = None) -> None:
         """
         Wait for a InferenceRecommendationsJob resource.
@@ -14209,6 +14447,7 @@ class InferenceRecommendationsJob(Base):
                     )
                 time.sleep(poll)
 
+    @Base.add_validate_call
     def wait_for_delete(
         self,
         poll: int = 5,
@@ -14276,6 +14515,7 @@ class InferenceRecommendationsJob(Base):
                 time.sleep(poll)
 
     @classmethod
+    @Base.add_validate_call
     def get_all(
         cls,
         creation_time_after: Optional[datetime.datetime] = Unassigned(),
@@ -14357,6 +14597,7 @@ class InferenceRecommendationsJob(Base):
             list_method_kwargs=operation_input_args,
         )
 
+    @Base.add_validate_call
     def get_all_steps(
         self,
         step_type: Optional[str] = Unassigned(),
@@ -14512,6 +14753,7 @@ class LabelingJob(Base):
 
     @classmethod
     @populate_inputs_decorator
+    @Base.add_validate_call
     def create(
         cls,
         labeling_job_name: str,
@@ -14598,6 +14840,7 @@ class LabelingJob(Base):
         return cls.get(labeling_job_name=labeling_job_name, session=session, region=region)
 
     @classmethod
+    @Base.add_validate_call
     def get(
         cls,
         labeling_job_name: str,
@@ -14643,6 +14886,7 @@ class LabelingJob(Base):
         labeling_job = cls(**transformed_response)
         return labeling_job
 
+    @Base.add_validate_call
     def refresh(
         self,
     ) -> Optional["LabelingJob"]:
@@ -14675,6 +14919,7 @@ class LabelingJob(Base):
         transform(response, "DescribeLabelingJobResponse", self)
         return self
 
+    @Base.add_validate_call
     def stop(self) -> None:
         """
         Stop a LabelingJob resource
@@ -14701,6 +14946,7 @@ class LabelingJob(Base):
 
         logger.info(f"Stopping {self.__class__.__name__} - {self.get_name()}")
 
+    @Base.add_validate_call
     def wait(self, poll: int = 5, timeout: Optional[int] = None) -> None:
         """
         Wait for a LabelingJob resource.
@@ -14755,6 +15001,7 @@ class LabelingJob(Base):
                 time.sleep(poll)
 
     @classmethod
+    @Base.add_validate_call
     def get_all(
         cls,
         creation_time_after: Optional[datetime.datetime] = Unassigned(),
@@ -14873,6 +15120,7 @@ class LineageGroup(Base):
         return None
 
     @classmethod
+    @Base.add_validate_call
     def get(
         cls,
         lineage_group_name: str,
@@ -14918,6 +15166,7 @@ class LineageGroup(Base):
         lineage_group = cls(**transformed_response)
         return lineage_group
 
+    @Base.add_validate_call
     def refresh(
         self,
     ) -> Optional["LineageGroup"]:
@@ -14951,6 +15200,7 @@ class LineageGroup(Base):
         return self
 
     @classmethod
+    @Base.add_validate_call
     def get_all(
         cls,
         created_after: Optional[datetime.datetime] = Unassigned(),
@@ -15014,6 +15264,7 @@ class LineageGroup(Base):
             list_method_kwargs=operation_input_args,
         )
 
+    @Base.add_validate_call
     def get_policy(
         self,
         session: Optional[Session] = None,
@@ -15129,6 +15380,7 @@ class MlflowTrackingServer(Base):
 
     @classmethod
     @populate_inputs_decorator
+    @Base.add_validate_call
     def create(
         cls,
         tracking_server_name: str,
@@ -15208,6 +15460,7 @@ class MlflowTrackingServer(Base):
         return cls.get(tracking_server_name=tracking_server_name, session=session, region=region)
 
     @classmethod
+    @Base.add_validate_call
     def get(
         cls,
         tracking_server_name: str,
@@ -15253,6 +15506,7 @@ class MlflowTrackingServer(Base):
         mlflow_tracking_server = cls(**transformed_response)
         return mlflow_tracking_server
 
+    @Base.add_validate_call
     def refresh(
         self,
     ) -> Optional["MlflowTrackingServer"]:
@@ -15286,6 +15540,7 @@ class MlflowTrackingServer(Base):
         return self
 
     @populate_inputs_decorator
+    @Base.add_validate_call
     def update(
         self,
         artifact_store_uri: Optional[str] = Unassigned(),
@@ -15336,6 +15591,7 @@ class MlflowTrackingServer(Base):
 
         return self
 
+    @Base.add_validate_call
     def delete(
         self,
     ) -> None:
@@ -15364,6 +15620,7 @@ class MlflowTrackingServer(Base):
 
         logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
+    @Base.add_validate_call
     def stop(self) -> None:
         """
         Stop a MlflowTrackingServer resource
@@ -15391,6 +15648,7 @@ class MlflowTrackingServer(Base):
 
         logger.info(f"Stopping {self.__class__.__name__} - {self.get_name()}")
 
+    @Base.add_validate_call
     def wait_for_status(
         self,
         target_status: Literal[
@@ -15469,6 +15727,7 @@ class MlflowTrackingServer(Base):
                     )
                 time.sleep(poll)
 
+    @Base.add_validate_call
     def wait_for_delete(
         self,
         poll: int = 5,
@@ -15532,6 +15791,7 @@ class MlflowTrackingServer(Base):
                 time.sleep(poll)
 
     @classmethod
+    @Base.add_validate_call
     def get_all(
         cls,
         created_after: Optional[datetime.datetime] = Unassigned(),
@@ -15676,6 +15936,7 @@ class Model(Base):
 
     @classmethod
     @populate_inputs_decorator
+    @Base.add_validate_call
     def create(
         cls,
         model_name: str,
@@ -15755,6 +16016,7 @@ class Model(Base):
         return cls.get(model_name=model_name, session=session, region=region)
 
     @classmethod
+    @Base.add_validate_call
     def get(
         cls,
         model_name: str,
@@ -15799,6 +16061,7 @@ class Model(Base):
         model = cls(**transformed_response)
         return model
 
+    @Base.add_validate_call
     def refresh(
         self,
     ) -> Optional["Model"]:
@@ -15830,6 +16093,7 @@ class Model(Base):
         transform(response, "DescribeModelOutput", self)
         return self
 
+    @Base.add_validate_call
     def delete(
         self,
     ) -> None:
@@ -15858,6 +16122,7 @@ class Model(Base):
         logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
     @classmethod
+    @Base.add_validate_call
     def get_all(
         cls,
         sort_by: Optional[str] = Unassigned(),
@@ -15924,6 +16189,7 @@ class Model(Base):
             list_method_kwargs=operation_input_args,
         )
 
+    @Base.add_validate_call
     def get_all_metadata(
         self,
         search_expression: Optional[ModelMetadataSearchExpression] = Unassigned(),
@@ -16066,6 +16332,7 @@ class ModelBiasJobDefinition(Base):
 
     @classmethod
     @populate_inputs_decorator
+    @Base.add_validate_call
     def create(
         cls,
         job_definition_name: str,
@@ -16152,6 +16419,7 @@ class ModelBiasJobDefinition(Base):
         return cls.get(job_definition_name=job_definition_name, session=session, region=region)
 
     @classmethod
+    @Base.add_validate_call
     def get(
         cls,
         job_definition_name: str,
@@ -16197,6 +16465,7 @@ class ModelBiasJobDefinition(Base):
         model_bias_job_definition = cls(**transformed_response)
         return model_bias_job_definition
 
+    @Base.add_validate_call
     def refresh(
         self,
     ) -> Optional["ModelBiasJobDefinition"]:
@@ -16229,6 +16498,7 @@ class ModelBiasJobDefinition(Base):
         transform(response, "DescribeModelBiasJobDefinitionResponse", self)
         return self
 
+    @Base.add_validate_call
     def delete(
         self,
     ) -> None:
@@ -16258,6 +16528,7 @@ class ModelBiasJobDefinition(Base):
         logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
     @classmethod
+    @Base.add_validate_call
     def get_all(
         cls,
         endpoint_name: Optional[str] = Unassigned(),
@@ -16394,6 +16665,7 @@ class ModelCard(Base):
 
     @classmethod
     @populate_inputs_decorator
+    @Base.add_validate_call
     def create(
         cls,
         model_card_name: str,
@@ -16465,6 +16737,7 @@ class ModelCard(Base):
         return cls.get(model_card_name=model_card_name, session=session, region=region)
 
     @classmethod
+    @Base.add_validate_call
     def get(
         cls,
         model_card_name: str,
@@ -16513,6 +16786,7 @@ class ModelCard(Base):
         model_card = cls(**transformed_response)
         return model_card
 
+    @Base.add_validate_call
     def refresh(
         self,
     ) -> Optional["ModelCard"]:
@@ -16547,6 +16821,7 @@ class ModelCard(Base):
         return self
 
     @populate_inputs_decorator
+    @Base.add_validate_call
     def update(
         self,
         content: Optional[str] = Unassigned(),
@@ -16593,6 +16868,7 @@ class ModelCard(Base):
 
         return self
 
+    @Base.add_validate_call
     def delete(
         self,
     ) -> None:
@@ -16622,6 +16898,7 @@ class ModelCard(Base):
 
         logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
+    @Base.add_validate_call
     def wait_for_status(
         self,
         target_status: Literal["Draft", "PendingReview", "Approved", "Archived"],
@@ -16672,6 +16949,7 @@ class ModelCard(Base):
                 time.sleep(poll)
 
     @classmethod
+    @Base.add_validate_call
     def get_all(
         cls,
         creation_time_after: Optional[datetime.datetime] = Unassigned(),
@@ -16741,6 +17019,7 @@ class ModelCard(Base):
             list_method_kwargs=operation_input_args,
         )
 
+    @Base.add_validate_call
     def get_all_versions(
         self,
         creation_time_after: Optional[datetime.datetime] = Unassigned(),
@@ -16871,6 +17150,7 @@ class ModelCardExportJob(Base):
 
     @classmethod
     @populate_inputs_decorator
+    @Base.add_validate_call
     def create(
         cls,
         model_card_name: Union[str, object],
@@ -16944,6 +17224,7 @@ class ModelCardExportJob(Base):
         )
 
     @classmethod
+    @Base.add_validate_call
     def get(
         cls,
         model_card_export_job_arn: str,
@@ -16989,6 +17270,7 @@ class ModelCardExportJob(Base):
         model_card_export_job = cls(**transformed_response)
         return model_card_export_job
 
+    @Base.add_validate_call
     def refresh(
         self,
     ) -> Optional["ModelCardExportJob"]:
@@ -17021,6 +17303,7 @@ class ModelCardExportJob(Base):
         transform(response, "DescribeModelCardExportJobResponse", self)
         return self
 
+    @Base.add_validate_call
     def wait(self, poll: int = 5, timeout: Optional[int] = None) -> None:
         """
         Wait for a ModelCardExportJob resource.
@@ -17077,6 +17360,7 @@ class ModelCardExportJob(Base):
                 time.sleep(poll)
 
     @classmethod
+    @Base.add_validate_call
     def get_all(
         cls,
         model_card_name: str,
@@ -17241,6 +17525,7 @@ class ModelExplainabilityJobDefinition(Base):
 
     @classmethod
     @populate_inputs_decorator
+    @Base.add_validate_call
     def create(
         cls,
         job_definition_name: str,
@@ -17330,6 +17615,7 @@ class ModelExplainabilityJobDefinition(Base):
         return cls.get(job_definition_name=job_definition_name, session=session, region=region)
 
     @classmethod
+    @Base.add_validate_call
     def get(
         cls,
         job_definition_name: str,
@@ -17377,6 +17663,7 @@ class ModelExplainabilityJobDefinition(Base):
         model_explainability_job_definition = cls(**transformed_response)
         return model_explainability_job_definition
 
+    @Base.add_validate_call
     def refresh(
         self,
     ) -> Optional["ModelExplainabilityJobDefinition"]:
@@ -17409,6 +17696,7 @@ class ModelExplainabilityJobDefinition(Base):
         transform(response, "DescribeModelExplainabilityJobDefinitionResponse", self)
         return self
 
+    @Base.add_validate_call
     def delete(
         self,
     ) -> None:
@@ -17438,6 +17726,7 @@ class ModelExplainabilityJobDefinition(Base):
         logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
     @classmethod
+    @Base.add_validate_call
     def get_all(
         cls,
         endpoint_name: Optional[str] = Unassigned(),
@@ -17650,6 +17939,7 @@ class ModelPackage(Base):
 
     @classmethod
     @populate_inputs_decorator
+    @Base.add_validate_call
     def create(
         cls,
         model_package_name: Optional[str] = Unassigned(),
@@ -17776,6 +18066,7 @@ class ModelPackage(Base):
         )
 
     @classmethod
+    @Base.add_validate_call
     def get(
         cls,
         model_package_name: str,
@@ -17820,6 +18111,7 @@ class ModelPackage(Base):
         model_package = cls(**transformed_response)
         return model_package
 
+    @Base.add_validate_call
     def refresh(
         self,
     ) -> Optional["ModelPackage"]:
@@ -17852,6 +18144,7 @@ class ModelPackage(Base):
         return self
 
     @populate_inputs_decorator
+    @Base.add_validate_call
     def update(
         self,
         model_approval_status: Optional[str] = Unassigned(),
@@ -17914,6 +18207,7 @@ class ModelPackage(Base):
 
         return self
 
+    @Base.add_validate_call
     def delete(
         self,
     ) -> None:
@@ -17942,6 +18236,7 @@ class ModelPackage(Base):
 
         logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
+    @Base.add_validate_call
     def wait_for_status(
         self,
         target_status: Literal["Pending", "InProgress", "Completed", "Failed", "Deleting"],
@@ -17996,6 +18291,7 @@ class ModelPackage(Base):
                     raise TimeoutExceededError(resouce_type="ModelPackage", status=current_status)
                 time.sleep(poll)
 
+    @Base.add_validate_call
     def wait_for_delete(
         self,
         poll: int = 5,
@@ -18059,6 +18355,7 @@ class ModelPackage(Base):
                 time.sleep(poll)
 
     @classmethod
+    @Base.add_validate_call
     def get_all(
         cls,
         creation_time_after: Optional[datetime.datetime] = Unassigned(),
@@ -18134,6 +18431,7 @@ class ModelPackage(Base):
             list_method_kwargs=operation_input_args,
         )
 
+    @Base.add_validate_call
     def batch_get(
         self,
         model_package_arn_list: List[str],
@@ -18218,6 +18516,7 @@ class ModelPackageGroup(Base):
         return None
 
     @classmethod
+    @Base.add_validate_call
     def create(
         cls,
         model_package_group_name: str,
@@ -18284,6 +18583,7 @@ class ModelPackageGroup(Base):
         )
 
     @classmethod
+    @Base.add_validate_call
     def get(
         cls,
         model_package_group_name: str,
@@ -18328,6 +18628,7 @@ class ModelPackageGroup(Base):
         model_package_group = cls(**transformed_response)
         return model_package_group
 
+    @Base.add_validate_call
     def refresh(
         self,
     ) -> Optional["ModelPackageGroup"]:
@@ -18359,6 +18660,7 @@ class ModelPackageGroup(Base):
         transform(response, "DescribeModelPackageGroupOutput", self)
         return self
 
+    @Base.add_validate_call
     def delete(
         self,
     ) -> None:
@@ -18387,6 +18689,7 @@ class ModelPackageGroup(Base):
 
         logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
+    @Base.add_validate_call
     def wait_for_status(
         self,
         target_status: Literal[
@@ -18445,6 +18748,7 @@ class ModelPackageGroup(Base):
                     )
                 time.sleep(poll)
 
+    @Base.add_validate_call
     def wait_for_delete(
         self,
         poll: int = 5,
@@ -18508,6 +18812,7 @@ class ModelPackageGroup(Base):
                 time.sleep(poll)
 
     @classmethod
+    @Base.add_validate_call
     def get_all(
         cls,
         creation_time_after: Optional[datetime.datetime] = Unassigned(),
@@ -18577,6 +18882,7 @@ class ModelPackageGroup(Base):
             list_method_kwargs=operation_input_args,
         )
 
+    @Base.add_validate_call
     def get_policy(
         self,
         session: Optional[Session] = None,
@@ -18619,6 +18925,7 @@ class ModelPackageGroup(Base):
 
         return list(response.values())[0]
 
+    @Base.add_validate_call
     def delete_policy(
         self,
         session: Optional[Session] = None,
@@ -18656,6 +18963,7 @@ class ModelPackageGroup(Base):
         response = client.delete_model_package_group_policy(**operation_input_args)
         logger.debug(f"Response: {response}")
 
+    @Base.add_validate_call
     def put_policy(
         self,
         resource_policy: str,
@@ -18785,6 +19093,7 @@ class ModelQualityJobDefinition(Base):
 
     @classmethod
     @populate_inputs_decorator
+    @Base.add_validate_call
     def create(
         cls,
         job_definition_name: str,
@@ -18871,6 +19180,7 @@ class ModelQualityJobDefinition(Base):
         return cls.get(job_definition_name=job_definition_name, session=session, region=region)
 
     @classmethod
+    @Base.add_validate_call
     def get(
         cls,
         job_definition_name: str,
@@ -18916,6 +19226,7 @@ class ModelQualityJobDefinition(Base):
         model_quality_job_definition = cls(**transformed_response)
         return model_quality_job_definition
 
+    @Base.add_validate_call
     def refresh(
         self,
     ) -> Optional["ModelQualityJobDefinition"]:
@@ -18948,6 +19259,7 @@ class ModelQualityJobDefinition(Base):
         transform(response, "DescribeModelQualityJobDefinitionResponse", self)
         return self
 
+    @Base.add_validate_call
     def delete(
         self,
     ) -> None:
@@ -18977,6 +19289,7 @@ class ModelQualityJobDefinition(Base):
         logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
     @classmethod
+    @Base.add_validate_call
     def get_all(
         cls,
         endpoint_name: Optional[str] = Unassigned(),
@@ -19090,6 +19403,7 @@ class MonitoringAlert(Base):
         logger.error("Name attribute not found for object monitoring_alert")
         return None
 
+    @Base.add_validate_call
     def update(
         self,
         monitoring_schedule_name: str,
@@ -19141,6 +19455,7 @@ class MonitoringAlert(Base):
         return self
 
     @classmethod
+    @Base.add_validate_call
     def get_all(
         cls,
         monitoring_schedule_name: str,
@@ -19196,6 +19511,7 @@ class MonitoringAlert(Base):
             list_method_kwargs=operation_input_args,
         )
 
+    @Base.add_validate_call
     def list_history(
         self,
         monitoring_schedule_name: Optional[str] = Unassigned(),
@@ -19311,6 +19627,7 @@ class MonitoringExecution(Base):
         return None
 
     @classmethod
+    @Base.add_validate_call
     def get_all(
         cls,
         monitoring_schedule_name: Optional[str] = Unassigned(),
@@ -19485,6 +19802,7 @@ class MonitoringSchedule(Base):
 
     @classmethod
     @populate_inputs_decorator
+    @Base.add_validate_call
     def create(
         cls,
         monitoring_schedule_name: str,
@@ -19552,6 +19870,7 @@ class MonitoringSchedule(Base):
         )
 
     @classmethod
+    @Base.add_validate_call
     def get(
         cls,
         monitoring_schedule_name: str,
@@ -19597,6 +19916,7 @@ class MonitoringSchedule(Base):
         monitoring_schedule = cls(**transformed_response)
         return monitoring_schedule
 
+    @Base.add_validate_call
     def refresh(
         self,
     ) -> Optional["MonitoringSchedule"]:
@@ -19630,6 +19950,7 @@ class MonitoringSchedule(Base):
         return self
 
     @populate_inputs_decorator
+    @Base.add_validate_call
     def update(
         self,
         monitoring_schedule_config: MonitoringScheduleConfig,
@@ -19673,6 +19994,7 @@ class MonitoringSchedule(Base):
 
         return self
 
+    @Base.add_validate_call
     def delete(
         self,
     ) -> None:
@@ -19701,6 +20023,7 @@ class MonitoringSchedule(Base):
 
         logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
+    @Base.add_validate_call
     def stop(self) -> None:
         """
         Stop a MonitoringSchedule resource
@@ -19727,6 +20050,7 @@ class MonitoringSchedule(Base):
 
         logger.info(f"Stopping {self.__class__.__name__} - {self.get_name()}")
 
+    @Base.add_validate_call
     def wait_for_status(
         self,
         target_status: Literal["Pending", "Failed", "Scheduled", "Stopped"],
@@ -19788,6 +20112,7 @@ class MonitoringSchedule(Base):
                 time.sleep(poll)
 
     @classmethod
+    @Base.add_validate_call
     def get_all(
         cls,
         endpoint_name: Optional[str] = Unassigned(),
@@ -19964,6 +20289,7 @@ class NotebookInstance(Base):
 
     @classmethod
     @populate_inputs_decorator
+    @Base.add_validate_call
     def create(
         cls,
         notebook_instance_name: str,
@@ -20071,6 +20397,7 @@ class NotebookInstance(Base):
         )
 
     @classmethod
+    @Base.add_validate_call
     def get(
         cls,
         notebook_instance_name: str,
@@ -20115,6 +20442,7 @@ class NotebookInstance(Base):
         notebook_instance = cls(**transformed_response)
         return notebook_instance
 
+    @Base.add_validate_call
     def refresh(
         self,
     ) -> Optional["NotebookInstance"]:
@@ -20147,6 +20475,7 @@ class NotebookInstance(Base):
         return self
 
     @populate_inputs_decorator
+    @Base.add_validate_call
     def update(
         self,
         instance_type: Optional[str] = Unassigned(),
@@ -20222,6 +20551,7 @@ class NotebookInstance(Base):
 
         return self
 
+    @Base.add_validate_call
     def delete(
         self,
     ) -> None:
@@ -20249,6 +20579,7 @@ class NotebookInstance(Base):
 
         logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
+    @Base.add_validate_call
     def stop(self) -> None:
         """
         Stop a NotebookInstance resource
@@ -20274,6 +20605,7 @@ class NotebookInstance(Base):
 
         logger.info(f"Stopping {self.__class__.__name__} - {self.get_name()}")
 
+    @Base.add_validate_call
     def wait_for_status(
         self,
         target_status: Literal[
@@ -20334,6 +20666,7 @@ class NotebookInstance(Base):
                     )
                 time.sleep(poll)
 
+    @Base.add_validate_call
     def wait_for_delete(
         self,
         poll: int = 5,
@@ -20397,6 +20730,7 @@ class NotebookInstance(Base):
                 time.sleep(poll)
 
     @classmethod
+    @Base.add_validate_call
     def get_all(
         cls,
         sort_by: Optional[str] = Unassigned(),
@@ -20520,6 +20854,7 @@ class NotebookInstanceLifecycleConfig(Base):
         return None
 
     @classmethod
+    @Base.add_validate_call
     def create(
         cls,
         notebook_instance_lifecycle_config_name: str,
@@ -20589,6 +20924,7 @@ class NotebookInstanceLifecycleConfig(Base):
         )
 
     @classmethod
+    @Base.add_validate_call
     def get(
         cls,
         notebook_instance_lifecycle_config_name: str,
@@ -20633,6 +20969,7 @@ class NotebookInstanceLifecycleConfig(Base):
         notebook_instance_lifecycle_config = cls(**transformed_response)
         return notebook_instance_lifecycle_config
 
+    @Base.add_validate_call
     def refresh(
         self,
     ) -> Optional["NotebookInstanceLifecycleConfig"]:
@@ -20664,6 +21001,7 @@ class NotebookInstanceLifecycleConfig(Base):
         transform(response, "DescribeNotebookInstanceLifecycleConfigOutput", self)
         return self
 
+    @Base.add_validate_call
     def update(
         self,
         on_create: Optional[List[NotebookInstanceLifecycleHook]] = Unassigned(),
@@ -20708,6 +21046,7 @@ class NotebookInstanceLifecycleConfig(Base):
 
         return self
 
+    @Base.add_validate_call
     def delete(
         self,
     ) -> None:
@@ -20736,6 +21075,7 @@ class NotebookInstanceLifecycleConfig(Base):
         logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
     @classmethod
+    @Base.add_validate_call
     def get_all(
         cls,
         sort_by: Optional[str] = Unassigned(),
@@ -20894,6 +21234,7 @@ class OptimizationJob(Base):
 
     @classmethod
     @populate_inputs_decorator
+    @Base.add_validate_call
     def create(
         cls,
         optimization_job_name: str,
@@ -20980,6 +21321,7 @@ class OptimizationJob(Base):
         return cls.get(optimization_job_name=optimization_job_name, session=session, region=region)
 
     @classmethod
+    @Base.add_validate_call
     def get(
         cls,
         optimization_job_name: str,
@@ -21025,6 +21367,7 @@ class OptimizationJob(Base):
         optimization_job = cls(**transformed_response)
         return optimization_job
 
+    @Base.add_validate_call
     def refresh(
         self,
     ) -> Optional["OptimizationJob"]:
@@ -21057,6 +21400,7 @@ class OptimizationJob(Base):
         transform(response, "DescribeOptimizationJobResponse", self)
         return self
 
+    @Base.add_validate_call
     def delete(
         self,
     ) -> None:
@@ -21085,6 +21429,7 @@ class OptimizationJob(Base):
 
         logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
+    @Base.add_validate_call
     def stop(self) -> None:
         """
         Stop a OptimizationJob resource
@@ -21111,6 +21456,7 @@ class OptimizationJob(Base):
 
         logger.info(f"Stopping {self.__class__.__name__} - {self.get_name()}")
 
+    @Base.add_validate_call
     def wait(self, poll: int = 5, timeout: Optional[int] = None) -> None:
         """
         Wait for a OptimizationJob resource.
@@ -21167,6 +21513,7 @@ class OptimizationJob(Base):
                 time.sleep(poll)
 
     @classmethod
+    @Base.add_validate_call
     def get_all(
         cls,
         creation_time_after: Optional[datetime.datetime] = Unassigned(),
@@ -21312,6 +21659,7 @@ class Pipeline(Base):
 
     @classmethod
     @populate_inputs_decorator
+    @Base.add_validate_call
     def create(
         cls,
         pipeline_name: str,
@@ -21396,6 +21744,7 @@ class Pipeline(Base):
         return cls.get(pipeline_name=pipeline_name, session=session, region=region)
 
     @classmethod
+    @Base.add_validate_call
     def get(
         cls,
         pipeline_name: str,
@@ -21441,6 +21790,7 @@ class Pipeline(Base):
         pipeline = cls(**transformed_response)
         return pipeline
 
+    @Base.add_validate_call
     def refresh(
         self,
     ) -> Optional["Pipeline"]:
@@ -21474,6 +21824,7 @@ class Pipeline(Base):
         return self
 
     @populate_inputs_decorator
+    @Base.add_validate_call
     def update(
         self,
         pipeline_display_name: Optional[str] = Unassigned(),
@@ -21530,6 +21881,7 @@ class Pipeline(Base):
 
         return self
 
+    @Base.add_validate_call
     def delete(
         self,
         client_request_token: str,
@@ -21561,6 +21913,7 @@ class Pipeline(Base):
 
         logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
+    @Base.add_validate_call
     def wait_for_status(
         self,
         target_status: Literal["Active", "Deleting"],
@@ -21610,6 +21963,7 @@ class Pipeline(Base):
                     raise TimeoutExceededError(resouce_type="Pipeline", status=current_status)
                 time.sleep(poll)
 
+    @Base.add_validate_call
     def wait_for_delete(
         self,
         poll: int = 5,
@@ -21671,6 +22025,7 @@ class Pipeline(Base):
                 time.sleep(poll)
 
     @classmethod
+    @Base.add_validate_call
     def get_all(
         cls,
         pipeline_name_prefix: Optional[str] = Unassigned(),
@@ -21790,6 +22145,7 @@ class PipelineExecution(Base):
         return None
 
     @classmethod
+    @Base.add_validate_call
     def get(
         cls,
         pipeline_execution_arn: str,
@@ -21835,6 +22191,7 @@ class PipelineExecution(Base):
         pipeline_execution = cls(**transformed_response)
         return pipeline_execution
 
+    @Base.add_validate_call
     def refresh(
         self,
     ) -> Optional["PipelineExecution"]:
@@ -21867,6 +22224,7 @@ class PipelineExecution(Base):
         transform(response, "DescribePipelineExecutionResponse", self)
         return self
 
+    @Base.add_validate_call
     def update(
         self,
         pipeline_execution_description: Optional[str] = Unassigned(),
@@ -21914,6 +22272,7 @@ class PipelineExecution(Base):
 
         return self
 
+    @Base.add_validate_call
     def stop(self) -> None:
         """
         Stop a PipelineExecution resource
@@ -21942,6 +22301,7 @@ class PipelineExecution(Base):
 
         logger.info(f"Stopping {self.__class__.__name__} - {self.get_name()}")
 
+    @Base.add_validate_call
     def wait_for_status(
         self,
         target_status: Literal["Executing", "Stopping", "Stopped", "Failed", "Succeeded"],
@@ -22001,6 +22361,7 @@ class PipelineExecution(Base):
                 time.sleep(poll)
 
     @classmethod
+    @Base.add_validate_call
     def get_all(
         cls,
         pipeline_name: str,
@@ -22068,6 +22429,7 @@ class PipelineExecution(Base):
             list_method_kwargs=operation_input_args,
         )
 
+    @Base.add_validate_call
     def get_pipeline_definition(
         self,
         session: Optional[Session] = None,
@@ -22112,6 +22474,7 @@ class PipelineExecution(Base):
         transformed_response = transform(response, "DescribePipelineDefinitionForExecutionResponse")
         return DescribePipelineDefinitionForExecutionResponse(**transformed_response)
 
+    @Base.add_validate_call
     def get_all_steps(
         self,
         sort_order: Optional[str] = Unassigned(),
@@ -22168,6 +22531,7 @@ class PipelineExecution(Base):
             list_method_kwargs=operation_input_args,
         )
 
+    @Base.add_validate_call
     def get_all_parameters(
         self,
         session: Optional[Session] = None,
@@ -22221,6 +22585,7 @@ class PipelineExecution(Base):
             list_method_kwargs=operation_input_args,
         )
 
+    @Base.add_validate_call
     def retry(
         self,
         client_request_token: str,
@@ -22265,6 +22630,7 @@ class PipelineExecution(Base):
         response = client.retry_pipeline_execution(**operation_input_args)
         logger.debug(f"Response: {response}")
 
+    @Base.add_validate_call
     def send_execution_step_failure(
         self,
         callback_token: str,
@@ -22311,6 +22677,7 @@ class PipelineExecution(Base):
         response = client.send_pipeline_execution_step_failure(**operation_input_args)
         logger.debug(f"Response: {response}")
 
+    @Base.add_validate_call
     def send_execution_step_success(
         self,
         callback_token: str,
@@ -22400,6 +22767,7 @@ class PresignedDomainUrl(Base):
         return None
 
     @classmethod
+    @Base.add_validate_call
     def create(
         cls,
         domain_id: str,
@@ -22408,7 +22776,7 @@ class PresignedDomainUrl(Base):
         expires_in_seconds: Optional[int] = Unassigned(),
         space_name: Optional[Union[str, object]] = Unassigned(),
         landing_uri: Optional[str] = Unassigned(),
-    ) -> Optional["resource_name"]:
+    ) -> Optional["PresignedDomainUrl"]:
         """
         Create a PresignedDomainUrl resource
 
@@ -22497,12 +22865,13 @@ class PresignedMlflowTrackingServerUrl(Base):
         return None
 
     @classmethod
+    @Base.add_validate_call
     def create(
         cls,
         tracking_server_name: str,
         expires_in_seconds: Optional[int] = Unassigned(),
         session_expiration_duration_in_seconds: Optional[int] = Unassigned(),
-    ) -> Optional["resource_name"]:
+    ) -> Optional["PresignedMlflowTrackingServerUrl"]:
         """
         Create a PresignedMlflowTrackingServerUrl resource
 
@@ -22583,11 +22952,12 @@ class PresignedNotebookInstanceUrl(Base):
         return None
 
     @classmethod
+    @Base.add_validate_call
     def create(
         cls,
         notebook_instance_name: Union[str, object],
         session_expiration_duration_in_seconds: Optional[int] = Unassigned(),
-    ) -> Optional["resource_name"]:
+    ) -> Optional["PresignedNotebookInstanceUrl"]:
         """
         Create a PresignedNotebookInstanceUrl resource
 
@@ -22727,6 +23097,7 @@ class ProcessingJob(Base):
 
     @classmethod
     @populate_inputs_decorator
+    @Base.add_validate_call
     def create(
         cls,
         processing_job_name: str,
@@ -22817,6 +23188,7 @@ class ProcessingJob(Base):
         return cls.get(processing_job_name=processing_job_name, session=session, region=region)
 
     @classmethod
+    @Base.add_validate_call
     def get(
         cls,
         processing_job_name: str,
@@ -22862,6 +23234,7 @@ class ProcessingJob(Base):
         processing_job = cls(**transformed_response)
         return processing_job
 
+    @Base.add_validate_call
     def refresh(
         self,
     ) -> Optional["ProcessingJob"]:
@@ -22894,6 +23267,7 @@ class ProcessingJob(Base):
         transform(response, "DescribeProcessingJobResponse", self)
         return self
 
+    @Base.add_validate_call
     def stop(self) -> None:
         """
         Stop a ProcessingJob resource
@@ -22920,6 +23294,7 @@ class ProcessingJob(Base):
 
         logger.info(f"Stopping {self.__class__.__name__} - {self.get_name()}")
 
+    @Base.add_validate_call
     def wait(self, poll: int = 5, timeout: Optional[int] = None) -> None:
         """
         Wait for a ProcessingJob resource.
@@ -22974,6 +23349,7 @@ class ProcessingJob(Base):
                 time.sleep(poll)
 
     @classmethod
+    @Base.add_validate_call
     def get_all(
         cls,
         creation_time_after: Optional[datetime.datetime] = Unassigned(),
@@ -23100,6 +23476,7 @@ class Project(Base):
         return None
 
     @classmethod
+    @Base.add_validate_call
     def create(
         cls,
         project_name: str,
@@ -23167,6 +23544,7 @@ class Project(Base):
         return cls.get(project_name=project_name, session=session, region=region)
 
     @classmethod
+    @Base.add_validate_call
     def get(
         cls,
         project_name: str,
@@ -23211,6 +23589,7 @@ class Project(Base):
         project = cls(**transformed_response)
         return project
 
+    @Base.add_validate_call
     def refresh(
         self,
     ) -> Optional["Project"]:
@@ -23242,6 +23621,7 @@ class Project(Base):
         transform(response, "DescribeProjectOutput", self)
         return self
 
+    @Base.add_validate_call
     def update(
         self,
         project_description: Optional[str] = Unassigned(),
@@ -23294,6 +23674,7 @@ class Project(Base):
 
         return self
 
+    @Base.add_validate_call
     def delete(
         self,
     ) -> None:
@@ -23322,6 +23703,7 @@ class Project(Base):
 
         logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
+    @Base.add_validate_call
     def wait_for_status(
         self,
         target_status: Literal[
@@ -23388,6 +23770,7 @@ class Project(Base):
                 time.sleep(poll)
 
     @classmethod
+    @Base.add_validate_call
     def get_all(
         cls,
         creation_time_after: Optional[datetime.datetime] = Unassigned(),
@@ -23489,6 +23872,7 @@ class ResourceCatalog(Base):
         return None
 
     @classmethod
+    @Base.add_validate_call
     def get_all(
         cls,
         name_contains: Optional[str] = Unassigned(),
@@ -23563,6 +23947,7 @@ class SagemakerServicecatalogPortfolio(Base):
     """
 
     @staticmethod
+    @Base.add_validate_call
     def disable(
         session: Optional[Session] = None,
         region: Optional[str] = None,
@@ -23595,6 +23980,7 @@ class SagemakerServicecatalogPortfolio(Base):
         logger.debug(f"Response: {response}")
 
     @staticmethod
+    @Base.add_validate_call
     def enable(
         session: Optional[Session] = None,
         region: Optional[str] = None,
@@ -23627,6 +24013,7 @@ class SagemakerServicecatalogPortfolio(Base):
         logger.debug(f"Response: {response}")
 
     @staticmethod
+    @Base.add_validate_call
     def get_status(
         session: Optional[Session] = None,
         region: Optional[str] = None,
@@ -23716,6 +24103,7 @@ class Space(Base):
         return None
 
     @classmethod
+    @Base.add_validate_call
     def create(
         cls,
         domain_id: str,
@@ -23793,6 +24181,7 @@ class Space(Base):
         return cls.get(domain_id=domain_id, space_name=space_name, session=session, region=region)
 
     @classmethod
+    @Base.add_validate_call
     def get(
         cls,
         domain_id: str,
@@ -23841,6 +24230,7 @@ class Space(Base):
         space = cls(**transformed_response)
         return space
 
+    @Base.add_validate_call
     def refresh(
         self,
     ) -> Optional["Space"]:
@@ -23874,6 +24264,7 @@ class Space(Base):
         transform(response, "DescribeSpaceResponse", self)
         return self
 
+    @Base.add_validate_call
     def update(
         self,
         space_settings: Optional[SpaceSettings] = Unassigned(),
@@ -23921,6 +24312,7 @@ class Space(Base):
 
         return self
 
+    @Base.add_validate_call
     def delete(
         self,
     ) -> None:
@@ -23951,6 +24343,7 @@ class Space(Base):
 
         logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
+    @Base.add_validate_call
     def wait_for_status(
         self,
         target_status: Literal[
@@ -24013,6 +24406,7 @@ class Space(Base):
                     raise TimeoutExceededError(resouce_type="Space", status=current_status)
                 time.sleep(poll)
 
+    @Base.add_validate_call
     def wait_for_delete(
         self,
         poll: int = 5,
@@ -24082,6 +24476,7 @@ class Space(Base):
                 time.sleep(poll)
 
     @classmethod
+    @Base.add_validate_call
     def get_all(
         cls,
         sort_order: Optional[str] = Unassigned(),
@@ -24184,6 +24579,7 @@ class StudioLifecycleConfig(Base):
         return None
 
     @classmethod
+    @Base.add_validate_call
     def create(
         cls,
         studio_lifecycle_config_name: str,
@@ -24255,6 +24651,7 @@ class StudioLifecycleConfig(Base):
         )
 
     @classmethod
+    @Base.add_validate_call
     def get(
         cls,
         studio_lifecycle_config_name: str,
@@ -24300,6 +24697,7 @@ class StudioLifecycleConfig(Base):
         studio_lifecycle_config = cls(**transformed_response)
         return studio_lifecycle_config
 
+    @Base.add_validate_call
     def refresh(
         self,
     ) -> Optional["StudioLifecycleConfig"]:
@@ -24332,6 +24730,7 @@ class StudioLifecycleConfig(Base):
         transform(response, "DescribeStudioLifecycleConfigResponse", self)
         return self
 
+    @Base.add_validate_call
     def delete(
         self,
     ) -> None:
@@ -24362,6 +24761,7 @@ class StudioLifecycleConfig(Base):
         logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
     @classmethod
+    @Base.add_validate_call
     def get_all(
         cls,
         name_contains: Optional[str] = Unassigned(),
@@ -24468,6 +24868,7 @@ class SubscribedWorkteam(Base):
         return None
 
     @classmethod
+    @Base.add_validate_call
     def get(
         cls,
         workteam_arn: str,
@@ -24512,6 +24913,7 @@ class SubscribedWorkteam(Base):
         subscribed_workteam = cls(**transformed_response)
         return subscribed_workteam
 
+    @Base.add_validate_call
     def refresh(
         self,
     ) -> Optional["SubscribedWorkteam"]:
@@ -24544,6 +24946,7 @@ class SubscribedWorkteam(Base):
         return self
 
     @classmethod
+    @Base.add_validate_call
     def get_all(
         cls,
         name_contains: Optional[str] = Unassigned(),
@@ -24629,6 +25032,7 @@ class Tag(Base):
         return None
 
     @classmethod
+    @Base.add_validate_call
     def get_all(
         cls,
         resource_arn: str,
@@ -24684,6 +25088,7 @@ class Tag(Base):
         )
 
     @classmethod
+    @Base.add_validate_call
     def add_tags(
         cls,
         resource_arn: str,
@@ -24727,6 +25132,7 @@ class Tag(Base):
         logger.debug(f"Response: {response}")
 
     @classmethod
+    @Base.add_validate_call
     def delete_tags(
         cls,
         resource_arn: str,
@@ -24912,6 +25318,7 @@ class TrainingJob(Base):
 
     @classmethod
     @populate_inputs_decorator
+    @Base.add_validate_call
     def create(
         cls,
         training_job_name: str,
@@ -25044,6 +25451,7 @@ class TrainingJob(Base):
         return cls.get(training_job_name=training_job_name, session=session, region=region)
 
     @classmethod
+    @Base.add_validate_call
     def get(
         cls,
         training_job_name: str,
@@ -25089,6 +25497,7 @@ class TrainingJob(Base):
         training_job = cls(**transformed_response)
         return training_job
 
+    @Base.add_validate_call
     def refresh(
         self,
     ) -> Optional["TrainingJob"]:
@@ -25122,6 +25531,7 @@ class TrainingJob(Base):
         return self
 
     @populate_inputs_decorator
+    @Base.add_validate_call
     def update(
         self,
         profiler_config: Optional[ProfilerConfigForUpdate] = Unassigned(),
@@ -25171,6 +25581,7 @@ class TrainingJob(Base):
 
         return self
 
+    @Base.add_validate_call
     def stop(self) -> None:
         """
         Stop a TrainingJob resource
@@ -25197,6 +25608,7 @@ class TrainingJob(Base):
 
         logger.info(f"Stopping {self.__class__.__name__} - {self.get_name()}")
 
+    @Base.add_validate_call
     def wait(self, poll: int = 5, timeout: Optional[int] = None) -> None:
         """
         Wait for a TrainingJob resource.
@@ -25251,6 +25663,7 @@ class TrainingJob(Base):
                 time.sleep(poll)
 
     @classmethod
+    @Base.add_validate_call
     def get_all(
         cls,
         creation_time_after: Optional[datetime.datetime] = Unassigned(),
@@ -25430,6 +25843,7 @@ class TransformJob(Base):
 
     @classmethod
     @populate_inputs_decorator
+    @Base.add_validate_call
     def create(
         cls,
         transform_job_name: str,
@@ -25529,6 +25943,7 @@ class TransformJob(Base):
         return cls.get(transform_job_name=transform_job_name, session=session, region=region)
 
     @classmethod
+    @Base.add_validate_call
     def get(
         cls,
         transform_job_name: str,
@@ -25574,6 +25989,7 @@ class TransformJob(Base):
         transform_job = cls(**transformed_response)
         return transform_job
 
+    @Base.add_validate_call
     def refresh(
         self,
     ) -> Optional["TransformJob"]:
@@ -25606,6 +26022,7 @@ class TransformJob(Base):
         transform(response, "DescribeTransformJobResponse", self)
         return self
 
+    @Base.add_validate_call
     def stop(self) -> None:
         """
         Stop a TransformJob resource
@@ -25632,6 +26049,7 @@ class TransformJob(Base):
 
         logger.info(f"Stopping {self.__class__.__name__} - {self.get_name()}")
 
+    @Base.add_validate_call
     def wait(self, poll: int = 5, timeout: Optional[int] = None) -> None:
         """
         Wait for a TransformJob resource.
@@ -25686,6 +26104,7 @@ class TransformJob(Base):
                 time.sleep(poll)
 
     @classmethod
+    @Base.add_validate_call
     def get_all(
         cls,
         creation_time_after: Optional[datetime.datetime] = Unassigned(),
@@ -25808,6 +26227,7 @@ class Trial(Base):
         return None
 
     @classmethod
+    @Base.add_validate_call
     def create(
         cls,
         trial_name: str,
@@ -25879,6 +26299,7 @@ class Trial(Base):
         return cls.get(trial_name=trial_name, session=session, region=region)
 
     @classmethod
+    @Base.add_validate_call
     def get(
         cls,
         trial_name: str,
@@ -25924,6 +26345,7 @@ class Trial(Base):
         trial = cls(**transformed_response)
         return trial
 
+    @Base.add_validate_call
     def refresh(
         self,
     ) -> Optional["Trial"]:
@@ -25956,6 +26378,7 @@ class Trial(Base):
         transform(response, "DescribeTrialResponse", self)
         return self
 
+    @Base.add_validate_call
     def update(
         self,
         display_name: Optional[str] = Unassigned(),
@@ -25999,6 +26422,7 @@ class Trial(Base):
 
         return self
 
+    @Base.add_validate_call
     def delete(
         self,
     ) -> None:
@@ -26028,6 +26452,7 @@ class Trial(Base):
         logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
     @classmethod
+    @Base.add_validate_call
     def get_all(
         cls,
         experiment_name: Optional[str] = Unassigned(),
@@ -26161,6 +26586,7 @@ class TrialComponent(Base):
         return None
 
     @classmethod
+    @Base.add_validate_call
     def create(
         cls,
         trial_component_name: str,
@@ -26246,6 +26672,7 @@ class TrialComponent(Base):
         return cls.get(trial_component_name=trial_component_name, session=session, region=region)
 
     @classmethod
+    @Base.add_validate_call
     def get(
         cls,
         trial_component_name: str,
@@ -26291,6 +26718,7 @@ class TrialComponent(Base):
         trial_component = cls(**transformed_response)
         return trial_component
 
+    @Base.add_validate_call
     def refresh(
         self,
     ) -> Optional["TrialComponent"]:
@@ -26323,6 +26751,7 @@ class TrialComponent(Base):
         transform(response, "DescribeTrialComponentResponse", self)
         return self
 
+    @Base.add_validate_call
     def update(
         self,
         display_name: Optional[str] = Unassigned(),
@@ -26389,6 +26818,7 @@ class TrialComponent(Base):
 
         return self
 
+    @Base.add_validate_call
     def delete(
         self,
     ) -> None:
@@ -26417,6 +26847,7 @@ class TrialComponent(Base):
 
         logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
+    @Base.add_validate_call
     def wait_for_status(
         self,
         target_status: Literal["InProgress", "Completed", "Failed", "Stopping", "Stopped"],
@@ -26472,6 +26903,7 @@ class TrialComponent(Base):
                 time.sleep(poll)
 
     @classmethod
+    @Base.add_validate_call
     def get_all(
         cls,
         experiment_name: Optional[str] = Unassigned(),
@@ -26545,6 +26977,7 @@ class TrialComponent(Base):
             list_method_kwargs=operation_input_args,
         )
 
+    @Base.add_validate_call
     def associate_trail(
         self,
         trial_name: str,
@@ -26587,6 +27020,7 @@ class TrialComponent(Base):
         response = client.associate_trial_component(**operation_input_args)
         logger.debug(f"Response: {response}")
 
+    @Base.add_validate_call
     def disassociate_trail(
         self,
         trial_name: str,
@@ -26719,6 +27153,7 @@ class UserProfile(Base):
 
     @classmethod
     @populate_inputs_decorator
+    @Base.add_validate_call
     def create(
         cls,
         domain_id: str,
@@ -26795,6 +27230,7 @@ class UserProfile(Base):
         )
 
     @classmethod
+    @Base.add_validate_call
     def get(
         cls,
         domain_id: str,
@@ -26844,6 +27280,7 @@ class UserProfile(Base):
         user_profile = cls(**transformed_response)
         return user_profile
 
+    @Base.add_validate_call
     def refresh(
         self,
     ) -> Optional["UserProfile"]:
@@ -26879,6 +27316,7 @@ class UserProfile(Base):
         return self
 
     @populate_inputs_decorator
+    @Base.add_validate_call
     def update(
         self,
         user_settings: Optional[UserSettings] = Unassigned(),
@@ -26924,6 +27362,7 @@ class UserProfile(Base):
 
         return self
 
+    @Base.add_validate_call
     def delete(
         self,
     ) -> None:
@@ -26954,6 +27393,7 @@ class UserProfile(Base):
 
         logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
+    @Base.add_validate_call
     def wait_for_status(
         self,
         target_status: Literal[
@@ -27018,6 +27458,7 @@ class UserProfile(Base):
                     raise TimeoutExceededError(resouce_type="UserProfile", status=current_status)
                 time.sleep(poll)
 
+    @Base.add_validate_call
     def wait_for_delete(
         self,
         poll: int = 5,
@@ -27089,6 +27530,7 @@ class UserProfile(Base):
                 time.sleep(poll)
 
     @classmethod
+    @Base.add_validate_call
     def get_all(
         cls,
         sort_order: Optional[str] = Unassigned(),
@@ -27203,6 +27645,7 @@ class Workforce(Base):
 
     @classmethod
     @populate_inputs_decorator
+    @Base.add_validate_call
     def create(
         cls,
         workforce_name: str,
@@ -27275,6 +27718,7 @@ class Workforce(Base):
         return cls.get(workforce_name=workforce_name, session=session, region=region)
 
     @classmethod
+    @Base.add_validate_call
     def get(
         cls,
         workforce_name: str,
@@ -27319,6 +27763,7 @@ class Workforce(Base):
         workforce = cls(**transformed_response)
         return workforce
 
+    @Base.add_validate_call
     def refresh(
         self,
     ) -> Optional["Workforce"]:
@@ -27351,6 +27796,7 @@ class Workforce(Base):
         return self
 
     @populate_inputs_decorator
+    @Base.add_validate_call
     def update(
         self,
         source_ip_config: Optional[SourceIpConfig] = Unassigned(),
@@ -27402,6 +27848,7 @@ class Workforce(Base):
 
         return self
 
+    @Base.add_validate_call
     def delete(
         self,
     ) -> None:
@@ -27429,6 +27876,7 @@ class Workforce(Base):
 
         logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
+    @Base.add_validate_call
     def wait_for_status(
         self,
         target_status: Literal["Initializing", "Updating", "Deleting", "Failed", "Active"],
@@ -27483,6 +27931,7 @@ class Workforce(Base):
                     raise TimeoutExceededError(resouce_type="Workforce", status=current_status)
                 time.sleep(poll)
 
+    @Base.add_validate_call
     def wait_for_delete(
         self,
         poll: int = 5,
@@ -27544,6 +27993,7 @@ class Workforce(Base):
                 time.sleep(poll)
 
     @classmethod
+    @Base.add_validate_call
     def get_all(
         cls,
         sort_by: Optional[str] = Unassigned(),
@@ -27634,6 +28084,7 @@ class Workteam(Base):
         return None
 
     @classmethod
+    @Base.add_validate_call
     def create(
         cls,
         workteam_name: str,
@@ -27711,6 +28162,7 @@ class Workteam(Base):
         return cls.get(workteam_name=workteam_name, session=session, region=region)
 
     @classmethod
+    @Base.add_validate_call
     def get(
         cls,
         workteam_name: str,
@@ -27755,6 +28207,7 @@ class Workteam(Base):
         workteam = cls(**transformed_response)
         return workteam
 
+    @Base.add_validate_call
     def refresh(
         self,
     ) -> Optional["Workteam"]:
@@ -27786,6 +28239,7 @@ class Workteam(Base):
         transform(response, "DescribeWorkteamResponse", self)
         return self
 
+    @Base.add_validate_call
     def update(
         self,
         member_definitions: Optional[List[MemberDefinition]] = Unassigned(),
@@ -27840,6 +28294,7 @@ class Workteam(Base):
 
         return self
 
+    @Base.add_validate_call
     def delete(
         self,
     ) -> None:
@@ -27869,6 +28324,7 @@ class Workteam(Base):
         logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
     @classmethod
+    @Base.add_validate_call
     def get_all(
         cls,
         sort_by: Optional[str] = Unassigned(),
@@ -27929,6 +28385,7 @@ class Workteam(Base):
             list_method_kwargs=operation_input_args,
         )
 
+    @Base.add_validate_call
     def get_all_labeling_jobs(
         self,
         workteam_arn: str,

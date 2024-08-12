@@ -178,7 +178,7 @@ class ResourcesCodeGen:
             "import time",
             "import functools",
             "from pydantic import validate_call",
-            "from typing import Dict, List, Literal, Optional, Union\n"
+            "from typing import Dict, List, Literal, Optional, Union, Any\n"
             "from boto3.session import Session",
             "from rich.console import Group",
             "from rich.live import Live",
@@ -346,6 +346,7 @@ class ResourcesCodeGen:
             class_attributes, class_attributes_string, attributes_and_documentation = (
                 class_attribute_info
             )
+
             # Start defining the class
             resource_class = f"class {resource_name}(Base):\n"
 
@@ -932,7 +933,7 @@ class ResourcesCodeGen:
                 decorator=decorator,
                 method_name="create",
                 method_args=add_indent("cls,\n", 4) + create_args,
-                return_type='Optional["resource_name"]',
+                return_type=f'Optional["{resource_name}"]',
                 serialize_operation_input=serialize_operation_input,
                 initialize_client=initialize_client,
                 call_operation_api=call_operation_api,
