@@ -87,6 +87,11 @@ SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA = {
                                                 },
                                             },
                                         },
+                                        "auto_ml_compute_config": {
+                                            "emr_serverless_compute_config": {
+                                                "execution_role_arn": {"type": "string"}
+                                            }
+                                        },
                                     },
                                 },
                                 "Cluster": {
@@ -211,6 +216,9 @@ SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA = {
                                                 },
                                                 "generative_ai_settings": {
                                                     "amazon_bedrock_role_arn": {"type": "string"}
+                                                },
+                                                "emr_serverless_settings": {
+                                                    "execution_role_arn": {"type": "string"}
                                                 },
                                             },
                                             "jupyter_lab_app_settings": {
@@ -859,6 +867,9 @@ SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA = {
                                                 },
                                                 "generative_ai_settings": {
                                                     "amazon_bedrock_role_arn": {"type": "string"}
+                                                },
+                                                "emr_serverless_settings": {
+                                                    "execution_role_arn": {"type": "string"}
                                                 },
                                             },
                                             "jupyter_lab_app_settings": {
