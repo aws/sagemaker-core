@@ -1,5 +1,24 @@
 # Changelog
 
+## v0.1.7 (2024-08-13)
+
+ * Daily Sync with Botocore v1.34.159 on 2024/08/13 (#150)
+ * feat: add param validation with pydantic validate_call (#149)
+ * Update create-release.yml
+ * Support textual rich logging for wait methods (#146)
+ * Refactor Package structure (#144)
+ * Separate environment variable for Sagemaker Core (#147)
+ * Add styling for textual rich logging (#145)
+ * Replace all Sagemaker V2 Calls (#142)
+ * Daily Sync with Botocore v1.34.153 on 2024/08/05 (#143)
+ * Update auto-approve.yml
+ * Use textual rich logging handler for all loggers (#138)
+ * Update auto-approve.yml
+ * Add user agent to Sagemaker Core (#140)
+ * Switch to sagemaker-bot account (#137)
+ * Metrics for boto API coverage (#136)
+ * Fix volume_size_in_g_b attribute in example notebooks (#130)
+
 ## v0.1.6 (2024-07-25)
 
  * Add private preview feedback for denesting simplifications (#128)
