@@ -482,6 +482,16 @@ SHAPE_DAG = {
         ],
         "type": "structure",
     },
+    "AutoMLComputeConfig": {
+        "members": [
+            {
+                "name": "EmrServerlessComputeConfig",
+                "shape": "EmrServerlessComputeConfig",
+                "type": "structure",
+            }
+        ],
+        "type": "structure",
+    },
     "AutoMLContainerDefinition": {
         "members": [
             {"name": "Image", "shape": "ContainerImage", "type": "string"},
@@ -915,6 +925,11 @@ SHAPE_DAG = {
             {"name": "DirectDeploySettings", "shape": "DirectDeploySettings", "type": "structure"},
             {"name": "KendraSettings", "shape": "KendraSettings", "type": "structure"},
             {"name": "GenerativeAiSettings", "shape": "GenerativeAiSettings", "type": "structure"},
+            {
+                "name": "EmrServerlessSettings",
+                "shape": "EmrServerlessSettings",
+                "type": "structure",
+            },
         ],
         "type": "structure",
     },
@@ -1617,6 +1632,7 @@ SHAPE_DAG = {
             {"name": "AutoMLJobObjective", "shape": "AutoMLJobObjective", "type": "structure"},
             {"name": "ModelDeployConfig", "shape": "ModelDeployConfig", "type": "structure"},
             {"name": "DataSplitConfig", "shape": "AutoMLDataSplitConfig", "type": "structure"},
+            {"name": "AutoMLComputeConfig", "shape": "AutoMLComputeConfig", "type": "structure"},
         ],
         "type": "structure",
     },
@@ -3765,6 +3781,7 @@ SHAPE_DAG = {
             {"name": "ModelDeployResult", "shape": "ModelDeployResult", "type": "structure"},
             {"name": "DataSplitConfig", "shape": "AutoMLDataSplitConfig", "type": "structure"},
             {"name": "SecurityConfig", "shape": "AutoMLSecurityConfig", "type": "structure"},
+            {"name": "AutoMLComputeConfig", "shape": "AutoMLComputeConfig", "type": "structure"},
         ],
         "type": "structure",
     },
@@ -5809,6 +5826,17 @@ SHAPE_DAG = {
         "type": "structure",
     },
     "Edges": {"member_shape": "Edge", "member_type": "structure", "type": "list"},
+    "EmrServerlessComputeConfig": {
+        "members": [{"name": "ExecutionRoleARN", "shape": "RoleArn", "type": "string"}],
+        "type": "structure",
+    },
+    "EmrServerlessSettings": {
+        "members": [
+            {"name": "ExecutionRoleArn", "shape": "RoleArn", "type": "string"},
+            {"name": "Status", "shape": "FeatureStatus", "type": "string"},
+        ],
+        "type": "structure",
+    },
     "EmrSettings": {
         "members": [
             {"name": "AssumableRoleArns", "shape": "AssumableRoleArns", "type": "list"},

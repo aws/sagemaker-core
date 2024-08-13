@@ -2849,6 +2849,7 @@ class AutoMLJobV2(Base):
         model_deploy_result: Provides information about endpoint for the model deployment.
         data_split_config: Returns the configuration settings of how the data are split into train and validation datasets.
         security_config: Returns the security configuration for traffic encryption or Amazon VPC settings.
+        auto_ml_compute_config: The compute configuration used for the AutoML job V2.
 
     """
 
@@ -2874,6 +2875,7 @@ class AutoMLJobV2(Base):
     model_deploy_result: Optional[ModelDeployResult] = Unassigned()
     data_split_config: Optional[AutoMLDataSplitConfig] = Unassigned()
     security_config: Optional[AutoMLSecurityConfig] = Unassigned()
+    auto_ml_compute_config: Optional[AutoMLComputeConfig] = Unassigned()
 
     def get_name(self) -> str:
         attributes = vars(self)
@@ -2938,6 +2940,7 @@ class AutoMLJobV2(Base):
         auto_ml_job_objective: Optional[AutoMLJobObjective] = Unassigned(),
         model_deploy_config: Optional[ModelDeployConfig] = Unassigned(),
         data_split_config: Optional[AutoMLDataSplitConfig] = Unassigned(),
+        auto_ml_compute_config: Optional[AutoMLComputeConfig] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["AutoMLJobV2"]:
@@ -2955,6 +2958,7 @@ class AutoMLJobV2(Base):
             auto_ml_job_objective: Specifies a metric to minimize or maximize as the objective of a job. If not specified, the default objective metric depends on the problem type. For the list of default values per problem type, see AutoMLJobObjective.    For tabular problem types: You must either provide both the AutoMLJobObjective and indicate the type of supervised learning problem in AutoMLProblemTypeConfig (TabularJobConfig.ProblemType), or none at all.   For text generation problem types (LLMs fine-tuning): Fine-tuning language models in Autopilot does not require setting the AutoMLJobObjective field. Autopilot fine-tunes LLMs without requiring multiple candidates to be trained and evaluated. Instead, using your dataset, Autopilot directly fine-tunes your target model to enhance a default objective metric, the cross-entropy loss. After fine-tuning a language model, you can evaluate the quality of its generated text using different metrics. For a list of the available metrics, see Metrics for fine-tuning LLMs in Autopilot.
             model_deploy_config: Specifies how to generate the endpoint name for an automatic one-click Autopilot model deployment.
             data_split_config: This structure specifies how to split the data into train and validation datasets. The validation and training datasets must contain the same headers. For jobs created by calling CreateAutoMLJob, the validation dataset must be less than 2 GB in size.  This attribute must not be set for the time-series forecasting problem type, as Autopilot automatically splits the input dataset into training and validation sets.
+            auto_ml_compute_config: Specifies the compute configuration for the AutoML job V2.
             session: Boto3 session.
             region: Region name.
 
@@ -2994,6 +2998,7 @@ class AutoMLJobV2(Base):
             "AutoMLJobObjective": auto_ml_job_objective,
             "ModelDeployConfig": model_deploy_config,
             "DataSplitConfig": data_split_config,
+            "AutoMLComputeConfig": auto_ml_compute_config,
         }
 
         operation_input_args = Base.populate_chained_attributes(

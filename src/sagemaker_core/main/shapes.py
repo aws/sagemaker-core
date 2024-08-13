@@ -1389,6 +1389,32 @@ class AutoMLChannel(Base):
     sample_weight_attribute_name: Optional[str] = Unassigned()
 
 
+class EmrServerlessComputeConfig(Base):
+    """
+    EmrServerlessComputeConfig
+          This data type is intended for use exclusively by SageMaker Canvas and cannot be used in other contexts at the moment.  Specifies the compute configuration for the EMR Serverless job.
+
+        Attributes
+       ----------------------
+       execution_role_arn: 	 The ARN of the IAM role granting the AutoML job V2 the necessary permissions access policies to list, connect to, or manage EMR Serverless jobs. For detailed information about the required permissions of this role, see "How to configure AutoML to initiate a remote job on EMR Serverless for large datasets" in Create a regression or classification job for tabular data using the AutoML API or Create an AutoML job for time-series forecasting using the API.
+    """
+
+    execution_role_arn: str
+
+
+class AutoMLComputeConfig(Base):
+    """
+    AutoMLComputeConfig
+          This data type is intended for use exclusively by SageMaker Canvas and cannot be used in other contexts at the moment.  Specifies the compute configuration for an AutoML job V2.
+
+        Attributes
+       ----------------------
+       emr_serverless_compute_config: 	 The configuration for using  EMR Serverless to run the AutoML job V2. To allow your AutoML job V2 to automatically initiate a remote job on EMR Serverless when additional compute resources are needed to process large datasets, you need to provide an EmrServerlessComputeConfig object, which includes an ExecutionRoleARN attribute, to the AutoMLComputeConfig of the AutoML job V2 input request. By seamlessly transitioning to EMR Serverless when required, the AutoML job can handle datasets that would otherwise exceed the initially provisioned resources, without any manual intervention from you.  EMR Serverless is available for the tabular and time series problem types. We recommend setting up this option for tabular datasets larger than 5 GB and time series datasets larger than 30 GB.
+    """
+
+    emr_serverless_compute_config: Optional[EmrServerlessComputeConfig] = Unassigned()
+
+
 class AutoMLDataSplitConfig(Base):
     """
     AutoMLDataSplitConfig
@@ -1582,7 +1608,7 @@ class AutoMLOutputDataConfig(Base):
         Attributes
        ----------------------
        kms_key_id: 	 The Key Management Service encryption key ID.
-       s3_output_path: 	 The Amazon S3 output path. Must be 128 characters or less.
+       s3_output_path: 	 The Amazon S3 output path. Must be 512 characters or less.
     """
 
     s3_output_path: str
@@ -2304,6 +2330,21 @@ class GenerativeAiSettings(Base):
     amazon_bedrock_role_arn: Optional[str] = Unassigned()
 
 
+class EmrServerlessSettings(Base):
+    """
+    EmrServerlessSettings
+         The settings for running Amazon EMR Serverless jobs in SageMaker Canvas.
+
+        Attributes
+       ----------------------
+       execution_role_arn: 	 The Amazon Resource Name (ARN) of the Amazon Web Services IAM role that is assumed for running Amazon EMR Serverless jobs in SageMaker Canvas. This role should have the necessary permissions to read and write data attached and a trust relationship with EMR Serverless.
+       status: 	 Describes whether Amazon EMR Serverless job capabilities are enabled or disabled in the SageMaker Canvas application.
+    """
+
+    execution_role_arn: Optional[str] = Unassigned()
+    status: Optional[str] = Unassigned()
+
+
 class CanvasAppSettings(Base):
     """
     CanvasAppSettings
@@ -2318,6 +2359,7 @@ class CanvasAppSettings(Base):
        direct_deploy_settings: 	 The model deployment settings for the SageMaker Canvas application.
        kendra_settings: 	 The settings for document querying.
        generative_ai_settings: 	 The generative AI settings for the SageMaker Canvas application.
+       emr_serverless_settings: 	 The settings for running Amazon EMR Serverless data processing jobs in SageMaker Canvas.
     """
 
     time_series_forecasting_settings: Optional[TimeSeriesForecastingSettings] = Unassigned()
@@ -2327,6 +2369,7 @@ class CanvasAppSettings(Base):
     direct_deploy_settings: Optional[DirectDeploySettings] = Unassigned()
     kendra_settings: Optional[KendraSettings] = Unassigned()
     generative_ai_settings: Optional[GenerativeAiSettings] = Unassigned()
+    emr_serverless_settings: Optional[EmrServerlessSettings] = Unassigned()
 
 
 class CaptureContentTypeHeader(Base):
@@ -4087,7 +4130,7 @@ class ProductionVariant(Base):
        enable_ssm_access: 	  You can use this parameter to turn on native Amazon Web Services Systems Manager (SSM) access for a production variant behind an endpoint. By default, SSM access is disabled for all production variants behind an endpoint. You can turn on or turn off SSM access for a production variant behind an existing endpoint by creating a new endpoint configuration and calling UpdateEndpoint.
        managed_instance_scaling: 	 Settings that control the range in the number of instances that the endpoint provisions as it scales up or down to accommodate traffic.
        routing_config: 	 Settings that control how the endpoint routes incoming traffic to the instances that the endpoint hosts.
-       inference_ami_version: 	 Specifies an option from a collection of preconfigured Amazon Machine Image (AMI) images. Each image is configured by Amazon Web Services with a set of software and driver versions. Amazon Web Services optimizes these configurations for different machine learning workloads. By selecting an AMI version, you can ensure that your inference environment is compatible with specific software requirements, such as CUDA driver versions, Linux kernel versions, or Amazon Web Services Neuron driver versions.
+       inference_ami_version: 	 Specifies an option from a collection of preconfigured Amazon Machine Image (AMI) images. Each image is configured by Amazon Web Services with a set of software and driver versions. Amazon Web Services optimizes these configurations for different machine learning workloads. By selecting an AMI version, you can ensure that your inference environment is compatible with specific software requirements, such as CUDA driver versions, Linux kernel versions, or Amazon Web Services Neuron driver versions. The AMI version names, and their configurations, are the following:  al2-ami-sagemaker-inference-gpu-2    Accelerator: GPU   NVIDIA driver version: 535.54.03   CUDA driver version: 12.2   Supported instance types: ml.g4dn.*, ml.g5.*, ml.g6.*, ml.p3.*, ml.p4d.*, ml.p4de.*, ml.p5.*
     """
 
     variant_name: str
@@ -6233,8 +6276,8 @@ class ProcessingS3Output(Base):
     """
 
     s3_uri: str
-    local_path: str
     s3_upload_mode: str
+    local_path: Optional[str] = Unassigned()
 
 
 class ProcessingFeatureStoreOutput(Base):
