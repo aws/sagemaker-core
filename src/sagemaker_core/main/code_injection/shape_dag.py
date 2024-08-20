@@ -5867,6 +5867,10 @@ SHAPE_DAG = {
         ],
         "type": "structure",
     },
+    "EndpointConfigStepMetadata": {
+        "members": [{"name": "Arn", "shape": "EndpointConfigArn", "type": "string"}],
+        "type": "structure",
+    },
     "EndpointConfigSummary": {
         "members": [
             {"name": "EndpointConfigName", "shape": "EndpointConfigName", "type": "string"},
@@ -5972,6 +5976,10 @@ SHAPE_DAG = {
         "member_shape": "EndpointPerformance",
         "member_type": "structure",
         "type": "list",
+    },
+    "EndpointStepMetadata": {
+        "members": [{"name": "Arn", "shape": "EndpointArn", "type": "string"}],
+        "type": "structure",
     },
     "EndpointSummary": {
         "members": [
@@ -11179,6 +11187,8 @@ SHAPE_DAG = {
             {"name": "ClarifyCheck", "shape": "ClarifyCheckStepMetadata", "type": "structure"},
             {"name": "Fail", "shape": "FailStepMetadata", "type": "structure"},
             {"name": "AutoMLJob", "shape": "AutoMLJobStepMetadata", "type": "structure"},
+            {"name": "Endpoint", "shape": "EndpointStepMetadata", "type": "structure"},
+            {"name": "EndpointConfig", "shape": "EndpointConfigStepMetadata", "type": "structure"},
         ],
         "type": "structure",
     },
