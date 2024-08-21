@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.1.8 (2024-08-21)
+
+ * Daily Sync with Botocore v1.35.2 on 2024/08/21 (#153)
+
 ## v0.1.7 (2024-08-13)
 
  * Daily Sync with Botocore v1.34.159 on 2024/08/13 (#150)
