@@ -70,6 +70,8 @@ class Base(BaseModel):
     def _serialize(cls, value: Any) -> Any:
         if isinstance(value, Unassigned):
             return None
+        elif isinstance(value, Dict):
+            return cls._serialize_args(value)
         elif isinstance(value, List):
             return cls._serialize_list(value)
         elif is_not_primitive(value) and not isinstance(value, dict):
