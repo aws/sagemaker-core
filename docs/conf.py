@@ -46,7 +46,7 @@ html_theme_options = {
     "titles_only": False,
 }
 
-htmlhelp_basename = "%sdoc" % project
+htmlhelp_basename = "%sdocs" % project
 
 # For Adobe Analytics
 html_js_files = [
@@ -83,4 +83,3 @@ autosummary_generate = True
 
 # autosectionlabel
 autosectionlabel_prefix_document = True
-
