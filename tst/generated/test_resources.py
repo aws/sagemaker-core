@@ -7,7 +7,7 @@ from sagemaker_core.main.resources import Base
 
 from sagemaker_core.main.code_injection.codec import pascal_to_snake, snake_to_pascal
 
-from sagemaker_core.main.utils import SageMakerClient
+from sagemaker_core.main.utils import SageMakerClient, serialize
 from sagemaker_core.tools.constants import BASIC_RETURN_TYPES
 from sagemaker_core.tools.data_extractor import (
     load_additional_operations_data,
@@ -195,7 +195,7 @@ class ResourcesTest(unittest.TestCase):
                                 mock_create_method.assert_called_once()
                                 mock_get_method.assert_called_once()
                                 self.assertLessEqual(
-                                    Base._serialize_args(
+                                    serialize(
                                         Base.populate_chained_attributes(
                                             operation_input_args=pascal_input_args,
                                             resource_name=name,
@@ -231,7 +231,7 @@ class ResourcesTest(unittest.TestCase):
                                 mock_update_method.assert_called_once()
                                 mock_get_method.assert_called_once()
                                 self.assertLessEqual(
-                                    Base._serialize_args(pascal_input_args).items(),
+                                    serialize(pascal_input_args).items(),
                                     mock_update_method.call_args[1].items(),
                                     f"Update call verification failed for {name}",
                                 )
@@ -318,7 +318,7 @@ class ResourcesTest(unittest.TestCase):
                                     method(**input_args).__next__()
                                     mock_additional_method.assert_called_once()
                                     self.assertLessEqual(
-                                        Base._serialize_args(pascal_input_args).items(),
+                                        serialize(pascal_input_args).items(),
                                         mock_additional_method.call_args[1].items(),
                                         f"{operation_info['method_name']} call verification failed for {name}",
                                     )
@@ -326,7 +326,7 @@ class ResourcesTest(unittest.TestCase):
                                     method(**input_args)
                                     mock_additional_method.assert_called_once()
                                     self.assertLessEqual(
-                                        Base._serialize_args(pascal_input_args).items(),
+                                        serialize(pascal_input_args).items(),
                                         mock_additional_method.call_args[1].items(),
                                         f"{operation_info['method_name']} call verification failed for {name}",
                                     )
@@ -344,7 +344,7 @@ class ResourcesTest(unittest.TestCase):
                                     method(**input_args)
                                     mock_additional_method.assert_called_once()
                                     self.assertLessEqual(
-                                        Base._serialize_args(pascal_input_args).items(),
+                                        serialize(pascal_input_args).items(),
                                         mock_additional_method.call_args[1].items(),
                                         f"{operation_info['method_name']} call verification failed for {name}",
                                     )
