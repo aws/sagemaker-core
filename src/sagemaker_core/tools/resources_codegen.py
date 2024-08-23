@@ -188,8 +188,8 @@ class ResourcesCodeGen:
             "from rich.style import Style",
             "from sagemaker_core.main.code_injection.codec import transform",
             "from sagemaker_core.main.code_injection.constants import Color",
-            "from sagemaker_core.main.utils import SageMakerClient, SageMakerRuntimeClient, ResourceIterator, Unassigned,"
-            "get_textual_rich_logger, snake_to_pascal, pascal_to_snake, is_not_primitive, is_not_str_dict, is_snake_case, is_primitive_list",
+            "from sagemaker_core.main.utils import SageMakerClient, SageMakerRuntimeClient, ResourceIterator, Unassigned, get_textual_rich_logger, "
+            "snake_to_pascal, pascal_to_snake, is_not_primitive, is_not_str_dict, is_snake_case, is_primitive_list, serialize",
             "from sagemaker_core.main.intelligent_defaults_helper import load_default_configs_for_resource_name, get_config_value",
             "from sagemaker_core.main.shapes import *",
             "from sagemaker_core.main.exceptions import *",

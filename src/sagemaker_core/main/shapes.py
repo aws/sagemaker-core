@@ -20,30 +20,6 @@ from sagemaker_core.main.utils import Unassigned
 class Base(BaseModel):
     model_config = ConfigDict(protected_namespaces=(), validate_assignment=True)
 
-    def serialize(self):
-        result = {}
-        for attr, value in self.__dict__.items():
-            if isinstance(value, Unassigned):
-                continue
-
-            components = attr.split("_")
-            pascal_attr = "".join(x.title() for x in components[0:])
-            if isinstance(value, List):
-                result[pascal_attr] = self._serialize_list(value)
-            elif isinstance(value, Dict):
-                result[pascal_attr] = self._serialize_dict(value)
-            elif hasattr(value, "serialize"):
-                result[pascal_attr] = value.serialize()
-            else:
-                result[pascal_attr] = value
-        return result
-
-    def _serialize_list(self, value: List):
-        return [v.serialize() if hasattr(v, "serialize") else v for v in value]
-
-    def _serialize_dict(self, value: Dict):
-        return {k: v.serialize() if hasattr(v, "serialize") else v for k, v in value.items()}
-
 
 class ActionSource(Base):
     """
@@ -8699,6 +8675,19 @@ class Endpoint(Base):
     shadow_production_variants: Optional[List[ProductionVariantSummary]] = Unassigned()
 
 
+class EndpointConfigStepMetadata(Base):
+    """
+    EndpointConfigStepMetadata
+         Metadata for an endpoint configuration step.
+
+        Attributes
+       ----------------------
+       arn: 	 The Amazon Resource Name (ARN) of the endpoint configuration used in the step.
+    """
+
+    arn: Optional[str] = Unassigned()
+
+
 class EndpointConfigSummary(Base):
     """
     EndpointConfigSummary
@@ -8714,6 +8703,19 @@ class EndpointConfigSummary(Base):
     endpoint_config_name: Union[str, object]
     endpoint_config_arn: str
     creation_time: datetime.datetime
+
+
+class EndpointStepMetadata(Base):
+    """
+    EndpointStepMetadata
+         Metadata for an endpoint step.
+
+        Attributes
+       ----------------------
+       arn: 	 The Amazon Resource Name (ARN) of the endpoint in the step.
+    """
+
+    arn: Optional[str] = Unassigned()
 
 
 class EndpointSummary(Base):
@@ -10049,6 +10051,8 @@ class PipelineExecutionStepMetadata(Base):
        clarify_check: 	 Container for the metadata for a Clarify check step. The configurations and outcomes of the check step execution. This includes:    The type of the check conducted,   The Amazon S3 URIs of baseline constraints and statistics files to be used for the drift check.   The Amazon S3 URIs of newly calculated baseline constraints and statistics.   The model package group name provided.   The Amazon S3 URI of the violation report if violations detected.   The Amazon Resource Name (ARN) of check processing job initiated by the step execution.   The boolean flags indicating if the drift check is skipped.   If step property BaselineUsedForDriftCheck is set the same as CalculatedBaseline.
        fail: 	 The configurations and outcomes of a Fail step execution.
        auto_ml_job: 	 The Amazon Resource Name (ARN) of the AutoML job that was run by this step.
+       endpoint: 	 The endpoint that was invoked during this step execution.
+       endpoint_config: 	 The endpoint configuration used to create an endpoint during this step execution.
     """
 
     training_job: Optional[TrainingJobStepMetadata] = Unassigned()
@@ -10065,6 +10069,8 @@ class PipelineExecutionStepMetadata(Base):
     clarify_check: Optional[ClarifyCheckStepMetadata] = Unassigned()
     fail: Optional[FailStepMetadata] = Unassigned()
     auto_ml_job: Optional[AutoMLJobStepMetadata] = Unassigned()
+    endpoint: Optional[EndpointStepMetadata] = Unassigned()
+    endpoint_config: Optional[EndpointConfigStepMetadata] = Unassigned()
 
 
 class SelectiveExecutionResult(Base):

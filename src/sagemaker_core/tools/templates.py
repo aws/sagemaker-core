@@ -54,7 +54,7 @@ def create(
         
     logger.debug(f"Input request: {{operation_input_args}}")
     # serialize the input request
-    operation_input_args = cls._serialize_args(operation_input_args)
+    operation_input_args = serialize(operation_input_args)
     logger.debug(f"Serialized input request: {{operation_input_args}}")
 
     # create the resource
@@ -85,7 +85,7 @@ def create(
         
     logger.debug(f"Input request: {{operation_input_args}}")
     # serialize the input request
-    operation_input_args = cls._serialize_args(operation_input_args)
+    operation_input_args = serialize(operation_input_args)
     logger.debug(f"Serialized input request: {{operation_input_args}}")
 
     # create the resource
@@ -114,7 +114,7 @@ def load(
 
     logger.debug(f"Input request: {{operation_input_args}}")
     # serialize the input request
-    operation_input_args = cls._serialize_args(operation_input_args)
+    operation_input_args = serialize(operation_input_args)
     logger.debug(f"Serialized input request: {{operation_input_args}}")
 
     # import the resource
@@ -159,7 +159,7 @@ def update(
     }}
     logger.debug(f"Input request: {{operation_input_args}}")
     # serialize the input request
-    operation_input_args = {resource_name}._serialize_args(operation_input_args)
+    operation_input_args = serialize(operation_input_args)
     logger.debug(f"Serialized input request: {{operation_input_args}}")
 
     # create the resource
@@ -186,7 +186,7 @@ def update(
     }}
     logger.debug(f"Input request: {{operation_input_args}}")
     # serialize the input request
-    operation_input_args = {resource_name}._serialize_args(operation_input_args)
+    operation_input_args = serialize(operation_input_args)
     logger.debug(f"Serialized input request: {{operation_input_args}}")
 
     # create the resource
@@ -210,7 +210,7 @@ def invoke(self,
     }}
     logger.debug(f"Input request: {{operation_input_args}}")
     # serialize the input request
-    operation_input_args = {resource_name}._serialize_args(operation_input_args)
+    operation_input_args = serialize(operation_input_args)
     logger.debug(f"Serialized input request: {{operation_input_args}}")
 
     # create the resource
@@ -234,7 +234,7 @@ def invoke_async(self,
     }}
     logger.debug(f"Input request: {{operation_input_args}}")
     # serialize the input request
-    operation_input_args = {resource_name}._serialize_args(operation_input_args)
+    operation_input_args = serialize(operation_input_args)
     logger.debug(f"Serialized input request: {{operation_input_args}}")
 
     # create the resource
@@ -258,7 +258,7 @@ def invoke_with_response_stream(self,
     }}
     logger.debug(f"Input request: {{operation_input_args}}")
     # serialize the input request
-    operation_input_args = {resource_name}._serialize_args(operation_input_args)
+    operation_input_args = serialize(operation_input_args)
     logger.debug(f"Serialized input request: {{operation_input_args}}")
 
     # create the resource
@@ -628,44 +628,6 @@ class Base(BaseModel):
     def get_sagemaker_client(cls, session = None, region_name = None, service_name = 'sagemaker'):
         return SageMakerClient(session=session, region_name=region_name, service_name=service_name).client
     
-    @classmethod
-    def _serialize_args(cls, value: dict) -> dict:
-        serialized_dict = {}
-        for k, v in value.items():
-            if serialize_result := cls._serialize(v):
-                serialized_dict.update({k: serialize_result})
-        return serialized_dict
-
-    @classmethod
-    def _serialize(cls, value: Any) -> Any:
-        if isinstance(value, Unassigned):
-            return None
-        elif isinstance(value, List):
-            return cls._serialize_list(value)
-        elif is_not_primitive(value) and not isinstance(value, dict):
-            return cls._serialize_object(value)
-        elif hasattr(value, "serialize"):
-            return value.serialize()
-        else:
-            return value
-
-    @classmethod
-    def _serialize_list(cls, value: List):
-        serialized_list = []
-        for v in value:
-            if serialize_result := cls._serialize(v):
-                serialized_list.append(serialize_result)
-        return serialized_list
-
-    @classmethod
-    def _serialize_object(cls, value: Any):
-        serialized_dict = {}
-        for k, v in vars(value).items():
-            if serialize_result := cls._serialize(v):
-                key = snake_to_pascal(k) if is_snake_case(k) else k
-                serialized_dict.update({key[0].upper() + key[1:]: serialize_result})
-        return serialized_dict
-    
     @staticmethod
     def get_updated_kwargs_with_configured_attributes(
         config_schema_for_resource: dict, resource_name: str, **kwargs
@@ -742,36 +704,12 @@ class Base(BaseModel):
             config = dict(arbitrary_types_allowed=True)
             return validate_call(config=config)(func)(*args, **kwargs)
         return wrapper
-        
+
 """
 
 SHAPE_BASE_CLASS_TEMPLATE = """
 class {class_name}:
     model_config = ConfigDict(protected_namespaces=(), validate_assignment=True)
-    
-    def serialize(self):
-        result = {{}}
-        for attr, value in self.__dict__.items():
-            if isinstance(value, Unassigned):
-                continue
-            
-            components = attr.split('_')
-            pascal_attr = ''.join(x.title() for x in components[0:])
-            if isinstance(value, List):
-                result[pascal_attr] = self._serialize_list(value)
-            elif isinstance(value, Dict):
-                result[pascal_attr] = self._serialize_dict(value)
-            elif hasattr(value, 'serialize'):
-                result[pascal_attr] = value.serialize()
-            else:
-                result[pascal_attr] = value
-        return result
-
-    def _serialize_list(self, value: List):
-        return [v.serialize() if hasattr(v, 'serialize') else v for v in value]
-    
-    def _serialize_dict(self, value: Dict):
-        return {{k: v.serialize() if hasattr(v, 'serialize') else v for k, v in value.items()}}
 """
 
 SHAPE_CLASS_TEMPLATE = '''
