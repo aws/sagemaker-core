@@ -25,7 +25,7 @@ from rich.logging import RichHandler
 from rich.style import Style
 from rich.theme import Theme
 from rich.traceback import install
-from typing import TypeVar, Generic, Type
+from typing import Any, Dict, List, TypeVar, Generic, Type
 from sagemaker_core.main.code_injection.codec import transform
 from sagemaker_core.main.code_injection.constants import Color
 from sagemaker_core.main.user_agent import get_user_agent_extra_suffix
@@ -459,3 +459,80 @@ class ResourceIterator(Generic[T]):
                 raise StopIteration
 
             return self.__next__()
+
+
+def serialize(value: Any) -> Any:
+    """
+    Serialize an object recursively by converting all objects to JSON-serializable types
+
+    Args:
+       value (Any): The object to be serialized
+
+    Returns:
+        Any: The serialized object
+    """
+    if isinstance(value, Unassigned):
+        return None
+    elif isinstance(value, Dict):
+        # if the value is a dict, use _serialize_dict() to serialize it recursively
+        return _serialize_dict(value)
+    elif isinstance(value, List):
+        # if the value is a dict, use _serialize_list() to serialize it recursively
+        return _serialize_list(value)
+    elif is_not_primitive(value):
+        # if the value is a dict, use _serialize_shape() to serialize it recursively
+        return _serialize_shape(value)
+    else:
+        return value
+
+
+def _serialize_dict(value: Dict) -> dict:
+    """
+    Serialize all values in a dict recursively
+
+    Args:
+       value (dict): The dict to be serialized
+
+    Returns:
+        dict: The serialized dict
+    """
+    serialized_dict = {}
+    for k, v in value.items():
+        if serialize_result := serialize(v):
+            serialized_dict.update({k: serialize_result})
+    return serialized_dict
+
+
+def _serialize_list(value: List) -> list:
+    """
+    Serialize all objects in a list
+
+    Args:
+       value (list): The dict to be serialized
+
+    Returns:
+        list: The serialized list
+    """
+    serialized_list = []
+    for v in value:
+        if serialize_result := serialize(v):
+            serialized_list.append(serialize_result)
+    return serialized_list
+
+
+def _serialize_shape(value: Any) -> dict:
+    """
+    Serialize a shape object defined in resource.py or shape.py to a dict
+
+    Args:
+       value (Any): The shape to be serialized
+
+    Returns:
+        dict: The dict of serialized shape
+    """
+    serialized_dict = {}
+    for k, v in vars(value).items():
+        if serialize_result := serialize(v):
+            key = snake_to_pascal(k) if is_snake_case(k) else k
+            serialized_dict.update({key[0].upper() + key[1:]: serialize_result})
+    return serialized_dict

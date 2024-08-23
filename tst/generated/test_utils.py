@@ -3,6 +3,11 @@ import datetime
 import logging
 from unittest.mock import Mock, patch, call
 from sagemaker_core.main.resources import TrainingJob, DataQualityJobDefinition
+from sagemaker_core.main.shapes import (
+    AdditionalS3DataSource,
+    TrialComponent,
+    TrialComponentParameterValue,
+)
 from sagemaker_core.main.utils import *
 
 
@@ -333,3 +338,36 @@ def test_configure_logging_with_invalid_log_level():
 def test_configure_logging_with_explicit_log_level():
     configure_logging("WARNING")
     assert logging.getLogger().level == logging.WARNING
+
+
+def test_serialize_method_returns_dict():
+    additional_s3_data_source = AdditionalS3DataSource(s3_data_type="filestring", s3_uri="s3/uri")
+    serialized_data = serialize(additional_s3_data_source)
+    assert isinstance(serialized_data, dict)
+
+
+def test_serialize_method_returns_correct_data():
+    additional_s3_data_source = AdditionalS3DataSource(s3_data_type="filestring", s3_uri="s3/uri")
+    serialized_data = serialize(additional_s3_data_source)
+    assert serialized_data["S3DataType"] == "filestring"
+    assert serialized_data["S3Uri"] == "s3/uri"
+
+
+def test_serialize_method_nested_shape():
+    trial_component_parameters = {
+        "test_num_value": TrialComponentParameterValue(number_value=1),
+        "test_str_value": TrialComponentParameterValue(string_value="string"),
+    }
+    trial_component = TrialComponent(
+        trial_component_name="test", parameters=trial_component_parameters
+    )
+    serialized_data = serialize(trial_component)
+    assert serialized_data["TrialComponentName"] == "test"
+    assert serialized_data["Parameters"] == {
+        "test_num_value": {
+            "NumberValue": 1,
+        },
+        "test_str_value": {
+            "StringValue": "string",
+        },
+    }
