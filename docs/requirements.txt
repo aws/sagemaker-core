@@ -1,0 +1,14 @@
+sphinx==5.1.1
+sphinx-rtd-theme==0.5.0
+docutils==0.15.2
+packaging==20.9
+jinja2==3.1.4
+schema==0.7.5
+boto3>=1.34.0,<2.0.0
+pydantic>=2.7.0,<3.0.0
+PyYAML>=6.0, <7.0
+jsonschema<5.0.0
+platformdirs>=4.0.0, <5.0.0
+rich>=13.0.0, <14.0.0
+mock>4.0, <5.0
+importlib-metadata<7.0,>=1.4.0
