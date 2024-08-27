@@ -45,7 +45,6 @@ def generate_code(
     )
 
     shapes_code_gen.generate_shapes()
-    resources_code_gen.generate_resources()
     reformat_file_with_black(".")
 
 

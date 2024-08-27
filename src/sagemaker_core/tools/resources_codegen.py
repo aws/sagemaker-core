@@ -1965,9 +1965,6 @@ class ResourcesCodeGen:
         Input for generating the Schema is the service JSON that is already loaded in the class
 
         """
-        self.resources_extractor = ResourcesExtractor()
-        self.resources_plan = self.resources_extractor.get_resource_plan()
-
         resource_properties = {}
 
         for _, row in self.resources_plan.iterrows():
