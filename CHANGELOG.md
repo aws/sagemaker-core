@@ -1,5 +1,8 @@
 # Changelog
 
+## v0.1.10 (2024-08-28)
+
+
 ## v0.1.9 (2024-08-28)
 
  * Update counting method of botocore api coverage (#159)
