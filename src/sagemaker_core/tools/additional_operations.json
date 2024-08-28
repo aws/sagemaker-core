@@ -1,13 +1,5 @@
 {
     "Cluster": {
-        "DescribeClusterNode": {
-            "operation_name": "DescribeClusterNode",
-            "resource_name": "Cluster",
-            "method_name": "get_node",
-            "return_type": "ClusterNodeDetails",
-            "method_type": "object",
-            "service_name": "sagemaker"
-        },
         "ListClusterNodes": {
             "operation_name": "ListClusterNodes",
             "resource_name": "Cluster",
