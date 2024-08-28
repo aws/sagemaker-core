@@ -1,25 +1,20 @@
-###########################
-Amazon SageMaker Core
-###########################
+########################
+SageMaker Core Resources
+########################
 
-********
-Overview
-********
+.. automodule:: sagemaker_core.main.resources
+    :members:
+    :undoc-members:
+    :show-inheritance:
+    :noindex:
 
-************************
-Sagemaker Core Resources
-************************
 
-.. toctree::
-    :maxdepth: 2
+########################
+SageMaker Core Shapes
+########################
 
-    sagemaker_core_resources/index
-
-*********
-Structure
-*********
-
-.. toctree::
-    :maxdepth: 2
-
-    structure/index
+.. automodule:: sagemaker_core.main.shapes
+    :members:
+    :undoc-members:
+    :show-inheritance:
+    :noindex:

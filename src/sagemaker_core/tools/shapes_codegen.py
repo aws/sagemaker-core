@@ -24,7 +24,12 @@ from sagemaker_core.tools.constants import (
     SHAPES_CODEGEN_FILE_NAME,
 )
 from sagemaker_core.tools.shapes_extractor import ShapesExtractor
-from sagemaker_core.main.utils import add_indent, convert_to_snake_case, remove_html_tags
+from sagemaker_core.main.utils import (
+    add_indent,
+    convert_to_snake_case,
+    remove_html_tags,
+    escape_special_rst_characters,
+)
 from sagemaker_core.tools.templates import SHAPE_CLASS_TEMPLATE, SHAPE_BASE_CLASS_TEMPLATE
 from sagemaker_core.tools.data_extractor import (
     load_combined_shapes_data,
@@ -166,20 +171,21 @@ class ShapesCodeGen:
         """
         shape_dict = self.combined_shapes[shape]
 
-        docstring = f" {shape}"
+        docstring = f"{shape}"
         if "documentation" in shape_dict:
-            docstring += f"\n \t  {shape_dict['documentation']}"
+            docstring += f"\n  {shape_dict['documentation']}"
 
-        docstring += "\n\n \t Attributes"
-        docstring += "\n\t----------------------"
+        docstring += "\n\nAttributes"
+        docstring += "\n----------------------"
 
         if "members" in shape_dict:
             for member, member_attributes in shape_dict["members"].items():
-                docstring += f"\n \t{convert_to_snake_case(member)}"
+                docstring += f"\n{convert_to_snake_case(member)}"
                 if "documentation" in member_attributes:
-                    docstring += f": \t {member_attributes['documentation']}"
+                    docstring += f": {member_attributes['documentation']}"
 
-        return remove_html_tags(docstring)
+        docstring = remove_html_tags(docstring)
+        return escape_special_rst_characters(docstring)
 
     def generate_license(self):
         """

@@ -5,10 +5,10 @@
 
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
+from datetime import datetime
 
-project = 'Sagemaker Core'
-copyright = "2024, Amazon Web Services, Inc. or its affiliates. All rights reserved."
-author = "AWS Sagemaker Codex"
+project = "sagemaker-core"
+copyright = "%s, Amazon Web Services, Inc. or its affiliates. All rights reserved." % datetime.now().year
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -25,16 +25,14 @@ extensions = [
 ]
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ['_templates']
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
-
+templates_path = ["_templates"]
+exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = 'sphinx_rtd_theme'
-html_static_path = ['_static']
+html_theme = "sphinx_rtd_theme"
 
 html_theme_options = {
     "collapse_navigation": True,

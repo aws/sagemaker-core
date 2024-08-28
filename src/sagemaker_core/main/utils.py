@@ -90,6 +90,18 @@ def remove_html_tags(text):
     return re.sub(clean, "", text)
 
 
+def escape_special_rst_characters(text):
+    # List of special characters that need to be escaped in reStructuredText
+    special_characters = ["*", "|"]
+
+    for char in special_characters:
+        # Use a regex to find the special character if preceded by a space
+        pattern = rf"(?<=\s){re.escape(char)}"
+        text = re.sub(pattern, rf"\\{char}", text)
+
+    return text
+
+
 def get_textual_rich_theme() -> Theme:
     """
     Get a textual rich theme with customized styling.
