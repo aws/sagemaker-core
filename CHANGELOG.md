@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.1.9 (2024-08-28)
+
+ * Update counting method of botocore api coverage (#159)
+ * Example notebook for tracking local pytorch experiment (#158)
+ * Add gen AI examples (#155)
+ * Fix _serialize_args() for dict parameters (#157)
+
 ## v0.1.8 (2024-08-21)
 
  * Daily Sync with Botocore v1.35.2 on 2024/08/21 (#153)
