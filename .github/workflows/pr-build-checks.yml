@@ -107,8 +107,6 @@ jobs:
         run: |
           export PYTHONPATH="$PYTHONPATH:$PWD"
           python -m pip install --upgrade pip
-          pip install coverage
-          pip install pytest-cov
           pip install -e ".[codegen]"
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -119,7 +117,11 @@ jobs:
       - name: Execute Boto API Coverage compute script and capture output
         run: |
           if [[ "${{ github.event.pull_request.user.login }}" == ${{ secrets.SAGEMAKER_BOT_USER_LOGIN }}* ]]; then
-            aws cloudwatch put-metric-data --metric-name CoveragePercent --namespace SageMakerPySdkCoreMonitoringMetrics --value $(python workflow_helper/compute_boto_api_coverage.py) --unit Count --dimensions MetricCategory=BotoApiCoverage
+            output=$(python workflow_helper/compute_boto_api_coverage.py)
+            unsupported_apis=$(echo $output | cut -d ' ' -f1)
+            supported_apis=$(echo $output | cut -d ' ' -f2)
+            aws cloudwatch put-metric-data --metric-name UnsupportedAPIs --namespace SageMakerPySdkCoreMonitoringMetrics --value $unsupported_apis --unit Count --dimensions MetricCategory=BotocoreAPICoverage
+            aws cloudwatch put-metric-data --metric-name SupportedAPIs --namespace SageMakerPySdkCoreMonitoringMetrics --value $supported_apis --unit Count --dimensions MetricCategory=BotocoreAPICoverage
           else
             echo "Putting metrics has been skipped"
           fi

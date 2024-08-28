@@ -174,9 +174,9 @@ class ResourcesExtractor:
 
         log.info(f"Total resource - {len(self.resources)}")
 
-        log.info(f"Total actions_under_resource - {len(self.actions_under_resource)}")
+        log.info(f"Supported actions - {len(self.actions_under_resource)}")
 
-        log.info(f"Unsupported actions: - {len(self.actions)}")
+        log.info(f"Unsupported actions - {len(self.actions)}")
 
         self._extract_resource_plan_as_dataframe()
 
@@ -367,6 +367,3 @@ class ResourcesExtractor:
             resource_methods (dict): The resource methods dict.
         """
         return self.resource_methods
-
-
-resource_extractor = ResourcesExtractor()

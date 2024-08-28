@@ -1,46 +1,15 @@
-import ast
-import csv
-import importlib
-import json
+from sagemaker_core.main.utils import configure_logging
+from sagemaker_core.tools.resources_extractor import ResourcesExtractor
 
 
 def main():
     """
-    This function computes the ratio percentage of APIs covered by sagemaker core to the ones in boto.
+    This function computes the number of APIs covered and uncovered by sagemaker core to the ones in Botocore.
     """
-    additional_operations_json_path = "src/sagemaker_core/tools/additional_operations.json"
-    with open(additional_operations_json_path, mode="r") as json_file:
-        additional_operations_json = json.load(json_file)
-
-    resource_csv_path = "resource_plan.csv"
-
-    with open(resource_csv_path, mode="r") as file:
-        csv_reader = csv.reader(file)
-        module_name = "sagemaker_core.main.resources"
-        module = importlib.import_module(module_name)
-        boto_methods = 0
-        sagemaker_core_methods = 0
-
-        next(csv_reader)
-
-        for row in csv_reader:
-            resource_name = row[0]
-            standard_methods = ast.literal_eval(row[2]) + ast.literal_eval(row[3])
-            additional_methods = ast.literal_eval(row[5])
-            ResourceClass = getattr(module, resource_name)
-            for standard_method in standard_methods:
-                boto_methods = boto_methods + 1
-                if hasattr(ResourceClass, standard_method) and callable(
-                    getattr(ResourceClass, standard_method)
-                ):
-                    sagemaker_core_methods = sagemaker_core_methods + 1
-
-            for additional_method in additional_methods:
-                boto_methods = boto_methods + 1
-                if additional_method in additional_operations_json:
-                    sagemaker_core_methods = sagemaker_core_methods + 1
-
-        print(sagemaker_core_methods * 100 / boto_methods)
+    configure_logging("ERROR") # Disable other log messages
+    resources_extractor = ResourcesExtractor()
+    # Print the number of unsupported Botocore API and supported Botocore API
+    print(len(resources_extractor.actions), len(resources_extractor.actions_under_resource))
 
 
 if __name__ == "__main__":
