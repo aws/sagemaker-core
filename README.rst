@@ -14,6 +14,9 @@ SageMaker Core
    :target: https://pypi.python.org/pypi/sagemaker-core
    :alt: Supported Python Versions
 
-SageMaker Core is an open source library for training and deploying machine learning models on Amazon SageMaker.
+SageMaker Core is an open source library for training and deploying machine learning models on Amazon SageMaker. 
+
+
+For examples and walkthroughs, see the `SageMaker Core Examples <https://github.com/aws/amazon-sagemaker-examples/tree/default/sagemaker-core>`_.
 
 For detailed documentation, including the API reference, see `Read the Docs <https://sagemaker-core.readthedocs.io>`_.
