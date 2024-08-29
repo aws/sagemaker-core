@@ -1,7 +1,3 @@
-.. |sagemaker_banner| image:: ../branding/icon/sagemaker-banner.png
-    :height: 100px
-    :alt: SageMaker
-
 .. include:: ../README.rst
 
 ########################
