@@ -1,6 +1,4 @@
-.. image:: https://github.com/aws/sagemaker-core/raw/main/branding/icon/sagemaker-banner.png
-    :height: 100px
-    :alt: SageMaker
+|sagemaker_banner|
 
 ====================
 SageMaker Core
