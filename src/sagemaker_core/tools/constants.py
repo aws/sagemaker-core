@@ -89,3 +89,5 @@ RESOURCES_CODEGEN_FILE_NAME = "resources.py"
 SHAPES_CODEGEN_FILE_NAME = "shapes.py"
 
 CONFIG_SCHEMA_FILE_NAME = "config_schema.py"
+
+API_COVERAGE_JSON_FILE_PATH = os.getcwd() + "/src/sagemaker_core/tools/api_coverage.json"
