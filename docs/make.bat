@@ -9,7 +9,7 @@ if "%SPHINXBUILD%" == "" (
 )
 set SOURCEDIR=.
 set BUILDDIR=_build
-set SPHINXPROJ=sagemaker
+set SPHINXPROJ=sagemaker-core
 
 if "%1" == "" goto help
 
