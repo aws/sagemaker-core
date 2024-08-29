@@ -11,6 +11,7 @@ project = "sagemaker-core"
 copyright = (
     "%s, Amazon Web Services, Inc. or its affiliates. All rights reserved." % datetime.now().year
 )
+author = "Amazon Web Services"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -20,9 +21,12 @@ pygments_style = "sphinx"
 extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
+    "sphinx.ext.coverage",
     "sphinx.ext.napoleon",
+    "sphinx.ext.intersphinx",
     "sphinx.ext.viewcode",
     "sphinx.ext.doctest",
+    "sphinx_rtd_theme"
 ]
 
 # -- Options for HTML output -------------------------------------------------
