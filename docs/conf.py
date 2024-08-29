@@ -8,20 +8,17 @@
 from datetime import datetime
 
 project = "sagemaker-core"
-copyright = "%s, Amazon Web Services, Inc. or its affiliates. All rights reserved." % datetime.now().year
+copyright = (
+    "%s, Amazon Web Services, Inc. or its affiliates. All rights reserved." % datetime.now().year
+)
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 extensions = [
     "sphinx.ext.autodoc",
-    "sphinx.ext.doctest",
-    "sphinx.ext.intersphinx",
-    "sphinx.ext.todo",
-    "sphinx.ext.coverage",
     "sphinx.ext.autosummary",
     "sphinx.ext.napoleon",
-    "sphinx.ext.autosectionlabel",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -43,26 +40,6 @@ html_theme_options = {
 }
 
 htmlhelp_basename = "%sdocs" % project
-
-# For Adobe Analytics
-html_js_files = [
-    "https://a0.awsstatic.com/s_code/js/3.0/awshome_s_code.js",
-    "https://cdn.datatables.net/1.10.23/js/jquery.dataTables.min.js",
-    "https://kit.fontawesome.com/a076d05399.js",
-    "js/datatable.js",
-]
-
-html_css_files = [
-    "https://cdn.datatables.net/1.10.23/css/jquery.dataTables.min.css",
-]
-
-html_context = {
-    "css_files": [
-        "_static/theme_overrides.css",
-        "_static/pagination.css",
-        "_static/search_accessories.css",
-    ]
-}
 
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {"python": ("http://docs.python.org/", None)}
