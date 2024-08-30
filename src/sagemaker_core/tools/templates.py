@@ -715,7 +715,7 @@ class {class_name}:
 SHAPE_CLASS_TEMPLATE = '''
 class {class_name}:
     """
-    {docstring}
+{docstring}
     """
 {data_class_members}
 

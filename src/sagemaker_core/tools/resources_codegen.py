@@ -36,6 +36,7 @@ from sagemaker_core.main.utils import (
     convert_to_snake_case,
     snake_to_pascal,
     remove_html_tags,
+    escape_special_rst_characters,
 )
 from sagemaker_core.tools.resources_extractor import ResourcesExtractor
 from sagemaker_core.tools.shapes_extractor import ShapesExtractor
@@ -643,7 +644,8 @@ class ResourcesCodeGen:
                 else:
                     documentation_string += f"{attribute_snake}: {documentation}\n"
         documentation_string = add_indent(documentation_string)
-        return remove_html_tags(documentation_string)
+        documentation_string = remove_html_tags(documentation_string)
+        return escape_special_rst_characters(documentation_string)
 
     def _generate_create_method_args(
         self, operation_input_shape_name: str, resource_name: str
