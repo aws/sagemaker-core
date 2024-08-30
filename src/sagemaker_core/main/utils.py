@@ -153,6 +153,7 @@ def enable_textual_rich_console_and_traceback():
     """
     global textual_rich_console_and_traceback_enabled
     if not textual_rich_console_and_traceback_enabled:
+        
         theme = get_textual_rich_theme()
         reconfigure(theme=theme)
         console = Console(theme=theme)
@@ -176,6 +177,8 @@ def get_textual_rich_logger(name: str, log_level: str = "INFO") -> logging.Logge
     """
     enable_textual_rich_console_and_traceback()
     handler = RichHandler(markup=True)
+    formatter = logging.Formatter('%(message)s')
+    handler.setFormatter(formatter)
     logging.basicConfig(level=getattr(logging, log_level), handlers=[handler])
     logger = logging.getLogger(name)
 
@@ -218,6 +221,8 @@ def configure_logging(log_level=None):
     for handler in _logger.handlers:
         _logger.removeHandler(handler)
     console_handler = RichHandler(markup=True)
+    formatter = logging.Formatter('%(message)s')
+    console_handler.setFormatter(formatter)
     _logger.addHandler(console_handler)
 
 
@@ -491,7 +496,7 @@ def serialize(value: Any) -> Any:
     elif isinstance(value, List):
         # if the value is a dict, use _serialize_list() to serialize it recursively
         return _serialize_list(value)
-    elif is_not_primitive(value):
+    elif is_not_primitive(value) and not value is None:
         # if the value is a dict, use _serialize_shape() to serialize it recursively
         return _serialize_shape(value)
     else:

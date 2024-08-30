@@ -25414,7 +25414,7 @@ class TrainingJob(Base):
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
         operation_input_args = serialize(operation_input_args)
-        logger.debug(f"Serialized input request: {operation_input_args}")
+        logger.info(f"Serialized input request: {operation_input_args}")
 
         # create the resource
         response = client.create_training_job(**operation_input_args)
@@ -25581,7 +25581,11 @@ class TrainingJob(Base):
         logger.info(f"Stopping {self.__class__.__name__} - {self.get_name()}")
 
     @Base.add_validate_call
-    def wait(self, poll: int = 5, timeout: Optional[int] = None) -> None:
+    def wait(self,
+        poll: Optional[int] = None, 
+        timeout: Optional[int] = None, 
+        logs: Optional[bool] = None
+    ) -> None:
         """
         Wait for a TrainingJob resource.
 
@@ -25597,6 +25601,7 @@ class TrainingJob(Base):
         """
         terminal_states = ["Completed", "Failed", "Stopped"]
         start_time = time.time()
+        poll = poll if poll else 5
 
         progress = Progress(
             SpinnerColumn("bouncingBar"),
@@ -25605,6 +25610,14 @@ class TrainingJob(Base):
         )
         progress.add_task("Waiting for TrainingJob...")
         status = Status("Current status:")
+        
+        if logs:
+            from sagemaker_core.main.logs import MultiLogStreamHandler
+            multi_stream_logger = MultiLogStreamHandler(
+                log_group_name=f"/aws/sagemaker/TrainingJobs",
+                log_stream_name_prefix=self.training_job_name,
+                expected_stream_count=self.resource_config.instance_count
+            )
 
         with Live(
             Panel(
@@ -25617,8 +25630,19 @@ class TrainingJob(Base):
                 self.refresh()
                 current_status = self.training_job_status
                 status.update(f"Current status: [bold]{current_status}")
+                
+                if logs and multi_stream_logger.ready():
+                    stream_log_events = multi_stream_logger.get_latest_log_events()
+                    for stream_id, event in stream_log_events:
+                        logger.info(
+                            f"{stream_id}:\n{event['message']}"
+                        )
 
                 if current_status in terminal_states:
+                    status.update(f"Current status: [bold]{current_status}")
+                    status.stop()
+                    progress.stop()
+                    
                     logger.info(f"Final Resource Status: [bold]{current_status}")
 
                     if "failed" in current_status.lower():
