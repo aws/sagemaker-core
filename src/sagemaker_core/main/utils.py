@@ -439,6 +439,7 @@ class ResourceIterator(Generic[T]):
                 if self.custom_key_mapping:
                     init_data = {self.custom_key_mapping.get(k, k): v for k, v in init_data.items()}
 
+                # Filter out the fields that are not in the resource class
                 fields = self.resource_cls.__annotations__
                 init_data = {k: v for k, v in init_data.items() if k in fields}
 
