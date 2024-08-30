@@ -125,7 +125,7 @@ jobs:
           else
             echo "Putting metrics has been skipped"
           fi
-  pylint:
+  pylint-codestyle:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -144,3 +144,6 @@ jobs:
         run: |
           python_files=$(find . -name '*.py')
           pylint $python_files --persistent=y --fail-under=8
+      - name: Run Black Check
+        run: |
+          black --check .
