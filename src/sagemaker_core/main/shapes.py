@@ -18,7 +18,7 @@ from sagemaker_core.main.utils import Unassigned
 
 
 class Base(BaseModel):
-    model_config = ConfigDict(protected_namespaces=(), validate_assignment=True)
+    model_config = ConfigDict(protected_namespaces=(), validate_assignment=True, extra="forbid")
 
 
 class ActionSource(Base):

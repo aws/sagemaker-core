@@ -9,8 +9,7 @@ from datetime import datetime
 
 project = "sagemaker-core"
 copyright = (
-    "%s, Amazon Web Services, Inc. or its affiliates. All rights reserved."
-    % datetime.now().year
+    "%s, Amazon Web Services, Inc. or its affiliates. All rights reserved." % datetime.now().year
 )
 author = "Amazon Web Services"
 
@@ -65,4 +64,3 @@ autosummary_generate = True
 
 # autosectionlabel
 autosectionlabel_prefix_document = True
-

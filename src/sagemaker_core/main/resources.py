@@ -51,7 +51,7 @@ logger = get_textual_rich_logger(__name__)
 
 
 class Base(BaseModel):
-    model_config = ConfigDict(protected_namespaces=(), validate_assignment=True)
+    model_config = ConfigDict(protected_namespaces=(), validate_assignment=True, extra="forbid")
 
     @classmethod
     def get_sagemaker_client(cls, session=None, region_name=None, service_name="sagemaker"):

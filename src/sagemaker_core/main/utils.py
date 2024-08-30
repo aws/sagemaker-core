@@ -438,6 +438,10 @@ class ResourceIterator(Generic[T]):
 
                 if self.custom_key_mapping:
                     init_data = {self.custom_key_mapping.get(k, k): v for k, v in init_data.items()}
+
+                fields = self.resource_cls.__annotations__
+                init_data = {k: v for k, v in init_data.items() if k in fields}
+
                 resource_object = self.resource_cls(**init_data)
 
             # If the resource object has refresh method, refresh and return it
