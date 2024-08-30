@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.0.1 (2024-08-30)
+
+ * fix: SMD pydantic issue (#170)
+ * feat: Add get started notebook (#160)
+ * update notebooks (#168)
+ * fix pyproject.toml (#167)
+
 ## v0.1.10 (2024-08-28)
 
 
