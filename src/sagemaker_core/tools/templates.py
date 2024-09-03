@@ -291,6 +291,10 @@ def get(
     operation_input_args = {{
 {operation_input_args}
     }}
+    # serialize the input request
+    operation_input_args = serialize(operation_input_args)
+    logger.debug(f"Serialized input request: {{operation_input_args}}")
+
     client = Base.get_sagemaker_client(session=session, region_name=region, service_name='{service_name}')
     response = client.{operation}(**operation_input_args)
 
@@ -312,6 +316,10 @@ def refresh(
     operation_input_args = {{
 {operation_input_args}
     }}
+    # serialize the input request
+    operation_input_args = serialize(operation_input_args)
+    logger.debug(f"Serialized input request: {{operation_input_args}}")
+
     client = Base.get_sagemaker_client()
     response = client.{operation}(**operation_input_args)
 
@@ -497,6 +505,10 @@ def delete(
     operation_input_args = {{
 {operation_input_args}
     }}
+    # serialize the input request
+    operation_input_args = serialize(operation_input_args)
+    logger.debug(f"Serialized input request: {{operation_input_args}}")
+
     client.{operation}(**operation_input_args)
     
     logger.info(f"Deleting {{self.__class__.__name__}} - {{self.get_name()}}")
@@ -511,6 +523,10 @@ def stop(self) -> None:
     operation_input_args = {{
 {operation_input_args}
     }}
+    # serialize the input request
+    operation_input_args = serialize(operation_input_args)
+    logger.debug(f"Serialized input request: {{operation_input_args}}")
+
     client.{operation}(**operation_input_args)
 
     logger.info(f"Stopping {{self.__class__.__name__}} - {{self.get_name()}}")
@@ -532,7 +548,9 @@ def get_all(
 {operation_input_args}
     }}
 {custom_key_mapping}
-    operation_input_args = {{k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}}
+    # serialize the input request
+    operation_input_args = serialize(operation_input_args)
+    logger.debug(f"Serialized input request: {{operation_input_args}}")
     
     return ResourceIterator(
 {resource_iterator_args}
@@ -582,7 +600,9 @@ SERIALIZE_INPUT_TEMPLATE = """
     operation_input_args = {{
 {operation_input_args}
     }}
-    logger.debug(f"Input request: {{operation_input_args}}")"""
+    # serialize the input request
+    operation_input_args = serialize(operation_input_args)
+    logger.debug(f"Serialized input request: {{operation_input_args}}")"""
 
 INITIALIZE_CLIENT_TEMPLATE = """
     client = Base.get_sagemaker_client(session=session, region_name=region, service_name='{service_name}')"""
@@ -603,13 +623,6 @@ DESERIALIZE_RESPONSE_TEMPLATE = """
 
 DESERIALIZE_RESPONSE_TO_BASIC_TYPE_TEMPLATE = """
     return list(response.values())[0]"""
-
-SERIALIZE_LIST_INPUT_TEMPLATE = """
-    operation_input_args = {{
-{operation_input_args}
-    }}
-    operation_input_args = {{k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}}
-    logger.debug(f"Input request: {{operation_input_args}}")"""
 
 RETURN_ITERATOR_TEMPLATE = """
     return ResourceIterator(

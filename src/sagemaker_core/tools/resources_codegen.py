@@ -56,7 +56,6 @@ from sagemaker_core.tools.templates import (
     RESOURCE_BASE_CLASS_TEMPLATE,
     RETURN_ITERATOR_TEMPLATE,
     SERIALIZE_INPUT_TEMPLATE,
-    SERIALIZE_LIST_INPUT_TEMPLATE,
     STOP_METHOD_TEMPLATE,
     DELETE_METHOD_TEMPLATE,
     WAIT_FOR_DELETE_METHOD_TEMPLATE,
@@ -1690,7 +1689,7 @@ class ResourcesCodeGen:
 
         resource_iterator_args = ",\n".join(resource_iterator_args_list)
         resource_iterator_args = add_indent(resource_iterator_args, 8)
-        serialize_operation_input = SERIALIZE_LIST_INPUT_TEMPLATE.format(
+        serialize_operation_input = SERIALIZE_INPUT_TEMPLATE.format(
             operation_input_args=operation_input_args
         )
         initialize_client = INITIALIZE_CLIENT_TEMPLATE.format(service_name=method.service_name)

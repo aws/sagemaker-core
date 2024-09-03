@@ -371,6 +371,10 @@ def get(
         'AppType': app_type,
         'AppName': app_name,
     }
+    # serialize the input request
+    operation_input_args = serialize(operation_input_args)
+    logger.debug(f"Serialized input request: {operation_input_args}")
+
     client = Base.get_sagemaker_client(session=session, region_name=region, service_name='sagemaker')
     response = client.describe_app(**operation_input_args)
 
@@ -416,6 +420,10 @@ def refresh(
         'AppType': self.app_type,
         'AppName': self.app_name,
     }
+    # serialize the input request
+    operation_input_args = serialize(operation_input_args)
+    logger.debug(f"Serialized input request: {operation_input_args}")
+
     client = Base.get_sagemaker_client()
     response = client.describe_app(**operation_input_args)
 
@@ -466,6 +474,10 @@ def delete(
     operation_input_args = {
         'CompilationJobName': self.compilation_job_name,
     }
+    # serialize the input request
+    operation_input_args = serialize(operation_input_args)
+    logger.debug(f"Serialized input request: {operation_input_args}")
+
     client.delete_compilation_job(**operation_input_args)
     
     logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
@@ -503,6 +515,10 @@ def stop(self) -> None:
     operation_input_args = {
         'CompilationJobName': self.compilation_job_name,
     }
+    # serialize the input request
+    operation_input_args = serialize(operation_input_args)
+    logger.debug(f"Serialized input request: {operation_input_args}")
+
     client.stop_compilation_job(**operation_input_args)
 
     logger.info(f"Stopping {self.__class__.__name__} - {self.get_name()}")
@@ -952,7 +968,9 @@ def get_all(
         'SpaceNameEquals': space_name_equals,
     }
 
-    operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
+    # serialize the input request
+    operation_input_args = serialize(operation_input_args)
+    logger.debug(f"Serialized input request: {operation_input_args}")
     
     return ResourceIterator(
         client=client,
@@ -1053,7 +1071,9 @@ def get_all(
         'CreationTimeAfter': creation_time_after,
     }
     custom_key_mapping = {"monitoring_job_definition_name": "job_definition_name", "monitoring_job_definition_arn": "job_definition_arn"}
-    operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
+    # serialize the input request
+    operation_input_args = serialize(operation_input_args)
+    logger.debug(f"Serialized input request: {operation_input_args}")
     
     return ResourceIterator(
         client=client,
@@ -1109,7 +1129,9 @@ def get_node(
         'ClusterName': self.cluster_name,
         'NodeId': node_id,
     }
-    logger.debug(f"Input request: {operation_input_args}")
+    # serialize the input request
+    operation_input_args = serialize(operation_input_args)
+    logger.debug(f"Serialized input request: {operation_input_args}")
 
     client = Base.get_sagemaker_client(session=session, region_name=region, service_name='sagemaker')
 
@@ -1169,7 +1191,9 @@ def update_weights_and_capacities(
         'EndpointName': self.endpoint_name,
         'DesiredWeightsAndCapacities': desired_weights_and_capacities,
     }
-    logger.debug(f"Input request: {operation_input_args}")
+    # serialize the input request
+    operation_input_args = serialize(operation_input_args)
+    logger.debug(f"Serialized input request: {operation_input_args}")
 
     client = Base.get_sagemaker_client(session=session, region_name=region, service_name='sagemaker')
 
@@ -1239,8 +1263,9 @@ def get_all_training_jobs(
         'SortBy': sort_by,
         'SortOrder': sort_order,
     }
-    operation_input_args = {k: v for k, v in operation_input_args.items() if v is not None and not isinstance(v, Unassigned)}
-    logger.debug(f"Input request: {operation_input_args}")
+    # serialize the input request
+    operation_input_args = serialize(operation_input_args)
+    logger.debug(f"Serialized input request: {operation_input_args}")
 
     client = Base.get_sagemaker_client(session=session, region_name=region, service_name='sagemaker')
 
@@ -1363,7 +1388,9 @@ def get_all_training_jobs(
             'SpaceName': space_name,
             'LandingUri': landing_uri,
         }
-        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
     
         client = Base.get_sagemaker_client(session=session, region_name=region, service_name='sagemaker')
     
