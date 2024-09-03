@@ -622,7 +622,7 @@ DESERIALIZE_INPUT_AND_RESPONSE_TO_CLS_TEMPLATE = """
 
 RESOURCE_BASE_CLASS_TEMPLATE = """
 class Base(BaseModel):
-    model_config = ConfigDict(protected_namespaces=(), validate_assignment=True)
+    model_config = ConfigDict(protected_namespaces=(), validate_assignment=True, extra="forbid")
     
     @classmethod
     def get_sagemaker_client(cls, session = None, region_name = None, service_name = 'sagemaker'):
@@ -709,7 +709,7 @@ class Base(BaseModel):
 
 SHAPE_BASE_CLASS_TEMPLATE = """
 class {class_name}:
-    model_config = ConfigDict(protected_namespaces=(), validate_assignment=True)
+    model_config = ConfigDict(protected_namespaces=(), validate_assignment=True, extra="forbid")
 """
 
 SHAPE_CLASS_TEMPLATE = '''

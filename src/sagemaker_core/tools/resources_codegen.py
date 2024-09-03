@@ -897,7 +897,8 @@ class ResourcesCodeGen:
                     resource_name=resource_name,
                     create_args=create_args,
                     resource_lower=resource_lower,
-                    service_name="sagemaker",  # TODO: change service name based on the service - runtime, sagemaker, etc.
+                    # TODO: change service name based on the service - runtime, sagemaker, etc.
+                    service_name="sagemaker",
                     operation_input_args=operation_input_args,
                     operation=operation,
                     get_args=get_args,
@@ -908,7 +909,8 @@ class ResourcesCodeGen:
                     resource_name=resource_name,
                     create_args=create_args,
                     resource_lower=resource_lower,
-                    service_name="sagemaker",  # TODO: change service name based on the service - runtime, sagemaker, etc.
+                    # TODO: change service name based on the service - runtime, sagemaker, etc.
+                    service_name="sagemaker",
                     operation_input_args=operation_input_args,
                     operation=operation,
                     get_args=get_args,
@@ -1074,7 +1076,8 @@ class ResourcesCodeGen:
             resource_name=resource_name,
             import_args=import_args,
             resource_lower=resource_lower,
-            service_name="sagemaker",  # TODO: change service name based on the service - runtime, sagemaker, etc.
+            # TODO: change service name based on the service - runtime, sagemaker, etc.
+            service_name="sagemaker",
             operation_input_args=operation_input_args,
             operation=operation,
             get_args=get_args,
@@ -1378,7 +1381,8 @@ class ResourcesCodeGen:
         formatted_method = GET_METHOD_TEMPLATE.format(
             docstring=docstring,
             resource_name=resource_name,
-            service_name="sagemaker",  # TODO: change service name based on the service - runtime, sagemaker, etc.
+            # TODO: change service name based on the service - runtime, sagemaker, etc.
+            service_name="sagemaker",
             describe_args=describe_args,
             resource_lower=resource_lower,
             operation_input_args=operation_input_args,
