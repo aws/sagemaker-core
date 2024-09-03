@@ -6,7 +6,7 @@ def main():
     """
     This function computes the number of APIs covered and uncovered by sagemaker core to the ones in Botocore.
     """
-    configure_logging("ERROR") # Disable other log messages
+    configure_logging("ERROR")  # Disable other log messages
     resources_extractor = ResourcesExtractor()
     # Print the number of unsupported Botocore API and supported Botocore API
     print(len(resources_extractor.actions), len(resources_extractor.actions_under_resource))
