@@ -1,4 +1,28 @@
 import os
+import sys
+import subprocess
+import torch.distributed as dist
+
+# Initialize the distributed environment
+dist.init_process_group(backend='nccl')
+
+# Install the requirements if rank is 0
+try:
+    rank = dist.get_rank()
+
+    python_path = sys.executable  
+    install_requirements_command = f"{python_path} -m pip install --no-cache-dir -r /opt/ml/input/data/code/requirements.txt"
+
+    if rank == 0:
+        print(f"Installing requirements with command: {install_requirements_command}")
+        subprocess.run(install_requirements_command, shell=True, check=True)
+except Exception as e:
+    print("An error occurred while installing the requirements.")
+    pass
+    
+# Wait for all processes to reach this point
+dist.barrier()
+
 import argparse
 from transformers import (
     AutoModelForCausalLM,
@@ -11,7 +35,6 @@ from transformers import Trainer, TrainingArguments
 
 from peft import LoraConfig, get_peft_model,prepare_model_for_kbit_training
 from accelerate import Accelerator
-
 
 def parse_arge():
     """Parse the arguments."""
@@ -70,6 +93,7 @@ def training_function(args):
     from huggingface_hub.hf_api import HfFolder;
     HfFolder.save_token(args.access_token)
 
+    print(f"Loading dataset from {args.dataset_path}")
     dataset = load_from_disk(args.dataset_path)
 
     model = AutoModelForCausalLM.from_pretrained(
@@ -126,6 +150,7 @@ def training_function(args):
         data_collator=default_data_collator,
     )
 
+    print("Starting training")
     # Start training
     trainer.train()
 
@@ -137,6 +162,8 @@ def training_function(args):
 
 def main():
     args, _ = parse_arge()
+
+    print("Running training function")
     training_function(args)
 
 

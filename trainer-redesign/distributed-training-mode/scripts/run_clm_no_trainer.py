@@ -1,4 +1,28 @@
 import os
+import sys
+import subprocess
+import torch.distributed as dist
+
+# Initialize the distributed environment
+dist.init_process_group(backend='nccl')
+
+# Install the requirements if rank is 0
+try:
+    rank = dist.get_rank()
+
+    python_path = sys.executable  
+    install_requirements_command = f"{python_path} -m pip install --no-cache-dir -r /opt/ml/input/data/code/requirements.txt"
+
+    if rank == 0:
+        print(f"Installing requirements with command: {install_requirements_command}")
+        subprocess.run(install_requirements_command, shell=True, check=True)
+except Exception as e:
+    print("An error occurred while installing the requirements.")
+    pass
+    
+# Wait for all processes to reach this point
+dist.barrier()
+
 import argparse
 import math
 from transformers import (
@@ -10,7 +34,6 @@ from transformers import (
 )
 from datasets import load_from_disk
 import torch
-import torch.distributed as dist
 from utils import create_dataloaders,get_module_class_from_name,save_model
 import time
 from tqdm import tqdm
@@ -139,6 +162,7 @@ def training_function(args):
     train_dataset = dataset["train"]
     eval_dataset = dataset["validation"]
 
+    # Create dataloaders for training and evaluation
     train_dataloader,eval_dataloader = create_dataloaders(train_dataset,eval_dataset,args.rank,args.world_size,args.seed,args.per_device_train_batch_size,args.per_device_train_batch_size)
 
 
@@ -207,12 +231,14 @@ def training_function(args):
     start = time.time()
     device = torch.device(f"cuda:{args.local_rank}")
 
+    # Perform Training Loop for num_train_epochs times
     for epoch in range(args.num_train_epochs):
 
         model.train()
         total_steps=0
         fsdp_loss = torch.zeros(2).to(args.local_rank)
 
+        # Use train_dataloader to get the batch data
         for _, batch in enumerate(tqdm(train_dataloader,disable=not (args.rank==0))):
 
             batch = {k: v.to(device) for k, v in batch.items()}
@@ -229,7 +255,7 @@ def training_function(args):
             if total_steps > args.max_steps:
                 break
              
-
+        # Reduce the loss across all processes
         torch.distributed.all_reduce(fsdp_loss, op=torch.distributed.ReduceOp.SUM)
         train_loss = fsdp_loss[0] / fsdp_loss[1]
         train_ppl = torch.exp(train_loss)
