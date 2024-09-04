@@ -14416,6 +14416,7 @@ SHAPE_DAG = {
                 "shape": "StudioWebPortalSettings",
                 "type": "structure",
             },
+            {"name": "AutoMountHomeEFS", "shape": "AutoMountHomeEFS", "type": "string"},
         ],
         "type": "structure",
     },

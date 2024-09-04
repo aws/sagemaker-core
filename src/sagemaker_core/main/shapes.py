@@ -3055,7 +3055,7 @@ class ContainerDefinition(Base):
     model_data_url: The S3 path where the model artifacts, which result from model training, are stored. This path must point to a single gzip compressed tar archive (.tar.gz suffix). The S3 path is required for SageMaker built-in algorithms, but not if you use your own algorithms. For more information on built-in algorithms, see Common Parameters.   The model artifacts must be in an S3 bucket that is in the same region as the model or endpoint you are creating.  If you provide a value for this parameter, SageMaker uses Amazon Web Services Security Token Service to download model artifacts from the S3 path you provide. Amazon Web Services STS is activated in your Amazon Web Services account by default. If you previously deactivated Amazon Web Services STS for a region, you need to reactivate Amazon Web Services STS for that region. For more information, see Activating and Deactivating Amazon Web Services STS in an Amazon Web Services Region in the Amazon Web Services Identity and Access Management User Guide.  If you use a built-in algorithm to create a model, SageMaker requires that you provide a S3 path to the model artifacts in ModelDataUrl.
     model_data_source: Specifies the location of ML model data to deploy.  Currently you cannot use ModelDataSource in conjunction with SageMaker batch transform, SageMaker serverless endpoints, SageMaker multi-model endpoints, and SageMaker Marketplace.
     additional_model_data_sources: Data sources that are available to your model in addition to the one that you specify for ModelDataSource when you use the CreateModel action.
-    environment: The environment variables to set in the Docker container. The maximum length of each key and value in the Environment map is 1024 bytes. The maximum length of all keys and values in the map, combined, is 32 KB. If you pass multiple containers to a CreateModel request, then the maximum length of all of their maps, combined, is also 32 KB.
+    environment: The environment variables to set in the Docker container. Don't include any sensitive data in your environment variables. The maximum length of each key and value in the Environment map is 1024 bytes. The maximum length of all keys and values in the map, combined, is 32 KB. If you pass multiple containers to a CreateModel request, then the maximum length of all of their maps, combined, is also 32 KB.
     model_package_name: The name or Amazon Resource Name (ARN) of the model package to use to create the model.
     inference_specification_name: The inference specification name in the model package version.
     multi_model_config: Specifies additional configuration for multi-model endpoints.
@@ -3856,6 +3856,7 @@ class UserSettings(Base):
     custom_posix_user_config: Details about the POSIX identity that is used for file system operations.
     custom_file_system_configs: The settings for assigning a custom file system to a user profile. Permitted users can access this file system in Amazon SageMaker Studio.
     studio_web_portal_settings: Studio settings. If these settings are applied on a user level, they take priority over the settings applied on a domain level.
+    auto_mount_home_efs: Indicates whether auto-mounting of an EFS volume is supported for the user profile. The DefaultAsDomain value is only supported for user profiles. Do not use the DefaultAsDomain value when setting this parameter for a domain.
     """
 
     execution_role: Optional[str] = Unassigned()
@@ -3875,6 +3876,7 @@ class UserSettings(Base):
     custom_posix_user_config: Optional[CustomPosixUserConfig] = Unassigned()
     custom_file_system_configs: Optional[List[CustomFileSystemConfig]] = Unassigned()
     studio_web_portal_settings: Optional[StudioWebPortalSettings] = Unassigned()
+    auto_mount_home_efs: Optional[str] = Unassigned()
 
 
 class RStudioServerProDomainSettings(Base):
