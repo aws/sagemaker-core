@@ -368,15 +368,19 @@ class ModelTrainer:
             container_entrypoint=container_entrypoint
         )
         create_input_args["input_data_config"] = input_data_configs
-        create_input_args["hyper_parameters"] = hyper_parameters or self.hyper_parameters
+        
+        hyper_parameters = hyper_parameters or self.hyper_parameters
+        if hyper_parameters:
+            for hyper_parameter, value in hyper_parameters.items():
+                create_input_args["hyper_parameters"] = {hyper_parameter: str(value)}
         
         default_env = {}
         for input_config in input_data_configs:
             default_env[f"SM_CHANNEL_{input_config.channel_name.upper()}"] = f"/opt/ml/input/data/{input_config.channel_name}"
         
-        if create_input_args["hyper_parameters"]:
+        if create_input_args.get("hyper_parameters"):
             for hyper_parameter, value in create_input_args["hyper_parameters"].items():
-                default_env[f"SM_HP_{hyper_parameter.upper()}"] = value
+                default_env[f"SM_HP_{hyper_parameter.upper()}"] = str(value)
         default_env["SM_MODEL_DIR"] = "/opt/ml/model"
         
         if environment:
