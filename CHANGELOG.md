@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.0.2 (2024-09-04)
+
+ * Daily Sync with Botocore v1.35.11 on 2024/09/04 (#179)
+ * Add serialization for all methods (#177)
+ * Add forbid extra for pydantic BaseModel (#173)
+ * Add black check (#174)
+
 ## v1.0.1 (2024-08-30)
 
  * fix: SMD pydantic issue (#170)
