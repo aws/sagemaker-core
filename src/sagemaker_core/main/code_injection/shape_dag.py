@@ -255,6 +255,10 @@ SHAPE_DAG = {
         "member_type": "structure",
         "type": "list",
     },
+    "AppLifecycleManagement": {
+        "members": [{"name": "IdleSettings", "shape": "IdleSettings", "type": "structure"}],
+        "type": "structure",
+    },
     "AppList": {"member_shape": "AppDetails", "member_type": "structure", "type": "list"},
     "AppSpecification": {
         "members": [
@@ -1127,7 +1131,7 @@ SHAPE_DAG = {
             {"name": "InstanceGroupName", "shape": "ClusterInstanceGroupName", "type": "string"},
             {"name": "InstanceType", "shape": "ClusterInstanceType", "type": "string"},
             {"name": "LifeCycleConfig", "shape": "ClusterLifeCycleConfig", "type": "structure"},
-            {"name": "ExecutionRole", "shape": "RoleArn", "type": "string"},
+            {"name": "ExecutionRole", "shape": "IAMRoleArn", "type": "string"},
             {"name": "ThreadsPerCore", "shape": "ClusterThreadsPerCore", "type": "integer"},
             {
                 "name": "InstanceStorageConfigs",
@@ -1148,7 +1152,7 @@ SHAPE_DAG = {
             {"name": "InstanceGroupName", "shape": "ClusterInstanceGroupName", "type": "string"},
             {"name": "InstanceType", "shape": "ClusterInstanceType", "type": "string"},
             {"name": "LifeCycleConfig", "shape": "ClusterLifeCycleConfig", "type": "structure"},
-            {"name": "ExecutionRole", "shape": "RoleArn", "type": "string"},
+            {"name": "ExecutionRole", "shape": "IAMRoleArn", "type": "string"},
             {"name": "ThreadsPerCore", "shape": "ClusterThreadsPerCore", "type": "integer"},
             {
                 "name": "InstanceStorageConfigs",
@@ -1264,6 +1268,11 @@ SHAPE_DAG = {
             {"name": "DefaultResourceSpec", "shape": "ResourceSpec", "type": "structure"},
             {"name": "CustomImages", "shape": "CustomImages", "type": "list"},
             {"name": "LifecycleConfigArns", "shape": "LifecycleConfigArns", "type": "list"},
+            {
+                "name": "AppLifecycleManagement",
+                "shape": "AppLifecycleManagement",
+                "type": "structure",
+            },
         ],
         "type": "structure",
     },
@@ -7001,6 +7010,15 @@ SHAPE_DAG = {
         "member_type": "structure",
         "type": "list",
     },
+    "IdleSettings": {
+        "members": [
+            {"name": "LifecycleManagement", "shape": "LifecycleManagement", "type": "string"},
+            {"name": "IdleTimeoutInMinutes", "shape": "IdleTimeoutInMinutes", "type": "integer"},
+            {"name": "MinIdleTimeoutInMinutes", "shape": "IdleTimeoutInMinutes", "type": "integer"},
+            {"name": "MaxIdleTimeoutInMinutes", "shape": "IdleTimeoutInMinutes", "type": "integer"},
+        ],
+        "type": "structure",
+    },
     "Image": {
         "members": [
             {"name": "CreationTime", "shape": "Timestamp", "type": "timestamp"},
@@ -7506,6 +7524,11 @@ SHAPE_DAG = {
             {"name": "CustomImages", "shape": "CustomImages", "type": "list"},
             {"name": "LifecycleConfigArns", "shape": "LifecycleConfigArns", "type": "list"},
             {"name": "CodeRepositories", "shape": "CodeRepositories", "type": "list"},
+            {
+                "name": "AppLifecycleManagement",
+                "shape": "AppLifecycleManagement",
+                "type": "structure",
+            },
             {"name": "EmrSettings", "shape": "EmrSettings", "type": "structure"},
         ],
         "type": "structure",
@@ -12566,8 +12589,19 @@ SHAPE_DAG = {
         "members": [{"name": "Cidrs", "shape": "Cidrs", "type": "list"}],
         "type": "structure",
     },
+    "SpaceAppLifecycleManagement": {
+        "members": [{"name": "IdleSettings", "shape": "SpaceIdleSettings", "type": "structure"}],
+        "type": "structure",
+    },
     "SpaceCodeEditorAppSettings": {
-        "members": [{"name": "DefaultResourceSpec", "shape": "ResourceSpec", "type": "structure"}],
+        "members": [
+            {"name": "DefaultResourceSpec", "shape": "ResourceSpec", "type": "structure"},
+            {
+                "name": "AppLifecycleManagement",
+                "shape": "SpaceAppLifecycleManagement",
+                "type": "structure",
+            },
+        ],
         "type": "structure",
     },
     "SpaceDetails": {
@@ -12592,10 +12626,21 @@ SHAPE_DAG = {
         ],
         "type": "structure",
     },
+    "SpaceIdleSettings": {
+        "members": [
+            {"name": "IdleTimeoutInMinutes", "shape": "IdleTimeoutInMinutes", "type": "integer"}
+        ],
+        "type": "structure",
+    },
     "SpaceJupyterLabAppSettings": {
         "members": [
             {"name": "DefaultResourceSpec", "shape": "ResourceSpec", "type": "structure"},
             {"name": "CodeRepositories", "shape": "CodeRepositories", "type": "list"},
+            {
+                "name": "AppLifecycleManagement",
+                "shape": "SpaceAppLifecycleManagement",
+                "type": "structure",
+            },
         ],
         "type": "structure",
     },
