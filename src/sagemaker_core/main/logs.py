@@ -4,7 +4,7 @@ import botocore
 from boto3.session import Session
 import botocore.client
 from botocore.config import Config
-from typing import Generator
+from typing import Generator, Tuple, List
 from sagemaker_core.main.utils import SingletonMeta
 
 
@@ -35,7 +35,7 @@ class LogStreamHandler:
         self.cw_client = CloudWatchLogsClient().client
         self.stream_id = stream_id
 
-    def get_latest_log_events(self) -> Generator[tuple[str, dict], None, None]:
+    def get_latest_log_events(self) -> Generator[Tuple[str, dict], None, None]:
         """
         This method gets all the latest log events for this stream that exist at this moment in time.
 
@@ -45,7 +45,7 @@ class LogStreamHandler:
         API Reference: https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/logs/client/get_log_events.html
 
         Returns:
-            Generator[tuple[str, dict], None, None]: Generator that yields a tuple that consists for two values
+            Generator[Tuple[str, dict], None, None]: Generator that yields a tuple that consists for two values
                 str: stream_name,
                 dict: event dict in format
                     {
@@ -79,7 +79,7 @@ class MultiLogStreamHandler:
     log_group_name: str = None
     log_stream_name_prefix: str = None
     expected_stream_count: int = None
-    streams: list[LogStreamHandler] = []
+    streams: List[LogStreamHandler] = []
     cw_client = None
 
     def __init__(
@@ -90,11 +90,11 @@ class MultiLogStreamHandler:
         self.expected_stream_count = expected_stream_count
         self.cw_client = CloudWatchLogsClient().client
 
-    def get_latest_log_events(self) -> Generator[tuple[str, dict], None, None]:
+    def get_latest_log_events(self) -> Generator[Tuple[str, dict], None, None]:
         """
         This method gets all the latest log events from each stream that exist at this moment.
         Returns:
-             Generator[tuple[str, dict], None, None]: Generator that yields a tuple that consists for two values
+             Generator[Tuple[str, dict], None, None]: Generator that yields a tuple that consists for two values
                 str: stream_name,
                 dict: event dict in format -
                     {

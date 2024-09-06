@@ -1751,7 +1751,7 @@ class ResourcesCodeGen:
         if resource_name == "TrainingJob":
             return """(
                 sum(instance_group.instance_count for instance_group in self.resource_config.instance_groups)
-                if self.resource_config.instance_groups
+                if self.resource_config.instance_groups and not isinstance(self.resource_config.instance_groups, Unassigned)
                 else self.resource_config.instance_count
             )
             """

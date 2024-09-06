@@ -93,14 +93,14 @@ def test_ready_streams_set():
         assert result == True
         mock_cw_client.describe_log_streams.assert_not_called()
 
-    
+
 def test_not_ready():
     mock_streams = {"logStreams": [], "nextToken": None}
 
     multi_log_stream_handler = MultiLogStreamHandler("logGroupName", "logStreamNamePrefix", 1)
     with patch.object(multi_log_stream_handler, "cw_client") as mock_cw_client:
         mock_cw_client.describe_log_streams.return_value = mock_streams
-        
+
         result = multi_log_stream_handler.ready()
 
         assert result == False
@@ -114,7 +114,7 @@ def test_ready_resource_not_found():
         mock_cw_client.describe_log_streams.side_effect = botocore.exceptions.ClientError(
             error_response={"Error": {"Code": "ResourceNotFoundException"}}, operation_name="test"
         )
-        
+
         result = multi_log_stream_handler.ready()
 
         assert result == False
