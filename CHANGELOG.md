@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.0.3 (2024-09-06)
+
+ * Daily Sync with Botocore v1.35.13 on 2024/09/06 (#180)
+ * Add test to check API coverage (#165)
+ * Update README.rst (#178)
+
 ## v1.0.2 (2024-09-04)
 
  * Daily Sync with Botocore v1.35.11 on 2024/09/04 (#179)
