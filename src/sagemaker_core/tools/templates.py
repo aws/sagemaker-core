@@ -325,12 +325,31 @@ if "failed" in current_status.lower():
     raise FailedStatusError(resource_type="{resource_name}", status=current_status, reason={reason})
 """
 
+INIT_WAIT_LOGS_TEMPLATE = """
+instance_count = {get_instance_count}
+if logs:
+    from sagemaker_core.main.logs import MultiLogStreamHandler
+    multi_stream_logger = MultiLogStreamHandler(
+        log_group_name=f"/aws/sagemaker/{job_type}s",
+        log_stream_name_prefix=self.get_name(),
+        expected_stream_count=instance_count
+    )
+"""
+
+PRINT_WAIT_LOGS = """
+if logs and multi_stream_logger.ready():
+    stream_log_events = multi_stream_logger.get_latest_log_events()
+    for stream_id, event in stream_log_events:
+        logger.info(f"{stream_id}:\\n{event['message']}")
+"""
+
 WAIT_METHOD_TEMPLATE = '''
 @Base.add_validate_call
 def wait(
     self,
     poll: int = 5,
-    timeout: Optional[int] = None
+    timeout: Optional[int] = None,
+    {logs_arg}
 ) -> None:
     """
     Wait for a {resource_name} resource.
@@ -338,7 +357,7 @@ def wait(
     Parameters:
         poll: The number of seconds to wait between each poll.
         timeout: The maximum number of seconds to wait before timing out.
-    
+        {logs_arg_doc}
     Raises:
         TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
         FailedStatusError:   If the resource reaches a failed state.
@@ -354,13 +373,14 @@ def wait(
     )
     progress.add_task("Waiting for {resource_name}...")
     status = Status("Current status:")
+    {init_wait_logs}
 
     with Live(Panel(Group(progress, status), title="Wait Log Panel", border_style=Style(color=Color.BLUE.value))):
         while True:
             self.refresh()
             current_status = self{status_key_path}
             status.update(f"Current status: [bold]{{current_status}}")
-
+            {print_wait_logs}
             if current_status in terminal_states:
                 logger.info(f"Final Resource Status: [bold]{{current_status}}")
 {failed_error_block}

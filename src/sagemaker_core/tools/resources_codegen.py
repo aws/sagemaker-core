@@ -29,6 +29,7 @@ from sagemaker_core.tools.constants import (
     CONFIG_SCHEMA_FILE_NAME,
     PYTHON_TYPES_TO_BASIC_JSON_TYPES,
     CONFIGURABLE_ATTRIBUTE_SUBSTRINGS,
+    JOBS_WITH_LOGS,
 )
 from sagemaker_core.tools.method import Method, MethodType
 from sagemaker_core.main.utils import (
@@ -75,6 +76,8 @@ from sagemaker_core.tools.templates import (
     GET_ALL_METHOD_WITH_ARGS_TEMPLATE,
     UPDATE_METHOD_TEMPLATE_WITHOUT_DECORATOR,
     RESOURCE_METHOD_EXCEPTION_DOCSTRING,
+    PRINT_WAIT_LOGS,
+    INIT_WAIT_LOGS_TEMPLATE,
 )
 from sagemaker_core.tools.data_extractor import (
     load_combined_shapes_data,
@@ -1737,6 +1740,28 @@ class ResourcesCodeGen:
 
         return "'(Unknown)'"
 
+    def _get_instance_count_ref(self, resource_name: str) -> str:
+        """Get the instance count reference for a resource object.
+        Args:
+            resource_name (str): The resource name.
+        Returns:
+            str: The instance count reference for resource object
+        """
+
+        if resource_name == "TrainingJob":
+            return """(
+                sum(instance_group.instance_count for instance_group in self.resource_config.instance_groups)
+                if self.resource_config.instance_groups
+                else self.resource_config.instance_count
+            )
+            """
+        elif resource_name == "TransformJob":
+            return "self.transform_resources.instance_count"
+        elif resource_name == "ProcessingJob":
+            return "self.processing_resources.cluster_config.instance_count"
+
+        raise ValueError(f"Instance count reference not found for resource {resource_name}")
+
     def generate_wait_method(self, resource_name: str) -> str:
         """Auto-Generate WAIT Method for a waitable resource.
 
@@ -1769,11 +1794,32 @@ class ResourcesCodeGen:
         )
         formatted_failed_block = add_indent(formatted_failed_block, 16)
 
+        logs_arg = ""
+        logs_arg_doc = ""
+        init_wait_logs = ""
+        print_wait_logs = ""
+        if resource_name in JOBS_WITH_LOGS:
+            logs_arg = "logs: Optional[bool] = False,"
+            logs_arg_doc = "logs: Whether to print logs while waiting.\n"
+
+            instance_count = self._get_instance_count_ref(resource_name)
+            init_wait_logs = add_indent(
+                INIT_WAIT_LOGS_TEMPLATE.format(
+                    get_instance_count=instance_count,
+                    job_type=resource_name,
+                )
+            )
+            print_wait_logs = add_indent(PRINT_WAIT_LOGS, 12)
+
         formatted_method = WAIT_METHOD_TEMPLATE.format(
             terminal_resource_states=terminal_resource_states,
             status_key_path=status_key_path,
             failed_error_block=formatted_failed_block,
             resource_name=resource_name,
+            logs_arg=logs_arg,
+            logs_arg_doc=logs_arg_doc,
+            init_wait_logs=init_wait_logs,
+            print_wait_logs=print_wait_logs,
         )
         return formatted_method
 
