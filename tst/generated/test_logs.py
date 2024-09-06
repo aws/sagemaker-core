@@ -4,9 +4,8 @@ from unittest.mock import patch, MagicMock
 from sagemaker_core.main.logs import LogStreamHandler, MultiLogStreamHandler
 
 
-@patch("sagemaker_core.main.logs.cw_client.get_log_events", autospec=True)
-def test_single_stream_handler_get_latest(mock_get_log_events):
-    mock_get_log_events.side_effect = [
+def test_single_stream_handler_get_latest():
+    mock_log_events = [
         {
             "nextForwardToken": "nextToken1",
             "events": [
@@ -16,22 +15,25 @@ def test_single_stream_handler_get_latest(mock_get_log_events):
         {"nextForwardToken": "nextToken2", "events": []},
     ]
 
-    log_stream_handler = LogStreamHandler("logGroupName", "logStreamName")
-    events = log_stream_handler.get_latest_log_events()
+    log_stream_handler = LogStreamHandler("logGroupName", "logStreamName", 0)
 
-    result = next(events)
+    with patch.object(log_stream_handler, "cw_client") as mock_cw_client:
+        mock_cw_client.get_log_events.side_effect = mock_log_events
+        events = log_stream_handler.get_latest_log_events()
 
-    assert result == (
-        "logStreamName",
-        {"ingestionTime": 123456789, "message": "test message", "timestamp": 123456789},
-    )
+        result = next(events)
 
-    mock_get_log_events.assert_called_once_with(
-        logGroupName="logGroupName", logStreamName="logStreamName", startFromHead=True
-    )
+        assert result == (
+            "logStreamName",
+            {"ingestionTime": 123456789, "message": "test message", "timestamp": 123456789},
+        )
 
-    with pytest.raises(StopIteration):
-        next(events)
+        mock_cw_client.get_log_events.assert_called_once_with(
+            logGroupName="logGroupName", logStreamName="logStreamName", startFromHead=True
+        )
+
+        with pytest.raises(StopIteration):
+            next(events)
 
 
 @patch("sagemaker_core.main.logs.MultiLogStreamHandler.ready", autospec=True)
@@ -64,51 +66,56 @@ def test_multi_stream_handler_get_latest(mock_ready):
         next(events)
 
 
-@patch("sagemaker_core.main.logs.cw_client.describe_log_streams", autospec=True)
-def test_ready(mock_describe_log_streams):
-    mock_describe_log_streams.return_value = {
+def test_ready():
+    mock_streams = {
         "logStreams": [{"logStreamName": "streamName"}],
         "nextToken": None,
     }
 
     multi_log_stream_handler = MultiLogStreamHandler("logGroupName", "logStreamNamePrefix", 1)
-    result = multi_log_stream_handler.ready()
+    with patch.object(multi_log_stream_handler, "cw_client") as mock_cw_client:
+        mock_cw_client.describe_log_streams.return_value = mock_streams
 
-    assert result == True
-    mock_describe_log_streams.assert_called_once()
+        result = multi_log_stream_handler.ready()
+
+        assert result == True
+        mock_cw_client.describe_log_streams.assert_called_once()
 
 
-@patch("sagemaker_core.main.logs.cw_client.describe_log_streams", autospec=True)
-def test_ready_streams_set(mock_describe_log_streams):
-    log_stream = LogStreamHandler("logGroupName", "logStreamName")
+def test_ready_streams_set():
+    log_stream = LogStreamHandler("logGroupName", "logStreamName", 0)
     multi_log_stream_handler = MultiLogStreamHandler("logGroupName", "logStreamNamePrefix", 1)
     multi_log_stream_handler.streams = [log_stream]
 
-    result = multi_log_stream_handler.ready()
+    with patch.object(multi_log_stream_handler, "cw_client") as mock_cw_client:
+        result = multi_log_stream_handler.ready()
 
-    assert result == True
-    mock_describe_log_streams.assert_not_called()
+        assert result == True
+        mock_cw_client.describe_log_streams.assert_not_called()
 
-
-@patch("sagemaker_core.main.logs.cw_client.describe_log_streams", autospec=True)
-def test_not_ready(mock_describe_log_streams):
-    mock_describe_log_streams.return_value = {"logStreams": [], "nextToken": None}
-
-    multi_log_stream_handler = MultiLogStreamHandler("logGroupName", "logStreamNamePrefix", 1)
-    result = multi_log_stream_handler.ready()
-
-    assert result == False
-    mock_describe_log_streams.assert_called_once()
-
-
-@patch("sagemaker_core.main.logs.cw_client.describe_log_streams", autospec=True)
-def test_ready_resource_not_found(mock_describe_log_streams):
-    mock_describe_log_streams.side_effect = botocore.exceptions.ClientError(
-        error_response={"Error": {"Code": "ResourceNotFoundException"}}, operation_name="test"
-    )
+    
+def test_not_ready():
+    mock_streams = {"logStreams": [], "nextToken": None}
 
     multi_log_stream_handler = MultiLogStreamHandler("logGroupName", "logStreamNamePrefix", 1)
-    result = multi_log_stream_handler.ready()
+    with patch.object(multi_log_stream_handler, "cw_client") as mock_cw_client:
+        mock_cw_client.describe_log_streams.return_value = mock_streams
+        
+        result = multi_log_stream_handler.ready()
 
-    assert result == False
-    mock_describe_log_streams.assert_called_once()
+        assert result == False
+        mock_cw_client.describe_log_streams.assert_called_once()
+
+
+def test_ready_resource_not_found():
+
+    multi_log_stream_handler = MultiLogStreamHandler("logGroupName", "logStreamNamePrefix", 1)
+    with patch.object(multi_log_stream_handler, "cw_client") as mock_cw_client:
+        mock_cw_client.describe_log_streams.side_effect = botocore.exceptions.ClientError(
+            error_response={"Error": {"Code": "ResourceNotFoundException"}}, operation_name="test"
+        )
+        
+        result = multi_log_stream_handler.ready()
+
+        assert result == False
+        mock_cw_client.describe_log_streams.assert_called_once()
