@@ -371,8 +371,9 @@ class ModelTrainer:
         
         hyper_parameters = hyper_parameters or self.hyper_parameters
         if hyper_parameters:
+            create_input_args["hyper_parameters"] = {}
             for hyper_parameter, value in hyper_parameters.items():
-                create_input_args["hyper_parameters"] = {hyper_parameter: str(value)}
+                create_input_args["hyper_parameters"][hyper_parameter] = str(value)
         
         default_env = {}
         for input_config in input_data_configs:
@@ -434,7 +435,8 @@ class ModelTrainer:
                         data_source=DataSource(
                             s3_data_source=S3DataSource(
                                 s3_data_type="S3Prefix",
-                                s3_uri=input_source
+                                s3_uri=input_source,
+                                s3_data_distribution_type="FullyReplicated"
                             )
                         ),
                         input_mode="File"
@@ -452,7 +454,8 @@ class ModelTrainer:
                         data_source=DataSource(
                             s3_data_source=S3DataSource(
                                 s3_data_type="S3Prefix",
-                                s3_uri=source_code_s3_uri
+                                s3_uri=source_code_s3_uri,
+                                s3_data_distribution_type="FullyReplicated"
                             )
                         ),
                         input_mode="File"

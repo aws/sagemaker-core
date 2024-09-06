@@ -1,28 +1,4 @@
 import os
-import sys
-import subprocess
-import torch.distributed as dist
-
-# Initialize the distributed environment
-dist.init_process_group(backend='nccl')
-
-# Install the requirements if rank is 0
-try:
-    rank = dist.get_rank()
-
-    python_path = sys.executable  
-    install_requirements_command = f"{python_path} -m pip install --no-cache-dir -r /opt/ml/input/data/code/requirements.txt"
-
-    if rank == 0:
-        print(f"Installing requirements with command: {install_requirements_command}")
-        subprocess.run(install_requirements_command, shell=True, check=True)
-except Exception as e:
-    print("An error occurred while installing the requirements.")
-    pass
-    
-# Wait for all processes to reach this point
-dist.barrier()
-
 import argparse
 import math
 from transformers import (
@@ -37,7 +13,7 @@ import torch
 from utils import create_dataloaders,get_module_class_from_name,save_model
 import time
 from tqdm import tqdm
-
+import torch.distributed as dist
 from torch.distributed.fsdp import (
     FullyShardedDataParallel as FSDP,
     MixedPrecision,
@@ -57,6 +33,8 @@ from torch.distributed.fsdp.wrap import (
 import functools
 
 
+# Initialize the distributed environment
+dist.init_process_group(backend='nccl')
 
 def parse_arge():
     """Parse the arguments."""
@@ -149,6 +127,9 @@ def training_function(args):
     HfFolder.save_token(args.access_token)
 
     dataset = load_from_disk(args.dataset_path)
+
+    dist.barrier()
+
     # load model from the hub
     model = AutoModelForCausalLM.from_pretrained(
         args.model_id,
@@ -294,13 +275,12 @@ def training_function(args):
 
 
 def main():
-    torch.distributed.init_process_group(
-                "nccl"
-            )
     args, _ = parse_arge()
     args.local_rank = int(os.environ["LOCAL_RANK"])
     args.rank = int(os.environ["RANK"])
     args.world_size = int(os.environ["WORLD_SIZE"])
+
+    print(f"Running with args: {args}")
     training_function(args)
 
 
