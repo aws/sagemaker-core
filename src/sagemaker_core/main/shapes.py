@@ -919,6 +919,38 @@ class AppImageConfigDetails(Base):
     code_editor_app_image_config: Optional[CodeEditorAppImageConfig] = Unassigned()
 
 
+class IdleSettings(Base):
+    """
+    IdleSettings
+      Settings related to idle shutdown of Studio applications.
+
+    Attributes
+    ----------------------
+    lifecycle_management: Indicates whether idle shutdown is activated for the application type.
+    idle_timeout_in_minutes: The time that SageMaker waits after the application becomes idle before shutting it down.
+    min_idle_timeout_in_minutes: The minimum value in minutes that custom idle shutdown can be set to by the user.
+    max_idle_timeout_in_minutes: The maximum value in minutes that custom idle shutdown can be set to by the user.
+    """
+
+    lifecycle_management: Optional[str] = Unassigned()
+    idle_timeout_in_minutes: Optional[int] = Unassigned()
+    min_idle_timeout_in_minutes: Optional[int] = Unassigned()
+    max_idle_timeout_in_minutes: Optional[int] = Unassigned()
+
+
+class AppLifecycleManagement(Base):
+    """
+    AppLifecycleManagement
+      Settings that are used to configure and manage the lifecycle of Amazon SageMaker Studio applications.
+
+    Attributes
+    ----------------------
+    idle_settings: Settings related to idle shutdown of Studio applications.
+    """
+
+    idle_settings: Optional[IdleSettings] = Unassigned()
+
+
 class AppSpecification(Base):
     """
     AppSpecification
@@ -2810,11 +2842,13 @@ class CodeEditorAppSettings(Base):
     default_resource_spec
     custom_images: A list of custom SageMaker images that are configured to run as a Code Editor app.
     lifecycle_config_arns: The Amazon Resource Name (ARN) of the Code Editor application lifecycle configuration.
+    app_lifecycle_management: Settings that are used to configure and manage the lifecycle of CodeEditor applications.
     """
 
     default_resource_spec: Optional[ResourceSpec] = Unassigned()
     custom_images: Optional[List[CustomImage]] = Unassigned()
     lifecycle_config_arns: Optional[List[str]] = Unassigned()
+    app_lifecycle_management: Optional[AppLifecycleManagement] = Unassigned()
 
 
 class CodeRepository(Base):
@@ -3736,6 +3770,7 @@ class JupyterLabAppSettings(Base):
     custom_images: A list of custom SageMaker images that are configured to run as a JupyterLab app.
     lifecycle_config_arns: The Amazon Resource Name (ARN) of the lifecycle configurations attached to the user profile or domain. To remove a lifecycle config, you must set LifecycleConfigArns to an empty list.
     code_repositories: A list of Git repositories that SageMaker automatically displays to users for cloning in the JupyterLab application.
+    app_lifecycle_management: Indicates whether idle shutdown is activated for JupyterLab applications.
     emr_settings: The configuration parameters that specify the IAM roles assumed by the execution role of SageMaker (assumable roles) and the cluster instances or job execution environments (execution roles or runtime roles) to manage and access resources required for running Amazon EMR clusters or Amazon EMR Serverless applications.
     """
 
@@ -3743,6 +3778,7 @@ class JupyterLabAppSettings(Base):
     custom_images: Optional[List[CustomImage]] = Unassigned()
     lifecycle_config_arns: Optional[List[str]] = Unassigned()
     code_repositories: Optional[List[CodeRepository]] = Unassigned()
+    app_lifecycle_management: Optional[AppLifecycleManagement] = Unassigned()
     emr_settings: Optional[EmrSettings] = Unassigned()
 
 
@@ -6403,6 +6439,32 @@ class ServiceCatalogProvisioningDetails(Base):
     provisioning_parameters: Optional[List[ProvisioningParameter]] = Unassigned()
 
 
+class SpaceIdleSettings(Base):
+    """
+    SpaceIdleSettings
+      Settings related to idle shutdown of Studio applications in a space.
+
+    Attributes
+    ----------------------
+    idle_timeout_in_minutes: The time that SageMaker waits after the application becomes idle before shutting it down.
+    """
+
+    idle_timeout_in_minutes: Optional[int] = Unassigned()
+
+
+class SpaceAppLifecycleManagement(Base):
+    """
+    SpaceAppLifecycleManagement
+      Settings that are used to configure and manage the lifecycle of Amazon SageMaker Studio applications in a space.
+
+    Attributes
+    ----------------------
+    idle_settings: Settings related to idle shutdown of Studio applications.
+    """
+
+    idle_settings: Optional[SpaceIdleSettings] = Unassigned()
+
+
 class SpaceCodeEditorAppSettings(Base):
     """
     SpaceCodeEditorAppSettings
@@ -6411,9 +6473,11 @@ class SpaceCodeEditorAppSettings(Base):
     Attributes
     ----------------------
     default_resource_spec
+    app_lifecycle_management: Settings that are used to configure and manage the lifecycle of CodeEditor applications in a space.
     """
 
     default_resource_spec: Optional[ResourceSpec] = Unassigned()
+    app_lifecycle_management: Optional[SpaceAppLifecycleManagement] = Unassigned()
 
 
 class SpaceJupyterLabAppSettings(Base):
@@ -6425,10 +6489,12 @@ class SpaceJupyterLabAppSettings(Base):
     ----------------------
     default_resource_spec
     code_repositories: A list of Git repositories that SageMaker automatically displays to users for cloning in the JupyterLab application.
+    app_lifecycle_management: Settings that are used to configure and manage the lifecycle of JupyterLab applications in a space.
     """
 
     default_resource_spec: Optional[ResourceSpec] = Unassigned()
     code_repositories: Optional[List[CodeRepository]] = Unassigned()
+    app_lifecycle_management: Optional[SpaceAppLifecycleManagement] = Unassigned()
 
 
 class EbsStorageSettings(Base):
