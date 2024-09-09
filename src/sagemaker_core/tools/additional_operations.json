@@ -137,6 +137,14 @@
             "return_type": "None",
             "method_type": "object",
             "service_name": "sagemaker"
+        },
+        "BatchPutMetrics": {
+            "operation_name": "BatchPutMetrics",
+            "resource_name": "TrialComponent",
+            "method_name": "batch_put_metrics",
+            "return_type": "None",
+            "method_type": "object",
+            "service_name": "sagemaker-metrics"
         }
     },
     "HubContent": {
@@ -392,6 +400,40 @@
             "return_type": "str",
             "method_type": "static",
             "service_name": "sagemaker"
+        }
+    },
+    "FeatureGroup": {
+        "GetRecord": {
+            "operation_name": "GetRecord",
+            "resource_name": "FeatureGroup",
+            "method_name": "get_record",
+            "return_type": "GetRecordResponse",
+            "method_type": "object",
+            "service_name": "sagemaker-featurestore-runtime"
+        },
+        "PutRecord": {
+            "operation_name": "PutRecord",
+            "resource_name": "FeatureGroup",
+            "method_name": "put_record",
+            "return_type": "None",
+            "method_type": "object",
+            "service_name": "sagemaker-featurestore-runtime"
+        },
+        "DeleteRecord": {
+            "operation_name": "DeleteRecord",
+            "resource_name": "FeatureGroup",
+            "method_name": "delete_record",
+            "return_type": "None",
+            "method_type": "object",
+            "service_name": "sagemaker-featurestore-runtime"
+        },
+        "BatchGetRecord": {
+            "operation_name": "BatchGetRecord",
+            "resource_name": "FeatureGroup",
+            "method_name": "batch_get_record",
+            "return_type": "BatchGetRecordResponse",
+            "method_type": "object",
+            "service_name": "sagemaker-featurestore-runtime"
         }
     }
 }

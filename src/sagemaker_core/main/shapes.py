@@ -4243,8 +4243,8 @@ class TtlDuration(Base):
     value:  TtlDuration time value.
     """
 
-    unit: Optional[str] = Unassigned()
-    value: Optional[int] = Unassigned()
+    unit: str
+    value: int
 
 
 class OnlineStoreConfig(Base):
@@ -11165,7 +11165,7 @@ class ResourceLimitExceeded(Base):
 class ResourceNotFound(Base):
     """
     ResourceNotFound
-      Resource being access is not found.
+      A resource that is required to perform an action was not found.
 
     Attributes
     ----------------------
@@ -11526,7 +11526,7 @@ class InternalDependencyException(Base):
 class InternalFailure(Base):
     """
     InternalFailure
-       An internal failure occurred.
+      An internal failure occurred. Try your request again. If the problem persists, contact Amazon Web Services customer support.
 
     Attributes
     ----------------------
@@ -11629,7 +11629,7 @@ class ModelNotReadyException(Base):
 class ServiceUnavailable(Base):
     """
     ServiceUnavailable
-       The service is unavailable. Try your call again.
+      The service is currently unavailable.
 
     Attributes
     ----------------------
@@ -11642,7 +11642,7 @@ class ServiceUnavailable(Base):
 class ValidationError(Base):
     """
     ValidationError
-       Inspect your request and try again.
+      There was an error validating your request.
 
     Attributes
     ----------------------
@@ -11650,3 +11650,152 @@ class ValidationError(Base):
     """
 
     message: Optional[str] = Unassigned()
+
+
+class AccessForbidden(Base):
+    """
+    AccessForbidden
+      You do not have permission to perform an action.
+
+    Attributes
+    ----------------------
+    message
+    """
+
+    message: Optional[str] = Unassigned()
+
+
+class BatchGetRecordError(Base):
+    """
+    BatchGetRecordError
+      The error that has occurred when attempting to retrieve a batch of Records.
+
+    Attributes
+    ----------------------
+    feature_group_name: The name of the feature group that the record belongs to.
+    record_identifier_value_as_string: The value for the RecordIdentifier in string format of a Record from a FeatureGroup that is causing an error when attempting to be retrieved.
+    error_code: The error code of an error that has occurred when attempting to retrieve a batch of Records. For more information on errors, see Errors.
+    error_message: The error message of an error that has occurred when attempting to retrieve a record in the batch.
+    """
+
+    feature_group_name: Union[str, object]
+    record_identifier_value_as_string: str
+    error_code: str
+    error_message: str
+
+
+class BatchGetRecordIdentifier(Base):
+    """
+    BatchGetRecordIdentifier
+      The identifier that identifies the batch of Records you are retrieving in a batch.
+
+    Attributes
+    ----------------------
+    feature_group_name: The name or Amazon Resource Name (ARN) of the FeatureGroup containing the records you are retrieving in a batch.
+    record_identifiers_value_as_string: The value for a list of record identifiers in string format.
+    feature_names: List of names of Features to be retrieved. If not specified, the latest value for all the Features are returned.
+    """
+
+    feature_group_name: Union[str, object]
+    record_identifiers_value_as_string: List[str]
+    feature_names: Optional[List[str]] = Unassigned()
+
+
+class FeatureValue(Base):
+    """
+    FeatureValue
+      The value associated with a feature.
+
+    Attributes
+    ----------------------
+    feature_name: The name of a feature that a feature value corresponds to.
+    value_as_string: The value in string format associated with a feature. Used when your CollectionType is None. Note that features types can be String, Integral, or Fractional. This value represents all three types as a string.
+    value_as_string_list: The list of values in string format associated with a feature. Used when your CollectionType is a List, Set, or Vector. Note that features types can be String, Integral, or Fractional. These values represents all three types as a string.
+    """
+
+    feature_name: str
+    value_as_string: Optional[str] = Unassigned()
+    value_as_string_list: Optional[List[str]] = Unassigned()
+
+
+class BatchGetRecordResultDetail(Base):
+    """
+    BatchGetRecordResultDetail
+      The output of records that have been retrieved in a batch.
+
+    Attributes
+    ----------------------
+    feature_group_name: The FeatureGroupName containing Records you retrieved in a batch.
+    record_identifier_value_as_string: The value of the record identifier in string format.
+    record: The Record retrieved.
+    expires_at: The ExpiresAt ISO string of the requested record.
+    """
+
+    feature_group_name: Union[str, object]
+    record_identifier_value_as_string: str
+    record: List[FeatureValue]
+    expires_at: Optional[str] = Unassigned()
+
+
+class BatchGetRecordResponse(Base):
+    """
+    BatchGetRecordResponse
+
+    Attributes
+    ----------------------
+    records: A list of Records you requested to be retrieved in batch.
+    errors: A list of errors that have occurred when retrieving a batch of Records.
+    unprocessed_identifiers: A unprocessed list of FeatureGroup names, with their corresponding RecordIdentifier value, and Feature name.
+    """
+
+    records: List[BatchGetRecordResultDetail]
+    errors: List[BatchGetRecordError]
+    unprocessed_identifiers: List[BatchGetRecordIdentifier]
+
+
+class GetRecordResponse(Base):
+    """
+    GetRecordResponse
+
+    Attributes
+    ----------------------
+    record: The record you requested. A list of FeatureValues.
+    expires_at: The ExpiresAt ISO string of the requested record.
+    """
+
+    record: Optional[List[FeatureValue]] = Unassigned()
+    expires_at: Optional[str] = Unassigned()
+
+
+class BatchPutMetricsError(Base):
+    """
+    BatchPutMetricsError
+      An error that occured when putting the metric data.
+
+    Attributes
+    ----------------------
+    code: The error code of an error that occured when attempting to put metrics.    METRIC_LIMIT_EXCEEDED: The maximum amount of metrics per resource is exceeded.    INTERNAL_ERROR: An internal error occured.    VALIDATION_ERROR: The metric data failed validation.    CONFLICT_ERROR: Multiple requests attempted to modify the same data simultaneously.
+    metric_index: An index that corresponds to the metric in the request.
+    """
+
+    code: Optional[str] = Unassigned()
+    metric_index: Optional[int] = Unassigned()
+
+
+class RawMetricData(Base):
+    """
+    RawMetricData
+      The raw metric data to associate with the resource.
+
+    Attributes
+    ----------------------
+    metric_name: The name of the metric.
+    timestamp: The time that the metric was recorded.
+    step: The metric step (epoch).
+    value: The metric value.
+    """
+
+    metric_name: str
+    timestamp: datetime.datetime
+    value: float
+    step: Optional[int] = Unassigned()
