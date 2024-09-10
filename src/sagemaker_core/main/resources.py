@@ -53,9 +53,9 @@ class Base(BaseModel):
 
     @classmethod
     def get_sagemaker_client(cls, session=None, region_name=None, service_name="sagemaker"):
-        return SageMakerClient(
-            session=session, region_name=region_name, service_name=service_name
-        ).client
+        return SageMakerClient(session=session, region_name=region_name).get_client(
+            service_name=service_name
+        )
 
     @staticmethod
     def get_updated_kwargs_with_configured_attributes(

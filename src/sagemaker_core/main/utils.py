@@ -320,7 +320,6 @@ class SageMakerClient(metaclass=SingletonMeta):
         self,
         session: Session = None,
         region_name: str = None,
-        service_name="sagemaker",
         config: Config = None,
     ):
         """
@@ -329,7 +328,7 @@ class SageMakerClient(metaclass=SingletonMeta):
         """
         if session is None:
             logger.warning("No boto3 session provided. Creating a new session.")
-            session = Session()
+            session = Session(region_name=region_name)
 
         if region_name is None:
             logger.warning("No region provided. Using default region.")
@@ -342,8 +341,29 @@ class SageMakerClient(metaclass=SingletonMeta):
         self.config = Config(user_agent_extra=get_user_agent_extra_suffix())
         self.session = session
         self.region_name = region_name
-        self.service_name = service_name
-        self.client = session.client(service_name, region_name, config=self.config)
+        self.sagemaker_client = session.client("sagemaker", region_name, config=self.config)
+        self.sagemaker_runtime_client = session.client(
+            "sagemaker-runtime", region_name, config=self.config
+        )
+        self.sagemaker_featurestore_runtime_client = session.client(
+            "sagemaker-featurestore-runtime", region_name, config=self.config
+        )
+        self.sagemaker_metrics_client = session.client(
+            "sagemaker-metrics", region_name, config=self.config
+        )
+
+    def get_client(self, service_name: str) -> Any:
+        """
+        Get the client of corresponding service
+
+        Args:
+            service_name (str): the service name
+
+        Returns:
+            Any: the client of that service
+        """
+        service_name = service_name.replace("-", "_")
+        return getattr(self, service_name + "_client")
 
 
 class ResourceIterator(Generic[T]):
