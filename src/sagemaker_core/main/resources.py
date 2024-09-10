@@ -3198,6 +3198,8 @@ class Cluster(Base):
         creation_time: The time when the SageMaker Cluster is created.
         failure_message: The failure message of the SageMaker HyperPod cluster.
         vpc_config:
+        orchestrator: The type of orchestrator used for the SageMaker HyperPod cluster.
+        node_recovery: The node recovery mode configured for the SageMaker HyperPod cluster.
 
     """
 
@@ -3208,6 +3210,8 @@ class Cluster(Base):
     failure_message: Optional[str] = Unassigned()
     instance_groups: Optional[List[ClusterInstanceGroupDetails]] = Unassigned()
     vpc_config: Optional[VpcConfig] = Unassigned()
+    orchestrator: Optional[ClusterOrchestrator] = Unassigned()
+    node_recovery: Optional[str] = Unassigned()
 
     def get_name(self) -> str:
         attributes = vars(self)
@@ -3252,6 +3256,8 @@ class Cluster(Base):
         instance_groups: List[ClusterInstanceGroupSpecification],
         vpc_config: Optional[VpcConfig] = Unassigned(),
         tags: Optional[List[Tag]] = Unassigned(),
+        orchestrator: Optional[ClusterOrchestrator] = Unassigned(),
+        node_recovery: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["Cluster"]:
@@ -3263,6 +3269,8 @@ class Cluster(Base):
             instance_groups: The instance groups to be created in the SageMaker HyperPod cluster.
             vpc_config:
             tags: Custom tags for managing the SageMaker HyperPod cluster as an Amazon Web Services resource. You can add tags to your cluster in the same way you add them in other Amazon Web Services services that support tagging. To learn more about tagging Amazon Web Services resources in general, see Tagging Amazon Web Services Resources User Guide.
+            orchestrator: The type of orchestrator to use for the SageMaker HyperPod cluster. Currently, the only supported value is "eks", which is to use an Amazon Elastic Kubernetes Service (EKS) cluster as the orchestrator.
+            node_recovery: The node recovery mode for the SageMaker HyperPod cluster. When set to Automatic, SageMaker HyperPod will automatically reboot or replace faulty nodes when issues are detected. When set to None, cluster administrators will need to manually manage any faulty cluster instances.
             session: Boto3 session.
             region: Region name.
 
@@ -3296,6 +3304,8 @@ class Cluster(Base):
             "InstanceGroups": instance_groups,
             "VpcConfig": vpc_config,
             "Tags": tags,
+            "Orchestrator": orchestrator,
+            "NodeRecovery": node_recovery,
         }
 
         operation_input_args = Base.populate_chained_attributes(
@@ -3406,6 +3416,7 @@ class Cluster(Base):
     def update(
         self,
         instance_groups: List[ClusterInstanceGroupSpecification],
+        node_recovery: Optional[str] = Unassigned(),
     ) -> Optional["Cluster"]:
         """
         Update a Cluster resource
@@ -3434,6 +3445,7 @@ class Cluster(Base):
         operation_input_args = {
             "ClusterName": self.cluster_name,
             "InstanceGroups": instance_groups,
+            "NodeRecovery": node_recovery,
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
