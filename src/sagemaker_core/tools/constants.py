@@ -79,7 +79,6 @@ ADDITIONAL_OPERATION_FILE_PATH = (
 )
 SERVICE_JSON_FILE_PATH = os.getcwd() + "/sample/sagemaker/2017-07-24/service-2.json"
 RUNTIME_SERVICE_JSON_FILE_PATH = os.getcwd() + "/sample/sagemaker-runtime/2017-05-13/service-2.json"
-EDGE_SERVICE_JSON_FILE_PATH = os.getcwd() + "/sample/sagemaker-edge/2020-09-23/service-2.json"
 FEATURE_STORE_SERVICE_JSON_FILE_PATH = (
     os.getcwd() + "/sample/sagemaker-featurestore-runtime/2020-07-01/service-2.json"
 )

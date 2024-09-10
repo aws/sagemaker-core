@@ -41,10 +41,10 @@ def load_service_jsons() -> ServiceJsonData:
 def load_combined_shapes_data() -> dict:
     service_json_data = load_service_jsons()
     return {
-        **service_json_data.sagemaker["shapes"],
         **service_json_data.sagemaker_runtime["shapes"],
         **service_json_data.sagemaker_feature_store["shapes"],
         **service_json_data.sagemaker_metrics["shapes"],
+        **service_json_data.sagemaker["shapes"],
     }
 
 
@@ -52,10 +52,10 @@ def load_combined_shapes_data() -> dict:
 def load_combined_operations_data() -> dict:
     service_json_data = load_service_jsons()
     return {
-        **service_json_data.sagemaker["operations"],
         **service_json_data.sagemaker_runtime["operations"],
         **service_json_data.sagemaker_feature_store["operations"],
         **service_json_data.sagemaker_metrics["operations"],
+        **service_json_data.sagemaker["operations"],
     }
 
 

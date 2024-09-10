@@ -12341,7 +12341,7 @@ SHAPE_DAG = {
         "type": "structure",
     },
     "ResourceNotFound": {
-        "members": [{"name": "Message", "shape": "Message", "type": "string"}],
+        "members": [{"name": "Message", "shape": "FailureReason", "type": "string"}],
         "type": "structure",
     },
     "ResourceSpec": {

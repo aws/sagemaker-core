@@ -109,6 +109,30 @@
             "return_type": "None",
             "method_type": "object",
             "service_name": "sagemaker"
+        },
+        "InvokeEndpoint": {
+            "operation_name": "InvokeEndpoint",
+            "resource_name": "Endpoint",
+            "method_name": "invoke",
+            "return_type": "InvokeEndpointOutput",
+            "method_type": "object",
+            "service_name": "sagemaker-runtime"
+        },
+        "InvokeEndpointAsync": {
+            "operation_name": "InvokeEndpointAsync",
+            "resource_name": "Endpoint",
+            "method_name": "invoke_async",
+            "return_type": "InvokeEndpointAsyncOutput",
+            "method_type": "object",
+            "service_name": "sagemaker-runtime"
+        },
+        "InvokeEndpointWithResponseStream": {
+            "operation_name": "InvokeEndpointWithResponseStream",
+            "resource_name": "Endpoint",
+            "method_name": "invoke_with_response_stream",
+            "return_type": "InvokeEndpointWithResponseStreamOutput",
+            "method_type": "object",
+            "service_name": "sagemaker-runtime"
         }
     },
     "InferenceComponent": {

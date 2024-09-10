@@ -27,7 +27,6 @@ from sagemaker_core.main.code_injection.codec import transform
 from sagemaker_core.main.code_injection.constants import Color
 from sagemaker_core.main.utils import (
     SageMakerClient,
-    SageMakerRuntimeClient,
     ResourceIterator,
     Unassigned,
     get_textual_rich_logger,
@@ -35,7 +34,6 @@ from sagemaker_core.main.utils import (
     pascal_to_snake,
     is_not_primitive,
     is_not_str_dict,
-    is_snake_case,
     is_primitive_list,
     serialize,
 )
@@ -299,7 +297,7 @@ class Action(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -341,7 +339,7 @@ class Action(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -386,7 +384,7 @@ class Action(Base):
                     error_code = e.response['Error']['Code']
                 ```
             ConflictException: There was a conflict when you attempted to modify a SageMaker entity such as an Experiment or Artifact.
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         logger.info("Updating action resource.")
@@ -428,7 +426,7 @@ class Action(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         client = Base.get_sagemaker_client()
@@ -485,7 +483,7 @@ class Action(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         client = Base.get_sagemaker_client(
@@ -1132,7 +1130,7 @@ class App(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -1178,7 +1176,7 @@ class App(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -1217,7 +1215,7 @@ class App(Base):
                     error_code = e.response['Error']['Code']
                 ```
             ResourceInUse: Resource being accessed is in use.
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         client = Base.get_sagemaker_client()
@@ -1563,7 +1561,7 @@ class AppImageConfig(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -1605,7 +1603,7 @@ class AppImageConfig(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -1645,7 +1643,7 @@ class AppImageConfig(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         logger.info("Updating app_image_config resource.")
@@ -1686,7 +1684,7 @@ class AppImageConfig(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         client = Base.get_sagemaker_client()
@@ -1925,7 +1923,7 @@ class Artifact(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -1967,7 +1965,7 @@ class Artifact(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -2011,7 +2009,7 @@ class Artifact(Base):
                     error_code = e.response['Error']['Code']
                 ```
             ConflictException: There was a conflict when you attempted to modify a SageMaker entity such as an Experiment or Artifact.
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         logger.info("Updating artifact resource.")
@@ -2052,7 +2050,7 @@ class Artifact(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         client = Base.get_sagemaker_client()
@@ -2110,7 +2108,7 @@ class Artifact(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         client = Base.get_sagemaker_client(
@@ -2200,7 +2198,7 @@ class Association(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         client = Base.get_sagemaker_client()
@@ -2264,7 +2262,7 @@ class Association(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         client = Base.get_sagemaker_client(
@@ -2327,7 +2325,7 @@ class Association(Base):
                     error_code = e.response['Error']['Code']
                 ```
             ResourceLimitExceeded: You have exceeded an SageMaker resource limit. For example, you might have too many training jobs created.
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -2563,7 +2561,7 @@ class AutoMLJob(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -2605,7 +2603,7 @@ class AutoMLJob(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -2637,7 +2635,7 @@ class AutoMLJob(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         client = SageMakerClient().client
@@ -2818,7 +2816,7 @@ class AutoMLJob(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -3072,7 +3070,7 @@ class AutoMLJobV2(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -3114,7 +3112,7 @@ class AutoMLJobV2(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -3342,7 +3340,7 @@ class Cluster(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -3384,7 +3382,7 @@ class Cluster(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -3425,7 +3423,7 @@ class Cluster(Base):
                 ```
             ConflictException: There was a conflict when you attempted to modify a SageMaker entity such as an Experiment or Artifact.
             ResourceLimitExceeded: You have exceeded an SageMaker resource limit. For example, you might have too many training jobs created.
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         logger.info("Updating cluster resource.")
@@ -3465,7 +3463,7 @@ class Cluster(Base):
                     error_code = e.response['Error']['Code']
                 ```
             ConflictException: There was a conflict when you attempted to modify a SageMaker entity such as an Experiment or Artifact.
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         client = Base.get_sagemaker_client()
@@ -3699,7 +3697,7 @@ class Cluster(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -3759,7 +3757,7 @@ class Cluster(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -3811,7 +3809,7 @@ class Cluster(Base):
                     error_code = e.response['Error']['Code']
                 ```
             ConflictException: There was a conflict when you attempted to modify a SageMaker entity such as an Experiment or Artifact.
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -4359,7 +4357,7 @@ class CompilationJob(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -4401,7 +4399,7 @@ class CompilationJob(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -4435,7 +4433,7 @@ class CompilationJob(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         client = Base.get_sagemaker_client()
@@ -4466,7 +4464,7 @@ class CompilationJob(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         client = SageMakerClient().client
@@ -4762,7 +4760,7 @@ class Context(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -4804,7 +4802,7 @@ class Context(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -4848,7 +4846,7 @@ class Context(Base):
                     error_code = e.response['Error']['Code']
                 ```
             ConflictException: There was a conflict when you attempted to modify a SageMaker entity such as an Experiment or Artifact.
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         logger.info("Updating context resource.")
@@ -4889,7 +4887,7 @@ class Context(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         client = Base.get_sagemaker_client()
@@ -4946,7 +4944,7 @@ class Context(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         client = Base.get_sagemaker_client(
@@ -5178,7 +5176,7 @@ class DataQualityJobDefinition(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -5220,7 +5218,7 @@ class DataQualityJobDefinition(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -5254,7 +5252,7 @@ class DataQualityJobDefinition(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         client = Base.get_sagemaker_client()
@@ -5424,7 +5422,7 @@ class Device(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -5468,7 +5466,7 @@ class Device(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -5714,7 +5712,7 @@ class DeviceFleet(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -5756,7 +5754,7 @@ class DeviceFleet(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -6367,7 +6365,7 @@ class Domain(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -6409,7 +6407,7 @@ class Domain(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -6458,7 +6456,7 @@ class Domain(Base):
                 ```
             ResourceInUse: Resource being accessed is in use.
             ResourceLimitExceeded: You have exceeded an SageMaker resource limit. For example, you might have too many training jobs created.
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         logger.info("Updating domain resource.")
@@ -6504,7 +6502,7 @@ class Domain(Base):
                     error_code = e.response['Error']['Code']
                 ```
             ResourceInUse: Resource being accessed is in use.
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         client = Base.get_sagemaker_client()
@@ -6837,7 +6835,7 @@ class EdgeDeploymentPlan(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -6882,7 +6880,7 @@ class EdgeDeploymentPlan(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -7423,7 +7421,7 @@ class EdgePackagingJob(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -7465,7 +7463,7 @@ class EdgePackagingJob(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -8095,218 +8093,6 @@ class Endpoint(Base):
                     raise e
                 time.sleep(poll)
 
-    @Base.add_validate_call
-    def invoke(
-        self,
-        body: Any,
-        content_type: Optional[str] = Unassigned(),
-        accept: Optional[str] = Unassigned(),
-        custom_attributes: Optional[str] = Unassigned(),
-        target_model: Optional[str] = Unassigned(),
-        target_variant: Optional[str] = Unassigned(),
-        target_container_hostname: Optional[str] = Unassigned(),
-        inference_id: Optional[str] = Unassigned(),
-        enable_explanations: Optional[str] = Unassigned(),
-        inference_component_name: Optional[str] = Unassigned(),
-    ) -> Optional[object]:
-        """
-        Invoke a Endpoint resource
-
-        Parameters:
-            body: Provides input data, in the format specified in the ContentType request header. Amazon SageMaker passes all of the data in the body to the model.  For information about the format of the request body, see Common Data Formats-Inference.
-            content_type: The MIME type of the input data in the request body.
-            accept: The desired MIME type of the inference response from the model container.
-            custom_attributes: Provides additional information about a request for an inference submitted to a model hosted at an Amazon SageMaker endpoint. The information is an opaque value that is forwarded verbatim. You could use this value, for example, to provide an ID that you can use to track a request or to provide other metadata that a service endpoint was programmed to process. The value must consist of no more than 1024 visible US-ASCII characters as specified in Section 3.3.6. Field Value Components of the Hypertext Transfer Protocol (HTTP/1.1).  The code in your model is responsible for setting or updating any custom attributes in the response. If your code does not set this value in the response, an empty value is returned. For example, if a custom attribute represents the trace ID, your model can prepend the custom attribute with Trace ID: in your post-processing function.  This feature is currently supported in the Amazon Web Services SDKs but not in the Amazon SageMaker Python SDK.
-            target_model: The model to request for inference when invoking a multi-model endpoint.
-            target_variant: Specify the production variant to send the inference request to when invoking an endpoint that is running two or more variants. Note that this parameter overrides the default behavior for the endpoint, which is to distribute the invocation traffic based on the variant weights. For information about how to use variant targeting to perform a/b testing, see Test models in production
-            target_container_hostname: If the endpoint hosts multiple containers and is configured to use direct invocation, this parameter specifies the host name of the container to invoke.
-            inference_id: If you provide a value, it is added to the captured data when you enable data capture on the endpoint. For information about data capture, see Capture Data.
-            enable_explanations: An optional JMESPath expression used to override the EnableExplanations parameter of the ClarifyExplainerConfig API. See the EnableExplanations section in the developer guide for more information.
-            inference_component_name: If the endpoint hosts one or more inference components, this parameter specifies the name of inference component to invoke.
-
-        Returns:
-            The Invoke response.
-
-        Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
-                The error message and error code can be parsed from the exception as follows:
-                ```
-                try:
-                    # AWS service call here
-                except botocore.exceptions.ClientError as e:
-                    error_message = e.response['Error']['Message']
-                    error_code = e.response['Error']['Code']
-                ```
-            InternalDependencyException: Your request caused an exception with an internal dependency. Contact customer support.
-            InternalFailure: An internal failure occurred. Try your request again. If the problem persists, contact Amazon Web Services customer support.
-            ModelError: Model (owned by the customer in the container) returned 4xx or 5xx error code.
-            ModelNotReadyException: Either a serverless endpoint variant's resources are still being provisioned, or a multi-model endpoint is still downloading or loading the target model. Wait and try your request again.
-            ServiceUnavailable: The service is currently unavailable.
-            ValidationError: There was an error validating your request.
-        """
-
-        logger.info(f"Invoking endpoint resource.")
-        client = SageMakerRuntimeClient(service_name="sagemaker-runtime").client
-        operation_input_args = {
-            "EndpointName": self.endpoint_name,
-            "Body": body,
-            "ContentType": content_type,
-            "Accept": accept,
-            "CustomAttributes": custom_attributes,
-            "TargetModel": target_model,
-            "TargetVariant": target_variant,
-            "TargetContainerHostname": target_container_hostname,
-            "InferenceId": inference_id,
-            "EnableExplanations": enable_explanations,
-            "InferenceComponentName": inference_component_name,
-        }
-        logger.debug(f"Input request: {operation_input_args}")
-        # serialize the input request
-        operation_input_args = serialize(operation_input_args)
-        logger.debug(f"Serialized input request: {operation_input_args}")
-
-        # create the resource
-        response = client.invoke_endpoint(**operation_input_args)
-        logger.debug(f"Response: {response}")
-
-        return response
-
-    @Base.add_validate_call
-    def invoke_async(
-        self,
-        input_location: str,
-        content_type: Optional[str] = Unassigned(),
-        accept: Optional[str] = Unassigned(),
-        custom_attributes: Optional[str] = Unassigned(),
-        inference_id: Optional[str] = Unassigned(),
-        request_ttl_seconds: Optional[int] = Unassigned(),
-        invocation_timeout_seconds: Optional[int] = Unassigned(),
-    ) -> Optional[object]:
-        """
-        Invoke Async a Endpoint resource
-
-        Parameters:
-            input_location: The Amazon S3 URI where the inference request payload is stored.
-            content_type: The MIME type of the input data in the request body.
-            accept: The desired MIME type of the inference response from the model container.
-            custom_attributes: Provides additional information about a request for an inference submitted to a model hosted at an Amazon SageMaker endpoint. The information is an opaque value that is forwarded verbatim. You could use this value, for example, to provide an ID that you can use to track a request or to provide other metadata that a service endpoint was programmed to process. The value must consist of no more than 1024 visible US-ASCII characters as specified in Section 3.3.6. Field Value Components of the Hypertext Transfer Protocol (HTTP/1.1).  The code in your model is responsible for setting or updating any custom attributes in the response. If your code does not set this value in the response, an empty value is returned. For example, if a custom attribute represents the trace ID, your model can prepend the custom attribute with Trace ID: in your post-processing function.  This feature is currently supported in the Amazon Web Services SDKs but not in the Amazon SageMaker Python SDK.
-            inference_id: The identifier for the inference request. Amazon SageMaker will generate an identifier for you if none is specified.
-            request_ttl_seconds: Maximum age in seconds a request can be in the queue before it is marked as expired. The default is 6 hours, or 21,600 seconds.
-            invocation_timeout_seconds: Maximum amount of time in seconds a request can be processed before it is marked as expired. The default is 15 minutes, or 900 seconds.
-
-        Returns:
-            The Invoke response.
-
-        Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
-                The error message and error code can be parsed from the exception as follows:
-                ```
-                try:
-                    # AWS service call here
-                except botocore.exceptions.ClientError as e:
-                    error_message = e.response['Error']['Message']
-                    error_code = e.response['Error']['Code']
-                ```
-            InternalFailure: An internal failure occurred. Try your request again. If the problem persists, contact Amazon Web Services customer support.
-            ServiceUnavailable: The service is currently unavailable.
-            ValidationError: There was an error validating your request.
-        """
-
-        logger.info(f"Invoking endpoint resource Async.")
-        client = SageMakerRuntimeClient(service_name="sagemaker-runtime").client
-
-        operation_input_args = {
-            "EndpointName": self.endpoint_name,
-            "ContentType": content_type,
-            "Accept": accept,
-            "CustomAttributes": custom_attributes,
-            "InferenceId": inference_id,
-            "InputLocation": input_location,
-            "RequestTTLSeconds": request_ttl_seconds,
-            "InvocationTimeoutSeconds": invocation_timeout_seconds,
-        }
-        logger.debug(f"Input request: {operation_input_args}")
-        # serialize the input request
-        operation_input_args = serialize(operation_input_args)
-        logger.debug(f"Serialized input request: {operation_input_args}")
-
-        # create the resource
-        response = client.invoke_endpoint_async(**operation_input_args)
-        logger.debug(f"Response: {response}")
-
-        return response
-
-    @Base.add_validate_call
-    def invoke_with_response_stream(
-        self,
-        body: Any,
-        content_type: Optional[str] = Unassigned(),
-        accept: Optional[str] = Unassigned(),
-        custom_attributes: Optional[str] = Unassigned(),
-        target_variant: Optional[str] = Unassigned(),
-        target_container_hostname: Optional[str] = Unassigned(),
-        inference_id: Optional[str] = Unassigned(),
-        inference_component_name: Optional[str] = Unassigned(),
-    ) -> Optional[object]:
-        """
-        Invoke with response stream a Endpoint resource
-
-        Parameters:
-            body: Provides input data, in the format specified in the ContentType request header. Amazon SageMaker passes all of the data in the body to the model.  For information about the format of the request body, see Common Data Formats-Inference.
-            content_type: The MIME type of the input data in the request body.
-            accept: The desired MIME type of the inference response from the model container.
-            custom_attributes: Provides additional information about a request for an inference submitted to a model hosted at an Amazon SageMaker endpoint. The information is an opaque value that is forwarded verbatim. You could use this value, for example, to provide an ID that you can use to track a request or to provide other metadata that a service endpoint was programmed to process. The value must consist of no more than 1024 visible US-ASCII characters as specified in Section 3.3.6. Field Value Components of the Hypertext Transfer Protocol (HTTP/1.1).  The code in your model is responsible for setting or updating any custom attributes in the response. If your code does not set this value in the response, an empty value is returned. For example, if a custom attribute represents the trace ID, your model can prepend the custom attribute with Trace ID: in your post-processing function.  This feature is currently supported in the Amazon Web Services SDKs but not in the Amazon SageMaker Python SDK.
-            target_variant: Specify the production variant to send the inference request to when invoking an endpoint that is running two or more variants. Note that this parameter overrides the default behavior for the endpoint, which is to distribute the invocation traffic based on the variant weights. For information about how to use variant targeting to perform a/b testing, see Test models in production
-            target_container_hostname: If the endpoint hosts multiple containers and is configured to use direct invocation, this parameter specifies the host name of the container to invoke.
-            inference_id: An identifier that you assign to your request.
-            inference_component_name: If the endpoint hosts one or more inference components, this parameter specifies the name of inference component to invoke for a streaming response.
-
-        Returns:
-            The Invoke response.
-
-        Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
-                The error message and error code can be parsed from the exception as follows:
-                ```
-                try:
-                    # AWS service call here
-                except botocore.exceptions.ClientError as e:
-                    error_message = e.response['Error']['Message']
-                    error_code = e.response['Error']['Code']
-                ```
-            InternalFailure: An internal failure occurred. Try your request again. If the problem persists, contact Amazon Web Services customer support.
-            InternalStreamFailure: The stream processing failed because of an unknown error, exception or failure. Try your request again.
-            ModelError: Model (owned by the customer in the container) returned 4xx or 5xx error code.
-            ModelStreamError: An error occurred while streaming the response body. This error can have the following error codes:  ModelInvocationTimeExceeded  The model failed to finish sending the response within the timeout period allowed by Amazon SageMaker.  StreamBroken  The Transmission Control Protocol (TCP) connection between the client and the model was reset or closed.
-            ServiceUnavailable: The service is currently unavailable.
-            ValidationError: There was an error validating your request.
-        """
-
-        logger.info(f"Invoking endpoint resource with Response Stream.")
-        client = SageMakerRuntimeClient(service_name="sagemaker-runtime").client
-
-        operation_input_args = {
-            "EndpointName": self.endpoint_name,
-            "Body": body,
-            "ContentType": content_type,
-            "Accept": accept,
-            "CustomAttributes": custom_attributes,
-            "TargetVariant": target_variant,
-            "TargetContainerHostname": target_container_hostname,
-            "InferenceId": inference_id,
-            "InferenceComponentName": inference_component_name,
-        }
-        logger.debug(f"Input request: {operation_input_args}")
-        # serialize the input request
-        operation_input_args = serialize(operation_input_args)
-        logger.debug(f"Serialized input request: {operation_input_args}")
-
-        # create the resource
-        response = client.invoke_endpoint_with_response_stream(**operation_input_args)
-        logger.debug(f"Response: {response}")
-
-        return response
-
     @classmethod
     @Base.add_validate_call
     def get_all(
@@ -8425,6 +8211,234 @@ class Endpoint(Base):
         logger.debug(f"Calling update_endpoint_weights_and_capacities API")
         response = client.update_endpoint_weights_and_capacities(**operation_input_args)
         logger.debug(f"Response: {response}")
+
+    @Base.add_validate_call
+    def invoke(
+        self,
+        body: Any,
+        content_type: Optional[str] = Unassigned(),
+        accept: Optional[str] = Unassigned(),
+        custom_attributes: Optional[str] = Unassigned(),
+        target_model: Optional[str] = Unassigned(),
+        target_variant: Optional[str] = Unassigned(),
+        target_container_hostname: Optional[str] = Unassigned(),
+        inference_id: Optional[str] = Unassigned(),
+        enable_explanations: Optional[str] = Unassigned(),
+        inference_component_name: Optional[str] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional[InvokeEndpointOutput]:
+        """
+        After you deploy a model into production using Amazon SageMaker hosting services, your client applications use this API to get inferences from the model hosted at the specified endpoint.
+
+        Parameters:
+            body: Provides input data, in the format specified in the ContentType request header. Amazon SageMaker passes all of the data in the body to the model.  For information about the format of the request body, see Common Data Formats-Inference.
+            content_type: The MIME type of the input data in the request body.
+            accept: The desired MIME type of the inference response from the model container.
+            custom_attributes: Provides additional information about a request for an inference submitted to a model hosted at an Amazon SageMaker endpoint. The information is an opaque value that is forwarded verbatim. You could use this value, for example, to provide an ID that you can use to track a request or to provide other metadata that a service endpoint was programmed to process. The value must consist of no more than 1024 visible US-ASCII characters as specified in Section 3.3.6. Field Value Components of the Hypertext Transfer Protocol (HTTP/1.1).  The code in your model is responsible for setting or updating any custom attributes in the response. If your code does not set this value in the response, an empty value is returned. For example, if a custom attribute represents the trace ID, your model can prepend the custom attribute with Trace ID: in your post-processing function.  This feature is currently supported in the Amazon Web Services SDKs but not in the Amazon SageMaker Python SDK.
+            target_model: The model to request for inference when invoking a multi-model endpoint.
+            target_variant: Specify the production variant to send the inference request to when invoking an endpoint that is running two or more variants. Note that this parameter overrides the default behavior for the endpoint, which is to distribute the invocation traffic based on the variant weights. For information about how to use variant targeting to perform a/b testing, see Test models in production
+            target_container_hostname: If the endpoint hosts multiple containers and is configured to use direct invocation, this parameter specifies the host name of the container to invoke.
+            inference_id: If you provide a value, it is added to the captured data when you enable data capture on the endpoint. For information about data capture, see Capture Data.
+            enable_explanations: An optional JMESPath expression used to override the EnableExplanations parameter of the ClarifyExplainerConfig API. See the EnableExplanations section in the developer guide for more information.
+            inference_component_name: If the endpoint hosts one or more inference components, this parameter specifies the name of inference component to invoke.
+            session: Boto3 session.
+            region: Region name.
+
+        Returns:
+            InvokeEndpointOutput
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            InternalDependencyException: Your request caused an exception with an internal dependency. Contact customer support.
+            InternalFailure: An internal failure occurred. Try your request again. If the problem persists, contact Amazon Web Services customer support.
+            ModelError: Model (owned by the customer in the container) returned 4xx or 5xx error code.
+            ModelNotReadyException: Either a serverless endpoint variant's resources are still being provisioned, or a multi-model endpoint is still downloading or loading the target model. Wait and try your request again.
+            ServiceUnavailable: The service is currently unavailable.
+            ValidationError: There was an error validating your request.
+        """
+
+        operation_input_args = {
+            "EndpointName": self.endpoint_name,
+            "Body": body,
+            "ContentType": content_type,
+            "Accept": accept,
+            "CustomAttributes": custom_attributes,
+            "TargetModel": target_model,
+            "TargetVariant": target_variant,
+            "TargetContainerHostname": target_container_hostname,
+            "InferenceId": inference_id,
+            "EnableExplanations": enable_explanations,
+            "InferenceComponentName": inference_component_name,
+        }
+        # serialize the input request
+        operation_input_args = serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker-runtime"
+        )
+
+        logger.debug(f"Calling invoke_endpoint API")
+        response = client.invoke_endpoint(**operation_input_args)
+        logger.debug(f"Response: {response}")
+
+        transformed_response = transform(response, "InvokeEndpointOutput")
+        return InvokeEndpointOutput(**transformed_response)
+
+    @Base.add_validate_call
+    def invoke_async(
+        self,
+        input_location: str,
+        content_type: Optional[str] = Unassigned(),
+        accept: Optional[str] = Unassigned(),
+        custom_attributes: Optional[str] = Unassigned(),
+        inference_id: Optional[str] = Unassigned(),
+        request_ttl_seconds: Optional[int] = Unassigned(),
+        invocation_timeout_seconds: Optional[int] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional[InvokeEndpointAsyncOutput]:
+        """
+        After you deploy a model into production using Amazon SageMaker hosting services, your client applications use this API to get inferences from the model hosted at the specified endpoint in an asynchronous manner.
+
+        Parameters:
+            input_location: The Amazon S3 URI where the inference request payload is stored.
+            content_type: The MIME type of the input data in the request body.
+            accept: The desired MIME type of the inference response from the model container.
+            custom_attributes: Provides additional information about a request for an inference submitted to a model hosted at an Amazon SageMaker endpoint. The information is an opaque value that is forwarded verbatim. You could use this value, for example, to provide an ID that you can use to track a request or to provide other metadata that a service endpoint was programmed to process. The value must consist of no more than 1024 visible US-ASCII characters as specified in Section 3.3.6. Field Value Components of the Hypertext Transfer Protocol (HTTP/1.1).  The code in your model is responsible for setting or updating any custom attributes in the response. If your code does not set this value in the response, an empty value is returned. For example, if a custom attribute represents the trace ID, your model can prepend the custom attribute with Trace ID: in your post-processing function.  This feature is currently supported in the Amazon Web Services SDKs but not in the Amazon SageMaker Python SDK.
+            inference_id: The identifier for the inference request. Amazon SageMaker will generate an identifier for you if none is specified.
+            request_ttl_seconds: Maximum age in seconds a request can be in the queue before it is marked as expired. The default is 6 hours, or 21,600 seconds.
+            invocation_timeout_seconds: Maximum amount of time in seconds a request can be processed before it is marked as expired. The default is 15 minutes, or 900 seconds.
+            session: Boto3 session.
+            region: Region name.
+
+        Returns:
+            InvokeEndpointAsyncOutput
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            InternalFailure: An internal failure occurred. Try your request again. If the problem persists, contact Amazon Web Services customer support.
+            ServiceUnavailable: The service is currently unavailable.
+            ValidationError: There was an error validating your request.
+        """
+
+        operation_input_args = {
+            "EndpointName": self.endpoint_name,
+            "ContentType": content_type,
+            "Accept": accept,
+            "CustomAttributes": custom_attributes,
+            "InferenceId": inference_id,
+            "InputLocation": input_location,
+            "RequestTTLSeconds": request_ttl_seconds,
+            "InvocationTimeoutSeconds": invocation_timeout_seconds,
+        }
+        # serialize the input request
+        operation_input_args = serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker-runtime"
+        )
+
+        logger.debug(f"Calling invoke_endpoint_async API")
+        response = client.invoke_endpoint_async(**operation_input_args)
+        logger.debug(f"Response: {response}")
+
+        transformed_response = transform(response, "InvokeEndpointAsyncOutput")
+        return InvokeEndpointAsyncOutput(**transformed_response)
+
+    @Base.add_validate_call
+    def invoke_with_response_stream(
+        self,
+        body: Any,
+        content_type: Optional[str] = Unassigned(),
+        accept: Optional[str] = Unassigned(),
+        custom_attributes: Optional[str] = Unassigned(),
+        target_variant: Optional[str] = Unassigned(),
+        target_container_hostname: Optional[str] = Unassigned(),
+        inference_id: Optional[str] = Unassigned(),
+        inference_component_name: Optional[str] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional[InvokeEndpointWithResponseStreamOutput]:
+        """
+        Invokes a model at the specified endpoint to return the inference response as a stream.
+
+        Parameters:
+            body: Provides input data, in the format specified in the ContentType request header. Amazon SageMaker passes all of the data in the body to the model.  For information about the format of the request body, see Common Data Formats-Inference.
+            content_type: The MIME type of the input data in the request body.
+            accept: The desired MIME type of the inference response from the model container.
+            custom_attributes: Provides additional information about a request for an inference submitted to a model hosted at an Amazon SageMaker endpoint. The information is an opaque value that is forwarded verbatim. You could use this value, for example, to provide an ID that you can use to track a request or to provide other metadata that a service endpoint was programmed to process. The value must consist of no more than 1024 visible US-ASCII characters as specified in Section 3.3.6. Field Value Components of the Hypertext Transfer Protocol (HTTP/1.1).  The code in your model is responsible for setting or updating any custom attributes in the response. If your code does not set this value in the response, an empty value is returned. For example, if a custom attribute represents the trace ID, your model can prepend the custom attribute with Trace ID: in your post-processing function.  This feature is currently supported in the Amazon Web Services SDKs but not in the Amazon SageMaker Python SDK.
+            target_variant: Specify the production variant to send the inference request to when invoking an endpoint that is running two or more variants. Note that this parameter overrides the default behavior for the endpoint, which is to distribute the invocation traffic based on the variant weights. For information about how to use variant targeting to perform a/b testing, see Test models in production
+            target_container_hostname: If the endpoint hosts multiple containers and is configured to use direct invocation, this parameter specifies the host name of the container to invoke.
+            inference_id: An identifier that you assign to your request.
+            inference_component_name: If the endpoint hosts one or more inference components, this parameter specifies the name of inference component to invoke for a streaming response.
+            session: Boto3 session.
+            region: Region name.
+
+        Returns:
+            InvokeEndpointWithResponseStreamOutput
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            InternalFailure: An internal failure occurred. Try your request again. If the problem persists, contact Amazon Web Services customer support.
+            InternalStreamFailure: The stream processing failed because of an unknown error, exception or failure. Try your request again.
+            ModelError: Model (owned by the customer in the container) returned 4xx or 5xx error code.
+            ModelStreamError: An error occurred while streaming the response body. This error can have the following error codes:  ModelInvocationTimeExceeded  The model failed to finish sending the response within the timeout period allowed by Amazon SageMaker.  StreamBroken  The Transmission Control Protocol (TCP) connection between the client and the model was reset or closed.
+            ServiceUnavailable: The service is currently unavailable.
+            ValidationError: There was an error validating your request.
+        """
+
+        operation_input_args = {
+            "EndpointName": self.endpoint_name,
+            "Body": body,
+            "ContentType": content_type,
+            "Accept": accept,
+            "CustomAttributes": custom_attributes,
+            "TargetVariant": target_variant,
+            "TargetContainerHostname": target_container_hostname,
+            "InferenceId": inference_id,
+            "InferenceComponentName": inference_component_name,
+        }
+        # serialize the input request
+        operation_input_args = serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker-runtime"
+        )
+
+        logger.debug(f"Calling invoke_endpoint_with_response_stream API")
+        response = client.invoke_endpoint_with_response_stream(**operation_input_args)
+        logger.debug(f"Response: {response}")
+
+        transformed_response = transform(response, "InvokeEndpointWithResponseStreamOutput")
+        return InvokeEndpointWithResponseStreamOutput(**transformed_response)
 
 
 class EndpointConfig(Base):
@@ -8922,7 +8936,7 @@ class Experiment(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -8964,7 +8978,7 @@ class Experiment(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -9004,7 +9018,7 @@ class Experiment(Base):
                     error_code = e.response['Error']['Code']
                 ```
             ConflictException: There was a conflict when you attempted to modify a SageMaker entity such as an Experiment or Artifact.
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         logger.info("Updating experiment resource.")
@@ -9044,7 +9058,7 @@ class Experiment(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         client = Base.get_sagemaker_client()
@@ -9327,7 +9341,7 @@ class FeatureGroup(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -9370,7 +9384,7 @@ class FeatureGroup(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -9416,7 +9430,7 @@ class FeatureGroup(Base):
                     error_code = e.response['Error']['Code']
                 ```
             ResourceLimitExceeded: You have exceeded an SageMaker resource limit. For example, you might have too many training jobs created.
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         logger.info("Updating feature_group resource.")
@@ -9457,7 +9471,7 @@ class FeatureGroup(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         client = Base.get_sagemaker_client()
@@ -9699,7 +9713,7 @@ class FeatureGroup(Base):
                 ```
             AccessForbidden: You do not have permission to perform an action.
             InternalFailure: An internal failure occurred. Try your request again. If the problem persists, contact Amazon Web Services customer support.
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
             ServiceUnavailable: The service is currently unavailable.
             ValidationError: There was an error validating your request.
         """
@@ -9962,7 +9976,7 @@ class FeatureMetadata(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -10005,7 +10019,7 @@ class FeatureMetadata(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -10050,7 +10064,7 @@ class FeatureMetadata(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         logger.info("Updating feature_metadata resource.")
@@ -10248,7 +10262,7 @@ class FlowDefinition(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -10290,7 +10304,7 @@ class FlowDefinition(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -10325,7 +10339,7 @@ class FlowDefinition(Base):
                     error_code = e.response['Error']['Code']
                 ```
             ResourceInUse: Resource being accessed is in use.
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         client = Base.get_sagemaker_client()
@@ -10687,7 +10701,7 @@ class Hub(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -10729,7 +10743,7 @@ class Hub(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -10770,7 +10784,7 @@ class Hub(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         logger.info("Updating hub resource.")
@@ -10812,7 +10826,7 @@ class Hub(Base):
                     error_code = e.response['Error']['Code']
                 ```
             ResourceInUse: Resource being accessed is in use.
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         client = Base.get_sagemaker_client()
@@ -11123,7 +11137,7 @@ class HubContent(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -11168,7 +11182,7 @@ class HubContent(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -11206,7 +11220,7 @@ class HubContent(Base):
                     error_code = e.response['Error']['Code']
                 ```
             ResourceInUse: Resource being accessed is in use.
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         client = Base.get_sagemaker_client()
@@ -11326,7 +11340,7 @@ class HubContent(Base):
                 ```
             ResourceInUse: Resource being accessed is in use.
             ResourceLimitExceeded: You have exceeded an SageMaker resource limit. For example, you might have too many training jobs created.
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         logger.info(f"Importing hub_content resource.")
@@ -11405,7 +11419,7 @@ class HubContent(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -11513,7 +11527,7 @@ class HubContentReference(Base):
                 ```
             ResourceInUse: Resource being accessed is in use.
             ResourceLimitExceeded: You have exceeded an SageMaker resource limit. For example, you might have too many training jobs created.
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
             ConfigSchemaValidationError: Raised when a configuration file does not adhere to the schema
             LocalConfigNotFoundError: Raised when a configuration file is not found in local file system
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
@@ -11559,7 +11573,7 @@ class HubContentReference(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         client = Base.get_sagemaker_client()
@@ -11708,7 +11722,7 @@ class HumanTaskUi(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -11750,7 +11764,7 @@ class HumanTaskUi(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -11784,7 +11798,7 @@ class HumanTaskUi(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         client = Base.get_sagemaker_client()
@@ -12179,7 +12193,7 @@ class HyperParameterTuningJob(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -12221,7 +12235,7 @@ class HyperParameterTuningJob(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -12285,7 +12299,7 @@ class HyperParameterTuningJob(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         client = SageMakerClient().client
@@ -12529,7 +12543,7 @@ class HyperParameterTuningJob(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -12714,7 +12728,7 @@ class Image(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -12756,7 +12770,7 @@ class Image(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -12802,7 +12816,7 @@ class Image(Base):
                     error_code = e.response['Error']['Code']
                 ```
             ResourceInUse: Resource being accessed is in use.
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         logger.info("Updating image resource.")
@@ -12845,7 +12859,7 @@ class Image(Base):
                     error_code = e.response['Error']['Code']
                 ```
             ResourceInUse: Resource being accessed is in use.
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         client = Base.get_sagemaker_client()
@@ -13097,7 +13111,7 @@ class Image(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -13232,7 +13246,7 @@ class ImageVersion(Base):
                 ```
             ResourceInUse: Resource being accessed is in use.
             ResourceLimitExceeded: You have exceeded an SageMaker resource limit. For example, you might have too many training jobs created.
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
             ConfigSchemaValidationError: Raised when a configuration file does not adhere to the schema
             LocalConfigNotFoundError: Raised when a configuration file is not found in local file system
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
@@ -13305,7 +13319,7 @@ class ImageVersion(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -13350,7 +13364,7 @@ class ImageVersion(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -13406,7 +13420,7 @@ class ImageVersion(Base):
                     error_code = e.response['Error']['Code']
                 ```
             ResourceInUse: Resource being accessed is in use.
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         logger.info("Updating image_version resource.")
@@ -13457,7 +13471,7 @@ class ImageVersion(Base):
                     error_code = e.response['Error']['Code']
                 ```
             ResourceInUse: Resource being accessed is in use.
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         client = Base.get_sagemaker_client()
@@ -14334,7 +14348,7 @@ class InferenceExperiment(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -14376,7 +14390,7 @@ class InferenceExperiment(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -14420,7 +14434,7 @@ class InferenceExperiment(Base):
                     error_code = e.response['Error']['Code']
                 ```
             ConflictException: There was a conflict when you attempted to modify a SageMaker entity such as an Experiment or Artifact.
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         logger.info("Updating inference_experiment resource.")
@@ -14464,7 +14478,7 @@ class InferenceExperiment(Base):
                     error_code = e.response['Error']['Code']
                 ```
             ConflictException: There was a conflict when you attempted to modify a SageMaker entity such as an Experiment or Artifact.
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         client = Base.get_sagemaker_client()
@@ -14496,7 +14510,7 @@ class InferenceExperiment(Base):
                     error_code = e.response['Error']['Code']
                 ```
             ConflictException: There was a conflict when you attempted to modify a SageMaker entity such as an Experiment or Artifact.
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         client = SageMakerClient().client
@@ -14844,7 +14858,7 @@ class InferenceRecommendationsJob(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -14886,7 +14900,7 @@ class InferenceRecommendationsJob(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -14918,7 +14932,7 @@ class InferenceRecommendationsJob(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         client = SageMakerClient().client
@@ -15168,7 +15182,7 @@ class InferenceRecommendationsJob(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -15406,7 +15420,7 @@ class LabelingJob(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -15448,7 +15462,7 @@ class LabelingJob(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -15480,7 +15494,7 @@ class LabelingJob(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         client = SageMakerClient().client
@@ -15696,7 +15710,7 @@ class LineageGroup(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -15738,7 +15752,7 @@ class LineageGroup(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -15844,7 +15858,7 @@ class LineageGroup(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -16044,7 +16058,7 @@ class MlflowTrackingServer(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -16086,7 +16100,7 @@ class MlflowTrackingServer(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -16130,7 +16144,7 @@ class MlflowTrackingServer(Base):
                 ```
             ConflictException: There was a conflict when you attempted to modify a SageMaker entity such as an Experiment or Artifact.
             ResourceLimitExceeded: You have exceeded an SageMaker resource limit. For example, you might have too many training jobs created.
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         logger.info("Updating mlflow_tracking_server resource.")
@@ -16172,7 +16186,7 @@ class MlflowTrackingServer(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         client = Base.get_sagemaker_client()
@@ -16204,7 +16218,7 @@ class MlflowTrackingServer(Base):
                     error_code = e.response['Error']['Code']
                 ```
             ConflictException: There was a conflict when you attempted to modify a SageMaker entity such as an Experiment or Artifact.
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         client = SageMakerClient().client
@@ -17024,7 +17038,7 @@ class ModelBiasJobDefinition(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -17066,7 +17080,7 @@ class ModelBiasJobDefinition(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -17100,7 +17114,7 @@ class ModelBiasJobDefinition(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         client = Base.get_sagemaker_client()
@@ -17354,7 +17368,7 @@ class ModelCard(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -17397,7 +17411,7 @@ class ModelCard(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -17440,7 +17454,7 @@ class ModelCard(Base):
                 ```
             ConflictException: There was a conflict when you attempted to modify a SageMaker entity such as an Experiment or Artifact.
             ResourceLimitExceeded: You have exceeded an SageMaker resource limit. For example, you might have too many training jobs created.
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         logger.info("Updating model_card resource.")
@@ -17481,7 +17495,7 @@ class ModelCard(Base):
                     error_code = e.response['Error']['Code']
                 ```
             ConflictException: There was a conflict when you attempted to modify a SageMaker entity such as an Experiment or Artifact.
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         client = Base.get_sagemaker_client()
@@ -17652,7 +17666,7 @@ class ModelCard(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -17780,7 +17794,7 @@ class ModelCardExportJob(Base):
                 ```
             ConflictException: There was a conflict when you attempted to modify a SageMaker entity such as an Experiment or Artifact.
             ResourceLimitExceeded: You have exceeded an SageMaker resource limit. For example, you might have too many training jobs created.
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
             ConfigSchemaValidationError: Raised when a configuration file does not adhere to the schema
             LocalConfigNotFoundError: Raised when a configuration file is not found in local file system
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
@@ -17846,7 +17860,7 @@ class ModelCardExportJob(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -17888,7 +17902,7 @@ class ModelCardExportJob(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -18243,7 +18257,7 @@ class ModelExplainabilityJobDefinition(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -18287,7 +18301,7 @@ class ModelExplainabilityJobDefinition(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -18321,7 +18335,7 @@ class ModelExplainabilityJobDefinition(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         client = Base.get_sagemaker_client()
@@ -19846,7 +19860,7 @@ class ModelQualityJobDefinition(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -19888,7 +19902,7 @@ class ModelQualityJobDefinition(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -19922,7 +19936,7 @@ class ModelQualityJobDefinition(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         client = Base.get_sagemaker_client()
@@ -20078,7 +20092,7 @@ class MonitoringAlert(Base):
                     error_code = e.response['Error']['Code']
                 ```
             ResourceLimitExceeded: You have exceeded an SageMaker resource limit. For example, you might have too many training jobs created.
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         logger.info("Updating monitoring_alert resource.")
@@ -20133,7 +20147,7 @@ class MonitoringAlert(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         client = Base.get_sagemaker_client(
@@ -20199,7 +20213,7 @@ class MonitoringAlert(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -20544,7 +20558,7 @@ class MonitoringSchedule(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -20586,7 +20600,7 @@ class MonitoringSchedule(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -20626,7 +20640,7 @@ class MonitoringSchedule(Base):
                     error_code = e.response['Error']['Code']
                 ```
             ResourceLimitExceeded: You have exceeded an SageMaker resource limit. For example, you might have too many training jobs created.
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         logger.info("Updating monitoring_schedule resource.")
@@ -20665,7 +20679,7 @@ class MonitoringSchedule(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         client = Base.get_sagemaker_client()
@@ -20696,7 +20710,7 @@ class MonitoringSchedule(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         client = SageMakerClient().client
@@ -22033,7 +22047,7 @@ class OptimizationJob(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -22075,7 +22089,7 @@ class OptimizationJob(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -22109,7 +22123,7 @@ class OptimizationJob(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         client = Base.get_sagemaker_client()
@@ -22140,7 +22154,7 @@ class OptimizationJob(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         client = SageMakerClient().client
@@ -22403,7 +22417,7 @@ class Pipeline(Base):
                 ```
             ConflictException: There was a conflict when you attempted to modify a SageMaker entity such as an Experiment or Artifact.
             ResourceLimitExceeded: You have exceeded an SageMaker resource limit. For example, you might have too many training jobs created.
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
             ConfigSchemaValidationError: Raised when a configuration file does not adhere to the schema
             LocalConfigNotFoundError: Raised when a configuration file is not found in local file system
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
@@ -22470,7 +22484,7 @@ class Pipeline(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -22512,7 +22526,7 @@ class Pipeline(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -22560,7 +22574,7 @@ class Pipeline(Base):
                     error_code = e.response['Error']['Code']
                 ```
             ConflictException: There was a conflict when you attempted to modify a SageMaker entity such as an Experiment or Artifact.
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         logger.info("Updating pipeline resource.")
@@ -22606,7 +22620,7 @@ class Pipeline(Base):
                     error_code = e.response['Error']['Code']
                 ```
             ConflictException: There was a conflict when you attempted to modify a SageMaker entity such as an Experiment or Artifact.
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         client = Base.get_sagemaker_client()
@@ -22881,7 +22895,7 @@ class PipelineExecution(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -22923,7 +22937,7 @@ class PipelineExecution(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -22964,7 +22978,7 @@ class PipelineExecution(Base):
                     error_code = e.response['Error']['Code']
                 ```
             ConflictException: There was a conflict when you attempted to modify a SageMaker entity such as an Experiment or Artifact.
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         logger.info("Updating pipeline_execution resource.")
@@ -23004,7 +23018,7 @@ class PipelineExecution(Base):
                     error_code = e.response['Error']['Code']
                 ```
             ConflictException: There was a conflict when you attempted to modify a SageMaker entity such as an Experiment or Artifact.
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         client = SageMakerClient().client
@@ -23119,7 +23133,7 @@ class PipelineExecution(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         client = Base.get_sagemaker_client(
@@ -23173,7 +23187,7 @@ class PipelineExecution(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -23224,7 +23238,7 @@ class PipelineExecution(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -23276,7 +23290,7 @@ class PipelineExecution(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -23326,7 +23340,7 @@ class PipelineExecution(Base):
                 ```
             ConflictException: There was a conflict when you attempted to modify a SageMaker entity such as an Experiment or Artifact.
             ResourceLimitExceeded: You have exceeded an SageMaker resource limit. For example, you might have too many training jobs created.
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -23375,7 +23389,7 @@ class PipelineExecution(Base):
                 ```
             ConflictException: There was a conflict when you attempted to modify a SageMaker entity such as an Experiment or Artifact.
             ResourceLimitExceeded: You have exceeded an SageMaker resource limit. For example, you might have too many training jobs created.
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -23426,7 +23440,7 @@ class PipelineExecution(Base):
                 ```
             ConflictException: There was a conflict when you attempted to modify a SageMaker entity such as an Experiment or Artifact.
             ResourceLimitExceeded: You have exceeded an SageMaker resource limit. For example, you might have too many training jobs created.
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -23523,7 +23537,7 @@ class PresignedDomainUrl(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
             ConfigSchemaValidationError: Raised when a configuration file does not adhere to the schema
             LocalConfigNotFoundError: Raised when a configuration file is not found in local file system
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
@@ -23617,7 +23631,7 @@ class PresignedMlflowTrackingServerUrl(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
             ConfigSchemaValidationError: Raised when a configuration file does not adhere to the schema
             LocalConfigNotFoundError: Raised when a configuration file is not found in local file system
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
@@ -23873,7 +23887,7 @@ class ProcessingJob(Base):
                 ```
             ResourceInUse: Resource being accessed is in use.
             ResourceLimitExceeded: You have exceeded an SageMaker resource limit. For example, you might have too many training jobs created.
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
             ConfigSchemaValidationError: Raised when a configuration file does not adhere to the schema
             LocalConfigNotFoundError: Raised when a configuration file is not found in local file system
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
@@ -23942,7 +23956,7 @@ class ProcessingJob(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -23984,7 +23998,7 @@ class ProcessingJob(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -24016,7 +24030,7 @@ class ProcessingJob(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         client = SageMakerClient().client
@@ -24955,7 +24969,7 @@ class Space(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -24998,7 +25012,7 @@ class Space(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -25040,7 +25054,7 @@ class Space(Base):
                 ```
             ResourceInUse: Resource being accessed is in use.
             ResourceLimitExceeded: You have exceeded an SageMaker resource limit. For example, you might have too many training jobs created.
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         logger.info("Updating space resource.")
@@ -25082,7 +25096,7 @@ class Space(Base):
                     error_code = e.response['Error']['Code']
                 ```
             ResourceInUse: Resource being accessed is in use.
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         client = Base.get_sagemaker_client()
@@ -25433,7 +25447,7 @@ class StudioLifecycleConfig(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -25475,7 +25489,7 @@ class StudioLifecycleConfig(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -25510,7 +25524,7 @@ class StudioLifecycleConfig(Base):
                     error_code = e.response['Error']['Code']
                 ```
             ResourceInUse: Resource being accessed is in use.
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         client = Base.get_sagemaker_client()
@@ -26168,7 +26182,7 @@ class TrainingJob(Base):
                 ```
             ResourceInUse: Resource being accessed is in use.
             ResourceLimitExceeded: You have exceeded an SageMaker resource limit. For example, you might have too many training jobs created.
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
             ConfigSchemaValidationError: Raised when a configuration file does not adhere to the schema
             LocalConfigNotFoundError: Raised when a configuration file is not found in local file system
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
@@ -26251,7 +26265,7 @@ class TrainingJob(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -26293,7 +26307,7 @@ class TrainingJob(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -26336,7 +26350,7 @@ class TrainingJob(Base):
                     error_code = e.response['Error']['Code']
                 ```
             ResourceLimitExceeded: You have exceeded an SageMaker resource limit. For example, you might have too many training jobs created.
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         logger.info("Updating training_job resource.")
@@ -26376,7 +26390,7 @@ class TrainingJob(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         client = SageMakerClient().client
@@ -26681,7 +26695,7 @@ class TransformJob(Base):
                 ```
             ResourceInUse: Resource being accessed is in use.
             ResourceLimitExceeded: You have exceeded an SageMaker resource limit. For example, you might have too many training jobs created.
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
             ConfigSchemaValidationError: Raised when a configuration file does not adhere to the schema
             LocalConfigNotFoundError: Raised when a configuration file is not found in local file system
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
@@ -26753,7 +26767,7 @@ class TransformJob(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -26795,7 +26809,7 @@ class TransformJob(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -26827,7 +26841,7 @@ class TransformJob(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         client = SageMakerClient().client
@@ -27056,7 +27070,7 @@ class Trial(Base):
                     error_code = e.response['Error']['Code']
                 ```
             ResourceLimitExceeded: You have exceeded an SageMaker resource limit. For example, you might have too many training jobs created.
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
             ConfigSchemaValidationError: Raised when a configuration file does not adhere to the schema
             LocalConfigNotFoundError: Raised when a configuration file is not found in local file system
             S3ConfigNotFoundError: Raised when a configuration file is not found in S3
@@ -27119,7 +27133,7 @@ class Trial(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -27161,7 +27175,7 @@ class Trial(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -27200,7 +27214,7 @@ class Trial(Base):
                     error_code = e.response['Error']['Code']
                 ```
             ConflictException: There was a conflict when you attempted to modify a SageMaker entity such as an Experiment or Artifact.
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         logger.info("Updating trial resource.")
@@ -27239,7 +27253,7 @@ class Trial(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         client = Base.get_sagemaker_client()
@@ -27296,7 +27310,7 @@ class Trial(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         client = Base.get_sagemaker_client(
@@ -27502,7 +27516,7 @@ class TrialComponent(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -27544,7 +27558,7 @@ class TrialComponent(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -27597,7 +27611,7 @@ class TrialComponent(Base):
                     error_code = e.response['Error']['Code']
                 ```
             ConflictException: There was a conflict when you attempted to modify a SageMaker entity such as an Experiment or Artifact.
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         logger.info("Updating trial_component resource.")
@@ -27645,7 +27659,7 @@ class TrialComponent(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         client = Base.get_sagemaker_client()
@@ -27759,7 +27773,7 @@ class TrialComponent(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         client = Base.get_sagemaker_client(
@@ -27815,7 +27829,7 @@ class TrialComponent(Base):
                     error_code = e.response['Error']['Code']
                 ```
             ResourceLimitExceeded: You have exceeded an SageMaker resource limit. For example, you might have too many training jobs created.
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -27859,7 +27873,7 @@ class TrialComponent(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -28121,7 +28135,7 @@ class UserProfile(Base):
                     error_code = e.response['Error']['Code']
                 ```
             ResourceLimitExceeded: You have exceeded an SageMaker resource limit. For example, you might have too many training jobs created.
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -28165,7 +28179,7 @@ class UserProfile(Base):
                     error_code = e.response['Error']['Code']
                 ```
             ResourceLimitExceeded: You have exceeded an SageMaker resource limit. For example, you might have too many training jobs created.
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {
@@ -28207,7 +28221,7 @@ class UserProfile(Base):
                 ```
             ResourceInUse: Resource being accessed is in use.
             ResourceLimitExceeded: You have exceeded an SageMaker resource limit. For example, you might have too many training jobs created.
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         logger.info("Updating user_profile resource.")
@@ -28248,7 +28262,7 @@ class UserProfile(Base):
                     error_code = e.response['Error']['Code']
                 ```
             ResourceInUse: Resource being accessed is in use.
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         client = Base.get_sagemaker_client()
@@ -29315,7 +29329,7 @@ class Workteam(Base):
                     error_message = e.response['Error']['Message']
                     error_code = e.response['Error']['Code']
                 ```
-            ResourceNotFound: A resource that is required to perform an action was not found.
+            ResourceNotFound: Resource being access is not found.
         """
 
         operation_input_args = {

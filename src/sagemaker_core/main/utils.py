@@ -346,41 +346,6 @@ class SageMakerClient(metaclass=SingletonMeta):
         self.client = session.client(service_name, region_name, config=self.config)
 
 
-class SageMakerRuntimeClient(metaclass=SingletonMeta):
-    """
-    A singleton class for creating a SageMaker client.
-    """
-
-    def __init__(
-        self,
-        session: Session = None,
-        region_name: str = None,
-        service_name="sagemaker-runtime",
-        config: Config = None,
-    ):
-        """
-        Initializes the SageMakerClient with a boto3 session, region name, and service name.
-        Creates a boto3 client using the provided session, region, and service.
-        """
-        if session is None:
-            logger.warning("No boto3 session provided. Creating a new session.")
-            session = Session()
-
-        if region_name is None:
-            logger.warning("No region provided. Using default region.")
-            region_name = session.region_name
-
-        if config is None:
-            logger.warning("No config provided. Using default config.")
-            config = Config(retries={"max_attempts": 10, "mode": "standard"})
-
-        self.config = Config(user_agent_extra=get_user_agent_extra_suffix())
-        self.session = session
-        self.region_name = region_name
-        self.service_name = service_name
-        self.client = session.client(service_name, region_name, config=self.config)
-
-
 class ResourceIterator(Generic[T]):
     """ResourceIterator class to iterate over a list of resources."""
 
@@ -488,7 +453,7 @@ def serialize(value: Any) -> Any:
     Returns:
         Any: The serialized object
     """
-    if isinstance(value, Unassigned):
+    if value is None or isinstance(value, Unassigned):
         return None
     elif isinstance(value, Dict):
         # if the value is a dict, use _serialize_dict() to serialize it recursively
