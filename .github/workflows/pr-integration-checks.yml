@@ -35,6 +35,7 @@ jobs:
             } catch (error) {
             console.log(error)
               console.log("${{ github.event.pull_request.user.login }} is not a collaborator for"+ context.repo.repo + ".  Requiring Manual Approval to run PR Checks.")
+
               return "manual-approval"
             }
   wait-for-approval:
