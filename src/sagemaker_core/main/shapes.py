@@ -2675,6 +2675,7 @@ class ClusterInstanceGroupDetails(Base):
     execution_role: The execution role for the instance group to assume.
     threads_per_core: The number you specified to TreadsPerCore in CreateCluster for enabling or disabling multithreading. For instance types that support multithreading, you can specify 1 for disabling multithreading and 2 for enabling multithreading. For more information, see the reference table of CPU cores and threads per CPU core per instance type in the Amazon Elastic Compute Cloud User Guide.
     instance_storage_configs: The additional storage configurations for the instances in the SageMaker HyperPod cluster instance group.
+    on_start_deep_health_checks: A flag indicating whether deep health checks should be performed when the cluster instance group is created or updated.
     """
 
     current_count: Optional[int] = Unassigned()
@@ -2685,6 +2686,7 @@ class ClusterInstanceGroupDetails(Base):
     execution_role: Optional[str] = Unassigned()
     threads_per_core: Optional[int] = Unassigned()
     instance_storage_configs: Optional[List[ClusterInstanceStorageConfig]] = Unassigned()
+    on_start_deep_health_checks: Optional[List[str]] = Unassigned()
 
 
 class ClusterInstanceGroupSpecification(Base):
@@ -2701,6 +2703,7 @@ class ClusterInstanceGroupSpecification(Base):
     execution_role: Specifies an IAM execution role to be assumed by the instance group.
     threads_per_core: Specifies the value for Threads per core. For instance types that support multithreading, you can specify 1 for disabling multithreading and 2 for enabling multithreading. For instance types that doesn't support multithreading, specify 1. For more information, see the reference table of CPU cores and threads per CPU core per instance type in the Amazon Elastic Compute Cloud User Guide.
     instance_storage_configs: Specifies the additional storage configurations for the instances in the SageMaker HyperPod cluster instance group.
+    on_start_deep_health_checks: A flag indicating whether deep health checks should be performed when the cluster instance group is created or updated.
     """
 
     instance_count: int
@@ -2710,6 +2713,7 @@ class ClusterInstanceGroupSpecification(Base):
     execution_role: str
     threads_per_core: Optional[int] = Unassigned()
     instance_storage_configs: Optional[List[ClusterInstanceStorageConfig]] = Unassigned()
+    on_start_deep_health_checks: Optional[List[str]] = Unassigned()
 
 
 class ClusterInstancePlacement(Base):
@@ -2794,6 +2798,32 @@ class ClusterNodeSummary(Base):
     instance_type: str
     launch_time: datetime.datetime
     instance_status: ClusterInstanceStatusDetails
+
+
+class ClusterOrchestratorEksConfig(Base):
+    """
+    ClusterOrchestratorEksConfig
+      The configuration settings for the Amazon EKS cluster used as the orchestrator for the SageMaker HyperPod cluster.
+
+    Attributes
+    ----------------------
+    cluster_arn: The Amazon Resource Name (ARN) of the Amazon EKS cluster associated with the SageMaker HyperPod cluster.
+    """
+
+    cluster_arn: str
+
+
+class ClusterOrchestrator(Base):
+    """
+    ClusterOrchestrator
+      The type of orchestrator used for the SageMaker HyperPod cluster.
+
+    Attributes
+    ----------------------
+    eks: The Amazon EKS cluster used as the orchestrator for the SageMaker HyperPod cluster.
+    """
+
+    eks: ClusterOrchestratorEksConfig
 
 
 class ClusterSummary(Base):
