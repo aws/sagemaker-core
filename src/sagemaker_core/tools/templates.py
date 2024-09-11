@@ -197,77 +197,6 @@ def update(
     return self
 """
 
-INVOKE_METHOD_TEMPLATE = """
-@Base.add_validate_call
-def invoke(self, 
-{invoke_args}
-) -> Optional[object]:
-{docstring}
-    logger.info(f"Invoking {resource_lower} resource.")
-    client = SageMakerRuntimeClient(service_name="{service_name}").client
-    operation_input_args = {{
-{operation_input_args}
-    }}
-    logger.debug(f"Input request: {{operation_input_args}}")
-    # serialize the input request
-    operation_input_args = serialize(operation_input_args)
-    logger.debug(f"Serialized input request: {{operation_input_args}}")
-
-    # create the resource
-    response = client.{operation}(**operation_input_args)
-    logger.debug(f"Response: {{response}}")
-
-    return response
-"""
-
-INVOKE_ASYNC_METHOD_TEMPLATE = """
-@Base.add_validate_call
-def invoke_async(self, 
-{create_args}
-) -> Optional[object]:
-{docstring}
-    logger.info(f"Invoking {resource_lower} resource Async.")
-    client = SageMakerRuntimeClient(service_name="{service_name}").client
-    
-    operation_input_args = {{
-{operation_input_args}
-    }}
-    logger.debug(f"Input request: {{operation_input_args}}")
-    # serialize the input request
-    operation_input_args = serialize(operation_input_args)
-    logger.debug(f"Serialized input request: {{operation_input_args}}")
-
-    # create the resource
-    response = client.{operation}(**operation_input_args)
-    logger.debug(f"Response: {{response}}")
-
-    return response
-"""
-
-INVOKE_WITH_RESPONSE_STREAM_METHOD_TEMPLATE = """
-@Base.add_validate_call
-def invoke_with_response_stream(self, 
-{create_args}
-) -> Optional[object]:
-{docstring}
-    logger.info(f"Invoking {resource_lower} resource with Response Stream.")
-    client = SageMakerRuntimeClient(service_name="{service_name}").client
-
-    operation_input_args = {{
-{operation_input_args}
-    }}
-    logger.debug(f"Input request: {{operation_input_args}}")
-    # serialize the input request
-    operation_input_args = serialize(operation_input_args)
-    logger.debug(f"Serialized input request: {{operation_input_args}}")
-
-    # create the resource
-    response = client.{operation}(**operation_input_args)
-    logger.debug(f"Response: {{response}}")
-
-    return response
-"""
-
 POPULATE_DEFAULTS_DECORATOR_TEMPLATE = """
 def populate_inputs_decorator(create_func):
     @functools.wraps(create_func)
@@ -639,7 +568,7 @@ class Base(BaseModel):
     
     @classmethod
     def get_sagemaker_client(cls, session = None, region_name = None, service_name = 'sagemaker'):
-        return SageMakerClient(session=session, region_name=region_name, service_name=service_name).client
+        return SageMakerClient(session=session, region_name=region_name).get_client(service_name=service_name)
     
     @staticmethod
     def get_updated_kwargs_with_configured_attributes(

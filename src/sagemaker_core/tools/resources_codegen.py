@@ -64,9 +64,6 @@ from sagemaker_core.tools.templates import (
     UPDATE_METHOD_TEMPLATE,
     POPULATE_DEFAULTS_DECORATOR_TEMPLATE,
     CREATE_METHOD_TEMPLATE_WITHOUT_DEFAULTS,
-    INVOKE_METHOD_TEMPLATE,
-    INVOKE_ASYNC_METHOD_TEMPLATE,
-    INVOKE_WITH_RESPONSE_STREAM_METHOD_TEMPLATE,
     IMPORT_METHOD_TEMPLATE,
     FAILED_STATUS_ERROR_TEMPLATE,
     GET_NAME_METHOD_TEMPLATE,
@@ -188,8 +185,8 @@ class ResourcesCodeGen:
             "from rich.style import Style",
             "from sagemaker_core.main.code_injection.codec import transform",
             "from sagemaker_core.main.code_injection.constants import Color",
-            "from sagemaker_core.main.utils import SageMakerClient, SageMakerRuntimeClient, ResourceIterator, Unassigned, get_textual_rich_logger, "
-            "snake_to_pascal, pascal_to_snake, is_not_primitive, is_not_str_dict, is_snake_case, is_primitive_list, serialize",
+            "from sagemaker_core.main.utils import SageMakerClient, ResourceIterator, Unassigned, get_textual_rich_logger, "
+            "snake_to_pascal, pascal_to_snake, is_not_primitive, is_not_str_dict, is_primitive_list, serialize",
             "from sagemaker_core.main.intelligent_defaults_helper import load_default_configs_for_resource_name, get_config_value",
             "from sagemaker_core.main.shapes import *",
             "from sagemaker_core.main.exceptions import *",
@@ -433,30 +430,6 @@ class ResourcesCodeGen:
                 resource_name, "wait_for_delete", object_methods
             ):
                 resource_class += add_indent(wait_for_delete_method, 4)
-
-            if invoke_method := self._evaluate_method(
-                resource_name,
-                "invoke",
-                object_methods,
-                resource_attributes=resource_attributes,
-            ):
-                resource_class += add_indent(invoke_method, 4)
-
-            if invoke_async_method := self._evaluate_method(
-                resource_name,
-                "invoke_async",
-                object_methods,
-                resource_attributes=resource_attributes,
-            ):
-                resource_class += add_indent(invoke_async_method, 4)
-
-            if invoke_with_response_stream_method := self._evaluate_method(
-                resource_name,
-                "invoke_with_response_stream",
-                object_methods,
-                resource_attributes=resource_attributes,
-            ):
-                resource_class += add_indent(invoke_with_response_stream_method, 4)
 
             if import_method := self._evaluate_method(resource_name, "import", class_methods):
                 resource_class += add_indent(import_method, 4)
@@ -1168,174 +1141,6 @@ class ResourcesCodeGen:
                 operation_input_args=operation_input_args,
                 operation=operation,
             )
-
-        # Return the formatted method
-        return formatted_method
-
-    def generate_invoke_method(self, resource_name: str, **kwargs) -> str:
-        """
-        Auto-generate the INVOKE ASYNC method for a resource.
-
-        Args:
-            resource_name (str): The resource name.
-
-        Returns:
-            str: The formatted Update Method template.
-
-        """
-        # Get the operation and shape for the 'create' method
-        operation_name = "Invoke" + resource_name
-        operation_metadata = self.operations[operation_name]
-        operation_input_shape_name = operation_metadata["input"]["shape"]
-
-        # Generate the arguments for the 'create' method
-        invoke_args = self._generate_method_args(
-            operation_input_shape_name, kwargs["resource_attributes"]
-        )
-
-        operation_input_args = self._generate_operation_input_necessary_args(
-            operation_metadata, kwargs["resource_attributes"]
-        )
-
-        # Convert the resource name to snake case
-        resource_lower = convert_to_snake_case(resource_name)
-
-        # Convert the operation name to snake case
-        operation = convert_to_snake_case(operation_name)
-
-        # generate docstring
-        docstring = self._generate_docstring(
-            title=f"Invoke a {resource_name} resource",
-            operation_name=operation_name,
-            resource_name=resource_name,
-            operation_input_shape_name=operation_input_shape_name,
-            include_session_region=False,
-            include_return_resource_docstring=False,
-            return_string=f"Returns:\n" f"    The Invoke response.\n",
-            exclude_resource_attrs=kwargs["resource_attributes"],
-        )
-        # Format the method using the CREATE_METHOD_TEMPLATE
-        formatted_method = INVOKE_METHOD_TEMPLATE.format(
-            docstring=docstring,
-            service_name="sagemaker-runtime",
-            invoke_args=invoke_args,
-            resource_name=resource_name,
-            resource_lower=resource_lower,
-            operation_input_args=operation_input_args,
-            operation=operation,
-        )
-
-        # Return the formatted method
-        return formatted_method
-
-    def generate_invoke_async_method(self, resource_name: str, **kwargs) -> str:
-        """
-        Auto-generate the INVOKE method for a resource.
-
-        Args:
-            resource_name (str): The resource name.
-
-        Returns:
-            str: The formatted Update Method template.
-
-        """
-        # Get the operation and shape for the 'create' method
-        operation_name = "Invoke" + resource_name + "Async"
-        operation_metadata = self.operations[operation_name]
-        operation_input_shape_name = operation_metadata["input"]["shape"]
-
-        # Generate the arguments for the 'create' method
-        invoke_args = self._generate_method_args(
-            operation_input_shape_name, kwargs["resource_attributes"]
-        )
-
-        operation_input_args = self._generate_operation_input_necessary_args(
-            operation_metadata, kwargs["resource_attributes"]
-        )
-
-        # Convert the resource name to snake case
-        resource_lower = convert_to_snake_case(resource_name)
-
-        # Convert the operation name to snake case
-        operation = convert_to_snake_case(operation_name)
-
-        # generate docstring
-        docstring = self._generate_docstring(
-            title=f"Invoke Async a {resource_name} resource",
-            operation_name=operation_name,
-            resource_name=resource_name,
-            operation_input_shape_name=operation_input_shape_name,
-            include_session_region=False,
-            include_return_resource_docstring=False,
-            return_string=f"Returns:\n" f"    The Invoke response.\n",
-            exclude_resource_attrs=kwargs["resource_attributes"],
-        )
-        # Format the method using the CREATE_METHOD_TEMPLATE
-        formatted_method = INVOKE_ASYNC_METHOD_TEMPLATE.format(
-            docstring=docstring,
-            service_name="sagemaker-runtime",
-            create_args=invoke_args,
-            resource_name=resource_name,
-            resource_lower=resource_lower,
-            operation_input_args=operation_input_args,
-            operation=operation,
-        )
-
-        # Return the formatted method
-        return formatted_method
-
-    def generate_invoke_with_response_stream_method(self, resource_name: str, **kwargs) -> str:
-        """
-        Auto-generate the INVOKE with response stream method for a resource.
-
-        Args:
-            resource_name (str): The resource name.
-
-        Returns:
-            str: The formatted Update Method template.
-
-        """
-        # Get the operation and shape for the 'create' method
-        operation_name = "Invoke" + resource_name + "WithResponseStream"
-        operation_metadata = self.operations[operation_name]
-        operation_input_shape_name = operation_metadata["input"]["shape"]
-
-        # Generate the arguments for the 'create' method
-        invoke_args = self._generate_method_args(
-            operation_input_shape_name, kwargs["resource_attributes"]
-        )
-
-        operation_input_args = self._generate_operation_input_necessary_args(
-            operation_metadata, kwargs["resource_attributes"]
-        )
-
-        # Convert the resource name to snake case
-        resource_lower = convert_to_snake_case(resource_name)
-
-        # Convert the operation name to snake case
-        operation = convert_to_snake_case(operation_name)
-
-        # generate docstring
-        docstring = self._generate_docstring(
-            title=f"Invoke with response stream a {resource_name} resource",
-            operation_name=operation_name,
-            resource_name=resource_name,
-            operation_input_shape_name=operation_input_shape_name,
-            include_session_region=False,
-            include_return_resource_docstring=False,
-            return_string=f"Returns:\n" f"    The Invoke response.\n",
-            exclude_resource_attrs=kwargs["resource_attributes"],
-        )
-        # Format the method using the CREATE_METHOD_TEMPLATE
-        formatted_method = INVOKE_WITH_RESPONSE_STREAM_METHOD_TEMPLATE.format(
-            docstring=docstring,
-            service_name="sagemaker-runtime",
-            create_args=invoke_args,
-            resource_name=resource_name,
-            resource_lower=resource_lower,
-            operation_input_args=operation_input_args,
-            operation=operation,
-        )
 
         # Return the formatted method
         return formatted_method
