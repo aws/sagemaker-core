@@ -34,8 +34,7 @@ jobs:
               return res.status == "204" ? "auto-approve" : "manual-approval"
             } catch (error) {
             console.log(error)
-              console.log("${{ github.event.pull_request.user.login }} is not a collaborator for"+ context.repo.repo + ".  Requiring Manual Approval to run PR Checks.")
-
+              console.log("${{ github.event.pull_request.user.login }} is not a collaborator for "+ context.repo.repo + ".  Requiring Manual Approval to run PR Checks.")
               return "manual-approval"
             }
   wait-for-approval:
@@ -43,7 +42,7 @@ jobs:
     needs: [ collab-check ]
     environment: ${{ needs.collab-check.outputs.approval-env }}
     steps:
-      - run: echo "Workflow Approved! Starting Integration tests."
+      - run: echo "Workflow Approved! Starting Integration tests with environment ${{environment}}"
   integ-tests:
     runs-on: ubuntu-latest
     needs: [wait-for-approval]
