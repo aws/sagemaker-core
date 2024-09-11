@@ -320,7 +320,6 @@ class SageMakerClient(metaclass=SingletonMeta):
         self,
         session: Session = None,
         region_name: str = None,
-        service_name="sagemaker",
         config: Config = None,
     ):
         """
@@ -329,7 +328,7 @@ class SageMakerClient(metaclass=SingletonMeta):
         """
         if session is None:
             logger.warning("No boto3 session provided. Creating a new session.")
-            session = Session()
+            session = Session(region_name=region_name)
 
         if region_name is None:
             logger.warning("No region provided. Using default region.")
@@ -342,43 +341,29 @@ class SageMakerClient(metaclass=SingletonMeta):
         self.config = Config(user_agent_extra=get_user_agent_extra_suffix())
         self.session = session
         self.region_name = region_name
-        self.service_name = service_name
-        self.client = session.client(service_name, region_name, config=self.config)
+        self.sagemaker_client = session.client("sagemaker", region_name, config=self.config)
+        self.sagemaker_runtime_client = session.client(
+            "sagemaker-runtime", region_name, config=self.config
+        )
+        self.sagemaker_featurestore_runtime_client = session.client(
+            "sagemaker-featurestore-runtime", region_name, config=self.config
+        )
+        self.sagemaker_metrics_client = session.client(
+            "sagemaker-metrics", region_name, config=self.config
+        )
 
-
-class SageMakerRuntimeClient(metaclass=SingletonMeta):
-    """
-    A singleton class for creating a SageMaker client.
-    """
-
-    def __init__(
-        self,
-        session: Session = None,
-        region_name: str = None,
-        service_name="sagemaker-runtime",
-        config: Config = None,
-    ):
+    def get_client(self, service_name: str) -> Any:
         """
-        Initializes the SageMakerClient with a boto3 session, region name, and service name.
-        Creates a boto3 client using the provided session, region, and service.
+        Get the client of corresponding service
+
+        Args:
+            service_name (str): the service name
+
+        Returns:
+            Any: the client of that service
         """
-        if session is None:
-            logger.warning("No boto3 session provided. Creating a new session.")
-            session = Session()
-
-        if region_name is None:
-            logger.warning("No region provided. Using default region.")
-            region_name = session.region_name
-
-        if config is None:
-            logger.warning("No config provided. Using default config.")
-            config = Config(retries={"max_attempts": 10, "mode": "standard"})
-
-        self.config = Config(user_agent_extra=get_user_agent_extra_suffix())
-        self.session = session
-        self.region_name = region_name
-        self.service_name = service_name
-        self.client = session.client(service_name, region_name, config=self.config)
+        service_name = service_name.replace("-", "_")
+        return getattr(self, service_name + "_client")
 
 
 class ResourceIterator(Generic[T]):
@@ -488,7 +473,7 @@ def serialize(value: Any) -> Any:
     Returns:
         Any: The serialized object
     """
-    if isinstance(value, Unassigned):
+    if value is None or isinstance(value, Unassigned):
         return None
     elif isinstance(value, Dict):
         # if the value is a dict, use _serialize_dict() to serialize it recursively

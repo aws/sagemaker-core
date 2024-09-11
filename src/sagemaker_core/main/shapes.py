@@ -21,6 +21,377 @@ class Base(BaseModel):
     model_config = ConfigDict(protected_namespaces=(), validate_assignment=True, extra="forbid")
 
 
+class InternalDependencyException(Base):
+    """
+    InternalDependencyException
+      Your request caused an exception with an internal dependency. Contact customer support.
+
+    Attributes
+    ----------------------
+    message
+    """
+
+    message: Optional[str] = Unassigned()
+
+
+class InternalFailure(Base):
+    """
+    InternalFailure
+      An internal failure occurred. Try your request again. If the problem persists, contact Amazon Web Services customer support.
+
+    Attributes
+    ----------------------
+    message
+    """
+
+    message: Optional[str] = Unassigned()
+
+
+class InternalStreamFailure(Base):
+    """
+    InternalStreamFailure
+      The stream processing failed because of an unknown error, exception or failure. Try your request again.
+
+    Attributes
+    ----------------------
+    message
+    """
+
+    message: Optional[str] = Unassigned()
+
+
+class InvokeEndpointAsyncOutput(Base):
+    """
+    InvokeEndpointAsyncOutput
+
+    Attributes
+    ----------------------
+    inference_id: Identifier for an inference request. This will be the same as the InferenceId specified in the input. Amazon SageMaker will generate an identifier for you if you do not specify one.
+    output_location: The Amazon S3 URI where the inference response payload is stored.
+    failure_location: The Amazon S3 URI where the inference failure response payload is stored.
+    """
+
+    inference_id: Optional[str] = Unassigned()
+    output_location: Optional[str] = Unassigned()
+    failure_location: Optional[str] = Unassigned()
+
+
+class InvokeEndpointOutput(Base):
+    """
+    InvokeEndpointOutput
+
+    Attributes
+    ----------------------
+    body: Includes the inference provided by the model.  For information about the format of the response body, see Common Data Formats-Inference. If the explainer is activated, the body includes the explanations provided by the model. For more information, see the Response section under Invoke the Endpoint in the Developer Guide.
+    content_type: The MIME type of the inference returned from the model container.
+    invoked_production_variant: Identifies the production variant that was invoked.
+    custom_attributes: Provides additional information in the response about the inference returned by a model hosted at an Amazon SageMaker endpoint. The information is an opaque value that is forwarded verbatim. You could use this value, for example, to return an ID received in the CustomAttributes header of a request or other metadata that a service endpoint was programmed to produce. The value must consist of no more than 1024 visible US-ASCII characters as specified in Section 3.3.6. Field Value Components of the Hypertext Transfer Protocol (HTTP/1.1). If the customer wants the custom attribute returned, the model must set the custom attribute to be included on the way back.  The code in your model is responsible for setting or updating any custom attributes in the response. If your code does not set this value in the response, an empty value is returned. For example, if a custom attribute represents the trace ID, your model can prepend the custom attribute with Trace ID: in your post-processing function. This feature is currently supported in the Amazon Web Services SDKs but not in the Amazon SageMaker Python SDK.
+    """
+
+    body: Any
+    content_type: Optional[str] = Unassigned()
+    invoked_production_variant: Optional[str] = Unassigned()
+    custom_attributes: Optional[str] = Unassigned()
+
+
+class PayloadPart(Base):
+    """
+    PayloadPart
+      A wrapper for pieces of the payload that's returned in response to a streaming inference request. A streaming inference response consists of one or more payload parts.
+
+    Attributes
+    ----------------------
+    bytes: A blob that contains part of the response for your streaming inference request.
+    """
+
+    bytes: Optional[Any] = Unassigned()
+
+
+class ModelStreamError(Base):
+    """
+    ModelStreamError
+       An error occurred while streaming the response body. This error can have the following error codes:  ModelInvocationTimeExceeded  The model failed to finish sending the response within the timeout period allowed by Amazon SageMaker.  StreamBroken  The Transmission Control Protocol (TCP) connection between the client and the model was reset or closed.
+
+    Attributes
+    ----------------------
+    message
+    error_code: This error can have the following error codes:  ModelInvocationTimeExceeded  The model failed to finish sending the response within the timeout period allowed by Amazon SageMaker.  StreamBroken  The Transmission Control Protocol (TCP) connection between the client and the model was reset or closed.
+    """
+
+    message: Optional[str] = Unassigned()
+    error_code: Optional[str] = Unassigned()
+
+
+class ResponseStream(Base):
+    """
+    ResponseStream
+      A stream of payload parts. Each part contains a portion of the response for a streaming inference request.
+
+    Attributes
+    ----------------------
+    payload_part: A wrapper for pieces of the payload that's returned in response to a streaming inference request. A streaming inference response consists of one or more payload parts.
+    model_stream_error:  An error occurred while streaming the response body. This error can have the following error codes:  ModelInvocationTimeExceeded  The model failed to finish sending the response within the timeout period allowed by Amazon SageMaker.  StreamBroken  The Transmission Control Protocol (TCP) connection between the client and the model was reset or closed.
+    internal_stream_failure: The stream processing failed because of an unknown error, exception or failure. Try your request again.
+    """
+
+    payload_part: Optional[PayloadPart] = Unassigned()
+    model_stream_error: Optional[ModelStreamError] = Unassigned()
+    internal_stream_failure: Optional[InternalStreamFailure] = Unassigned()
+
+
+class InvokeEndpointWithResponseStreamOutput(Base):
+    """
+    InvokeEndpointWithResponseStreamOutput
+
+    Attributes
+    ----------------------
+    body
+    content_type: The MIME type of the inference returned from the model container.
+    invoked_production_variant: Identifies the production variant that was invoked.
+    custom_attributes: Provides additional information in the response about the inference returned by a model hosted at an Amazon SageMaker endpoint. The information is an opaque value that is forwarded verbatim. You could use this value, for example, to return an ID received in the CustomAttributes header of a request or other metadata that a service endpoint was programmed to produce. The value must consist of no more than 1024 visible US-ASCII characters as specified in Section 3.3.6. Field Value Components of the Hypertext Transfer Protocol (HTTP/1.1). If the customer wants the custom attribute returned, the model must set the custom attribute to be included on the way back.  The code in your model is responsible for setting or updating any custom attributes in the response. If your code does not set this value in the response, an empty value is returned. For example, if a custom attribute represents the trace ID, your model can prepend the custom attribute with Trace ID: in your post-processing function. This feature is currently supported in the Amazon Web Services SDKs but not in the Amazon SageMaker Python SDK.
+    """
+
+    body: ResponseStream
+    content_type: Optional[str] = Unassigned()
+    invoked_production_variant: Optional[str] = Unassigned()
+    custom_attributes: Optional[str] = Unassigned()
+
+
+class ModelError(Base):
+    """
+    ModelError
+       Model (owned by the customer in the container) returned 4xx or 5xx error code.
+
+    Attributes
+    ----------------------
+    message
+    original_status_code:  Original status code.
+    original_message:  Original message.
+    log_stream_arn:  The Amazon Resource Name (ARN) of the log stream.
+    """
+
+    message: Optional[str] = Unassigned()
+    original_status_code: Optional[int] = Unassigned()
+    original_message: Optional[str] = Unassigned()
+    log_stream_arn: Optional[str] = Unassigned()
+
+
+class ModelNotReadyException(Base):
+    """
+    ModelNotReadyException
+      Either a serverless endpoint variant's resources are still being provisioned, or a multi-model endpoint is still downloading or loading the target model. Wait and try your request again.
+
+    Attributes
+    ----------------------
+    message
+    """
+
+    message: Optional[str] = Unassigned()
+
+
+class ServiceUnavailable(Base):
+    """
+    ServiceUnavailable
+      The service is currently unavailable.
+
+    Attributes
+    ----------------------
+    message
+    """
+
+    message: Optional[str] = Unassigned()
+
+
+class ValidationError(Base):
+    """
+    ValidationError
+      There was an error validating your request.
+
+    Attributes
+    ----------------------
+    message
+    """
+
+    message: Optional[str] = Unassigned()
+
+
+class AccessForbidden(Base):
+    """
+    AccessForbidden
+      You do not have permission to perform an action.
+
+    Attributes
+    ----------------------
+    message
+    """
+
+    message: Optional[str] = Unassigned()
+
+
+class BatchGetRecordError(Base):
+    """
+    BatchGetRecordError
+      The error that has occurred when attempting to retrieve a batch of Records.
+
+    Attributes
+    ----------------------
+    feature_group_name: The name of the feature group that the record belongs to.
+    record_identifier_value_as_string: The value for the RecordIdentifier in string format of a Record from a FeatureGroup that is causing an error when attempting to be retrieved.
+    error_code: The error code of an error that has occurred when attempting to retrieve a batch of Records. For more information on errors, see Errors.
+    error_message: The error message of an error that has occurred when attempting to retrieve a record in the batch.
+    """
+
+    feature_group_name: Union[str, object]
+    record_identifier_value_as_string: str
+    error_code: str
+    error_message: str
+
+
+class BatchGetRecordIdentifier(Base):
+    """
+    BatchGetRecordIdentifier
+      The identifier that identifies the batch of Records you are retrieving in a batch.
+
+    Attributes
+    ----------------------
+    feature_group_name: The name or Amazon Resource Name (ARN) of the FeatureGroup containing the records you are retrieving in a batch.
+    record_identifiers_value_as_string: The value for a list of record identifiers in string format.
+    feature_names: List of names of Features to be retrieved. If not specified, the latest value for all the Features are returned.
+    """
+
+    feature_group_name: Union[str, object]
+    record_identifiers_value_as_string: List[str]
+    feature_names: Optional[List[str]] = Unassigned()
+
+
+class FeatureValue(Base):
+    """
+    FeatureValue
+      The value associated with a feature.
+
+    Attributes
+    ----------------------
+    feature_name: The name of a feature that a feature value corresponds to.
+    value_as_string: The value in string format associated with a feature. Used when your CollectionType is None. Note that features types can be String, Integral, or Fractional. This value represents all three types as a string.
+    value_as_string_list: The list of values in string format associated with a feature. Used when your CollectionType is a List, Set, or Vector. Note that features types can be String, Integral, or Fractional. These values represents all three types as a string.
+    """
+
+    feature_name: str
+    value_as_string: Optional[str] = Unassigned()
+    value_as_string_list: Optional[List[str]] = Unassigned()
+
+
+class BatchGetRecordResultDetail(Base):
+    """
+    BatchGetRecordResultDetail
+      The output of records that have been retrieved in a batch.
+
+    Attributes
+    ----------------------
+    feature_group_name: The FeatureGroupName containing Records you retrieved in a batch.
+    record_identifier_value_as_string: The value of the record identifier in string format.
+    record: The Record retrieved.
+    expires_at: The ExpiresAt ISO string of the requested record.
+    """
+
+    feature_group_name: Union[str, object]
+    record_identifier_value_as_string: str
+    record: List[FeatureValue]
+    expires_at: Optional[str] = Unassigned()
+
+
+class BatchGetRecordResponse(Base):
+    """
+    BatchGetRecordResponse
+
+    Attributes
+    ----------------------
+    records: A list of Records you requested to be retrieved in batch.
+    errors: A list of errors that have occurred when retrieving a batch of Records.
+    unprocessed_identifiers: A unprocessed list of FeatureGroup names, with their corresponding RecordIdentifier value, and Feature name.
+    """
+
+    records: List[BatchGetRecordResultDetail]
+    errors: List[BatchGetRecordError]
+    unprocessed_identifiers: List[BatchGetRecordIdentifier]
+
+
+class GetRecordResponse(Base):
+    """
+    GetRecordResponse
+
+    Attributes
+    ----------------------
+    record: The record you requested. A list of FeatureValues.
+    expires_at: The ExpiresAt ISO string of the requested record.
+    """
+
+    record: Optional[List[FeatureValue]] = Unassigned()
+    expires_at: Optional[str] = Unassigned()
+
+
+class TtlDuration(Base):
+    """
+    TtlDuration
+      Time to live duration, where the record is hard deleted after the expiration time is reached; ExpiresAt = EventTime + TtlDuration. For information on HardDelete, see the DeleteRecord API in the Amazon SageMaker API Reference guide.
+
+    Attributes
+    ----------------------
+    unit:  TtlDuration time unit.
+    value:  TtlDuration time value.
+    """
+
+    unit: Optional[str] = Unassigned()
+    value: Optional[int] = Unassigned()
+
+
+class ResourceNotFound(Base):
+    """
+    ResourceNotFound
+      Resource being access is not found.
+
+    Attributes
+    ----------------------
+    message
+    """
+
+    message: Optional[str] = Unassigned()
+
+
+class BatchPutMetricsError(Base):
+    """
+    BatchPutMetricsError
+      An error that occured when putting the metric data.
+
+    Attributes
+    ----------------------
+    code: The error code of an error that occured when attempting to put metrics.    METRIC_LIMIT_EXCEEDED: The maximum amount of metrics per resource is exceeded.    INTERNAL_ERROR: An internal error occured.    VALIDATION_ERROR: The metric data failed validation.    CONFLICT_ERROR: Multiple requests attempted to modify the same data simultaneously.
+    metric_index: An index that corresponds to the metric in the request.
+    """
+
+    code: Optional[str] = Unassigned()
+    metric_index: Optional[int] = Unassigned()
+
+
+class RawMetricData(Base):
+    """
+    RawMetricData
+      The raw metric data to associate with the resource.
+
+    Attributes
+    ----------------------
+    metric_name: The name of the metric.
+    timestamp: The time that the metric was recorded.
+    step: The metric step (epoch).
+    value: The metric value.
+    """
+
+    metric_name: str
+    timestamp: datetime.datetime
+    value: float
+    step: Optional[int] = Unassigned()
+
+
 class ActionSource(Base):
     """
     ActionSource
@@ -4296,21 +4667,6 @@ class OnlineStoreSecurityConfig(Base):
     """
 
     kms_key_id: Optional[str] = Unassigned()
-
-
-class TtlDuration(Base):
-    """
-    TtlDuration
-      Time to live duration, where the record is hard deleted after the expiration time is reached; ExpiresAt = EventTime + TtlDuration. For information on HardDelete, see the DeleteRecord API in the Amazon SageMaker API Reference guide.
-
-    Attributes
-    ----------------------
-    unit:  TtlDuration time unit.
-    value:  TtlDuration time value.
-    """
-
-    unit: Optional[str] = Unassigned()
-    value: Optional[int] = Unassigned()
 
 
 class OnlineStoreConfig(Base):
@@ -11258,19 +11614,6 @@ class ResourceLimitExceeded(Base):
     message: Optional[str] = Unassigned()
 
 
-class ResourceNotFound(Base):
-    """
-    ResourceNotFound
-      Resource being access is not found.
-
-    Attributes
-    ----------------------
-    message
-    """
-
-    message: Optional[str] = Unassigned()
-
-
 class SearchExpression(Base):
     """
     SearchExpression
@@ -11604,145 +11947,3 @@ class VariantProperty(Base):
     """
 
     variant_property_type: str
-
-
-class InternalDependencyException(Base):
-    """
-    InternalDependencyException
-      Your request caused an exception with an internal dependency. Contact customer support.
-
-    Attributes
-    ----------------------
-    message
-    """
-
-    message: Optional[str] = Unassigned()
-
-
-class InternalFailure(Base):
-    """
-    InternalFailure
-       An internal failure occurred.
-
-    Attributes
-    ----------------------
-    message
-    """
-
-    message: Optional[str] = Unassigned()
-
-
-class InternalStreamFailure(Base):
-    """
-    InternalStreamFailure
-      The stream processing failed because of an unknown error, exception or failure. Try your request again.
-
-    Attributes
-    ----------------------
-    message
-    """
-
-    message: Optional[str] = Unassigned()
-
-
-class PayloadPart(Base):
-    """
-    PayloadPart
-      A wrapper for pieces of the payload that's returned in response to a streaming inference request. A streaming inference response consists of one or more payload parts.
-
-    Attributes
-    ----------------------
-    bytes: A blob that contains part of the response for your streaming inference request.
-    """
-
-    bytes: Optional[Any] = Unassigned()
-
-
-class ModelStreamError(Base):
-    """
-    ModelStreamError
-       An error occurred while streaming the response body. This error can have the following error codes:  ModelInvocationTimeExceeded  The model failed to finish sending the response within the timeout period allowed by Amazon SageMaker.  StreamBroken  The Transmission Control Protocol (TCP) connection between the client and the model was reset or closed.
-
-    Attributes
-    ----------------------
-    message
-    error_code: This error can have the following error codes:  ModelInvocationTimeExceeded  The model failed to finish sending the response within the timeout period allowed by Amazon SageMaker.  StreamBroken  The Transmission Control Protocol (TCP) connection between the client and the model was reset or closed.
-    """
-
-    message: Optional[str] = Unassigned()
-    error_code: Optional[str] = Unassigned()
-
-
-class ResponseStream(Base):
-    """
-    ResponseStream
-      A stream of payload parts. Each part contains a portion of the response for a streaming inference request.
-
-    Attributes
-    ----------------------
-    payload_part: A wrapper for pieces of the payload that's returned in response to a streaming inference request. A streaming inference response consists of one or more payload parts.
-    model_stream_error:  An error occurred while streaming the response body. This error can have the following error codes:  ModelInvocationTimeExceeded  The model failed to finish sending the response within the timeout period allowed by Amazon SageMaker.  StreamBroken  The Transmission Control Protocol (TCP) connection between the client and the model was reset or closed.
-    internal_stream_failure: The stream processing failed because of an unknown error, exception or failure. Try your request again.
-    """
-
-    payload_part: Optional[PayloadPart] = Unassigned()
-    model_stream_error: Optional[ModelStreamError] = Unassigned()
-    internal_stream_failure: Optional[InternalStreamFailure] = Unassigned()
-
-
-class ModelError(Base):
-    """
-    ModelError
-       Model (owned by the customer in the container) returned 4xx or 5xx error code.
-
-    Attributes
-    ----------------------
-    message
-    original_status_code:  Original status code.
-    original_message:  Original message.
-    log_stream_arn:  The Amazon Resource Name (ARN) of the log stream.
-    """
-
-    message: Optional[str] = Unassigned()
-    original_status_code: Optional[int] = Unassigned()
-    original_message: Optional[str] = Unassigned()
-    log_stream_arn: Optional[str] = Unassigned()
-
-
-class ModelNotReadyException(Base):
-    """
-    ModelNotReadyException
-      Either a serverless endpoint variant's resources are still being provisioned, or a multi-model endpoint is still downloading or loading the target model. Wait and try your request again.
-
-    Attributes
-    ----------------------
-    message
-    """
-
-    message: Optional[str] = Unassigned()
-
-
-class ServiceUnavailable(Base):
-    """
-    ServiceUnavailable
-       The service is unavailable. Try your call again.
-
-    Attributes
-    ----------------------
-    message
-    """
-
-    message: Optional[str] = Unassigned()
-
-
-class ValidationError(Base):
-    """
-    ValidationError
-       Inspect your request and try again.
-
-    Attributes
-    ----------------------
-    message
-    """
-
-    message: Optional[str] = Unassigned()
