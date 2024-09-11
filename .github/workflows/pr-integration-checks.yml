@@ -96,5 +96,3 @@ jobs:
           else
             echo "Putting metrics has been skipped"
           fi
-
-
