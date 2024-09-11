@@ -42,7 +42,7 @@ jobs:
     needs: [ collab-check ]
     environment: ${{ needs.collab-check.outputs.approval-env }}
     steps:
-      - run: echo "Workflow Approved! Starting Integration tests with environment ${{environment}}"
+      - run: echo "Workflow Approved! Starting Integration tests"
   integ-tests:
     runs-on: ubuntu-latest
     needs: [wait-for-approval]
