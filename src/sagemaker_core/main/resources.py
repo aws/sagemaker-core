@@ -27,7 +27,6 @@ from sagemaker_core.main.code_injection.codec import transform
 from sagemaker_core.main.code_injection.constants import Color
 from sagemaker_core.main.utils import (
     SageMakerClient,
-    SageMakerRuntimeClient,
     ResourceIterator,
     Unassigned,
     get_textual_rich_logger,
@@ -35,7 +34,6 @@ from sagemaker_core.main.utils import (
     pascal_to_snake,
     is_not_primitive,
     is_not_str_dict,
-    is_snake_case,
     is_primitive_list,
     serialize,
 )
@@ -55,9 +53,9 @@ class Base(BaseModel):
 
     @classmethod
     def get_sagemaker_client(cls, session=None, region_name=None, service_name="sagemaker"):
-        return SageMakerClient(
-            session=session, region_name=region_name, service_name=service_name
-        ).client
+        return SageMakerClient(session=session, region_name=region_name).get_client(
+            service_name=service_name
+        )
 
     @staticmethod
     def get_updated_kwargs_with_configured_attributes(
@@ -8107,218 +8105,6 @@ class Endpoint(Base):
                     raise e
                 time.sleep(poll)
 
-    @Base.add_validate_call
-    def invoke(
-        self,
-        body: Any,
-        content_type: Optional[str] = Unassigned(),
-        accept: Optional[str] = Unassigned(),
-        custom_attributes: Optional[str] = Unassigned(),
-        target_model: Optional[str] = Unassigned(),
-        target_variant: Optional[str] = Unassigned(),
-        target_container_hostname: Optional[str] = Unassigned(),
-        inference_id: Optional[str] = Unassigned(),
-        enable_explanations: Optional[str] = Unassigned(),
-        inference_component_name: Optional[str] = Unassigned(),
-    ) -> Optional[object]:
-        """
-        Invoke a Endpoint resource
-
-        Parameters:
-            body: Provides input data, in the format specified in the ContentType request header. Amazon SageMaker passes all of the data in the body to the model.  For information about the format of the request body, see Common Data Formats-Inference.
-            content_type: The MIME type of the input data in the request body.
-            accept: The desired MIME type of the inference response from the model container.
-            custom_attributes: Provides additional information about a request for an inference submitted to a model hosted at an Amazon SageMaker endpoint. The information is an opaque value that is forwarded verbatim. You could use this value, for example, to provide an ID that you can use to track a request or to provide other metadata that a service endpoint was programmed to process. The value must consist of no more than 1024 visible US-ASCII characters as specified in Section 3.3.6. Field Value Components of the Hypertext Transfer Protocol (HTTP/1.1).  The code in your model is responsible for setting or updating any custom attributes in the response. If your code does not set this value in the response, an empty value is returned. For example, if a custom attribute represents the trace ID, your model can prepend the custom attribute with Trace ID: in your post-processing function.  This feature is currently supported in the Amazon Web Services SDKs but not in the Amazon SageMaker Python SDK.
-            target_model: The model to request for inference when invoking a multi-model endpoint.
-            target_variant: Specify the production variant to send the inference request to when invoking an endpoint that is running two or more variants. Note that this parameter overrides the default behavior for the endpoint, which is to distribute the invocation traffic based on the variant weights. For information about how to use variant targeting to perform a/b testing, see Test models in production
-            target_container_hostname: If the endpoint hosts multiple containers and is configured to use direct invocation, this parameter specifies the host name of the container to invoke.
-            inference_id: If you provide a value, it is added to the captured data when you enable data capture on the endpoint. For information about data capture, see Capture Data.
-            enable_explanations: An optional JMESPath expression used to override the EnableExplanations parameter of the ClarifyExplainerConfig API. See the EnableExplanations section in the developer guide for more information.
-            inference_component_name: If the endpoint hosts one or more inference components, this parameter specifies the name of inference component to invoke.
-
-        Returns:
-            The Invoke response.
-
-        Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
-                The error message and error code can be parsed from the exception as follows:
-                ```
-                try:
-                    # AWS service call here
-                except botocore.exceptions.ClientError as e:
-                    error_message = e.response['Error']['Message']
-                    error_code = e.response['Error']['Code']
-                ```
-            InternalDependencyException: Your request caused an exception with an internal dependency. Contact customer support.
-            InternalFailure: An internal failure occurred.
-            ModelError: Model (owned by the customer in the container) returned 4xx or 5xx error code.
-            ModelNotReadyException: Either a serverless endpoint variant's resources are still being provisioned, or a multi-model endpoint is still downloading or loading the target model. Wait and try your request again.
-            ServiceUnavailable: The service is unavailable. Try your call again.
-            ValidationError: Inspect your request and try again.
-        """
-
-        logger.info(f"Invoking endpoint resource.")
-        client = SageMakerRuntimeClient(service_name="sagemaker-runtime").client
-        operation_input_args = {
-            "EndpointName": self.endpoint_name,
-            "Body": body,
-            "ContentType": content_type,
-            "Accept": accept,
-            "CustomAttributes": custom_attributes,
-            "TargetModel": target_model,
-            "TargetVariant": target_variant,
-            "TargetContainerHostname": target_container_hostname,
-            "InferenceId": inference_id,
-            "EnableExplanations": enable_explanations,
-            "InferenceComponentName": inference_component_name,
-        }
-        logger.debug(f"Input request: {operation_input_args}")
-        # serialize the input request
-        operation_input_args = serialize(operation_input_args)
-        logger.debug(f"Serialized input request: {operation_input_args}")
-
-        # create the resource
-        response = client.invoke_endpoint(**operation_input_args)
-        logger.debug(f"Response: {response}")
-
-        return response
-
-    @Base.add_validate_call
-    def invoke_async(
-        self,
-        input_location: str,
-        content_type: Optional[str] = Unassigned(),
-        accept: Optional[str] = Unassigned(),
-        custom_attributes: Optional[str] = Unassigned(),
-        inference_id: Optional[str] = Unassigned(),
-        request_ttl_seconds: Optional[int] = Unassigned(),
-        invocation_timeout_seconds: Optional[int] = Unassigned(),
-    ) -> Optional[object]:
-        """
-        Invoke Async a Endpoint resource
-
-        Parameters:
-            input_location: The Amazon S3 URI where the inference request payload is stored.
-            content_type: The MIME type of the input data in the request body.
-            accept: The desired MIME type of the inference response from the model container.
-            custom_attributes: Provides additional information about a request for an inference submitted to a model hosted at an Amazon SageMaker endpoint. The information is an opaque value that is forwarded verbatim. You could use this value, for example, to provide an ID that you can use to track a request or to provide other metadata that a service endpoint was programmed to process. The value must consist of no more than 1024 visible US-ASCII characters as specified in Section 3.3.6. Field Value Components of the Hypertext Transfer Protocol (HTTP/1.1).  The code in your model is responsible for setting or updating any custom attributes in the response. If your code does not set this value in the response, an empty value is returned. For example, if a custom attribute represents the trace ID, your model can prepend the custom attribute with Trace ID: in your post-processing function.  This feature is currently supported in the Amazon Web Services SDKs but not in the Amazon SageMaker Python SDK.
-            inference_id: The identifier for the inference request. Amazon SageMaker will generate an identifier for you if none is specified.
-            request_ttl_seconds: Maximum age in seconds a request can be in the queue before it is marked as expired. The default is 6 hours, or 21,600 seconds.
-            invocation_timeout_seconds: Maximum amount of time in seconds a request can be processed before it is marked as expired. The default is 15 minutes, or 900 seconds.
-
-        Returns:
-            The Invoke response.
-
-        Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
-                The error message and error code can be parsed from the exception as follows:
-                ```
-                try:
-                    # AWS service call here
-                except botocore.exceptions.ClientError as e:
-                    error_message = e.response['Error']['Message']
-                    error_code = e.response['Error']['Code']
-                ```
-            InternalFailure: An internal failure occurred.
-            ServiceUnavailable: The service is unavailable. Try your call again.
-            ValidationError: Inspect your request and try again.
-        """
-
-        logger.info(f"Invoking endpoint resource Async.")
-        client = SageMakerRuntimeClient(service_name="sagemaker-runtime").client
-
-        operation_input_args = {
-            "EndpointName": self.endpoint_name,
-            "ContentType": content_type,
-            "Accept": accept,
-            "CustomAttributes": custom_attributes,
-            "InferenceId": inference_id,
-            "InputLocation": input_location,
-            "RequestTTLSeconds": request_ttl_seconds,
-            "InvocationTimeoutSeconds": invocation_timeout_seconds,
-        }
-        logger.debug(f"Input request: {operation_input_args}")
-        # serialize the input request
-        operation_input_args = serialize(operation_input_args)
-        logger.debug(f"Serialized input request: {operation_input_args}")
-
-        # create the resource
-        response = client.invoke_endpoint_async(**operation_input_args)
-        logger.debug(f"Response: {response}")
-
-        return response
-
-    @Base.add_validate_call
-    def invoke_with_response_stream(
-        self,
-        body: Any,
-        content_type: Optional[str] = Unassigned(),
-        accept: Optional[str] = Unassigned(),
-        custom_attributes: Optional[str] = Unassigned(),
-        target_variant: Optional[str] = Unassigned(),
-        target_container_hostname: Optional[str] = Unassigned(),
-        inference_id: Optional[str] = Unassigned(),
-        inference_component_name: Optional[str] = Unassigned(),
-    ) -> Optional[object]:
-        """
-        Invoke with response stream a Endpoint resource
-
-        Parameters:
-            body: Provides input data, in the format specified in the ContentType request header. Amazon SageMaker passes all of the data in the body to the model.  For information about the format of the request body, see Common Data Formats-Inference.
-            content_type: The MIME type of the input data in the request body.
-            accept: The desired MIME type of the inference response from the model container.
-            custom_attributes: Provides additional information about a request for an inference submitted to a model hosted at an Amazon SageMaker endpoint. The information is an opaque value that is forwarded verbatim. You could use this value, for example, to provide an ID that you can use to track a request or to provide other metadata that a service endpoint was programmed to process. The value must consist of no more than 1024 visible US-ASCII characters as specified in Section 3.3.6. Field Value Components of the Hypertext Transfer Protocol (HTTP/1.1).  The code in your model is responsible for setting or updating any custom attributes in the response. If your code does not set this value in the response, an empty value is returned. For example, if a custom attribute represents the trace ID, your model can prepend the custom attribute with Trace ID: in your post-processing function.  This feature is currently supported in the Amazon Web Services SDKs but not in the Amazon SageMaker Python SDK.
-            target_variant: Specify the production variant to send the inference request to when invoking an endpoint that is running two or more variants. Note that this parameter overrides the default behavior for the endpoint, which is to distribute the invocation traffic based on the variant weights. For information about how to use variant targeting to perform a/b testing, see Test models in production
-            target_container_hostname: If the endpoint hosts multiple containers and is configured to use direct invocation, this parameter specifies the host name of the container to invoke.
-            inference_id: An identifier that you assign to your request.
-            inference_component_name: If the endpoint hosts one or more inference components, this parameter specifies the name of inference component to invoke for a streaming response.
-
-        Returns:
-            The Invoke response.
-
-        Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
-                The error message and error code can be parsed from the exception as follows:
-                ```
-                try:
-                    # AWS service call here
-                except botocore.exceptions.ClientError as e:
-                    error_message = e.response['Error']['Message']
-                    error_code = e.response['Error']['Code']
-                ```
-            InternalFailure: An internal failure occurred.
-            InternalStreamFailure: The stream processing failed because of an unknown error, exception or failure. Try your request again.
-            ModelError: Model (owned by the customer in the container) returned 4xx or 5xx error code.
-            ModelStreamError: An error occurred while streaming the response body. This error can have the following error codes:  ModelInvocationTimeExceeded  The model failed to finish sending the response within the timeout period allowed by Amazon SageMaker.  StreamBroken  The Transmission Control Protocol (TCP) connection between the client and the model was reset or closed.
-            ServiceUnavailable: The service is unavailable. Try your call again.
-            ValidationError: Inspect your request and try again.
-        """
-
-        logger.info(f"Invoking endpoint resource with Response Stream.")
-        client = SageMakerRuntimeClient(service_name="sagemaker-runtime").client
-
-        operation_input_args = {
-            "EndpointName": self.endpoint_name,
-            "Body": body,
-            "ContentType": content_type,
-            "Accept": accept,
-            "CustomAttributes": custom_attributes,
-            "TargetVariant": target_variant,
-            "TargetContainerHostname": target_container_hostname,
-            "InferenceId": inference_id,
-            "InferenceComponentName": inference_component_name,
-        }
-        logger.debug(f"Input request: {operation_input_args}")
-        # serialize the input request
-        operation_input_args = serialize(operation_input_args)
-        logger.debug(f"Serialized input request: {operation_input_args}")
-
-        # create the resource
-        response = client.invoke_endpoint_with_response_stream(**operation_input_args)
-        logger.debug(f"Response: {response}")
-
-        return response
-
     @classmethod
     @Base.add_validate_call
     def get_all(
@@ -8437,6 +8223,234 @@ class Endpoint(Base):
         logger.debug(f"Calling update_endpoint_weights_and_capacities API")
         response = client.update_endpoint_weights_and_capacities(**operation_input_args)
         logger.debug(f"Response: {response}")
+
+    @Base.add_validate_call
+    def invoke(
+        self,
+        body: Any,
+        content_type: Optional[str] = Unassigned(),
+        accept: Optional[str] = Unassigned(),
+        custom_attributes: Optional[str] = Unassigned(),
+        target_model: Optional[str] = Unassigned(),
+        target_variant: Optional[str] = Unassigned(),
+        target_container_hostname: Optional[str] = Unassigned(),
+        inference_id: Optional[str] = Unassigned(),
+        enable_explanations: Optional[str] = Unassigned(),
+        inference_component_name: Optional[str] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional[InvokeEndpointOutput]:
+        """
+        After you deploy a model into production using Amazon SageMaker hosting services, your client applications use this API to get inferences from the model hosted at the specified endpoint.
+
+        Parameters:
+            body: Provides input data, in the format specified in the ContentType request header. Amazon SageMaker passes all of the data in the body to the model.  For information about the format of the request body, see Common Data Formats-Inference.
+            content_type: The MIME type of the input data in the request body.
+            accept: The desired MIME type of the inference response from the model container.
+            custom_attributes: Provides additional information about a request for an inference submitted to a model hosted at an Amazon SageMaker endpoint. The information is an opaque value that is forwarded verbatim. You could use this value, for example, to provide an ID that you can use to track a request or to provide other metadata that a service endpoint was programmed to process. The value must consist of no more than 1024 visible US-ASCII characters as specified in Section 3.3.6. Field Value Components of the Hypertext Transfer Protocol (HTTP/1.1).  The code in your model is responsible for setting or updating any custom attributes in the response. If your code does not set this value in the response, an empty value is returned. For example, if a custom attribute represents the trace ID, your model can prepend the custom attribute with Trace ID: in your post-processing function.  This feature is currently supported in the Amazon Web Services SDKs but not in the Amazon SageMaker Python SDK.
+            target_model: The model to request for inference when invoking a multi-model endpoint.
+            target_variant: Specify the production variant to send the inference request to when invoking an endpoint that is running two or more variants. Note that this parameter overrides the default behavior for the endpoint, which is to distribute the invocation traffic based on the variant weights. For information about how to use variant targeting to perform a/b testing, see Test models in production
+            target_container_hostname: If the endpoint hosts multiple containers and is configured to use direct invocation, this parameter specifies the host name of the container to invoke.
+            inference_id: If you provide a value, it is added to the captured data when you enable data capture on the endpoint. For information about data capture, see Capture Data.
+            enable_explanations: An optional JMESPath expression used to override the EnableExplanations parameter of the ClarifyExplainerConfig API. See the EnableExplanations section in the developer guide for more information.
+            inference_component_name: If the endpoint hosts one or more inference components, this parameter specifies the name of inference component to invoke.
+            session: Boto3 session.
+            region: Region name.
+
+        Returns:
+            InvokeEndpointOutput
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            InternalDependencyException: Your request caused an exception with an internal dependency. Contact customer support.
+            InternalFailure: An internal failure occurred. Try your request again. If the problem persists, contact Amazon Web Services customer support.
+            ModelError: Model (owned by the customer in the container) returned 4xx or 5xx error code.
+            ModelNotReadyException: Either a serverless endpoint variant's resources are still being provisioned, or a multi-model endpoint is still downloading or loading the target model. Wait and try your request again.
+            ServiceUnavailable: The service is currently unavailable.
+            ValidationError: There was an error validating your request.
+        """
+
+        operation_input_args = {
+            "EndpointName": self.endpoint_name,
+            "Body": body,
+            "ContentType": content_type,
+            "Accept": accept,
+            "CustomAttributes": custom_attributes,
+            "TargetModel": target_model,
+            "TargetVariant": target_variant,
+            "TargetContainerHostname": target_container_hostname,
+            "InferenceId": inference_id,
+            "EnableExplanations": enable_explanations,
+            "InferenceComponentName": inference_component_name,
+        }
+        # serialize the input request
+        operation_input_args = serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker-runtime"
+        )
+
+        logger.debug(f"Calling invoke_endpoint API")
+        response = client.invoke_endpoint(**operation_input_args)
+        logger.debug(f"Response: {response}")
+
+        transformed_response = transform(response, "InvokeEndpointOutput")
+        return InvokeEndpointOutput(**transformed_response)
+
+    @Base.add_validate_call
+    def invoke_async(
+        self,
+        input_location: str,
+        content_type: Optional[str] = Unassigned(),
+        accept: Optional[str] = Unassigned(),
+        custom_attributes: Optional[str] = Unassigned(),
+        inference_id: Optional[str] = Unassigned(),
+        request_ttl_seconds: Optional[int] = Unassigned(),
+        invocation_timeout_seconds: Optional[int] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional[InvokeEndpointAsyncOutput]:
+        """
+        After you deploy a model into production using Amazon SageMaker hosting services, your client applications use this API to get inferences from the model hosted at the specified endpoint in an asynchronous manner.
+
+        Parameters:
+            input_location: The Amazon S3 URI where the inference request payload is stored.
+            content_type: The MIME type of the input data in the request body.
+            accept: The desired MIME type of the inference response from the model container.
+            custom_attributes: Provides additional information about a request for an inference submitted to a model hosted at an Amazon SageMaker endpoint. The information is an opaque value that is forwarded verbatim. You could use this value, for example, to provide an ID that you can use to track a request or to provide other metadata that a service endpoint was programmed to process. The value must consist of no more than 1024 visible US-ASCII characters as specified in Section 3.3.6. Field Value Components of the Hypertext Transfer Protocol (HTTP/1.1).  The code in your model is responsible for setting or updating any custom attributes in the response. If your code does not set this value in the response, an empty value is returned. For example, if a custom attribute represents the trace ID, your model can prepend the custom attribute with Trace ID: in your post-processing function.  This feature is currently supported in the Amazon Web Services SDKs but not in the Amazon SageMaker Python SDK.
+            inference_id: The identifier for the inference request. Amazon SageMaker will generate an identifier for you if none is specified.
+            request_ttl_seconds: Maximum age in seconds a request can be in the queue before it is marked as expired. The default is 6 hours, or 21,600 seconds.
+            invocation_timeout_seconds: Maximum amount of time in seconds a request can be processed before it is marked as expired. The default is 15 minutes, or 900 seconds.
+            session: Boto3 session.
+            region: Region name.
+
+        Returns:
+            InvokeEndpointAsyncOutput
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            InternalFailure: An internal failure occurred. Try your request again. If the problem persists, contact Amazon Web Services customer support.
+            ServiceUnavailable: The service is currently unavailable.
+            ValidationError: There was an error validating your request.
+        """
+
+        operation_input_args = {
+            "EndpointName": self.endpoint_name,
+            "ContentType": content_type,
+            "Accept": accept,
+            "CustomAttributes": custom_attributes,
+            "InferenceId": inference_id,
+            "InputLocation": input_location,
+            "RequestTTLSeconds": request_ttl_seconds,
+            "InvocationTimeoutSeconds": invocation_timeout_seconds,
+        }
+        # serialize the input request
+        operation_input_args = serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker-runtime"
+        )
+
+        logger.debug(f"Calling invoke_endpoint_async API")
+        response = client.invoke_endpoint_async(**operation_input_args)
+        logger.debug(f"Response: {response}")
+
+        transformed_response = transform(response, "InvokeEndpointAsyncOutput")
+        return InvokeEndpointAsyncOutput(**transformed_response)
+
+    @Base.add_validate_call
+    def invoke_with_response_stream(
+        self,
+        body: Any,
+        content_type: Optional[str] = Unassigned(),
+        accept: Optional[str] = Unassigned(),
+        custom_attributes: Optional[str] = Unassigned(),
+        target_variant: Optional[str] = Unassigned(),
+        target_container_hostname: Optional[str] = Unassigned(),
+        inference_id: Optional[str] = Unassigned(),
+        inference_component_name: Optional[str] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional[InvokeEndpointWithResponseStreamOutput]:
+        """
+        Invokes a model at the specified endpoint to return the inference response as a stream.
+
+        Parameters:
+            body: Provides input data, in the format specified in the ContentType request header. Amazon SageMaker passes all of the data in the body to the model.  For information about the format of the request body, see Common Data Formats-Inference.
+            content_type: The MIME type of the input data in the request body.
+            accept: The desired MIME type of the inference response from the model container.
+            custom_attributes: Provides additional information about a request for an inference submitted to a model hosted at an Amazon SageMaker endpoint. The information is an opaque value that is forwarded verbatim. You could use this value, for example, to provide an ID that you can use to track a request or to provide other metadata that a service endpoint was programmed to process. The value must consist of no more than 1024 visible US-ASCII characters as specified in Section 3.3.6. Field Value Components of the Hypertext Transfer Protocol (HTTP/1.1).  The code in your model is responsible for setting or updating any custom attributes in the response. If your code does not set this value in the response, an empty value is returned. For example, if a custom attribute represents the trace ID, your model can prepend the custom attribute with Trace ID: in your post-processing function.  This feature is currently supported in the Amazon Web Services SDKs but not in the Amazon SageMaker Python SDK.
+            target_variant: Specify the production variant to send the inference request to when invoking an endpoint that is running two or more variants. Note that this parameter overrides the default behavior for the endpoint, which is to distribute the invocation traffic based on the variant weights. For information about how to use variant targeting to perform a/b testing, see Test models in production
+            target_container_hostname: If the endpoint hosts multiple containers and is configured to use direct invocation, this parameter specifies the host name of the container to invoke.
+            inference_id: An identifier that you assign to your request.
+            inference_component_name: If the endpoint hosts one or more inference components, this parameter specifies the name of inference component to invoke for a streaming response.
+            session: Boto3 session.
+            region: Region name.
+
+        Returns:
+            InvokeEndpointWithResponseStreamOutput
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            InternalFailure: An internal failure occurred. Try your request again. If the problem persists, contact Amazon Web Services customer support.
+            InternalStreamFailure: The stream processing failed because of an unknown error, exception or failure. Try your request again.
+            ModelError: Model (owned by the customer in the container) returned 4xx or 5xx error code.
+            ModelStreamError: An error occurred while streaming the response body. This error can have the following error codes:  ModelInvocationTimeExceeded  The model failed to finish sending the response within the timeout period allowed by Amazon SageMaker.  StreamBroken  The Transmission Control Protocol (TCP) connection between the client and the model was reset or closed.
+            ServiceUnavailable: The service is currently unavailable.
+            ValidationError: There was an error validating your request.
+        """
+
+        operation_input_args = {
+            "EndpointName": self.endpoint_name,
+            "Body": body,
+            "ContentType": content_type,
+            "Accept": accept,
+            "CustomAttributes": custom_attributes,
+            "TargetVariant": target_variant,
+            "TargetContainerHostname": target_container_hostname,
+            "InferenceId": inference_id,
+            "InferenceComponentName": inference_component_name,
+        }
+        # serialize the input request
+        operation_input_args = serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker-runtime"
+        )
+
+        logger.debug(f"Calling invoke_endpoint_with_response_stream API")
+        response = client.invoke_endpoint_with_response_stream(**operation_input_args)
+        logger.debug(f"Response: {response}")
+
+        transformed_response = transform(response, "InvokeEndpointWithResponseStreamOutput")
+        return InvokeEndpointWithResponseStreamOutput(**transformed_response)
 
 
 class EndpointConfig(Base):
@@ -9676,6 +9690,230 @@ class FeatureGroup(Base):
             resource_cls=FeatureGroup,
             list_method_kwargs=operation_input_args,
         )
+
+    @Base.add_validate_call
+    def get_record(
+        self,
+        record_identifier_value_as_string: str,
+        feature_names: Optional[List[str]] = Unassigned(),
+        expiration_time_response: Optional[str] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional[GetRecordResponse]:
+        """
+        Use for OnlineStore serving from a FeatureStore.
+
+        Parameters:
+            record_identifier_value_as_string: The value that corresponds to RecordIdentifier type and uniquely identifies the record in the FeatureGroup.
+            feature_names: List of names of Features to be retrieved. If not specified, the latest value for all the Features are returned.
+            expiration_time_response: Parameter to request ExpiresAt in response. If Enabled, GetRecord will return the value of ExpiresAt, if it is not null. If Disabled and null, GetRecord will return null.
+            session: Boto3 session.
+            region: Region name.
+
+        Returns:
+            GetRecordResponse
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            AccessForbidden: You do not have permission to perform an action.
+            InternalFailure: An internal failure occurred. Try your request again. If the problem persists, contact Amazon Web Services customer support.
+            ResourceNotFound: Resource being access is not found.
+            ServiceUnavailable: The service is currently unavailable.
+            ValidationError: There was an error validating your request.
+        """
+
+        operation_input_args = {
+            "FeatureGroupName": self.feature_group_name,
+            "RecordIdentifierValueAsString": record_identifier_value_as_string,
+            "FeatureNames": feature_names,
+            "ExpirationTimeResponse": expiration_time_response,
+        }
+        # serialize the input request
+        operation_input_args = serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker-featurestore-runtime"
+        )
+
+        logger.debug(f"Calling get_record API")
+        response = client.get_record(**operation_input_args)
+        logger.debug(f"Response: {response}")
+
+        transformed_response = transform(response, "GetRecordResponse")
+        return GetRecordResponse(**transformed_response)
+
+    @Base.add_validate_call
+    def put_record(
+        self,
+        record: List[FeatureValue],
+        target_stores: Optional[List[str]] = Unassigned(),
+        ttl_duration: Optional[TtlDuration] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> None:
+        """
+        The PutRecord API is used to ingest a list of Records into your feature group.
+
+        Parameters:
+            record: List of FeatureValues to be inserted. This will be a full over-write. If you only want to update few of the feature values, do the following:   Use GetRecord to retrieve the latest record.   Update the record returned from GetRecord.    Use PutRecord to update feature values.
+            target_stores: A list of stores to which you're adding the record. By default, Feature Store adds the record to all of the stores that you're using for the FeatureGroup.
+            ttl_duration: Time to live duration, where the record is hard deleted after the expiration time is reached; ExpiresAt = EventTime + TtlDuration. For information on HardDelete, see the DeleteRecord API in the Amazon SageMaker API Reference guide.
+            session: Boto3 session.
+            region: Region name.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            AccessForbidden: You do not have permission to perform an action.
+            InternalFailure: An internal failure occurred. Try your request again. If the problem persists, contact Amazon Web Services customer support.
+            ServiceUnavailable: The service is currently unavailable.
+            ValidationError: There was an error validating your request.
+        """
+
+        operation_input_args = {
+            "FeatureGroupName": self.feature_group_name,
+            "Record": record,
+            "TargetStores": target_stores,
+            "TtlDuration": ttl_duration,
+        }
+        # serialize the input request
+        operation_input_args = serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker-featurestore-runtime"
+        )
+
+        logger.debug(f"Calling put_record API")
+        response = client.put_record(**operation_input_args)
+        logger.debug(f"Response: {response}")
+
+    @Base.add_validate_call
+    def delete_record(
+        self,
+        record_identifier_value_as_string: str,
+        event_time: str,
+        target_stores: Optional[List[str]] = Unassigned(),
+        deletion_mode: Optional[str] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> None:
+        """
+        Deletes a Record from a FeatureGroup in the OnlineStore.
+
+        Parameters:
+            record_identifier_value_as_string: The value for the RecordIdentifier that uniquely identifies the record, in string format.
+            event_time: Timestamp indicating when the deletion event occurred. EventTime can be used to query data at a certain point in time.
+            target_stores: A list of stores from which you're deleting the record. By default, Feature Store deletes the record from all of the stores that you're using for the FeatureGroup.
+            deletion_mode: The name of the deletion mode for deleting the record. By default, the deletion mode is set to SoftDelete.
+            session: Boto3 session.
+            region: Region name.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            AccessForbidden: You do not have permission to perform an action.
+            InternalFailure: An internal failure occurred. Try your request again. If the problem persists, contact Amazon Web Services customer support.
+            ServiceUnavailable: The service is currently unavailable.
+            ValidationError: There was an error validating your request.
+        """
+
+        operation_input_args = {
+            "FeatureGroupName": self.feature_group_name,
+            "RecordIdentifierValueAsString": record_identifier_value_as_string,
+            "EventTime": event_time,
+            "TargetStores": target_stores,
+            "DeletionMode": deletion_mode,
+        }
+        # serialize the input request
+        operation_input_args = serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker-featurestore-runtime"
+        )
+
+        logger.debug(f"Calling delete_record API")
+        response = client.delete_record(**operation_input_args)
+        logger.debug(f"Response: {response}")
+
+    @Base.add_validate_call
+    def batch_get_record(
+        self,
+        identifiers: List[BatchGetRecordIdentifier],
+        expiration_time_response: Optional[str] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional[BatchGetRecordResponse]:
+        """
+        Retrieves a batch of Records from a FeatureGroup.
+
+        Parameters:
+            identifiers: A list containing the name or Amazon Resource Name (ARN) of the FeatureGroup, the list of names of Features to be retrieved, and the corresponding RecordIdentifier values as strings.
+            expiration_time_response: Parameter to request ExpiresAt in response. If Enabled, BatchGetRecord will return the value of ExpiresAt, if it is not null. If Disabled and null, BatchGetRecord will return null.
+            session: Boto3 session.
+            region: Region name.
+
+        Returns:
+            BatchGetRecordResponse
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            AccessForbidden: You do not have permission to perform an action.
+            InternalFailure: An internal failure occurred. Try your request again. If the problem persists, contact Amazon Web Services customer support.
+            ServiceUnavailable: The service is currently unavailable.
+            ValidationError: There was an error validating your request.
+        """
+
+        operation_input_args = {
+            "Identifiers": identifiers,
+            "ExpirationTimeResponse": expiration_time_response,
+        }
+        # serialize the input request
+        operation_input_args = serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker-featurestore-runtime"
+        )
+
+        logger.debug(f"Calling batch_get_record API")
+        response = client.batch_get_record(**operation_input_args)
+        logger.debug(f"Response: {response}")
+
+        transformed_response = transform(response, "BatchGetRecordResponse")
+        return BatchGetRecordResponse(**transformed_response)
 
 
 class FeatureMetadata(Base):
@@ -27664,6 +27902,49 @@ class TrialComponent(Base):
 
         logger.debug(f"Calling disassociate_trial_component API")
         response = client.disassociate_trial_component(**operation_input_args)
+        logger.debug(f"Response: {response}")
+
+    @Base.add_validate_call
+    def batch_put_metrics(
+        self,
+        metric_data: List[RawMetricData],
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> None:
+        """
+        Used to ingest training metrics into SageMaker.
+
+        Parameters:
+            metric_data: A list of raw metric values to put.
+            session: Boto3 session.
+            region: Region name.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+        """
+
+        operation_input_args = {
+            "TrialComponentName": self.trial_component_name,
+            "MetricData": metric_data,
+        }
+        # serialize the input request
+        operation_input_args = serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker-metrics"
+        )
+
+        logger.debug(f"Calling batch_put_metrics API")
+        response = client.batch_put_metrics(**operation_input_args)
         logger.debug(f"Response: {response}")
 
 

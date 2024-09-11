@@ -1,4 +1,8 @@
 SHAPE_DAG = {
+    "AccessForbidden": {
+        "members": [{"name": "Message", "shape": "Message", "type": "string"}],
+        "type": "structure",
+    },
     "ActionSource": {
         "members": [
             {"name": "SourceUri", "shape": "SourceUri", "type": "string"},
@@ -791,6 +795,89 @@ SHAPE_DAG = {
             {"name": "ModelPackageStatus", "shape": "ModelPackageStatus", "type": "string"},
             {"name": "ModelApprovalStatus", "shape": "ModelApprovalStatus", "type": "string"},
         ],
+        "type": "structure",
+    },
+    "BatchGetRecordError": {
+        "members": [
+            {"name": "FeatureGroupName", "shape": "ValueAsString", "type": "string"},
+            {"name": "RecordIdentifierValueAsString", "shape": "ValueAsString", "type": "string"},
+            {"name": "ErrorCode", "shape": "ValueAsString", "type": "string"},
+            {"name": "ErrorMessage", "shape": "Message", "type": "string"},
+        ],
+        "type": "structure",
+    },
+    "BatchGetRecordErrors": {
+        "member_shape": "BatchGetRecordError",
+        "member_type": "structure",
+        "type": "list",
+    },
+    "BatchGetRecordIdentifier": {
+        "members": [
+            {"name": "FeatureGroupName", "shape": "FeatureGroupNameOrArn", "type": "string"},
+            {
+                "name": "RecordIdentifiersValueAsString",
+                "shape": "RecordIdentifiers",
+                "type": "list",
+            },
+            {"name": "FeatureNames", "shape": "FeatureNames", "type": "list"},
+        ],
+        "type": "structure",
+    },
+    "BatchGetRecordIdentifiers": {
+        "member_shape": "BatchGetRecordIdentifier",
+        "member_type": "structure",
+        "type": "list",
+    },
+    "BatchGetRecordRequest": {
+        "members": [
+            {"name": "Identifiers", "shape": "BatchGetRecordIdentifiers", "type": "list"},
+            {"name": "ExpirationTimeResponse", "shape": "ExpirationTimeResponse", "type": "string"},
+        ],
+        "type": "structure",
+    },
+    "BatchGetRecordResponse": {
+        "members": [
+            {"name": "Records", "shape": "BatchGetRecordResultDetails", "type": "list"},
+            {"name": "Errors", "shape": "BatchGetRecordErrors", "type": "list"},
+            {"name": "UnprocessedIdentifiers", "shape": "UnprocessedIdentifiers", "type": "list"},
+        ],
+        "type": "structure",
+    },
+    "BatchGetRecordResultDetail": {
+        "members": [
+            {"name": "FeatureGroupName", "shape": "ValueAsString", "type": "string"},
+            {"name": "RecordIdentifierValueAsString", "shape": "ValueAsString", "type": "string"},
+            {"name": "Record", "shape": "Record", "type": "list"},
+            {"name": "ExpiresAt", "shape": "ExpiresAt", "type": "string"},
+        ],
+        "type": "structure",
+    },
+    "BatchGetRecordResultDetails": {
+        "member_shape": "BatchGetRecordResultDetail",
+        "member_type": "structure",
+        "type": "list",
+    },
+    "BatchPutMetricsError": {
+        "members": [
+            {"name": "Code", "shape": "PutMetricsErrorCode", "type": "string"},
+            {"name": "MetricIndex", "shape": "Integer", "type": "integer"},
+        ],
+        "type": "structure",
+    },
+    "BatchPutMetricsErrorList": {
+        "member_shape": "BatchPutMetricsError",
+        "member_type": "structure",
+        "type": "list",
+    },
+    "BatchPutMetricsRequest": {
+        "members": [
+            {"name": "TrialComponentName", "shape": "ExperimentEntityName", "type": "string"},
+            {"name": "MetricData", "shape": "RawMetricDataList", "type": "list"},
+        ],
+        "type": "structure",
+    },
+    "BatchPutMetricsResponse": {
+        "members": [{"name": "Errors", "shape": "BatchPutMetricsErrorList", "type": "list"}],
         "type": "structure",
     },
     "BatchTransformInput": {
@@ -3424,6 +3511,16 @@ SHAPE_DAG = {
     },
     "DeleteProjectInput": {
         "members": [{"name": "ProjectName", "shape": "ProjectEntityName", "type": "string"}],
+        "type": "structure",
+    },
+    "DeleteRecordRequest": {
+        "members": [
+            {"name": "FeatureGroupName", "shape": "FeatureGroupNameOrArn", "type": "string"},
+            {"name": "RecordIdentifierValueAsString", "shape": "ValueAsString", "type": "string"},
+            {"name": "EventTime", "shape": "ValueAsString", "type": "string"},
+            {"name": "TargetStores", "shape": "TargetStores", "type": "list"},
+            {"name": "DeletionMode", "shape": "DeletionMode", "type": "string"},
+        ],
         "type": "structure",
     },
     "DeleteSpaceRequest": {
@@ -6184,6 +6281,7 @@ SHAPE_DAG = {
         ],
         "type": "structure",
     },
+    "FeatureNames": {"member_shape": "FeatureName", "member_type": "string", "type": "list"},
     "FeatureParameter": {
         "members": [
             {"name": "Key", "shape": "FeatureParameterKey", "type": "string"},
@@ -6205,6 +6303,14 @@ SHAPE_DAG = {
         "member_shape": "FeatureParameter",
         "member_type": "structure",
         "type": "list",
+    },
+    "FeatureValue": {
+        "members": [
+            {"name": "FeatureName", "shape": "FeatureName", "type": "string"},
+            {"name": "ValueAsString", "shape": "ValueAsString", "type": "string"},
+            {"name": "ValueAsStringList", "shape": "ValueAsStringList", "type": "list"},
+        ],
+        "type": "structure",
     },
     "FileSource": {
         "members": [
@@ -6348,6 +6454,22 @@ SHAPE_DAG = {
     },
     "GetModelPackageGroupPolicyOutput": {
         "members": [{"name": "ResourcePolicy", "shape": "PolicyString", "type": "string"}],
+        "type": "structure",
+    },
+    "GetRecordRequest": {
+        "members": [
+            {"name": "FeatureGroupName", "shape": "FeatureGroupNameOrArn", "type": "string"},
+            {"name": "RecordIdentifierValueAsString", "shape": "ValueAsString", "type": "string"},
+            {"name": "FeatureNames", "shape": "FeatureNames", "type": "list"},
+            {"name": "ExpirationTimeResponse", "shape": "ExpirationTimeResponse", "type": "string"},
+        ],
+        "type": "structure",
+    },
+    "GetRecordResponse": {
+        "members": [
+            {"name": "Record", "shape": "Record", "type": "list"},
+            {"name": "ExpiresAt", "shape": "ExpiresAt", "type": "string"},
+        ],
         "type": "structure",
     },
     "GetSagemakerServicecatalogPortfolioStatusInput": {"members": [], "type": "structure"},
@@ -11756,6 +11878,15 @@ SHAPE_DAG = {
         ],
         "type": "structure",
     },
+    "PutRecordRequest": {
+        "members": [
+            {"name": "FeatureGroupName", "shape": "FeatureGroupNameOrArn", "type": "string"},
+            {"name": "Record", "shape": "Record", "type": "list"},
+            {"name": "TargetStores", "shape": "TargetStores", "type": "list"},
+            {"name": "TtlDuration", "shape": "TtlDuration", "type": "structure"},
+        ],
+        "type": "structure",
+    },
     "QualityCheckStepMetadata": {
         "members": [
             {"name": "CheckType", "shape": "String256", "type": "string"},
@@ -11856,6 +11987,20 @@ SHAPE_DAG = {
             {"name": "RStudioPackageManagerUrl", "shape": "String", "type": "string"},
         ],
         "type": "structure",
+    },
+    "RawMetricData": {
+        "members": [
+            {"name": "MetricName", "shape": "MetricName", "type": "string"},
+            {"name": "Timestamp", "shape": "Timestamp", "type": "timestamp"},
+            {"name": "Step", "shape": "Step", "type": "integer"},
+            {"name": "Value", "shape": "Double", "type": "double"},
+        ],
+        "type": "structure",
+    },
+    "RawMetricDataList": {
+        "member_shape": "RawMetricData",
+        "member_type": "structure",
+        "type": "list",
     },
     "RealTimeInferenceConfig": {
         "members": [
@@ -12053,6 +12198,8 @@ SHAPE_DAG = {
         ],
         "type": "structure",
     },
+    "Record": {"member_shape": "FeatureValue", "member_type": "structure", "type": "list"},
+    "RecordIdentifiers": {"member_shape": "ValueAsString", "member_type": "string", "type": "list"},
     "RedshiftDatasetDefinition": {
         "members": [
             {"name": "ClusterId", "shape": "RedshiftClusterId", "type": "string"},
@@ -13020,6 +13167,7 @@ SHAPE_DAG = {
         ],
         "type": "structure",
     },
+    "TargetStores": {"member_shape": "TargetStore", "member_type": "string", "type": "list"},
     "TargetTrackingScalingPolicyConfiguration": {
         "members": [
             {"name": "MetricSpecification", "shape": "MetricSpecification", "type": "structure"},
@@ -13716,6 +13864,11 @@ SHAPE_DAG = {
             {"name": "ContentSha256", "shape": "TemplateContentSha256", "type": "string"},
         ],
         "type": "structure",
+    },
+    "UnprocessedIdentifiers": {
+        "member_shape": "BatchGetRecordIdentifier",
+        "member_type": "structure",
+        "type": "list",
     },
     "UpdateActionRequest": {
         "members": [
@@ -14489,6 +14642,7 @@ SHAPE_DAG = {
         "members": [{"name": "Message", "shape": "Message", "type": "string"}],
         "type": "structure",
     },
+    "ValueAsStringList": {"member_shape": "ValueAsString", "member_type": "string", "type": "list"},
     "VariantProperty": {
         "members": [
             {"name": "VariantPropertyType", "shape": "VariantPropertyType", "type": "string"}

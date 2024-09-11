@@ -61,7 +61,7 @@ class ResourcesTest(unittest.TestCase):
             "Others": 0,
         }
         resources = set()
-        client = SageMakerClient(session=session).client
+        client = SageMakerClient(session=session).get_client(service_name="sagemaker")
         for name, cls in inspect.getmembers(
             importlib.import_module("sagemaker_core.main.resources"), inspect.isclass
         ):

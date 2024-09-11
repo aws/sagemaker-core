@@ -97,7 +97,7 @@ class ResourcesExtractor:
             if resource_name not in self.resource_methods:
                 self.resource_methods[resource_name] = dict()
             for operation_name, operation in resource_operations.items():
-                self.actions_under_resource.update(operation_name)
+                self.actions_under_resource.add(operation_name)
                 method = Method(**operation)
                 method.get_docstring_title(self.operations[operation_name])
                 self.resource_methods[resource_name][operation["method_name"]] = method
