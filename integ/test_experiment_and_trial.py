@@ -71,3 +71,8 @@ class TestExperimentAndTrial(unittest.TestCase):
         assert len(trial_component.parameters) == 7
         assert len(trial_component.metrics) == 1
         assert trial_component.metrics[0].count == 5
+
+        trial_component.disassociate_trail(trial_name=trial.trial_name)
+        trial_component.delete()
+        trial.delete()
+        experiment.delete()

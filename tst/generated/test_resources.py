@@ -378,8 +378,8 @@ class ResourcesTest(unittest.TestCase):
         return converted
 
     def _convert_to_pascal(self, string: str):
-        if string == "auto_ml_job_name":
-            return "AutoMLJobName"
+        if string.startswith("auto_ml_"):
+            return "AutoML" + snake_to_pascal(string[7:])
         return snake_to_pascal(string)
 
     def _get_required_parameters_for_function(self, func) -> dict:
