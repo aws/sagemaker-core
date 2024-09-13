@@ -55,6 +55,7 @@ from sagemaker_core.tools.templates import (
     REFRESH_METHOD_TEMPLATE,
     RESOURCE_BASE_CLASS_TEMPLATE,
     RETURN_ITERATOR_TEMPLATE,
+    RETURN_WITHOUT_DESERIALIZATION_TEMPLATE,
     SERIALIZE_INPUT_TEMPLATE,
     STOP_METHOD_TEMPLATE,
     DELETE_METHOD_TEMPLATE,
@@ -1372,6 +1373,11 @@ class ResourcesCodeGen:
         elif method.return_type in BASIC_RETURN_TYPES:
             return_type = f"Optional[{method.return_type}]"
             deserialize_response = DESERIALIZE_RESPONSE_TO_BASIC_TYPE_TEMPLATE
+            return_string = f"Returns:\n" f"    {method.return_type}\n"
+        elif method.return_type == "object":
+            # if the return type is object, return the response without deserialization
+            return_type = f"Optional[{method.return_type}]"
+            deserialize_response = RETURN_WITHOUT_DESERIALIZATION_TEMPLATE
             return_string = f"Returns:\n" f"    {method.return_type}\n"
         else:
             if method.return_type == "cls":

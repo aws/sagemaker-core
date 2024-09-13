@@ -553,6 +553,9 @@ DESERIALIZE_RESPONSE_TEMPLATE = """
 DESERIALIZE_RESPONSE_TO_BASIC_TYPE_TEMPLATE = """
     return list(response.values())[0]"""
 
+RETURN_WITHOUT_DESERIALIZATION_TEMPLATE = """
+    return response"""
+
 RETURN_ITERATOR_TEMPLATE = """
     return ResourceIterator(
 {resource_iterator_args}

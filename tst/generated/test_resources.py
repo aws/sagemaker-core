@@ -295,6 +295,8 @@ class ResourcesTest(unittest.TestCase):
                                     operation_info["return_type"]
                                 ]
                             }
+                        elif operation_info["return_type"] == "object":
+                            return_value = {"return_value": None}
                         else:
                             return_cls = self.SHAPE_CLASSES_BY_SHAPE_NAME[
                                 operation_info["return_type"]

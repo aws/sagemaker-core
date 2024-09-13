@@ -163,7 +163,13 @@ class TestSageMakerCore(unittest.TestCase):
             content_type="text/csv",
             accept="application/csv",
         )
-        assert invoke_result.body.payload_part
+
+        def deserialise(response):
+            return [res_part for res_part in response["Body"]]
+
+        deserialised_response = deserialise(invoke_result)
+        assert len(deserialised_response) > 0
+        assert deserialised_response[0]["PayloadPart"]
 
     def test_intelligent_defaults(self):
         os.environ["SAGEMAKER_CORE_ADMIN_CONFIG_OVERRIDE"] = (

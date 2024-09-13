@@ -8389,7 +8389,7 @@ class Endpoint(Base):
         inference_component_name: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[InvokeEndpointWithResponseStreamOutput]:
+    ) -> Optional[object]:
         """
         Invokes a model at the specified endpoint to return the inference response as a stream.
 
@@ -8406,7 +8406,7 @@ class Endpoint(Base):
             region: Region name.
 
         Returns:
-            InvokeEndpointWithResponseStreamOutput
+            object
 
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
@@ -8449,8 +8449,7 @@ class Endpoint(Base):
         response = client.invoke_endpoint_with_response_stream(**operation_input_args)
         logger.debug(f"Response: {response}")
 
-        transformed_response = transform(response, "InvokeEndpointWithResponseStreamOutput")
-        return InvokeEndpointWithResponseStreamOutput(**transformed_response)
+        return response
 
 
 class EndpointConfig(Base):
