@@ -8237,6 +8237,7 @@ class Endpoint(Base):
         inference_id: Optional[str] = Unassigned(),
         enable_explanations: Optional[str] = Unassigned(),
         inference_component_name: Optional[str] = Unassigned(),
+        session_id: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[InvokeEndpointOutput]:
@@ -8254,6 +8255,7 @@ class Endpoint(Base):
             inference_id: If you provide a value, it is added to the captured data when you enable data capture on the endpoint. For information about data capture, see Capture Data.
             enable_explanations: An optional JMESPath expression used to override the EnableExplanations parameter of the ClarifyExplainerConfig API. See the EnableExplanations section in the developer guide for more information.
             inference_component_name: If the endpoint hosts one or more inference components, this parameter specifies the name of inference component to invoke.
+            session_id: Creates a stateful session or identifies an existing one. You can do one of the following:   Create a stateful session by specifying the value NEW_SESSION.   Send your request to an existing stateful session by specifying the ID of that session.   With a stateful session, you can send multiple requests to a stateful model. When you create a session with a stateful model, the model must create the session ID and set the expiration time. The model must also provide that information in the response to your request. You can get the ID and timestamp from the NewSessionId response parameter. For any subsequent request where you specify that session ID, SageMaker routes the request to the same instance that supports the session.
             session: Boto3 session.
             region: Region name.
 
@@ -8290,6 +8292,7 @@ class Endpoint(Base):
             "InferenceId": inference_id,
             "EnableExplanations": enable_explanations,
             "InferenceComponentName": inference_component_name,
+            "SessionId": session_id,
         }
         # serialize the input request
         operation_input_args = serialize(operation_input_args)
@@ -8387,6 +8390,7 @@ class Endpoint(Base):
         target_container_hostname: Optional[str] = Unassigned(),
         inference_id: Optional[str] = Unassigned(),
         inference_component_name: Optional[str] = Unassigned(),
+        session_id: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[InvokeEndpointWithResponseStreamOutput]:
@@ -8402,6 +8406,7 @@ class Endpoint(Base):
             target_container_hostname: If the endpoint hosts multiple containers and is configured to use direct invocation, this parameter specifies the host name of the container to invoke.
             inference_id: An identifier that you assign to your request.
             inference_component_name: If the endpoint hosts one or more inference components, this parameter specifies the name of inference component to invoke for a streaming response.
+            session_id: The ID of a stateful session to handle your request. You can't create a stateful session by using the InvokeEndpointWithResponseStream action. Instead, you can create one by using the  InvokeEndpoint  action. In your request, you specify NEW_SESSION for the SessionId request parameter. The response to that request provides the session ID for the NewSessionId response parameter.
             session: Boto3 session.
             region: Region name.
 
@@ -8436,6 +8441,7 @@ class Endpoint(Base):
             "TargetContainerHostname": target_container_hostname,
             "InferenceId": inference_id,
             "InferenceComponentName": inference_component_name,
+            "SessionId": session_id,
         }
         # serialize the input request
         operation_input_args = serialize(operation_input_args)
