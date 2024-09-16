@@ -683,36 +683,42 @@ def wait_for_status(
         expected_output = '''
 
 @Base.add_validate_call
-def invoke_with_response_stream(
+def invoke(
     self,
     body: Any,
     content_type: Optional[str] = Unassigned(),
     accept: Optional[str] = Unassigned(),
     custom_attributes: Optional[str] = Unassigned(),
+    target_model: Optional[str] = Unassigned(),
     target_variant: Optional[str] = Unassigned(),
     target_container_hostname: Optional[str] = Unassigned(),
     inference_id: Optional[str] = Unassigned(),
+    enable_explanations: Optional[str] = Unassigned(),
     inference_component_name: Optional[str] = Unassigned(),
+    session_id: Optional[str] = Unassigned(),
     session: Optional[Session] = None,
     region: Optional[str] = None,
-) -> Optional[InvokeEndpointWithResponseStreamOutput]:
+) -> Optional[InvokeEndpointOutput]:
     """
-    Invokes a model at the specified endpoint to return the inference response as a stream.
+    After you deploy a model into production using Amazon SageMaker hosting services, your client applications use this API to get inferences from the model hosted at the specified endpoint.
     
     Parameters:
         body: Provides input data, in the format specified in the ContentType request header. Amazon SageMaker passes all of the data in the body to the model.  For information about the format of the request body, see Common Data Formats-Inference.
         content_type: The MIME type of the input data in the request body.
         accept: The desired MIME type of the inference response from the model container.
         custom_attributes: Provides additional information about a request for an inference submitted to a model hosted at an Amazon SageMaker endpoint. The information is an opaque value that is forwarded verbatim. You could use this value, for example, to provide an ID that you can use to track a request or to provide other metadata that a service endpoint was programmed to process. The value must consist of no more than 1024 visible US-ASCII characters as specified in Section 3.3.6. Field Value Components of the Hypertext Transfer Protocol (HTTP/1.1).  The code in your model is responsible for setting or updating any custom attributes in the response. If your code does not set this value in the response, an empty value is returned. For example, if a custom attribute represents the trace ID, your model can prepend the custom attribute with Trace ID: in your post-processing function.  This feature is currently supported in the Amazon Web Services SDKs but not in the Amazon SageMaker Python SDK. 
+        target_model: The model to request for inference when invoking a multi-model endpoint.
         target_variant: Specify the production variant to send the inference request to when invoking an endpoint that is running two or more variants. Note that this parameter overrides the default behavior for the endpoint, which is to distribute the invocation traffic based on the variant weights. For information about how to use variant targeting to perform a/b testing, see Test models in production 
         target_container_hostname: If the endpoint hosts multiple containers and is configured to use direct invocation, this parameter specifies the host name of the container to invoke.
-        inference_id: An identifier that you assign to your request.
-        inference_component_name: If the endpoint hosts one or more inference components, this parameter specifies the name of inference component to invoke for a streaming response.
+        inference_id: If you provide a value, it is added to the captured data when you enable data capture on the endpoint. For information about data capture, see Capture Data.
+        enable_explanations: An optional JMESPath expression used to override the EnableExplanations parameter of the ClarifyExplainerConfig API. See the EnableExplanations section in the developer guide for more information. 
+        inference_component_name: If the endpoint hosts one or more inference components, this parameter specifies the name of inference component to invoke.
+        session_id: Creates a stateful session or identifies an existing one. You can do one of the following:   Create a stateful session by specifying the value NEW_SESSION.   Send your request to an existing stateful session by specifying the ID of that session.   With a stateful session, you can send multiple requests to a stateful model. When you create a session with a stateful model, the model must create the session ID and set the expiration time. The model must also provide that information in the response to your request. You can get the ID and timestamp from the NewSessionId response parameter. For any subsequent request where you specify that session ID, SageMaker routes the request to the same instance that supports the session.
         session: Boto3 session.
         region: Region name.
     
     Returns:
-        InvokeEndpointWithResponseStreamOutput
+        InvokeEndpointOutput
     
     Raises:
         botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
@@ -724,10 +730,10 @@ def invoke_with_response_stream(
                 error_message = e.response['Error']['Message']
                 error_code = e.response['Error']['Code']
             ```
+        InternalDependencyException: Your request caused an exception with an internal dependency. Contact customer support.
         InternalFailure: An internal failure occurred. Try your request again. If the problem persists, contact Amazon Web Services customer support.
-        InternalStreamFailure: The stream processing failed because of an unknown error, exception or failure. Try your request again.
         ModelError: Model (owned by the customer in the container) returned 4xx or 5xx error code.
-        ModelStreamError: An error occurred while streaming the response body. This error can have the following error codes:  ModelInvocationTimeExceeded  The model failed to finish sending the response within the timeout period allowed by Amazon SageMaker.  StreamBroken  The Transmission Control Protocol (TCP) connection between the client and the model was reset or closed.
+        ModelNotReadyException: Either a serverless endpoint variant's resources are still being provisioned, or a multi-model endpoint is still downloading or loading the target model. Wait and try your request again.
         ServiceUnavailable: The service is currently unavailable.
         ValidationError: There was an error validating your request.
     """
@@ -739,10 +745,13 @@ def invoke_with_response_stream(
         'ContentType': content_type,
         'Accept': accept,
         'CustomAttributes': custom_attributes,
+        'TargetModel': target_model,
         'TargetVariant': target_variant,
         'TargetContainerHostname': target_container_hostname,
         'InferenceId': inference_id,
+        'EnableExplanations': enable_explanations,
         'InferenceComponentName': inference_component_name,
+        'SessionId': session_id,
     }
     # serialize the input request
     operation_input_args = serialize(operation_input_args)
@@ -750,26 +759,24 @@ def invoke_with_response_stream(
 
     client = Base.get_sagemaker_client(session=session, region_name=region, service_name='sagemaker-runtime')
 
-    logger.debug(f"Calling invoke_endpoint_with_response_stream API")
-    response = client.invoke_endpoint_with_response_stream(**operation_input_args)
+    logger.debug(f"Calling invoke_endpoint API")
+    response = client.invoke_endpoint(**operation_input_args)
     logger.debug(f"Response: {response}")
 
-    transformed_response = transform(response, 'InvokeEndpointWithResponseStreamOutput')
-    return InvokeEndpointWithResponseStreamOutput(**transformed_response)
+    transformed_response = transform(response, 'InvokeEndpointOutput')
+    return InvokeEndpointOutput(**transformed_response)
 '''
         method = Method(
             **{
-                "operation_name": "InvokeEndpointWithResponseStream",
+                "operation_name": "InvokeEndpoint",
                 "resource_name": "Endpoint",
-                "method_name": "invoke_with_response_stream",
-                "return_type": "InvokeEndpointWithResponseStreamOutput",
+                "method_name": "invoke",
+                "return_type": "InvokeEndpointOutput",
                 "method_type": "object",
                 "service_name": "sagemaker-runtime",
             }
         )
-        method.get_docstring_title(
-            self.resource_generator.operations["InvokeEndpointWithResponseStream"]
-        )
+        method.get_docstring_title(self.resource_generator.operations["InvokeEndpoint"])
         assert self.resource_generator.generate_method(method, ["endpoint_name"]) == expected_output
 
     def test_generate_invoke_async_method(self):
@@ -871,6 +878,7 @@ def invoke_with_response_stream(
     target_container_hostname: Optional[str] = Unassigned(),
     inference_id: Optional[str] = Unassigned(),
     inference_component_name: Optional[str] = Unassigned(),
+    session_id: Optional[str] = Unassigned(),
     session: Optional[Session] = None,
     region: Optional[str] = None,
 ) -> Optional[InvokeEndpointWithResponseStreamOutput]:
@@ -886,6 +894,7 @@ def invoke_with_response_stream(
         target_container_hostname: If the endpoint hosts multiple containers and is configured to use direct invocation, this parameter specifies the host name of the container to invoke.
         inference_id: An identifier that you assign to your request.
         inference_component_name: If the endpoint hosts one or more inference components, this parameter specifies the name of inference component to invoke for a streaming response.
+        session_id: The ID of a stateful session to handle your request. You can't create a stateful session by using the InvokeEndpointWithResponseStream action. Instead, you can create one by using the  InvokeEndpoint  action. In your request, you specify NEW_SESSION for the SessionId request parameter. The response to that request provides the session ID for the NewSessionId response parameter.
         session: Boto3 session.
         region: Region name.
     
@@ -921,6 +930,7 @@ def invoke_with_response_stream(
         'TargetContainerHostname': target_container_hostname,
         'InferenceId': inference_id,
         'InferenceComponentName': inference_component_name,
+        'SessionId': session_id,
     }
     # serialize the input request
     operation_input_args = serialize(operation_input_args)
