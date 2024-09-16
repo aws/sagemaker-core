@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.0.5 (2024-09-16)
+
+ * Daily Sync with Botocore v1.35.19 on 2024/09/16 (#200)
+ * Issue template (#196)
+ * Collab check (#195)
+ * Support APIs from sagemaker-featurestore-runtime and sagemaker-metrics (#181)
+
 ## v1.0.4 (2024-09-10)
 
  * Daily Sync with Botocore v1.35.15 on 2024/09/10 (#182)
