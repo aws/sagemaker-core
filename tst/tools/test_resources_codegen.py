@@ -776,7 +776,6 @@ def invoke(
                 "service_name": "sagemaker-runtime",
             }
         )
-        
         method.get_docstring_title(self.resource_generator.operations["InvokeEndpoint"])
         assert self.resource_generator.generate_method(method, ["endpoint_name"]) == expected_output
 
