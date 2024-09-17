@@ -531,7 +531,61 @@ def stop(self) -> None:
 def wait(
     self,
     poll: int = 5,
-    timeout: Optional[int] = None
+    timeout: Optional[int] = None,
+    
+) -> None:
+    """
+    Wait for a CompilationJob resource.
+    
+    Parameters:
+        poll: The number of seconds to wait between each poll.
+        timeout: The maximum number of seconds to wait before timing out.
+        
+    Raises:
+        TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
+        FailedStatusError:   If the resource reaches a failed state.
+        WaiterError: Raised when an error occurs while waiting.
+    
+    """
+    terminal_states = ['COMPLETED', 'FAILED', 'STOPPED']
+    start_time = time.time()
+
+    progress = Progress(SpinnerColumn("bouncingBar"),
+        TextColumn("{task.description}"),
+        TimeElapsedColumn(),
+    )
+    progress.add_task("Waiting for CompilationJob...")
+    status = Status("Current status:")
+    
+
+    with Live(Panel(Group(progress, status), title="Wait Log Panel", border_style=Style(color=Color.BLUE.value))):
+        while True:
+            self.refresh()
+            current_status = self.compilation_job_status
+            status.update(f"Current status: [bold]{current_status}")
+            
+            if current_status in terminal_states:
+                logger.info(f"Final Resource Status: [bold]{current_status}")
+                
+                if "failed" in current_status.lower():
+                    raise FailedStatusError(resource_type="CompilationJob", status=current_status, reason=self.failure_reason)
+
+                return
+
+            if timeout is not None and time.time() - start_time >= timeout:
+                raise TimeoutExceededError(resouce_type="CompilationJob", status=current_status)
+            time.sleep(poll)
+'''
+        assert self.resource_generator.generate_wait_method("CompilationJob") == expected_output
+
+    def test_generate_wait_method_with_logs(self):
+        expected_output = '''
+@Base.add_validate_call
+def wait(
+    self,
+    poll: int = 5,
+    timeout: Optional[int] = None,
+    logs: Optional[bool] = False,
 ) -> None:
     """
     Wait for a TrainingJob resource.
@@ -539,7 +593,8 @@ def wait(
     Parameters:
         poll: The number of seconds to wait between each poll.
         timeout: The maximum number of seconds to wait before timing out.
-    
+        logs: Whether to print logs while waiting.
+
     Raises:
         TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
         FailedStatusError:   If the resource reaches a failed state.
@@ -555,12 +610,32 @@ def wait(
     )
     progress.add_task("Waiting for TrainingJob...")
     status = Status("Current status:")
+        
+    instance_count = (
+                    sum(instance_group.instance_count for instance_group in self.resource_config.instance_groups)
+                    if self.resource_config.instance_groups and not isinstance(self.resource_config.instance_groups, Unassigned)
+                    else self.resource_config.instance_count
+                )
+                
+    if logs:
+        from sagemaker_core.main.logs import MultiLogStreamHandler
+        multi_stream_logger = MultiLogStreamHandler(
+            log_group_name=f"/aws/sagemaker/TrainingJobs",
+            log_stream_name_prefix=self.get_name(),
+            expected_stream_count=instance_count
+        )
+
 
     with Live(Panel(Group(progress, status), title="Wait Log Panel", border_style=Style(color=Color.BLUE.value))):
         while True:
             self.refresh()
             current_status = self.training_job_status
             status.update(f"Current status: [bold]{current_status}")
+                        
+            if logs and multi_stream_logger.ready():
+                stream_log_events = multi_stream_logger.get_latest_log_events()
+                for stream_id, event in stream_log_events:
+                    logger.info(f"{stream_id}:\\n{event['message']}")
 
             if current_status in terminal_states:
                 logger.info(f"Final Resource Status: [bold]{current_status}")

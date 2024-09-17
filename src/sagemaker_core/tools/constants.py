@@ -20,6 +20,8 @@ OBJECT_METHODS = set(
 
 TERMINAL_STATES = set(["Completed", "Stopped", "Deleted", "Failed", "Succeeded", "Cancelled"])
 
+JOBS_WITH_LOGS = set(["TrainingJob", "ProcessingJob", "TransformJob"])
+
 CONFIGURABLE_ATTRIBUTE_SUBSTRINGS = [
     "kms",
     "s3",

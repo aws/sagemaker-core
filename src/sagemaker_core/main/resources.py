@@ -2652,7 +2652,11 @@ class AutoMLJob(Base):
         logger.info(f"Stopping {self.__class__.__name__} - {self.get_name()}")
 
     @Base.add_validate_call
-    def wait(self, poll: int = 5, timeout: Optional[int] = None) -> None:
+    def wait(
+        self,
+        poll: int = 5,
+        timeout: Optional[int] = None,
+    ) -> None:
         """
         Wait for a AutoMLJob resource.
 
@@ -3130,7 +3134,11 @@ class AutoMLJobV2(Base):
         return self
 
     @Base.add_validate_call
-    def wait(self, poll: int = 5, timeout: Optional[int] = None) -> None:
+    def wait(
+        self,
+        poll: int = 5,
+        timeout: Optional[int] = None,
+    ) -> None:
         """
         Wait for a AutoMLJobV2 resource.
 
@@ -4493,7 +4501,11 @@ class CompilationJob(Base):
         logger.info(f"Stopping {self.__class__.__name__} - {self.get_name()}")
 
     @Base.add_validate_call
-    def wait(self, poll: int = 5, timeout: Optional[int] = None) -> None:
+    def wait(
+        self,
+        poll: int = 5,
+        timeout: Optional[int] = None,
+    ) -> None:
         """
         Wait for a CompilationJob resource.
 
@@ -7523,7 +7535,11 @@ class EdgePackagingJob(Base):
         logger.info(f"Stopping {self.__class__.__name__} - {self.get_name()}")
 
     @Base.add_validate_call
-    def wait(self, poll: int = 5, timeout: Optional[int] = None) -> None:
+    def wait(
+        self,
+        poll: int = 5,
+        timeout: Optional[int] = None,
+    ) -> None:
         """
         Wait for a EdgePackagingJob resource.
 
@@ -12334,7 +12350,11 @@ class HyperParameterTuningJob(Base):
         logger.info(f"Stopping {self.__class__.__name__} - {self.get_name()}")
 
     @Base.add_validate_call
-    def wait(self, poll: int = 5, timeout: Optional[int] = None) -> None:
+    def wait(
+        self,
+        poll: int = 5,
+        timeout: Optional[int] = None,
+    ) -> None:
         """
         Wait for a HyperParameterTuningJob resource.
 
@@ -14967,7 +14987,11 @@ class InferenceRecommendationsJob(Base):
         logger.info(f"Stopping {self.__class__.__name__} - {self.get_name()}")
 
     @Base.add_validate_call
-    def wait(self, poll: int = 5, timeout: Optional[int] = None) -> None:
+    def wait(
+        self,
+        poll: int = 5,
+        timeout: Optional[int] = None,
+    ) -> None:
         """
         Wait for a InferenceRecommendationsJob resource.
 
@@ -15529,7 +15553,11 @@ class LabelingJob(Base):
         logger.info(f"Stopping {self.__class__.__name__} - {self.get_name()}")
 
     @Base.add_validate_call
-    def wait(self, poll: int = 5, timeout: Optional[int] = None) -> None:
+    def wait(
+        self,
+        poll: int = 5,
+        timeout: Optional[int] = None,
+    ) -> None:
         """
         Wait for a LabelingJob resource.
 
@@ -17939,7 +17967,11 @@ class ModelCardExportJob(Base):
         return self
 
     @Base.add_validate_call
-    def wait(self, poll: int = 5, timeout: Optional[int] = None) -> None:
+    def wait(
+        self,
+        poll: int = 5,
+        timeout: Optional[int] = None,
+    ) -> None:
         """
         Wait for a ModelCardExportJob resource.
 
@@ -22190,7 +22222,11 @@ class OptimizationJob(Base):
         logger.info(f"Stopping {self.__class__.__name__} - {self.get_name()}")
 
     @Base.add_validate_call
-    def wait(self, poll: int = 5, timeout: Optional[int] = None) -> None:
+    def wait(
+        self,
+        poll: int = 5,
+        timeout: Optional[int] = None,
+    ) -> None:
         """
         Wait for a OptimizationJob resource.
 
@@ -24066,13 +24102,19 @@ class ProcessingJob(Base):
         logger.info(f"Stopping {self.__class__.__name__} - {self.get_name()}")
 
     @Base.add_validate_call
-    def wait(self, poll: int = 5, timeout: Optional[int] = None) -> None:
+    def wait(
+        self,
+        poll: int = 5,
+        timeout: Optional[int] = None,
+        logs: Optional[bool] = False,
+    ) -> None:
         """
         Wait for a ProcessingJob resource.
 
         Parameters:
             poll: The number of seconds to wait between each poll.
             timeout: The maximum number of seconds to wait before timing out.
+            logs: Whether to print logs while waiting.
 
         Raises:
             TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
@@ -24091,6 +24133,16 @@ class ProcessingJob(Base):
         progress.add_task("Waiting for ProcessingJob...")
         status = Status("Current status:")
 
+        instance_count = self.processing_resources.cluster_config.instance_count
+        if logs:
+            from sagemaker_core.main.logs import MultiLogStreamHandler
+
+            multi_stream_logger = MultiLogStreamHandler(
+                log_group_name=f"/aws/sagemaker/ProcessingJobs",
+                log_stream_name_prefix=self.get_name(),
+                expected_stream_count=instance_count,
+            )
+
         with Live(
             Panel(
                 Group(progress, status),
@@ -24102,6 +24154,11 @@ class ProcessingJob(Base):
                 self.refresh()
                 current_status = self.processing_job_status
                 status.update(f"Current status: [bold]{current_status}")
+
+                if logs and multi_stream_logger.ready():
+                    stream_log_events = multi_stream_logger.get_latest_log_events()
+                    for stream_id, event in stream_log_events:
+                        logger.info(f"{stream_id}:\n{event['message']}")
 
                 if current_status in terminal_states:
                     logger.info(f"Final Resource Status: [bold]{current_status}")
@@ -26426,13 +26483,19 @@ class TrainingJob(Base):
         logger.info(f"Stopping {self.__class__.__name__} - {self.get_name()}")
 
     @Base.add_validate_call
-    def wait(self, poll: int = 5, timeout: Optional[int] = None) -> None:
+    def wait(
+        self,
+        poll: int = 5,
+        timeout: Optional[int] = None,
+        logs: Optional[bool] = False,
+    ) -> None:
         """
         Wait for a TrainingJob resource.
 
         Parameters:
             poll: The number of seconds to wait between each poll.
             timeout: The maximum number of seconds to wait before timing out.
+            logs: Whether to print logs while waiting.
 
         Raises:
             TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
@@ -26451,6 +26514,25 @@ class TrainingJob(Base):
         progress.add_task("Waiting for TrainingJob...")
         status = Status("Current status:")
 
+        instance_count = (
+            sum(
+                instance_group.instance_count
+                for instance_group in self.resource_config.instance_groups
+            )
+            if self.resource_config.instance_groups
+            and not isinstance(self.resource_config.instance_groups, Unassigned)
+            else self.resource_config.instance_count
+        )
+
+        if logs:
+            from sagemaker_core.main.logs import MultiLogStreamHandler
+
+            multi_stream_logger = MultiLogStreamHandler(
+                log_group_name=f"/aws/sagemaker/TrainingJobs",
+                log_stream_name_prefix=self.get_name(),
+                expected_stream_count=instance_count,
+            )
+
         with Live(
             Panel(
                 Group(progress, status),
@@ -26462,6 +26544,11 @@ class TrainingJob(Base):
                 self.refresh()
                 current_status = self.training_job_status
                 status.update(f"Current status: [bold]{current_status}")
+
+                if logs and multi_stream_logger.ready():
+                    stream_log_events = multi_stream_logger.get_latest_log_events()
+                    for stream_id, event in stream_log_events:
+                        logger.info(f"{stream_id}:\n{event['message']}")
 
                 if current_status in terminal_states:
                     logger.info(f"Final Resource Status: [bold]{current_status}")
@@ -26877,13 +26964,19 @@ class TransformJob(Base):
         logger.info(f"Stopping {self.__class__.__name__} - {self.get_name()}")
 
     @Base.add_validate_call
-    def wait(self, poll: int = 5, timeout: Optional[int] = None) -> None:
+    def wait(
+        self,
+        poll: int = 5,
+        timeout: Optional[int] = None,
+        logs: Optional[bool] = False,
+    ) -> None:
         """
         Wait for a TransformJob resource.
 
         Parameters:
             poll: The number of seconds to wait between each poll.
             timeout: The maximum number of seconds to wait before timing out.
+            logs: Whether to print logs while waiting.
 
         Raises:
             TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
@@ -26902,6 +26995,16 @@ class TransformJob(Base):
         progress.add_task("Waiting for TransformJob...")
         status = Status("Current status:")
 
+        instance_count = self.transform_resources.instance_count
+        if logs:
+            from sagemaker_core.main.logs import MultiLogStreamHandler
+
+            multi_stream_logger = MultiLogStreamHandler(
+                log_group_name=f"/aws/sagemaker/TransformJobs",
+                log_stream_name_prefix=self.get_name(),
+                expected_stream_count=instance_count,
+            )
+
         with Live(
             Panel(
                 Group(progress, status),
@@ -26913,6 +27016,11 @@ class TransformJob(Base):
                 self.refresh()
                 current_status = self.transform_job_status
                 status.update(f"Current status: [bold]{current_status}")
+
+                if logs and multi_stream_logger.ready():
+                    stream_log_events = multi_stream_logger.get_latest_log_events()
+                    for stream_id, event in stream_log_events:
+                        logger.info(f"{stream_id}:\n{event['message']}")
 
                 if current_status in terminal_states:
                     logger.info(f"Final Resource Status: [bold]{current_status}")
