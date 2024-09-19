@@ -238,3 +238,4 @@ def test_deserializer_for_map_type():
 
 if __name__ == "__main__":
     unittest.main()
+
