@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.0.6 (2024-09-20)
+
+ * Daily Sync with Botocore v1.35.23 on 2024/09/20 (#205)
+ * Update all PR Checks to have collab check (#202)
+
 ## v1.0.5 (2024-09-16)
 
  * Daily Sync with Botocore v1.35.19 on 2024/09/16 (#200)
