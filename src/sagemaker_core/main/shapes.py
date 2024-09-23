@@ -406,6 +406,18 @@ class MetricQueryResult(Base):
     message: Optional[str] = Unassigned()
 
 
+class BatchGetMetricsResponse(Base):
+    """
+    BatchGetMetricsResponse
+
+    Attributes
+    ----------------------
+    metric_query_results: The results of a query to retrieve training metrics from SageMaker.
+    """
+
+    metric_query_results: Optional[List[MetricQueryResult]] = Unassigned()
+
+
 class BatchPutMetricsError(Base):
     """
     BatchPutMetricsError

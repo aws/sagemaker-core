@@ -171,6 +171,16 @@
             "service_name": "sagemaker-metrics"
         }
     },
+    "Metrics": {
+        "BatchGetMetrics": {
+            "operation_name": "BatchGetMetrics",
+            "resource_name": "Metrics",
+            "method_name": "batch_get_metrics",
+            "return_type": "BatchGetMetricsResponse",
+            "method_type": "object",
+            "service_name": "sagemaker-metrics"
+        }
+    },
     "HubContent": {
         "ListHubContentVersions": {
             "operation_name": "ListHubContentVersions",
