@@ -469,6 +469,7 @@ SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA = {
                                                 "s3_data_source": {
                                                     "s3_uri": {"type": "string"},
                                                     "s3_data_type": {"type": "string"},
+                                                    "manifest_s3_uri": {"type": "string"},
                                                 }
                                             }
                                         },
