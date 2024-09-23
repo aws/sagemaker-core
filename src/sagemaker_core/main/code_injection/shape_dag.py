@@ -797,6 +797,16 @@ SHAPE_DAG = {
         ],
         "type": "structure",
     },
+    "BatchGetMetricsRequest": {
+        "members": [{"name": "MetricQueries", "shape": "MetricQueryList", "type": "list"}],
+        "type": "structure",
+    },
+    "BatchGetMetricsResponse": {
+        "members": [
+            {"name": "MetricQueryResults", "shape": "MetricQueryResultList", "type": "list"}
+        ],
+        "type": "structure",
+    },
     "BatchGetRecordError": {
         "members": [
             {"name": "FeatureGroupName", "shape": "ValueAsString", "type": "string"},
@@ -9659,6 +9669,33 @@ SHAPE_DAG = {
         "member_type": "structure",
         "type": "list",
     },
+    "MetricQuery": {
+        "members": [
+            {"name": "MetricName", "shape": "MetricName", "type": "string"},
+            {"name": "ResourceArn", "shape": "SageMakerResourceArn", "type": "string"},
+            {"name": "MetricStat", "shape": "MetricStatistic", "type": "string"},
+            {"name": "Period", "shape": "Period", "type": "string"},
+            {"name": "XAxisType", "shape": "XAxisType", "type": "string"},
+            {"name": "Start", "shape": "Long", "type": "long"},
+            {"name": "End", "shape": "Long", "type": "long"},
+        ],
+        "type": "structure",
+    },
+    "MetricQueryList": {"member_shape": "MetricQuery", "member_type": "structure", "type": "list"},
+    "MetricQueryResult": {
+        "members": [
+            {"name": "Status", "shape": "MetricQueryResultStatus", "type": "string"},
+            {"name": "Message", "shape": "Message", "type": "string"},
+            {"name": "XAxisValues", "shape": "XAxisValues", "type": "list"},
+            {"name": "MetricValues", "shape": "MetricValues", "type": "list"},
+        ],
+        "type": "structure",
+    },
+    "MetricQueryResultList": {
+        "member_shape": "MetricQueryResult",
+        "member_type": "structure",
+        "type": "list",
+    },
     "MetricSpecification": {
         "members": [
             {"name": "Predefined", "shape": "PredefinedMetricSpecification", "type": "structure"},
@@ -9666,6 +9703,7 @@ SHAPE_DAG = {
         ],
         "type": "structure",
     },
+    "MetricValues": {"member_shape": "Double", "member_type": "double", "type": "list"},
     "MetricsSource": {
         "members": [
             {"name": "ContentType", "shape": "ContentType", "type": "string"},
@@ -12459,6 +12497,7 @@ SHAPE_DAG = {
             {"name": "CompressionType", "shape": "ModelCompressionType", "type": "string"},
             {"name": "ModelAccessConfig", "shape": "ModelAccessConfig", "type": "structure"},
             {"name": "HubAccessConfig", "shape": "InferenceHubAccessConfig", "type": "structure"},
+            {"name": "ManifestS3Uri", "shape": "S3ModelUri", "type": "string"},
         ],
         "type": "structure",
     },
@@ -14796,4 +14835,5 @@ SHAPE_DAG = {
         "type": "structure",
     },
     "Workteams": {"member_shape": "Workteam", "member_type": "structure", "type": "list"},
+    "XAxisValues": {"member_shape": "Long", "member_type": "long", "type": "list"},
 }
