@@ -169,15 +169,13 @@
             "return_type": "None",
             "method_type": "object",
             "service_name": "sagemaker-metrics"
-        }
-    },
-    "Metrics": {
+        },
         "BatchGetMetrics": {
             "operation_name": "BatchGetMetrics",
-            "resource_name": "Metrics",
+            "resource_name": "TrialComponent",
             "method_name": "batch_get_metrics",
             "return_type": "BatchGetMetricsResponse",
-            "method_type": "object",
+            "method_type": "class",
             "service_name": "sagemaker-metrics"
         }
     },

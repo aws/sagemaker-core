@@ -15898,61 +15898,6 @@ class LineageGroup(Base):
         return GetLineageGroupPolicyResponse(**transformed_response)
 
 
-class Metrics(Base):
-    """
-    Class representing resource Metrics
-
-    """
-
-    @Base.add_validate_call
-    def batch_get_metrics(
-        self,
-        metric_queries: List[MetricQuery],
-        session: Optional[Session] = None,
-        region: Optional[str] = None,
-    ) -> Optional[BatchGetMetricsResponse]:
-        """
-        Used to retrieve training metrics from SageMaker.
-
-        Parameters:
-            metric_queries: Queries made to retrieve training metrics from SageMaker.
-            session: Boto3 session.
-            region: Region name.
-
-        Returns:
-            BatchGetMetricsResponse
-
-        Raises:
-            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
-                The error message and error code can be parsed from the exception as follows:
-                ```
-                try:
-                    # AWS service call here
-                except botocore.exceptions.ClientError as e:
-                    error_message = e.response['Error']['Message']
-                    error_code = e.response['Error']['Code']
-                ```
-        """
-
-        operation_input_args = {
-            "MetricQueries": metric_queries,
-        }
-        # serialize the input request
-        operation_input_args = serialize(operation_input_args)
-        logger.debug(f"Serialized input request: {operation_input_args}")
-
-        client = Base.get_sagemaker_client(
-            session=session, region_name=region, service_name="sagemaker-metrics"
-        )
-
-        logger.debug(f"Calling batch_get_metrics API")
-        response = client.batch_get_metrics(**operation_input_args)
-        logger.debug(f"Response: {response}")
-
-        transformed_response = transform(response, "BatchGetMetricsResponse")
-        return BatchGetMetricsResponse(**transformed_response)
-
-
 class MlflowTrackingServer(Base):
     """
     Class representing resource MlflowTrackingServer
@@ -28008,6 +27953,55 @@ class TrialComponent(Base):
         logger.debug(f"Calling batch_put_metrics API")
         response = client.batch_put_metrics(**operation_input_args)
         logger.debug(f"Response: {response}")
+
+    @classmethod
+    @Base.add_validate_call
+    def batch_get_metrics(
+        cls,
+        metric_queries: List[MetricQuery],
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional[BatchGetMetricsResponse]:
+        """
+        Used to retrieve training metrics from SageMaker.
+
+        Parameters:
+            metric_queries: Queries made to retrieve training metrics from SageMaker.
+            session: Boto3 session.
+            region: Region name.
+
+        Returns:
+            BatchGetMetricsResponse
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+        """
+
+        operation_input_args = {
+            "MetricQueries": metric_queries,
+        }
+        # serialize the input request
+        operation_input_args = serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker-metrics"
+        )
+
+        logger.debug(f"Calling batch_get_metrics API")
+        response = client.batch_get_metrics(**operation_input_args)
+        logger.debug(f"Response: {response}")
+
+        transformed_response = transform(response, "BatchGetMetricsResponse")
+        return BatchGetMetricsResponse(**transformed_response)
 
 
 class UserProfile(Base):
