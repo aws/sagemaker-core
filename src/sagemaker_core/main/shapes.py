@@ -4316,6 +4316,21 @@ class CustomFileSystemConfig(Base):
     efs_file_system_config: Optional[EFSFileSystemConfig] = Unassigned()
 
 
+class HiddenSageMakerImage(Base):
+    """
+    HiddenSageMakerImage
+      The SageMaker images that are hidden from the Studio user interface. You must specify the SageMaker image name and version aliases.
+
+    Attributes
+    ----------------------
+    sage_maker_image_name:  The SageMaker image name that you are hiding from the Studio user interface.
+    version_aliases:  The version aliases you are hiding from the Studio user interface.
+    """
+
+    sage_maker_image_name: Optional[str] = Unassigned()
+    version_aliases: Optional[List[str]] = Unassigned()
+
+
 class StudioWebPortalSettings(Base):
     """
     StudioWebPortalSettings
@@ -4325,10 +4340,14 @@ class StudioWebPortalSettings(Base):
     ----------------------
     hidden_ml_tools: The machine learning tools that are hidden from the Studio left navigation pane.
     hidden_app_types: The Applications supported in Studio that are hidden from the Studio left navigation pane.
+    hidden_instance_types:  The instance types you are hiding from the Studio user interface.
+    hidden_sage_maker_image_version_aliases:  The version aliases you are hiding from the Studio user interface.
     """
 
     hidden_ml_tools: Optional[List[str]] = Unassigned()
     hidden_app_types: Optional[List[str]] = Unassigned()
+    hidden_instance_types: Optional[List[str]] = Unassigned()
+    hidden_sage_maker_image_version_aliases: Optional[List[HiddenSageMakerImage]] = Unassigned()
 
 
 class UserSettings(Base):
@@ -5861,15 +5880,15 @@ class HumanTaskConfig(Base):
 
     workteam_arn: str
     ui_config: UiConfig
-    pre_human_task_lambda_arn: str
     task_title: str
     task_description: str
     number_of_human_workers_per_data_object: int
     task_time_limit_in_seconds: int
-    annotation_consolidation_config: AnnotationConsolidationConfig
+    pre_human_task_lambda_arn: Optional[str] = Unassigned()
     task_keywords: Optional[List[str]] = Unassigned()
     task_availability_lifetime_in_seconds: Optional[int] = Unassigned()
     max_concurrent_task_count: Optional[int] = Unassigned()
+    annotation_consolidation_config: Optional[AnnotationConsolidationConfig] = Unassigned()
     public_workforce_task_price: Optional[PublicWorkforceTaskPrice] = Unassigned()
 
 
@@ -9991,7 +10010,7 @@ class LabelingJobSummary(Base):
     labeling_job_status: str
     label_counters: LabelCounters
     workteam_arn: str
-    pre_human_task_lambda_arn: str
+    pre_human_task_lambda_arn: Optional[str] = Unassigned()
     annotation_consolidation_lambda_arn: Optional[str] = Unassigned()
     failure_reason: Optional[str] = Unassigned()
     labeling_job_output: Optional[LabelingJobOutput] = Unassigned()

@@ -6573,7 +6573,24 @@ SHAPE_DAG = {
     },
     "Groups": {"member_shape": "Group", "member_type": "string", "type": "list"},
     "HiddenAppTypesList": {"member_shape": "AppType", "member_type": "string", "type": "list"},
+    "HiddenInstanceTypesList": {
+        "member_shape": "AppInstanceType",
+        "member_type": "string",
+        "type": "list",
+    },
     "HiddenMlToolsList": {"member_shape": "MlTools", "member_type": "string", "type": "list"},
+    "HiddenSageMakerImage": {
+        "members": [
+            {"name": "SageMakerImageName", "shape": "SageMakerImageName", "type": "string"},
+            {"name": "VersionAliases", "shape": "VersionAliasesList", "type": "list"},
+        ],
+        "type": "structure",
+    },
+    "HiddenSageMakerImageVersionAliasesList": {
+        "member_shape": "HiddenSageMakerImage",
+        "member_type": "structure",
+        "type": "list",
+    },
     "HolidayConfig": {
         "member_shape": "HolidayConfigAttributes",
         "member_type": "structure",
@@ -13135,6 +13152,12 @@ SHAPE_DAG = {
         "members": [
             {"name": "HiddenMlTools", "shape": "HiddenMlToolsList", "type": "list"},
             {"name": "HiddenAppTypes", "shape": "HiddenAppTypesList", "type": "list"},
+            {"name": "HiddenInstanceTypes", "shape": "HiddenInstanceTypesList", "type": "list"},
+            {
+                "name": "HiddenSageMakerImageVersionAliases",
+                "shape": "HiddenSageMakerImageVersionAliasesList",
+                "type": "list",
+            },
         ],
         "type": "structure",
     },
@@ -14700,6 +14723,11 @@ SHAPE_DAG = {
     "VectorConfig": {
         "members": [{"name": "Dimension", "shape": "Dimension", "type": "integer"}],
         "type": "structure",
+    },
+    "VersionAliasesList": {
+        "member_shape": "ImageVersionAliasPattern",
+        "member_type": "string",
+        "type": "list",
     },
     "Vertex": {
         "members": [
