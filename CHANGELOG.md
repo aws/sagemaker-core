@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.0.8 (2024-09-25)
+
+ * Daily Sync with Botocore v1.35.26 on 2024/09/25 (#209)
+ * Support BatchGetMetrics from sagemaker-metrics (#207)
+
 ## v1.0.7 (2024-09-23)
 
  * Daily Sync with Botocore v1.35.24 on 2024/09/23 (#206)
