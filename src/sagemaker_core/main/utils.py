@@ -160,6 +160,12 @@ def enable_textual_rich_console_and_traceback():
         textual_rich_console_and_traceback_enabled = True
 
 
+def get_rich_handler():
+    handler = RichHandler(markup=True)
+    handler.setFormatter(logging.Formatter("%(message)s"))
+    return handler
+
+
 def get_textual_rich_logger(name: str, log_level: str = "INFO") -> logging.Logger:
     """
     Get a logger with textual rich handler.
@@ -175,7 +181,7 @@ def get_textual_rich_logger(name: str, log_level: str = "INFO") -> logging.Logge
 
     """
     enable_textual_rich_console_and_traceback()
-    handler = RichHandler(markup=True)
+    handler = get_rich_handler()
     logging.basicConfig(level=getattr(logging, log_level), handlers=[handler])
     logger = logging.getLogger(name)
 
@@ -217,8 +223,8 @@ def configure_logging(log_level=None):
     # reset any currently associated handlers with log level
     for handler in _logger.handlers:
         _logger.removeHandler(handler)
-    console_handler = RichHandler(markup=True)
-    _logger.addHandler(console_handler)
+    rich_handler = get_rich_handler()
+    _logger.addHandler(rich_handler)
 
 
 def is_snake_case(s: str):
