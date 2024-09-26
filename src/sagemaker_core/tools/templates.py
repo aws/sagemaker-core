@@ -265,7 +265,6 @@ if "failed" in current_status.lower():
 INIT_WAIT_LOGS_TEMPLATE = """
 instance_count = {get_instance_count}
 if logs:
-    from sagemaker_core.main.logs import MultiLogStreamHandler
     multi_stream_logger = MultiLogStreamHandler(
         log_group_name=f"/aws/sagemaker/{job_type}s",
         log_stream_name_prefix=self.get_name(),

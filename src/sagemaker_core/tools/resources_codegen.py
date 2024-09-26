@@ -29,7 +29,7 @@ from sagemaker_core.tools.constants import (
     CONFIG_SCHEMA_FILE_NAME,
     PYTHON_TYPES_TO_BASIC_JSON_TYPES,
     CONFIGURABLE_ATTRIBUTE_SUBSTRINGS,
-    JOBS_WITH_LOGS,
+    RESOURCE_WITH_LOGS,
 )
 from sagemaker_core.tools.method import Method, MethodType
 from sagemaker_core.main.utils import (
@@ -191,6 +191,7 @@ class ResourcesCodeGen:
             "from sagemaker_core.main.utils import SageMakerClient, ResourceIterator, Unassigned, get_textual_rich_logger, "
             "snake_to_pascal, pascal_to_snake, is_not_primitive, is_not_str_dict, is_primitive_list, serialize",
             "from sagemaker_core.main.intelligent_defaults_helper import load_default_configs_for_resource_name, get_config_value",
+            "from sagemaker_core.main.logs import MultiLogStreamHandler",
             "from sagemaker_core.main.shapes import *",
             "from sagemaker_core.main.exceptions import *",
         ]
@@ -1602,7 +1603,7 @@ class ResourcesCodeGen:
         logs_arg_doc = ""
         init_wait_logs = ""
         print_wait_logs = ""
-        if resource_name in JOBS_WITH_LOGS:
+        if resource_name in RESOURCE_WITH_LOGS:
             logs_arg = "logs: Optional[bool] = False,"
             logs_arg_doc = "logs: Whether to print logs while waiting.\n"
 

@@ -41,6 +41,7 @@ from sagemaker_core.main.intelligent_defaults_helper import (
     load_default_configs_for_resource_name,
     get_config_value,
 )
+from sagemaker_core.main.logs import MultiLogStreamHandler
 from sagemaker_core.main.shapes import *
 from sagemaker_core.main.exceptions import *
 
@@ -24135,8 +24136,6 @@ class ProcessingJob(Base):
 
         instance_count = self.processing_resources.cluster_config.instance_count
         if logs:
-            from sagemaker_core.main.logs import MultiLogStreamHandler
-
             multi_stream_logger = MultiLogStreamHandler(
                 log_group_name=f"/aws/sagemaker/ProcessingJobs",
                 log_stream_name_prefix=self.get_name(),
@@ -26525,8 +26524,6 @@ class TrainingJob(Base):
         )
 
         if logs:
-            from sagemaker_core.main.logs import MultiLogStreamHandler
-
             multi_stream_logger = MultiLogStreamHandler(
                 log_group_name=f"/aws/sagemaker/TrainingJobs",
                 log_stream_name_prefix=self.get_name(),
@@ -26997,8 +26994,6 @@ class TransformJob(Base):
 
         instance_count = self.transform_resources.instance_count
         if logs:
-            from sagemaker_core.main.logs import MultiLogStreamHandler
-
             multi_stream_logger = MultiLogStreamHandler(
                 log_group_name=f"/aws/sagemaker/TransformJobs",
                 log_stream_name_prefix=self.get_name(),

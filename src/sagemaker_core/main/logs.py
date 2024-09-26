@@ -10,20 +10,21 @@ from sagemaker_core.main.utils import SingletonMeta
 
 class CloudWatchLogsClient(metaclass=SingletonMeta):
     """
-    A singleton class for creating a SageMaker client.
+    A singleton class for creating a CloudWatchLogs client.
     """
 
     def __init__(self):
         session = Session()
-        self.client = session.client(
-            "logs",
-            session.region_name,
-            config=Config(retries={"max_attempts": 10, "mode": "standard"}),
-        )
+        if not self.client:
+            self.client = session.client(
+                "logs",
+                session.region_name,
+                config=Config(retries={"max_attempts": 10, "mode": "standard"}),
+            )
 
 
 class LogStreamHandler:
-    log_groupt_name: str = None
+    log_group_name: str = None
     log_stream_name: str = None
     stream_id: int = None
     next_token: str = None

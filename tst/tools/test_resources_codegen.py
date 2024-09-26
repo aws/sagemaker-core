@@ -618,7 +618,6 @@ def wait(
                 )
                 
     if logs:
-        from sagemaker_core.main.logs import MultiLogStreamHandler
         multi_stream_logger = MultiLogStreamHandler(
             log_group_name=f"/aws/sagemaker/TrainingJobs",
             log_stream_name_prefix=self.get_name(),
