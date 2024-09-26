@@ -12,11 +12,12 @@ class CloudWatchLogsClient(metaclass=SingletonMeta):
     """
     A singleton class for creating a CloudWatchLogs client.
     """
+
     client: botocore.client = None
 
     def __init__(self):
-        session = Session()
         if not self.client:
+            session = Session()
             self.client = session.client(
                 "logs",
                 session.region_name,
