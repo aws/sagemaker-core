@@ -6147,6 +6147,7 @@ class Domain(Base):
         vpc_id: The ID of the Amazon Virtual Private Cloud (VPC) that the domain uses for communication.
         kms_key_id: The Amazon Web Services KMS customer managed key used to encrypt the EFS volume attached to the domain.
         app_security_group_management: The entity that creates and manages the required security groups for inter-app communication in VPCOnly mode. Required when CreateDomain.AppNetworkAccessType is VPCOnly and DomainSettings.RStudioServerProDomainSettings.DomainExecutionRoleArn is provided.
+        tag_propagation: Indicates whether custom tag propagation is supported for the domain.
         default_space_settings: The default settings used to create a space.
 
     """
@@ -6172,6 +6173,7 @@ class Domain(Base):
     vpc_id: Optional[str] = Unassigned()
     kms_key_id: Optional[str] = Unassigned()
     app_security_group_management: Optional[str] = Unassigned()
+    tag_propagation: Optional[str] = Unassigned()
     default_space_settings: Optional[DefaultSpaceSettings] = Unassigned()
 
     def get_name(self) -> str:
@@ -6270,6 +6272,7 @@ class Domain(Base):
         home_efs_file_system_kms_key_id: Optional[str] = Unassigned(),
         kms_key_id: Optional[str] = Unassigned(),
         app_security_group_management: Optional[str] = Unassigned(),
+        tag_propagation: Optional[str] = Unassigned(),
         default_space_settings: Optional[DefaultSpaceSettings] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
@@ -6289,6 +6292,7 @@ class Domain(Base):
             home_efs_file_system_kms_key_id: Use KmsKeyId.
             kms_key_id: SageMaker uses Amazon Web Services KMS to encrypt EFS and EBS volumes attached to the domain with an Amazon Web Services managed key by default. For more control, specify a customer managed key.
             app_security_group_management: The entity that creates and manages the required security groups for inter-app communication in VPCOnly mode. Required when CreateDomain.AppNetworkAccessType is VPCOnly and DomainSettings.RStudioServerProDomainSettings.DomainExecutionRoleArn is provided. If setting up the domain for use with RStudio, this value must be set to Service.
+            tag_propagation: Indicates whether custom tag propagation is supported for the domain. Defaults to DISABLED.
             default_space_settings: The default settings used to create a space.
             session: Boto3 session.
             region: Region name.
@@ -6330,6 +6334,7 @@ class Domain(Base):
             "HomeEfsFileSystemKmsKeyId": home_efs_file_system_kms_key_id,
             "KmsKeyId": kms_key_id,
             "AppSecurityGroupManagement": app_security_group_management,
+            "TagPropagation": tag_propagation,
             "DefaultSpaceSettings": default_space_settings,
         }
 
@@ -6446,6 +6451,7 @@ class Domain(Base):
         default_space_settings: Optional[DefaultSpaceSettings] = Unassigned(),
         subnet_ids: Optional[List[str]] = Unassigned(),
         app_network_access_type: Optional[str] = Unassigned(),
+        tag_propagation: Optional[str] = Unassigned(),
     ) -> Optional["Domain"]:
         """
         Update a Domain resource
@@ -6482,6 +6488,7 @@ class Domain(Base):
             "DefaultSpaceSettings": default_space_settings,
             "SubnetIds": subnet_ids,
             "AppNetworkAccessType": app_network_access_type,
+            "TagPropagation": tag_propagation,
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
