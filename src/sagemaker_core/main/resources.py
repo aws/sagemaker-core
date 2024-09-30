@@ -813,7 +813,8 @@ class Algorithm(Base):
                 Group(progress, status),
                 title="Wait Log Panel",
                 border_style=Style(color=Color.BLUE.value),
-            )
+            ),
+            transient=True,
         ):
             while True:
                 self.refresh()
@@ -1271,7 +1272,8 @@ class App(Base):
                 Group(progress, status),
                 title="Wait Log Panel",
                 border_style=Style(color=Color.BLUE.value),
-            )
+            ),
+            transient=True,
         ):
             while True:
                 self.refresh()
@@ -2687,7 +2689,8 @@ class AutoMLJob(Base):
                 Group(progress, status),
                 title="Wait Log Panel",
                 border_style=Style(color=Color.BLUE.value),
-            )
+            ),
+            transient=True,
         ):
             while True:
                 self.refresh()
@@ -3169,7 +3172,8 @@ class AutoMLJobV2(Base):
                 Group(progress, status),
                 title="Wait Log Panel",
                 border_style=Style(color=Color.BLUE.value),
-            )
+            ),
+            transient=True,
         ):
             while True:
                 self.refresh()
@@ -3543,7 +3547,8 @@ class Cluster(Base):
                 Group(progress, status),
                 title="Wait Log Panel",
                 border_style=Style(color=Color.BLUE.value),
-            )
+            ),
+            transient=True,
         ):
             while True:
                 self.refresh()
@@ -4536,7 +4541,8 @@ class CompilationJob(Base):
                 Group(progress, status),
                 title="Wait Log Panel",
                 border_style=Style(color=Color.BLUE.value),
-            )
+            ),
+            transient=True,
         ):
             while True:
                 self.refresh()
@@ -6594,7 +6600,8 @@ class Domain(Base):
                 Group(progress, status),
                 title="Wait Log Panel",
                 border_style=Style(color=Color.BLUE.value),
-            )
+            ),
+            transient=True,
         ):
             while True:
                 self.refresh()
@@ -7577,7 +7584,8 @@ class EdgePackagingJob(Base):
                 Group(progress, status),
                 title="Wait Log Panel",
                 border_style=Style(color=Color.BLUE.value),
-            )
+            ),
+            transient=True,
         ):
             while True:
                 self.refresh()
@@ -8048,7 +8056,8 @@ class Endpoint(Base):
                 Group(progress, status),
                 title="Wait Log Panel",
                 border_style=Style(color=Color.BLUE.value),
-            )
+            ),
+            transient=True,
         ):
             while True:
                 self.refresh()
@@ -9564,7 +9573,8 @@ class FeatureGroup(Base):
                 Group(progress, status),
                 title="Wait Log Panel",
                 border_style=Style(color=Color.BLUE.value),
-            )
+            ),
+            transient=True,
         ):
             while True:
                 self.refresh()
@@ -10432,7 +10442,8 @@ class FlowDefinition(Base):
                 Group(progress, status),
                 title="Wait Log Panel",
                 border_style=Style(color=Color.BLUE.value),
-            )
+            ),
+            transient=True,
         ):
             while True:
                 self.refresh()
@@ -10927,7 +10938,8 @@ class Hub(Base):
                 Group(progress, status),
                 title="Wait Log Panel",
                 border_style=Style(color=Color.BLUE.value),
-            )
+            ),
+            transient=True,
         ):
             while True:
                 self.refresh()
@@ -11316,7 +11328,8 @@ class HubContent(Base):
                 Group(progress, status),
                 title="Wait Log Panel",
                 border_style=Style(color=Color.BLUE.value),
-            )
+            ),
+            transient=True,
         ):
             while True:
                 self.refresh()
@@ -11891,7 +11904,8 @@ class HumanTaskUi(Base):
                 Group(progress, status),
                 title="Wait Log Panel",
                 border_style=Style(color=Color.BLUE.value),
-            )
+            ),
+            transient=True,
         ):
             while True:
                 self.refresh()
@@ -12392,7 +12406,8 @@ class HyperParameterTuningJob(Base):
                 Group(progress, status),
                 title="Wait Log Panel",
                 border_style=Style(color=Color.BLUE.value),
-            )
+            ),
+            transient=True,
         ):
             while True:
                 self.refresh()
@@ -12964,7 +12979,8 @@ class Image(Base):
                 Group(progress, status),
                 title="Wait Log Panel",
                 border_style=Style(color=Color.BLUE.value),
-            )
+            ),
+            transient=True,
         ):
             while True:
                 self.refresh()
@@ -13570,7 +13586,8 @@ class ImageVersion(Base):
                 Group(progress, status),
                 title="Wait Log Panel",
                 border_style=Style(color=Color.BLUE.value),
-            )
+            ),
+            transient=True,
         ):
             while True:
                 self.refresh()
@@ -13987,7 +14004,8 @@ class InferenceComponent(Base):
                 Group(progress, status),
                 title="Wait Log Panel",
                 border_style=Style(color=Color.BLUE.value),
-            )
+            ),
+            transient=True,
         ):
             while True:
                 self.refresh()
@@ -14622,7 +14640,8 @@ class InferenceExperiment(Base):
                 Group(progress, status),
                 title="Wait Log Panel",
                 border_style=Style(color=Color.BLUE.value),
-            )
+            ),
+            transient=True,
         ):
             while True:
                 self.refresh()
@@ -15029,7 +15048,8 @@ class InferenceRecommendationsJob(Base):
                 Group(progress, status),
                 title="Wait Log Panel",
                 border_style=Style(color=Color.BLUE.value),
-            )
+            ),
+            transient=True,
         ):
             while True:
                 self.refresh()
@@ -15595,7 +15615,8 @@ class LabelingJob(Base):
                 Group(progress, status),
                 title="Wait Log Panel",
                 border_style=Style(color=Color.BLUE.value),
-            )
+            ),
+            transient=True,
         ):
             while True:
                 self.refresh()
@@ -16343,7 +16364,8 @@ class MlflowTrackingServer(Base):
                 Group(progress, status),
                 title="Wait Log Panel",
                 border_style=Style(color=Color.BLUE.value),
-            )
+            ),
+            transient=True,
         ):
             while True:
                 self.refresh()
@@ -17601,7 +17623,8 @@ class ModelCard(Base):
                 Group(progress, status),
                 title="Wait Log Panel",
                 border_style=Style(color=Color.BLUE.value),
-            )
+            ),
+            transient=True,
         ):
             while True:
                 self.refresh()
@@ -18009,7 +18032,8 @@ class ModelCardExportJob(Base):
                 Group(progress, status),
                 title="Wait Log Panel",
                 border_style=Style(color=Color.BLUE.value),
-            )
+            ),
+            transient=True,
         ):
             while True:
                 self.refresh()
@@ -18966,7 +18990,8 @@ class ModelPackage(Base):
                 Group(progress, status),
                 title="Wait Log Panel",
                 border_style=Style(color=Color.BLUE.value),
-            )
+            ),
+            transient=True,
         ):
             while True:
                 self.refresh()
@@ -19433,7 +19458,8 @@ class ModelPackageGroup(Base):
                 Group(progress, status),
                 title="Wait Log Panel",
                 border_style=Style(color=Color.BLUE.value),
-            )
+            ),
+            transient=True,
         ):
             while True:
                 self.refresh()
@@ -20822,7 +20848,8 @@ class MonitoringSchedule(Base):
                 Group(progress, status),
                 title="Wait Log Panel",
                 border_style=Style(color=Color.BLUE.value),
-            )
+            ),
+            transient=True,
         ):
             while True:
                 self.refresh()
@@ -21391,7 +21418,8 @@ class NotebookInstance(Base):
                 Group(progress, status),
                 title="Wait Log Panel",
                 border_style=Style(color=Color.BLUE.value),
-            )
+            ),
+            transient=True,
         ):
             while True:
                 self.refresh()
@@ -22264,7 +22292,8 @@ class OptimizationJob(Base):
                 Group(progress, status),
                 title="Wait Log Panel",
                 border_style=Style(color=Color.BLUE.value),
-            )
+            ),
+            transient=True,
         ):
             while True:
                 self.refresh()
@@ -22735,7 +22764,8 @@ class Pipeline(Base):
                 Group(progress, status),
                 title="Wait Log Panel",
                 border_style=Style(color=Color.BLUE.value),
-            )
+            ),
+            transient=True,
         ):
             while True:
                 self.refresh()
@@ -23133,7 +23163,8 @@ class PipelineExecution(Base):
                 Group(progress, status),
                 title="Wait Log Panel",
                 border_style=Style(color=Color.BLUE.value),
-            )
+            ),
+            transient=True,
         ):
             while True:
                 self.refresh()
@@ -24154,7 +24185,8 @@ class ProcessingJob(Base):
                 Group(progress, status),
                 title="Wait Log Panel",
                 border_style=Style(color=Color.BLUE.value),
-            )
+            ),
+            transient=True,
         ):
             while True:
                 self.refresh()
@@ -24593,7 +24625,8 @@ class Project(Base):
                 Group(progress, status),
                 title="Wait Log Panel",
                 border_style=Style(color=Color.BLUE.value),
-            )
+            ),
+            transient=True,
         ):
             while True:
                 self.refresh()
@@ -25238,7 +25271,8 @@ class Space(Base):
                 Group(progress, status),
                 title="Wait Log Panel",
                 border_style=Style(color=Color.BLUE.value),
-            )
+            ),
+            transient=True,
         ):
             while True:
                 self.refresh()
@@ -26542,7 +26576,8 @@ class TrainingJob(Base):
                 Group(progress, status),
                 title="Wait Log Panel",
                 border_style=Style(color=Color.BLUE.value),
-            )
+            ),
+            transient=True,
         ):
             while True:
                 self.refresh()
@@ -27012,7 +27047,8 @@ class TransformJob(Base):
                 Group(progress, status),
                 title="Wait Log Panel",
                 border_style=Style(color=Color.BLUE.value),
-            )
+            ),
+            transient=True,
         ):
             while True:
                 self.refresh()
@@ -27839,7 +27875,8 @@ class TrialComponent(Base):
                 Group(progress, status),
                 title="Wait Log Panel",
                 border_style=Style(color=Color.BLUE.value),
-            )
+            ),
+            transient=True,
         ):
             while True:
                 self.refresh()
@@ -28500,7 +28537,8 @@ class UserProfile(Base):
                 Group(progress, status),
                 title="Wait Log Panel",
                 border_style=Style(color=Color.BLUE.value),
-            )
+            ),
+            transient=True,
         ):
             while True:
                 self.refresh()
@@ -28985,7 +29023,8 @@ class Workforce(Base):
                 Group(progress, status),
                 title="Wait Log Panel",
                 border_style=Style(color=Color.BLUE.value),
-            )
+            ),
+            transient=True,
         ):
             while True:
                 self.refresh()
