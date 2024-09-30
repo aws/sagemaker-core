@@ -558,7 +558,15 @@ def wait(
     status = Status("Current status:")
     
 
-    with Live(Panel(Group(progress, status), title="Wait Log Panel", border_style=Style(color=Color.BLUE.value))):
+    with Live(
+        Panel(
+            Group(progress, status),
+            title="Wait Log Panel",
+            border_style=Style(color=Color.BLUE.value
+            )
+        ),
+        transient=True
+    ):
         while True:
             self.refresh()
             current_status = self.compilation_job_status
@@ -625,7 +633,15 @@ def wait(
         )
 
 
-    with Live(Panel(Group(progress, status), title="Wait Log Panel", border_style=Style(color=Color.BLUE.value))):
+    with Live(
+        Panel(
+            Group(progress, status),
+            title="Wait Log Panel",
+            border_style=Style(color=Color.BLUE.value
+            )
+        ),
+        transient=True
+    ):
         while True:
             self.refresh()
             current_status = self.training_job_status
@@ -681,7 +697,15 @@ def wait_for_status(
     progress.add_task(f"Waiting for InferenceComponent to reach [bold]{target_status} status...")
     status = Status("Current status:")
 
-    with Live(Panel(Group(progress, status), title="Wait Log Panel", border_style=Style(color=Color.BLUE.value))):
+    with Live(
+        Panel(
+            Group(progress, status),
+            title="Wait Log Panel",
+            border_style=Style(color=Color.BLUE.value
+            )
+        ),
+        transient=True
+    ):
         while True:
             self.refresh()
             current_status = self.inference_component_status
@@ -734,7 +758,15 @@ def wait_for_status(
     progress.add_task(f"Waiting for InferenceExperiment to reach [bold]{target_status} status...")
     status = Status("Current status:")
 
-    with Live(Panel(Group(progress, status), title="Wait Log Panel", border_style=Style(color=Color.BLUE.value))):
+    with Live(
+        Panel(
+            Group(progress, status),
+            title="Wait Log Panel",
+            border_style=Style(color=Color.BLUE.value
+            )
+        ),
+        transient=True
+    ):
         while True:
             self.refresh()
             current_status = self.status
