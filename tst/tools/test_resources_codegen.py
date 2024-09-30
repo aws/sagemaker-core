@@ -955,7 +955,7 @@ def invoke_with_response_stream(
     session_id: Optional[str] = Unassigned(),
     session: Optional[Session] = None,
     region: Optional[str] = None,
-) -> Optional[InvokeEndpointWithResponseStreamOutput]:
+) -> Optional[object]:
     """
     Invokes a model at the specified endpoint to return the inference response as a stream.
     
@@ -973,7 +973,7 @@ def invoke_with_response_stream(
         region: Region name.
     
     Returns:
-        InvokeEndpointWithResponseStreamOutput
+        object
     
     Raises:
         botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
@@ -1016,15 +1016,14 @@ def invoke_with_response_stream(
     response = client.invoke_endpoint_with_response_stream(**operation_input_args)
     logger.debug(f"Response: {response}")
 
-    transformed_response = transform(response, 'InvokeEndpointWithResponseStreamOutput')
-    return InvokeEndpointWithResponseStreamOutput(**transformed_response)
+    return response
 '''
         method = Method(
             **{
                 "operation_name": "InvokeEndpointWithResponseStream",
                 "resource_name": "Endpoint",
                 "method_name": "invoke_with_response_stream",
-                "return_type": "InvokeEndpointWithResponseStreamOutput",
+                "return_type": "object",
                 "method_type": "object",
                 "service_name": "sagemaker-runtime",
             }
