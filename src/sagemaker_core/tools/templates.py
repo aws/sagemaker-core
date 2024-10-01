@@ -312,7 +312,15 @@ def wait(
     status = Status("Current status:")
     {init_wait_logs}
 
-    with Live(Panel(Group(progress, status), title="Wait Log Panel", border_style=Style(color=Color.BLUE.value))):
+    with Live(
+        Panel(
+            Group(progress, status),
+            title="Wait Log Panel",
+            border_style=Style(color=Color.BLUE.value
+            )
+        ),
+        transient=True
+    ):
         while True:
             self.refresh()
             current_status = self{status_key_path}
@@ -358,7 +366,15 @@ def wait_for_status(
     progress.add_task(f"Waiting for {resource_name} to reach [bold]{{target_status}} status...")
     status = Status("Current status:")
 
-    with Live(Panel(Group(progress, status), title="Wait Log Panel", border_style=Style(color=Color.BLUE.value))):
+    with Live(
+        Panel(
+            Group(progress, status),
+            title="Wait Log Panel",
+            border_style=Style(color=Color.BLUE.value
+            )
+        ),
+        transient=True
+    ):
         while True:
             self.refresh()
             current_status = self{status_key_path}
