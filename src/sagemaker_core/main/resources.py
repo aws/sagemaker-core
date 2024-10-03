@@ -979,6 +979,7 @@ class App(Base):
         creation_time: The creation time of the application.  After an application has been shut down for 24 hours, SageMaker deletes all metadata for the application. To be considered an update and retain application metadata, applications must be restarted within 24 hours after the previous application has been shut down. After this time window, creation of an application is considered a new application rather than an update of the previous application.
         failure_reason: The failure reason.
         resource_spec: The instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance.
+        built_in_lifecycle_config_arn: The lifecycle configuration that runs before the default lifecycle configuration
 
     """
 
@@ -994,6 +995,7 @@ class App(Base):
     creation_time: Optional[datetime.datetime] = Unassigned()
     failure_reason: Optional[str] = Unassigned()
     resource_spec: Optional[ResourceSpec] = Unassigned()
+    built_in_lifecycle_config_arn: Optional[str] = Unassigned()
 
     def get_name(self) -> str:
         attributes = vars(self)
