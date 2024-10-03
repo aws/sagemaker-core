@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.0.10 (2024-10-03)
+
+ * Daily Sync with Botocore v1.35.32 on 2024/10/03 (#215)
+ * fix: set rich panel to transient (#214)
+ * Feature: Add wait with logs to subset of Job types (#201)
+
 ## v1.0.9 (2024-09-27)
 
  * Daily Sync with Botocore v1.35.28 on 2024/09/27 (#210)
