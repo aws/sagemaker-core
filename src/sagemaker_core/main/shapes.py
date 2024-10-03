@@ -3306,12 +3306,14 @@ class CodeEditorAppSettings(Base):
     custom_images: A list of custom SageMaker images that are configured to run as a Code Editor app.
     lifecycle_config_arns: The Amazon Resource Name (ARN) of the Code Editor application lifecycle configuration.
     app_lifecycle_management: Settings that are used to configure and manage the lifecycle of CodeEditor applications.
+    built_in_lifecycle_config_arn: The lifecycle configuration that runs before the default lifecycle configuration. It can override changes made in the default lifecycle configuration.
     """
 
     default_resource_spec: Optional[ResourceSpec] = Unassigned()
     custom_images: Optional[List[CustomImage]] = Unassigned()
     lifecycle_config_arns: Optional[List[str]] = Unassigned()
     app_lifecycle_management: Optional[AppLifecycleManagement] = Unassigned()
+    built_in_lifecycle_config_arn: Optional[str] = Unassigned()
 
 
 class CodeRepository(Base):
@@ -4235,6 +4237,7 @@ class JupyterLabAppSettings(Base):
     code_repositories: A list of Git repositories that SageMaker automatically displays to users for cloning in the JupyterLab application.
     app_lifecycle_management: Indicates whether idle shutdown is activated for JupyterLab applications.
     emr_settings: The configuration parameters that specify the IAM roles assumed by the execution role of SageMaker (assumable roles) and the cluster instances or job execution environments (execution roles or runtime roles) to manage and access resources required for running Amazon EMR clusters or Amazon EMR Serverless applications.
+    built_in_lifecycle_config_arn: The lifecycle configuration that runs before the default lifecycle configuration. It can override changes made in the default lifecycle configuration.
     """
 
     default_resource_spec: Optional[ResourceSpec] = Unassigned()
@@ -4243,6 +4246,7 @@ class JupyterLabAppSettings(Base):
     code_repositories: Optional[List[CodeRepository]] = Unassigned()
     app_lifecycle_management: Optional[AppLifecycleManagement] = Unassigned()
     emr_settings: Optional[EmrSettings] = Unassigned()
+    built_in_lifecycle_config_arn: Optional[str] = Unassigned()
 
 
 class DefaultEbsStorageSettings(Base):
