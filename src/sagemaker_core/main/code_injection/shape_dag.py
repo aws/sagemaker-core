@@ -2456,6 +2456,7 @@ SHAPE_DAG = {
             {"name": "SourceUri", "shape": "ModelPackageSourceUri", "type": "string"},
             {"name": "SecurityConfig", "shape": "ModelPackageSecurityConfig", "type": "structure"},
             {"name": "ModelCard", "shape": "ModelPackageModelCard", "type": "structure"},
+            {"name": "ModelLifeCycle", "shape": "ModelLifeCycle", "type": "structure"},
         ],
         "type": "structure",
     },
@@ -4969,6 +4970,7 @@ SHAPE_DAG = {
             {"name": "SourceUri", "shape": "ModelPackageSourceUri", "type": "string"},
             {"name": "SecurityConfig", "shape": "ModelPackageSecurityConfig", "type": "structure"},
             {"name": "ModelCard", "shape": "ModelPackageModelCard", "type": "structure"},
+            {"name": "ModelLifeCycle", "shape": "ModelLifeCycle", "type": "structure"},
         ],
         "type": "structure",
     },
@@ -10102,6 +10104,14 @@ SHAPE_DAG = {
         "member_type": "structure",
         "type": "list",
     },
+    "ModelLifeCycle": {
+        "members": [
+            {"name": "Stage", "shape": "EntityName", "type": "string"},
+            {"name": "StageStatus", "shape": "EntityName", "type": "string"},
+            {"name": "StageDescription", "shape": "StageDescription", "type": "string"},
+        ],
+        "type": "structure",
+    },
     "ModelMetadataFilter": {
         "members": [
             {"name": "Name", "shape": "ModelMetadataFilterType", "type": "string"},
@@ -10194,6 +10204,7 @@ SHAPE_DAG = {
             {"name": "SourceUri", "shape": "ModelPackageSourceUri", "type": "string"},
             {"name": "SecurityConfig", "shape": "ModelPackageSecurityConfig", "type": "structure"},
             {"name": "ModelCard", "shape": "ModelPackageModelCard", "type": "structure"},
+            {"name": "ModelLifeCycle", "shape": "ModelLifeCycle", "type": "structure"},
             {"name": "Tags", "shape": "TagList", "type": "list"},
             {"name": "CustomerMetadataProperties", "shape": "CustomerMetadataMap", "type": "map"},
             {"name": "DriftCheckBaselines", "shape": "DriftCheckBaselines", "type": "structure"},
@@ -14337,6 +14348,8 @@ SHAPE_DAG = {
             },
             {"name": "SourceUri", "shape": "ModelPackageSourceUri", "type": "string"},
             {"name": "ModelCard", "shape": "ModelPackageModelCard", "type": "structure"},
+            {"name": "ModelLifeCycle", "shape": "ModelLifeCycle", "type": "structure"},
+            {"name": "ClientToken", "shape": "ClientToken", "type": "string"},
         ],
         "type": "structure",
     },

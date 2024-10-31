@@ -18544,6 +18544,7 @@ class ModelPackage(Base):
         source_uri: The URI of the source for the model package.
         security_config: The KMS Key ID (KMSKeyId) used for encryption of model package information.
         model_card: The model card associated with the model package. Since ModelPackageModelCard is tied to a model package, it is a specific usage of a model card and its schema is simplified compared to the schema of ModelCard. The ModelPackageModelCard schema does not include model_package_details, and model_overview is composed of the model_creator and model_artifact properties. For more information about the model package model card schema, see Model package model card schema. For more information about the model card associated with the model package, see View the Details of a Model Version.
+        model_life_cycle:  A structure describing the current state of the model in its life cycle.
 
     """
 
@@ -18578,6 +18579,7 @@ class ModelPackage(Base):
     source_uri: Optional[str] = Unassigned()
     security_config: Optional[ModelPackageSecurityConfig] = Unassigned()
     model_card: Optional[ModelPackageModelCard] = Unassigned()
+    model_life_cycle: Optional[ModelLifeCycle] = Unassigned()
 
     def get_name(self) -> str:
         attributes = vars(self)
@@ -18675,6 +18677,7 @@ class ModelPackage(Base):
         source_uri: Optional[str] = Unassigned(),
         security_config: Optional[ModelPackageSecurityConfig] = Unassigned(),
         model_card: Optional[ModelPackageModelCard] = Unassigned(),
+        model_life_cycle: Optional[ModelLifeCycle] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["ModelPackage"]:
@@ -18704,6 +18707,7 @@ class ModelPackage(Base):
             source_uri: The URI of the source for the model package. If you want to clone a model package, set it to the model package Amazon Resource Name (ARN). If you want to register a model, set it to the model ARN.
             security_config: The KMS Key ID (KMSKeyId) used for encryption of model package information.
             model_card: The model card associated with the model package. Since ModelPackageModelCard is tied to a model package, it is a specific usage of a model card and its schema is simplified compared to the schema of ModelCard. The ModelPackageModelCard schema does not include model_package_details, and model_overview is composed of the model_creator and model_artifact properties. For more information about the model package model card schema, see Model package model card schema. For more information about the model card associated with the model package, see View the Details of a Model Version.
+            model_life_cycle:  A structure describing the current state of the model in its life cycle.
             session: Boto3 session.
             region: Region name.
 
@@ -18755,6 +18759,7 @@ class ModelPackage(Base):
             "SourceUri": source_uri,
             "SecurityConfig": security_config,
             "ModelCard": model_card,
+            "ModelLifeCycle": model_life_cycle,
         }
 
         operation_input_args = Base.populate_chained_attributes(
@@ -18874,6 +18879,8 @@ class ModelPackage(Base):
         inference_specification: Optional[InferenceSpecification] = Unassigned(),
         source_uri: Optional[str] = Unassigned(),
         model_card: Optional[ModelPackageModelCard] = Unassigned(),
+        model_life_cycle: Optional[ModelLifeCycle] = Unassigned(),
+        client_token: Optional[str] = Unassigned(),
     ) -> Optional["ModelPackage"]:
         """
         Update a ModelPackage resource
@@ -18881,6 +18888,7 @@ class ModelPackage(Base):
         Parameters:
             customer_metadata_properties_to_remove: The metadata properties associated with the model package versions to remove.
             additional_inference_specifications_to_add: An array of additional Inference Specification objects to be added to the existing array additional Inference Specification. Total number of additional Inference Specifications can not exceed 15. Each additional Inference Specification specifies artifacts based on this model package that can be used on inference endpoints. Generally used with SageMaker Neo to store the compiled artifacts.
+            client_token:  A unique token that guarantees that the call to this API is idempotent.
 
         Returns:
             The ModelPackage resource.
@@ -18911,6 +18919,8 @@ class ModelPackage(Base):
             "InferenceSpecification": inference_specification,
             "SourceUri": source_uri,
             "ModelCard": model_card,
+            "ModelLifeCycle": model_life_cycle,
+            "ClientToken": client_token,
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
