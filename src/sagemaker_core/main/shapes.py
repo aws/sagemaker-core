@@ -6292,6 +6292,23 @@ class ModelPackageModelCard(Base):
     model_card_status: Optional[str] = Unassigned()
 
 
+class ModelLifeCycle(Base):
+    """
+    ModelLifeCycle
+       A structure describing the current state of the model in its life cycle.
+
+    Attributes
+    ----------------------
+    stage:  The current stage in the model life cycle.
+    stage_status:  The current status of a stage in model life cycle.
+    stage_description:  Describes the stage related details.
+    """
+
+    stage: str
+    stage_status: str
+    stage_description: Optional[str] = Unassigned()
+
+
 class ModelQualityBaselineConfig(Base):
     """
     ModelQualityBaselineConfig
@@ -11282,6 +11299,7 @@ class ModelPackage(Base):
     source_uri: The URI of the source for the model package.
     security_config
     model_card
+    model_life_cycle:  A structure describing the current state of the model in its life cycle.
     tags: A list of the tags associated with the model package. For more information, see Tagging Amazon Web Services resources in the Amazon Web Services General Reference Guide.
     customer_metadata_properties: The metadata properties for the model package.
     drift_check_baselines: Represents the drift check baselines that can be used when the model monitor is set using the model package.
@@ -11316,6 +11334,7 @@ class ModelPackage(Base):
     source_uri: Optional[str] = Unassigned()
     security_config: Optional[ModelPackageSecurityConfig] = Unassigned()
     model_card: Optional[ModelPackageModelCard] = Unassigned()
+    model_life_cycle: Optional[ModelLifeCycle] = Unassigned()
     tags: Optional[List[Tag]] = Unassigned()
     customer_metadata_properties: Optional[Dict[str, str]] = Unassigned()
     drift_check_baselines: Optional[DriftCheckBaselines] = Unassigned()
