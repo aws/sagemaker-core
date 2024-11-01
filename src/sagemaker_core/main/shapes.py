@@ -2360,6 +2360,23 @@ class BatchDataCaptureConfig(Base):
     generate_inference_id: Optional[bool] = Unassigned()
 
 
+class BatchDeleteClusterNodesError(Base):
+    """
+    BatchDeleteClusterNodesError
+      Represents an error encountered when deleting a node from a SageMaker HyperPod cluster.
+
+    Attributes
+    ----------------------
+    code: The error code associated with the error encountered when deleting a node. The code provides information about the specific issue encountered, such as the node not being found, the node's status being invalid for deletion, or the node ID being in use by another process.
+    message: A message describing the error encountered when deleting a node.
+    node_id: The ID of the node that encountered an error during the deletion process.
+    """
+
+    code: str
+    message: str
+    node_id: str
+
+
 class BatchDescribeModelPackageError(Base):
     """
     BatchDescribeModelPackageError
@@ -10913,6 +10930,7 @@ class TrainingJobSummary(Base):
     training_end_time: A timestamp that shows when the training job ended. This field is set only if the training job has one of the terminal statuses (Completed, Failed, or Stopped).
     last_modified_time:  Timestamp when the training job was last modified.
     training_job_status: The status of the training job.
+    secondary_status: The secondary status of the training job.
     warm_pool_status: The status of the warm pool associated with the training job.
     """
 
@@ -10922,6 +10940,7 @@ class TrainingJobSummary(Base):
     training_job_status: str
     training_end_time: Optional[datetime.datetime] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
+    secondary_status: Optional[str] = Unassigned()
     warm_pool_status: Optional[WarmPoolStatus] = Unassigned()
 
 
