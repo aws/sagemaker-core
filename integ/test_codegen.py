@@ -42,6 +42,7 @@ os.makedirs("./data", exist_ok=True)
 iris_df = iris_df[["target"] + [col for col in iris_df.columns if col != "target"]]
 train_data, test_data = train_test_split(iris_df, test_size=0.2, random_state=42)
 train_data.to_csv("./data/train.csv", index=False, header=False)
+test_data_no_target = test_data.drop("target", axis=1)
 
 # Upload Data
 prefix = "DEMO-scikit-iris"
@@ -148,6 +149,27 @@ class TestSageMakerCore(unittest.TestCase):
             endpoint_config_name=endpoint_config,
         )
         endpoint.wait_for_status("InService")
+
+        invoke_result = endpoint.invoke(
+            body=test_data_no_target.to_csv(header=False, index=False),
+            content_type="text/csv",
+            accept="text/csv",
+        )
+
+        assert invoke_result.body
+
+        invoke_result = endpoint.invoke_with_response_stream(
+            test_data_no_target.to_csv(header=False, index=False),
+            content_type="text/csv",
+            accept="application/csv",
+        )
+
+        def deserialise(response):
+            return [res_part for res_part in response["Body"]]
+
+        deserialised_response = deserialise(invoke_result)
+        assert len(deserialised_response) > 0
+        assert deserialised_response[0]["PayloadPart"]
 
     def test_intelligent_defaults(self):
         os.environ["SAGEMAKER_CORE_ADMIN_CONFIG_OVERRIDE"] = (
