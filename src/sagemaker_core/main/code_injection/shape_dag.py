@@ -749,6 +749,33 @@ SHAPE_DAG = {
         ],
         "type": "structure",
     },
+    "BatchDeleteClusterNodesError": {
+        "members": [
+            {"name": "Code", "shape": "BatchDeleteClusterNodesErrorCode", "type": "string"},
+            {"name": "Message", "shape": "String", "type": "string"},
+            {"name": "NodeId", "shape": "ClusterNodeId", "type": "string"},
+        ],
+        "type": "structure",
+    },
+    "BatchDeleteClusterNodesErrorList": {
+        "member_shape": "BatchDeleteClusterNodesError",
+        "member_type": "structure",
+        "type": "list",
+    },
+    "BatchDeleteClusterNodesRequest": {
+        "members": [
+            {"name": "ClusterName", "shape": "ClusterNameOrArn", "type": "string"},
+            {"name": "NodeIds", "shape": "ClusterNodeIds", "type": "list"},
+        ],
+        "type": "structure",
+    },
+    "BatchDeleteClusterNodesResponse": {
+        "members": [
+            {"name": "Failed", "shape": "BatchDeleteClusterNodesErrorList", "type": "list"},
+            {"name": "Successful", "shape": "ClusterNodeIds", "type": "list"},
+        ],
+        "type": "structure",
+    },
     "BatchDescribeModelPackageError": {
         "members": [
             {"name": "ErrorCode", "shape": "String", "type": "string"},
@@ -1322,6 +1349,7 @@ SHAPE_DAG = {
         ],
         "type": "structure",
     },
+    "ClusterNodeIds": {"member_shape": "ClusterNodeId", "member_type": "string", "type": "list"},
     "ClusterNodeSummaries": {
         "member_shape": "ClusterNodeSummary",
         "member_type": "structure",
@@ -13566,6 +13594,7 @@ SHAPE_DAG = {
             {"name": "TrainingEndTime", "shape": "Timestamp", "type": "timestamp"},
             {"name": "LastModifiedTime", "shape": "Timestamp", "type": "timestamp"},
             {"name": "TrainingJobStatus", "shape": "TrainingJobStatus", "type": "string"},
+            {"name": "SecondaryStatus", "shape": "SecondaryStatus", "type": "string"},
             {"name": "WarmPoolStatus", "shape": "WarmPoolStatus", "type": "structure"},
         ],
         "type": "structure",
