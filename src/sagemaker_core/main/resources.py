@@ -3855,6 +3855,56 @@ class Cluster(Base):
         response = client.update_cluster_software(**operation_input_args)
         logger.debug(f"Response: {response}")
 
+    @Base.add_validate_call
+    def batch_delete_nodes(
+        self,
+        node_ids: List[str],
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional[BatchDeleteClusterNodesResponse]:
+        """
+        Deletes specific nodes within a SageMaker HyperPod cluster.
+
+        Parameters:
+            node_ids: A list of node IDs to be deleted from the specified cluster.  For SageMaker HyperPod clusters using the Slurm workload manager, you cannot remove instances that are configured as Slurm controller nodes.
+            session: Boto3 session.
+            region: Region name.
+
+        Returns:
+            BatchDeleteClusterNodesResponse
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceNotFound: Resource being access is not found.
+        """
+
+        operation_input_args = {
+            "ClusterName": self.cluster_name,
+            "NodeIds": node_ids,
+        }
+        # serialize the input request
+        operation_input_args = serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
+
+        logger.debug(f"Calling batch_delete_cluster_nodes API")
+        response = client.batch_delete_cluster_nodes(**operation_input_args)
+        logger.debug(f"Response: {response}")
+
+        transformed_response = transform(response, "BatchDeleteClusterNodesResponse")
+        return BatchDeleteClusterNodesResponse(**transformed_response)
+
 
 class CodeRepository(Base):
     """

@@ -23,6 +23,14 @@
             "return_type": "None",
             "method_type": "object",
             "service_name": "sagemaker"
+        },
+        "BatchDeleteClusterNodes": {
+            "operation_name": "BatchDeleteClusterNodes",
+            "resource_name": "Cluster",
+            "method_name": "batch_delete_nodes",
+            "return_type": "BatchDeleteClusterNodesResponse",
+            "method_type": "object",
+            "service_name": "sagemaker"
         }
     },
     "PipelineExecution": {
