@@ -2377,6 +2377,20 @@ class BatchDeleteClusterNodesError(Base):
     node_id: str
 
 
+class BatchDeleteClusterNodesResponse(Base):
+    """
+    BatchDeleteClusterNodesResponse
+
+    Attributes
+    ----------------------
+    failed: A list of errors encountered when deleting the specified nodes.
+    successful: A list of node IDs that were successfully deleted from the specified cluster.
+    """
+
+    failed: Optional[List[BatchDeleteClusterNodesError]] = Unassigned()
+    successful: Optional[List[str]] = Unassigned()
+
+
 class BatchDescribeModelPackageError(Base):
     """
     BatchDescribeModelPackageError
