@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.0.14 (2024-11-15)
+
+ * Daily Sync with Botocore v1.35.62 on 2024/11/15 (#221)
+ * Support BatchDeleteClusterNodes from sagemaker (#220)
+
 ## v1.0.13 (2024-11-01)
 
  * Daily Sync with Botocore v1.35.53 on 2024/11/01 (#219)
