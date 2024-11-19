@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.0.15 (2024-11-19)
+
+ * fix: update pydantic dep version (#222)
+
 ## v1.0.14 (2024-11-15)
 
  * Daily Sync with Botocore v1.35.62 on 2024/11/15 (#221)
