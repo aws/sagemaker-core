@@ -3140,6 +3140,7 @@ class ClusterInstanceGroupDetails(Base):
     threads_per_core: The number you specified to TreadsPerCore in CreateCluster for enabling or disabling multithreading. For instance types that support multithreading, you can specify 1 for disabling multithreading and 2 for enabling multithreading. For more information, see the reference table of CPU cores and threads per CPU core per instance type in the Amazon Elastic Compute Cloud User Guide.
     instance_storage_configs: The additional storage configurations for the instances in the SageMaker HyperPod cluster instance group.
     on_start_deep_health_checks: A flag indicating whether deep health checks should be performed when the cluster instance group is created or updated.
+    override_vpc_config
     """
 
     current_count: Optional[int] = Unassigned()
@@ -3151,6 +3152,7 @@ class ClusterInstanceGroupDetails(Base):
     threads_per_core: Optional[int] = Unassigned()
     instance_storage_configs: Optional[List[ClusterInstanceStorageConfig]] = Unassigned()
     on_start_deep_health_checks: Optional[List[str]] = Unassigned()
+    override_vpc_config: Optional[VpcConfig] = Unassigned()
 
 
 class ClusterInstanceGroupSpecification(Base):
@@ -3168,6 +3170,7 @@ class ClusterInstanceGroupSpecification(Base):
     threads_per_core: Specifies the value for Threads per core. For instance types that support multithreading, you can specify 1 for disabling multithreading and 2 for enabling multithreading. For instance types that doesn't support multithreading, specify 1. For more information, see the reference table of CPU cores and threads per CPU core per instance type in the Amazon Elastic Compute Cloud User Guide.
     instance_storage_configs: Specifies the additional storage configurations for the instances in the SageMaker HyperPod cluster instance group.
     on_start_deep_health_checks: A flag indicating whether deep health checks should be performed when the cluster instance group is created or updated.
+    override_vpc_config
     """
 
     instance_count: int
@@ -3178,6 +3181,7 @@ class ClusterInstanceGroupSpecification(Base):
     threads_per_core: Optional[int] = Unassigned()
     instance_storage_configs: Optional[List[ClusterInstanceStorageConfig]] = Unassigned()
     on_start_deep_health_checks: Optional[List[str]] = Unassigned()
+    override_vpc_config: Optional[VpcConfig] = Unassigned()
 
 
 class ClusterInstancePlacement(Base):
@@ -3223,6 +3227,7 @@ class ClusterNodeDetails(Base):
     instance_type: The type of the instance.
     launch_time: The time when the instance is launched.
     life_cycle_config: The LifeCycle configuration applied to the instance.
+    override_vpc_config
     threads_per_core: The number of threads per CPU core you specified under CreateCluster.
     instance_storage_configs: The configurations of additional storage specified to the instance group where the instance (node) is launched.
     private_primary_ip: The private primary IP address of the SageMaker HyperPod cluster node.
@@ -3236,6 +3241,7 @@ class ClusterNodeDetails(Base):
     instance_type: Optional[str] = Unassigned()
     launch_time: Optional[datetime.datetime] = Unassigned()
     life_cycle_config: Optional[ClusterLifeCycleConfig] = Unassigned()
+    override_vpc_config: Optional[VpcConfig] = Unassigned()
     threads_per_core: Optional[int] = Unassigned()
     instance_storage_configs: Optional[List[ClusterInstanceStorageConfig]] = Unassigned()
     private_primary_ip: Optional[str] = Unassigned()
@@ -5324,7 +5330,7 @@ class InferenceComponentStartupParameters(Base):
 class InferenceComponentComputeResourceRequirements(Base):
     """
     InferenceComponentComputeResourceRequirements
-      Defines the compute resources to allocate to run a model that you assign to an inference component. These resources include CPU cores, accelerators, and memory.
+      Defines the compute resources to allocate to run a model, plus any adapter models, that you assign to an inference component. These resources include CPU cores, accelerators, and memory.
 
     Attributes
     ----------------------
@@ -5350,13 +5356,17 @@ class InferenceComponentSpecification(Base):
     model_name: The name of an existing SageMaker model object in your account that you want to deploy with the inference component.
     container: Defines a container that provides the runtime environment for a model that you deploy with an inference component.
     startup_parameters: Settings that take effect while the model container starts up.
-    compute_resource_requirements: The compute resources allocated to run the model assigned to the inference component.
+    compute_resource_requirements: The compute resources allocated to run the model, plus any adapter models, that you assign to the inference component. Omit this parameter if your request is meant to create an adapter inference component. An adapter inference component is loaded by a base inference component, and it uses the compute resources of the base inference component.
+    base_inference_component_name: The name of an existing inference component that is to contain the inference component that you're creating with your request. Specify this parameter only if your request is meant to create an adapter inference component. An adapter inference component contains the path to an adapter model. The purpose of the adapter model is to tailor the inference output of a base foundation model, which is hosted by the base inference component. The adapter inference component uses the compute resources that you assigned to the base inference component. When you create an adapter inference component, use the Container parameter to specify the location of the adapter artifacts. In the parameter value, use the ArtifactUrl parameter of the InferenceComponentContainerSpecification data type. Before you can create an adapter inference component, you must have an existing inference component that contains the foundation model that you want to adapt.
     """
 
-    compute_resource_requirements: InferenceComponentComputeResourceRequirements
     model_name: Optional[Union[str, object]] = Unassigned()
     container: Optional[InferenceComponentContainerSpecification] = Unassigned()
     startup_parameters: Optional[InferenceComponentStartupParameters] = Unassigned()
+    compute_resource_requirements: Optional[InferenceComponentComputeResourceRequirements] = (
+        Unassigned()
+    )
+    base_inference_component_name: Optional[str] = Unassigned()
 
 
 class InferenceComponentRuntimeConfig(Base):
@@ -6629,6 +6639,21 @@ class ModelCompilationConfig(Base):
     override_environment: Optional[Dict[str, str]] = Unassigned()
 
 
+class ModelShardingConfig(Base):
+    """
+    ModelShardingConfig
+      Settings for the model sharding technique that's applied by a model optimization job.
+
+    Attributes
+    ----------------------
+    image: The URI of an LMI DLC in Amazon ECR. SageMaker uses this image to run the optimization.
+    override_environment: Environment variables that override the default ones in the model container.
+    """
+
+    image: Optional[str] = Unassigned()
+    override_environment: Optional[Dict[str, str]] = Unassigned()
+
+
 class OptimizationConfig(Base):
     """
     OptimizationConfig
@@ -6638,10 +6663,12 @@ class OptimizationConfig(Base):
     ----------------------
     model_quantization_config: Settings for the model quantization technique that's applied by a model optimization job.
     model_compilation_config: Settings for the model compilation technique that's applied by a model optimization job.
+    model_sharding_config: Settings for the model sharding technique that's applied by a model optimization job.
     """
 
     model_quantization_config: Optional[ModelQuantizationConfig] = Unassigned()
     model_compilation_config: Optional[ModelCompilationConfig] = Unassigned()
+    model_sharding_config: Optional[ModelShardingConfig] = Unassigned()
 
 
 class OptimizationJobOutputConfig(Base):
@@ -8113,7 +8140,8 @@ class InferenceComponentSpecificationSummary(Base):
     model_name: The name of the SageMaker model object that is deployed with the inference component.
     container: Details about the container that provides the runtime environment for the model that is deployed with the inference component.
     startup_parameters: Settings that take effect while the model container starts up.
-    compute_resource_requirements: The compute resources allocated to run the model assigned to the inference component.
+    compute_resource_requirements: The compute resources allocated to run the model, plus any adapter models, that you assign to the inference component.
+    base_inference_component_name: The name of the base inference component that contains this inference component.
     """
 
     model_name: Optional[Union[str, object]] = Unassigned()
@@ -8122,6 +8150,7 @@ class InferenceComponentSpecificationSummary(Base):
     compute_resource_requirements: Optional[InferenceComponentComputeResourceRequirements] = (
         Unassigned()
     )
+    base_inference_component_name: Optional[str] = Unassigned()
 
 
 class InferenceComponentRuntimeConfigSummary(Base):
