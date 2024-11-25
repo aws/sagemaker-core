@@ -13786,9 +13786,9 @@ class InferenceComponent(Base):
         cls,
         inference_component_name: str,
         endpoint_name: Union[str, object],
-        variant_name: str,
         specification: InferenceComponentSpecification,
-        runtime_config: InferenceComponentRuntimeConfig,
+        variant_name: Optional[str] = Unassigned(),
+        runtime_config: Optional[InferenceComponentRuntimeConfig] = Unassigned(),
         tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
@@ -13799,8 +13799,8 @@ class InferenceComponent(Base):
         Parameters:
             inference_component_name: A unique name to assign to the inference component.
             endpoint_name: The name of an existing endpoint where you host the inference component.
-            variant_name: The name of an existing production variant where you host the inference component.
             specification: Details about the resources to deploy with this inference component, including the model, container, and compute resources.
+            variant_name: The name of an existing production variant where you host the inference component.
             runtime_config: Runtime settings for a model that is deployed with an inference component.
             tags: A list of key-value pairs associated with the model. For more information, see Tagging Amazon Web Services resources in the Amazon Web Services General Reference.
             session: Boto3 session.

@@ -1263,6 +1263,7 @@ SHAPE_DAG = {
                 "type": "list",
             },
             {"name": "OnStartDeepHealthChecks", "shape": "OnStartDeepHealthChecks", "type": "list"},
+            {"name": "OverrideVpcConfig", "shape": "VpcConfig", "type": "structure"},
         ],
         "type": "structure",
     },
@@ -1285,6 +1286,7 @@ SHAPE_DAG = {
                 "type": "list",
             },
             {"name": "OnStartDeepHealthChecks", "shape": "OnStartDeepHealthChecks", "type": "list"},
+            {"name": "OverrideVpcConfig", "shape": "VpcConfig", "type": "structure"},
         ],
         "type": "structure",
     },
@@ -1337,6 +1339,7 @@ SHAPE_DAG = {
             {"name": "InstanceType", "shape": "ClusterInstanceType", "type": "string"},
             {"name": "LaunchTime", "shape": "Timestamp", "type": "timestamp"},
             {"name": "LifeCycleConfig", "shape": "ClusterLifeCycleConfig", "type": "structure"},
+            {"name": "OverrideVpcConfig", "shape": "VpcConfig", "type": "structure"},
             {"name": "ThreadsPerCore", "shape": "ClusterThreadsPerCore", "type": "integer"},
             {
                 "name": "InstanceStorageConfigs",
@@ -7360,6 +7363,11 @@ SHAPE_DAG = {
                 "shape": "InferenceComponentComputeResourceRequirements",
                 "type": "structure",
             },
+            {
+                "name": "BaseInferenceComponentName",
+                "shape": "InferenceComponentName",
+                "type": "string",
+            },
         ],
         "type": "structure",
     },
@@ -7380,6 +7388,11 @@ SHAPE_DAG = {
                 "name": "ComputeResourceRequirements",
                 "shape": "InferenceComponentComputeResourceRequirements",
                 "type": "structure",
+            },
+            {
+                "name": "BaseInferenceComponentName",
+                "shape": "InferenceComponentName",
+                "type": "string",
             },
         ],
         "type": "structure",
@@ -10457,6 +10470,17 @@ SHAPE_DAG = {
         ],
         "type": "structure",
     },
+    "ModelShardingConfig": {
+        "members": [
+            {"name": "Image", "shape": "OptimizationContainerImage", "type": "string"},
+            {
+                "name": "OverrideEnvironment",
+                "shape": "OptimizationJobEnvironmentVariables",
+                "type": "map",
+            },
+        ],
+        "type": "structure",
+    },
     "ModelStepMetadata": {
         "members": [{"name": "Arn", "shape": "String256", "type": "string"}],
         "type": "structure",
@@ -11060,6 +11084,7 @@ SHAPE_DAG = {
                 "shape": "ModelCompilationConfig",
                 "type": "structure",
             },
+            {"name": "ModelShardingConfig", "shape": "ModelShardingConfig", "type": "structure"},
         ],
         "type": "structure",
     },
