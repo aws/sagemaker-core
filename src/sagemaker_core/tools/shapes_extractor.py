@@ -119,19 +119,24 @@ class ShapesExtractor:
 
     def _evaluate_list_type(self, member_shape):
         list_shape_name = member_shape["member"]["shape"]
-        list_shape_type = self.combined_shapes[list_shape_name]["type"]
-        if list_shape_type in ["list", "map"]:
-            raise Exception(
-                "Unhandled list shape key type encountered, needs extra logic to handle this"
-            )
-        if list_shape_type == "structure":
+        list_shape_member = self.combined_shapes[list_shape_name]
+        list_shape_type = list_shape_member["type"]
+        if list_shape_type == "list":
+            member_type = f"List[{self._evaluate_list_type(list_shape_member)}]"
+        elif list_shape_type == "map":
+            member_type = f"List[{self._evaluate_map_type(list_shape_member)}]"
+        elif list_shape_type == "structure":
             # handling an edge case of nested structure
             if list_shape_name == "SearchExpression":
                 member_type = f"List['{list_shape_name}']"
             else:
                 member_type = f"List[{list_shape_name}]"
-        else:
+        elif list_shape_type in BASIC_JSON_TYPES_TO_PYTHON_TYPES.keys():
             member_type = f"List[{BASIC_JSON_TYPES_TO_PYTHON_TYPES[list_shape_type]}]"
+        else:
+            raise Exception(
+                f"Unhandled list shape key type {list_shape_type} for Shape: {list_shape_name} encountered, needs extra logic to handle this"
+            )
         return member_type
 
     def _evaluate_map_type(self, member_shape):
