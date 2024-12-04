@@ -967,6 +967,7 @@ class ResourceConfig(Base):
     volume_kms_key_id: The Amazon Web Services KMS key that SageMaker uses to encrypt data on the storage volume attached to the ML compute instance(s) that run the training job.  Certain Nitro-based instances include local storage, dependent on the instance type. Local storage volumes are encrypted using a hardware module on the instance. You can't request a VolumeKmsKeyId when using an instance type with local storage. For a list of instance types that support local instance storage, see Instance Store Volumes. For more information about local instance storage encryption, see SSD Instance Store Volumes.  The VolumeKmsKeyId can be in any of the following formats:   // KMS Key ID  "1234abcd-12ab-34cd-56ef-1234567890ab"    // Amazon Resource Name (ARN) of a KMS Key  "arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab"
     keep_alive_period_in_seconds: The duration of time in seconds to retain configured resources in a warm pool for subsequent training jobs.
     instance_groups: The configuration of a heterogeneous cluster in JSON format.
+    training_plan_arn: The Amazon Resource Name (ARN); of the training plan to use for this resource configuration.
     """
 
     volume_size_in_gb: int
@@ -975,6 +976,7 @@ class ResourceConfig(Base):
     volume_kms_key_id: Optional[str] = Unassigned()
     keep_alive_period_in_seconds: Optional[int] = Unassigned()
     instance_groups: Optional[List[InstanceGroup]] = Unassigned()
+    training_plan_arn: Optional[str] = Unassigned()
 
 
 class StoppingCondition(Base):
@@ -3140,6 +3142,9 @@ class ClusterInstanceGroupDetails(Base):
     threads_per_core: The number you specified to TreadsPerCore in CreateCluster for enabling or disabling multithreading. For instance types that support multithreading, you can specify 1 for disabling multithreading and 2 for enabling multithreading. For more information, see the reference table of CPU cores and threads per CPU core per instance type in the Amazon Elastic Compute Cloud User Guide.
     instance_storage_configs: The additional storage configurations for the instances in the SageMaker HyperPod cluster instance group.
     on_start_deep_health_checks: A flag indicating whether deep health checks should be performed when the cluster instance group is created or updated.
+    status: The current status of the cluster instance group.    InService: The instance group is active and healthy.    Creating: The instance group is being provisioned.    Updating: The instance group is being updated.    Failed: The instance group has failed to provision or is no longer healthy.    Degraded: The instance group is degraded, meaning that some instances have failed to provision or are no longer healthy.    Deleting: The instance group is being deleted.
+    training_plan_arn: The Amazon Resource Name (ARN); of the training plan associated with this cluster instance group. For more information about how to reserve GPU capacity for your SageMaker HyperPod clusters using Amazon SageMaker Training Plan, see  CreateTrainingPlan .
+    training_plan_status: The current status of the training plan associated with this cluster instance group.
     override_vpc_config
     """
 
@@ -3152,6 +3157,9 @@ class ClusterInstanceGroupDetails(Base):
     threads_per_core: Optional[int] = Unassigned()
     instance_storage_configs: Optional[List[ClusterInstanceStorageConfig]] = Unassigned()
     on_start_deep_health_checks: Optional[List[str]] = Unassigned()
+    status: Optional[str] = Unassigned()
+    training_plan_arn: Optional[str] = Unassigned()
+    training_plan_status: Optional[str] = Unassigned()
     override_vpc_config: Optional[VpcConfig] = Unassigned()
 
 
@@ -3170,6 +3178,7 @@ class ClusterInstanceGroupSpecification(Base):
     threads_per_core: Specifies the value for Threads per core. For instance types that support multithreading, you can specify 1 for disabling multithreading and 2 for enabling multithreading. For instance types that doesn't support multithreading, specify 1. For more information, see the reference table of CPU cores and threads per CPU core per instance type in the Amazon Elastic Compute Cloud User Guide.
     instance_storage_configs: Specifies the additional storage configurations for the instances in the SageMaker HyperPod cluster instance group.
     on_start_deep_health_checks: A flag indicating whether deep health checks should be performed when the cluster instance group is created or updated.
+    training_plan_arn: The Amazon Resource Name (ARN); of the training plan to use for this cluster instance group. For more information about how to reserve GPU capacity for your SageMaker HyperPod clusters using Amazon SageMaker Training Plan, see  CreateTrainingPlan .
     override_vpc_config
     """
 
@@ -3181,6 +3190,7 @@ class ClusterInstanceGroupSpecification(Base):
     threads_per_core: Optional[int] = Unassigned()
     instance_storage_configs: Optional[List[ClusterInstanceStorageConfig]] = Unassigned()
     on_start_deep_health_checks: Optional[List[str]] = Unassigned()
+    training_plan_arn: Optional[str] = Unassigned()
     override_vpc_config: Optional[VpcConfig] = Unassigned()
 
 
@@ -3296,6 +3306,33 @@ class ClusterOrchestrator(Base):
     eks: ClusterOrchestratorEksConfig
 
 
+class ClusterSchedulerConfigSummary(Base):
+    """
+    ClusterSchedulerConfigSummary
+      Summary of the cluster policy.
+
+    Attributes
+    ----------------------
+    cluster_scheduler_config_arn: ARN of the cluster policy.
+    cluster_scheduler_config_id: ID of the cluster policy.
+    cluster_scheduler_config_version: Version of the cluster policy.
+    name: Name of the cluster policy.
+    creation_time: Creation time of the cluster policy.
+    last_modified_time: Last modified time of the cluster policy.
+    status: Status of the cluster policy.
+    cluster_arn: ARN of the cluster.
+    """
+
+    cluster_scheduler_config_arn: str
+    cluster_scheduler_config_id: str
+    name: str
+    creation_time: datetime.datetime
+    status: str
+    cluster_scheduler_config_version: Optional[int] = Unassigned()
+    last_modified_time: Optional[datetime.datetime] = Unassigned()
+    cluster_arn: Optional[str] = Unassigned()
+
+
 class ClusterSummary(Base):
     """
     ClusterSummary
@@ -3307,12 +3344,14 @@ class ClusterSummary(Base):
     cluster_name: The name of the SageMaker HyperPod cluster.
     creation_time: The time when the SageMaker HyperPod cluster is created.
     cluster_status: The status of the SageMaker HyperPod cluster.
+    training_plan_arns: A list of Amazon Resource Names (ARNs) of the training plans associated with this cluster. For more information about how to reserve GPU capacity for your SageMaker HyperPod clusters using Amazon SageMaker Training Plan, see  CreateTrainingPlan .
     """
 
     cluster_arn: str
     cluster_name: Union[str, object]
     creation_time: datetime.datetime
     cluster_status: str
+    training_plan_arns: Optional[List[str]] = Unassigned()
 
 
 class CustomImage(Base):
@@ -3507,6 +3546,101 @@ class CompilationJobSummary(Base):
     compilation_target_platform_os: Optional[str] = Unassigned()
     compilation_target_platform_arch: Optional[str] = Unassigned()
     compilation_target_platform_accelerator: Optional[str] = Unassigned()
+    last_modified_time: Optional[datetime.datetime] = Unassigned()
+
+
+class ComputeQuotaResourceConfig(Base):
+    """
+    ComputeQuotaResourceConfig
+      Configuration of the resources used for the compute allocation definition.
+
+    Attributes
+    ----------------------
+    instance_type: The instance type of the instance group for the cluster.
+    count: The number of instances to add to the instance group of a SageMaker HyperPod cluster.
+    """
+
+    instance_type: str
+    count: int
+
+
+class ResourceSharingConfig(Base):
+    """
+    ResourceSharingConfig
+      Resource sharing configuration.
+
+    Attributes
+    ----------------------
+    strategy: The strategy of how idle compute is shared within the cluster. The following are the options of strategies.    DontLend: entities do not lend idle compute.    Lend: entities can lend idle compute to entities that can borrow.    LendandBorrow: entities can lend idle compute and borrow idle compute from other entities.   Default is LendandBorrow.
+    borrow_limit: The limit on how much idle compute can be borrowed.The values can be 1 - 500 percent of idle compute that the team is allowed to borrow. Default is 50.
+    """
+
+    strategy: str
+    borrow_limit: Optional[int] = Unassigned()
+
+
+class ComputeQuotaConfig(Base):
+    """
+    ComputeQuotaConfig
+      Configuration of the compute allocation definition for an entity. This includes the resource sharing option and the setting to preempt low priority tasks.
+
+    Attributes
+    ----------------------
+    compute_quota_resources: Allocate compute resources by instance types.
+    resource_sharing_config: Resource sharing configuration. This defines how an entity can lend and borrow idle compute with other entities within the cluster.
+    preempt_team_tasks: Allows workloads from within an entity to preempt same-team workloads. When set to LowerPriority, the entity's lower priority tasks are preempted by their own higher priority tasks. Default is LowerPriority.
+    """
+
+    compute_quota_resources: Optional[List[ComputeQuotaResourceConfig]] = Unassigned()
+    resource_sharing_config: Optional[ResourceSharingConfig] = Unassigned()
+    preempt_team_tasks: Optional[str] = Unassigned()
+
+
+class ComputeQuotaTarget(Base):
+    """
+    ComputeQuotaTarget
+      The target entity to allocate compute resources to.
+
+    Attributes
+    ----------------------
+    team_name: Name of the team to allocate compute resources to.
+    fair_share_weight: Assigned entity fair-share weight. Idle compute will be shared across entities based on these assigned weights. This weight is only used when FairShare is enabled. A weight of 0 is the lowest priority and 100 is the highest. Weight 0 is the default.
+    """
+
+    team_name: str
+    fair_share_weight: Optional[int] = Unassigned()
+
+
+class ComputeQuotaSummary(Base):
+    """
+    ComputeQuotaSummary
+      Summary of the compute allocation definition.
+
+    Attributes
+    ----------------------
+    compute_quota_arn: ARN of the compute allocation definition.
+    compute_quota_id: ID of the compute allocation definition.
+    name: Name of the compute allocation definition.
+    compute_quota_version: Version of the compute allocation definition.
+    status: Status of the compute allocation definition.
+    cluster_arn: ARN of the cluster.
+    compute_quota_config: Configuration of the compute allocation definition. This includes the resource sharing option, and the setting to preempt low priority tasks.
+    compute_quota_target: The target entity to allocate compute resources to.
+    activation_state: The state of the compute allocation being described. Use to enable or disable compute allocation. Default is Enabled.
+    creation_time: Creation time of the compute allocation definition.
+    last_modified_time: Last modified time of the compute allocation definition.
+    """
+
+    compute_quota_arn: str
+    compute_quota_id: str
+    name: str
+    status: str
+    compute_quota_target: ComputeQuotaTarget
+    creation_time: datetime.datetime
+    compute_quota_version: Optional[int] = Unassigned()
+    cluster_arn: Optional[str] = Unassigned()
+    compute_quota_config: Optional[ComputeQuotaConfig] = Unassigned()
+    activation_state: Optional[str] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
 
 
@@ -3838,6 +3972,36 @@ class ModelDeployConfig(Base):
 
     auto_generate_endpoint_name: Optional[bool] = Unassigned()
     endpoint_name: Optional[Union[str, object]] = Unassigned()
+
+
+class PriorityClass(Base):
+    """
+    PriorityClass
+      Priority class configuration. When included in PriorityClasses, these class configurations define how tasks are queued.
+
+    Attributes
+    ----------------------
+    name: Name of the priority class.
+    weight: Weight of the priority class. The value is within a range from 0 to 100, where 0 is the default. A weight of 0 is the lowest priority and 100 is the highest. Weight 0 is the default.
+    """
+
+    name: str
+    weight: int
+
+
+class SchedulerConfig(Base):
+    """
+    SchedulerConfig
+      Cluster policy configuration. This policy is used for task prioritization and fair-share allocation. This helps prioritize critical workloads and distributes idle compute across entities.
+
+    Attributes
+    ----------------------
+    priority_classes: List of the priority classes, PriorityClass, of the cluster policy. When specified, these class configurations define how tasks are queued.
+    fair_share: When enabled, entities borrow idle compute based on their assigned FairShareWeight. When disabled, entities borrow idle compute based on a first-come first-serve basis. Default is Enabled.
+    """
+
+    priority_classes: Optional[List[PriorityClass]] = Unassigned()
+    fair_share: Optional[str] = Unassigned()
 
 
 class InputConfig(Base):
@@ -4344,6 +4508,21 @@ class EFSFileSystemConfig(Base):
     file_system_path: Optional[str] = Unassigned()
 
 
+class FSxLustreFileSystemConfig(Base):
+    """
+    FSxLustreFileSystemConfig
+      The settings for assigning a custom Amazon FSx for Lustre file system to a user profile or space for an Amazon SageMaker Domain.
+
+    Attributes
+    ----------------------
+    file_system_id: The globally unique, 17-digit, ID of the file system, assigned by Amazon FSx for Lustre.
+    file_system_path: The path to the file system directory that is accessible in Amazon SageMaker Studio. Permitted users can access only this directory and below.
+    """
+
+    file_system_id: str
+    file_system_path: Optional[str] = Unassigned()
+
+
 class CustomFileSystemConfig(Base):
     """
     CustomFileSystemConfig
@@ -4352,9 +4531,11 @@ class CustomFileSystemConfig(Base):
     Attributes
     ----------------------
     efs_file_system_config: The settings for a custom Amazon EFS file system.
+    f_sx_lustre_file_system_config: The settings for a custom Amazon FSx for Lustre file system.
     """
 
     efs_file_system_config: Optional[EFSFileSystemConfig] = Unassigned()
+    f_sx_lustre_file_system_config: Optional[FSxLustreFileSystemConfig] = Unassigned()
 
 
 class HiddenSageMakerImage(Base):
@@ -6701,6 +6882,34 @@ class OptimizationVpcConfig(Base):
     subnets: List[str]
 
 
+class PartnerAppMaintenanceConfig(Base):
+    """
+    PartnerAppMaintenanceConfig
+      Maintenance configuration settings for the SageMaker Partner AI App.
+
+    Attributes
+    ----------------------
+    maintenance_window_start: The day and time of the week in Coordinated Universal Time (UTC) 24-hour standard time that weekly maintenance updates are scheduled. This value must take the following format: 3-letter-day:24-h-hour:minute. For example: TUE:03:30.
+    """
+
+    maintenance_window_start: Optional[str] = Unassigned()
+
+
+class PartnerAppConfig(Base):
+    """
+    PartnerAppConfig
+      Configuration settings for the SageMaker Partner AI App.
+
+    Attributes
+    ----------------------
+    admin_users: The list of users that are given admin access to the SageMaker Partner AI App.
+    arguments: This is a map of required inputs for a SageMaker Partner AI App. Based on the application type, the map is populated with a key and value pair that is specific to the user and application.
+    """
+
+    admin_users: Optional[List[str]] = Unassigned()
+    arguments: Optional[Dict[str, str]] = Unassigned()
+
+
 class PipelineDefinitionS3Location(Base):
     """
     PipelineDefinitionS3Location
@@ -7082,6 +7291,19 @@ class EFSFileSystem(Base):
     file_system_id: str
 
 
+class FSxLustreFileSystem(Base):
+    """
+    FSxLustreFileSystem
+      A custom file system in Amazon FSx for Lustre.
+
+    Attributes
+    ----------------------
+    file_system_id: Amazon FSx for Lustre file system ID.
+    """
+
+    file_system_id: str
+
+
 class CustomFileSystem(Base):
     """
     CustomFileSystem
@@ -7090,9 +7312,11 @@ class CustomFileSystem(Base):
     Attributes
     ----------------------
     efs_file_system: A custom file system in Amazon EFS.
+    f_sx_lustre_file_system: A custom file system in Amazon FSx for Lustre.
     """
 
     efs_file_system: Optional[EFSFileSystem] = Unassigned()
+    f_sx_lustre_file_system: Optional[FSxLustreFileSystem] = Unassigned()
 
 
 class SpaceSettings(Base):
@@ -8464,6 +8688,21 @@ class OptimizationOutput(Base):
     recommended_inference_image: Optional[str] = Unassigned()
 
 
+class ErrorInfo(Base):
+    """
+    ErrorInfo
+      This is an error field object that contains the error code and the reason for an operation failure.
+
+    Attributes
+    ----------------------
+    code: The error code for an invalid or failed operation.
+    reason: The failure reason for the operation.
+    """
+
+    code: Optional[str] = Unassigned()
+    reason: Optional[str] = Unassigned()
+
+
 class DescribePipelineDefinitionForExecutionResponse(Base):
     """
     DescribePipelineDefinitionForExecutionResponse
@@ -8629,6 +8868,35 @@ class ProfilerRuleEvaluationStatus(Base):
     rule_evaluation_status: Optional[str] = Unassigned()
     status_details: Optional[str] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
+
+
+class ReservedCapacitySummary(Base):
+    """
+    ReservedCapacitySummary
+      Details of a reserved capacity for the training plan. For more information about how to reserve GPU capacity for your SageMaker HyperPod clusters using Amazon SageMaker Training Plan, see  CreateTrainingPlan .
+
+    Attributes
+    ----------------------
+    reserved_capacity_arn: The Amazon Resource Name (ARN); of the reserved capacity.
+    instance_type: The instance type for the reserved capacity.
+    total_instance_count: The total number of instances in the reserved capacity.
+    status: The current status of the reserved capacity.
+    availability_zone: The availability zone for the reserved capacity.
+    duration_hours: The number of whole hours in the total duration for this reserved capacity.
+    duration_minutes: The additional minutes beyond whole hours in the total duration for this reserved capacity.
+    start_time: The start time of the reserved capacity.
+    end_time: The end time of the reserved capacity.
+    """
+
+    reserved_capacity_arn: str
+    instance_type: str
+    total_instance_count: int
+    status: str
+    availability_zone: Optional[str] = Unassigned()
+    duration_hours: Optional[int] = Unassigned()
+    duration_minutes: Optional[int] = Unassigned()
+    start_time: Optional[datetime.datetime] = Unassigned()
+    end_time: Optional[datetime.datetime] = Unassigned()
 
 
 class TrialComponentSource(Base):
@@ -10537,6 +10805,27 @@ class OptimizationJobSummary(Base):
     last_modified_time: Optional[datetime.datetime] = Unassigned()
 
 
+class PartnerAppSummary(Base):
+    """
+    PartnerAppSummary
+      A subset of information related to a SageMaker Partner AI App. This information is used as part of the ListPartnerApps API response.
+
+    Attributes
+    ----------------------
+    arn: The ARN of the SageMaker Partner AI App.
+    name: The name of the SageMaker Partner AI App.
+    type: The type of SageMaker Partner AI App to create. Must be one of the following: lakera-guard, comet, deepchecks-llm-evaluation, or fiddler.
+    status: The status of the SageMaker Partner AI App.
+    creation_time: The creation time of the SageMaker Partner AI App.
+    """
+
+    arn: Optional[str] = Unassigned()
+    name: Optional[str] = Unassigned()
+    type: Optional[str] = Unassigned()
+    status: Optional[str] = Unassigned()
+    creation_time: Optional[datetime.datetime] = Unassigned()
+
+
 class TrainingJobStepMetadata(Base):
     """
     TrainingJobStepMetadata
@@ -10975,6 +11264,7 @@ class TrainingJobSummary(Base):
     training_job_status: The status of the training job.
     secondary_status: The secondary status of the training job.
     warm_pool_status: The status of the warm pool associated with the training job.
+    training_plan_arn: The Amazon Resource Name (ARN); of the training plan associated with this training job. For more information about how to reserve GPU capacity for your SageMaker HyperPod clusters using Amazon SageMaker Training Plan, see  CreateTrainingPlan .
     """
 
     training_job_name: Union[str, object]
@@ -10985,6 +11275,63 @@ class TrainingJobSummary(Base):
     last_modified_time: Optional[datetime.datetime] = Unassigned()
     secondary_status: Optional[str] = Unassigned()
     warm_pool_status: Optional[WarmPoolStatus] = Unassigned()
+    training_plan_arn: Optional[str] = Unassigned()
+
+
+class TrainingPlanFilter(Base):
+    """
+    TrainingPlanFilter
+      A filter to apply when listing or searching for training plans. For more information about how to reserve GPU capacity for your SageMaker HyperPod clusters using Amazon SageMaker Training Plan, see  CreateTrainingPlan .
+
+    Attributes
+    ----------------------
+    name: The name of the filter field (e.g., Status, InstanceType).
+    value: The value to filter by for the specified field.
+    """
+
+    name: str
+    value: str
+
+
+class TrainingPlanSummary(Base):
+    """
+    TrainingPlanSummary
+      Details of the training plan. For more information about how to reserve GPU capacity for your SageMaker HyperPod clusters using Amazon SageMaker Training Plan, see  CreateTrainingPlan .
+
+    Attributes
+    ----------------------
+    training_plan_arn: The Amazon Resource Name (ARN); of the training plan.
+    training_plan_name: The name of the training plan.
+    status: The current status of the training plan (e.g., Pending, Active, Expired). To see the complete list of status values available for a training plan, refer to the Status attribute within the  TrainingPlanSummary  object.
+    status_message: A message providing additional information about the current status of the training plan.
+    duration_hours: The number of whole hours in the total duration for this training plan.
+    duration_minutes: The additional minutes beyond whole hours in the total duration for this training plan.
+    start_time: The start time of the training plan.
+    end_time: The end time of the training plan.
+    upfront_fee: The upfront fee for the training plan.
+    currency_code: The currency code for the upfront fee (e.g., USD).
+    total_instance_count: The total number of instances reserved in this training plan.
+    available_instance_count: The number of instances currently available for use in this training plan.
+    in_use_instance_count: The number of instances currently in use from this training plan.
+    target_resources: The target resources (e.g., training jobs, HyperPod clusters) that can use this training plan. Training plans are specific to their target resource.   A training plan designed for SageMaker training jobs can only be used to schedule and run training jobs.   A training plan for HyperPod clusters can be used exclusively to provide compute resources to a cluster's instance group.
+    reserved_capacity_summaries: A list of reserved capacities associated with this training plan, including details such as instance types, counts, and availability zones.
+    """
+
+    training_plan_arn: str
+    training_plan_name: Union[str, object]
+    status: str
+    status_message: Optional[str] = Unassigned()
+    duration_hours: Optional[int] = Unassigned()
+    duration_minutes: Optional[int] = Unassigned()
+    start_time: Optional[datetime.datetime] = Unassigned()
+    end_time: Optional[datetime.datetime] = Unassigned()
+    upfront_fee: Optional[str] = Unassigned()
+    currency_code: Optional[str] = Unassigned()
+    total_instance_count: Optional[int] = Unassigned()
+    available_instance_count: Optional[int] = Unassigned()
+    in_use_instance_count: Optional[int] = Unassigned()
+    target_resources: Optional[List[str]] = Unassigned()
+    reserved_capacity_summaries: Optional[List[ReservedCapacitySummary]] = Unassigned()
 
 
 class TransformJobSummary(Base):
@@ -11741,6 +12088,31 @@ class RenderingError(Base):
     message: str
 
 
+class ReservedCapacityOffering(Base):
+    """
+    ReservedCapacityOffering
+      Details about a reserved capacity offering for a training plan offering. For more information about how to reserve GPU capacity for your SageMaker HyperPod clusters using Amazon SageMaker Training Plan, see  CreateTrainingPlan .
+
+    Attributes
+    ----------------------
+    instance_type: The instance type for the reserved capacity offering.
+    instance_count: The number of instances in the reserved capacity offering.
+    availability_zone: The availability zone for the reserved capacity offering.
+    duration_hours: The number of whole hours in the total duration for this reserved capacity offering.
+    duration_minutes: The additional minutes beyond whole hours in the total duration for this reserved capacity offering.
+    start_time: The start time of the reserved capacity offering.
+    end_time: The end time of the reserved capacity offering.
+    """
+
+    instance_type: str
+    instance_count: int
+    availability_zone: Optional[str] = Unassigned()
+    duration_hours: Optional[int] = Unassigned()
+    duration_minutes: Optional[int] = Unassigned()
+    start_time: Optional[datetime.datetime] = Unassigned()
+    end_time: Optional[datetime.datetime] = Unassigned()
+
+
 class ResourceConfigForUpdate(Base):
     """
     ResourceConfigForUpdate
@@ -12068,6 +12440,35 @@ class VisibilityConditions(Base):
 
     key: Optional[str] = Unassigned()
     value: Optional[str] = Unassigned()
+
+
+class TrainingPlanOffering(Base):
+    """
+    TrainingPlanOffering
+      Details about a training plan offering. For more information about how to reserve GPU capacity for your SageMaker HyperPod clusters using Amazon SageMaker Training Plan, see  CreateTrainingPlan .
+
+    Attributes
+    ----------------------
+    training_plan_offering_id: The unique identifier for this training plan offering.
+    target_resources: The target resources (e.g., SageMaker Training Jobs, SageMaker HyperPod) for this training plan offering. Training plans are specific to their target resource.   A training plan designed for SageMaker training jobs can only be used to schedule and run training jobs.   A training plan for HyperPod clusters can be used exclusively to provide compute resources to a cluster's instance group.
+    requested_start_time_after: The requested start time that the user specified when searching for the training plan offering.
+    requested_end_time_before: The requested end time that the user specified when searching for the training plan offering.
+    duration_hours: The number of whole hours in the total duration for this training plan offering.
+    duration_minutes: The additional minutes beyond whole hours in the total duration for this training plan offering.
+    upfront_fee: The upfront fee for this training plan offering.
+    currency_code: The currency code for the upfront fee (e.g., USD).
+    reserved_capacity_offerings: A list of reserved capacity offerings associated with this training plan offering.
+    """
+
+    training_plan_offering_id: str
+    target_resources: List[str]
+    requested_start_time_after: Optional[datetime.datetime] = Unassigned()
+    requested_end_time_before: Optional[datetime.datetime] = Unassigned()
+    duration_hours: Optional[int] = Unassigned()
+    duration_minutes: Optional[int] = Unassigned()
+    upfront_fee: Optional[str] = Unassigned()
+    currency_code: Optional[str] = Unassigned()
+    reserved_capacity_offerings: Optional[List[ReservedCapacityOffering]] = Unassigned()
 
 
 class ServiceCatalogProvisioningUpdateDetails(Base):
