@@ -931,7 +931,9 @@ class ResourcesCodeGen:
             for e in errors:
                 error_shape = e["shape"]
                 error_shape_dict = self.shapes[error_shape]
-                error_shape_documentation = error_shape_dict.get("documentation").strip()
+                error_shape_documentation = error_shape_dict.get("documentation")
+                if error_shape_documentation:
+                    error_shape_documentation.strip()
                 shape_errors_and_docstrings[error_shape] = error_shape_documentation
         sorted_keys = sorted(shape_errors_and_docstrings.keys())
         return {key: shape_errors_and_docstrings[key] for key in sorted_keys}
@@ -939,7 +941,10 @@ class ResourcesCodeGen:
     def _exception_docstring(self, operation: str) -> str:
         _docstring = RESOURCE_METHOD_EXCEPTION_DOCSTRING
         for error, documentaion in self._fetch_shape_errors_and_doc_strings(operation).items():
-            _docstring += f"\n    {error}: {remove_html_tags(documentaion).strip()}"
+            if documentaion:
+                _docstring += f"\n    {error}: {remove_html_tags(documentaion).strip()}"
+            else:
+                _docstring += f"\n    {error}"
         return _docstring
 
     def _generate_docstring(

@@ -26,7 +26,8 @@ class Method:
         self.__dict__.update(kwargs)
 
     def get_docstring_title(self, operation):
-        title = remove_html_tags(operation["documentation"])
-        self.docstring_title = title.split(".")[0] + "."
+        documentation = operation.get("documentation")
+        title = remove_html_tags(documentation) if documentation else None
+        self.docstring_title = title.split(".")[0] + "." if title else None
 
     # TODO: add some templates for common methods

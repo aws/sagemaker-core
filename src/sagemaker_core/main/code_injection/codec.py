@@ -115,15 +115,29 @@ def _evaluate_list_type(raw_list, shape) -> list:
     """
     _shape_member_type = shape["member_type"]
     _shape_member_shape = shape["member_shape"]
+    _evaluated_list = []
     if _shape_member_type in BASIC_TYPES:
         # if basic types directly assign list value.
         _evaluated_list = raw_list
     elif _shape_member_type == STRUCTURE_TYPE:
-        # if structure type transform each list item and assign value.
-        _evaluated_list = []
+        # if structure type, transform each list item and assign value.
         # traverse through response list and evaluate item
         for item in raw_list:
             _evaluated_item = transform(item, _shape_member_shape)
+            _evaluated_list.append(_evaluated_item)
+    elif _shape_member_type == LIST_TYPE:
+        # if list type, transform each list item and assign value.
+        # traverse through response list and evaluate item
+        for item in raw_list:
+            _list_type_shape = SHAPE_DAG[_shape_member_shape]
+            _evaluated_item = _evaluate_list_type(item, _list_type_shape)
+            _evaluated_list.append(_evaluated_item)
+    elif _shape_member_type == MAP_TYPE:
+        # if structure type, transform each list item and assign value.
+        # traverse through response list and evaluate item
+        for item in raw_list:
+            _map_type_shape = SHAPE_DAG[_shape_member_shape]
+            _evaluated_item = _evaluate_map_type(item, _map_type_shape)
             _evaluated_list.append(_evaluated_item)
     else:
         raise ValueError(
