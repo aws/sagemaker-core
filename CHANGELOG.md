@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.0.17 (2024-12-04)
+
+ * Daily Sync with Botocore v1.35.75 on 2024/12/04 (#227)
+ * Add support for map-in-list, list-in-list structures (#224)
+
 ## v1.0.16 (2024-11-25)
 
  * Daily Sync with Botocore v1.35.68 on 2024/11/25 (#223)
