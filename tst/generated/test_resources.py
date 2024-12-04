@@ -112,6 +112,7 @@ class ResourcesTest(unittest.TestCase):
                             "JobDefinitionSummaries": [summary],
                             f"{name}SummaryList": [summary],
                             f"{name}s": [summary],
+                            f"Summaries": [summary]
                         }
                         if name == "MlflowTrackingServer":
                             summary_response = {"TrackingServerSummaries": [summary]}
