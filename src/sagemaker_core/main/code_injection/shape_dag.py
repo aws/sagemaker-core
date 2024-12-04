@@ -1263,6 +1263,13 @@ SHAPE_DAG = {
                 "type": "list",
             },
             {"name": "OnStartDeepHealthChecks", "shape": "OnStartDeepHealthChecks", "type": "list"},
+            {"name": "Status", "shape": "InstanceGroupStatus", "type": "string"},
+            {"name": "TrainingPlanArn", "shape": "TrainingPlanArn", "type": "string"},
+            {
+                "name": "TrainingPlanStatus",
+                "shape": "InstanceGroupTrainingPlanStatus",
+                "type": "string",
+            },
             {"name": "OverrideVpcConfig", "shape": "VpcConfig", "type": "structure"},
         ],
         "type": "structure",
@@ -1286,6 +1293,7 @@ SHAPE_DAG = {
                 "type": "list",
             },
             {"name": "OnStartDeepHealthChecks", "shape": "OnStartDeepHealthChecks", "type": "list"},
+            {"name": "TrainingPlanArn", "shape": "TrainingPlanArn", "type": "string"},
             {"name": "OverrideVpcConfig", "shape": "VpcConfig", "type": "structure"},
         ],
         "type": "structure",
@@ -1380,6 +1388,32 @@ SHAPE_DAG = {
         "members": [{"name": "ClusterArn", "shape": "EksClusterArn", "type": "string"}],
         "type": "structure",
     },
+    "ClusterSchedulerConfigSummary": {
+        "members": [
+            {
+                "name": "ClusterSchedulerConfigArn",
+                "shape": "ClusterSchedulerConfigArn",
+                "type": "string",
+            },
+            {
+                "name": "ClusterSchedulerConfigId",
+                "shape": "ClusterSchedulerConfigId",
+                "type": "string",
+            },
+            {"name": "ClusterSchedulerConfigVersion", "shape": "Integer", "type": "integer"},
+            {"name": "Name", "shape": "EntityName", "type": "string"},
+            {"name": "CreationTime", "shape": "Timestamp", "type": "timestamp"},
+            {"name": "LastModifiedTime", "shape": "Timestamp", "type": "timestamp"},
+            {"name": "Status", "shape": "SchedulerResourceStatus", "type": "string"},
+            {"name": "ClusterArn", "shape": "ClusterArn", "type": "string"},
+        ],
+        "type": "structure",
+    },
+    "ClusterSchedulerConfigSummaryList": {
+        "member_shape": "ClusterSchedulerConfigSummary",
+        "member_type": "structure",
+        "type": "list",
+    },
     "ClusterSummaries": {
         "member_shape": "ClusterSummary",
         "member_type": "structure",
@@ -1391,6 +1425,7 @@ SHAPE_DAG = {
             {"name": "ClusterName", "shape": "ClusterName", "type": "string"},
             {"name": "CreationTime", "shape": "Timestamp", "type": "timestamp"},
             {"name": "ClusterStatus", "shape": "ClusterStatus", "type": "string"},
+            {"name": "TrainingPlanArns", "shape": "TrainingPlanArns", "type": "list"},
         ],
         "type": "structure",
     },
@@ -1514,6 +1549,62 @@ SHAPE_DAG = {
         "member_shape": "CompressionType",
         "member_type": "string",
         "type": "list",
+    },
+    "ComputeQuotaConfig": {
+        "members": [
+            {
+                "name": "ComputeQuotaResources",
+                "shape": "ComputeQuotaResourceConfigList",
+                "type": "list",
+            },
+            {
+                "name": "ResourceSharingConfig",
+                "shape": "ResourceSharingConfig",
+                "type": "structure",
+            },
+            {"name": "PreemptTeamTasks", "shape": "PreemptTeamTasks", "type": "string"},
+        ],
+        "type": "structure",
+    },
+    "ComputeQuotaResourceConfig": {
+        "members": [
+            {"name": "InstanceType", "shape": "ClusterInstanceType", "type": "string"},
+            {"name": "Count", "shape": "InstanceCount", "type": "integer"},
+        ],
+        "type": "structure",
+    },
+    "ComputeQuotaResourceConfigList": {
+        "member_shape": "ComputeQuotaResourceConfig",
+        "member_type": "structure",
+        "type": "list",
+    },
+    "ComputeQuotaSummary": {
+        "members": [
+            {"name": "ComputeQuotaArn", "shape": "ComputeQuotaArn", "type": "string"},
+            {"name": "ComputeQuotaId", "shape": "ComputeQuotaId", "type": "string"},
+            {"name": "Name", "shape": "EntityName", "type": "string"},
+            {"name": "ComputeQuotaVersion", "shape": "Integer", "type": "integer"},
+            {"name": "Status", "shape": "SchedulerResourceStatus", "type": "string"},
+            {"name": "ClusterArn", "shape": "ClusterArn", "type": "string"},
+            {"name": "ComputeQuotaConfig", "shape": "ComputeQuotaConfig", "type": "structure"},
+            {"name": "ComputeQuotaTarget", "shape": "ComputeQuotaTarget", "type": "structure"},
+            {"name": "ActivationState", "shape": "ActivationState", "type": "string"},
+            {"name": "CreationTime", "shape": "Timestamp", "type": "timestamp"},
+            {"name": "LastModifiedTime", "shape": "Timestamp", "type": "timestamp"},
+        ],
+        "type": "structure",
+    },
+    "ComputeQuotaSummaryList": {
+        "member_shape": "ComputeQuotaSummary",
+        "member_type": "structure",
+        "type": "list",
+    },
+    "ComputeQuotaTarget": {
+        "members": [
+            {"name": "TeamName", "shape": "ComputeQuotaTargetTeamName", "type": "string"},
+            {"name": "FairShareWeight", "shape": "FairShareWeight", "type": "integer"},
+        ],
+        "type": "structure",
     },
     "ConditionStepMetadata": {
         "members": [{"name": "Outcome", "shape": "ConditionOutcome", "type": "string"}],
@@ -1811,6 +1902,31 @@ SHAPE_DAG = {
         "members": [{"name": "ClusterArn", "shape": "ClusterArn", "type": "string"}],
         "type": "structure",
     },
+    "CreateClusterSchedulerConfigRequest": {
+        "members": [
+            {"name": "Name", "shape": "EntityName", "type": "string"},
+            {"name": "ClusterArn", "shape": "ClusterArn", "type": "string"},
+            {"name": "SchedulerConfig", "shape": "SchedulerConfig", "type": "structure"},
+            {"name": "Description", "shape": "EntityDescription", "type": "string"},
+            {"name": "Tags", "shape": "TagList", "type": "list"},
+        ],
+        "type": "structure",
+    },
+    "CreateClusterSchedulerConfigResponse": {
+        "members": [
+            {
+                "name": "ClusterSchedulerConfigArn",
+                "shape": "ClusterSchedulerConfigArn",
+                "type": "string",
+            },
+            {
+                "name": "ClusterSchedulerConfigId",
+                "shape": "ClusterSchedulerConfigId",
+                "type": "string",
+            },
+        ],
+        "type": "structure",
+    },
     "CreateCodeRepositoryInput": {
         "members": [
             {"name": "CodeRepositoryName", "shape": "EntityName", "type": "string"},
@@ -1838,6 +1954,25 @@ SHAPE_DAG = {
     },
     "CreateCompilationJobResponse": {
         "members": [{"name": "CompilationJobArn", "shape": "CompilationJobArn", "type": "string"}],
+        "type": "structure",
+    },
+    "CreateComputeQuotaRequest": {
+        "members": [
+            {"name": "Name", "shape": "EntityName", "type": "string"},
+            {"name": "Description", "shape": "EntityDescription", "type": "string"},
+            {"name": "ClusterArn", "shape": "ClusterArn", "type": "string"},
+            {"name": "ComputeQuotaConfig", "shape": "ComputeQuotaConfig", "type": "structure"},
+            {"name": "ComputeQuotaTarget", "shape": "ComputeQuotaTarget", "type": "structure"},
+            {"name": "ActivationState", "shape": "ActivationState", "type": "string"},
+            {"name": "Tags", "shape": "TagList", "type": "list"},
+        ],
+        "type": "structure",
+    },
+    "CreateComputeQuotaResponse": {
+        "members": [
+            {"name": "ComputeQuotaArn", "shape": "ComputeQuotaArn", "type": "string"},
+            {"name": "ComputeQuotaId", "shape": "ComputeQuotaId", "type": "string"},
+        ],
         "type": "structure",
     },
     "CreateContextRequest": {
@@ -2648,6 +2783,45 @@ SHAPE_DAG = {
         ],
         "type": "structure",
     },
+    "CreatePartnerAppPresignedUrlRequest": {
+        "members": [
+            {"name": "Arn", "shape": "PartnerAppArn", "type": "string"},
+            {"name": "ExpiresInSeconds", "shape": "ExpiresInSeconds", "type": "integer"},
+            {
+                "name": "SessionExpirationDurationInSeconds",
+                "shape": "SessionExpirationDurationInSeconds",
+                "type": "integer",
+            },
+        ],
+        "type": "structure",
+    },
+    "CreatePartnerAppPresignedUrlResponse": {
+        "members": [{"name": "Url", "shape": "String2048", "type": "string"}],
+        "type": "structure",
+    },
+    "CreatePartnerAppRequest": {
+        "members": [
+            {"name": "Name", "shape": "PartnerAppName", "type": "string"},
+            {"name": "Type", "shape": "PartnerAppType", "type": "string"},
+            {"name": "ExecutionRoleArn", "shape": "RoleArn", "type": "string"},
+            {
+                "name": "MaintenanceConfig",
+                "shape": "PartnerAppMaintenanceConfig",
+                "type": "structure",
+            },
+            {"name": "Tier", "shape": "NonEmptyString64", "type": "string"},
+            {"name": "ApplicationConfig", "shape": "PartnerAppConfig", "type": "structure"},
+            {"name": "AuthType", "shape": "PartnerAppAuthType", "type": "string"},
+            {"name": "EnableIamSessionBasedIdentity", "shape": "Boolean", "type": "boolean"},
+            {"name": "ClientToken", "shape": "ClientToken", "type": "string"},
+            {"name": "Tags", "shape": "TagList", "type": "list"},
+        ],
+        "type": "structure",
+    },
+    "CreatePartnerAppResponse": {
+        "members": [{"name": "Arn", "shape": "PartnerAppArn", "type": "string"}],
+        "type": "structure",
+    },
     "CreatePipelineRequest": {
         "members": [
             {"name": "PipelineName", "shape": "PipelineName", "type": "string"},
@@ -2873,6 +3047,18 @@ SHAPE_DAG = {
         "members": [{"name": "TrainingJobArn", "shape": "TrainingJobArn", "type": "string"}],
         "type": "structure",
     },
+    "CreateTrainingPlanRequest": {
+        "members": [
+            {"name": "TrainingPlanName", "shape": "TrainingPlanName", "type": "string"},
+            {"name": "TrainingPlanOfferingId", "shape": "TrainingPlanOfferingId", "type": "string"},
+            {"name": "Tags", "shape": "TagList", "type": "list"},
+        ],
+        "type": "structure",
+    },
+    "CreateTrainingPlanResponse": {
+        "members": [{"name": "TrainingPlanArn", "shape": "TrainingPlanArn", "type": "string"}],
+        "type": "structure",
+    },
     "CreateTransformJobRequest": {
         "members": [
             {"name": "TransformJobName", "shape": "TransformJobName", "type": "string"},
@@ -2997,12 +3183,20 @@ SHAPE_DAG = {
     },
     "CsvContentTypes": {"member_shape": "CsvContentType", "member_type": "string", "type": "list"},
     "CustomFileSystem": {
-        "members": [{"name": "EFSFileSystem", "shape": "EFSFileSystem", "type": "structure"}],
+        "members": [
+            {"name": "EFSFileSystem", "shape": "EFSFileSystem", "type": "structure"},
+            {"name": "FSxLustreFileSystem", "shape": "FSxLustreFileSystem", "type": "structure"},
+        ],
         "type": "structure",
     },
     "CustomFileSystemConfig": {
         "members": [
-            {"name": "EFSFileSystemConfig", "shape": "EFSFileSystemConfig", "type": "structure"}
+            {"name": "EFSFileSystemConfig", "shape": "EFSFileSystemConfig", "type": "structure"},
+            {
+                "name": "FSxLustreFileSystemConfig",
+                "shape": "FSxLustreFileSystemConfig",
+                "type": "structure",
+            },
         ],
         "type": "structure",
     },
@@ -3333,12 +3527,26 @@ SHAPE_DAG = {
         "members": [{"name": "ClusterArn", "shape": "ClusterArn", "type": "string"}],
         "type": "structure",
     },
+    "DeleteClusterSchedulerConfigRequest": {
+        "members": [
+            {
+                "name": "ClusterSchedulerConfigId",
+                "shape": "ClusterSchedulerConfigId",
+                "type": "string",
+            }
+        ],
+        "type": "structure",
+    },
     "DeleteCodeRepositoryInput": {
         "members": [{"name": "CodeRepositoryName", "shape": "EntityName", "type": "string"}],
         "type": "structure",
     },
     "DeleteCompilationJobRequest": {
         "members": [{"name": "CompilationJobName", "shape": "EntityName", "type": "string"}],
+        "type": "structure",
+    },
+    "DeleteComputeQuotaRequest": {
+        "members": [{"name": "ComputeQuotaId", "shape": "ComputeQuotaId", "type": "string"}],
         "type": "structure",
     },
     "DeleteContextRequest": {
@@ -3544,6 +3752,17 @@ SHAPE_DAG = {
     },
     "DeleteOptimizationJobRequest": {
         "members": [{"name": "OptimizationJobName", "shape": "EntityName", "type": "string"}],
+        "type": "structure",
+    },
+    "DeletePartnerAppRequest": {
+        "members": [
+            {"name": "Arn", "shape": "PartnerAppArn", "type": "string"},
+            {"name": "ClientToken", "shape": "ClientToken", "type": "string"},
+        ],
+        "type": "structure",
+    },
+    "DeletePartnerAppResponse": {
+        "members": [{"name": "Arn", "shape": "PartnerAppArn", "type": "string"}],
         "type": "structure",
     },
     "DeletePipelineRequest": {
@@ -3985,6 +4204,43 @@ SHAPE_DAG = {
         ],
         "type": "structure",
     },
+    "DescribeClusterSchedulerConfigRequest": {
+        "members": [
+            {
+                "name": "ClusterSchedulerConfigId",
+                "shape": "ClusterSchedulerConfigId",
+                "type": "string",
+            },
+            {"name": "ClusterSchedulerConfigVersion", "shape": "Integer", "type": "integer"},
+        ],
+        "type": "structure",
+    },
+    "DescribeClusterSchedulerConfigResponse": {
+        "members": [
+            {
+                "name": "ClusterSchedulerConfigArn",
+                "shape": "ClusterSchedulerConfigArn",
+                "type": "string",
+            },
+            {
+                "name": "ClusterSchedulerConfigId",
+                "shape": "ClusterSchedulerConfigId",
+                "type": "string",
+            },
+            {"name": "Name", "shape": "EntityName", "type": "string"},
+            {"name": "ClusterSchedulerConfigVersion", "shape": "Integer", "type": "integer"},
+            {"name": "Status", "shape": "SchedulerResourceStatus", "type": "string"},
+            {"name": "FailureReason", "shape": "FailureReason", "type": "string"},
+            {"name": "ClusterArn", "shape": "ClusterArn", "type": "string"},
+            {"name": "SchedulerConfig", "shape": "SchedulerConfig", "type": "structure"},
+            {"name": "Description", "shape": "EntityDescription", "type": "string"},
+            {"name": "CreationTime", "shape": "Timestamp", "type": "timestamp"},
+            {"name": "CreatedBy", "shape": "UserContext", "type": "structure"},
+            {"name": "LastModifiedTime", "shape": "Timestamp", "type": "timestamp"},
+            {"name": "LastModifiedBy", "shape": "UserContext", "type": "structure"},
+        ],
+        "type": "structure",
+    },
     "DescribeCodeRepositoryInput": {
         "members": [{"name": "CodeRepositoryName", "shape": "EntityName", "type": "string"}],
         "type": "structure",
@@ -4023,6 +4279,33 @@ SHAPE_DAG = {
             {"name": "OutputConfig", "shape": "OutputConfig", "type": "structure"},
             {"name": "VpcConfig", "shape": "NeoVpcConfig", "type": "structure"},
             {"name": "DerivedInformation", "shape": "DerivedInformation", "type": "structure"},
+        ],
+        "type": "structure",
+    },
+    "DescribeComputeQuotaRequest": {
+        "members": [
+            {"name": "ComputeQuotaId", "shape": "ComputeQuotaId", "type": "string"},
+            {"name": "ComputeQuotaVersion", "shape": "Integer", "type": "integer"},
+        ],
+        "type": "structure",
+    },
+    "DescribeComputeQuotaResponse": {
+        "members": [
+            {"name": "ComputeQuotaArn", "shape": "ComputeQuotaArn", "type": "string"},
+            {"name": "ComputeQuotaId", "shape": "ComputeQuotaId", "type": "string"},
+            {"name": "Name", "shape": "EntityName", "type": "string"},
+            {"name": "Description", "shape": "EntityDescription", "type": "string"},
+            {"name": "ComputeQuotaVersion", "shape": "Integer", "type": "integer"},
+            {"name": "Status", "shape": "SchedulerResourceStatus", "type": "string"},
+            {"name": "FailureReason", "shape": "FailureReason", "type": "string"},
+            {"name": "ClusterArn", "shape": "ClusterArn", "type": "string"},
+            {"name": "ComputeQuotaConfig", "shape": "ComputeQuotaConfig", "type": "structure"},
+            {"name": "ComputeQuotaTarget", "shape": "ComputeQuotaTarget", "type": "structure"},
+            {"name": "ActivationState", "shape": "ActivationState", "type": "string"},
+            {"name": "CreationTime", "shape": "Timestamp", "type": "timestamp"},
+            {"name": "CreatedBy", "shape": "UserContext", "type": "structure"},
+            {"name": "LastModifiedTime", "shape": "Timestamp", "type": "timestamp"},
+            {"name": "LastModifiedBy", "shape": "UserContext", "type": "structure"},
         ],
         "type": "structure",
     },
@@ -5188,6 +5471,33 @@ SHAPE_DAG = {
         ],
         "type": "structure",
     },
+    "DescribePartnerAppRequest": {
+        "members": [{"name": "Arn", "shape": "PartnerAppArn", "type": "string"}],
+        "type": "structure",
+    },
+    "DescribePartnerAppResponse": {
+        "members": [
+            {"name": "Arn", "shape": "PartnerAppArn", "type": "string"},
+            {"name": "Name", "shape": "PartnerAppName", "type": "string"},
+            {"name": "Type", "shape": "PartnerAppType", "type": "string"},
+            {"name": "Status", "shape": "PartnerAppStatus", "type": "string"},
+            {"name": "CreationTime", "shape": "Timestamp", "type": "timestamp"},
+            {"name": "ExecutionRoleArn", "shape": "RoleArn", "type": "string"},
+            {"name": "BaseUrl", "shape": "String2048", "type": "string"},
+            {
+                "name": "MaintenanceConfig",
+                "shape": "PartnerAppMaintenanceConfig",
+                "type": "structure",
+            },
+            {"name": "Tier", "shape": "NonEmptyString64", "type": "string"},
+            {"name": "Version", "shape": "NonEmptyString64", "type": "string"},
+            {"name": "ApplicationConfig", "shape": "PartnerAppConfig", "type": "structure"},
+            {"name": "AuthType", "shape": "PartnerAppAuthType", "type": "string"},
+            {"name": "EnableIamSessionBasedIdentity", "shape": "Boolean", "type": "boolean"},
+            {"name": "Error", "shape": "ErrorInfo", "type": "structure"},
+        ],
+        "type": "structure",
+    },
     "DescribePipelineDefinitionForExecutionRequest": {
         "members": [
             {"name": "PipelineExecutionArn", "shape": "PipelineExecutionArn", "type": "string"}
@@ -5490,6 +5800,38 @@ SHAPE_DAG = {
             {"name": "RetryStrategy", "shape": "RetryStrategy", "type": "structure"},
             {"name": "RemoteDebugConfig", "shape": "RemoteDebugConfig", "type": "structure"},
             {"name": "InfraCheckConfig", "shape": "InfraCheckConfig", "type": "structure"},
+        ],
+        "type": "structure",
+    },
+    "DescribeTrainingPlanRequest": {
+        "members": [{"name": "TrainingPlanName", "shape": "TrainingPlanName", "type": "string"}],
+        "type": "structure",
+    },
+    "DescribeTrainingPlanResponse": {
+        "members": [
+            {"name": "TrainingPlanArn", "shape": "TrainingPlanArn", "type": "string"},
+            {"name": "TrainingPlanName", "shape": "TrainingPlanName", "type": "string"},
+            {"name": "Status", "shape": "TrainingPlanStatus", "type": "string"},
+            {"name": "StatusMessage", "shape": "TrainingPlanStatusMessage", "type": "string"},
+            {"name": "DurationHours", "shape": "TrainingPlanDurationHours", "type": "long"},
+            {"name": "DurationMinutes", "shape": "TrainingPlanDurationMinutes", "type": "long"},
+            {"name": "StartTime", "shape": "Timestamp", "type": "timestamp"},
+            {"name": "EndTime", "shape": "Timestamp", "type": "timestamp"},
+            {"name": "UpfrontFee", "shape": "String256", "type": "string"},
+            {"name": "CurrencyCode", "shape": "CurrencyCode", "type": "string"},
+            {"name": "TotalInstanceCount", "shape": "TotalInstanceCount", "type": "integer"},
+            {
+                "name": "AvailableInstanceCount",
+                "shape": "AvailableInstanceCount",
+                "type": "integer",
+            },
+            {"name": "InUseInstanceCount", "shape": "InUseInstanceCount", "type": "integer"},
+            {"name": "TargetResources", "shape": "SageMakerResourceNames", "type": "list"},
+            {
+                "name": "ReservedCapacitySummaries",
+                "shape": "ReservedCapacitySummaries",
+                "type": "list",
+            },
         ],
         "type": "structure",
     },
@@ -6198,6 +6540,13 @@ SHAPE_DAG = {
         "member_type": "structure",
         "type": "list",
     },
+    "ErrorInfo": {
+        "members": [
+            {"name": "Code", "shape": "NonEmptyString64", "type": "string"},
+            {"name": "Reason", "shape": "NonEmptyString256", "type": "string"},
+        ],
+        "type": "structure",
+    },
     "ExecutionRoleArns": {"member_shape": "RoleArn", "member_type": "string", "type": "list"},
     "Experiment": {
         "members": [
@@ -6261,6 +6610,17 @@ SHAPE_DAG = {
                 "shape": "ClarifyExplainerConfig",
                 "type": "structure",
             }
+        ],
+        "type": "structure",
+    },
+    "FSxLustreFileSystem": {
+        "members": [{"name": "FileSystemId", "shape": "FileSystemId", "type": "string"}],
+        "type": "structure",
+    },
+    "FSxLustreFileSystemConfig": {
+        "members": [
+            {"name": "FileSystemId", "shape": "FileSystemId", "type": "string"},
+            {"name": "FileSystemPath", "shape": "FileSystemPath", "type": "string"},
         ],
         "type": "structure",
     },
@@ -8187,6 +8547,31 @@ SHAPE_DAG = {
         ],
         "type": "structure",
     },
+    "ListClusterSchedulerConfigsRequest": {
+        "members": [
+            {"name": "CreatedAfter", "shape": "Timestamp", "type": "timestamp"},
+            {"name": "CreatedBefore", "shape": "Timestamp", "type": "timestamp"},
+            {"name": "NameContains", "shape": "EntityName", "type": "string"},
+            {"name": "ClusterArn", "shape": "ClusterArn", "type": "string"},
+            {"name": "Status", "shape": "SchedulerResourceStatus", "type": "string"},
+            {"name": "SortBy", "shape": "SortClusterSchedulerConfigBy", "type": "string"},
+            {"name": "SortOrder", "shape": "SortOrder", "type": "string"},
+            {"name": "NextToken", "shape": "NextToken", "type": "string"},
+            {"name": "MaxResults", "shape": "MaxResults", "type": "integer"},
+        ],
+        "type": "structure",
+    },
+    "ListClusterSchedulerConfigsResponse": {
+        "members": [
+            {
+                "name": "ClusterSchedulerConfigSummaries",
+                "shape": "ClusterSchedulerConfigSummaryList",
+                "type": "list",
+            },
+            {"name": "NextToken", "shape": "NextToken", "type": "string"},
+        ],
+        "type": "structure",
+    },
     "ListClustersRequest": {
         "members": [
             {"name": "CreationTimeAfter", "shape": "Timestamp", "type": "timestamp"},
@@ -8196,6 +8581,7 @@ SHAPE_DAG = {
             {"name": "NextToken", "shape": "NextToken", "type": "string"},
             {"name": "SortBy", "shape": "ClusterSortBy", "type": "string"},
             {"name": "SortOrder", "shape": "SortOrder", "type": "string"},
+            {"name": "TrainingPlanArn", "shape": "TrainingPlanArn", "type": "string"},
         ],
         "type": "structure",
     },
@@ -8249,6 +8635,27 @@ SHAPE_DAG = {
     "ListCompilationJobsResponse": {
         "members": [
             {"name": "CompilationJobSummaries", "shape": "CompilationJobSummaries", "type": "list"},
+            {"name": "NextToken", "shape": "NextToken", "type": "string"},
+        ],
+        "type": "structure",
+    },
+    "ListComputeQuotasRequest": {
+        "members": [
+            {"name": "CreatedAfter", "shape": "Timestamp", "type": "timestamp"},
+            {"name": "CreatedBefore", "shape": "Timestamp", "type": "timestamp"},
+            {"name": "NameContains", "shape": "EntityName", "type": "string"},
+            {"name": "Status", "shape": "SchedulerResourceStatus", "type": "string"},
+            {"name": "ClusterArn", "shape": "ClusterArn", "type": "string"},
+            {"name": "SortBy", "shape": "SortQuotaBy", "type": "string"},
+            {"name": "SortOrder", "shape": "SortOrder", "type": "string"},
+            {"name": "NextToken", "shape": "NextToken", "type": "string"},
+            {"name": "MaxResults", "shape": "MaxResults", "type": "integer"},
+        ],
+        "type": "structure",
+    },
+    "ListComputeQuotasResponse": {
+        "members": [
+            {"name": "ComputeQuotaSummaries", "shape": "ComputeQuotaSummaryList", "type": "list"},
             {"name": "NextToken", "shape": "NextToken", "type": "string"},
         ],
         "type": "structure",
@@ -9290,6 +9697,20 @@ SHAPE_DAG = {
         ],
         "type": "structure",
     },
+    "ListPartnerAppsRequest": {
+        "members": [
+            {"name": "MaxResults", "shape": "MaxResults", "type": "integer"},
+            {"name": "NextToken", "shape": "NextToken", "type": "string"},
+        ],
+        "type": "structure",
+    },
+    "ListPartnerAppsResponse": {
+        "members": [
+            {"name": "Summaries", "shape": "PartnerAppSummaries", "type": "list"},
+            {"name": "NextToken", "shape": "NextToken", "type": "string"},
+        ],
+        "type": "structure",
+    },
     "ListPipelineExecutionStepsRequest": {
         "members": [
             {"name": "PipelineExecutionArn", "shape": "PipelineExecutionArn", "type": "string"},
@@ -9561,6 +9982,7 @@ SHAPE_DAG = {
             {"name": "SortBy", "shape": "SortBy", "type": "string"},
             {"name": "SortOrder", "shape": "SortOrder", "type": "string"},
             {"name": "WarmPoolStatusEquals", "shape": "WarmPoolResourceStatus", "type": "string"},
+            {"name": "TrainingPlanArnEquals", "shape": "TrainingPlanArn", "type": "string"},
         ],
         "type": "structure",
     },
@@ -9568,6 +9990,25 @@ SHAPE_DAG = {
         "members": [
             {"name": "TrainingJobSummaries", "shape": "TrainingJobSummaries", "type": "list"},
             {"name": "NextToken", "shape": "NextToken", "type": "string"},
+        ],
+        "type": "structure",
+    },
+    "ListTrainingPlansRequest": {
+        "members": [
+            {"name": "NextToken", "shape": "NextToken", "type": "string"},
+            {"name": "MaxResults", "shape": "MaxResults", "type": "integer"},
+            {"name": "StartTimeAfter", "shape": "Timestamp", "type": "timestamp"},
+            {"name": "StartTimeBefore", "shape": "Timestamp", "type": "timestamp"},
+            {"name": "SortBy", "shape": "TrainingPlanSortBy", "type": "string"},
+            {"name": "SortOrder", "shape": "TrainingPlanSortOrder", "type": "string"},
+            {"name": "Filters", "shape": "TrainingPlanFilters", "type": "list"},
+        ],
+        "type": "structure",
+    },
+    "ListTrainingPlansResponse": {
+        "members": [
+            {"name": "NextToken", "shape": "NextToken", "type": "string"},
+            {"name": "TrainingPlanSummaries", "shape": "TrainingPlanSummaries", "type": "list"},
         ],
         "type": "structure",
     },
@@ -11304,6 +11745,50 @@ SHAPE_DAG = {
         "type": "list",
     },
     "Parents": {"member_shape": "Parent", "member_type": "structure", "type": "list"},
+    "PartnerAppAdminUserList": {
+        "member_shape": "NonEmptyString256",
+        "member_type": "string",
+        "type": "list",
+    },
+    "PartnerAppArguments": {
+        "key_shape": "NonEmptyString256",
+        "key_type": "string",
+        "type": "map",
+        "value_shape": "String1024",
+        "value_type": "string",
+    },
+    "PartnerAppConfig": {
+        "members": [
+            {"name": "AdminUsers", "shape": "PartnerAppAdminUserList", "type": "list"},
+            {"name": "Arguments", "shape": "PartnerAppArguments", "type": "map"},
+        ],
+        "type": "structure",
+    },
+    "PartnerAppMaintenanceConfig": {
+        "members": [
+            {
+                "name": "MaintenanceWindowStart",
+                "shape": "WeeklyScheduleTimeFormat",
+                "type": "string",
+            }
+        ],
+        "type": "structure",
+    },
+    "PartnerAppSummaries": {
+        "member_shape": "PartnerAppSummary",
+        "member_type": "structure",
+        "type": "list",
+    },
+    "PartnerAppSummary": {
+        "members": [
+            {"name": "Arn", "shape": "PartnerAppArn", "type": "string"},
+            {"name": "Name", "shape": "PartnerAppName", "type": "string"},
+            {"name": "Type", "shape": "PartnerAppType", "type": "string"},
+            {"name": "Status", "shape": "PartnerAppStatus", "type": "string"},
+            {"name": "CreationTime", "shape": "Timestamp", "type": "timestamp"},
+        ],
+        "type": "structure",
+    },
     "PayloadPart": {
         "members": [{"name": "Bytes", "shape": "PartBlob", "type": "blob"}],
         "type": "structure",
@@ -11552,6 +12037,18 @@ SHAPE_DAG = {
     "PredefinedMetricSpecification": {
         "members": [{"name": "PredefinedMetricType", "shape": "String", "type": "string"}],
         "type": "structure",
+    },
+    "PriorityClass": {
+        "members": [
+            {"name": "Name", "shape": "ClusterSchedulerPriorityClassName", "type": "string"},
+            {"name": "Weight", "shape": "PriorityWeight", "type": "integer"},
+        ],
+        "type": "structure",
+    },
+    "PriorityClassList": {
+        "member_shape": "PriorityClass",
+        "member_type": "structure",
+        "type": "list",
     },
     "ProcessingClusterConfig": {
         "members": [
@@ -12420,6 +12917,42 @@ SHAPE_DAG = {
         ],
         "type": "structure",
     },
+    "ReservedCapacityOffering": {
+        "members": [
+            {"name": "InstanceType", "shape": "ReservedCapacityInstanceType", "type": "string"},
+            {"name": "InstanceCount", "shape": "ReservedCapacityInstanceCount", "type": "integer"},
+            {"name": "AvailabilityZone", "shape": "AvailabilityZone", "type": "string"},
+            {"name": "DurationHours", "shape": "ReservedCapacityDurationHours", "type": "long"},
+            {"name": "DurationMinutes", "shape": "ReservedCapacityDurationMinutes", "type": "long"},
+            {"name": "StartTime", "shape": "Timestamp", "type": "timestamp"},
+            {"name": "EndTime", "shape": "Timestamp", "type": "timestamp"},
+        ],
+        "type": "structure",
+    },
+    "ReservedCapacityOfferings": {
+        "member_shape": "ReservedCapacityOffering",
+        "member_type": "structure",
+        "type": "list",
+    },
+    "ReservedCapacitySummaries": {
+        "member_shape": "ReservedCapacitySummary",
+        "member_type": "structure",
+        "type": "list",
+    },
+    "ReservedCapacitySummary": {
+        "members": [
+            {"name": "ReservedCapacityArn", "shape": "ReservedCapacityArn", "type": "string"},
+            {"name": "InstanceType", "shape": "ReservedCapacityInstanceType", "type": "string"},
+            {"name": "TotalInstanceCount", "shape": "TotalInstanceCount", "type": "integer"},
+            {"name": "Status", "shape": "ReservedCapacityStatus", "type": "string"},
+            {"name": "AvailabilityZone", "shape": "AvailabilityZone", "type": "string"},
+            {"name": "DurationHours", "shape": "ReservedCapacityDurationHours", "type": "long"},
+            {"name": "DurationMinutes", "shape": "ReservedCapacityDurationMinutes", "type": "long"},
+            {"name": "StartTime", "shape": "Timestamp", "type": "timestamp"},
+            {"name": "EndTime", "shape": "Timestamp", "type": "timestamp"},
+        ],
+        "type": "structure",
+    },
     "ResolvedAttributes": {
         "members": [
             {"name": "AutoMLJobObjective", "shape": "AutoMLJobObjective", "type": "structure"},
@@ -12458,6 +12991,7 @@ SHAPE_DAG = {
                 "type": "integer",
             },
             {"name": "InstanceGroups", "shape": "InstanceGroups", "type": "list"},
+            {"name": "TrainingPlanArn", "shape": "TrainingPlanArn", "type": "string"},
         ],
         "type": "structure",
     },
@@ -12501,6 +13035,13 @@ SHAPE_DAG = {
     },
     "ResourceNotFound": {
         "members": [{"name": "Message", "shape": "FailureReason", "type": "string"}],
+        "type": "structure",
+    },
+    "ResourceSharingConfig": {
+        "members": [
+            {"name": "Strategy", "shape": "ResourceSharingStrategy", "type": "string"},
+            {"name": "BorrowLimit", "shape": "BorrowLimit", "type": "integer"},
+        ],
         "type": "structure",
     },
     "ResourceSpec": {
@@ -12618,6 +13159,11 @@ SHAPE_DAG = {
         "member_type": "string",
         "type": "list",
     },
+    "SageMakerResourceNames": {
+        "member_shape": "SageMakerResourceName",
+        "member_type": "string",
+        "type": "list",
+    },
     "ScalingPolicies": {
         "member_shape": "ScalingPolicy",
         "member_type": "structure",
@@ -12652,6 +13198,13 @@ SHAPE_DAG = {
             {"name": "ScheduleExpression", "shape": "ScheduleExpression", "type": "string"},
             {"name": "DataAnalysisStartTime", "shape": "String", "type": "string"},
             {"name": "DataAnalysisEndTime", "shape": "String", "type": "string"},
+        ],
+        "type": "structure",
+    },
+    "SchedulerConfig": {
+        "members": [
+            {"name": "PriorityClasses", "shape": "PriorityClassList", "type": "list"},
+            {"name": "FairShare", "shape": "FairShare", "type": "string"},
         ],
         "type": "structure",
     },
@@ -12721,6 +13274,23 @@ SHAPE_DAG = {
         "member_shape": "SearchRecord",
         "member_type": "structure",
         "type": "list",
+    },
+    "SearchTrainingPlanOfferingsRequest": {
+        "members": [
+            {"name": "InstanceType", "shape": "ReservedCapacityInstanceType", "type": "string"},
+            {"name": "InstanceCount", "shape": "ReservedCapacityInstanceCount", "type": "integer"},
+            {"name": "StartTimeAfter", "shape": "Timestamp", "type": "timestamp"},
+            {"name": "EndTimeBefore", "shape": "Timestamp", "type": "timestamp"},
+            {"name": "DurationHours", "shape": "TrainingPlanDurationHoursInput", "type": "long"},
+            {"name": "TargetResources", "shape": "SageMakerResourceNames", "type": "list"},
+        ],
+        "type": "structure",
+    },
+    "SearchTrainingPlanOfferingsResponse": {
+        "members": [
+            {"name": "TrainingPlanOfferings", "shape": "TrainingPlanOfferings", "type": "list"}
+        ],
+        "type": "structure",
     },
     "SecondaryStatusTransition": {
         "members": [
@@ -13621,6 +14191,80 @@ SHAPE_DAG = {
             {"name": "TrainingJobStatus", "shape": "TrainingJobStatus", "type": "string"},
             {"name": "SecondaryStatus", "shape": "SecondaryStatus", "type": "string"},
             {"name": "WarmPoolStatus", "shape": "WarmPoolStatus", "type": "structure"},
+            {"name": "TrainingPlanArn", "shape": "TrainingPlanArn", "type": "string"},
+        ],
+        "type": "structure",
+    },
+    "TrainingPlanArns": {
+        "member_shape": "TrainingPlanArn",
+        "member_type": "string",
+        "type": "list",
+    },
+    "TrainingPlanFilter": {
+        "members": [
+            {"name": "Name", "shape": "TrainingPlanFilterName", "type": "string"},
+            {"name": "Value", "shape": "String64", "type": "string"},
+        ],
+        "type": "structure",
+    },
+    "TrainingPlanFilters": {
+        "member_shape": "TrainingPlanFilter",
+        "member_type": "structure",
+        "type": "list",
+    },
+    "TrainingPlanOffering": {
+        "members": [
+            {"name": "TrainingPlanOfferingId", "shape": "TrainingPlanOfferingId", "type": "string"},
+            {"name": "TargetResources", "shape": "SageMakerResourceNames", "type": "list"},
+            {"name": "RequestedStartTimeAfter", "shape": "Timestamp", "type": "timestamp"},
+            {"name": "RequestedEndTimeBefore", "shape": "Timestamp", "type": "timestamp"},
+            {"name": "DurationHours", "shape": "TrainingPlanDurationHours", "type": "long"},
+            {"name": "DurationMinutes", "shape": "TrainingPlanDurationMinutes", "type": "long"},
+            {"name": "UpfrontFee", "shape": "String256", "type": "string"},
+            {"name": "CurrencyCode", "shape": "CurrencyCode", "type": "string"},
+            {
+                "name": "ReservedCapacityOfferings",
+                "shape": "ReservedCapacityOfferings",
+                "type": "list",
+            },
+        ],
+        "type": "structure",
+    },
+    "TrainingPlanOfferings": {
+        "member_shape": "TrainingPlanOffering",
+        "member_type": "structure",
+        "type": "list",
+    },
+    "TrainingPlanSummaries": {
+        "member_shape": "TrainingPlanSummary",
+        "member_type": "structure",
+        "type": "list",
+    },
+    "TrainingPlanSummary": {
+        "members": [
+            {"name": "TrainingPlanArn", "shape": "TrainingPlanArn", "type": "string"},
+            {"name": "TrainingPlanName", "shape": "TrainingPlanName", "type": "string"},
+            {"name": "Status", "shape": "TrainingPlanStatus", "type": "string"},
+            {"name": "StatusMessage", "shape": "TrainingPlanStatusMessage", "type": "string"},
+            {"name": "DurationHours", "shape": "TrainingPlanDurationHours", "type": "long"},
+            {"name": "DurationMinutes", "shape": "TrainingPlanDurationMinutes", "type": "long"},
+            {"name": "StartTime", "shape": "Timestamp", "type": "timestamp"},
+            {"name": "EndTime", "shape": "Timestamp", "type": "timestamp"},
+            {"name": "UpfrontFee", "shape": "String256", "type": "string"},
+            {"name": "CurrencyCode", "shape": "CurrencyCode", "type": "string"},
+            {"name": "TotalInstanceCount", "shape": "TotalInstanceCount", "type": "integer"},
+            {
+                "name": "AvailableInstanceCount",
+                "shape": "AvailableInstanceCount",
+                "type": "integer",
+            },
+            {"name": "InUseInstanceCount", "shape": "InUseInstanceCount", "type": "integer"},
+            {"name": "TargetResources", "shape": "SageMakerResourceNames", "type": "list"},
+            {
+                "name": "ReservedCapacitySummaries",
+                "shape": "ReservedCapacitySummaries",
+                "type": "list",
+            },
         ],
         "type": "structure",
     },
@@ -14094,6 +14738,30 @@ SHAPE_DAG = {
         "members": [{"name": "ClusterArn", "shape": "ClusterArn", "type": "string"}],
         "type": "structure",
     },
+    "UpdateClusterSchedulerConfigRequest": {
+        "members": [
+            {
+                "name": "ClusterSchedulerConfigId",
+                "shape": "ClusterSchedulerConfigId",
+                "type": "string",
+            },
+            {"name": "TargetVersion", "shape": "Integer", "type": "integer"},
+            {"name": "SchedulerConfig", "shape": "SchedulerConfig", "type": "structure"},
+            {"name": "Description", "shape": "EntityDescription", "type": "string"},
+        ],
+        "type": "structure",
+    },
+    "UpdateClusterSchedulerConfigResponse": {
+        "members": [
+            {
+                "name": "ClusterSchedulerConfigArn",
+                "shape": "ClusterSchedulerConfigArn",
+                "type": "string",
+            },
+            {"name": "ClusterSchedulerConfigVersion", "shape": "Integer", "type": "integer"},
+        ],
+        "type": "structure",
+    },
     "UpdateClusterSoftwareRequest": {
         "members": [{"name": "ClusterName", "shape": "ClusterNameOrArn", "type": "string"}],
         "type": "structure",
@@ -14111,6 +14779,24 @@ SHAPE_DAG = {
     },
     "UpdateCodeRepositoryOutput": {
         "members": [{"name": "CodeRepositoryArn", "shape": "CodeRepositoryArn", "type": "string"}],
+        "type": "structure",
+    },
+    "UpdateComputeQuotaRequest": {
+        "members": [
+            {"name": "ComputeQuotaId", "shape": "ComputeQuotaId", "type": "string"},
+            {"name": "TargetVersion", "shape": "Integer", "type": "integer"},
+            {"name": "ComputeQuotaConfig", "shape": "ComputeQuotaConfig", "type": "structure"},
+            {"name": "ComputeQuotaTarget", "shape": "ComputeQuotaTarget", "type": "structure"},
+            {"name": "ActivationState", "shape": "ActivationState", "type": "string"},
+            {"name": "Description", "shape": "EntityDescription", "type": "string"},
+        ],
+        "type": "structure",
+    },
+    "UpdateComputeQuotaResponse": {
+        "members": [
+            {"name": "ComputeQuotaArn", "shape": "ComputeQuotaArn", "type": "string"},
+            {"name": "ComputeQuotaVersion", "shape": "Integer", "type": "integer"},
+        ],
         "type": "structure",
     },
     "UpdateContextRequest": {
@@ -14517,6 +15203,26 @@ SHAPE_DAG = {
     },
     "UpdateNotebookInstanceLifecycleConfigOutput": {"members": [], "type": "structure"},
     "UpdateNotebookInstanceOutput": {"members": [], "type": "structure"},
+    "UpdatePartnerAppRequest": {
+        "members": [
+            {"name": "Arn", "shape": "PartnerAppArn", "type": "string"},
+            {
+                "name": "MaintenanceConfig",
+                "shape": "PartnerAppMaintenanceConfig",
+                "type": "structure",
+            },
+            {"name": "Tier", "shape": "NonEmptyString64", "type": "string"},
+            {"name": "ApplicationConfig", "shape": "PartnerAppConfig", "type": "structure"},
+            {"name": "EnableIamSessionBasedIdentity", "shape": "Boolean", "type": "boolean"},
+            {"name": "ClientToken", "shape": "ClientToken", "type": "string"},
+            {"name": "Tags", "shape": "TagList", "type": "list"},
+        ],
+        "type": "structure",
+    },
+    "UpdatePartnerAppResponse": {
+        "members": [{"name": "Arn", "shape": "PartnerAppArn", "type": "string"}],
+        "type": "structure",
+    },
     "UpdatePipelineExecutionRequest": {
         "members": [
             {"name": "PipelineExecutionArn", "shape": "PipelineExecutionArn", "type": "string"},

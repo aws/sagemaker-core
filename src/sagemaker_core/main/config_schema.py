@@ -754,6 +754,10 @@ SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA = {
                                         },
                                     },
                                 },
+                                "PartnerApp": {
+                                    "type": "object",
+                                    "properties": {"execution_role_arn": {"type": "string"}},
+                                },
                                 "Pipeline": {
                                     "type": "object",
                                     "properties": {"role_arn": {"type": "string"}},

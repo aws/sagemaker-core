@@ -3640,6 +3640,7 @@ class Cluster(Base):
         name_contains: Optional[str] = Unassigned(),
         sort_by: Optional[str] = Unassigned(),
         sort_order: Optional[str] = Unassigned(),
+        training_plan_arn: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> ResourceIterator["Cluster"]:
@@ -3654,6 +3655,7 @@ class Cluster(Base):
             next_token: Set the next token to retrieve the list of SageMaker HyperPod clusters.
             sort_by: The field by which to sort results. The default value is CREATION_TIME.
             sort_order: The sort order for results. The default value is Ascending.
+            training_plan_arn: The Amazon Resource Name (ARN); of the training plan to filter clusters by. For more information about reserving GPU capacity for your SageMaker HyperPod clusters using Amazon SageMaker Training Plan, see  CreateTrainingPlan .
             session: Boto3 session.
             region: Region name.
 
@@ -3682,6 +3684,7 @@ class Cluster(Base):
             "NameContains": name_contains,
             "SortBy": sort_by,
             "SortOrder": sort_order,
+            "TrainingPlanArn": training_plan_arn,
         }
 
         # serialize the input request
@@ -3904,6 +3907,525 @@ class Cluster(Base):
 
         transformed_response = transform(response, "BatchDeleteClusterNodesResponse")
         return BatchDeleteClusterNodesResponse(**transformed_response)
+
+
+class ClusterSchedulerConfig(Base):
+    """
+    Class representing resource ClusterSchedulerConfig
+
+    Attributes:
+        cluster_scheduler_config_arn: ARN of the cluster policy.
+        cluster_scheduler_config_id: ID of the cluster policy.
+        name: Name of the cluster policy.
+        cluster_scheduler_config_version: Version of the cluster policy.
+        status: Status of the cluster policy.
+        creation_time: Creation time of the cluster policy.
+        failure_reason: Failure reason of the cluster policy.
+        cluster_arn: ARN of the cluster where the cluster policy is applied.
+        scheduler_config: Cluster policy configuration. This policy is used for task prioritization and fair-share allocation. This helps prioritize critical workloads and distributes idle compute across entities.
+        description: Description of the cluster policy.
+        created_by:
+        last_modified_time: Last modified time of the cluster policy.
+        last_modified_by:
+
+    """
+
+    cluster_scheduler_config_id: str
+    cluster_scheduler_config_arn: Optional[str] = Unassigned()
+    name: Optional[str] = Unassigned()
+    cluster_scheduler_config_version: Optional[int] = Unassigned()
+    status: Optional[str] = Unassigned()
+    failure_reason: Optional[str] = Unassigned()
+    cluster_arn: Optional[str] = Unassigned()
+    scheduler_config: Optional[SchedulerConfig] = Unassigned()
+    description: Optional[str] = Unassigned()
+    creation_time: Optional[datetime.datetime] = Unassigned()
+    created_by: Optional[UserContext] = Unassigned()
+    last_modified_time: Optional[datetime.datetime] = Unassigned()
+    last_modified_by: Optional[UserContext] = Unassigned()
+
+    def get_name(self) -> str:
+        attributes = vars(self)
+        resource_name = "cluster_scheduler_config_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
+        for attribute, value in attributes.items():
+            if attribute == "name" or attribute in attribute_name_candidates:
+                return value
+        logger.error("Name attribute not found for object cluster_scheduler_config")
+        return None
+
+    @classmethod
+    @Base.add_validate_call
+    def create(
+        cls,
+        name: str,
+        cluster_arn: str,
+        scheduler_config: SchedulerConfig,
+        description: Optional[str] = Unassigned(),
+        tags: Optional[List[Tag]] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional["ClusterSchedulerConfig"]:
+        """
+        Create a ClusterSchedulerConfig resource
+
+        Parameters:
+            name: Name for the cluster policy.
+            cluster_arn: ARN of the cluster.
+            scheduler_config: Configuration about the monitoring schedule.
+            description: Description of the cluster policy.
+            tags: Tags of the cluster policy.
+            session: Boto3 session.
+            region: Region name.
+
+        Returns:
+            The ClusterSchedulerConfig resource.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ConflictException: There was a conflict when you attempted to modify a SageMaker entity such as an Experiment or Artifact.
+            ResourceLimitExceeded: You have exceeded an SageMaker resource limit. For example, you might have too many training jobs created.
+            ConfigSchemaValidationError: Raised when a configuration file does not adhere to the schema
+            LocalConfigNotFoundError: Raised when a configuration file is not found in local file system
+            S3ConfigNotFoundError: Raised when a configuration file is not found in S3
+        """
+
+        logger.info("Creating cluster_scheduler_config resource.")
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
+
+        operation_input_args = {
+            "Name": name,
+            "ClusterArn": cluster_arn,
+            "SchedulerConfig": scheduler_config,
+            "Description": description,
+            "Tags": tags,
+        }
+
+        operation_input_args = Base.populate_chained_attributes(
+            resource_name="ClusterSchedulerConfig", operation_input_args=operation_input_args
+        )
+
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+
+        # create the resource
+        response = client.create_cluster_scheduler_config(**operation_input_args)
+        logger.debug(f"Response: {response}")
+
+        return cls.get(
+            cluster_scheduler_config_id=response["ClusterSchedulerConfigId"],
+            session=session,
+            region=region,
+        )
+
+    @classmethod
+    @Base.add_validate_call
+    def get(
+        cls,
+        cluster_scheduler_config_id: str,
+        cluster_scheduler_config_version: Optional[int] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional["ClusterSchedulerConfig"]:
+        """
+        Get a ClusterSchedulerConfig resource
+
+        Parameters:
+            cluster_scheduler_config_id: ID of the cluster policy.
+            cluster_scheduler_config_version: Version of the cluster policy.
+            session: Boto3 session.
+            region: Region name.
+
+        Returns:
+            The ClusterSchedulerConfig resource.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceNotFound: Resource being access is not found.
+        """
+
+        operation_input_args = {
+            "ClusterSchedulerConfigId": cluster_scheduler_config_id,
+            "ClusterSchedulerConfigVersion": cluster_scheduler_config_version,
+        }
+        # serialize the input request
+        operation_input_args = serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
+        response = client.describe_cluster_scheduler_config(**operation_input_args)
+
+        logger.debug(response)
+
+        # deserialize the response
+        transformed_response = transform(response, "DescribeClusterSchedulerConfigResponse")
+        cluster_scheduler_config = cls(**transformed_response)
+        return cluster_scheduler_config
+
+    @Base.add_validate_call
+    def refresh(
+        self,
+    ) -> Optional["ClusterSchedulerConfig"]:
+        """
+        Refresh a ClusterSchedulerConfig resource
+
+        Returns:
+            The ClusterSchedulerConfig resource.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceNotFound: Resource being access is not found.
+        """
+
+        operation_input_args = {
+            "ClusterSchedulerConfigId": self.cluster_scheduler_config_id,
+            "ClusterSchedulerConfigVersion": self.cluster_scheduler_config_version,
+        }
+        # serialize the input request
+        operation_input_args = serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+
+        client = Base.get_sagemaker_client()
+        response = client.describe_cluster_scheduler_config(**operation_input_args)
+
+        # deserialize response and update self
+        transform(response, "DescribeClusterSchedulerConfigResponse", self)
+        return self
+
+    @Base.add_validate_call
+    def update(
+        self,
+        target_version: int,
+        scheduler_config: Optional[SchedulerConfig] = Unassigned(),
+        description: Optional[str] = Unassigned(),
+    ) -> Optional["ClusterSchedulerConfig"]:
+        """
+        Update a ClusterSchedulerConfig resource
+
+        Parameters:
+            target_version: Target version.
+
+        Returns:
+            The ClusterSchedulerConfig resource.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ConflictException: There was a conflict when you attempted to modify a SageMaker entity such as an Experiment or Artifact.
+            ResourceLimitExceeded: You have exceeded an SageMaker resource limit. For example, you might have too many training jobs created.
+            ResourceNotFound: Resource being access is not found.
+        """
+
+        logger.info("Updating cluster_scheduler_config resource.")
+        client = Base.get_sagemaker_client()
+
+        operation_input_args = {
+            "ClusterSchedulerConfigId": self.cluster_scheduler_config_id,
+            "TargetVersion": target_version,
+            "SchedulerConfig": scheduler_config,
+            "Description": description,
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+
+        # create the resource
+        response = client.update_cluster_scheduler_config(**operation_input_args)
+        logger.debug(f"Response: {response}")
+        self.refresh()
+
+        return self
+
+    @Base.add_validate_call
+    def delete(
+        self,
+    ) -> None:
+        """
+        Delete a ClusterSchedulerConfig resource
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceNotFound: Resource being access is not found.
+        """
+
+        client = Base.get_sagemaker_client()
+
+        operation_input_args = {
+            "ClusterSchedulerConfigId": self.cluster_scheduler_config_id,
+        }
+        # serialize the input request
+        operation_input_args = serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+
+        client.delete_cluster_scheduler_config(**operation_input_args)
+
+        logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+
+    @Base.add_validate_call
+    def wait_for_status(
+        self,
+        target_status: Literal[
+            "Creating",
+            "CreateFailed",
+            "CreateRollbackFailed",
+            "Created",
+            "Updating",
+            "UpdateFailed",
+            "UpdateRollbackFailed",
+            "Updated",
+            "Deleting",
+            "DeleteFailed",
+            "DeleteRollbackFailed",
+            "Deleted",
+        ],
+        poll: int = 5,
+        timeout: Optional[int] = None,
+    ) -> None:
+        """
+        Wait for a ClusterSchedulerConfig resource to reach certain status.
+
+        Parameters:
+            target_status: The status to wait for.
+            poll: The number of seconds to wait between each poll.
+            timeout: The maximum number of seconds to wait before timing out.
+
+        Raises:
+            TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
+            FailedStatusError:   If the resource reaches a failed state.
+            WaiterError: Raised when an error occurs while waiting.
+        """
+        start_time = time.time()
+
+        progress = Progress(
+            SpinnerColumn("bouncingBar"),
+            TextColumn("{task.description}"),
+            TimeElapsedColumn(),
+        )
+        progress.add_task(
+            f"Waiting for ClusterSchedulerConfig to reach [bold]{target_status} status..."
+        )
+        status = Status("Current status:")
+
+        with Live(
+            Panel(
+                Group(progress, status),
+                title="Wait Log Panel",
+                border_style=Style(color=Color.BLUE.value),
+            ),
+            transient=True,
+        ):
+            while True:
+                self.refresh()
+                current_status = self.status
+                status.update(f"Current status: [bold]{current_status}")
+
+                if target_status == current_status:
+                    logger.info(f"Final Resource Status: [bold]{current_status}")
+                    return
+
+                if "failed" in current_status.lower():
+                    raise FailedStatusError(
+                        resource_type="ClusterSchedulerConfig",
+                        status=current_status,
+                        reason=self.failure_reason,
+                    )
+
+                if timeout is not None and time.time() - start_time >= timeout:
+                    raise TimeoutExceededError(
+                        resouce_type="ClusterSchedulerConfig", status=current_status
+                    )
+                time.sleep(poll)
+
+    @Base.add_validate_call
+    def wait_for_delete(
+        self,
+        poll: int = 5,
+        timeout: Optional[int] = None,
+    ) -> None:
+        """
+        Wait for a ClusterSchedulerConfig resource to be deleted.
+
+        Parameters:
+            poll: The number of seconds to wait between each poll.
+            timeout: The maximum number of seconds to wait before timing out.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
+            DeleteFailedStatusError:   If the resource reaches a failed state.
+            WaiterError: Raised when an error occurs while waiting.
+        """
+        start_time = time.time()
+
+        progress = Progress(
+            SpinnerColumn("bouncingBar"),
+            TextColumn("{task.description}"),
+            TimeElapsedColumn(),
+        )
+        progress.add_task("Waiting for ClusterSchedulerConfig to be deleted...")
+        status = Status("Current status:")
+
+        with Live(
+            Panel(
+                Group(progress, status),
+                title="Wait Log Panel",
+                border_style=Style(color=Color.BLUE.value),
+            )
+        ):
+            while True:
+                try:
+                    self.refresh()
+                    current_status = self.status
+                    status.update(f"Current status: [bold]{current_status}")
+
+                    if current_status.lower() == "deleted":
+                        print("Resource was deleted.")
+                        return
+
+                    if timeout is not None and time.time() - start_time >= timeout:
+                        raise TimeoutExceededError(
+                            resouce_type="ClusterSchedulerConfig", status=current_status
+                        )
+                except botocore.exceptions.ClientError as e:
+                    error_code = e.response["Error"]["Code"]
+
+                    if "ResourceNotFound" in error_code or "ValidationException" in error_code:
+                        logger.info("Resource was not found. It may have been deleted.")
+                        return
+                    raise e
+                time.sleep(poll)
+
+    @classmethod
+    @Base.add_validate_call
+    def get_all(
+        cls,
+        created_after: Optional[datetime.datetime] = Unassigned(),
+        created_before: Optional[datetime.datetime] = Unassigned(),
+        name_contains: Optional[str] = Unassigned(),
+        cluster_arn: Optional[str] = Unassigned(),
+        status: Optional[str] = Unassigned(),
+        sort_by: Optional[str] = Unassigned(),
+        sort_order: Optional[str] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> ResourceIterator["ClusterSchedulerConfig"]:
+        """
+        Get all ClusterSchedulerConfig resources
+
+        Parameters:
+            created_after: Filter for after this creation time. The input for this parameter is a Unix timestamp. To convert a date and time into a Unix timestamp, see EpochConverter.
+            created_before: Filter for before this creation time. The input for this parameter is a Unix timestamp. To convert a date and time into a Unix timestamp, see EpochConverter.
+            name_contains: Filter for name containing this string.
+            cluster_arn: Filter for ARN of the cluster.
+            status: Filter for status.
+            sort_by: Filter for sorting the list by a given value. For example, sort by name, creation time, or status.
+            sort_order: The order of the list. By default, listed in Descending order according to by SortBy. To change the list order, you can specify SortOrder to be Ascending.
+            next_token: If the previous response was truncated, you will receive this token. Use it in your next request to receive the next set of results.
+            max_results: The maximum number of cluster policies to list.
+            session: Boto3 session.
+            region: Region name.
+
+        Returns:
+            Iterator for listed ClusterSchedulerConfig resources.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+        """
+
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
+
+        operation_input_args = {
+            "CreatedAfter": created_after,
+            "CreatedBefore": created_before,
+            "NameContains": name_contains,
+            "ClusterArn": cluster_arn,
+            "Status": status,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
+        }
+
+        # serialize the input request
+        operation_input_args = serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+
+        return ResourceIterator(
+            client=client,
+            list_method="list_cluster_scheduler_configs",
+            summaries_key="ClusterSchedulerConfigSummaries",
+            summary_name="ClusterSchedulerConfigSummary",
+            resource_cls=ClusterSchedulerConfig,
+            list_method_kwargs=operation_input_args,
+        )
 
 
 class CodeRepository(Base):
@@ -4689,6 +5211,531 @@ class CompilationJob(Base):
             summaries_key="CompilationJobSummaries",
             summary_name="CompilationJobSummary",
             resource_cls=CompilationJob,
+            list_method_kwargs=operation_input_args,
+        )
+
+
+class ComputeQuota(Base):
+    """
+    Class representing resource ComputeQuota
+
+    Attributes:
+        compute_quota_arn: ARN of the compute allocation definition.
+        compute_quota_id: ID of the compute allocation definition.
+        name: Name of the compute allocation definition.
+        compute_quota_version: Version of the compute allocation definition.
+        status: Status of the compute allocation definition.
+        compute_quota_target: The target entity to allocate compute resources to.
+        creation_time: Creation time of the compute allocation configuration.
+        description: Description of the compute allocation definition.
+        failure_reason: Failure reason of the compute allocation definition.
+        cluster_arn: ARN of the cluster.
+        compute_quota_config: Configuration of the compute allocation definition. This includes the resource sharing option, and the setting to preempt low priority tasks.
+        activation_state: The state of the compute allocation being described. Use to enable or disable compute allocation. Default is Enabled.
+        created_by:
+        last_modified_time: Last modified time of the compute allocation configuration.
+        last_modified_by:
+
+    """
+
+    compute_quota_id: str
+    compute_quota_arn: Optional[str] = Unassigned()
+    name: Optional[str] = Unassigned()
+    description: Optional[str] = Unassigned()
+    compute_quota_version: Optional[int] = Unassigned()
+    status: Optional[str] = Unassigned()
+    failure_reason: Optional[str] = Unassigned()
+    cluster_arn: Optional[str] = Unassigned()
+    compute_quota_config: Optional[ComputeQuotaConfig] = Unassigned()
+    compute_quota_target: Optional[ComputeQuotaTarget] = Unassigned()
+    activation_state: Optional[str] = Unassigned()
+    creation_time: Optional[datetime.datetime] = Unassigned()
+    created_by: Optional[UserContext] = Unassigned()
+    last_modified_time: Optional[datetime.datetime] = Unassigned()
+    last_modified_by: Optional[UserContext] = Unassigned()
+
+    def get_name(self) -> str:
+        attributes = vars(self)
+        resource_name = "compute_quota_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
+        for attribute, value in attributes.items():
+            if attribute == "name" or attribute in attribute_name_candidates:
+                return value
+        logger.error("Name attribute not found for object compute_quota")
+        return None
+
+    @classmethod
+    @Base.add_validate_call
+    def create(
+        cls,
+        name: str,
+        cluster_arn: str,
+        compute_quota_config: ComputeQuotaConfig,
+        compute_quota_target: ComputeQuotaTarget,
+        description: Optional[str] = Unassigned(),
+        activation_state: Optional[str] = Unassigned(),
+        tags: Optional[List[Tag]] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional["ComputeQuota"]:
+        """
+        Create a ComputeQuota resource
+
+        Parameters:
+            name: Name to the compute allocation definition.
+            cluster_arn: ARN of the cluster.
+            compute_quota_config: Configuration of the compute allocation definition. This includes the resource sharing option, and the setting to preempt low priority tasks.
+            compute_quota_target: The target entity to allocate compute resources to.
+            description: Description of the compute allocation definition.
+            activation_state: The state of the compute allocation being described. Use to enable or disable compute allocation. Default is Enabled.
+            tags: Tags of the compute allocation definition.
+            session: Boto3 session.
+            region: Region name.
+
+        Returns:
+            The ComputeQuota resource.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ConflictException: There was a conflict when you attempted to modify a SageMaker entity such as an Experiment or Artifact.
+            ResourceLimitExceeded: You have exceeded an SageMaker resource limit. For example, you might have too many training jobs created.
+            ConfigSchemaValidationError: Raised when a configuration file does not adhere to the schema
+            LocalConfigNotFoundError: Raised when a configuration file is not found in local file system
+            S3ConfigNotFoundError: Raised when a configuration file is not found in S3
+        """
+
+        logger.info("Creating compute_quota resource.")
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
+
+        operation_input_args = {
+            "Name": name,
+            "Description": description,
+            "ClusterArn": cluster_arn,
+            "ComputeQuotaConfig": compute_quota_config,
+            "ComputeQuotaTarget": compute_quota_target,
+            "ActivationState": activation_state,
+            "Tags": tags,
+        }
+
+        operation_input_args = Base.populate_chained_attributes(
+            resource_name="ComputeQuota", operation_input_args=operation_input_args
+        )
+
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+
+        # create the resource
+        response = client.create_compute_quota(**operation_input_args)
+        logger.debug(f"Response: {response}")
+
+        return cls.get(compute_quota_id=response["ComputeQuotaId"], session=session, region=region)
+
+    @classmethod
+    @Base.add_validate_call
+    def get(
+        cls,
+        compute_quota_id: str,
+        compute_quota_version: Optional[int] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional["ComputeQuota"]:
+        """
+        Get a ComputeQuota resource
+
+        Parameters:
+            compute_quota_id: ID of the compute allocation definition.
+            compute_quota_version: Version of the compute allocation definition.
+            session: Boto3 session.
+            region: Region name.
+
+        Returns:
+            The ComputeQuota resource.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceNotFound: Resource being access is not found.
+        """
+
+        operation_input_args = {
+            "ComputeQuotaId": compute_quota_id,
+            "ComputeQuotaVersion": compute_quota_version,
+        }
+        # serialize the input request
+        operation_input_args = serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
+        response = client.describe_compute_quota(**operation_input_args)
+
+        logger.debug(response)
+
+        # deserialize the response
+        transformed_response = transform(response, "DescribeComputeQuotaResponse")
+        compute_quota = cls(**transformed_response)
+        return compute_quota
+
+    @Base.add_validate_call
+    def refresh(
+        self,
+    ) -> Optional["ComputeQuota"]:
+        """
+        Refresh a ComputeQuota resource
+
+        Returns:
+            The ComputeQuota resource.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceNotFound: Resource being access is not found.
+        """
+
+        operation_input_args = {
+            "ComputeQuotaId": self.compute_quota_id,
+            "ComputeQuotaVersion": self.compute_quota_version,
+        }
+        # serialize the input request
+        operation_input_args = serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+
+        client = Base.get_sagemaker_client()
+        response = client.describe_compute_quota(**operation_input_args)
+
+        # deserialize response and update self
+        transform(response, "DescribeComputeQuotaResponse", self)
+        return self
+
+    @Base.add_validate_call
+    def update(
+        self,
+        target_version: int,
+        compute_quota_config: Optional[ComputeQuotaConfig] = Unassigned(),
+        compute_quota_target: Optional[ComputeQuotaTarget] = Unassigned(),
+        activation_state: Optional[str] = Unassigned(),
+        description: Optional[str] = Unassigned(),
+    ) -> Optional["ComputeQuota"]:
+        """
+        Update a ComputeQuota resource
+
+        Parameters:
+            target_version: Target version.
+
+        Returns:
+            The ComputeQuota resource.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ConflictException: There was a conflict when you attempted to modify a SageMaker entity such as an Experiment or Artifact.
+            ResourceLimitExceeded: You have exceeded an SageMaker resource limit. For example, you might have too many training jobs created.
+            ResourceNotFound: Resource being access is not found.
+        """
+
+        logger.info("Updating compute_quota resource.")
+        client = Base.get_sagemaker_client()
+
+        operation_input_args = {
+            "ComputeQuotaId": self.compute_quota_id,
+            "TargetVersion": target_version,
+            "ComputeQuotaConfig": compute_quota_config,
+            "ComputeQuotaTarget": compute_quota_target,
+            "ActivationState": activation_state,
+            "Description": description,
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+
+        # create the resource
+        response = client.update_compute_quota(**operation_input_args)
+        logger.debug(f"Response: {response}")
+        self.refresh()
+
+        return self
+
+    @Base.add_validate_call
+    def delete(
+        self,
+    ) -> None:
+        """
+        Delete a ComputeQuota resource
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceNotFound: Resource being access is not found.
+        """
+
+        client = Base.get_sagemaker_client()
+
+        operation_input_args = {
+            "ComputeQuotaId": self.compute_quota_id,
+        }
+        # serialize the input request
+        operation_input_args = serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+
+        client.delete_compute_quota(**operation_input_args)
+
+        logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+
+    @Base.add_validate_call
+    def wait_for_status(
+        self,
+        target_status: Literal[
+            "Creating",
+            "CreateFailed",
+            "CreateRollbackFailed",
+            "Created",
+            "Updating",
+            "UpdateFailed",
+            "UpdateRollbackFailed",
+            "Updated",
+            "Deleting",
+            "DeleteFailed",
+            "DeleteRollbackFailed",
+            "Deleted",
+        ],
+        poll: int = 5,
+        timeout: Optional[int] = None,
+    ) -> None:
+        """
+        Wait for a ComputeQuota resource to reach certain status.
+
+        Parameters:
+            target_status: The status to wait for.
+            poll: The number of seconds to wait between each poll.
+            timeout: The maximum number of seconds to wait before timing out.
+
+        Raises:
+            TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
+            FailedStatusError:   If the resource reaches a failed state.
+            WaiterError: Raised when an error occurs while waiting.
+        """
+        start_time = time.time()
+
+        progress = Progress(
+            SpinnerColumn("bouncingBar"),
+            TextColumn("{task.description}"),
+            TimeElapsedColumn(),
+        )
+        progress.add_task(f"Waiting for ComputeQuota to reach [bold]{target_status} status...")
+        status = Status("Current status:")
+
+        with Live(
+            Panel(
+                Group(progress, status),
+                title="Wait Log Panel",
+                border_style=Style(color=Color.BLUE.value),
+            ),
+            transient=True,
+        ):
+            while True:
+                self.refresh()
+                current_status = self.status
+                status.update(f"Current status: [bold]{current_status}")
+
+                if target_status == current_status:
+                    logger.info(f"Final Resource Status: [bold]{current_status}")
+                    return
+
+                if "failed" in current_status.lower():
+                    raise FailedStatusError(
+                        resource_type="ComputeQuota",
+                        status=current_status,
+                        reason=self.failure_reason,
+                    )
+
+                if timeout is not None and time.time() - start_time >= timeout:
+                    raise TimeoutExceededError(resouce_type="ComputeQuota", status=current_status)
+                time.sleep(poll)
+
+    @Base.add_validate_call
+    def wait_for_delete(
+        self,
+        poll: int = 5,
+        timeout: Optional[int] = None,
+    ) -> None:
+        """
+        Wait for a ComputeQuota resource to be deleted.
+
+        Parameters:
+            poll: The number of seconds to wait between each poll.
+            timeout: The maximum number of seconds to wait before timing out.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
+            DeleteFailedStatusError:   If the resource reaches a failed state.
+            WaiterError: Raised when an error occurs while waiting.
+        """
+        start_time = time.time()
+
+        progress = Progress(
+            SpinnerColumn("bouncingBar"),
+            TextColumn("{task.description}"),
+            TimeElapsedColumn(),
+        )
+        progress.add_task("Waiting for ComputeQuota to be deleted...")
+        status = Status("Current status:")
+
+        with Live(
+            Panel(
+                Group(progress, status),
+                title="Wait Log Panel",
+                border_style=Style(color=Color.BLUE.value),
+            )
+        ):
+            while True:
+                try:
+                    self.refresh()
+                    current_status = self.status
+                    status.update(f"Current status: [bold]{current_status}")
+
+                    if current_status.lower() == "deleted":
+                        print("Resource was deleted.")
+                        return
+
+                    if timeout is not None and time.time() - start_time >= timeout:
+                        raise TimeoutExceededError(
+                            resouce_type="ComputeQuota", status=current_status
+                        )
+                except botocore.exceptions.ClientError as e:
+                    error_code = e.response["Error"]["Code"]
+
+                    if "ResourceNotFound" in error_code or "ValidationException" in error_code:
+                        logger.info("Resource was not found. It may have been deleted.")
+                        return
+                    raise e
+                time.sleep(poll)
+
+    @classmethod
+    @Base.add_validate_call
+    def get_all(
+        cls,
+        created_after: Optional[datetime.datetime] = Unassigned(),
+        created_before: Optional[datetime.datetime] = Unassigned(),
+        name_contains: Optional[str] = Unassigned(),
+        status: Optional[str] = Unassigned(),
+        cluster_arn: Optional[str] = Unassigned(),
+        sort_by: Optional[str] = Unassigned(),
+        sort_order: Optional[str] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> ResourceIterator["ComputeQuota"]:
+        """
+        Get all ComputeQuota resources
+
+        Parameters:
+            created_after: Filter for after this creation time. The input for this parameter is a Unix timestamp. To convert a date and time into a Unix timestamp, see EpochConverter.
+            created_before: Filter for before this creation time. The input for this parameter is a Unix timestamp. To convert a date and time into a Unix timestamp, see EpochConverter.
+            name_contains: Filter for name containing this string.
+            status: Filter for status.
+            cluster_arn: Filter for ARN of the cluster.
+            sort_by: Filter for sorting the list by a given value. For example, sort by name, creation time, or status.
+            sort_order: The order of the list. By default, listed in Descending order according to by SortBy. To change the list order, you can specify SortOrder to be Ascending.
+            next_token: If the previous response was truncated, you will receive this token. Use it in your next request to receive the next set of results.
+            max_results: The maximum number of compute allocation definitions to list.
+            session: Boto3 session.
+            region: Region name.
+
+        Returns:
+            Iterator for listed ComputeQuota resources.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+        """
+
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
+
+        operation_input_args = {
+            "CreatedAfter": created_after,
+            "CreatedBefore": created_before,
+            "NameContains": name_contains,
+            "Status": status,
+            "ClusterArn": cluster_arn,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
+        }
+
+        # serialize the input request
+        operation_input_args = serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+
+        return ResourceIterator(
+            client=client,
+            list_method="list_compute_quotas",
+            summaries_key="ComputeQuotaSummaries",
+            summary_name="ComputeQuotaSummary",
+            resource_cls=ComputeQuota,
             list_method_kwargs=operation_input_args,
         )
 
@@ -22459,6 +23506,573 @@ class OptimizationJob(Base):
         )
 
 
+class PartnerApp(Base):
+    """
+    Class representing resource PartnerApp
+
+    Attributes:
+        arn: The ARN of the SageMaker Partner AI App that was described.
+        name: The name of the SageMaker Partner AI App.
+        type: The type of SageMaker Partner AI App. Must be one of the following: lakera-guard, comet, deepchecks-llm-evaluation, or fiddler.
+        status: The status of the SageMaker Partner AI App.
+        creation_time: The time that the SageMaker Partner AI App was created.
+        execution_role_arn: The ARN of the IAM role associated with the SageMaker Partner AI App.
+        base_url: The URL of the SageMaker Partner AI App that the Application SDK uses to support in-app calls for the user.
+        maintenance_config: Maintenance configuration settings for the SageMaker Partner AI App.
+        tier: The instance type and size of the cluster attached to the SageMaker Partner AI App.
+        version: The version of the SageMaker Partner AI App.
+        application_config: Configuration settings for the SageMaker Partner AI App.
+        auth_type: The authorization type that users use to access the SageMaker Partner AI App.
+        enable_iam_session_based_identity: When set to TRUE, the SageMaker Partner AI App sets the Amazon Web Services IAM session name or the authenticated IAM user as the identity of the SageMaker Partner AI App user.
+        error: This is an error field object that contains the error code and the reason for an operation failure.
+
+    """
+
+    arn: str
+    name: Optional[str] = Unassigned()
+    type: Optional[str] = Unassigned()
+    status: Optional[str] = Unassigned()
+    creation_time: Optional[datetime.datetime] = Unassigned()
+    execution_role_arn: Optional[str] = Unassigned()
+    base_url: Optional[str] = Unassigned()
+    maintenance_config: Optional[PartnerAppMaintenanceConfig] = Unassigned()
+    tier: Optional[str] = Unassigned()
+    version: Optional[str] = Unassigned()
+    application_config: Optional[PartnerAppConfig] = Unassigned()
+    auth_type: Optional[str] = Unassigned()
+    enable_iam_session_based_identity: Optional[bool] = Unassigned()
+    error: Optional[ErrorInfo] = Unassigned()
+
+    def get_name(self) -> str:
+        attributes = vars(self)
+        resource_name = "partner_app_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
+        for attribute, value in attributes.items():
+            if attribute == "name" or attribute in attribute_name_candidates:
+                return value
+        logger.error("Name attribute not found for object partner_app")
+        return None
+
+    @classmethod
+    @Base.add_validate_call
+    def create(
+        cls,
+        name: str,
+        type: str,
+        execution_role_arn: str,
+        tier: str,
+        auth_type: str,
+        maintenance_config: Optional[PartnerAppMaintenanceConfig] = Unassigned(),
+        application_config: Optional[PartnerAppConfig] = Unassigned(),
+        enable_iam_session_based_identity: Optional[bool] = Unassigned(),
+        client_token: Optional[str] = Unassigned(),
+        tags: Optional[List[Tag]] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional["PartnerApp"]:
+        """
+        Create a PartnerApp resource
+
+        Parameters:
+            name: The name to give the SageMaker Partner AI App.
+            type: The type of SageMaker Partner AI App to create. Must be one of the following: lakera-guard, comet, deepchecks-llm-evaluation, or fiddler.
+            execution_role_arn: The ARN of the IAM role that the partner application uses.
+            tier: Indicates the instance type and size of the cluster attached to the SageMaker Partner AI App.
+            auth_type: The authorization type that users use to access the SageMaker Partner AI App.
+            maintenance_config: Maintenance configuration settings for the SageMaker Partner AI App.
+            application_config: Configuration settings for the SageMaker Partner AI App.
+            enable_iam_session_based_identity: When set to TRUE, the SageMaker Partner AI App sets the Amazon Web Services IAM session name or the authenticated IAM user as the identity of the SageMaker Partner AI App user.
+            client_token: A unique token that guarantees that the call to this API is idempotent.
+            tags: Each tag consists of a key and an optional value. Tag keys must be unique per resource.
+            session: Boto3 session.
+            region: Region name.
+
+        Returns:
+            The PartnerApp resource.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ConflictException: There was a conflict when you attempted to modify a SageMaker entity such as an Experiment or Artifact.
+            ResourceLimitExceeded: You have exceeded an SageMaker resource limit. For example, you might have too many training jobs created.
+            ConfigSchemaValidationError: Raised when a configuration file does not adhere to the schema
+            LocalConfigNotFoundError: Raised when a configuration file is not found in local file system
+            S3ConfigNotFoundError: Raised when a configuration file is not found in S3
+        """
+
+        logger.info("Creating partner_app resource.")
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
+
+        operation_input_args = {
+            "Name": name,
+            "Type": type,
+            "ExecutionRoleArn": execution_role_arn,
+            "MaintenanceConfig": maintenance_config,
+            "Tier": tier,
+            "ApplicationConfig": application_config,
+            "AuthType": auth_type,
+            "EnableIamSessionBasedIdentity": enable_iam_session_based_identity,
+            "ClientToken": client_token,
+            "Tags": tags,
+        }
+
+        operation_input_args = Base.populate_chained_attributes(
+            resource_name="PartnerApp", operation_input_args=operation_input_args
+        )
+
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+
+        # create the resource
+        response = client.create_partner_app(**operation_input_args)
+        logger.debug(f"Response: {response}")
+
+        return cls.get(arn=response["Arn"], session=session, region=region)
+
+    @classmethod
+    @Base.add_validate_call
+    def get(
+        cls,
+        arn: str,
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional["PartnerApp"]:
+        """
+        Get a PartnerApp resource
+
+        Parameters:
+            arn: The ARN of the SageMaker Partner AI App to describe.
+            session: Boto3 session.
+            region: Region name.
+
+        Returns:
+            The PartnerApp resource.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceNotFound: Resource being access is not found.
+        """
+
+        operation_input_args = {
+            "Arn": arn,
+        }
+        # serialize the input request
+        operation_input_args = serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
+        response = client.describe_partner_app(**operation_input_args)
+
+        logger.debug(response)
+
+        # deserialize the response
+        transformed_response = transform(response, "DescribePartnerAppResponse")
+        partner_app = cls(**transformed_response)
+        return partner_app
+
+    @Base.add_validate_call
+    def refresh(
+        self,
+    ) -> Optional["PartnerApp"]:
+        """
+        Refresh a PartnerApp resource
+
+        Returns:
+            The PartnerApp resource.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceNotFound: Resource being access is not found.
+        """
+
+        operation_input_args = {
+            "Arn": self.arn,
+        }
+        # serialize the input request
+        operation_input_args = serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+
+        client = Base.get_sagemaker_client()
+        response = client.describe_partner_app(**operation_input_args)
+
+        # deserialize response and update self
+        transform(response, "DescribePartnerAppResponse", self)
+        return self
+
+    @Base.add_validate_call
+    def update(
+        self,
+        maintenance_config: Optional[PartnerAppMaintenanceConfig] = Unassigned(),
+        tier: Optional[str] = Unassigned(),
+        application_config: Optional[PartnerAppConfig] = Unassigned(),
+        enable_iam_session_based_identity: Optional[bool] = Unassigned(),
+        client_token: Optional[str] = Unassigned(),
+        tags: Optional[List[Tag]] = Unassigned(),
+    ) -> Optional["PartnerApp"]:
+        """
+        Update a PartnerApp resource
+
+        Parameters:
+            client_token: A unique token that guarantees that the call to this API is idempotent.
+            tags: Each tag consists of a key and an optional value. Tag keys must be unique per resource.
+
+        Returns:
+            The PartnerApp resource.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ConflictException: There was a conflict when you attempted to modify a SageMaker entity such as an Experiment or Artifact.
+            ResourceNotFound: Resource being access is not found.
+        """
+
+        logger.info("Updating partner_app resource.")
+        client = Base.get_sagemaker_client()
+
+        operation_input_args = {
+            "Arn": self.arn,
+            "MaintenanceConfig": maintenance_config,
+            "Tier": tier,
+            "ApplicationConfig": application_config,
+            "EnableIamSessionBasedIdentity": enable_iam_session_based_identity,
+            "ClientToken": client_token,
+            "Tags": tags,
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+
+        # create the resource
+        response = client.update_partner_app(**operation_input_args)
+        logger.debug(f"Response: {response}")
+        self.refresh()
+
+        return self
+
+    @Base.add_validate_call
+    def delete(
+        self,
+        client_token: Optional[str] = Unassigned(),
+    ) -> None:
+        """
+        Delete a PartnerApp resource
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ConflictException: There was a conflict when you attempted to modify a SageMaker entity such as an Experiment or Artifact.
+            ResourceNotFound: Resource being access is not found.
+        """
+
+        client = Base.get_sagemaker_client()
+
+        operation_input_args = {
+            "Arn": self.arn,
+            "ClientToken": client_token,
+        }
+        # serialize the input request
+        operation_input_args = serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+
+        client.delete_partner_app(**operation_input_args)
+
+        logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+
+    @Base.add_validate_call
+    def wait_for_status(
+        self,
+        target_status: Literal[
+            "Creating", "Updating", "Deleting", "Available", "Failed", "UpdateFailed", "Deleted"
+        ],
+        poll: int = 5,
+        timeout: Optional[int] = None,
+    ) -> None:
+        """
+        Wait for a PartnerApp resource to reach certain status.
+
+        Parameters:
+            target_status: The status to wait for.
+            poll: The number of seconds to wait between each poll.
+            timeout: The maximum number of seconds to wait before timing out.
+
+        Raises:
+            TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
+            FailedStatusError:   If the resource reaches a failed state.
+            WaiterError: Raised when an error occurs while waiting.
+        """
+        start_time = time.time()
+
+        progress = Progress(
+            SpinnerColumn("bouncingBar"),
+            TextColumn("{task.description}"),
+            TimeElapsedColumn(),
+        )
+        progress.add_task(f"Waiting for PartnerApp to reach [bold]{target_status} status...")
+        status = Status("Current status:")
+
+        with Live(
+            Panel(
+                Group(progress, status),
+                title="Wait Log Panel",
+                border_style=Style(color=Color.BLUE.value),
+            ),
+            transient=True,
+        ):
+            while True:
+                self.refresh()
+                current_status = self.status
+                status.update(f"Current status: [bold]{current_status}")
+
+                if target_status == current_status:
+                    logger.info(f"Final Resource Status: [bold]{current_status}")
+                    return
+
+                if "failed" in current_status.lower():
+                    raise FailedStatusError(
+                        resource_type="PartnerApp", status=current_status, reason="(Unknown)"
+                    )
+
+                if timeout is not None and time.time() - start_time >= timeout:
+                    raise TimeoutExceededError(resouce_type="PartnerApp", status=current_status)
+                time.sleep(poll)
+
+    @Base.add_validate_call
+    def wait_for_delete(
+        self,
+        poll: int = 5,
+        timeout: Optional[int] = None,
+    ) -> None:
+        """
+        Wait for a PartnerApp resource to be deleted.
+
+        Parameters:
+            poll: The number of seconds to wait between each poll.
+            timeout: The maximum number of seconds to wait before timing out.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
+            DeleteFailedStatusError:   If the resource reaches a failed state.
+            WaiterError: Raised when an error occurs while waiting.
+        """
+        start_time = time.time()
+
+        progress = Progress(
+            SpinnerColumn("bouncingBar"),
+            TextColumn("{task.description}"),
+            TimeElapsedColumn(),
+        )
+        progress.add_task("Waiting for PartnerApp to be deleted...")
+        status = Status("Current status:")
+
+        with Live(
+            Panel(
+                Group(progress, status),
+                title="Wait Log Panel",
+                border_style=Style(color=Color.BLUE.value),
+            )
+        ):
+            while True:
+                try:
+                    self.refresh()
+                    current_status = self.status
+                    status.update(f"Current status: [bold]{current_status}")
+
+                    if current_status.lower() == "deleted":
+                        print("Resource was deleted.")
+                        return
+
+                    if timeout is not None and time.time() - start_time >= timeout:
+                        raise TimeoutExceededError(resouce_type="PartnerApp", status=current_status)
+                except botocore.exceptions.ClientError as e:
+                    error_code = e.response["Error"]["Code"]
+
+                    if "ResourceNotFound" in error_code or "ValidationException" in error_code:
+                        logger.info("Resource was not found. It may have been deleted.")
+                        return
+                    raise e
+                time.sleep(poll)
+
+    @classmethod
+    @Base.add_validate_call
+    def get_all(
+        cls,
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> ResourceIterator["PartnerApp"]:
+        """
+        Get all PartnerApp resources.
+
+        Parameters:
+            session: Boto3 session.
+            region: Region name.
+
+        Returns:
+            Iterator for listed PartnerApp resources.
+
+        """
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
+
+        return ResourceIterator(
+            client=client,
+            list_method="list_partner_apps",
+            summaries_key="Summaries",
+            summary_name="PartnerAppSummary",
+            resource_cls=PartnerApp,
+        )
+
+
+class PartnerAppPresignedUrl(Base):
+    """
+    Class representing resource PartnerAppPresignedUrl
+
+    Attributes:
+        arn: The ARN of the SageMaker Partner AI App to create the presigned URL for.
+        expires_in_seconds: The time that will pass before the presigned URL expires.
+        session_expiration_duration_in_seconds: Indicates how long the Amazon SageMaker Partner AI App session can be accessed for after logging in.
+        url: The presigned URL that you can use to access the SageMaker Partner AI App.
+
+    """
+
+    arn: str
+    expires_in_seconds: Optional[int] = Unassigned()
+    session_expiration_duration_in_seconds: Optional[int] = Unassigned()
+    url: Optional[str] = Unassigned()
+
+    def get_name(self) -> str:
+        attributes = vars(self)
+        resource_name = "partner_app_presigned_url_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
+        for attribute, value in attributes.items():
+            if attribute == "name" or attribute in attribute_name_candidates:
+                return value
+        logger.error("Name attribute not found for object partner_app_presigned_url")
+        return None
+
+    @classmethod
+    @Base.add_validate_call
+    def create(
+        cls,
+        arn: str,
+        expires_in_seconds: Optional[int] = Unassigned(),
+        session_expiration_duration_in_seconds: Optional[int] = Unassigned(),
+    ) -> Optional["PartnerAppPresignedUrl"]:
+        """
+        Create a PartnerAppPresignedUrl resource
+
+        Parameters:
+            arn: The ARN of the SageMaker Partner AI App to create the presigned URL for.
+            expires_in_seconds: The time that will pass before the presigned URL expires.
+            session_expiration_duration_in_seconds: Indicates how long the Amazon SageMaker Partner AI App session can be accessed for after logging in.
+            session: Boto3 session.
+            region: Region name.
+
+        Returns:
+            The PartnerAppPresignedUrl resource.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceNotFound: Resource being access is not found.
+            ConfigSchemaValidationError: Raised when a configuration file does not adhere to the schema
+            LocalConfigNotFoundError: Raised when a configuration file is not found in local file system
+            S3ConfigNotFoundError: Raised when a configuration file is not found in S3
+        """
+
+        operation_input_args = {
+            "Arn": arn,
+            "ExpiresInSeconds": expires_in_seconds,
+            "SessionExpirationDurationInSeconds": session_expiration_duration_in_seconds,
+        }
+        # serialize the input request
+        operation_input_args = serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
+
+        logger.debug(f"Calling create_partner_app_presigned_url API")
+        response = client.create_partner_app_presigned_url(**operation_input_args)
+        logger.debug(f"Response: {response}")
+
+        transformed_response = transform(response, "CreatePartnerAppPresignedUrlResponse")
+        return cls(**operation_input_args, **transformed_response)
+
+
 class Pipeline(Base):
     """
     Class representing resource Pipeline
@@ -26680,6 +28294,7 @@ class TrainingJob(Base):
         sort_by: Optional[str] = Unassigned(),
         sort_order: Optional[str] = Unassigned(),
         warm_pool_status_equals: Optional[str] = Unassigned(),
+        training_plan_arn_equals: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> ResourceIterator["TrainingJob"]:
@@ -26698,6 +28313,7 @@ class TrainingJob(Base):
             sort_by: The field to sort results by. The default is CreationTime.
             sort_order: The sort order for results. The default is Ascending.
             warm_pool_status_equals: A filter that retrieves only training jobs with a specific warm pool status.
+            training_plan_arn_equals: The Amazon Resource Name (ARN); of the training plan to filter training jobs by. For more information about reserving GPU capacity for your SageMaker training jobs using Amazon SageMaker Training Plan, see  CreateTrainingPlan .
             session: Boto3 session.
             region: Region name.
 
@@ -26730,6 +28346,7 @@ class TrainingJob(Base):
             "SortBy": sort_by,
             "SortOrder": sort_order,
             "WarmPoolStatusEquals": warm_pool_status_equals,
+            "TrainingPlanArnEquals": training_plan_arn_equals,
         }
 
         # serialize the input request
@@ -26742,6 +28359,341 @@ class TrainingJob(Base):
             summaries_key="TrainingJobSummaries",
             summary_name="TrainingJobSummary",
             resource_cls=TrainingJob,
+            list_method_kwargs=operation_input_args,
+        )
+
+
+class TrainingPlan(Base):
+    """
+    Class representing resource TrainingPlan
+
+    Attributes:
+        training_plan_arn: The Amazon Resource Name (ARN); of the training plan.
+        training_plan_name: The name of the training plan.
+        status: The current status of the training plan (e.g., Pending, Active, Expired). To see the complete list of status values available for a training plan, refer to the Status attribute within the  TrainingPlanSummary  object.
+        status_message: A message providing additional information about the current status of the training plan.
+        duration_hours: The number of whole hours in the total duration for this training plan.
+        duration_minutes: The additional minutes beyond whole hours in the total duration for this training plan.
+        start_time: The start time of the training plan.
+        end_time: The end time of the training plan.
+        upfront_fee: The upfront fee for the training plan.
+        currency_code: The currency code for the upfront fee (e.g., USD).
+        total_instance_count: The total number of instances reserved in this training plan.
+        available_instance_count: The number of instances currently available for use in this training plan.
+        in_use_instance_count: The number of instances currently in use from this training plan.
+        target_resources: The target resources (e.g., SageMaker Training Jobs, SageMaker HyperPod) that can use this training plan. Training plans are specific to their target resource.   A training plan designed for SageMaker training jobs can only be used to schedule and run training jobs.   A training plan for HyperPod clusters can be used exclusively to provide compute resources to a cluster's instance group.
+        reserved_capacity_summaries: The list of Reserved Capacity providing the underlying compute resources of the plan.
+
+    """
+
+    training_plan_name: str
+    training_plan_arn: Optional[str] = Unassigned()
+    status: Optional[str] = Unassigned()
+    status_message: Optional[str] = Unassigned()
+    duration_hours: Optional[int] = Unassigned()
+    duration_minutes: Optional[int] = Unassigned()
+    start_time: Optional[datetime.datetime] = Unassigned()
+    end_time: Optional[datetime.datetime] = Unassigned()
+    upfront_fee: Optional[str] = Unassigned()
+    currency_code: Optional[str] = Unassigned()
+    total_instance_count: Optional[int] = Unassigned()
+    available_instance_count: Optional[int] = Unassigned()
+    in_use_instance_count: Optional[int] = Unassigned()
+    target_resources: Optional[List[str]] = Unassigned()
+    reserved_capacity_summaries: Optional[List[ReservedCapacitySummary]] = Unassigned()
+
+    def get_name(self) -> str:
+        attributes = vars(self)
+        resource_name = "training_plan_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
+        for attribute, value in attributes.items():
+            if attribute == "name" or attribute in attribute_name_candidates:
+                return value
+        logger.error("Name attribute not found for object training_plan")
+        return None
+
+    @classmethod
+    @Base.add_validate_call
+    def create(
+        cls,
+        training_plan_name: str,
+        training_plan_offering_id: str,
+        tags: Optional[List[Tag]] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional["TrainingPlan"]:
+        """
+        Create a TrainingPlan resource
+
+        Parameters:
+            training_plan_name: The name of the training plan to create.
+            training_plan_offering_id: The unique identifier of the training plan offering to use for creating this plan.
+            tags: An array of key-value pairs to apply to this training plan.
+            session: Boto3 session.
+            region: Region name.
+
+        Returns:
+            The TrainingPlan resource.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceInUse: Resource being accessed is in use.
+            ResourceLimitExceeded: You have exceeded an SageMaker resource limit. For example, you might have too many training jobs created.
+            ResourceNotFound: Resource being access is not found.
+            ConfigSchemaValidationError: Raised when a configuration file does not adhere to the schema
+            LocalConfigNotFoundError: Raised when a configuration file is not found in local file system
+            S3ConfigNotFoundError: Raised when a configuration file is not found in S3
+        """
+
+        logger.info("Creating training_plan resource.")
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
+
+        operation_input_args = {
+            "TrainingPlanName": training_plan_name,
+            "TrainingPlanOfferingId": training_plan_offering_id,
+            "Tags": tags,
+        }
+
+        operation_input_args = Base.populate_chained_attributes(
+            resource_name="TrainingPlan", operation_input_args=operation_input_args
+        )
+
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+
+        # create the resource
+        response = client.create_training_plan(**operation_input_args)
+        logger.debug(f"Response: {response}")
+
+        return cls.get(training_plan_name=training_plan_name, session=session, region=region)
+
+    @classmethod
+    @Base.add_validate_call
+    def get(
+        cls,
+        training_plan_name: str,
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional["TrainingPlan"]:
+        """
+        Get a TrainingPlan resource
+
+        Parameters:
+            training_plan_name: The name of the training plan to describe.
+            session: Boto3 session.
+            region: Region name.
+
+        Returns:
+            The TrainingPlan resource.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceNotFound: Resource being access is not found.
+        """
+
+        operation_input_args = {
+            "TrainingPlanName": training_plan_name,
+        }
+        # serialize the input request
+        operation_input_args = serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
+        response = client.describe_training_plan(**operation_input_args)
+
+        logger.debug(response)
+
+        # deserialize the response
+        transformed_response = transform(response, "DescribeTrainingPlanResponse")
+        training_plan = cls(**transformed_response)
+        return training_plan
+
+    @Base.add_validate_call
+    def refresh(
+        self,
+    ) -> Optional["TrainingPlan"]:
+        """
+        Refresh a TrainingPlan resource
+
+        Returns:
+            The TrainingPlan resource.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceNotFound: Resource being access is not found.
+        """
+
+        operation_input_args = {
+            "TrainingPlanName": self.training_plan_name,
+        }
+        # serialize the input request
+        operation_input_args = serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+
+        client = Base.get_sagemaker_client()
+        response = client.describe_training_plan(**operation_input_args)
+
+        # deserialize response and update self
+        transform(response, "DescribeTrainingPlanResponse", self)
+        return self
+
+    @Base.add_validate_call
+    def wait_for_status(
+        self,
+        target_status: Literal["Pending", "Active", "Scheduled", "Expired", "Failed"],
+        poll: int = 5,
+        timeout: Optional[int] = None,
+    ) -> None:
+        """
+        Wait for a TrainingPlan resource to reach certain status.
+
+        Parameters:
+            target_status: The status to wait for.
+            poll: The number of seconds to wait between each poll.
+            timeout: The maximum number of seconds to wait before timing out.
+
+        Raises:
+            TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
+            FailedStatusError:   If the resource reaches a failed state.
+            WaiterError: Raised when an error occurs while waiting.
+        """
+        start_time = time.time()
+
+        progress = Progress(
+            SpinnerColumn("bouncingBar"),
+            TextColumn("{task.description}"),
+            TimeElapsedColumn(),
+        )
+        progress.add_task(f"Waiting for TrainingPlan to reach [bold]{target_status} status...")
+        status = Status("Current status:")
+
+        with Live(
+            Panel(
+                Group(progress, status),
+                title="Wait Log Panel",
+                border_style=Style(color=Color.BLUE.value),
+            ),
+            transient=True,
+        ):
+            while True:
+                self.refresh()
+                current_status = self.status
+                status.update(f"Current status: [bold]{current_status}")
+
+                if target_status == current_status:
+                    logger.info(f"Final Resource Status: [bold]{current_status}")
+                    return
+
+                if "failed" in current_status.lower():
+                    raise FailedStatusError(
+                        resource_type="TrainingPlan",
+                        status=current_status,
+                        reason=self.status_message,
+                    )
+
+                if timeout is not None and time.time() - start_time >= timeout:
+                    raise TimeoutExceededError(resouce_type="TrainingPlan", status=current_status)
+                time.sleep(poll)
+
+    @classmethod
+    @Base.add_validate_call
+    def get_all(
+        cls,
+        start_time_after: Optional[datetime.datetime] = Unassigned(),
+        start_time_before: Optional[datetime.datetime] = Unassigned(),
+        sort_by: Optional[str] = Unassigned(),
+        sort_order: Optional[str] = Unassigned(),
+        filters: Optional[List[TrainingPlanFilter]] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> ResourceIterator["TrainingPlan"]:
+        """
+        Get all TrainingPlan resources
+
+        Parameters:
+            next_token: A token to continue pagination if more results are available.
+            max_results: The maximum number of results to return in the response.
+            start_time_after: Filter to list only training plans with an actual start time after this date.
+            start_time_before: Filter to list only training plans with an actual start time before this date.
+            sort_by: The training plan field to sort the results by (e.g., StartTime, Status).
+            sort_order: The order to sort the results (Ascending or Descending).
+            filters: Additional filters to apply to the list of training plans.
+            session: Boto3 session.
+            region: Region name.
+
+        Returns:
+            Iterator for listed TrainingPlan resources.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+        """
+
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
+
+        operation_input_args = {
+            "StartTimeAfter": start_time_after,
+            "StartTimeBefore": start_time_before,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
+            "Filters": filters,
+        }
+
+        # serialize the input request
+        operation_input_args = serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+
+        return ResourceIterator(
+            client=client,
+            list_method="list_training_plans",
+            summaries_key="TrainingPlanSummaries",
+            summary_name="TrainingPlanSummary",
+            resource_cls=TrainingPlan,
             list_method_kwargs=operation_input_args,
         )
 
