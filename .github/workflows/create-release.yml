@@ -6,6 +6,9 @@ on:
     branches:
       - main
 
+permissions:
+  id-token: write # This is required for requesting the JWT
+
 jobs:
   create-release:
     if: github.event.pull_request.merged == true && startsWith(github.event.pull_request.title, 'Daily Sync with Botocore') && github.event.pull_request.user.login == 'sagemaker-bot'
