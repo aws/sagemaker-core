@@ -5,6 +5,9 @@ on:
     # Every Monday to Friday at 10:00 UTC (3:00 PDT)
     - cron: 00 10 * * 1-5
 
+permissions:
+  id-token: write # This is required for requesting the JWT
+
 jobs:
   sync-with-botocore:
     runs-on: ubuntu-latest
