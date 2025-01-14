@@ -548,6 +548,8 @@ class S3ModelDataSource(Base):
     model_access_config: Specifies the access configuration file for the ML model. You can explicitly accept the model end-user license agreement (EULA) within the ModelAccessConfig. You are responsible for reviewing and complying with any applicable license terms and making sure they are acceptable for your use case before downloading or using a model.
     hub_access_config: Configuration information for hub access.
     manifest_s3_uri: The Amazon S3 URI of the manifest file. The manifest file is a CSV file that stores the artifact locations.
+    e_tag: The ETag associated with S3 URI.
+    manifest_etag: The ETag associated with Manifest S3 URI.
     """
 
     s3_uri: str
@@ -556,6 +558,8 @@ class S3ModelDataSource(Base):
     model_access_config: Optional[ModelAccessConfig] = Unassigned()
     hub_access_config: Optional[InferenceHubAccessConfig] = Unassigned()
     manifest_s3_uri: Optional[str] = Unassigned()
+    e_tag: Optional[str] = Unassigned()
+    manifest_etag: Optional[str] = Unassigned()
 
 
 class ModelDataSource(Base):
@@ -594,11 +598,13 @@ class AdditionalS3DataSource(Base):
     s3_data_type: The data type of the additional data source that you specify for use in inference or training.
     s3_uri: The uniform resource identifier (URI) used to identify an additional data source used in inference or training.
     compression_type: The type of compression used for an additional data source used in inference or training. Specify None if your additional data source is not compressed.
+    e_tag: The ETag associated with S3 URI.
     """
 
     s3_data_type: str
     s3_uri: str
     compression_type: Optional[str] = Unassigned()
+    e_tag: Optional[str] = Unassigned()
 
 
 class ModelPackageContainerDefinition(Base):
@@ -609,7 +615,7 @@ class ModelPackageContainerDefinition(Base):
     Attributes
     ----------------------
     container_hostname: The DNS host name for the Docker container.
-    image: The Amazon EC2 Container Registry (Amazon ECR) path where inference code is stored. If you are using your own custom algorithm instead of an algorithm provided by SageMaker, the inference code must meet SageMaker requirements. SageMaker supports both registry/repository[:tag] and registry/repository[@digest] image path formats. For more information, see Using Your Own Algorithms with Amazon SageMaker.
+    image: The Amazon EC2 Container Registry path where inference code is stored. If you are using your own custom algorithm instead of an algorithm provided by SageMaker, the inference code must meet SageMaker requirements. SageMaker supports both registry/repository[:tag] and registry/repository[@digest] image path formats. For more information, see Using Your Own Algorithms with Amazon SageMaker.
     image_digest: An MD5 hash of the training algorithm that identifies the Docker image used for training.
     model_data_url: The Amazon S3 path where the model artifacts, which result from model training, are stored. This path must point to a single gzip compressed tar archive (.tar.gz suffix).  The model artifacts must be in an S3 bucket that is in the same region as the model package.
     model_data_source: Specifies the location of ML model data to deploy during endpoint creation.
@@ -620,6 +626,7 @@ class ModelPackageContainerDefinition(Base):
     framework_version: The framework version of the Model Package Container Image.
     nearest_model_name: The name of a pre-trained machine learning benchmarked by Amazon SageMaker Inference Recommender model that matches your model. You can find a list of benchmarked models by calling ListModelMetadata.
     additional_s3_data_source: The additional data source that is used during inference in the Docker container for your model package.
+    model_data_e_tag: The ETag associated with Model Data URL.
     """
 
     image: str
@@ -634,6 +641,7 @@ class ModelPackageContainerDefinition(Base):
     framework_version: Optional[str] = Unassigned()
     nearest_model_name: Optional[str] = Unassigned()
     additional_s3_data_source: Optional[AdditionalS3DataSource] = Unassigned()
+    model_data_e_tag: Optional[str] = Unassigned()
 
 
 class AdditionalInferenceSpecificationDefinition(Base):
@@ -750,7 +758,7 @@ class TrainingImageConfig(Base):
 class AlgorithmSpecification(Base):
     """
     AlgorithmSpecification
-      Specifies the training algorithm to use in a CreateTrainingJob request. For more information about algorithms provided by SageMaker, see Algorithms. For information about using your own algorithms, see Using Your Own Algorithms with Amazon SageMaker.
+      Specifies the training algorithm to use in a CreateTrainingJob request.  SageMaker uses its own SageMaker account credentials to pull and access built-in algorithms so built-in algorithms are universally accessible across all Amazon Web Services accounts. As a result, built-in algorithms have standard, unrestricted access. You cannot restrict built-in algorithms using IAM roles. Use custom algorithms if you require specific access controls.  For more information about algorithms provided by SageMaker, see Algorithms. For information about using your own algorithms, see Using Your Own Algorithms with Amazon SageMaker.
 
     Attributes
     ----------------------
@@ -1190,11 +1198,11 @@ class AnnotationConsolidationConfig(Base):
 class ResourceSpec(Base):
     """
     ResourceSpec
-      Specifies the ARN's of a SageMaker image and SageMaker image version, and the instance type that the version runs on.
+      Specifies the ARN's of a SageMaker AI image and SageMaker AI image version, and the instance type that the version runs on.
 
     Attributes
     ----------------------
-    sage_maker_image_arn: The ARN of the SageMaker image that the image version belongs to.
+    sage_maker_image_arn: The ARN of the SageMaker AI image that the image version belongs to.
     sage_maker_image_version_arn: The ARN of the image version created on the instance.
     sage_maker_image_version_alias: The SageMakerImageVersionAlias of the image to launch with. This value is in SemVer 2.0.0 versioning format.
     instance_type: The instance type that the image version runs on.   JupyterServer apps only support the system value. For KernelGateway apps, the system value is translated to ml.t3.medium. KernelGateway apps also support all other values for available instance types.
@@ -1211,7 +1219,7 @@ class ResourceSpec(Base):
 class AppDetails(Base):
     """
     AppDetails
-      Details about an Amazon SageMaker app.
+      Details about an Amazon SageMaker AI app.
 
     Attributes
     ----------------------
@@ -1253,7 +1261,7 @@ class KernelSpec(Base):
 class FileSystemConfig(Base):
     """
     FileSystemConfig
-      The Amazon Elastic File System storage configuration for a SageMaker image.
+      The Amazon Elastic File System storage configuration for a SageMaker AI image.
 
     Attributes
     ----------------------
@@ -1270,12 +1278,12 @@ class FileSystemConfig(Base):
 class KernelGatewayImageConfig(Base):
     """
     KernelGatewayImageConfig
-      The configuration for the file system and kernels in a SageMaker image running as a KernelGateway app.
+      The configuration for the file system and kernels in a SageMaker AI image running as a KernelGateway app.
 
     Attributes
     ----------------------
     kernel_specs: The specification of the Jupyter kernels in the image.
-    file_system_config: The Amazon Elastic File System storage configuration for a SageMaker image.
+    file_system_config: The Amazon Elastic File System storage configuration for a SageMaker AI image.
     """
 
     kernel_specs: List[KernelSpec]
@@ -1302,7 +1310,7 @@ class ContainerConfig(Base):
 class JupyterLabAppImageConfig(Base):
     """
     JupyterLabAppImageConfig
-      The configuration for the file system and kernels in a SageMaker image running as a JupyterLab app. The FileSystemConfig object is not supported.
+      The configuration for the file system and kernels in a SageMaker AI image running as a JupyterLab app. The FileSystemConfig object is not supported.
 
     Attributes
     ----------------------
@@ -1332,7 +1340,7 @@ class CodeEditorAppImageConfig(Base):
 class AppImageConfigDetails(Base):
     """
     AppImageConfigDetails
-      The configuration for running a SageMaker image as a KernelGateway app.
+      The configuration for running a SageMaker AI image as a KernelGateway app.
 
     Attributes
     ----------------------
@@ -1340,7 +1348,7 @@ class AppImageConfigDetails(Base):
     app_image_config_name: The name of the AppImageConfig. Must be unique to your account.
     creation_time: When the AppImageConfig was created.
     last_modified_time: When the AppImageConfig was last modified.
-    kernel_gateway_image_config: The configuration for the file system and kernels in the SageMaker image.
+    kernel_gateway_image_config: The configuration for the file system and kernels in the SageMaker AI image.
     jupyter_lab_app_image_config: The configuration for the file system and the runtime, such as the environment variables and entry point.
     code_editor_app_image_config: The configuration for the file system and the runtime, such as the environment variables and entry point.
     """
@@ -1788,7 +1796,7 @@ class AutoMLS3DataSource(Base):
 
     Attributes
     ----------------------
-    s3_data_type: The data type.    If you choose S3Prefix, S3Uri identifies a key name prefix. SageMaker uses all objects that match the specified key name prefix for model training. The S3Prefix should have the following format:  s3://DOC-EXAMPLE-BUCKET/DOC-EXAMPLE-FOLDER-OR-FILE    If you choose ManifestFile, S3Uri identifies an object that is a manifest file containing a list of object keys that you want SageMaker to use for model training. A ManifestFile should have the format shown below:  [ {"prefix": "s3://DOC-EXAMPLE-BUCKET/DOC-EXAMPLE-FOLDER/DOC-EXAMPLE-PREFIX/"},    "DOC-EXAMPLE-RELATIVE-PATH/DOC-EXAMPLE-FOLDER/DATA-1",   "DOC-EXAMPLE-RELATIVE-PATH/DOC-EXAMPLE-FOLDER/DATA-2",   ... "DOC-EXAMPLE-RELATIVE-PATH/DOC-EXAMPLE-FOLDER/DATA-N" ]    If you choose AugmentedManifestFile, S3Uri identifies an object that is an augmented manifest file in JSON lines format. This file contains the data you want to use for model training. AugmentedManifestFile is available for V2 API jobs only (for example, for jobs created by calling CreateAutoMLJobV2). Here is a minimal, single-record example of an AugmentedManifestFile:  {"source-ref": "s3://DOC-EXAMPLE-BUCKET/DOC-EXAMPLE-FOLDER/cats/cat.jpg",   "label-metadata": {"class-name": "cat" } For more information on AugmentedManifestFile, see Provide Dataset Metadata to Training Jobs with an Augmented Manifest File.
+    s3_data_type: The data type.    If you choose S3Prefix, S3Uri identifies a key name prefix. SageMaker AI uses all objects that match the specified key name prefix for model training. The S3Prefix should have the following format:  s3://DOC-EXAMPLE-BUCKET/DOC-EXAMPLE-FOLDER-OR-FILE    If you choose ManifestFile, S3Uri identifies an object that is a manifest file containing a list of object keys that you want SageMaker AI to use for model training. A ManifestFile should have the format shown below:  [ {"prefix": "s3://DOC-EXAMPLE-BUCKET/DOC-EXAMPLE-FOLDER/DOC-EXAMPLE-PREFIX/"},    "DOC-EXAMPLE-RELATIVE-PATH/DOC-EXAMPLE-FOLDER/DATA-1",   "DOC-EXAMPLE-RELATIVE-PATH/DOC-EXAMPLE-FOLDER/DATA-2",   ... "DOC-EXAMPLE-RELATIVE-PATH/DOC-EXAMPLE-FOLDER/DATA-N" ]    If you choose AugmentedManifestFile, S3Uri identifies an object that is an augmented manifest file in JSON lines format. This file contains the data you want to use for model training. AugmentedManifestFile is available for V2 API jobs only (for example, for jobs created by calling CreateAutoMLJobV2). Here is a minimal, single-record example of an AugmentedManifestFile:  {"source-ref": "s3://DOC-EXAMPLE-BUCKET/DOC-EXAMPLE-FOLDER/cats/cat.jpg",   "label-metadata": {"class-name": "cat" } For more information on AugmentedManifestFile, see Provide Dataset Metadata to Training Jobs with an Augmented Manifest File.
     s3_uri: The URL to the Amazon S3 data source. The Uri refers to the Amazon S3 prefix or ManifestFile depending on the data type.
     """
 
@@ -2849,12 +2857,12 @@ class CanvasAppSettings(Base):
 class CaptureContentTypeHeader(Base):
     """
     CaptureContentTypeHeader
-      Configuration specifying how to treat different headers. If no headers are specified Amazon SageMaker will by default base64 encode when capturing the data.
+      Configuration specifying how to treat different headers. If no headers are specified Amazon SageMaker AI will by default base64 encode when capturing the data.
 
     Attributes
     ----------------------
-    csv_content_types: The list of all content type headers that Amazon SageMaker will treat as CSV and capture accordingly.
-    json_content_types: The list of all content type headers that SageMaker will treat as JSON and capture accordingly.
+    csv_content_types: The list of all content type headers that Amazon SageMaker AI will treat as CSV and capture accordingly.
+    json_content_types: The list of all content type headers that SageMaker AI will treat as JSON and capture accordingly.
     """
 
     csv_content_types: Optional[List[str]] = Unassigned()
@@ -3241,6 +3249,7 @@ class ClusterNodeDetails(Base):
     threads_per_core: The number of threads per CPU core you specified under CreateCluster.
     instance_storage_configs: The configurations of additional storage specified to the instance group where the instance (node) is launched.
     private_primary_ip: The private primary IP address of the SageMaker HyperPod cluster node.
+    private_primary_ipv6: The private primary IPv6 address of the SageMaker HyperPod cluster node.
     private_dns_hostname: The private DNS hostname of the SageMaker HyperPod cluster node.
     placement: The placement details of the SageMaker HyperPod cluster node.
     """
@@ -3255,6 +3264,7 @@ class ClusterNodeDetails(Base):
     threads_per_core: Optional[int] = Unassigned()
     instance_storage_configs: Optional[List[ClusterInstanceStorageConfig]] = Unassigned()
     private_primary_ip: Optional[str] = Unassigned()
+    private_primary_ipv6: Optional[str] = Unassigned()
     private_dns_hostname: Optional[str] = Unassigned()
     placement: Optional[ClusterInstancePlacement] = Unassigned()
 
@@ -3357,7 +3367,7 @@ class ClusterSummary(Base):
 class CustomImage(Base):
     """
     CustomImage
-      A custom SageMaker image. For more information, see Bring your own SageMaker image.
+      A custom SageMaker AI image. For more information, see Bring your own SageMaker AI image.
 
     Attributes
     ----------------------
@@ -3395,7 +3405,7 @@ class CodeEditorAppSettings(Base):
 class CodeRepository(Base):
     """
     CodeRepository
-      A Git repository that SageMaker automatically displays to users for cloning in the JupyterServer application.
+      A Git repository that SageMaker AI automatically displays to users for cloning in the JupyterServer application.
 
     Attributes
     ----------------------
@@ -4047,11 +4057,11 @@ class OutputConfig(Base):
 
     Attributes
     ----------------------
-    s3_output_location: Identifies the S3 bucket where you want Amazon SageMaker to store the model artifacts. For example, s3://bucket-name/key-name-prefix.
+    s3_output_location: Identifies the S3 bucket where you want Amazon SageMaker AI to store the model artifacts. For example, s3://bucket-name/key-name-prefix.
     target_device: Identifies the target device or the machine learning instance that you want to run your model on after the compilation has completed. Alternatively, you can specify OS, architecture, and accelerator using TargetPlatform fields. It can be used instead of TargetPlatform.  Currently ml_trn1 is available only in US East (N. Virginia) Region, and ml_inf2 is available only in US East (Ohio) Region.
     target_platform: Contains information about a target platform that you want your model to run on, such as OS, architecture, and accelerators. It is an alternative of TargetDevice. The following examples show how to configure the TargetPlatform and CompilerOptions JSON strings for popular target platforms:    Raspberry Pi 3 Model B+  "TargetPlatform": {"Os": "LINUX", "Arch": "ARM_EABIHF"},    "CompilerOptions": {'mattr': ['+neon']}    Jetson TX2  "TargetPlatform": {"Os": "LINUX", "Arch": "ARM64", "Accelerator": "NVIDIA"},    "CompilerOptions": {'gpu-code': 'sm_62', 'trt-ver': '6.0.1', 'cuda-ver': '10.0'}    EC2 m5.2xlarge instance OS  "TargetPlatform": {"Os": "LINUX", "Arch": "X86_64", "Accelerator": "NVIDIA"},    "CompilerOptions": {'mcpu': 'skylake-avx512'}    RK3399  "TargetPlatform": {"Os": "LINUX", "Arch": "ARM64", "Accelerator": "MALI"}    ARMv7 phone (CPU)  "TargetPlatform": {"Os": "ANDROID", "Arch": "ARM_EABI"},    "CompilerOptions": {'ANDROID_PLATFORM': 25, 'mattr': ['+neon']}    ARMv8 phone (CPU)  "TargetPlatform": {"Os": "ANDROID", "Arch": "ARM64"},    "CompilerOptions": {'ANDROID_PLATFORM': 29}
     compiler_options: Specifies additional parameters for compiler options in JSON format. The compiler options are TargetPlatform specific. It is required for NVIDIA accelerators and highly recommended for CPU compilations. For any other cases, it is optional to specify CompilerOptions.     DTYPE: Specifies the data type for the input. When compiling for ml_* (except for ml_inf) instances using PyTorch framework, provide the data type (dtype) of the model's input. "float32" is used if "DTYPE" is not specified. Options for data type are:   float32: Use either "float" or "float32".   int64: Use either "int64" or "long".    For example, {"dtype" : "float32"}.    CPU: Compilation for CPU supports the following compiler options.    mcpu: CPU micro-architecture. For example, {'mcpu': 'skylake-avx512'}     mattr: CPU flags. For example, {'mattr': ['+neon', '+vfpv4']}       ARM: Details of ARM CPU compilations.    NEON: NEON is an implementation of the Advanced SIMD extension used in ARMv7 processors. For example, add {'mattr': ['+neon']} to the compiler options if compiling for ARM 32-bit platform with the NEON support.      NVIDIA: Compilation for NVIDIA GPU supports the following compiler options.    gpu_code: Specifies the targeted architecture.    trt-ver: Specifies the TensorRT versions in x.y.z. format.    cuda-ver: Specifies the CUDA version in x.y format.   For example, {'gpu-code': 'sm_72', 'trt-ver': '6.0.1', 'cuda-ver': '10.1'}     ANDROID: Compilation for the Android OS supports the following compiler options:    ANDROID_PLATFORM: Specifies the Android API levels. Available levels range from 21 to 29. For example, {'ANDROID_PLATFORM': 28}.    mattr: Add {'mattr': ['+neon']} to compiler options if compiling for ARM 32-bit platform with NEON support.      INFERENTIA: Compilation for target ml_inf1 uses compiler options passed in as a JSON string. For example, "CompilerOptions": "\"--verbose 1 --num-neuroncores 2 -O2\"".  For information about supported compiler options, see  Neuron Compiler CLI Reference Guide.     CoreML: Compilation for the CoreML OutputConfig TargetDevice supports the following compiler options:    class_labels: Specifies the classification labels file name inside input tar.gz file. For example, {"class_labels": "imagenet_labels_1000.txt"}. Labels inside the txt file should be separated by newlines.
-    kms_key_id: The Amazon Web Services Key Management Service key (Amazon Web Services KMS) that Amazon SageMaker uses to encrypt your output models with Amazon S3 server-side encryption after compilation job. If you don't provide a KMS key ID, Amazon SageMaker uses the default KMS key for Amazon S3 for your role's account. For more information, see KMS-Managed Encryption Keys in the Amazon Simple Storage Service Developer Guide.  The KmsKeyId can be any of the following formats:    Key ID: 1234abcd-12ab-34cd-56ef-1234567890ab    Key ARN: arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab    Alias name: alias/ExampleAlias    Alias name ARN: arn:aws:kms:us-west-2:111122223333:alias/ExampleAlias
+    kms_key_id: The Amazon Web Services Key Management Service key (Amazon Web Services KMS) that Amazon SageMaker AI uses to encrypt your output models with Amazon S3 server-side encryption after compilation job. If you don't provide a KMS key ID, Amazon SageMaker AI uses the default KMS key for Amazon S3 for your role's account. For more information, see KMS-Managed Encryption Keys in the Amazon Simple Storage Service Developer Guide.  The KmsKeyId can be any of the following formats:    Key ID: 1234abcd-12ab-34cd-56ef-1234567890ab    Key ARN: arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab    Alias name: alias/ExampleAlias    Alias name ARN: arn:aws:kms:us-west-2:111122223333:alias/ExampleAlias
     """
 
     s3_output_location: str
@@ -4064,7 +4074,7 @@ class OutputConfig(Base):
 class NeoVpcConfig(Base):
     """
     NeoVpcConfig
-      The VpcConfig configuration object that specifies the VPC that you want the compilation jobs to connect to. For more information on controlling access to your Amazon S3 buckets used for compilation job, see Give Amazon SageMaker Compilation Jobs Access to Resources in Your Amazon VPC.
+      The VpcConfig configuration object that specifies the VPC that you want the compilation jobs to connect to. For more information on controlling access to your Amazon S3 buckets used for compilation job, see Give Amazon SageMaker AI Compilation Jobs Access to Resources in Your Amazon VPC.
 
     Attributes
     ----------------------
@@ -4197,8 +4207,8 @@ class MonitoringS3Output(Base):
 
     Attributes
     ----------------------
-    s3_uri: A URI that identifies the Amazon S3 storage location where Amazon SageMaker saves the results of a monitoring job.
-    local_path: The local path to the Amazon S3 storage location where Amazon SageMaker saves the results of a monitoring job. LocalPath is an absolute path for the output data.
+    s3_uri: A URI that identifies the Amazon S3 storage location where Amazon SageMaker AI saves the results of a monitoring job.
+    local_path: The local path to the Amazon S3 storage location where Amazon SageMaker AI saves the results of a monitoring job. LocalPath is an absolute path for the output data.
     s3_upload_mode: Whether to upload the results of the monitoring job continuously or after the job completes.
     """
 
@@ -4228,7 +4238,7 @@ class MonitoringOutputConfig(Base):
     Attributes
     ----------------------
     monitoring_outputs: Monitoring outputs for monitoring jobs. This is where the output of the periodic monitoring jobs is uploaded.
-    kms_key_id: The Key Management Service (KMS) key that Amazon SageMaker uses to encrypt the model artifacts at rest using Amazon S3 server-side encryption.
+    kms_key_id: The Key Management Service (KMS) key that Amazon SageMaker AI uses to encrypt the model artifacts at rest using Amazon S3 server-side encryption.
     """
 
     monitoring_outputs: List[MonitoringOutput]
@@ -4245,7 +4255,7 @@ class MonitoringClusterConfig(Base):
     instance_count: The number of ML compute instances to use in the model monitoring job. For distributed processing jobs, specify a value greater than 1. The default value is 1.
     instance_type: The ML compute instance type for the processing job.
     volume_size_in_gb: The size of the ML storage volume, in gigabytes, that you want to provision. You must specify sufficient ML storage for your scenario.
-    volume_kms_key_id: The Key Management Service (KMS) key that Amazon SageMaker uses to encrypt data on the storage volume attached to the ML compute instance(s) that run the model monitoring job.
+    volume_kms_key_id: The Key Management Service (KMS) key that Amazon SageMaker AI uses to encrypt data on the storage volume attached to the ML compute instance(s) that run the model monitoring job.
     """
 
     instance_count: int
@@ -4319,7 +4329,7 @@ class EdgeOutputConfig(Base):
 class SharingSettings(Base):
     """
     SharingSettings
-      Specifies options for sharing Amazon SageMaker Studio notebooks. These settings are specified as part of DefaultUserSettings when the CreateDomain API is called, and as part of UserSettings when the CreateUserProfile API is called. When SharingSettings is not specified, notebook sharing isn't allowed.
+      Specifies options for sharing Amazon SageMaker AI Studio notebooks. These settings are specified as part of DefaultUserSettings when the CreateDomain API is called, and as part of UserSettings when the CreateUserProfile API is called. When SharingSettings is not specified, notebook sharing isn't allowed.
 
     Attributes
     ----------------------
@@ -4340,9 +4350,9 @@ class JupyterServerAppSettings(Base):
 
     Attributes
     ----------------------
-    default_resource_spec: The default instance type and the Amazon Resource Name (ARN) of the default SageMaker image used by the JupyterServer app. If you use the LifecycleConfigArns parameter, then this parameter is also required.
+    default_resource_spec: The default instance type and the Amazon Resource Name (ARN) of the default SageMaker AI image used by the JupyterServer app. If you use the LifecycleConfigArns parameter, then this parameter is also required.
     lifecycle_config_arns:  The Amazon Resource Name (ARN) of the Lifecycle Configurations attached to the JupyterServerApp. If you use this parameter, the DefaultResourceSpec parameter is also required.  To remove a Lifecycle Config, you must set LifecycleConfigArns to an empty list.
-    code_repositories: A list of Git repositories that SageMaker automatically displays to users for cloning in the JupyterServer application.
+    code_repositories: A list of Git repositories that SageMaker AI automatically displays to users for cloning in the JupyterServer application.
     """
 
     default_resource_spec: Optional[ResourceSpec] = Unassigned()
@@ -4357,8 +4367,8 @@ class KernelGatewayAppSettings(Base):
 
     Attributes
     ----------------------
-    default_resource_spec: The default instance type and the Amazon Resource Name (ARN) of the default SageMaker image used by the KernelGateway app.  The Amazon SageMaker Studio UI does not use the default instance type value set here. The default instance type set here is used when Apps are created using the CLI or CloudFormation and the instance type parameter value is not passed.
-    custom_images: A list of custom SageMaker images that are configured to run as a KernelGateway app.
+    default_resource_spec: The default instance type and the Amazon Resource Name (ARN) of the default SageMaker AI image used by the KernelGateway app.  The Amazon SageMaker AI Studio UI does not use the default instance type value set here. The default instance type set here is used when Apps are created using the CLI or CloudFormation and the instance type parameter value is not passed.
+    custom_images: A list of custom SageMaker AI images that are configured to run as a KernelGateway app.
     lifecycle_config_arns:  The Amazon Resource Name (ARN) of the Lifecycle Configurations attached to the the user profile or domain.  To remove a Lifecycle Config, you must set LifecycleConfigArns to an empty list.
     """
 
@@ -4374,7 +4384,7 @@ class TensorBoardAppSettings(Base):
 
     Attributes
     ----------------------
-    default_resource_spec: The default instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance.
+    default_resource_spec: The default instance type and the Amazon Resource Name (ARN) of the SageMaker AI image created on the instance.
     """
 
     default_resource_spec: Optional[ResourceSpec] = Unassigned()
@@ -4403,7 +4413,7 @@ class RSessionAppSettings(Base):
     Attributes
     ----------------------
     default_resource_spec
-    custom_images: A list of custom SageMaker images that are configured to run as a RSession app.
+    custom_images: A list of custom SageMaker AI images that are configured to run as a RSession app.
     """
 
     default_resource_spec: Optional[ResourceSpec] = Unassigned()
@@ -4496,12 +4506,12 @@ class CustomPosixUserConfig(Base):
 class EFSFileSystemConfig(Base):
     """
     EFSFileSystemConfig
-      The settings for assigning a custom Amazon EFS file system to a user profile or space for an Amazon SageMaker Domain.
+      The settings for assigning a custom Amazon EFS file system to a user profile or space for an Amazon SageMaker AI Domain.
 
     Attributes
     ----------------------
     file_system_id: The ID of your Amazon EFS file system.
-    file_system_path: The path to the file system directory that is accessible in Amazon SageMaker Studio. Permitted users can access only this directory and below.
+    file_system_path: The path to the file system directory that is accessible in Amazon SageMaker AI Studio. Permitted users can access only this directory and below.
     """
 
     file_system_id: str
@@ -4526,7 +4536,7 @@ class FSxLustreFileSystemConfig(Base):
 class CustomFileSystemConfig(Base):
     """
     CustomFileSystemConfig
-      The settings for assigning a custom file system to a user profile or space for an Amazon SageMaker Domain. Permitted users can access this file system in Amazon SageMaker Studio.
+      The settings for assigning a custom file system to a user profile or space for an Amazon SageMaker AI Domain. Permitted users can access this file system in Amazon SageMaker AI Studio.
 
     Attributes
     ----------------------
@@ -4580,8 +4590,8 @@ class UserSettings(Base):
     Attributes
     ----------------------
     execution_role: The execution role for the user. SageMaker applies this setting only to private spaces that the user creates in the domain. SageMaker doesn't apply this setting to shared spaces.
-    security_groups: The security groups for the Amazon Virtual Private Cloud (VPC) that the domain uses for communication. Optional when the CreateDomain.AppNetworkAccessType parameter is set to PublicInternetOnly. Required when the CreateDomain.AppNetworkAccessType parameter is set to VpcOnly, unless specified as part of the DefaultUserSettings for the domain. Amazon SageMaker adds a security group to allow NFS traffic from Amazon SageMaker Studio. Therefore, the number of security groups that you can specify is one less than the maximum number shown. SageMaker applies these settings only to private spaces that the user creates in the domain. SageMaker doesn't apply these settings to shared spaces.
-    sharing_settings: Specifies options for sharing Amazon SageMaker Studio notebooks.
+    security_groups: The security groups for the Amazon Virtual Private Cloud (VPC) that the domain uses for communication. Optional when the CreateDomain.AppNetworkAccessType parameter is set to PublicInternetOnly. Required when the CreateDomain.AppNetworkAccessType parameter is set to VpcOnly, unless specified as part of the DefaultUserSettings for the domain. Amazon SageMaker AI adds a security group to allow NFS traffic from Amazon SageMaker AI Studio. Therefore, the number of security groups that you can specify is one less than the maximum number shown. SageMaker applies these settings only to private spaces that the user creates in the domain. SageMaker doesn't apply these settings to shared spaces.
+    sharing_settings: Specifies options for sharing Amazon SageMaker AI Studio notebooks.
     jupyter_server_app_settings: The Jupyter server's app settings.
     kernel_gateway_app_settings: The kernel gateway app settings.
     tensor_board_app_settings: The TensorBoard app settings.
@@ -4594,7 +4604,7 @@ class UserSettings(Base):
     default_landing_uri: The default experience that the user is directed to when accessing the domain. The supported values are:    studio::: Indicates that Studio is the default experience. This value can only be passed if StudioWebPortal is set to ENABLED.    app:JupyterServer:: Indicates that Studio Classic is the default experience.
     studio_web_portal: Whether the user can access Studio. If this value is set to DISABLED, the user cannot access Studio, even if that is the default experience for the domain.
     custom_posix_user_config: Details about the POSIX identity that is used for file system operations. SageMaker applies these settings only to private spaces that the user creates in the domain. SageMaker doesn't apply these settings to shared spaces.
-    custom_file_system_configs: The settings for assigning a custom file system to a user profile. Permitted users can access this file system in Amazon SageMaker Studio. SageMaker applies these settings only to private spaces that the user creates in the domain. SageMaker doesn't apply these settings to shared spaces.
+    custom_file_system_configs: The settings for assigning a custom file system to a user profile. Permitted users can access this file system in Amazon SageMaker AI Studio. SageMaker applies these settings only to private spaces that the user creates in the domain. SageMaker doesn't apply these settings to shared spaces.
     studio_web_portal_settings: Studio settings. If these settings are applied on a user level, they take priority over the settings applied on a domain level.
     auto_mount_home_efs: Indicates whether auto-mounting of an EFS volume is supported for the user profile. The DefaultAsDomain value is only supported for user profiles. Do not use the DefaultAsDomain value when setting this parameter for a domain. SageMaker applies this setting only to private spaces that the user creates in the domain. SageMaker doesn't apply this setting to shared spaces.
     """
@@ -4662,7 +4672,7 @@ class DomainSettings(Base):
     ----------------------
     security_group_ids: The security groups for the Amazon Virtual Private Cloud that the Domain uses for communication between Domain-level apps and user apps.
     r_studio_server_pro_domain_settings: A collection of settings that configure the RStudioServerPro Domain-level app.
-    execution_role_identity_config: The configuration for attaching a SageMaker user profile name to the execution role as a sts:SourceIdentity key.
+    execution_role_identity_config: The configuration for attaching a SageMaker AI user profile name to the execution role as a sts:SourceIdentity key.
     docker_settings: A collection of settings that configure the domain's Docker interaction.
     amazon_q_settings: A collection of settings that configure the Amazon Q experience within the domain. The AuthMode that you use to create the domain must be SSO.
     """
@@ -4688,7 +4698,7 @@ class DefaultSpaceSettings(Base):
     jupyter_lab_app_settings
     space_storage_settings
     custom_posix_user_config
-    custom_file_system_configs: The settings for assigning a custom file system to a domain. Permitted users can access this file system in Amazon SageMaker Studio.
+    custom_file_system_configs: The settings for assigning a custom file system to a domain. Permitted users can access this file system in Amazon SageMaker AI Studio.
     """
 
     execution_role: Optional[str] = Unassigned()
@@ -4871,16 +4881,16 @@ class ProductionVariant(Base):
 class DataCaptureConfig(Base):
     """
     DataCaptureConfig
-      Configuration to control how SageMaker captures inference data.
+      Configuration to control how SageMaker AI captures inference data.
 
     Attributes
     ----------------------
     enable_capture: Whether data capture should be enabled or disabled (defaults to enabled).
-    initial_sampling_percentage: The percentage of requests SageMaker will capture. A lower value is recommended for Endpoints with high traffic.
+    initial_sampling_percentage: The percentage of requests SageMaker AI will capture. A lower value is recommended for Endpoints with high traffic.
     destination_s3_uri: The Amazon S3 location used to capture the data.
-    kms_key_id: The Amazon Resource Name (ARN) of an Key Management Service key that SageMaker uses to encrypt the captured data at rest using Amazon S3 server-side encryption. The KmsKeyId can be any of the following formats:    Key ID: 1234abcd-12ab-34cd-56ef-1234567890ab    Key ARN: arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab    Alias name: alias/ExampleAlias    Alias name ARN: arn:aws:kms:us-west-2:111122223333:alias/ExampleAlias
+    kms_key_id: The Amazon Resource Name (ARN) of an Key Management Service key that SageMaker AI uses to encrypt the captured data at rest using Amazon S3 server-side encryption. The KmsKeyId can be any of the following formats:    Key ID: 1234abcd-12ab-34cd-56ef-1234567890ab    Key ARN: arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab    Alias name: alias/ExampleAlias    Alias name ARN: arn:aws:kms:us-west-2:111122223333:alias/ExampleAlias
     capture_options: Specifies data Model Monitor will capture. You can configure whether to collect only input, only output, or both
-    capture_content_type_header: Configuration specifying how to treat different headers. If no headers are specified SageMaker will by default base64 encode when capturing the data.
+    capture_content_type_header: Configuration specifying how to treat different headers. If no headers are specified SageMaker AI will by default base64 encode when capturing the data.
     """
 
     initial_sampling_percentage: int
@@ -5534,7 +5544,7 @@ class InferenceComponentSpecification(Base):
 
     Attributes
     ----------------------
-    model_name: The name of an existing SageMaker model object in your account that you want to deploy with the inference component.
+    model_name: The name of an existing SageMaker AI model object in your account that you want to deploy with the inference component.
     container: Defines a container that provides the runtime environment for a model that you deploy with an inference component.
     startup_parameters: Settings that take effect while the model container starts up.
     compute_resource_requirements: The compute resources allocated to run the model, plus any adapter models, that you assign to the inference component. Omit this parameter if your request is meant to create an adapter inference component. An adapter inference component is loaded by a base inference component, and it uses the compute resources of the base inference component.
@@ -6305,12 +6315,14 @@ class SourceAlgorithm(Base):
     ----------------------
     model_data_url: The Amazon S3 path where the model artifacts, which result from model training, are stored. This path must point to a single gzip compressed tar archive (.tar.gz suffix).  The model artifacts must be in an S3 bucket that is in the same Amazon Web Services region as the algorithm.
     model_data_source: Specifies the location of ML model data to deploy during endpoint creation.
+    model_data_e_tag: The ETag associated with Model Data URL.
     algorithm_name: The name of an algorithm that was used to create the model package. The algorithm must be either an algorithm resource in your SageMaker account or an algorithm in Amazon Web Services Marketplace that you are subscribed to.
     """
 
     algorithm_name: Union[str, object]
     model_data_url: Optional[str] = Unassigned()
     model_data_source: Optional[ModelDataSource] = Unassigned()
+    model_data_e_tag: Optional[str] = Unassigned()
 
 
 class SourceAlgorithmSpecification(Base):
@@ -6595,7 +6607,7 @@ class ScheduleConfig(Base):
 
     Attributes
     ----------------------
-    schedule_expression: A cron expression that describes details about the monitoring schedule. The supported cron expressions are:   If you want to set the job to start every hour, use the following:  Hourly: cron(0 \* ? \* \* \*)    If you want to start the job daily:  cron(0 [00-23] ? \* \* \*)    If you want to run the job one time, immediately, use the following keyword:  NOW    For example, the following are valid cron expressions:   Daily at noon UTC: cron(0 12 ? \* \* \*)    Daily at midnight UTC: cron(0 0 ? \* \* \*)    To support running every 6, 12 hours, the following are also supported:  cron(0 [00-23]/[01-24] ? \* \* \*)  For example, the following are valid cron expressions:   Every 12 hours, starting at 5pm UTC: cron(0 17/12 ? \* \* \*)    Every two hours starting at midnight: cron(0 0/2 ? \* \* \*)       Even though the cron expression is set to start at 5PM UTC, note that there could be a delay of 0-20 minutes from the actual requested time to run the execution.    We recommend that if you would like a daily schedule, you do not provide this parameter. Amazon SageMaker will pick a time for running every day.    You can also specify the keyword NOW to run the monitoring job immediately, one time, without recurring.
+    schedule_expression: A cron expression that describes details about the monitoring schedule. The supported cron expressions are:   If you want to set the job to start every hour, use the following:  Hourly: cron(0 \* ? \* \* \*)    If you want to start the job daily:  cron(0 [00-23] ? \* \* \*)    If you want to run the job one time, immediately, use the following keyword:  NOW    For example, the following are valid cron expressions:   Daily at noon UTC: cron(0 12 ? \* \* \*)    Daily at midnight UTC: cron(0 0 ? \* \* \*)    To support running every 6, 12 hours, the following are also supported:  cron(0 [00-23]/[01-24] ? \* \* \*)  For example, the following are valid cron expressions:   Every 12 hours, starting at 5pm UTC: cron(0 17/12 ? \* \* \*)    Every two hours starting at midnight: cron(0 0/2 ? \* \* \*)       Even though the cron expression is set to start at 5PM UTC, note that there could be a delay of 0-20 minutes from the actual requested time to run the execution.    We recommend that if you would like a daily schedule, you do not provide this parameter. Amazon SageMaker AI will pick a time for running every day.    You can also specify the keyword NOW to run the monitoring job immediately, one time, without recurring.
     data_analysis_start_time: Sets the start time for a monitoring job window. Express this time as an offset to the times that you schedule your monitoring jobs to run. You schedule monitoring jobs with the ScheduleExpression parameter. Specify this offset in ISO 8601 duration format. For example, if you want to monitor the five hours of data in your dataset that precede the start of each monitoring job, you would specify: "-PT5H". The start time that you specify must not precede the end time that you specify by more than 24 hours. You specify the end time with the DataAnalysisEndTime parameter. If you set ScheduleExpression to NOW, this parameter is required.
     data_analysis_end_time: Sets the end time for a monitoring job window. Express this time as an offset to the times that you schedule your monitoring jobs to run. You schedule monitoring jobs with the ScheduleExpression parameter. Specify this offset in ISO 8601 duration format. For example, if you want to end the window one hour before the start of each monitoring job, you would specify: "-PT1H". The end time that you specify must not follow the start time that you specify by more than 24 hours. You specify the start time with the DataAnalysisStartTime parameter. If you set ScheduleExpression to NOW, this parameter is required.
     """
@@ -6683,14 +6695,14 @@ class MonitoringJobDefinition(Base):
     Attributes
     ----------------------
     baseline_config: Baseline configuration used to validate that the data conforms to the specified constraints and statistics
-    monitoring_inputs: The array of inputs for the monitoring job. Currently we support monitoring an Amazon SageMaker Endpoint.
+    monitoring_inputs: The array of inputs for the monitoring job. Currently we support monitoring an Amazon SageMaker AI Endpoint.
     monitoring_output_config: The array of outputs from the monitoring job to be uploaded to Amazon S3.
     monitoring_resources: Identifies the resources, ML compute instances, and ML storage volumes to deploy for a monitoring job. In distributed processing, you specify more than one instance.
     monitoring_app_specification: Configures the monitoring job to run a specified Docker container image.
     stopping_condition: Specifies a time limit for how long the monitoring job is allowed to run.
     environment: Sets the environment variables in the Docker container.
     network_config: Specifies networking options for an monitoring job.
-    role_arn: The Amazon Resource Name (ARN) of an IAM role that Amazon SageMaker can assume to perform tasks on your behalf.
+    role_arn: The Amazon Resource Name (ARN) of an IAM role that Amazon SageMaker AI can assume to perform tasks on your behalf.
     """
 
     monitoring_inputs: List[MonitoringInput]
@@ -7281,7 +7293,7 @@ class SpaceStorageSettings(Base):
 class EFSFileSystem(Base):
     """
     EFSFileSystem
-      A file system, created by you in Amazon EFS, that you assign to a user profile or space for an Amazon SageMaker Domain. Permitted users can access this file system in Amazon SageMaker Studio.
+      A file system, created by you in Amazon EFS, that you assign to a user profile or space for an Amazon SageMaker AI Domain. Permitted users can access this file system in Amazon SageMaker AI Studio.
 
     Attributes
     ----------------------
@@ -7307,7 +7319,7 @@ class FSxLustreFileSystem(Base):
 class CustomFileSystem(Base):
     """
     CustomFileSystem
-      A file system, created by you, that you assign to a user profile or space for an Amazon SageMaker Domain. Permitted users can access this file system in Amazon SageMaker Studio.
+      A file system, created by you, that you assign to a user profile or space for an Amazon SageMaker AI Domain. Permitted users can access this file system in Amazon SageMaker AI Studio.
 
     Attributes
     ----------------------
@@ -7330,9 +7342,9 @@ class SpaceSettings(Base):
     kernel_gateway_app_settings
     code_editor_app_settings: The Code Editor application settings.
     jupyter_lab_app_settings: The settings for the JupyterLab application.
-    app_type: The type of app created within the space.
+    app_type: The type of app created within the space. If using the  UpdateSpace API, you can't change the app type of your space by specifying a different value for this field.
     space_storage_settings: The storage settings for a space.
-    custom_file_systems: A file system, created by you, that you assign to a space for an Amazon SageMaker Domain. Permitted users can access this file system in Amazon SageMaker Studio.
+    custom_file_systems: A file system, created by you, that you assign to a space for an Amazon SageMaker AI Domain. Permitted users can access this file system in Amazon SageMaker AI Studio.
     """
 
     jupyter_server_app_settings: Optional[JupyterServerAppSettings] = Unassigned()
@@ -8361,7 +8373,7 @@ class InferenceComponentSpecificationSummary(Base):
 
     Attributes
     ----------------------
-    model_name: The name of the SageMaker model object that is deployed with the inference component.
+    model_name: The name of the SageMaker AI model object that is deployed with the inference component.
     container: Details about the container that provides the runtime environment for the model that is deployed with the inference component.
     startup_parameters: Settings that take effect while the model container starts up.
     compute_resource_requirements: The compute resources allocated to run the model, plus any adapter models, that you assign to the inference component.
@@ -9286,7 +9298,7 @@ class DomainSettingsForUpdate(Base):
     Attributes
     ----------------------
     r_studio_server_pro_domain_settings_for_update: A collection of RStudioServerPro Domain-level app settings to update. A single RStudioServerPro application is created for a domain.
-    execution_role_identity_config: The configuration for attaching a SageMaker user profile name to the execution role as a sts:SourceIdentity key. This configuration can only be modified if there are no apps in the InService or Pending state.
+    execution_role_identity_config: The configuration for attaching a SageMaker AI user profile name to the execution role as a sts:SourceIdentity key. This configuration can only be modified if there are no apps in the InService or Pending state.
     security_group_ids: The security groups for the Amazon Virtual Private Cloud that the Domain uses for communication between Domain-level apps and user apps.
     docker_settings: A collection of settings that configure the domain's Docker interaction.
     amazon_q_settings: A collection of settings that configure the Amazon Q experience within the domain.
@@ -10103,7 +10115,7 @@ class HyperParameterTuningJobSummary(Base):
 class Image(Base):
     """
     Image
-      A SageMaker image. A SageMaker image represents a set of container images that are derived from a common base container image. Each of these container images is represented by a SageMaker ImageVersion.
+      A SageMaker AI image. A SageMaker AI image represents a set of container images that are derived from a common base container image. Each of these container images is represented by a SageMaker AI ImageVersion.
 
     Attributes
     ----------------------
@@ -10130,7 +10142,7 @@ class Image(Base):
 class ImageVersion(Base):
     """
     ImageVersion
-      A version of a SageMaker Image. A version represents an existing container image.
+      A version of a SageMaker AI Image. A version represents an existing container image.
 
     Attributes
     ----------------------
@@ -10748,7 +10760,7 @@ class NotebookInstanceLifecycleConfigSummary(Base):
 class NotebookInstanceSummary(Base):
     """
     NotebookInstanceSummary
-      Provides summary information for an SageMaker notebook instance.
+      Provides summary information for an SageMaker AI notebook instance.
 
     Attributes
     ----------------------
@@ -10760,8 +10772,8 @@ class NotebookInstanceSummary(Base):
     creation_time: A timestamp that shows when the notebook instance was created.
     last_modified_time: A timestamp that shows when the notebook instance was last modified.
     notebook_instance_lifecycle_config_name: The name of a notebook instance lifecycle configuration associated with this notebook instance. For information about notebook instance lifestyle configurations, see Step 2.1: (Optional) Customize a Notebook Instance.
-    default_code_repository: The Git repository associated with the notebook instance as its default code repository. This can be either the name of a Git repository stored as a resource in your account, or the URL of a Git repository in Amazon Web Services CodeCommit or in any other Git repository. When you open a notebook instance, it opens in the directory that contains this repository. For more information, see Associating Git Repositories with SageMaker Notebook Instances.
-    additional_code_repositories: An array of up to three Git repositories associated with the notebook instance. These can be either the names of Git repositories stored as resources in your account, or the URL of Git repositories in Amazon Web Services CodeCommit or in any other Git repository. These repositories are cloned at the same level as the default repository of your notebook instance. For more information, see Associating Git Repositories with SageMaker Notebook Instances.
+    default_code_repository: The Git repository associated with the notebook instance as its default code repository. This can be either the name of a Git repository stored as a resource in your account, or the URL of a Git repository in Amazon Web Services CodeCommit or in any other Git repository. When you open a notebook instance, it opens in the directory that contains this repository. For more information, see Associating Git Repositories with SageMaker AI Notebook Instances.
+    additional_code_repositories: An array of up to three Git repositories associated with the notebook instance. These can be either the names of Git repositories stored as resources in your account, or the URL of Git repositories in Amazon Web Services CodeCommit or in any other Git repository. These repositories are cloned at the same level as the default repository of your notebook instance. For more information, see Associating Git Repositories with SageMaker AI Notebook Instances.
     """
 
     notebook_instance_name: Union[str, object]
@@ -11231,14 +11243,14 @@ class SpaceDetails(Base):
 class StudioLifecycleConfigDetails(Base):
     """
     StudioLifecycleConfigDetails
-      Details of the Amazon SageMaker Studio Lifecycle Configuration.
+      Details of the Amazon SageMaker AI Studio Lifecycle Configuration.
 
     Attributes
     ----------------------
     studio_lifecycle_config_arn:  The Amazon Resource Name (ARN) of the Lifecycle Configuration.
-    studio_lifecycle_config_name: The name of the Amazon SageMaker Studio Lifecycle Configuration.
-    creation_time: The creation time of the Amazon SageMaker Studio Lifecycle Configuration.
-    last_modified_time: This value is equivalent to CreationTime because Amazon SageMaker Studio Lifecycle Configurations are immutable.
+    studio_lifecycle_config_name: The name of the Amazon SageMaker AI Studio Lifecycle Configuration.
+    creation_time: The creation time of the Amazon SageMaker AI Studio Lifecycle Configuration.
+    last_modified_time: This value is equivalent to CreationTime because Amazon SageMaker AI Studio Lifecycle Configurations are immutable.
     studio_lifecycle_config_app_type: The App type to which the Lifecycle Configuration is attached.
     """
 
