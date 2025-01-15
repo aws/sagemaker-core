@@ -975,10 +975,10 @@ class App(Base):
         space_name: The name of the space. If this value is not set, then UserProfileName must be set.
         status: The status.
         last_health_check_timestamp: The timestamp of the last health check.
-        last_user_activity_timestamp: The timestamp of the last user's activity. LastUserActivityTimestamp is also updated when SageMaker performs health checks without user activity. As a result, this value is set to the same value as LastHealthCheckTimestamp.
-        creation_time: The creation time of the application.  After an application has been shut down for 24 hours, SageMaker deletes all metadata for the application. To be considered an update and retain application metadata, applications must be restarted within 24 hours after the previous application has been shut down. After this time window, creation of an application is considered a new application rather than an update of the previous application.
+        last_user_activity_timestamp: The timestamp of the last user's activity. LastUserActivityTimestamp is also updated when SageMaker AI performs health checks without user activity. As a result, this value is set to the same value as LastHealthCheckTimestamp.
+        creation_time: The creation time of the application.  After an application has been shut down for 24 hours, SageMaker AI deletes all metadata for the application. To be considered an update and retain application metadata, applications must be restarted within 24 hours after the previous application has been shut down. After this time window, creation of an application is considered a new application rather than an update of the previous application.
         failure_reason: The failure reason.
-        resource_spec: The instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance.
+        resource_spec: The instance type and the Amazon Resource Name (ARN) of the SageMaker AI image created on the instance.
         built_in_lifecycle_config_arn: The lifecycle configuration that runs before the default lifecycle configuration
 
     """
@@ -1037,7 +1037,7 @@ class App(Base):
             user_profile_name: The user profile name. If this value is not set, then SpaceName must be set.
             space_name: The name of the space. If this value is not set, then UserProfileName must be set.
             tags: Each tag consists of a key and an optional value. Tag keys must be unique per resource.
-            resource_spec: The instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance.  The value of InstanceType passed as part of the ResourceSpec in the CreateApp call overrides the value passed as part of the ResourceSpec configured for the user profile or the domain. If InstanceType is not specified in any of those three ResourceSpec values for a KernelGateway app, the CreateApp call fails with a request validation error.
+            resource_spec: The instance type and the Amazon Resource Name (ARN) of the SageMaker AI image created on the instance.  The value of InstanceType passed as part of the ResourceSpec in the CreateApp call overrides the value passed as part of the ResourceSpec configured for the user profile or the domain. If InstanceType is not specified in any of those three ResourceSpec values for a KernelGateway app, the CreateApp call fails with a request validation error.
             session: Boto3 session.
             region: Region name.
 
@@ -2371,7 +2371,7 @@ class AutoMLJob(Base):
         end_time: Returns the end time of the AutoML job.
         failure_reason: Returns the failure reason for an AutoML job, when applicable.
         partial_failure_reasons: Returns a list of reasons for partial failures within an AutoML job.
-        best_candidate: The best model candidate selected by SageMaker Autopilot using both the best objective metric and lowest InferenceLatency for an experiment.
+        best_candidate: The best model candidate selected by SageMaker AI Autopilot using both the best objective metric and lowest InferenceLatency for an experiment.
         generate_candidate_definitions_only: Indicates whether the output for an AutoML job generates candidate definitions only.
         auto_ml_job_artifacts: Returns information on the job's artifacts found in AutoMLJobArtifacts.
         resolved_attributes: Contains ProblemType, AutoMLJobObjective, and CompletionCriteria. If you do not provide these values, they are inferred.
@@ -4768,16 +4768,16 @@ class CompilationJob(Base):
         compilation_job_name: The name of the model compilation job.
         compilation_job_arn: The Amazon Resource Name (ARN) of the model compilation job.
         compilation_job_status: The status of the model compilation job.
-        stopping_condition: Specifies a limit to how long a model compilation job can run. When the job reaches the time limit, Amazon SageMaker ends the compilation job. Use this API to cap model training costs.
+        stopping_condition: Specifies a limit to how long a model compilation job can run. When the job reaches the time limit, Amazon SageMaker AI ends the compilation job. Use this API to cap model training costs.
         creation_time: The time that the model compilation job was created.
         last_modified_time: The time that the status of the model compilation job was last modified.
         failure_reason: If a model compilation job failed, the reason it failed.
         model_artifacts: Information about the location in Amazon S3 that has been configured for storing the model artifacts used in the compilation job.
-        role_arn: The Amazon Resource Name (ARN) of an IAM role that Amazon SageMaker assumes to perform the model compilation job.
+        role_arn: The Amazon Resource Name (ARN) of an IAM role that Amazon SageMaker AI assumes to perform the model compilation job.
         input_config: Information about the location in Amazon S3 of the input model artifacts, the name and shape of the expected data inputs, and the framework in which the model was trained.
         output_config: Information about the output location for the compiled model and the target device that the model runs on.
         compilation_start_time: The time when the model compilation job started the CompilationJob instances.  You are billed for the time between this timestamp and the timestamp in the CompilationEndTime field. In Amazon CloudWatch Logs, the start time might be later than this time. That's because it takes time to download the compilation job, which depends on the size of the compilation job container.
-        compilation_end_time: The time when the model compilation job on a compilation job instance ended. For a successful or stopped job, this is when the job's model artifacts have finished uploading. For a failed job, this is when Amazon SageMaker detected that the job failed.
+        compilation_end_time: The time when the model compilation job on a compilation job instance ended. For a successful or stopped job, this is when the job's model artifacts have finished uploading. For a failed job, this is when Amazon SageMaker AI detected that the job failed.
         inference_image: The inference image to use when compiling a model. Specify an image only if the target device is a cloud instance.
         model_package_version_arn: The Amazon Resource Name (ARN) of the versioned model package that was provided to SageMaker Neo when you initiated a compilation job.
         model_digests: Provides a BLAKE2 hash value that identifies the compiled model artifacts in Amazon S3.
@@ -4867,9 +4867,9 @@ class CompilationJob(Base):
 
         Parameters:
             compilation_job_name: A name for the model compilation job. The name must be unique within the Amazon Web Services Region and within your Amazon Web Services account.
-            role_arn: The Amazon Resource Name (ARN) of an IAM role that enables Amazon SageMaker to perform tasks on your behalf.  During model compilation, Amazon SageMaker needs your permission to:   Read input data from an S3 bucket   Write model artifacts to an S3 bucket   Write logs to Amazon CloudWatch Logs   Publish metrics to Amazon CloudWatch   You grant permissions for all of these tasks to an IAM role. To pass this role to Amazon SageMaker, the caller of this API must have the iam:PassRole permission. For more information, see Amazon SageMaker Roles.
+            role_arn: The Amazon Resource Name (ARN) of an IAM role that enables Amazon SageMaker AI to perform tasks on your behalf.  During model compilation, Amazon SageMaker AI needs your permission to:   Read input data from an S3 bucket   Write model artifacts to an S3 bucket   Write logs to Amazon CloudWatch Logs   Publish metrics to Amazon CloudWatch   You grant permissions for all of these tasks to an IAM role. To pass this role to Amazon SageMaker AI, the caller of this API must have the iam:PassRole permission. For more information, see Amazon SageMaker AI Roles.
             output_config: Provides information about the output location for the compiled model and the target device the model runs on.
-            stopping_condition: Specifies a limit to how long a model compilation job can run. When the job reaches the time limit, Amazon SageMaker ends the compilation job. Use this API to cap model training costs.
+            stopping_condition: Specifies a limit to how long a model compilation job can run. When the job reaches the time limit, Amazon SageMaker AI ends the compilation job. Use this API to cap model training costs.
             model_package_version_arn: The Amazon Resource Name (ARN) of a versioned model package. Provide either a ModelPackageVersionArn or an InputConfig object in the request syntax. The presence of both objects in the CreateCompilationJob request will return an exception.
             input_config: Provides information about the location of input model artifacts, the name and shape of the expected data inputs, and the framework in which the model was trained.
             vpc_config: A VpcConfig object that specifies the VPC that you want your compilation job to connect to. Control access to your models by configuring the VPC. For more information, see Protect Compilation Jobs by Using an Amazon Virtual Private Cloud.
@@ -6116,7 +6116,7 @@ class DataQualityJobDefinition(Base):
         data_quality_job_input: The list of inputs for the data quality monitoring job. Currently endpoints are supported.
         data_quality_job_output_config:
         job_resources:
-        role_arn: The Amazon Resource Name (ARN) of an IAM role that Amazon SageMaker can assume to perform tasks on your behalf.
+        role_arn: The Amazon Resource Name (ARN) of an IAM role that Amazon SageMaker AI can assume to perform tasks on your behalf.
         data_quality_baseline_config: The constraints and baselines for the data quality monitoring job definition.
         network_config: The networking configuration for the data quality monitoring job.
         stopping_condition:
@@ -6216,7 +6216,7 @@ class DataQualityJobDefinition(Base):
             data_quality_job_input: A list of inputs for the monitoring job. Currently endpoints are supported as monitoring inputs.
             data_quality_job_output_config:
             job_resources:
-            role_arn: The Amazon Resource Name (ARN) of an IAM role that Amazon SageMaker can assume to perform tasks on your behalf.
+            role_arn: The Amazon Resource Name (ARN) of an IAM role that Amazon SageMaker AI can assume to perform tasks on your behalf.
             data_quality_baseline_config: Configures the constraints and baselines for the monitoring job.
             network_config: Specifies networking configuration for the monitoring job.
             stopping_condition:
@@ -7249,7 +7249,7 @@ class Domain(Base):
         domain_name: The domain name.
         home_efs_file_system_id: The ID of the Amazon Elastic File System managed by this Domain.
         single_sign_on_managed_application_instance_id: The IAM Identity Center managed application instance ID.
-        single_sign_on_application_arn: The ARN of the application managed by SageMaker in IAM Identity Center. This value is only returned for domains created after October 1, 2023.
+        single_sign_on_application_arn: The ARN of the application managed by SageMaker AI in IAM Identity Center. This value is only returned for domains created after October 1, 2023.
         status: The status.
         creation_time: The creation time.
         last_modified_time: The last modified time.
@@ -7258,7 +7258,7 @@ class Domain(Base):
         auth_mode: The domain's authentication mode.
         default_user_settings: Settings which are applied to UserProfiles in this domain if settings are not explicitly specified in a given UserProfile.
         domain_settings: A collection of Domain settings.
-        app_network_access_type: Specifies the VPC used for non-EFS traffic. The default value is PublicInternetOnly.    PublicInternetOnly - Non-EFS traffic is through a VPC managed by Amazon SageMaker, which allows direct internet access    VpcOnly - All traffic is through the specified VPC and subnets
+        app_network_access_type: Specifies the VPC used for non-EFS traffic. The default value is PublicInternetOnly.    PublicInternetOnly - Non-EFS traffic is through a VPC managed by Amazon SageMaker AI, which allows direct internet access    VpcOnly - All traffic is through the specified VPC and subnets
         home_efs_file_system_kms_key_id: Use KmsKeyId.
         subnet_ids: The VPC subnets that the domain uses for communication.
         url: The domain's URL.
@@ -7406,9 +7406,9 @@ class Domain(Base):
             vpc_id: The ID of the Amazon Virtual Private Cloud (VPC) that the domain uses for communication.
             domain_settings: A collection of Domain settings.
             tags: Tags to associated with the Domain. Each tag consists of a key and an optional value. Tag keys must be unique per resource. Tags are searchable using the Search API. Tags that you specify for the Domain are also added to all Apps that the Domain launches.
-            app_network_access_type: Specifies the VPC used for non-EFS traffic. The default value is PublicInternetOnly.    PublicInternetOnly - Non-EFS traffic is through a VPC managed by Amazon SageMaker, which allows direct internet access    VpcOnly - All traffic is through the specified VPC and subnets
+            app_network_access_type: Specifies the VPC used for non-EFS traffic. The default value is PublicInternetOnly.    PublicInternetOnly - Non-EFS traffic is through a VPC managed by Amazon SageMaker AI, which allows direct internet access    VpcOnly - All traffic is through the specified VPC and subnets
             home_efs_file_system_kms_key_id: Use KmsKeyId.
-            kms_key_id: SageMaker uses Amazon Web Services KMS to encrypt EFS and EBS volumes attached to the domain with an Amazon Web Services managed key by default. For more control, specify a customer managed key.
+            kms_key_id: SageMaker AI uses Amazon Web Services KMS to encrypt EFS and EBS volumes attached to the domain with an Amazon Web Services managed key by default. For more control, specify a customer managed key.
             app_security_group_management: The entity that creates and manages the required security groups for inter-app communication in VPCOnly mode. Required when CreateDomain.AppNetworkAccessType is VPCOnly and DomainSettings.RStudioServerProDomainSettings.DomainExecutionRoleArn is provided. If setting up the domain for use with RStudio, this value must be set to Service.
             tag_propagation: Indicates whether custom tag propagation is supported for the domain. Defaults to DISABLED.
             default_space_settings: The default settings for shared spaces that users create in the domain.
@@ -9702,7 +9702,7 @@ class EndpointConfig(Base):
             async_inference_config: Specifies configuration for how an endpoint performs asynchronous inference. This is a required field in order for your Endpoint to be invoked using InvokeEndpointAsync.
             explainer_config: A member of CreateEndpointConfig that enables explainers.
             shadow_production_variants: An array of ProductionVariant objects, one for each model that you want to host at this endpoint in shadow mode with production traffic replicated from the model specified on ProductionVariants. If you use this field, you can only specify one variant for ProductionVariants and one variant for ShadowProductionVariants.
-            execution_role_arn: The Amazon Resource Name (ARN) of an IAM role that Amazon SageMaker can assume to perform actions on your behalf. For more information, see SageMaker Roles.   To be able to pass this role to Amazon SageMaker, the caller of this action must have the iam:PassRole permission.
+            execution_role_arn: The Amazon Resource Name (ARN) of an IAM role that Amazon SageMaker AI can assume to perform actions on your behalf. For more information, see SageMaker AI Roles.   To be able to pass this role to Amazon SageMaker AI, the caller of this action must have the iam:PassRole permission.
             vpc_config:
             enable_network_isolation: Sets whether all model containers deployed to the endpoint are isolated. If they are, no inbound or outbound network calls can be made to or from the model containers.
             session: Boto3 session.
@@ -13743,7 +13743,7 @@ class Image(Base):
         image_name: The name of the image.
         image_status: The status of the image.
         last_modified_time: When the image was last modified.
-        role_arn: The ARN of the IAM role that enables Amazon SageMaker to perform tasks on your behalf.
+        role_arn: The ARN of the IAM role that enables Amazon SageMaker AI to perform tasks on your behalf.
 
     """
 
@@ -13804,7 +13804,7 @@ class Image(Base):
 
         Parameters:
             image_name: The name of the image. Must be unique to your account.
-            role_arn: The ARN of an IAM role that enables Amazon SageMaker to perform tasks on your behalf.
+            role_arn: The ARN of an IAM role that enables Amazon SageMaker AI to perform tasks on your behalf.
             description: The description of the image.
             display_name: The display name of the image. If not provided, ImageName is displayed.
             tags: A list of tags to apply to the image.
@@ -14313,7 +14313,7 @@ class ImageVersion(Base):
         last_modified_time: When the version was last modified.
         version: The version number.
         vendor_guidance: The stability of the image version specified by the maintainer.    NOT_PROVIDED: The maintainers did not provide a status for image version stability.    STABLE: The image version is stable.    TO_BE_ARCHIVED: The image version is set to be archived. Custom image versions that are set to be archived are automatically archived after three months.    ARCHIVED: The image version is archived. Archived image versions are not searchable and are no longer actively supported.
-        job_type: Indicates SageMaker job type compatibility.    TRAINING: The image version is compatible with SageMaker training jobs.    INFERENCE: The image version is compatible with SageMaker inference jobs.    NOTEBOOK_KERNEL: The image version is compatible with SageMaker notebook kernels.
+        job_type: Indicates SageMaker AI job type compatibility.    TRAINING: The image version is compatible with SageMaker AI training jobs.    INFERENCE: The image version is compatible with SageMaker AI inference jobs.    NOTEBOOK_KERNEL: The image version is compatible with SageMaker AI notebook kernels.
         ml_framework: The machine learning framework vended in the image version.
         programming_lang: The supported programming language and its version.
         processor: Indicates CPU or GPU compatibility.    CPU: The image version is compatible with CPU.    GPU: The image version is compatible with GPU.
@@ -14383,7 +14383,7 @@ class ImageVersion(Base):
             image_name: The ImageName of the Image to create a version of.
             aliases: A list of aliases created with the image version.
             vendor_guidance: The stability of the image version, specified by the maintainer.    NOT_PROVIDED: The maintainers did not provide a status for image version stability.    STABLE: The image version is stable.    TO_BE_ARCHIVED: The image version is set to be archived. Custom image versions that are set to be archived are automatically archived after three months.    ARCHIVED: The image version is archived. Archived image versions are not searchable and are no longer actively supported.
-            job_type: Indicates SageMaker job type compatibility.    TRAINING: The image version is compatible with SageMaker training jobs.    INFERENCE: The image version is compatible with SageMaker inference jobs.    NOTEBOOK_KERNEL: The image version is compatible with SageMaker notebook kernels.
+            job_type: Indicates SageMaker AI job type compatibility.    TRAINING: The image version is compatible with SageMaker AI training jobs.    INFERENCE: The image version is compatible with SageMaker AI inference jobs.    NOTEBOOK_KERNEL: The image version is compatible with SageMaker AI notebook kernels.
             ml_framework: The machine learning framework vended in the image version.
             programming_lang: The supported programming language and its version.
             processor: Indicates CPU or GPU compatibility.    CPU: The image version is compatible with CPU.    GPU: The image version is compatible with GPU.
@@ -18124,7 +18124,7 @@ class ModelBiasJobDefinition(Base):
             model_bias_job_input: Inputs for the model bias job.
             model_bias_job_output_config:
             job_resources:
-            role_arn: The Amazon Resource Name (ARN) of an IAM role that Amazon SageMaker can assume to perform tasks on your behalf.
+            role_arn: The Amazon Resource Name (ARN) of an IAM role that Amazon SageMaker AI can assume to perform tasks on your behalf.
             model_bias_baseline_config: The baseline configuration for a model bias job.
             network_config: Networking options for a model bias job.
             stopping_condition:
@@ -19348,7 +19348,7 @@ class ModelExplainabilityJobDefinition(Base):
             model_explainability_job_input: Inputs for the model explainability job.
             model_explainability_job_output_config:
             job_resources:
-            role_arn: The Amazon Resource Name (ARN) of an IAM role that Amazon SageMaker can assume to perform tasks on your behalf.
+            role_arn: The Amazon Resource Name (ARN) of an IAM role that Amazon SageMaker AI can assume to perform tasks on your behalf.
             model_explainability_baseline_config: The baseline configuration for a model explainability job.
             network_config: Networking options for a model explainability job.
             stopping_condition:
@@ -20864,7 +20864,7 @@ class ModelQualityJobDefinition(Base):
         model_quality_job_input: Inputs for the model quality job.
         model_quality_job_output_config:
         job_resources:
-        role_arn: The Amazon Resource Name (ARN) of an IAM role that Amazon SageMaker can assume to perform tasks on your behalf.
+        role_arn: The Amazon Resource Name (ARN) of an IAM role that Amazon SageMaker AI can assume to perform tasks on your behalf.
         model_quality_baseline_config: The baseline configuration for a model quality job.
         network_config: Networking options for a model quality job.
         stopping_condition:
@@ -20964,7 +20964,7 @@ class ModelQualityJobDefinition(Base):
             model_quality_job_input: A list of the inputs that are monitored. Currently endpoints are supported.
             model_quality_job_output_config:
             job_resources:
-            role_arn: The Amazon Resource Name (ARN) of an IAM role that Amazon SageMaker can assume to perform tasks on your behalf.
+            role_arn: The Amazon Resource Name (ARN) of an IAM role that Amazon SageMaker AI can assume to perform tasks on your behalf.
             model_quality_baseline_config: Specifies the constraints and baselines for the monitoring job.
             network_config: Specifies the network configuration for the monitoring job.
             stopping_condition:
@@ -22073,7 +22073,7 @@ class NotebookInstance(Base):
 
     Attributes:
         notebook_instance_arn: The Amazon Resource Name (ARN) of the notebook instance.
-        notebook_instance_name: The name of the SageMaker notebook instance.
+        notebook_instance_name: The name of the SageMaker AI notebook instance.
         notebook_instance_status: The status of the notebook instance.
         failure_reason: If status is Failed, the reason it failed.
         url: The URL that you use to connect to the Jupyter notebook that is running in your notebook instance.
@@ -22081,16 +22081,16 @@ class NotebookInstance(Base):
         subnet_id: The ID of the VPC subnet.
         security_groups: The IDs of the VPC security groups.
         role_arn: The Amazon Resource Name (ARN) of the IAM role associated with the instance.
-        kms_key_id: The Amazon Web Services KMS key ID SageMaker uses to encrypt data when storing it on the ML storage volume attached to the instance.
-        network_interface_id: The network interface IDs that SageMaker created at the time of creating the instance.
+        kms_key_id: The Amazon Web Services KMS key ID SageMaker AI uses to encrypt data when storing it on the ML storage volume attached to the instance.
+        network_interface_id: The network interface IDs that SageMaker AI created at the time of creating the instance.
         last_modified_time: A timestamp. Use this parameter to retrieve the time when the notebook instance was last modified.
         creation_time: A timestamp. Use this parameter to return the time when the notebook instance was created
         notebook_instance_lifecycle_config_name: Returns the name of a notebook instance lifecycle configuration. For information about notebook instance lifestyle configurations, see Step 2.1: (Optional) Customize a Notebook Instance
-        direct_internet_access: Describes whether SageMaker provides internet access to the notebook instance. If this value is set to Disabled, the notebook instance does not have internet access, and cannot connect to SageMaker training and endpoint services. For more information, see Notebook Instances Are Internet-Enabled by Default.
+        direct_internet_access: Describes whether SageMaker AI provides internet access to the notebook instance. If this value is set to Disabled, the notebook instance does not have internet access, and cannot connect to SageMaker AI training and endpoint services. For more information, see Notebook Instances Are Internet-Enabled by Default.
         volume_size_in_gb: The size, in GB, of the ML storage volume attached to the notebook instance.
         accelerator_types: This parameter is no longer supported. Elastic Inference (EI) is no longer available. This parameter was used to specify a list of the EI instance types associated with this notebook instance.
-        default_code_repository: The Git repository associated with the notebook instance as its default code repository. This can be either the name of a Git repository stored as a resource in your account, or the URL of a Git repository in Amazon Web Services CodeCommit or in any other Git repository. When you open a notebook instance, it opens in the directory that contains this repository. For more information, see Associating Git Repositories with SageMaker Notebook Instances.
-        additional_code_repositories: An array of up to three Git repositories associated with the notebook instance. These can be either the names of Git repositories stored as resources in your account, or the URL of Git repositories in Amazon Web Services CodeCommit or in any other Git repository. These repositories are cloned at the same level as the default repository of your notebook instance. For more information, see Associating Git Repositories with SageMaker Notebook Instances.
+        default_code_repository: The Git repository associated with the notebook instance as its default code repository. This can be either the name of a Git repository stored as a resource in your account, or the URL of a Git repository in Amazon Web Services CodeCommit or in any other Git repository. When you open a notebook instance, it opens in the directory that contains this repository. For more information, see Associating Git Repositories with SageMaker AI Notebook Instances.
+        additional_code_repositories: An array of up to three Git repositories associated with the notebook instance. These can be either the names of Git repositories stored as resources in your account, or the URL of Git repositories in Amazon Web Services CodeCommit or in any other Git repository. These repositories are cloned at the same level as the default repository of your notebook instance. For more information, see Associating Git Repositories with SageMaker AI Notebook Instances.
         root_access: Whether root access is enabled or disabled for users of the notebook instance.  Lifecycle configurations need root access to be able to set up a notebook instance. Because of this, lifecycle configurations associated with a notebook instance always run with root access even if you disable root access for users.
         platform_identifier: The platform identifier of the notebook instance runtime environment.
         instance_metadata_service_configuration: Information on the IMDS configuration of the notebook instance
@@ -22188,17 +22188,17 @@ class NotebookInstance(Base):
         Parameters:
             notebook_instance_name: The name of the new notebook instance.
             instance_type: The type of ML compute instance to launch for the notebook instance.
-            role_arn:  When you send any requests to Amazon Web Services resources from the notebook instance, SageMaker assumes this role to perform tasks on your behalf. You must grant this role necessary permissions so SageMaker can perform these tasks. The policy must allow the SageMaker service principal (sagemaker.amazonaws.com) permissions to assume this role. For more information, see SageMaker Roles.   To be able to pass this role to SageMaker, the caller of this API must have the iam:PassRole permission.
+            role_arn:  When you send any requests to Amazon Web Services resources from the notebook instance, SageMaker AI assumes this role to perform tasks on your behalf. You must grant this role necessary permissions so SageMaker AI can perform these tasks. The policy must allow the SageMaker AI service principal (sagemaker.amazonaws.com) permissions to assume this role. For more information, see SageMaker AI Roles.   To be able to pass this role to SageMaker AI, the caller of this API must have the iam:PassRole permission.
             subnet_id: The ID of the subnet in a VPC to which you would like to have a connectivity from your ML compute instance.
             security_group_ids: The VPC security group IDs, in the form sg-xxxxxxxx. The security groups must be for the same VPC as specified in the subnet.
-            kms_key_id: The Amazon Resource Name (ARN) of a Amazon Web Services Key Management Service key that SageMaker uses to encrypt data on the storage volume attached to your notebook instance. The KMS key you provide must be enabled. For information, see Enabling and Disabling Keys in the Amazon Web Services Key Management Service Developer Guide.
+            kms_key_id: The Amazon Resource Name (ARN) of a Amazon Web Services Key Management Service key that SageMaker AI uses to encrypt data on the storage volume attached to your notebook instance. The KMS key you provide must be enabled. For information, see Enabling and Disabling Keys in the Amazon Web Services Key Management Service Developer Guide.
             tags: An array of key-value pairs. You can use tags to categorize your Amazon Web Services resources in different ways, for example, by purpose, owner, or environment. For more information, see Tagging Amazon Web Services Resources.
             lifecycle_config_name: The name of a lifecycle configuration to associate with the notebook instance. For information about lifestyle configurations, see Step 2.1: (Optional) Customize a Notebook Instance.
-            direct_internet_access: Sets whether SageMaker provides internet access to the notebook instance. If you set this to Disabled this notebook instance is able to access resources only in your VPC, and is not be able to connect to SageMaker training and endpoint services unless you configure a NAT Gateway in your VPC. For more information, see Notebook Instances Are Internet-Enabled by Default. You can set the value of this parameter to Disabled only if you set a value for the SubnetId parameter.
+            direct_internet_access: Sets whether SageMaker AI provides internet access to the notebook instance. If you set this to Disabled this notebook instance is able to access resources only in your VPC, and is not be able to connect to SageMaker AI training and endpoint services unless you configure a NAT Gateway in your VPC. For more information, see Notebook Instances Are Internet-Enabled by Default. You can set the value of this parameter to Disabled only if you set a value for the SubnetId parameter.
             volume_size_in_gb: The size, in GB, of the ML storage volume to attach to the notebook instance. The default value is 5 GB.
             accelerator_types: This parameter is no longer supported. Elastic Inference (EI) is no longer available. This parameter was used to specify a list of EI instance types to associate with this notebook instance.
-            default_code_repository: A Git repository to associate with the notebook instance as its default code repository. This can be either the name of a Git repository stored as a resource in your account, or the URL of a Git repository in Amazon Web Services CodeCommit or in any other Git repository. When you open a notebook instance, it opens in the directory that contains this repository. For more information, see Associating Git Repositories with SageMaker Notebook Instances.
-            additional_code_repositories: An array of up to three Git repositories to associate with the notebook instance. These can be either the names of Git repositories stored as resources in your account, or the URL of Git repositories in Amazon Web Services CodeCommit or in any other Git repository. These repositories are cloned at the same level as the default repository of your notebook instance. For more information, see Associating Git Repositories with SageMaker Notebook Instances.
+            default_code_repository: A Git repository to associate with the notebook instance as its default code repository. This can be either the name of a Git repository stored as a resource in your account, or the URL of a Git repository in Amazon Web Services CodeCommit or in any other Git repository. When you open a notebook instance, it opens in the directory that contains this repository. For more information, see Associating Git Repositories with SageMaker AI Notebook Instances.
+            additional_code_repositories: An array of up to three Git repositories to associate with the notebook instance. These can be either the names of Git repositories stored as resources in your account, or the URL of Git repositories in Amazon Web Services CodeCommit or in any other Git repository. These repositories are cloned at the same level as the default repository of your notebook instance. For more information, see Associating Git Repositories with SageMaker AI Notebook Instances.
             root_access: Whether root access is enabled or disabled for users of the notebook instance. The default value is Enabled.  Lifecycle configurations need root access to be able to set up a notebook instance. Because of this, lifecycle configurations associated with a notebook instance always run with root access even if you disable root access for users.
             platform_identifier: The platform identifier of the notebook instance runtime environment.
             instance_metadata_service_configuration: Information on the IMDS configuration of the notebook instance
@@ -23149,7 +23149,7 @@ class OptimizationJob(Base):
 
         Parameters:
             optimization_job_name: A custom name for the new optimization job.
-            role_arn: The Amazon Resource Name (ARN) of an IAM role that enables Amazon SageMaker to perform tasks on your behalf.  During model optimization, Amazon SageMaker needs your permission to:   Read input data from an S3 bucket   Write model artifacts to an S3 bucket   Write logs to Amazon CloudWatch Logs   Publish metrics to Amazon CloudWatch   You grant permissions for all of these tasks to an IAM role. To pass this role to Amazon SageMaker, the caller of this API must have the iam:PassRole permission. For more information, see Amazon SageMaker Roles.
+            role_arn: The Amazon Resource Name (ARN) of an IAM role that enables Amazon SageMaker AI to perform tasks on your behalf.  During model optimization, Amazon SageMaker AI needs your permission to:   Read input data from an S3 bucket   Write model artifacts to an S3 bucket   Write logs to Amazon CloudWatch Logs   Publish metrics to Amazon CloudWatch   You grant permissions for all of these tasks to an IAM role. To pass this role to Amazon SageMaker AI, the caller of this API must have the iam:PassRole permission. For more information, see Amazon SageMaker AI Roles.
             model_source: The location of the source model to optimize with an optimization job.
             deployment_instance_type: The type of instance that hosts the optimized model that you create with the optimization job.
             optimization_configs: Settings for each of the optimization techniques that the job applies.
@@ -23559,7 +23559,21 @@ class PartnerApp(Base):
         logger.error("Name attribute not found for object partner_app")
         return None
 
+    def populate_inputs_decorator(create_func):
+        @functools.wraps(create_func)
+        def wrapper(*args, **kwargs):
+            config_schema_for_resource = {"execution_role_arn": {"type": "string"}}
+            return create_func(
+                *args,
+                **Base.get_updated_kwargs_with_configured_attributes(
+                    config_schema_for_resource, "PartnerApp", **kwargs
+                ),
+            )
+
+        return wrapper
+
     @classmethod
+    @populate_inputs_decorator
     @Base.add_validate_call
     def create(
         cls,
@@ -23734,6 +23748,7 @@ class PartnerApp(Base):
         transform(response, "DescribePartnerAppResponse", self)
         return self
 
+    @populate_inputs_decorator
     @Base.add_validate_call
     def update(
         self,
@@ -27107,10 +27122,10 @@ class StudioLifecycleConfig(Base):
 
     Attributes:
         studio_lifecycle_config_arn: The ARN of the Lifecycle Configuration to describe.
-        studio_lifecycle_config_name: The name of the Amazon SageMaker Studio Lifecycle Configuration that is described.
-        creation_time: The creation time of the Amazon SageMaker Studio Lifecycle Configuration.
-        last_modified_time: This value is equivalent to CreationTime because Amazon SageMaker Studio Lifecycle Configurations are immutable.
-        studio_lifecycle_config_content: The content of your Amazon SageMaker Studio Lifecycle Configuration script.
+        studio_lifecycle_config_name: The name of the Amazon SageMaker AI Studio Lifecycle Configuration that is described.
+        creation_time: The creation time of the Amazon SageMaker AI Studio Lifecycle Configuration.
+        last_modified_time: This value is equivalent to CreationTime because Amazon SageMaker AI Studio Lifecycle Configurations are immutable.
+        studio_lifecycle_config_content: The content of your Amazon SageMaker AI Studio Lifecycle Configuration script.
         studio_lifecycle_config_app_type: The App type that the Lifecycle Configuration is attached to.
 
     """
@@ -27153,8 +27168,8 @@ class StudioLifecycleConfig(Base):
         Create a StudioLifecycleConfig resource
 
         Parameters:
-            studio_lifecycle_config_name: The name of the Amazon SageMaker Studio Lifecycle Configuration to create.
-            studio_lifecycle_config_content: The content of your Amazon SageMaker Studio Lifecycle Configuration script. This content must be base64 encoded.
+            studio_lifecycle_config_name: The name of the Amazon SageMaker AI Studio Lifecycle Configuration to create.
+            studio_lifecycle_config_content: The content of your Amazon SageMaker AI Studio Lifecycle Configuration script. This content must be base64 encoded.
             studio_lifecycle_config_app_type: The App type that the Lifecycle Configuration is attached to.
             tags: Tags to be associated with the Lifecycle Configuration. Each tag consists of a key and an optional value. Tag keys must be unique per resource. Tags are searchable using the Search API.
             session: Boto3 session.
@@ -27222,7 +27237,7 @@ class StudioLifecycleConfig(Base):
         Get a StudioLifecycleConfig resource
 
         Parameters:
-            studio_lifecycle_config_name: The name of the Amazon SageMaker Studio Lifecycle Configuration to describe.
+            studio_lifecycle_config_name: The name of the Amazon SageMaker AI Studio Lifecycle Configuration to describe.
             session: Boto3 session.
             region: Region name.
 
