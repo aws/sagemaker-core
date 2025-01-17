@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.0.18 (2025-01-17)
+
+ * Daily Sync with Botocore v1.36.1 on 2025/01/17 (#235)
+ * Latest Botocore changes and unit test updates (#233)
+ * fix: fetch version dynamically for useragent string and fix workflows (#230)
+ * Use OIDC Role in workflows (#229)
+
 ## v1.0.17 (2024-12-04)
 
  * Daily Sync with Botocore v1.35.75 on 2024/12/04 (#227)
