@@ -3153,7 +3153,7 @@ class ClusterInstanceGroupDetails(Base):
     status: The current status of the cluster instance group.    InService: The instance group is active and healthy.    Creating: The instance group is being provisioned.    Updating: The instance group is being updated.    Failed: The instance group has failed to provision or is no longer healthy.    Degraded: The instance group is degraded, meaning that some instances have failed to provision or are no longer healthy.    Deleting: The instance group is being deleted.
     training_plan_arn: The Amazon Resource Name (ARN); of the training plan associated with this cluster instance group. For more information about how to reserve GPU capacity for your SageMaker HyperPod clusters using Amazon SageMaker Training Plan, see  CreateTrainingPlan .
     training_plan_status: The current status of the training plan associated with this cluster instance group.
-    override_vpc_config
+    override_vpc_config: The customized VPC configuration at the instance group level that overrides the default VPC configuration of the SageMaker HyperPod cluster.
     """
 
     current_count: Optional[int] = Unassigned()
@@ -3187,7 +3187,7 @@ class ClusterInstanceGroupSpecification(Base):
     instance_storage_configs: Specifies the additional storage configurations for the instances in the SageMaker HyperPod cluster instance group.
     on_start_deep_health_checks: A flag indicating whether deep health checks should be performed when the cluster instance group is created or updated.
     training_plan_arn: The Amazon Resource Name (ARN); of the training plan to use for this cluster instance group. For more information about how to reserve GPU capacity for your SageMaker HyperPod clusters using Amazon SageMaker Training Plan, see  CreateTrainingPlan .
-    override_vpc_config
+    override_vpc_config: To configure multi-AZ deployments, customize the VPC configuration at the instance group level. You can specify different subnets and security groups across different AZs in the instance group specification to override a SageMaker HyperPod cluster's default VPC configuration. For more information about deploying a cluster in multiple AZs, see Setting up SageMaker HyperPod clusters across multiple AZs.   If you configure your VPC with IPv6 support and specify subnets with IPv6 addressing enabled in your instance group VPC configuration, the nodes automatically use IPv6 addressing for network communication.  For information about adding IPv6 support for your VPC, see IPv6 support for your VPC.  For information about creating a new VPC for use with IPv6, see Create a VPC.
     """
 
     instance_count: int
@@ -3245,11 +3245,11 @@ class ClusterNodeDetails(Base):
     instance_type: The type of the instance.
     launch_time: The time when the instance is launched.
     life_cycle_config: The LifeCycle configuration applied to the instance.
-    override_vpc_config
+    override_vpc_config: The customized VPC configuration at the instance group level that overrides the default VPC configuration of the SageMaker HyperPod cluster.
     threads_per_core: The number of threads per CPU core you specified under CreateCluster.
     instance_storage_configs: The configurations of additional storage specified to the instance group where the instance (node) is launched.
     private_primary_ip: The private primary IP address of the SageMaker HyperPod cluster node.
-    private_primary_ipv6: The private primary IPv6 address of the SageMaker HyperPod cluster node.
+    private_primary_ipv6: The private primary IPv6 address of the SageMaker HyperPod cluster node when configured with an Amazon VPC that supports IPv6 and includes subnets with IPv6 addressing enabled in either the cluster VPC configuration or the instance group VPC configuration.
     private_dns_hostname: The private DNS hostname of the SageMaker HyperPod cluster node.
     placement: The placement details of the SageMaker HyperPod cluster node.
     """
