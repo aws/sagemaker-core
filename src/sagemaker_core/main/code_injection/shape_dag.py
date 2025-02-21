@@ -1304,6 +1304,11 @@ SHAPE_DAG = {
         "member_type": "structure",
         "type": "list",
     },
+    "ClusterInstanceGroupsToDelete": {
+        "member_shape": "ClusterInstanceGroupName",
+        "member_type": "string",
+        "type": "list",
+    },
     "ClusterInstancePlacement": {
         "members": [
             {"name": "AvailabilityZone", "shape": "ClusterAvailabilityZone", "type": "string"},
@@ -14737,6 +14742,11 @@ SHAPE_DAG = {
                 "type": "list",
             },
             {"name": "NodeRecovery", "shape": "ClusterNodeRecovery", "type": "string"},
+            {
+                "name": "InstanceGroupsToDelete",
+                "shape": "ClusterInstanceGroupsToDelete",
+                "type": "list",
+            },
         ],
         "type": "structure",
     },

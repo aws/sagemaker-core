@@ -3430,9 +3430,13 @@ class Cluster(Base):
         self,
         instance_groups: List[ClusterInstanceGroupSpecification],
         node_recovery: Optional[str] = Unassigned(),
+        instance_groups_to_delete: Optional[List[str]] = Unassigned(),
     ) -> Optional["Cluster"]:
         """
         Update a Cluster resource
+
+        Parameters:
+            instance_groups_to_delete: Specify the names of the instance groups to delete. Use a single , as the separator between multiple names.
 
         Returns:
             The Cluster resource.
@@ -3459,6 +3463,7 @@ class Cluster(Base):
             "ClusterName": self.cluster_name,
             "InstanceGroups": instance_groups,
             "NodeRecovery": node_recovery,
+            "InstanceGroupsToDelete": instance_groups_to_delete,
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
