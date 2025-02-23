@@ -1,5 +1,11 @@
 import datetime
-from sagemaker_core.main.resources import Model, EndpointConfig, Endpoint
+from sagemaker_core.main.resources import (
+    HyperParameterTuningJob,
+    Model,
+    EndpointConfig,
+    Endpoint,
+    TransformJob,
+)
 
 
 class SageMakerCleaner:
@@ -81,6 +87,40 @@ class SageMakerCleaner:
         for model in models:
             try:
                 model.delete()
+            except:
+                self._track_resource(failed=1)
+        self._track_resource(deleted=1)
+
+    def cleanup_hyperparameter_tuningjob(self, creation_time_before, creation_time_after):
+        """Deletes Models before a given timestamp
+
+        Args:
+            creation_time_before (datetime): timestamp for 'CreationTimeBefore' or 'CreatedBefore' boto3 parameter
+            creation_time_after (datetime): timestamp for 'CreationTimeAfter' or 'CreatedAfter' boto3 parameter
+        """
+        tuning_jobs = HyperParameterTuningJob.get_all(
+            creation_time_before=creation_time_before, creation_time_after=creation_time_after
+        )
+        for tuning_job in tuning_jobs:
+            try:
+                tuning_job.delete()
+            except:
+                self._track_resource(failed=1)
+        self._track_resource(deleted=1)
+
+    def cleanup_transform_job(self, creation_time_before, creation_time_after):
+        """Deletes Models before a given timestamp
+
+        Args:
+            creation_time_before (datetime): timestamp for 'CreationTimeBefore' or 'CreatedBefore' boto3 parameter
+            creation_time_after (datetime): timestamp for 'CreationTimeAfter' or 'CreatedAfter' boto3 parameter
+        """
+        transform_jobs = TransformJob.get_all(
+            creation_time_before=creation_time_before, creation_time_after=creation_time_after
+        )
+        for transform_job in transform_jobs:
+            try:
+                transform_job.stop()
             except:
                 self._track_resource(failed=1)
         self._track_resource(deleted=1)
