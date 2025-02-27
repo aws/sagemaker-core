@@ -3874,7 +3874,7 @@ class Cluster(Base):
         Deletes specific nodes within a SageMaker HyperPod cluster.
 
         Parameters:
-            node_ids: A list of node IDs to be deleted from the specified cluster.  For SageMaker HyperPod clusters using the Slurm workload manager, you cannot remove instances that are configured as Slurm controller nodes.
+            node_ids: A list of node IDs to be deleted from the specified cluster.    For SageMaker HyperPod clusters using the Slurm workload manager, you cannot remove instances that are configured as Slurm controller nodes.   If you need to delete more than 99 instances, contact Support for assistance.
             session: Boto3 session.
             region: Region name.
 
@@ -14801,6 +14801,7 @@ class InferenceComponent(Base):
         specification: Details about the resources that are deployed with this inference component.
         runtime_config: Details about the runtime settings for the model that is deployed with the inference component.
         inference_component_status: The status of the inference component.
+        last_deployment_config: The deployment and rollback settings that you assigned to the inference component.
 
     """
 
@@ -14815,6 +14816,7 @@ class InferenceComponent(Base):
     creation_time: Optional[datetime.datetime] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
     inference_component_status: Optional[str] = Unassigned()
+    last_deployment_config: Optional[InferenceComponentDeploymentConfig] = Unassigned()
 
     def get_name(self) -> str:
         attributes = vars(self)
@@ -14999,9 +15001,13 @@ class InferenceComponent(Base):
         self,
         specification: Optional[InferenceComponentSpecification] = Unassigned(),
         runtime_config: Optional[InferenceComponentRuntimeConfig] = Unassigned(),
+        deployment_config: Optional[InferenceComponentDeploymentConfig] = Unassigned(),
     ) -> Optional["InferenceComponent"]:
         """
         Update a InferenceComponent resource
+
+        Parameters:
+            deployment_config: The deployment configuration for the inference component. The configuration contains the desired deployment strategy and rollback settings.
 
         Returns:
             The InferenceComponent resource.
@@ -15026,6 +15032,7 @@ class InferenceComponent(Base):
             "InferenceComponentName": self.inference_component_name,
             "Specification": specification,
             "RuntimeConfig": runtime_config,
+            "DeploymentConfig": deployment_config,
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request

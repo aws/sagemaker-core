@@ -4911,6 +4911,11 @@ SHAPE_DAG = {
                 "shape": "InferenceComponentStatus",
                 "type": "string",
             },
+            {
+                "name": "LastDeploymentConfig",
+                "shape": "InferenceComponentDeploymentConfig",
+                "type": "structure",
+            },
         ],
         "type": "structure",
     },
@@ -7670,6 +7675,13 @@ SHAPE_DAG = {
         ],
         "type": "structure",
     },
+    "InferenceComponentCapacitySize": {
+        "members": [
+            {"name": "Type", "shape": "InferenceComponentCapacitySizeType", "type": "string"},
+            {"name": "Value", "shape": "CapacitySizeValue", "type": "integer"},
+        ],
+        "type": "structure",
+    },
     "InferenceComponentComputeResourceRequirements": {
         "members": [
             {"name": "NumberOfCpuCoresRequired", "shape": "NumberOfCpuCores", "type": "float"},
@@ -7696,6 +7708,42 @@ SHAPE_DAG = {
             {"name": "DeployedImage", "shape": "DeployedImage", "type": "structure"},
             {"name": "ArtifactUrl", "shape": "Url", "type": "string"},
             {"name": "Environment", "shape": "EnvironmentMap", "type": "map"},
+        ],
+        "type": "structure",
+    },
+    "InferenceComponentDeploymentConfig": {
+        "members": [
+            {
+                "name": "RollingUpdatePolicy",
+                "shape": "InferenceComponentRollingUpdatePolicy",
+                "type": "structure",
+            },
+            {
+                "name": "AutoRollbackConfiguration",
+                "shape": "AutoRollbackConfig",
+                "type": "structure",
+            },
+        ],
+        "type": "structure",
+    },
+    "InferenceComponentRollingUpdatePolicy": {
+        "members": [
+            {
+                "name": "MaximumBatchSize",
+                "shape": "InferenceComponentCapacitySize",
+                "type": "structure",
+            },
+            {"name": "WaitIntervalInSeconds", "shape": "WaitIntervalInSeconds", "type": "integer"},
+            {
+                "name": "MaximumExecutionTimeoutInSeconds",
+                "shape": "MaximumExecutionTimeoutInSeconds",
+                "type": "integer",
+            },
+            {
+                "name": "RollbackMaximumBatchSize",
+                "shape": "InferenceComponentCapacitySize",
+                "type": "structure",
+            },
         ],
         "type": "structure",
     },
@@ -15002,6 +15050,11 @@ SHAPE_DAG = {
             {
                 "name": "RuntimeConfig",
                 "shape": "InferenceComponentRuntimeConfig",
+                "type": "structure",
+            },
+            {
+                "name": "DeploymentConfig",
+                "shape": "InferenceComponentDeploymentConfig",
                 "type": "structure",
             },
         ],
