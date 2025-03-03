@@ -835,6 +835,19 @@ class AlgorithmSummary(Base):
     algorithm_description: Optional[str] = Unassigned()
 
 
+class HubAccessConfig(Base):
+    """
+    HubAccessConfig
+      The configuration for a private hub model reference that points to a public SageMaker JumpStart model. For more information about private hubs, see Private curated hubs for foundation model access control in JumpStart.
+
+    Attributes
+    ----------------------
+    hub_content_arn: The ARN of your private model hub content. This should be a ModelReference resource type that points to a SageMaker JumpStart public hub model.
+    """
+
+    hub_content_arn: str
+
+
 class S3DataSource(Base):
     """
     S3DataSource
@@ -847,6 +860,8 @@ class S3DataSource(Base):
     s3_data_distribution_type: If you want SageMaker to replicate the entire dataset on each ML compute instance that is launched for model training, specify FullyReplicated.  If you want SageMaker to replicate a subset of data on each ML compute instance that is launched for model training, specify ShardedByS3Key. If there are n ML compute instances launched for a training job, each instance gets approximately 1/n of the number of S3 objects. In this case, model training on each machine uses only the subset of training data.  Don't choose more ML compute instances for training than available S3 objects. If you do, some nodes won't get any data and you will pay for nodes that aren't getting any training data. This applies in both File and Pipe modes. Keep this in mind when developing algorithms.  In distributed training, where you use multiple ML compute EC2 instances, you might choose ShardedByS3Key. If the algorithm requires copying training data to the ML storage volume (when TrainingInputMode is set to File), this copies 1/n of the number of objects.
     attribute_names: A list of one or more attribute names to use that are found in a specified augmented manifest file.
     instance_group_names: A list of names of instance groups that get data from the S3 data source.
+    model_access_config
+    hub_access_config: The configuration for a private hub model reference that points to a SageMaker JumpStart public hub model.
     """
 
     s3_data_type: str
@@ -854,6 +869,8 @@ class S3DataSource(Base):
     s3_data_distribution_type: Optional[str] = Unassigned()
     attribute_names: Optional[List[str]] = Unassigned()
     instance_group_names: Optional[List[str]] = Unassigned()
+    model_access_config: Optional[ModelAccessConfig] = Unassigned()
+    hub_access_config: Optional[HubAccessConfig] = Unassigned()
 
 
 class FileSystemDataSource(Base):
