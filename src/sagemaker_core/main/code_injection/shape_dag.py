@@ -2070,6 +2070,7 @@ SHAPE_DAG = {
     "CreateDomainResponse": {
         "members": [
             {"name": "DomainArn", "shape": "DomainArn", "type": "string"},
+            {"name": "DomainId", "shape": "DomainId", "type": "string"},
             {"name": "Url", "shape": "String1024", "type": "string"},
         ],
         "type": "structure",
@@ -4712,6 +4713,7 @@ SHAPE_DAG = {
             {"name": "HubContentStatus", "shape": "HubContentStatus", "type": "string"},
             {"name": "FailureReason", "shape": "FailureReason", "type": "string"},
             {"name": "CreationTime", "shape": "Timestamp", "type": "timestamp"},
+            {"name": "LastModifiedTime", "shape": "Timestamp", "type": "timestamp"},
         ],
         "type": "structure",
     },
@@ -7024,6 +7026,10 @@ SHAPE_DAG = {
         "value_shape": "ConfigValue",
         "value_type": "string",
     },
+    "HubAccessConfig": {
+        "members": [{"name": "HubContentArn", "shape": "HubContentArn", "type": "string"}],
+        "type": "structure",
+    },
     "HubContentDependency": {
         "members": [
             {"name": "DependencyOriginPath", "shape": "DependencyOriginPath", "type": "string"},
@@ -7659,6 +7665,7 @@ SHAPE_DAG = {
             {"name": "HubContentDescription", "shape": "HubContentDescription", "type": "string"},
             {"name": "HubContentMarkdown", "shape": "HubContentMarkdown", "type": "string"},
             {"name": "HubContentDocument", "shape": "HubContentDocument", "type": "string"},
+            {"name": "SupportStatus", "shape": "HubContentSupportStatus", "type": "string"},
             {
                 "name": "HubContentSearchKeywords",
                 "shape": "HubContentSearchKeywordList",
@@ -13182,6 +13189,8 @@ SHAPE_DAG = {
             {"name": "S3DataDistributionType", "shape": "S3DataDistribution", "type": "string"},
             {"name": "AttributeNames", "shape": "AttributeNames", "type": "list"},
             {"name": "InstanceGroupNames", "shape": "InstanceGroupNames", "type": "list"},
+            {"name": "ModelAccessConfig", "shape": "ModelAccessConfig", "type": "structure"},
+            {"name": "HubAccessConfig", "shape": "HubAccessConfig", "type": "structure"},
         ],
         "type": "structure",
     },
@@ -14988,6 +14997,47 @@ SHAPE_DAG = {
             {"name": "Description", "shape": "FeatureDescription", "type": "string"},
             {"name": "ParameterAdditions", "shape": "FeatureParameterAdditions", "type": "list"},
             {"name": "ParameterRemovals", "shape": "FeatureParameterRemovals", "type": "list"},
+        ],
+        "type": "structure",
+    },
+    "UpdateHubContentReferenceRequest": {
+        "members": [
+            {"name": "HubName", "shape": "HubNameOrArn", "type": "string"},
+            {"name": "HubContentName", "shape": "HubContentName", "type": "string"},
+            {"name": "HubContentType", "shape": "HubContentType", "type": "string"},
+            {"name": "MinVersion", "shape": "HubContentVersion", "type": "string"},
+        ],
+        "type": "structure",
+    },
+    "UpdateHubContentReferenceResponse": {
+        "members": [
+            {"name": "HubArn", "shape": "HubArn", "type": "string"},
+            {"name": "HubContentArn", "shape": "HubContentArn", "type": "string"},
+        ],
+        "type": "structure",
+    },
+    "UpdateHubContentRequest": {
+        "members": [
+            {"name": "HubName", "shape": "HubNameOrArn", "type": "string"},
+            {"name": "HubContentName", "shape": "HubContentName", "type": "string"},
+            {"name": "HubContentType", "shape": "HubContentType", "type": "string"},
+            {"name": "HubContentVersion", "shape": "HubContentVersion", "type": "string"},
+            {"name": "HubContentDisplayName", "shape": "HubContentDisplayName", "type": "string"},
+            {"name": "HubContentDescription", "shape": "HubContentDescription", "type": "string"},
+            {"name": "HubContentMarkdown", "shape": "HubContentMarkdown", "type": "string"},
+            {
+                "name": "HubContentSearchKeywords",
+                "shape": "HubContentSearchKeywordList",
+                "type": "list",
+            },
+            {"name": "SupportStatus", "shape": "HubContentSupportStatus", "type": "string"},
+        ],
+        "type": "structure",
+    },
+    "UpdateHubContentResponse": {
+        "members": [
+            {"name": "HubArn", "shape": "HubArn", "type": "string"},
+            {"name": "HubContentArn", "shape": "HubContentArn", "type": "string"},
         ],
         "type": "structure",
     },
