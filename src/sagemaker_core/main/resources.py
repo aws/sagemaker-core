@@ -12221,6 +12221,7 @@ class HubContent(Base):
         hub_content_search_keywords: The searchable keywords for the hub content.
         hub_content_dependencies: The location of any dependencies that the hub content has, such as scripts, model artifacts, datasets, or notebooks.
         failure_reason: The failure reason if importing hub content failed.
+        last_modified_time: The last modified time of the hub content.
 
     """
 
@@ -12242,6 +12243,7 @@ class HubContent(Base):
     hub_content_status: Optional[str] = Unassigned()
     failure_reason: Optional[str] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
+    last_modified_time: Optional[datetime.datetime] = Unassigned()
     hub_name: Optional[str] = Unassigned()
 
     def get_name(self) -> str:
@@ -12361,6 +12363,63 @@ class HubContent(Base):
         return self
 
     @Base.add_validate_call
+    def update(
+        self,
+        hub_content_type: str,
+        hub_content_version: str,
+        hub_content_display_name: Optional[str] = Unassigned(),
+        hub_content_description: Optional[str] = Unassigned(),
+        hub_content_markdown: Optional[str] = Unassigned(),
+        hub_content_search_keywords: Optional[List[str]] = Unassigned(),
+        support_status: Optional[str] = Unassigned(),
+    ) -> Optional["HubContent"]:
+        """
+        Update a HubContent resource
+
+        Returns:
+            The HubContent resource.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceInUse: Resource being accessed is in use.
+            ResourceNotFound: Resource being access is not found.
+        """
+
+        logger.info("Updating hub_content resource.")
+        client = Base.get_sagemaker_client()
+
+        operation_input_args = {
+            "HubName": self.hub_name,
+            "HubContentName": self.hub_content_name,
+            "HubContentType": hub_content_type,
+            "HubContentVersion": hub_content_version,
+            "HubContentDisplayName": hub_content_display_name,
+            "HubContentDescription": hub_content_description,
+            "HubContentMarkdown": hub_content_markdown,
+            "HubContentSearchKeywords": hub_content_search_keywords,
+            "SupportStatus": support_status,
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+
+        # create the resource
+        response = client.update_hub_content(**operation_input_args)
+        logger.debug(f"Response: {response}")
+        self.refresh()
+
+        return self
+
+    @Base.add_validate_call
     def delete(
         self,
     ) -> None:
@@ -12400,7 +12459,7 @@ class HubContent(Base):
     @Base.add_validate_call
     def wait_for_status(
         self,
-        target_status: Literal["Supported", "Deprecated"],
+        target_status: Literal["Supported", "Deprecated", "Restricted"],
         poll: int = 5,
         timeout: Optional[int] = None,
     ) -> None:
@@ -12461,6 +12520,7 @@ class HubContent(Base):
         hub_content_display_name: Optional[str] = Unassigned(),
         hub_content_description: Optional[str] = Unassigned(),
         hub_content_markdown: Optional[str] = Unassigned(),
+        support_status: Optional[str] = Unassigned(),
         hub_content_search_keywords: Optional[List[str]] = Unassigned(),
         tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
@@ -12479,6 +12539,7 @@ class HubContent(Base):
             hub_content_display_name: The display name of the hub content to import.
             hub_content_description: A description of the hub content to import.
             hub_content_markdown: A string that provides a description of the hub content. This string can include links, tables, and standard markdown formating.
+            support_status: The status of the hub content resource.
             hub_content_search_keywords: The searchable keywords of the hub content.
             tags: Any tags associated with the hub content.
             session: Boto3 session.
@@ -12517,6 +12578,7 @@ class HubContent(Base):
             "HubContentDescription": hub_content_description,
             "HubContentMarkdown": hub_content_markdown,
             "HubContentDocument": hub_content_document,
+            "SupportStatus": support_status,
             "HubContentSearchKeywords": hub_content_search_keywords,
             "Tags": tags,
         }
@@ -12713,6 +12775,56 @@ class HubContentReference(Base):
 
         transformed_response = transform(response, "CreateHubContentReferenceResponse")
         return cls(**operation_input_args, **transformed_response)
+
+    @Base.add_validate_call
+    def update(
+        self,
+        hub_content_type: str,
+        min_version: Optional[str] = Unassigned(),
+    ) -> Optional["HubContentReference"]:
+        """
+        Update a HubContentReference resource
+
+        Parameters:
+            hub_content_type: The content type of the resource that you want to update. Only specify a ModelReference resource for this API. To update a Model or Notebook resource, use the UpdateHubContent API instead.
+
+        Returns:
+            The HubContentReference resource.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceInUse: Resource being accessed is in use.
+            ResourceNotFound: Resource being access is not found.
+        """
+
+        logger.info("Updating hub_content_reference resource.")
+        client = Base.get_sagemaker_client()
+
+        operation_input_args = {
+            "HubName": self.hub_name,
+            "HubContentName": self.hub_content_name,
+            "HubContentType": hub_content_type,
+            "MinVersion": min_version,
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+
+        # create the resource
+        response = client.update_hub_content_reference(**operation_input_args)
+        logger.debug(f"Response: {response}")
+        self.refresh()
+
+        return self
 
     @Base.add_validate_call
     def delete(
