@@ -116,6 +116,7 @@ def load(
     hub_content_display_name: Optional[str] = Unassigned(),
     hub_content_description: Optional[str] = Unassigned(),
     hub_content_markdown: Optional[str] = Unassigned(),
+    support_status: Optional[str] = Unassigned(),
     hub_content_search_keywords: Optional[List[str]] = Unassigned(),
     tags: Optional[List[Tag]] = Unassigned(),
     session: Optional[Session] = None,
@@ -134,6 +135,7 @@ def load(
         hub_content_display_name: The display name of the hub content to import.
         hub_content_description: A description of the hub content to import.
         hub_content_markdown: A string that provides a description of the hub content. This string can include links, tables, and standard markdown formating.
+        support_status: The status of the hub content resource.
         hub_content_search_keywords: The searchable keywords of the hub content.
         tags: Any tags associated with the hub content.
         session: Boto3 session.
@@ -170,6 +172,7 @@ def load(
         'HubContentDescription': hub_content_description,
         'HubContentMarkdown': hub_content_markdown,
         'HubContentDocument': hub_content_document,
+        'SupportStatus': support_status,
         'HubContentSearchKeywords': hub_content_search_keywords,
         'Tags': tags,
     }
