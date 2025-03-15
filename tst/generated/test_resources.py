@@ -296,6 +296,8 @@ class ResourcesTest(unittest.TestCase):
                                     operation_info["return_type"]
                                 ]
                             }
+                        elif operation_info["return_type"] == "object":
+                            return_value = {"return_value": None}
                         else:
                             return_cls = self.SHAPE_CLASSES_BY_SHAPE_NAME[
                                 operation_info["return_type"]
@@ -379,8 +381,8 @@ class ResourcesTest(unittest.TestCase):
         return converted
 
     def _convert_to_pascal(self, string: str):
-        if string == "auto_ml_job_name":
-            return "AutoMLJobName"
+        if string.startswith("auto_ml_"):
+            return "AutoML" + snake_to_pascal(string[7:])
         return snake_to_pascal(string)
 
     def _get_required_parameters_for_function(self, func) -> dict:
