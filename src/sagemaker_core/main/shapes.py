@@ -7118,7 +7118,7 @@ class ProcessingOutputConfig(Base):
     Attributes
     ----------------------
     outputs: An array of outputs configuring the data to upload from the processing container.
-    kms_key_id: The Amazon Web Services Key Management Service (Amazon Web Services KMS) key that Amazon SageMaker uses to encrypt the processing job output. KmsKeyId can be an ID of a KMS key, ARN of a KMS key, alias of a KMS key, or alias of a KMS key. The KmsKeyId is applied to all outputs.
+    kms_key_id: The Amazon Web Services Key Management Service (Amazon Web Services KMS) key that Amazon SageMaker uses to encrypt the processing job output. KmsKeyId can be an ID of a KMS key, ARN of a KMS key, or alias of a KMS key. The KmsKeyId is applied to all outputs.
     """
 
     outputs: List[ProcessingOutput]
