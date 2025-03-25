@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.0.26 (2025-03-25)
+
+ * Daily Sync with Botocore v1.37.19 on 2025/03/25 (#267)
+ * UNIT TEST FIXES FROM BOTOCORE GENERATION  (#263)
+ * Add CODEOWNERS file (#240)
+
 ## v1.0.25 (2025-02-27)
 
  * Daily Sync with Botocore v1.37.2 on 2025/02/27 (#251)
