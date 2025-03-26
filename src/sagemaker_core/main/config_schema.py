@@ -756,7 +756,10 @@ SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA = {
                                 },
                                 "PartnerApp": {
                                     "type": "object",
-                                    "properties": {"execution_role_arn": {"type": "string"}},
+                                    "properties": {
+                                        "execution_role_arn": {"type": "string"},
+                                        "kms_key_id": {"type": "string"},
+                                    },
                                 },
                                 "Pipeline": {
                                     "type": "object",

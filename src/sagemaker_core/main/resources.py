@@ -23640,7 +23640,9 @@ class PartnerApp(Base):
         type: The type of SageMaker Partner AI App. Must be one of the following: lakera-guard, comet, deepchecks-llm-evaluation, or fiddler.
         status: The status of the SageMaker Partner AI App.
         creation_time: The time that the SageMaker Partner AI App was created.
+        last_modified_time: The time that the SageMaker Partner AI App was last modified.
         execution_role_arn: The ARN of the IAM role associated with the SageMaker Partner AI App.
+        kms_key_id: The Amazon Web Services KMS customer managed key used to encrypt the data at rest associated with SageMaker Partner AI Apps.
         base_url: The URL of the SageMaker Partner AI App that the Application SDK uses to support in-app calls for the user.
         maintenance_config: Maintenance configuration settings for the SageMaker Partner AI App.
         tier: The instance type and size of the cluster attached to the SageMaker Partner AI App.
@@ -23657,7 +23659,9 @@ class PartnerApp(Base):
     type: Optional[str] = Unassigned()
     status: Optional[str] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
+    last_modified_time: Optional[datetime.datetime] = Unassigned()
     execution_role_arn: Optional[str] = Unassigned()
+    kms_key_id: Optional[str] = Unassigned()
     base_url: Optional[str] = Unassigned()
     maintenance_config: Optional[PartnerAppMaintenanceConfig] = Unassigned()
     tier: Optional[str] = Unassigned()
@@ -23706,6 +23710,7 @@ class PartnerApp(Base):
         execution_role_arn: str,
         tier: str,
         auth_type: str,
+        kms_key_id: Optional[str] = Unassigned(),
         maintenance_config: Optional[PartnerAppMaintenanceConfig] = Unassigned(),
         application_config: Optional[PartnerAppConfig] = Unassigned(),
         enable_iam_session_based_identity: Optional[bool] = Unassigned(),
@@ -23723,6 +23728,7 @@ class PartnerApp(Base):
             execution_role_arn: The ARN of the IAM role that the partner application uses.
             tier: Indicates the instance type and size of the cluster attached to the SageMaker Partner AI App.
             auth_type: The authorization type that users use to access the SageMaker Partner AI App.
+            kms_key_id: SageMaker Partner AI Apps uses Amazon Web Services KMS to encrypt data at rest using an Amazon Web Services managed key by default. For more control, specify a customer managed key.
             maintenance_config: Maintenance configuration settings for the SageMaker Partner AI App.
             application_config: Configuration settings for the SageMaker Partner AI App.
             enable_iam_session_based_identity: When set to TRUE, the SageMaker Partner AI App sets the Amazon Web Services IAM session name or the authenticated IAM user as the identity of the SageMaker Partner AI App user.
@@ -23760,6 +23766,7 @@ class PartnerApp(Base):
             "Name": name,
             "Type": type,
             "ExecutionRoleArn": execution_role_arn,
+            "KmsKeyId": kms_key_id,
             "MaintenanceConfig": maintenance_config,
             "Tier": tier,
             "ApplicationConfig": application_config,

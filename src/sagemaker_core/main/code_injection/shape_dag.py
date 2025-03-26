@@ -2812,6 +2812,7 @@ SHAPE_DAG = {
             {"name": "Name", "shape": "PartnerAppName", "type": "string"},
             {"name": "Type", "shape": "PartnerAppType", "type": "string"},
             {"name": "ExecutionRoleArn", "shape": "RoleArn", "type": "string"},
+            {"name": "KmsKeyId", "shape": "KmsKeyId", "type": "string"},
             {
                 "name": "MaintenanceConfig",
                 "shape": "PartnerAppMaintenanceConfig",
@@ -5496,7 +5497,9 @@ SHAPE_DAG = {
             {"name": "Type", "shape": "PartnerAppType", "type": "string"},
             {"name": "Status", "shape": "PartnerAppStatus", "type": "string"},
             {"name": "CreationTime", "shape": "Timestamp", "type": "timestamp"},
+            {"name": "LastModifiedTime", "shape": "Timestamp", "type": "timestamp"},
             {"name": "ExecutionRoleArn", "shape": "RoleArn", "type": "string"},
+            {"name": "KmsKeyId", "shape": "KmsKeyId", "type": "string"},
             {"name": "BaseUrl", "shape": "String2048", "type": "string"},
             {
                 "name": "MaintenanceConfig",
