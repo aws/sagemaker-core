@@ -1,7 +1,7 @@
 import json
 
-from sagemaker_core.tools.constants import API_COVERAGE_JSON_FILE_PATH
-from sagemaker_core.tools.resources_extractor import ResourcesExtractor
+from sagemaker.core.tools.constants import API_COVERAGE_JSON_FILE_PATH
+from sagemaker.core.tools.resources_extractor import ResourcesExtractor
 
 
 class TestAPICoverage:

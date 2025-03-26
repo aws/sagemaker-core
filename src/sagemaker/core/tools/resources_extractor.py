@@ -15,14 +15,14 @@ from typing import Optional
 
 import pandas as pd
 
-from sagemaker_core.main.utils import get_textual_rich_logger
-from sagemaker_core.tools.constants import CLASS_METHODS, OBJECT_METHODS
-from sagemaker_core.tools.data_extractor import (
+from sagemaker.core.utils.utils import get_textual_rich_logger
+from sagemaker.core.tools.constants import CLASS_METHODS, OBJECT_METHODS
+from sagemaker.core.tools.data_extractor import (
     load_additional_operations_data,
     load_combined_operations_data,
     load_combined_shapes_data,
 )
-from sagemaker_core.tools.method import Method
+from sagemaker.core.tools.method import Method
 
 log = get_textual_rich_logger(__name__)
 """

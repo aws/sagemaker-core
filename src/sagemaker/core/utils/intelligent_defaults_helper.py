@@ -25,14 +25,14 @@ from platformdirs import site_config_dir, user_config_dir
 
 from botocore.utils import merge_dicts
 from six.moves.urllib.parse import urlparse
-from sagemaker_core.main.config_schema import SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA
-from sagemaker_core.main.exceptions import (
+from sagemaker.core.config_schema import SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA
+from sagemaker.core.utils.exceptions import (
     LocalConfigNotFoundError,
     S3ConfigNotFoundError,
     IntelligentDefaultsError,
     ConfigSchemaValidationError,
 )
-from sagemaker_core.main.utils import get_textual_rich_logger
+from sagemaker.core.utils.utils import get_textual_rich_logger
 
 logger = get_textual_rich_logger(__name__)
 

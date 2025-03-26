@@ -5,7 +5,7 @@ from boto3.session import Session
 import botocore.client
 from botocore.config import Config
 from typing import Generator, Tuple, List
-from sagemaker_core.main.utils import SingletonMeta
+from sagemaker.core.utils.utils import SingletonMeta
 
 
 class CloudWatchLogsClient(metaclass=SingletonMeta):

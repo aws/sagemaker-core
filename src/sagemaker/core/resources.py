@@ -23,9 +23,10 @@ from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn, TimeElapsedColumn
 from rich.status import Status
 from rich.style import Style
-from sagemaker_core.main.code_injection.codec import transform
-from sagemaker_core.main.code_injection.constants import Color
-from sagemaker_core.main.utils import (
+from sagemaker.core.shapes import *
+from sagemaker.core.utils.code_injection.codec import transform
+from sagemaker.core.utils.code_injection.constants import Color
+from sagemaker.core.utils.utils import (
     SageMakerClient,
     ResourceIterator,
     Unassigned,
@@ -37,13 +38,12 @@ from sagemaker_core.main.utils import (
     is_primitive_list,
     serialize,
 )
-from sagemaker_core.main.intelligent_defaults_helper import (
+from sagemaker.core.utils.intelligent_defaults_helper import (
     load_default_configs_for_resource_name,
     get_config_value,
 )
-from sagemaker_core.main.logs import MultiLogStreamHandler
-from sagemaker_core.main.shapes import *
-from sagemaker_core.main.exceptions import *
+from sagemaker.core.utils.logs import MultiLogStreamHandler
+from sagemaker.core.utils.exceptions import *
 
 
 logger = get_textual_rich_logger(__name__)
@@ -12720,6 +12720,8 @@ class HubContentReference(Base):
         hub_content_name: Optional[Union[str, object]] = Unassigned(),
         min_version: Optional[str] = Unassigned(),
         tags: Optional[List[Tag]] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
     ) -> Optional["HubContentReference"]:
         """
         Create a HubContentReference resource
@@ -24161,6 +24163,8 @@ class PartnerAppPresignedUrl(Base):
         arn: str,
         expires_in_seconds: Optional[int] = Unassigned(),
         session_expiration_duration_in_seconds: Optional[int] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
     ) -> Optional["PartnerAppPresignedUrl"]:
         """
         Create a PartnerAppPresignedUrl resource
@@ -25419,6 +25423,8 @@ class PresignedDomainUrl(Base):
         expires_in_seconds: Optional[int] = Unassigned(),
         space_name: Optional[Union[str, object]] = Unassigned(),
         landing_uri: Optional[str] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
     ) -> Optional["PresignedDomainUrl"]:
         """
         Create a PresignedDomainUrl resource
@@ -25516,6 +25522,8 @@ class PresignedMlflowTrackingServerUrl(Base):
         tracking_server_name: str,
         expires_in_seconds: Optional[int] = Unassigned(),
         session_expiration_duration_in_seconds: Optional[int] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
     ) -> Optional["PresignedMlflowTrackingServerUrl"]:
         """
         Create a PresignedMlflowTrackingServerUrl resource
@@ -25604,6 +25612,8 @@ class PresignedNotebookInstanceUrl(Base):
         cls,
         notebook_instance_name: Union[str, object],
         session_expiration_duration_in_seconds: Optional[int] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
     ) -> Optional["PresignedNotebookInstanceUrl"]:
         """
         Create a PresignedNotebookInstanceUrl resource

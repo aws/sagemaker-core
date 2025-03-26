@@ -4,7 +4,7 @@
 SageMaker Core Resources
 ########################
 
-.. automodule:: sagemaker_core.main.resources
+.. automodule:: sagemaker.core.resources
     :members:
     :noindex:
 
@@ -13,6 +13,6 @@ SageMaker Core Resources
 SageMaker Core Shapes
 ########################
 
-.. automodule:: sagemaker_core.main.shapes
+.. automodule:: sagemaker.core.shapes
     :members:
     :noindex:

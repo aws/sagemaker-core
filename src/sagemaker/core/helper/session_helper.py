@@ -564,7 +564,7 @@ class Session(object):  # pylint: disable=too-many-public-methods
         Args:
             bucket (Optional[str]): S3 Bucket to use (if it exists)
             key_prefix (Optional[str]): S3 Object Key Prefix to use or append to (if it exists)
-            sagemaker_session (sagemaker.session.Session): Session to fetch a default bucket and
+            sagemaker_session (sagemaker.core.session.Session): Session to fetch a default bucket and
                 prefix from, if bucket doesn't exist. Expected to exist
 
         Returns: The correct S3 Bucket and S3 Object Key Prefix that should be used

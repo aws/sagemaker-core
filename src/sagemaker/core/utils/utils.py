@@ -26,9 +26,9 @@ from rich.style import Style
 from rich.theme import Theme
 from rich.traceback import install
 from typing import Any, Dict, List, TypeVar, Generic, Type
-from sagemaker_core.main.code_injection.codec import transform
-from sagemaker_core.main.code_injection.constants import Color
-from sagemaker_core.main.user_agent import get_user_agent_extra_suffix
+from sagemaker.core.utils.code_injection.codec import transform
+from sagemaker.core.utils.code_injection.constants import Color
+from sagemaker.core.utils.user_agent import get_user_agent_extra_suffix
 
 
 def add_indent(text, num_spaces=4):

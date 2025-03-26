@@ -1,5 +1,5 @@
-from sagemaker_core.main.utils import configure_logging
-from sagemaker_core.tools.resources_extractor import ResourcesExtractor
+from sagemaker.core.utils.utils import configure_logging
+from sagemaker.core.tools.resources_extractor import ResourcesExtractor
 
 
 def main():

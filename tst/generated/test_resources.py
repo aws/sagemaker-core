@@ -4,13 +4,13 @@ import inspect
 import unittest
 from unittest.mock import patch
 
-from sagemaker_core.main.resources import Base
+from sagemaker.core.resources import Base
 
-from sagemaker_core.main.code_injection.codec import pascal_to_snake, snake_to_pascal
+from sagemaker.core.utils.code_injection.codec import pascal_to_snake, snake_to_pascal
 
-from sagemaker_core.main.utils import SageMakerClient, serialize
-from sagemaker_core.tools.constants import BASIC_RETURN_TYPES
-from sagemaker_core.tools.data_extractor import (
+from sagemaker.core.utils.utils import SageMakerClient, serialize
+from sagemaker.core.tools.constants import BASIC_RETURN_TYPES
+from sagemaker.core.tools.data_extractor import (
     load_additional_operations_data,
     load_combined_operations_data,
     load_combined_shapes_data,
@@ -34,21 +34,21 @@ class ResourcesTest(unittest.TestCase):
 
     def setUp(self) -> None:
         for name, cls in inspect.getmembers(
-            importlib.import_module("sagemaker_core.main.resources"), inspect.isclass
+            importlib.import_module("sagemaker.core.resources"), inspect.isclass
         ):
-            if cls.__module__ == "sagemaker_core.main.resources":
+            if cls.__module__ == "sagemaker.core.resources":
                 if hasattr(cls, "get") and callable(cls.get):
                     self.MOCK_RESOURCES_RESPONSE_BY_RESOURCE_NAME[name] = (
                         self._get_required_parameters_for_function(cls.get)
                     )
 
         for shape_name, shape_cls in inspect.getmembers(
-            importlib.import_module("sagemaker_core.main.shapes"), inspect.isclass
+            importlib.import_module("sagemaker.core.shapes"), inspect.isclass
         ):
-            if shape_cls.__module__ == "sagemaker_core.main.shapes":
+            if shape_cls.__module__ == "sagemaker.core.shapes":
                 self.SHAPE_CLASSES_BY_SHAPE_NAME[shape_name] = shape_cls
 
-    @patch("sagemaker_core.main.resources.transform")
+    @patch("sagemaker.core.resources.transform")
     @patch("boto3.session.Session")
     def test_resources(self, session, mock_transform):
         report = {
@@ -63,9 +63,9 @@ class ResourcesTest(unittest.TestCase):
         resources = set()
         client = SageMakerClient(session=session).get_client(service_name="sagemaker")
         for name, cls in inspect.getmembers(
-            importlib.import_module("sagemaker_core.main.resources"), inspect.isclass
+            importlib.import_module("sagemaker.core.resources"), inspect.isclass
         ):
-            if cls.__module__ == "sagemaker_core.main.resources":
+            if cls.__module__ == "sagemaker.core.resources":
                 print_string = f"Running the following tests for resource {name}:"
                 resources.add(name)
                 if hasattr(cls, "get") and callable(cls.get):
