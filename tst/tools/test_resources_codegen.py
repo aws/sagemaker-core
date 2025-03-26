@@ -1856,7 +1856,7 @@ def wait_for_delete(
 
                 
                 if current_status.lower() == "deleted":
-                    print("Resource was deleted.")
+                    logger.info("Resource was deleted.")
                     return
 
 

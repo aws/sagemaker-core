@@ -1346,7 +1346,7 @@ class App(Base):
                     status.update(f"Current status: [bold]{current_status}")
 
                     if current_status.lower() == "deleted":
-                        print("Resource was deleted.")
+                        logger.info("Resource was deleted.")
                         return
 
                     if timeout is not None and time.time() - start_time >= timeout:
@@ -4344,7 +4344,7 @@ class ClusterSchedulerConfig(Base):
                     status.update(f"Current status: [bold]{current_status}")
 
                     if current_status.lower() == "deleted":
-                        print("Resource was deleted.")
+                        logger.info("Resource was deleted.")
                         return
 
                     if timeout is not None and time.time() - start_time >= timeout:
@@ -5656,7 +5656,7 @@ class ComputeQuota(Base):
                     status.update(f"Current status: [bold]{current_status}")
 
                     if current_status.lower() == "deleted":
-                        print("Resource was deleted.")
+                        logger.info("Resource was deleted.")
                         return
 
                     if timeout is not None and time.time() - start_time >= timeout:
@@ -16350,7 +16350,7 @@ class InferenceRecommendationsJob(Base):
                     status.update(f"Current status: [bold]{current_status}")
 
                     if current_status.lower() == "deleted":
-                        print("Resource was deleted.")
+                        logger.info("Resource was deleted.")
                         return
 
                     if timeout is not None and time.time() - start_time >= timeout:
@@ -24078,7 +24078,7 @@ class PartnerApp(Base):
                     status.update(f"Current status: [bold]{current_status}")
 
                     if current_status.lower() == "deleted":
-                        print("Resource was deleted.")
+                        logger.info("Resource was deleted.")
                         return
 
                     if timeout is not None and time.time() - start_time >= timeout:
