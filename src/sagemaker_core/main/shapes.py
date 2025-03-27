@@ -2541,12 +2541,12 @@ class MonitoringDatasetFormat(Base):
     Attributes
     ----------------------
     csv: The CSV dataset used in the monitoring job.
-    json_format: The JSON dataset used in the monitoring job
+    json: The JSON dataset used in the monitoring job
     parquet: The Parquet dataset used in the monitoring job
     """
 
     csv: Optional[MonitoringCsvDatasetFormat] = Unassigned()
-    json_format: Optional[MonitoringJsonDatasetFormat] = Field(default=Unassigned(), alias="json")
+    json: Optional[MonitoringJsonDatasetFormat] = Unassigned()
     parquet: Optional[MonitoringParquetDatasetFormat] = Unassigned()
 
 
