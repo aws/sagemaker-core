@@ -12,7 +12,7 @@
 # language governing permissions and limitations under the License.
 import datetime
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict
 from typing import List, Dict, Optional, Any, Union
 from sagemaker_core.main.utils import Unassigned
 
