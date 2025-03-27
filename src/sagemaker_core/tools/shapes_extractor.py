@@ -99,6 +99,9 @@ class ShapesExtractor:
                 _dag[shape] = {"type": "structure", "members": []}
                 for member, member_attrs in shape_data["members"].items():
                     shape_node_member = {"name": member, "shape": member_attrs["shape"]}
+                    if member_attrs.get("alias") is not None:
+                        shape_node_member["alias"] = member_attrs.get("alias")
+
                     member_shape_dict = _all_shapes[member_attrs["shape"]]
                     shape_node_member["type"] = member_shape_dict["type"]
                     _dag[shape]["members"].append(shape_node_member)
@@ -218,6 +221,8 @@ class ShapesExtractor:
         # bring the required members in front
         ordered_members = {key: members[key] for key in required_args if key in members}
         ordered_members.update(members)
+        field_aliases = {}
+
         for member_name, member_attrs in ordered_members.items():
             member_shape_name = member_attrs["shape"]
             if self.combined_shapes[member_shape_name]:
@@ -235,12 +240,27 @@ class ShapesExtractor:
             else:
                 raise Exception("The Shape definition mush exist. The Json Data might be corrupt")
             member_name_snake_case = convert_to_snake_case(member_name)
-            if member_name in required_args:
-                init_data_body[f"{member_name_snake_case}"] = f"{member_type}"
+
+            # Handle "alias" if present
+            if "alias" in member_attrs:
+                field_aliases[member_name_snake_case] = member_attrs["alias"]
+                if member_name in required_args:
+                    init_data_body[f"{member_name_snake_case}"] = (
+                        f"{member_type} = Field(alias='{member_attrs['alias']}')"
+                    )
+                else:
+                    init_data_body[f"{member_name_snake_case}"] = (
+                        f"Optional[{member_type}] = Field(default=Unassigned(), "
+                        f"alias='{member_attrs['alias']}')"
+                    )
             else:
-                init_data_body[f"{member_name_snake_case}"] = (
-                    f"Optional[{member_type}] = Unassigned()"
-                )
+                if member_name in required_args:
+                    init_data_body[f"{member_name_snake_case}"] = f"{member_type}"
+                else:
+                    init_data_body[f"{member_name_snake_case}"] = (
+                        f"Optional[{member_type}] = Unassigned()"
+                    )
+
         return init_data_body
 
     @lru_cache

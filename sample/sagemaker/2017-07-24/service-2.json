@@ -30859,9 +30859,10 @@
           "shape":"MonitoringCsvDatasetFormat",
           "documentation":"<p>The CSV dataset used in the monitoring job.</p>"
         },
-        "Json":{
+        "JsonFormat":{
           "shape":"MonitoringJsonDatasetFormat",
-          "documentation":"<p>The JSON dataset used in the monitoring job</p>"
+          "documentation":"<p>The JSON dataset used in the monitoring job</p>",
+          "alias": "json"
         },
         "Parquet":{
           "shape":"MonitoringParquetDatasetFormat",

@@ -204,7 +204,7 @@ class ShapesCodeGen:
         """
         imports = "import datetime\n"
         imports += "\n"
-        imports += "from pydantic import BaseModel, ConfigDict\n"
+        imports += "from pydantic import BaseModel, ConfigDict, Field\n"
         imports += "from typing import List, Dict, Optional, Any, Union\n"
         imports += "from sagemaker_core.main.utils import Unassigned"
         imports += "\n"

@@ -11147,7 +11147,12 @@ SHAPE_DAG = {
     "MonitoringDatasetFormat": {
         "members": [
             {"name": "Csv", "shape": "MonitoringCsvDatasetFormat", "type": "structure"},
-            {"name": "Json", "shape": "MonitoringJsonDatasetFormat", "type": "structure"},
+            {
+                "alias": "json",
+                "name": "JsonFormat",
+                "shape": "MonitoringJsonDatasetFormat",
+                "type": "structure",
+            },
             {"name": "Parquet", "shape": "MonitoringParquetDatasetFormat", "type": "structure"},
         ],
         "type": "structure",

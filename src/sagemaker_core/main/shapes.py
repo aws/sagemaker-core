@@ -12,7 +12,7 @@
 # language governing permissions and limitations under the License.
 import datetime
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from typing import List, Dict, Optional, Any, Union
 from sagemaker_core.main.utils import Unassigned
 
@@ -2541,12 +2541,12 @@ class MonitoringDatasetFormat(Base):
     Attributes
     ----------------------
     csv: The CSV dataset used in the monitoring job.
-    json: The JSON dataset used in the monitoring job
+    json_format: The JSON dataset used in the monitoring job
     parquet: The Parquet dataset used in the monitoring job
     """
 
     csv: Optional[MonitoringCsvDatasetFormat] = Unassigned()
-    json: Optional[MonitoringJsonDatasetFormat] = Unassigned()
+    json_format: Optional[MonitoringJsonDatasetFormat] = Field(default=Unassigned(), alias="json")
     parquet: Optional[MonitoringParquetDatasetFormat] = Unassigned()
 
 
