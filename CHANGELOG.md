@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.0.27 (2025-03-27)
+
+ * Daily Sync with Botocore v1.37.21 on 2025/03/27 (#271)
+ * Remove sagemaker from integ test dependency (#272)
+
 ## v1.0.26 (2025-03-25)
 
  * Daily Sync with Botocore v1.37.19 on 2025/03/25 (#267)
