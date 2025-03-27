@@ -1,7 +1,7 @@
 import json
-from sagemaker_core.tools.method import Method
-from sagemaker_core.tools.resources_codegen import ResourcesCodeGen
-from sagemaker_core.tools.constants import SERVICE_JSON_FILE_PATH
+from sagemaker.core.tools.method import Method
+from sagemaker.core.tools.resources_codegen import ResourcesCodeGen
+from sagemaker.core.tools.constants import SERVICE_JSON_FILE_PATH
 
 
 class TestGenerateResource:
@@ -1500,6 +1500,8 @@ def get_all_training_jobs(
         expires_in_seconds: Optional[int] = Unassigned(),
         space_name: Optional[Union[str, object]] = Unassigned(),
         landing_uri: Optional[str] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
     ) -> Optional["PresignedDomainUrl"]:
         """
         Create a PresignedDomainUrl resource
@@ -1854,7 +1856,7 @@ def wait_for_delete(
 
                 
                 if current_status.lower() == "deleted":
-                    print("Resource was deleted.")
+                    logger.info("Resource was deleted.")
                     return
 
 

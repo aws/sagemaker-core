@@ -1,7 +1,7 @@
 import botocore
 import pytest
 from unittest.mock import patch, MagicMock
-from sagemaker_core.main.logs import LogStreamHandler, MultiLogStreamHandler
+from sagemaker.core.utils.logs import LogStreamHandler, MultiLogStreamHandler
 
 
 def test_single_stream_handler_get_latest():
@@ -36,7 +36,7 @@ def test_single_stream_handler_get_latest():
             next(events)
 
 
-@patch("sagemaker_core.main.logs.MultiLogStreamHandler.ready", autospec=True)
+@patch("sagemaker.core.utils.logs.MultiLogStreamHandler.ready", autospec=True)
 def test_multi_stream_handler_get_latest(mock_ready):
     mock_ready.return_value = True
 

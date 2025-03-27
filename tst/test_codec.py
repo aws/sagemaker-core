@@ -2,9 +2,9 @@ import datetime
 from dateutil.tz import tzlocal
 from pprint import pprint
 import unittest
-from sagemaker_core.main.code_injection.codec import pascal_to_snake
-from sagemaker_core.main.code_injection.codec import transform
-from sagemaker_core.main.resources import Model, TrialComponent, AutoMLJobV2
+from sagemaker.core.utils.code_injection.codec import pascal_to_snake
+from sagemaker.core.utils.code_injection.codec import transform
+from sagemaker.core.resources import Model, TrialComponent, AutoMLJobV2
 
 
 class TestConversion(unittest.TestCase):

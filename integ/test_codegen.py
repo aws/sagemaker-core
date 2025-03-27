@@ -10,8 +10,8 @@ from sklearn.datasets import load_iris
 from sklearn.model_selection import train_test_split
 
 from sagemaker_cleaner import handle_cleanup
-from sagemaker_core.main.shapes import ContainerDefinition, ProductionVariant, ProfilerConfig
-from sagemaker_core.main.resources import (
+from sagemaker.core.shapes import ContainerDefinition, ProductionVariant, ProfilerConfig
+from sagemaker.core.resources import (
     TrainingJob,
     AlgorithmSpecification,
     Channel,
@@ -24,7 +24,7 @@ from sagemaker_core.main.resources import (
     EndpointConfig,
     Endpoint,
 )
-from sagemaker_core.helper.session_helper import Session, get_execution_role
+from sagemaker.core.helper.session_helper import Session, get_execution_role
 
 logger = logging.getLogger()
 

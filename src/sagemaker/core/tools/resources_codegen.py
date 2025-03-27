@@ -15,11 +15,11 @@ from functools import lru_cache
 
 import os
 import json
-from sagemaker_core.main.code_injection.codec import pascal_to_snake
-from sagemaker_core.main.config_schema import SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA
-from sagemaker_core.main.exceptions import IntelligentDefaultsError
-from sagemaker_core.main.utils import get_textual_rich_logger
-from sagemaker_core.tools.constants import (
+from sagemaker.core.utils.code_injection.codec import pascal_to_snake
+from sagemaker.core.config_schema import SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA
+from sagemaker.core.utils.exceptions import IntelligentDefaultsError
+from sagemaker.core.utils.utils import get_textual_rich_logger
+from sagemaker.core.tools.constants import (
     BASIC_RETURN_TYPES,
     GENERATED_CLASSES_LOCATION,
     RESOURCES_CODEGEN_FILE_NAME,
@@ -31,17 +31,17 @@ from sagemaker_core.tools.constants import (
     CONFIGURABLE_ATTRIBUTE_SUBSTRINGS,
     RESOURCE_WITH_LOGS,
 )
-from sagemaker_core.tools.method import Method, MethodType
-from sagemaker_core.main.utils import (
+from sagemaker.core.tools.method import Method, MethodType
+from sagemaker.core.utils.utils import (
     add_indent,
     convert_to_snake_case,
     snake_to_pascal,
     remove_html_tags,
     escape_special_rst_characters,
 )
-from sagemaker_core.tools.resources_extractor import ResourcesExtractor
-from sagemaker_core.tools.shapes_extractor import ShapesExtractor
-from sagemaker_core.tools.templates import (
+from sagemaker.core.tools.resources_extractor import ResourcesExtractor
+from sagemaker.core.tools.shapes_extractor import ShapesExtractor
+from sagemaker.core.tools.templates import (
     CALL_OPERATION_API_NO_ARG_TEMPLATE,
     CALL_OPERATION_API_TEMPLATE,
     CREATE_METHOD_TEMPLATE,
@@ -75,7 +75,7 @@ from sagemaker_core.tools.templates import (
     INIT_WAIT_LOGS_TEMPLATE,
     PRINT_WAIT_LOGS,
 )
-from sagemaker_core.tools.data_extractor import (
+from sagemaker.core.tools.data_extractor import (
     load_combined_shapes_data,
     load_combined_operations_data,
 )
@@ -186,14 +186,14 @@ class ResourcesCodeGen:
             "from rich.progress import Progress, SpinnerColumn, TextColumn, TimeElapsedColumn",
             "from rich.status import Status",
             "from rich.style import Style",
-            "from sagemaker_core.main.code_injection.codec import transform",
-            "from sagemaker_core.main.code_injection.constants import Color",
-            "from sagemaker_core.main.utils import SageMakerClient, ResourceIterator, Unassigned, get_textual_rich_logger, "
+            "from sagemaker.core.shapes import *",
+            "from sagemaker.core.utils.code_injection.codec import transform",
+            "from sagemaker.core.utils.code_injection.constants import Color",
+            "from sagemaker.core.utils.utils import SageMakerClient, ResourceIterator, Unassigned, get_textual_rich_logger, "
             "snake_to_pascal, pascal_to_snake, is_not_primitive, is_not_str_dict, is_primitive_list, serialize",
-            "from sagemaker_core.main.intelligent_defaults_helper import load_default_configs_for_resource_name, get_config_value",
-            "from sagemaker_core.main.logs import MultiLogStreamHandler",
-            "from sagemaker_core.main.shapes import *",
-            "from sagemaker_core.main.exceptions import *",
+            "from sagemaker.core.utils.intelligent_defaults_helper import load_default_configs_for_resource_name, get_config_value",
+            "from sagemaker.core.utils.logs import MultiLogStreamHandler",
+            "from sagemaker.core.utils.exceptions import *",
         ]
 
         formated_imports = "\n".join(imports)
@@ -908,11 +908,18 @@ class ResourcesCodeGen:
             deserialize_response = DESERIALIZE_INPUT_AND_RESPONSE_TO_CLS_TEMPLATE.format(
                 operation_output_shape=operation_output_shape_name
             )
+            method_args = (
+                add_indent("cls,\n", 4)
+                + create_args
+                + "\n"
+                + add_indent("session: Optional[Session] = None,\n", 4)
+                + add_indent("region: Optional[str] = None,", 4)
+            )
             formatted_method = GENERIC_METHOD_TEMPLATE.format(
                 docstring=docstring,
                 decorator=decorator,
                 method_name="create",
-                method_args=add_indent("cls,\n", 4) + create_args,
+                method_args=method_args,
                 return_type=f'Optional["{resource_name}"]',
                 serialize_operation_input=serialize_operation_input,
                 initialize_client=initialize_client,

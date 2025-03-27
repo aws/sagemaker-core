@@ -454,7 +454,7 @@ if "delete_failed" in current_status.lower() or "deletefailed" in current_status
 
 DELETED_STATUS_CHECK = """
 if current_status.lower() == "deleted":
-    print("Resource was deleted.")
+    logger.info("Resource was deleted.")
     return
 """
 
