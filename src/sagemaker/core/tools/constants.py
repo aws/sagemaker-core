@@ -13,9 +13,9 @@
 """Constants used in the code_generator modules."""
 import os
 
-CLASS_METHODS = set(["create", "add", "start", "register", "import", "list", "get"])
+CLASS_METHODS = set(["create", "add", "register", "import", "list", "get"])
 OBJECT_METHODS = set(
-    ["refresh", "delete", "update", "stop", "deregister", "wait", "wait_for_status"]
+    ["refresh", "delete", "update", "start", "stop", "deregister", "wait", "wait_for_status"]
 )
 
 TERMINAL_STATES = set(["Completed", "Stopped", "Deleted", "Failed", "Succeeded", "Cancelled"])

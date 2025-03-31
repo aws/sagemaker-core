@@ -419,6 +419,11 @@ class ResourcesCodeGen:
             ):
                 resource_class += add_indent(delete_method, 4)
 
+            if start_method := self._evaluate_method(
+                resource_name, "start", object_methods, resource_attributes=resource_attributes
+            ):
+                resource_class += add_indent(start_method, 4)
+
             if stop_method := self._evaluate_method(resource_name, "stop", object_methods):
                 resource_class += add_indent(stop_method, 4)
 
@@ -984,6 +989,7 @@ class ResourcesCodeGen:
             str: The generated docstring for the IMPORT method.
         """
         docstring = f"{title}\n"
+        _shape_attr_documentation_string = ""
         if operation_input_shape_name:
             _shape_attr_documentation_string = self._get_shape_attr_documentation_string(
                 self.shapes_extractor.fetch_shape_members_and_doc_strings(
@@ -1293,6 +1299,63 @@ class ResourcesCodeGen:
             delete_args=delete_args,
             operation_input_args=operation_input_args,
             operation=operation,
+        )
+        return formatted_method
+
+    def generate_start_method(self, resource_name: str, **kwargs) -> str:
+        """Auto-Generate 'start' object Method [delete API] for a resource.
+
+        Args:
+            resource_name (str): The resource name.
+
+        Returns:
+            str: The formatted stop Method template.
+        """
+        operation_name = "Start" + resource_name
+        operation_metadata = self.operations[operation_name]
+        operation_input_shape_name = operation_metadata["input"]["shape"]
+        resource_attributes = kwargs["resource_attributes"]
+
+        method_args = add_indent("self,\n", 4)
+        method_args += (
+            self._generate_method_args(operation_input_shape_name, resource_attributes) + "\n"
+        )
+        operation_input_args = self._generate_operation_input_args_updated(
+            operation_metadata, False, resource_attributes
+        )
+        exclude_resource_attrs = resource_attributes
+        method_args += add_indent("session: Optional[Session] = None,\n", 4)
+        method_args += add_indent("region: Optional[str] = None,", 4)
+
+        serialize_operation_input = SERIALIZE_INPUT_TEMPLATE.format(
+            operation_input_args=operation_input_args
+        )
+        call_operation_api = CALL_OPERATION_API_TEMPLATE.format(
+            operation=convert_to_snake_case(operation_name)
+        )
+
+        # generate docstring
+        docstring = self._generate_docstring(
+            title=f"Start a {resource_name} resource",
+            operation_name=operation_name,
+            resource_name=resource_name,
+            include_session_region=True,
+            include_return_resource_docstring=False,
+            exclude_resource_attrs=exclude_resource_attrs,
+        )
+
+        initialize_client = INITIALIZE_CLIENT_TEMPLATE.format(service_name="sagemaker")
+
+        formatted_method = GENERIC_METHOD_TEMPLATE.format(
+            docstring=docstring,
+            decorator="",
+            method_name="start",
+            method_args=method_args,
+            return_type="None",
+            serialize_operation_input=serialize_operation_input,
+            initialize_client=initialize_client,
+            call_operation_api=call_operation_api,
+            deserialize_response="",
         )
         return formatted_method
 

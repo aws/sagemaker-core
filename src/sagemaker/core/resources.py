@@ -15784,6 +15784,48 @@ class InferenceExperiment(Base):
         logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
     @Base.add_validate_call
+    def start(
+        self,
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> None:
+        """
+        Start a InferenceExperiment resource
+
+        Parameters:
+            session: Boto3 session.
+            region: Region name.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ConflictException: There was a conflict when you attempted to modify a SageMaker entity such as an Experiment or Artifact.
+            ResourceNotFound: Resource being access is not found.
+        """
+
+        operation_input_args = {
+            "Name": self.name,
+        }
+        # serialize the input request
+        operation_input_args = serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
+
+        logger.debug(f"Calling start_inference_experiment API")
+        response = client.start_inference_experiment(**operation_input_args)
+        logger.debug(f"Response: {response}")
+
+    @Base.add_validate_call
     def stop(self) -> None:
         """
         Stop a InferenceExperiment resource
@@ -17501,6 +17543,48 @@ class MlflowTrackingServer(Base):
         client.delete_mlflow_tracking_server(**operation_input_args)
 
         logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+
+    @Base.add_validate_call
+    def start(
+        self,
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> None:
+        """
+        Start a MlflowTrackingServer resource
+
+        Parameters:
+            session: Boto3 session.
+            region: Region name.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ConflictException: There was a conflict when you attempted to modify a SageMaker entity such as an Experiment or Artifact.
+            ResourceNotFound: Resource being access is not found.
+        """
+
+        operation_input_args = {
+            "TrackingServerName": self.tracking_server_name,
+        }
+        # serialize the input request
+        operation_input_args = serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
+
+        logger.debug(f"Calling start_mlflow_tracking_server API")
+        response = client.start_mlflow_tracking_server(**operation_input_args)
+        logger.debug(f"Response: {response}")
 
     @Base.add_validate_call
     def stop(self) -> None:
@@ -22016,6 +22100,47 @@ class MonitoringSchedule(Base):
         logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
 
     @Base.add_validate_call
+    def start(
+        self,
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> None:
+        """
+        Start a MonitoringSchedule resource
+
+        Parameters:
+            session: Boto3 session.
+            region: Region name.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceNotFound: Resource being access is not found.
+        """
+
+        operation_input_args = {
+            "MonitoringScheduleName": self.monitoring_schedule_name,
+        }
+        # serialize the input request
+        operation_input_args = serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
+
+        logger.debug(f"Calling start_monitoring_schedule API")
+        response = client.start_monitoring_schedule(**operation_input_args)
+        logger.debug(f"Response: {response}")
+
+    @Base.add_validate_call
     def stop(self) -> None:
         """
         Stop a MonitoringSchedule resource
@@ -22585,6 +22710,47 @@ class NotebookInstance(Base):
         client.delete_notebook_instance(**operation_input_args)
 
         logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+
+    @Base.add_validate_call
+    def start(
+        self,
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> None:
+        """
+        Start a NotebookInstance resource
+
+        Parameters:
+            session: Boto3 session.
+            region: Region name.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceLimitExceeded: You have exceeded an SageMaker resource limit. For example, you might have too many training jobs created.
+        """
+
+        operation_input_args = {
+            "NotebookInstanceName": self.notebook_instance_name,
+        }
+        # serialize the input request
+        operation_input_args = serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
+
+        logger.debug(f"Calling start_notebook_instance API")
+        response = client.start_notebook_instance(**operation_input_args)
+        logger.debug(f"Response: {response}")
 
     @Base.add_validate_call
     def stop(self) -> None:
@@ -24913,6 +25079,58 @@ class PipelineExecution(Base):
         self.refresh()
 
         return self
+
+    @Base.add_validate_call
+    def start(
+        self,
+        pipeline_name: str,
+        client_request_token: str,
+        pipeline_parameters: Optional[List[Parameter]] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> None:
+        """
+        Start a PipelineExecution resource
+
+        Parameters:
+            session: Boto3 session.
+            region: Region name.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ConflictException: There was a conflict when you attempted to modify a SageMaker entity such as an Experiment or Artifact.
+            ResourceLimitExceeded: You have exceeded an SageMaker resource limit. For example, you might have too many training jobs created.
+            ResourceNotFound: Resource being access is not found.
+        """
+
+        operation_input_args = {
+            "PipelineName": pipeline_name,
+            "PipelineExecutionDisplayName": self.pipeline_execution_display_name,
+            "PipelineParameters": pipeline_parameters,
+            "PipelineExecutionDescription": self.pipeline_execution_description,
+            "ClientRequestToken": client_request_token,
+            "ParallelismConfiguration": self.parallelism_configuration,
+            "SelectiveExecutionConfig": self.selective_execution_config,
+        }
+        # serialize the input request
+        operation_input_args = serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
+
+        logger.debug(f"Calling start_pipeline_execution API")
+        response = client.start_pipeline_execution(**operation_input_args)
+        logger.debug(f"Response: {response}")
 
     @Base.add_validate_call
     def stop(self) -> None:
