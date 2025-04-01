@@ -974,6 +974,7 @@ class App(Base):
         user_profile_name: The user profile name.
         space_name: The name of the space. If this value is not set, then UserProfileName must be set.
         status: The status.
+        recovery_mode:  Indicates whether the application is launched in recovery mode.
         last_health_check_timestamp: The timestamp of the last health check.
         last_user_activity_timestamp: The timestamp of the last user's activity. LastUserActivityTimestamp is also updated when SageMaker AI performs health checks without user activity. As a result, this value is set to the same value as LastHealthCheckTimestamp.
         creation_time: The creation time of the application.  After an application has been shut down for 24 hours, SageMaker AI deletes all metadata for the application. To be considered an update and retain application metadata, applications must be restarted within 24 hours after the previous application has been shut down. After this time window, creation of an application is considered a new application rather than an update of the previous application.
@@ -990,6 +991,7 @@ class App(Base):
     user_profile_name: Optional[str] = Unassigned()
     space_name: Optional[str] = Unassigned()
     status: Optional[str] = Unassigned()
+    recovery_mode: Optional[bool] = Unassigned()
     last_health_check_timestamp: Optional[datetime.datetime] = Unassigned()
     last_user_activity_timestamp: Optional[datetime.datetime] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
@@ -1024,6 +1026,7 @@ class App(Base):
         space_name: Optional[Union[str, object]] = Unassigned(),
         tags: Optional[List[Tag]] = Unassigned(),
         resource_spec: Optional[ResourceSpec] = Unassigned(),
+        recovery_mode: Optional[bool] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["App"]:
@@ -1038,6 +1041,7 @@ class App(Base):
             space_name: The name of the space. If this value is not set, then UserProfileName must be set.
             tags: Each tag consists of a key and an optional value. Tag keys must be unique per resource.
             resource_spec: The instance type and the Amazon Resource Name (ARN) of the SageMaker AI image created on the instance.  The value of InstanceType passed as part of the ResourceSpec in the CreateApp call overrides the value passed as part of the ResourceSpec configured for the user profile or the domain. If InstanceType is not specified in any of those three ResourceSpec values for a KernelGateway app, the CreateApp call fails with a request validation error.
+            recovery_mode:  Indicates whether the application is launched in recovery mode.
             session: Boto3 session.
             region: Region name.
 
@@ -1074,6 +1078,7 @@ class App(Base):
             "AppName": app_name,
             "Tags": tags,
             "ResourceSpec": resource_spec,
+            "RecoveryMode": recovery_mode,
         }
 
         operation_input_args = Base.populate_chained_attributes(
@@ -23690,7 +23695,10 @@ class PartnerApp(Base):
     def populate_inputs_decorator(create_func):
         @functools.wraps(create_func)
         def wrapper(*args, **kwargs):
-            config_schema_for_resource = {"execution_role_arn": {"type": "string"}}
+            config_schema_for_resource = {
+                "execution_role_arn": {"type": "string"},
+                "kms_key_id": {"type": "string"},
+            }
             return create_func(
                 *args,
                 **Base.get_updated_kwargs_with_configured_attributes(
