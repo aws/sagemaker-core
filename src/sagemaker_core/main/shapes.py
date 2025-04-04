@@ -1120,11 +1120,13 @@ class TransformResources(Base):
     instance_type: The ML compute instance type for the transform job. If you are using built-in algorithms to transform moderately sized datasets, we recommend using ml.m4.xlarge or ml.m5.largeinstance types.
     instance_count: The number of ML compute instances to use in the transform job. The default value is 1, and the maximum is 100. For distributed transform jobs, specify a value greater than 1.
     volume_kms_key_id: The Amazon Web Services Key Management Service (Amazon Web Services KMS) key that Amazon SageMaker uses to encrypt model data on the storage volume attached to the ML compute instance(s) that run the batch transform job.  Certain Nitro-based instances include local storage, dependent on the instance type. Local storage volumes are encrypted using a hardware module on the instance. You can't request a VolumeKmsKeyId when using an instance type with local storage. For a list of instance types that support local instance storage, see Instance Store Volumes. For more information about local instance storage encryption, see SSD Instance Store Volumes.   The VolumeKmsKeyId can be any of the following formats:   Key ID: 1234abcd-12ab-34cd-56ef-1234567890ab    Key ARN: arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab    Alias name: alias/ExampleAlias    Alias name ARN: arn:aws:kms:us-west-2:111122223333:alias/ExampleAlias
+    transform_ami_version: Specifies an option from a collection of preconfigured Amazon Machine Image (AMI) images. Each image is configured by Amazon Web Services with a set of software and driver versions.  al2-ami-sagemaker-batch-gpu-470    Accelerator: GPU   NVIDIA driver version: 470    al2-ami-sagemaker-batch-gpu-535    Accelerator: GPU   NVIDIA driver version: 535
     """
 
     instance_type: str
     instance_count: int
     volume_kms_key_id: Optional[str] = Unassigned()
+    transform_ami_version: Optional[str] = Unassigned()
 
 
 class TransformJobDefinition(Base):
@@ -12518,6 +12520,21 @@ class VisibilityConditions(Base):
 
     key: Optional[str] = Unassigned()
     value: Optional[str] = Unassigned()
+
+
+class TotalHits(Base):
+    """
+    TotalHits
+      Represents the total number of matching results and indicates how accurate that count is. The Value field provides the count, which may be exact or estimated. The Relation field indicates whether it's an exact figure or a lower bound. This helps understand the full scope of search results, especially when dealing with large result sets.
+
+    Attributes
+    ----------------------
+    value: The total number of matching results. This value may be exact or an estimate, depending on the Relation field.
+    relation: Indicates the relationship between the returned Value and the actual total number of matching results. Possible values are:    EqualTo: The Value is the exact count of matching results.    GreaterThanOrEqualTo: The Value is a lower bound of the actual count of matching results.
+    """
+
+    value: Optional[int] = Unassigned()
+    relation: Optional[str] = Unassigned()
 
 
 class TrainingPlanOffering(Base):
