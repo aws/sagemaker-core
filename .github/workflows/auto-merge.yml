@@ -1,0 +1,38 @@
+name: Merge Botocore Sync PR
+
+on:
+  pull_request:
+    branches:
+      - "main*"
+    paths:
+      - "sample/**/*.json"
+
+concurrency:
+    group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.head_ref }}
+    cancel-in-progress: true
+
+permissions:
+  id-token: write # This is required for requesting the JWT
+  contents: read
+
+jobs:
+  merge-botocore-sync-pr:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.user.login == 'sagemaker-bot' && startsWith(github.event.pull_request.head.ref, 'botocore-sync') && startsWith(github.event.pull_request.title, 'Daily Sync with Botocore')
+    steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.CODEBUILD_ROLE_ARN }}
+          role-duration-seconds: 10800
+          aws-region: us-west-2
+      - name: Auto Merge Botocore Sync PRs
+        uses: aws-actions/aws-codebuild-run-build@v1
+        with:
+          project-name: sagemaker-core-merge-botocore-pr
+          env-vars-for-codebuild: |
+            PR_NUMBER,
+            COMMIT_SHA
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          COMMIT_SHA: ${{ github.event.pull_request.head.sha }}
