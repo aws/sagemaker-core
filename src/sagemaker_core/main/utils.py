@@ -506,7 +506,7 @@ def _serialize_dict(value: Dict) -> dict:
     """
     serialized_dict = {}
     for k, v in value.items():
-        if serialize_result := serialize(v):
+        if (serialize_result := serialize(v)) is not None:
             serialized_dict.update({k: serialize_result})
     return serialized_dict
 
@@ -523,7 +523,7 @@ def _serialize_list(value: List) -> list:
     """
     serialized_list = []
     for v in value:
-        if serialize_result := serialize(v):
+        if (serialize_result := serialize(v)) is not None:
             serialized_list.append(serialize_result)
     return serialized_list
 
@@ -540,7 +540,7 @@ def _serialize_shape(value: Any) -> dict:
     """
     serialized_dict = {}
     for k, v in vars(value).items():
-        if serialize_result := serialize(v):
+        if (serialize_result := serialize(v)) is not None:
             key = snake_to_pascal(k) if is_snake_case(k) else k
             serialized_dict.update({key[0].upper() + key[1:]: serialize_result})
     return serialized_dict

@@ -13,7 +13,7 @@
 """Constants used in the code_injection modules."""
 from enum import Enum
 
-BASIC_TYPES = ["string", "boolean", "integer", "long", "double", "timestamp", "float"]
+BASIC_TYPES = ["string", "boolean", "integer", "long", "double", "timestamp", "float", "blob"]
 STRUCTURE_TYPE = "structure"
 MAP_TYPE = "map"
 LIST_TYPE = "list"

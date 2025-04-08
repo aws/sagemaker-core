@@ -143,24 +143,6 @@ class ResponseStream(Base):
     internal_stream_failure: Optional[InternalStreamFailure] = Unassigned()
 
 
-class InvokeEndpointWithResponseStreamOutput(Base):
-    """
-    InvokeEndpointWithResponseStreamOutput
-
-    Attributes
-    ----------------------
-    body
-    content_type: The MIME type of the inference returned from the model container.
-    invoked_production_variant: Identifies the production variant that was invoked.
-    custom_attributes: Provides additional information in the response about the inference returned by a model hosted at an Amazon SageMaker endpoint. The information is an opaque value that is forwarded verbatim. You could use this value, for example, to return an ID received in the CustomAttributes header of a request or other metadata that a service endpoint was programmed to produce. The value must consist of no more than 1024 visible US-ASCII characters as specified in Section 3.3.6. Field Value Components of the Hypertext Transfer Protocol (HTTP/1.1). If the customer wants the custom attribute returned, the model must set the custom attribute to be included on the way back.  The code in your model is responsible for setting or updating any custom attributes in the response. If your code does not set this value in the response, an empty value is returned. For example, if a custom attribute represents the trace ID, your model can prepend the custom attribute with Trace ID: in your post-processing function. This feature is currently supported in the Amazon Web Services SDKs but not in the Amazon SageMaker Python SDK.
-    """
-
-    body: ResponseStream
-    content_type: Optional[str] = Unassigned()
-    invoked_production_variant: Optional[str] = Unassigned()
-    custom_attributes: Optional[str] = Unassigned()
-
-
 class ModelError(Base):
     """
     ModelError

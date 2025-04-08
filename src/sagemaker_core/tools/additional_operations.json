@@ -138,7 +138,7 @@
             "operation_name": "InvokeEndpointWithResponseStream",
             "resource_name": "Endpoint",
             "method_name": "invoke_with_response_stream",
-            "return_type": "InvokeEndpointWithResponseStreamOutput",
+            "return_type": "object",
             "method_type": "object",
             "service_name": "sagemaker-runtime"
         }
