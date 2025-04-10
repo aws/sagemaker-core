@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.0.29 (2025-04-10)
+
+ * Daily Sync with Botocore v1.37.31 on 2025/04/10 (#284)
+ * Add auto-merge for botocore sync PRs (#281)
+
 ## v1.0.28 (2025-04-04)
 
  * Daily Sync with Botocore v1.37.26 on 2025/04/03 (#277)
