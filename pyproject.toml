@@ -49,4 +49,4 @@ line-length = 100
 exclude = '\.ipynb$'
 
 [tool.setuptools.dynamic]
-version = { attr = "sagemaker_core._version.__version__"}
+version = { file = "VERSION"}

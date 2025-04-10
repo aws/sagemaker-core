@@ -1,5 +1,19 @@
 # Changelog
 
+## v1.0.29 (2025-04-10)
+
+ * Daily Sync with Botocore v1.37.31 on 2025/04/10 (#284)
+ * Add auto-merge for botocore sync PRs (#281)
+
+## v1.0.28 (2025-04-04)
+
+ * Daily Sync with Botocore v1.37.26 on 2025/04/03 (#277)
+
+## v1.0.27 (2025-03-27)
+
+ * Daily Sync with Botocore v1.37.21 on 2025/03/27 (#271)
+ * Remove sagemaker from integ test dependency (#272)
+
 ## v1.0.26 (2025-03-25)
 
  * Daily Sync with Botocore v1.37.19 on 2025/03/25 (#267)

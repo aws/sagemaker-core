@@ -974,6 +974,7 @@ class App(Base):
         user_profile_name: The user profile name.
         space_name: The name of the space. If this value is not set, then UserProfileName must be set.
         status: The status.
+        recovery_mode:  Indicates whether the application is launched in recovery mode.
         last_health_check_timestamp: The timestamp of the last health check.
         last_user_activity_timestamp: The timestamp of the last user's activity. LastUserActivityTimestamp is also updated when SageMaker AI performs health checks without user activity. As a result, this value is set to the same value as LastHealthCheckTimestamp.
         creation_time: The creation time of the application.  After an application has been shut down for 24 hours, SageMaker AI deletes all metadata for the application. To be considered an update and retain application metadata, applications must be restarted within 24 hours after the previous application has been shut down. After this time window, creation of an application is considered a new application rather than an update of the previous application.
@@ -990,6 +991,7 @@ class App(Base):
     user_profile_name: Optional[str] = Unassigned()
     space_name: Optional[str] = Unassigned()
     status: Optional[str] = Unassigned()
+    recovery_mode: Optional[bool] = Unassigned()
     last_health_check_timestamp: Optional[datetime.datetime] = Unassigned()
     last_user_activity_timestamp: Optional[datetime.datetime] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
@@ -1024,6 +1026,7 @@ class App(Base):
         space_name: Optional[Union[str, object]] = Unassigned(),
         tags: Optional[List[Tag]] = Unassigned(),
         resource_spec: Optional[ResourceSpec] = Unassigned(),
+        recovery_mode: Optional[bool] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["App"]:
@@ -1038,6 +1041,7 @@ class App(Base):
             space_name: The name of the space. If this value is not set, then UserProfileName must be set.
             tags: Each tag consists of a key and an optional value. Tag keys must be unique per resource.
             resource_spec: The instance type and the Amazon Resource Name (ARN) of the SageMaker AI image created on the instance.  The value of InstanceType passed as part of the ResourceSpec in the CreateApp call overrides the value passed as part of the ResourceSpec configured for the user profile or the domain. If InstanceType is not specified in any of those three ResourceSpec values for a KernelGateway app, the CreateApp call fails with a request validation error.
+            recovery_mode:  Indicates whether the application is launched in recovery mode.
             session: Boto3 session.
             region: Region name.
 
@@ -1074,6 +1078,7 @@ class App(Base):
             "AppName": app_name,
             "Tags": tags,
             "ResourceSpec": resource_spec,
+            "RecoveryMode": recovery_mode,
         }
 
         operation_input_args = Base.populate_chained_attributes(
@@ -22868,6 +22873,7 @@ class NotebookInstanceLifecycleConfig(Base):
         notebook_instance_lifecycle_config_name: str,
         on_create: Optional[List[NotebookInstanceLifecycleHook]] = Unassigned(),
         on_start: Optional[List[NotebookInstanceLifecycleHook]] = Unassigned(),
+        tags: Optional[List[Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["NotebookInstanceLifecycleConfig"]:
@@ -22878,6 +22884,7 @@ class NotebookInstanceLifecycleConfig(Base):
             notebook_instance_lifecycle_config_name: The name of the lifecycle configuration.
             on_create: A shell script that runs only once, when you create a notebook instance. The shell script must be a base64-encoded string.
             on_start: A shell script that runs every time you start a notebook instance, including when you create the notebook instance. The shell script must be a base64-encoded string.
+            tags: An array of key-value pairs. You can use tags to categorize your Amazon Web Services resources in different ways, for example, by purpose, owner, or environment. For more information, see Tagging Amazon Web Services Resources.
             session: Boto3 session.
             region: Region name.
 
@@ -22909,6 +22916,7 @@ class NotebookInstanceLifecycleConfig(Base):
             "NotebookInstanceLifecycleConfigName": notebook_instance_lifecycle_config_name,
             "OnCreate": on_create,
             "OnStart": on_start,
+            "Tags": tags,
         }
 
         operation_input_args = Base.populate_chained_attributes(
@@ -23640,7 +23648,9 @@ class PartnerApp(Base):
         type: The type of SageMaker Partner AI App. Must be one of the following: lakera-guard, comet, deepchecks-llm-evaluation, or fiddler.
         status: The status of the SageMaker Partner AI App.
         creation_time: The time that the SageMaker Partner AI App was created.
+        last_modified_time: The time that the SageMaker Partner AI App was last modified.
         execution_role_arn: The ARN of the IAM role associated with the SageMaker Partner AI App.
+        kms_key_id: The Amazon Web Services KMS customer managed key used to encrypt the data at rest associated with SageMaker Partner AI Apps.
         base_url: The URL of the SageMaker Partner AI App that the Application SDK uses to support in-app calls for the user.
         maintenance_config: Maintenance configuration settings for the SageMaker Partner AI App.
         tier: The instance type and size of the cluster attached to the SageMaker Partner AI App.
@@ -23657,7 +23667,9 @@ class PartnerApp(Base):
     type: Optional[str] = Unassigned()
     status: Optional[str] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
+    last_modified_time: Optional[datetime.datetime] = Unassigned()
     execution_role_arn: Optional[str] = Unassigned()
+    kms_key_id: Optional[str] = Unassigned()
     base_url: Optional[str] = Unassigned()
     maintenance_config: Optional[PartnerAppMaintenanceConfig] = Unassigned()
     tier: Optional[str] = Unassigned()
@@ -23686,7 +23698,10 @@ class PartnerApp(Base):
     def populate_inputs_decorator(create_func):
         @functools.wraps(create_func)
         def wrapper(*args, **kwargs):
-            config_schema_for_resource = {"execution_role_arn": {"type": "string"}}
+            config_schema_for_resource = {
+                "execution_role_arn": {"type": "string"},
+                "kms_key_id": {"type": "string"},
+            }
             return create_func(
                 *args,
                 **Base.get_updated_kwargs_with_configured_attributes(
@@ -23706,6 +23721,7 @@ class PartnerApp(Base):
         execution_role_arn: str,
         tier: str,
         auth_type: str,
+        kms_key_id: Optional[str] = Unassigned(),
         maintenance_config: Optional[PartnerAppMaintenanceConfig] = Unassigned(),
         application_config: Optional[PartnerAppConfig] = Unassigned(),
         enable_iam_session_based_identity: Optional[bool] = Unassigned(),
@@ -23723,6 +23739,7 @@ class PartnerApp(Base):
             execution_role_arn: The ARN of the IAM role that the partner application uses.
             tier: Indicates the instance type and size of the cluster attached to the SageMaker Partner AI App.
             auth_type: The authorization type that users use to access the SageMaker Partner AI App.
+            kms_key_id: SageMaker Partner AI Apps uses Amazon Web Services KMS to encrypt data at rest using an Amazon Web Services managed key by default. For more control, specify a customer managed key.
             maintenance_config: Maintenance configuration settings for the SageMaker Partner AI App.
             application_config: Configuration settings for the SageMaker Partner AI App.
             enable_iam_session_based_identity: When set to TRUE, the SageMaker Partner AI App sets the Amazon Web Services IAM session name or the authenticated IAM user as the identity of the SageMaker Partner AI App user.
@@ -23760,6 +23777,7 @@ class PartnerApp(Base):
             "Name": name,
             "Type": type,
             "ExecutionRoleArn": execution_role_arn,
+            "KmsKeyId": kms_key_id,
             "MaintenanceConfig": maintenance_config,
             "Tier": tier,
             "ApplicationConfig": application_config,

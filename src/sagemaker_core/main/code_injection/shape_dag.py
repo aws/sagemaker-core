@@ -1817,6 +1817,7 @@ SHAPE_DAG = {
             {"name": "AppName", "shape": "AppName", "type": "string"},
             {"name": "Tags", "shape": "TagList", "type": "list"},
             {"name": "ResourceSpec", "shape": "ResourceSpec", "type": "structure"},
+            {"name": "RecoveryMode", "shape": "Boolean", "type": "boolean"},
         ],
         "type": "structure",
     },
@@ -2743,6 +2744,7 @@ SHAPE_DAG = {
             },
             {"name": "OnCreate", "shape": "NotebookInstanceLifecycleConfigList", "type": "list"},
             {"name": "OnStart", "shape": "NotebookInstanceLifecycleConfigList", "type": "list"},
+            {"name": "Tags", "shape": "TagList", "type": "list"},
         ],
         "type": "structure",
     },
@@ -2812,6 +2814,7 @@ SHAPE_DAG = {
             {"name": "Name", "shape": "PartnerAppName", "type": "string"},
             {"name": "Type", "shape": "PartnerAppType", "type": "string"},
             {"name": "ExecutionRoleArn", "shape": "RoleArn", "type": "string"},
+            {"name": "KmsKeyId", "shape": "KmsKeyId", "type": "string"},
             {
                 "name": "MaintenanceConfig",
                 "shape": "PartnerAppMaintenanceConfig",
@@ -4052,6 +4055,7 @@ SHAPE_DAG = {
             {"name": "UserProfileName", "shape": "UserProfileName", "type": "string"},
             {"name": "SpaceName", "shape": "SpaceName", "type": "string"},
             {"name": "Status", "shape": "AppStatus", "type": "string"},
+            {"name": "RecoveryMode", "shape": "Boolean", "type": "boolean"},
             {"name": "LastHealthCheckTimestamp", "shape": "Timestamp", "type": "timestamp"},
             {"name": "LastUserActivityTimestamp", "shape": "Timestamp", "type": "timestamp"},
             {"name": "CreationTime", "shape": "Timestamp", "type": "timestamp"},
@@ -5496,7 +5500,9 @@ SHAPE_DAG = {
             {"name": "Type", "shape": "PartnerAppType", "type": "string"},
             {"name": "Status", "shape": "PartnerAppStatus", "type": "string"},
             {"name": "CreationTime", "shape": "Timestamp", "type": "timestamp"},
+            {"name": "LastModifiedTime", "shape": "Timestamp", "type": "timestamp"},
             {"name": "ExecutionRoleArn", "shape": "RoleArn", "type": "string"},
+            {"name": "KmsKeyId", "shape": "KmsKeyId", "type": "string"},
             {"name": "BaseUrl", "shape": "String2048", "type": "string"},
             {
                 "name": "MaintenanceConfig",
@@ -13334,6 +13340,7 @@ SHAPE_DAG = {
         "members": [
             {"name": "Results", "shape": "SearchResultsList", "type": "list"},
             {"name": "NextToken", "shape": "NextToken", "type": "string"},
+            {"name": "TotalHits", "shape": "TotalHits", "type": "structure"},
         ],
         "type": "structure",
     },
@@ -14085,6 +14092,13 @@ SHAPE_DAG = {
         ],
         "type": "structure",
     },
+    "TotalHits": {
+        "members": [
+            {"name": "Value", "shape": "Long", "type": "long"},
+            {"name": "Relation", "shape": "Relation", "type": "string"},
+        ],
+        "type": "structure",
+    },
     "TrackingServerSummary": {
         "members": [
             {"name": "TrackingServerArn", "shape": "TrackingServerArn", "type": "string"},
@@ -14485,6 +14499,7 @@ SHAPE_DAG = {
             {"name": "InstanceType", "shape": "TransformInstanceType", "type": "string"},
             {"name": "InstanceCount", "shape": "TransformInstanceCount", "type": "integer"},
             {"name": "VolumeKmsKeyId", "shape": "KmsKeyId", "type": "string"},
+            {"name": "TransformAmiVersion", "shape": "TransformAmiVersion", "type": "string"},
         ],
         "type": "structure",
     },
