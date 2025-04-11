@@ -1908,6 +1908,8 @@ class ResourcesCodeGen:
             new_val = value.split("=")[0].strip()
             if new_val.startswith("Optional"):
                 new_val = new_val.replace("Optional[", "")[:-1]
+            if new_val.startswith("shapes."):
+                new_val = new_val.replace("shapes.", "")
             cleaned_class_attributes[key] = new_val
         return cleaned_class_attributes
 

@@ -75,7 +75,7 @@ def create(
 ) -> Optional["{resource_name}"]:
 {docstring}
     logger.info("Creating {resource_lower} resource.")
-    client =Base.get_sagemaker_client(session=session, region_name=region, service_name='{service_name}')
+    client = Base.get_sagemaker_client(session=session, region_name=region, service_name='{service_name}')
 
     operation_input_args = {{
 {operation_input_args}

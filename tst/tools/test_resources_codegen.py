@@ -18,7 +18,6 @@ class TestGenerateResource:
     def test_generate_create_method(self):
         expected_output = '''
 @classmethod
-@populate_inputs_decorator
 @Base.add_validate_call
 def create(
     cls,

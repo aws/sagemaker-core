@@ -223,8 +223,7 @@ class ShapesExtractor:
 
     @lru_cache
     def generate_shape_members(self, shape, required_override=(), add_shapes_prefix=True):
-        shape_key = shape.split("shapes.")[1] if shape.startswith("shapes.") else shape
-        shape_dict = self.combined_shapes[shape_key]
+        shape_dict = self.combined_shapes[shape]
         members = shape_dict["members"]
         required_args = list(required_override) or shape_dict.get("required", [])
         init_data_body = {}
