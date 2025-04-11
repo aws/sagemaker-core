@@ -22,6 +22,7 @@ from sagemaker_core.tools.constants import (
     LICENCES_STRING,
     GENERATED_CLASSES_LOCATION,
     SHAPES_CODEGEN_FILE_NAME,
+    SHAPES_WITH_JSON_FIELD_ALIAS,
 )
 from sagemaker_core.tools.shapes_extractor import ShapesExtractor
 from sagemaker_core.main.utils import (
@@ -180,7 +181,13 @@ class ShapesCodeGen:
 
         if "members" in shape_dict:
             for member, member_attributes in shape_dict["members"].items():
-                docstring += f"\n{convert_to_snake_case(member)}"
+                # Add alias if field name is json, to address the Bug: https://github.com/aws/sagemaker-python-sdk/issues/4944
+                if shape in SHAPES_WITH_JSON_FIELD_ALIAS and member == "Json":
+                    updated_member = "JsonFormat"
+                    docstring += f"\n{convert_to_snake_case(updated_member)}"
+                else:
+                    docstring += f"\n{convert_to_snake_case(member)}"
+
                 if "documentation" in member_attributes:
                     docstring += f": {member_attributes['documentation']}"
 
@@ -204,7 +211,7 @@ class ShapesCodeGen:
         """
         imports = "import datetime\n"
         imports += "\n"
-        imports += "from pydantic import BaseModel, ConfigDict\n"
+        imports += "from pydantic import BaseModel, ConfigDict, Field\n"
         imports += "from typing import List, Dict, Optional, Any, Union\n"
         imports += "from sagemaker_core.main.utils import Unassigned"
         imports += "\n"

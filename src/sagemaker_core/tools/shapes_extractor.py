@@ -16,7 +16,11 @@ import pprint
 from functools import lru_cache
 from typing import Optional, Any
 
-from sagemaker_core.tools.constants import BASIC_JSON_TYPES_TO_PYTHON_TYPES, SHAPE_DAG_FILE_PATH
+from sagemaker_core.tools.constants import (
+    BASIC_JSON_TYPES_TO_PYTHON_TYPES,
+    SHAPE_DAG_FILE_PATH,
+    SHAPES_WITH_JSON_FIELD_ALIAS,
+)
 from sagemaker_core.main.utils import (
     reformat_file_with_black,
     convert_to_snake_case,
@@ -99,6 +103,11 @@ class ShapesExtractor:
                 _dag[shape] = {"type": "structure", "members": []}
                 for member, member_attrs in shape_data["members"].items():
                     shape_node_member = {"name": member, "shape": member_attrs["shape"]}
+                    # Add alias if field name is json, to address the Bug: https://github.com/aws/sagemaker-python-sdk/issues/4944
+                    if shape in SHAPES_WITH_JSON_FIELD_ALIAS and member == "Json":
+                        shape_node_member["name"] = "JsonFormat"
+                        shape_node_member["alias"] = "json"
+
                     member_shape_dict = _all_shapes[member_attrs["shape"]]
                     shape_node_member["type"] = member_shape_dict["type"]
                     _dag[shape]["members"].append(shape_node_member)
@@ -218,6 +227,8 @@ class ShapesExtractor:
         # bring the required members in front
         ordered_members = {key: members[key] for key in required_args if key in members}
         ordered_members.update(members)
+        field_aliases = {}
+
         for member_name, member_attrs in ordered_members.items():
             member_shape_name = member_attrs["shape"]
             if self.combined_shapes[member_shape_name]:
@@ -234,13 +245,28 @@ class ShapesExtractor:
                     member_type = BASIC_JSON_TYPES_TO_PYTHON_TYPES[member_shape_type]
             else:
                 raise Exception("The Shape definition mush exist. The Json Data might be corrupt")
-            member_name_snake_case = convert_to_snake_case(member_name)
-            if member_name in required_args:
-                init_data_body[f"{member_name_snake_case}"] = f"{member_type}"
-            else:
-                init_data_body[f"{member_name_snake_case}"] = (
-                    f"Optional[{member_type}] = Unassigned()"
+
+            is_required = member_name in required_args
+            # Add alias if field name is json, to address the Bug: https://github.com/aws/sagemaker-python-sdk/issues/4944
+            if shape in SHAPES_WITH_JSON_FIELD_ALIAS and member_name == "Json":
+                updated_member_name_snake_case = "json_format"
+                field_aliases[updated_member_name_snake_case] = "json"
+                init_data_body[f"{updated_member_name_snake_case}"] = (
+                    (
+                        f"{member_type} = Field(alias='{field_aliases[updated_member_name_snake_case]}')"
+                    )
+                    if is_required
+                    else f"Optional[{member_type}] = Field(default=Unassigned(), alias='json')"
                 )
+            else:
+                member_name_snake_case = convert_to_snake_case(member_name)
+                if is_required:
+                    init_data_body[f"{member_name_snake_case}"] = f"{member_type}"
+                else:
+                    init_data_body[f"{member_name_snake_case}"] = (
+                        f"Optional[{member_type}] = Unassigned()"
+                    )
+
         return init_data_body
 
     @lru_cache
