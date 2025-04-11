@@ -23,12 +23,12 @@ def create(
     cls,
     compilation_job_name: str,
     role_arn: str,
-    output_config: OutputConfig,
-    stopping_condition: StoppingCondition,
+    output_config: shapes.OutputConfig,
+    stopping_condition: shapes.StoppingCondition,
     model_package_version_arn: Optional[str] = Unassigned(),
-    input_config: Optional[InputConfig] = Unassigned(),
-    vpc_config: Optional[NeoVpcConfig] = Unassigned(),
-    tags: Optional[List[Tag]] = Unassigned(),
+    input_config: Optional[shapes.InputConfig] = Unassigned(),
+    vpc_config: Optional[shapes.NeoVpcConfig] = Unassigned(),
+    tags: Optional[List[shapes.Tag]] = Unassigned(),
     session: Optional[Session] = None,
     region: Optional[str] = None,
 ) -> Optional["CompilationJob"]:
@@ -68,7 +68,7 @@ def create(
     """
 
     logger.info("Creating compilation_job resource.")
-    client =Base.get_sagemaker_client(session=session, region_name=region, service_name='sagemaker')
+    client = Base.get_sagemaker_client(session=session, region_name=region, service_name='sagemaker')
 
     operation_input_args = {
         'CompilationJobName': compilation_job_name,
@@ -118,7 +118,7 @@ def load(
     hub_content_markdown: Optional[str] = Unassigned(),
     support_status: Optional[str] = Unassigned(),
     hub_content_search_keywords: Optional[List[str]] = Unassigned(),
-    tags: Optional[List[Tag]] = Unassigned(),
+    tags: Optional[List[shapes.Tag]] = Unassigned(),
     session: Optional[Session] = None,
     region: Optional[str] = None,
 ) -> Optional["HubContent"]:
@@ -197,8 +197,8 @@ def load(
 def update(
     self,
     retain_all_variant_properties: Optional[bool] = Unassigned(),
-    exclude_retained_variant_properties: Optional[List[VariantProperty]] = Unassigned(),
-    deployment_config: Optional[DeploymentConfig] = Unassigned(),
+    exclude_retained_variant_properties: Optional[List[shapes.VariantProperty]] = Unassigned(),
+    deployment_config: Optional[shapes.DeploymentConfig] = Unassigned(),
     retain_deployment_config: Optional[bool] = Unassigned(),
 ) -> Optional["Endpoint"]:
     """
@@ -264,8 +264,8 @@ def update(
 def update(
     self,
     retain_all_variant_properties: Optional[bool] = Unassigned(),
-    exclude_retained_variant_properties: Optional[List[VariantProperty]] = Unassigned(),
-    deployment_config: Optional[DeploymentConfig] = Unassigned(),
+    exclude_retained_variant_properties: Optional[List[shapes.VariantProperty]] = Unassigned(),
+    deployment_config: Optional[shapes.DeploymentConfig] = Unassigned(),
     retain_deployment_config: Optional[bool] = Unassigned(),
 ) -> Optional["Endpoint"]:
     """
@@ -807,7 +807,7 @@ def invoke(
     session_id: Optional[str] = Unassigned(),
     session: Optional[Session] = None,
     region: Optional[str] = None,
-) -> Optional[InvokeEndpointOutput]:
+) -> Optional[shapes.InvokeEndpointOutput]:
     """
     After you deploy a model into production using Amazon SageMaker hosting services, your client applications use this API to get inferences from the model hosted at the specified endpoint.
     
@@ -827,7 +827,7 @@ def invoke(
         region: Region name.
     
     Returns:
-        InvokeEndpointOutput
+        shapes.InvokeEndpointOutput
     
     Raises:
         botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
@@ -873,7 +873,7 @@ def invoke(
     logger.debug(f"Response: {response}")
 
     transformed_response = transform(response, 'InvokeEndpointOutput')
-    return InvokeEndpointOutput(**transformed_response)
+    return shapes.InvokeEndpointOutput(**transformed_response)
 '''
         method = Method(
             **{
@@ -903,7 +903,7 @@ def invoke_async(
     invocation_timeout_seconds: Optional[int] = Unassigned(),
     session: Optional[Session] = None,
     region: Optional[str] = None,
-) -> Optional[InvokeEndpointAsyncOutput]:
+) -> Optional[shapes.InvokeEndpointAsyncOutput]:
     """
     After you deploy a model into production using Amazon SageMaker hosting services, your client applications use this API to get inferences from the model hosted at the specified endpoint in an asynchronous manner.
     
@@ -919,7 +919,7 @@ def invoke_async(
         region: Region name.
     
     Returns:
-        InvokeEndpointAsyncOutput
+        shapes.InvokeEndpointAsyncOutput
     
     Raises:
         botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
@@ -958,7 +958,7 @@ def invoke_async(
     logger.debug(f"Response: {response}")
 
     transformed_response = transform(response, 'InvokeEndpointAsyncOutput')
-    return InvokeEndpointAsyncOutput(**transformed_response)
+    return shapes.InvokeEndpointAsyncOutput(**transformed_response)
 '''
         method = Method(
             **{
@@ -990,7 +990,7 @@ def invoke_with_response_stream(
     session_id: Optional[str] = Unassigned(),
     session: Optional[Session] = None,
     region: Optional[str] = None,
-) -> Optional[InvokeEndpointWithResponseStreamOutput]:
+) -> Optional[shapes.InvokeEndpointWithResponseStreamOutput]:
     """
     Invokes a model at the specified endpoint to return the inference response as a stream.
     
@@ -1008,7 +1008,7 @@ def invoke_with_response_stream(
         region: Region name.
     
     Returns:
-        InvokeEndpointWithResponseStreamOutput
+        shapes.InvokeEndpointWithResponseStreamOutput
     
     Raises:
         botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
@@ -1052,7 +1052,7 @@ def invoke_with_response_stream(
     logger.debug(f"Response: {response}")
 
     transformed_response = transform(response, 'InvokeEndpointWithResponseStreamOutput')
-    return InvokeEndpointWithResponseStreamOutput(**transformed_response)
+    return shapes.InvokeEndpointWithResponseStreamOutput(**transformed_response)
 '''
         method = Method(
             **{
@@ -1253,7 +1253,7 @@ def get_node(
     node_id: str,
     session: Optional[Session] = None,
     region: Optional[str] = None,
-) -> Optional[ClusterNodeDetails]:
+) -> Optional[shapes.ClusterNodeDetails]:
     """
     Retrieves information of a node (also called a instance interchangeably) of a SageMaker HyperPod cluster.
     
@@ -1263,7 +1263,7 @@ def get_node(
         region: Region name.
     
     Returns:
-        ClusterNodeDetails
+        shapes.ClusterNodeDetails
     
     Raises:
         botocore.exceptions.ClientError: This exception is raised for AWS service related errors. 
@@ -1294,7 +1294,7 @@ def get_node(
     logger.debug(f"Response: {response}")
 
     transformed_response = transform(response, 'DescribeClusterNodeResponse')
-    return ClusterNodeDetails(**transformed_response)
+    return shapes.ClusterNodeDetails(**transformed_response)
 '''
         method = Method(
             **{
@@ -1315,7 +1315,7 @@ def get_node(
 @Base.add_validate_call
 def update_weights_and_capacities(
     self,
-    desired_weights_and_capacities: List[DesiredWeightAndCapacity],
+    desired_weights_and_capacities: List[shapes.DesiredWeightAndCapacity],
     session: Optional[Session] = None,
     region: Optional[str] = None,
 ) -> None:
@@ -1381,7 +1381,7 @@ def get_all_training_jobs(
     sort_by: Optional[str] = Unassigned(),
     sort_order: Optional[str] = Unassigned(),    session: Optional[Session] = None,
     region: Optional[str] = None,
-) -> ResourceIterator[HyperParameterTrainingJobSummary]:
+) -> ResourceIterator[shapes.HyperParameterTrainingJobSummary]:
     """
     Gets a list of TrainingJobSummary objects that describe the training jobs that a hyperparameter tuning job launched.
     
@@ -1429,7 +1429,7 @@ def get_all_training_jobs(
         list_method='list_training_jobs_for_hyper_parameter_tuning_job',
         summaries_key='TrainingJobSummaries',
         summary_name='HyperParameterTrainingJobSummary',
-        resource_cls=HyperParameterTrainingJobSummary,
+        resource_cls=shapes.HyperParameterTrainingJobSummary,
         list_method_kwargs=operation_input_args
     )
 '''
@@ -1877,9 +1877,9 @@ def wait_for_delete(
 @Base.add_validate_call
 def put_record(
     self,
-    record: List[FeatureValue],
+    record: List[shapes.FeatureValue],
     target_stores: Optional[List[str]] = Unassigned(),
-    ttl_duration: Optional[TtlDuration] = Unassigned(),
+    ttl_duration: Optional[shapes.TtlDuration] = Unassigned(),
     session: Optional[Session] = None,
     region: Optional[str] = None,
 ) -> None:

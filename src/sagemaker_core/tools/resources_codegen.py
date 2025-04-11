@@ -177,7 +177,7 @@ class ResourcesCodeGen:
             "import datetime",
             "import time",
             "import functools",
-            "from pydantic import validate_call",
+            "from pydantic import validate_call, ConfigDict, BaseModel",
             "from typing import Dict, List, Literal, Optional, Union, Any\n"
             "from boto3.session import Session",
             "from rich.console import Group",
@@ -192,8 +192,8 @@ class ResourcesCodeGen:
             "snake_to_pascal, pascal_to_snake, is_not_primitive, is_not_str_dict, is_primitive_list, serialize",
             "from sagemaker_core.main.intelligent_defaults_helper import load_default_configs_for_resource_name, get_config_value",
             "from sagemaker_core.main.logs import MultiLogStreamHandler",
-            "from sagemaker_core.main.shapes import *",
             "from sagemaker_core.main.exceptions import *",
+            "import sagemaker_core.main.shapes as shapes",
         ]
 
         formated_imports = "\n".join(imports)
@@ -1388,9 +1388,12 @@ class ResourcesCodeGen:
                 return_type_conversion = "cls"
                 return_string = f"Returns:\n" f"    {method.resource_name}\n"
             else:
-                return_type = f"Optional[{method.return_type}]"
                 return_type_conversion = method.return_type
-                return_string = f"Returns:\n" f"    {method.return_type}\n"
+                if method.resource_name != method.return_type and method.return_type in self.shapes:
+                    return_type_conversion = f"shapes.{method.return_type}"
+                return_type = f"Optional[{return_type_conversion}]"
+
+                return_string = f"Returns:\n" f"    {return_type_conversion}\n"
             operation_output_shape = operation_metadata["output"]["shape"]
             deserialize_response = DESERIALIZE_RESPONSE_TEMPLATE.format(
                 operation_output_shape=operation_output_shape,
@@ -1471,10 +1474,14 @@ class ResourcesCodeGen:
         method_args += add_indent("session: Optional[Session] = None,\n", 4)
         method_args += add_indent("region: Optional[str] = None,", 4)
 
+        iterator_return_type = method.return_type
+        if method.resource_name != method.return_type and method.return_type in self.shapes:
+            iterator_return_type = f"shapes.{method.return_type}"
+
         if method.return_type == method.resource_name:
-            return_type = f'ResourceIterator["{method.resource_name}"]'
+            method_return_type = f'ResourceIterator["{method.resource_name}"]'
         else:
-            return_type = f"ResourceIterator[{method.return_type}]"
+            method_return_type = f"ResourceIterator[{iterator_return_type}]"
         return_string = f"Returns:\n" f"    Iterator for listed {method.return_type}.\n"
 
         get_list_operation_output_shape = operation_metadata["output"]["shape"]
@@ -1497,7 +1504,7 @@ class ResourcesCodeGen:
             f"list_method='{list_method}'",
             f"summaries_key='{summaries_key}'",
             f"summary_name='{summary_name}'",
-            f"resource_cls={method.return_type}",
+            f"resource_cls={iterator_return_type}",
             "list_method_kwargs=operation_input_args",
         ]
 
@@ -1527,7 +1534,7 @@ class ResourcesCodeGen:
             decorator=decorator,
             method_name=method.method_name,
             method_args=method_args,
-            return_type=return_type,
+            return_type=method_return_type,
             serialize_operation_input=serialize_operation_input,
             initialize_client=initialize_client,
             call_operation_api="",
@@ -1901,6 +1908,8 @@ class ResourcesCodeGen:
             new_val = value.split("=")[0].strip()
             if new_val.startswith("Optional"):
                 new_val = new_val.replace("Optional[", "")[:-1]
+            if new_val.startswith("shapes."):
+                new_val = new_val.replace("shapes.", "")
             cleaned_class_attributes[key] = new_val
         return cleaned_class_attributes
 
