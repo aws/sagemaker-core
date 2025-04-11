@@ -148,7 +148,7 @@ class ShapesCodeGen:
         """
         class_name = shape
         init_data = self.shapes_extractor.generate_data_shape_string_body(
-            shape, self.resources_plan
+            shape, self.resources_plan, add_shapes_prefix=False
         )
         try:
             data_class_members = add_indent(init_data, 4)

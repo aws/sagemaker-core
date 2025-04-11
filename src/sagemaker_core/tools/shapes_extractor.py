@@ -117,19 +117,21 @@ class ShapesExtractor:
                 _dag[shape]["value_type"] = _all_shapes[_map_value_shape]["type"]
         return _dag
 
-    def _evaluate_list_type(self, member_shape):
+    def _evaluate_list_type(self, member_shape, add_shapes_prefix=True):
         list_shape_name = member_shape["member"]["shape"]
         list_shape_member = self.combined_shapes[list_shape_name]
         list_shape_type = list_shape_member["type"]
         if list_shape_type == "list":
-            member_type = f"List[{self._evaluate_list_type(list_shape_member)}]"
+            member_type = f"List[{self._evaluate_list_type(list_shape_member, add_shapes_prefix)}]"
         elif list_shape_type == "map":
-            member_type = f"List[{self._evaluate_map_type(list_shape_member)}]"
+            member_type = f"List[{self._evaluate_map_type(list_shape_member, add_shapes_prefix)}]"
         elif list_shape_type == "structure":
             # handling an edge case of nested structure
             if list_shape_name == "SearchExpression":
                 member_type = f"List['{list_shape_name}']"
             else:
+                if add_shapes_prefix:
+                    list_shape_name = f"shapes.{list_shape_name}"
                 member_type = f"List[{list_shape_name}]"
         elif list_shape_type in BASIC_JSON_TYPES_TO_PYTHON_TYPES.keys():
             member_type = f"List[{BASIC_JSON_TYPES_TO_PYTHON_TYPES[list_shape_type]}]"
@@ -139,7 +141,7 @@ class ShapesExtractor:
             )
         return member_type
 
-    def _evaluate_map_type(self, member_shape):
+    def _evaluate_map_type(self, member_shape, add_shapes_prefix=True):
         map_key_shape_name = member_shape["key"]["shape"]
         map_value_shape_name = member_shape["value"]["shape"]
         map_key_shape = self.combined_shapes[map_key_shape_name]
@@ -152,6 +154,8 @@ class ShapesExtractor:
                 "Unhandled map shape key type encountered, needs extra logic to handle this"
             )
         if map_value_shape_type == "structure":
+            if add_shapes_prefix:
+                map_value_shape_name = f"shapes.{map_value_shape_name}"
             member_type = (
                 f"Dict[{BASIC_JSON_TYPES_TO_PYTHON_TYPES[map_key_shape_type]}, "
                 f"{map_value_shape_name}]"
@@ -159,12 +163,12 @@ class ShapesExtractor:
         elif map_value_shape_type == "list":
             member_type = (
                 f"Dict[{BASIC_JSON_TYPES_TO_PYTHON_TYPES[map_key_shape_type]}, "
-                f"{self._evaluate_list_type(map_value_shape)}]"
+                f"{self._evaluate_list_type(map_value_shape, add_shapes_prefix)}]"
             )
         elif map_value_shape_type == "map":
             member_type = (
                 f"Dict[{BASIC_JSON_TYPES_TO_PYTHON_TYPES[map_key_shape_type]}, "
-                f"{self._evaluate_map_type(map_value_shape)}]"
+                f"{self._evaluate_map_type(map_value_shape, add_shapes_prefix)}]"
             )
         else:
             member_type = (
@@ -174,9 +178,13 @@ class ShapesExtractor:
         return member_type
 
     def generate_data_shape_members_and_string_body(
-        self, shape, resource_plan: Optional[Any] = None, required_override=()
+        self,
+        shape,
+        resource_plan: Optional[Any] = None,
+        required_override=(),
+        add_shapes_prefix=True,
     ):
-        shape_members = self.generate_shape_members(shape, required_override)
+        shape_members = self.generate_shape_members(shape, required_override, add_shapes_prefix)
         resource_names = None
         if resource_plan is not None:
             resource_names = [row["resource_name"] for _, row in resource_plan.iterrows()]
@@ -199,19 +207,24 @@ class ShapesExtractor:
                 init_data_body += f"{attr}: {value}\n"
         return shape_members, init_data_body
 
-    def generate_data_shape_string_body(self, shape, resource_plan, required_override=()):
+    def generate_data_shape_string_body(
+        self, shape, resource_plan, required_override=(), add_shapes_prefix=True
+    ):
         return self.generate_data_shape_members_and_string_body(
-            shape, resource_plan, required_override
+            shape, resource_plan, required_override, add_shapes_prefix
         )[1]
 
-    def generate_data_shape_members(self, shape, resource_plan, required_override=()):
+    def generate_data_shape_members(
+        self, shape, resource_plan, required_override=(), add_shapes_prefix=True
+    ):
         return self.generate_data_shape_members_and_string_body(
-            shape, resource_plan, required_override
+            shape, resource_plan, required_override, add_shapes_prefix
         )[0]
 
     @lru_cache
-    def generate_shape_members(self, shape, required_override=()):
-        shape_dict = self.combined_shapes[shape]
+    def generate_shape_members(self, shape, required_override=(), add_shapes_prefix=True):
+        shape_key = shape.split("shapes.")[1] if shape.startswith("shapes.") else shape
+        shape_dict = self.combined_shapes[shape_key]
         members = shape_dict["members"]
         required_args = list(required_override) or shape_dict.get("required", [])
         init_data_body = {}
@@ -224,11 +237,13 @@ class ShapesExtractor:
                 member_shape = self.combined_shapes[member_shape_name]
                 member_shape_type = member_shape["type"]
                 if member_shape_type == "structure":
-                    member_type = member_shape_name
+                    if add_shapes_prefix:
+                        member_shape_name = f"shapes.{member_shape_name}"
+                    member_type = f"{member_shape_name}"
                 elif member_shape_type == "list":
-                    member_type = self._evaluate_list_type(member_shape)
+                    member_type = self._evaluate_list_type(member_shape, add_shapes_prefix)
                 elif member_shape_type == "map":
-                    member_type = self._evaluate_map_type(member_shape)
+                    member_type = self._evaluate_map_type(member_shape, add_shapes_prefix)
                 else:
                     # Shape is a simple type like string
                     member_type = BASIC_JSON_TYPES_TO_PYTHON_TYPES[member_shape_type]
