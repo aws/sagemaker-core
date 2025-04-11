@@ -75,7 +75,9 @@ class Base(BaseModel):
                         configurable_attribute, resource_defaults, global_defaults
                     ):
                         resource_name = snake_to_pascal(configurable_attribute)
-                        class_object = globals()[resource_name]
+                        class_object = getattr(shapes, resource_name, None) or globals().get(
+                            resource_name
+                        )
                         kwargs[configurable_attribute] = class_object(**config_value)
         except BaseException as e:
             logger.debug("Could not load Default Configs. Continuing.", exc_info=True)
@@ -121,7 +123,9 @@ class Base(BaseModel):
     @staticmethod
     def _get_chained_attribute(item_value: Any):
         resource_name = type(item_value).__name__
-        class_object = globals()[resource_name]
+        class_object = globals().get(resource_name) or getattr(shapes, resource_name, None)
+        if class_object is None:
+            return item_value
         return class_object(
             **Base.populate_chained_attributes(
                 resource_name=resource_name, operation_input_args=vars(item_value)
