@@ -183,6 +183,8 @@ def get_textual_rich_logger(name: str, log_level: str = "INFO") -> logging.Logge
     enable_textual_rich_console_and_traceback()
     handler = get_rich_handler()
     logger = logging.getLogger(name)
+    for handler in logger.handlers:
+	    logger.removeHandler(handler)
     logger.addHandler(handler)
     logger.setLevel(getattr(logging, log_level))
 
