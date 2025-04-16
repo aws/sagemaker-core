@@ -184,7 +184,7 @@ def get_textual_rich_logger(name: str, log_level: str = "INFO") -> logging.Logge
     handler = get_rich_handler()
     logger = logging.getLogger(name)
     for handler in logger.handlers:
-	    logger.removeHandler(handler)
+		logger.removeHandler(handler)
     logger.addHandler(handler)
     logger.setLevel(getattr(logging, log_level))
 
