@@ -12,7 +12,7 @@
 # language governing permissions and limitations under the License.
 import datetime
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from typing import List, Dict, Optional, Any, Union
 from sagemaker_core.main.utils import Unassigned
 
@@ -1013,7 +1013,7 @@ class StoppingCondition(Base):
     ----------------------
     max_runtime_in_seconds: The maximum length of time, in seconds, that a training or compilation job can run before it is stopped. For compilation jobs, if the job does not complete during this time, a TimeOut error is generated. We recommend starting with 900 seconds and increasing as necessary based on your model. For all other jobs, if the job does not complete during this time, SageMaker ends the job. When RetryStrategy is specified in the job request, MaxRuntimeInSeconds specifies the maximum time for all of the attempts in total, not each individual attempt. The default value is 1 day. The maximum value is 28 days. The maximum time that a TrainingJob can run in total, including any time spent publishing metrics or archiving and uploading models after it has been stopped, is 30 days.
     max_wait_time_in_seconds: The maximum length of time, in seconds, that a managed Spot training job has to complete. It is the amount of time spent waiting for Spot capacity plus the amount of time the job can run. It must be equal to or greater than MaxRuntimeInSeconds. If the job does not complete during this time, SageMaker ends the job. When RetryStrategy is specified in the job request, MaxWaitTimeInSeconds specifies the maximum time for all of the attempts in total, not each individual attempt.
-    max_pending_time_in_seconds: The maximum length of time, in seconds, that a training or compilation job can be pending before it is stopped.
+    max_pending_time_in_seconds: The maximum length of time, in seconds, that a training or compilation job can be pending before it is stopped.  When working with training jobs that use capacity from training plans, not all Pending job states count against the MaxPendingTimeInSeconds limit. The following scenarios do not increment the MaxPendingTimeInSeconds counter:   The plan is in a Scheduled state: Jobs queued (in Pending status) before a plan's start date (waiting for scheduled start time)   Between capacity reservations: Jobs temporarily back to Pending status between two capacity reservation periods    MaxPendingTimeInSeconds only increments when jobs are actively waiting for capacity in an Active plan.
     """
 
     max_runtime_in_seconds: Optional[int] = Unassigned()
@@ -2543,12 +2543,12 @@ class MonitoringDatasetFormat(Base):
     Attributes
     ----------------------
     csv: The CSV dataset used in the monitoring job.
-    json: The JSON dataset used in the monitoring job
+    json_format: The JSON dataset used in the monitoring job
     parquet: The Parquet dataset used in the monitoring job
     """
 
     csv: Optional[MonitoringCsvDatasetFormat] = Unassigned()
-    json: Optional[MonitoringJsonDatasetFormat] = Unassigned()
+    json_format: Optional[MonitoringJsonDatasetFormat] = Field(default=Unassigned(), alias="json")
     parquet: Optional[MonitoringParquetDatasetFormat] = Unassigned()
 
 
@@ -4877,7 +4877,7 @@ class ProductionVariant(Base):
     enable_ssm_access:  You can use this parameter to turn on native Amazon Web Services Systems Manager (SSM) access for a production variant behind an endpoint. By default, SSM access is disabled for all production variants behind an endpoint. You can turn on or turn off SSM access for a production variant behind an existing endpoint by creating a new endpoint configuration and calling UpdateEndpoint.
     managed_instance_scaling: Settings that control the range in the number of instances that the endpoint provisions as it scales up or down to accommodate traffic.
     routing_config: Settings that control how the endpoint routes incoming traffic to the instances that the endpoint hosts.
-    inference_ami_version: Specifies an option from a collection of preconfigured Amazon Machine Image (AMI) images. Each image is configured by Amazon Web Services with a set of software and driver versions. Amazon Web Services optimizes these configurations for different machine learning workloads. By selecting an AMI version, you can ensure that your inference environment is compatible with specific software requirements, such as CUDA driver versions, Linux kernel versions, or Amazon Web Services Neuron driver versions. The AMI version names, and their configurations, are the following:  al2-ami-sagemaker-inference-gpu-2    Accelerator: GPU   NVIDIA driver version: 535   CUDA version: 12.2    al2-ami-sagemaker-inference-gpu-2-1    Accelerator: GPU   NVIDIA driver version: 535   CUDA version: 12.2   NVIDIA Container Toolkit with disabled CUDA-compat mounting    al2-ami-sagemaker-inference-gpu-3-1    Accelerator: GPU   NVIDIA driver version: 550   CUDA version: 12.4   NVIDIA Container Toolkit with disabled CUDA-compat mounting
+    inference_ami_version: Specifies an option from a collection of preconfigured Amazon Machine Image (AMI) images. Each image is configured by Amazon Web Services with a set of software and driver versions. Amazon Web Services optimizes these configurations for different machine learning workloads. By selecting an AMI version, you can ensure that your inference environment is compatible with specific software requirements, such as CUDA driver versions, Linux kernel versions, or Amazon Web Services Neuron driver versions. The AMI version names, and their configurations, are the following:  al2-ami-sagemaker-inference-gpu-2    Accelerator: GPU   NVIDIA driver version: 535   CUDA version: 12.2    al2-ami-sagemaker-inference-gpu-2-1    Accelerator: GPU   NVIDIA driver version: 535   CUDA version: 12.2   NVIDIA Container Toolkit with disabled CUDA-compat mounting    al2-ami-sagemaker-inference-gpu-3-1    Accelerator: GPU   NVIDIA driver version: 550   CUDA version: 12.4   NVIDIA Container Toolkit with disabled CUDA-compat mounting    al2-ami-sagemaker-inference-neuron-2    Accelerator: Inferentia2 and Trainium   Neuron driver version: 2.19
     """
 
     variant_name: str
@@ -10680,6 +10680,7 @@ class ModelPackageSummary(Base):
     creation_time: A timestamp that shows when the model package was created.
     model_package_status: The overall status of the model package.
     model_approval_status: The approval status of the model. This can be one of the following values.    APPROVED - The model is approved    REJECTED - The model is rejected.    PENDING_MANUAL_APPROVAL - The model is waiting for manual approval.
+    model_life_cycle
     """
 
     model_package_arn: str
@@ -10690,6 +10691,7 @@ class ModelPackageSummary(Base):
     model_package_version: Optional[int] = Unassigned()
     model_package_description: Optional[str] = Unassigned()
     model_approval_status: Optional[str] = Unassigned()
+    model_life_cycle: Optional[ModelLifeCycle] = Unassigned()
 
 
 class ModelSummary(Base):

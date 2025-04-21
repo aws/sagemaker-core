@@ -10885,6 +10885,7 @@ SHAPE_DAG = {
             {"name": "CreationTime", "shape": "CreationTime", "type": "timestamp"},
             {"name": "ModelPackageStatus", "shape": "ModelPackageStatus", "type": "string"},
             {"name": "ModelApprovalStatus", "shape": "ModelApprovalStatus", "type": "string"},
+            {"name": "ModelLifeCycle", "shape": "ModelLifeCycle", "type": "structure"},
         ],
         "type": "structure",
     },
@@ -11153,7 +11154,12 @@ SHAPE_DAG = {
     "MonitoringDatasetFormat": {
         "members": [
             {"name": "Csv", "shape": "MonitoringCsvDatasetFormat", "type": "structure"},
-            {"name": "Json", "shape": "MonitoringJsonDatasetFormat", "type": "structure"},
+            {
+                "alias": "json",
+                "name": "JsonFormat",
+                "shape": "MonitoringJsonDatasetFormat",
+                "type": "structure",
+            },
             {"name": "Parquet", "shape": "MonitoringParquetDatasetFormat", "type": "structure"},
         ],
         "type": "structure",
