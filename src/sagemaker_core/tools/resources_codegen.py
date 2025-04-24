@@ -1754,20 +1754,31 @@ class ResourcesCodeGen:
             get_operation_required_input = []
 
         custom_key_mapping_str = ""
+        custom_key_mapping = {}
         if any(member not in summary_members for member in get_operation_required_input):
-            if "MonitoringJobDefinitionSummary" == summary_name:
+            if summary_name == "MonitoringJobDefinitionSummary":
                 custom_key_mapping = {
                     "monitoring_job_definition_name": "job_definition_name",
                     "monitoring_job_definition_arn": "job_definition_arn",
                 }
-                custom_key_mapping_str = f"custom_key_mapping = {json.dumps(custom_key_mapping)}"
-                custom_key_mapping_str = add_indent(custom_key_mapping_str, 4)
+            elif summary_name == "HubContentInfo":
+                custom_key_mapping = {
+                    "HubContentArn": "HubName",
+                }
+            elif summary_name == "ImageVersion":
+                custom_key_mapping = {
+                    "ImageVersionArn": "ImageName",
+                }
             else:
                 log.warning(
                     f"Resource {resource_name} summaries do not have required members to create object instance. Resource may require custom key mapping for get_all().\n"
                     f"List {summary_name} Members: {summary_members}, Object Required Members: {get_operation_required_input}"
                 )
                 return ""
+
+            custom_key_mapping_str = add_indent(
+                f"custom_key_mapping = {json.dumps(custom_key_mapping)}", 4
+            )
 
         resource_iterator_args_list = [
             "client=client",
