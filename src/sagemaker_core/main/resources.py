@@ -26151,10 +26151,10 @@ class Project(Base):
         project_arn: The Amazon Resource Name (ARN) of the project.
         project_name: The name of the project.
         project_id: The ID of the project.
-        service_catalog_provisioning_details: Information used to provision a service catalog product. For information, see What is Amazon Web Services Service Catalog.
         project_status: The status of the project.
         creation_time: The time when the project was created.
         project_description: The description of the project.
+        service_catalog_provisioning_details: Information used to provision a service catalog product. For information, see What is Amazon Web Services Service Catalog.
         service_catalog_provisioned_product_details: Information about a provisioned service catalog product.
         created_by:
         last_modified_time: The timestamp when project was last modified.
@@ -26199,8 +26199,10 @@ class Project(Base):
     def create(
         cls,
         project_name: str,
-        service_catalog_provisioning_details: shapes.ServiceCatalogProvisioningDetails,
         project_description: Optional[str] = Unassigned(),
+        service_catalog_provisioning_details: Optional[
+            shapes.ServiceCatalogProvisioningDetails
+        ] = Unassigned(),
         tags: Optional[List[shapes.Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
@@ -26210,8 +26212,8 @@ class Project(Base):
 
         Parameters:
             project_name: The name of the project.
-            service_catalog_provisioning_details: The product ID and provisioning artifact ID to provision a service catalog. The provisioning artifact ID will default to the latest provisioning artifact ID of the product, if you don't provide the provisioning artifact ID. For more information, see What is Amazon Web Services Service Catalog.
             project_description: A description for the project.
+            service_catalog_provisioning_details: The product ID and provisioning artifact ID to provision a service catalog. The provisioning artifact ID will default to the latest provisioning artifact ID of the product, if you don't provide the provisioning artifact ID. For more information, see What is Amazon Web Services Service Catalog.
             tags: An array of key-value pairs that you want to use to organize and track your Amazon Web Services resource costs. For more information, see Tagging Amazon Web Services resources in the Amazon Web Services General Reference Guide.
             session: Boto3 session.
             region: Region name.
