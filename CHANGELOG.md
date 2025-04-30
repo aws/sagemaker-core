@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.0.30 (2025-04-30)
+
+ * Daily Sync with Botocore v1.38.5 on 2025/04/30 (#292)
+ * Daily Sync with Botocore v1.37.37 on 2025/04/21 (#290)
+ * Fix logging behavior (#287)
+ * fix: explicit reference of shapes in resources.py (#285)
+ * fix: Changes to address the field name error: json shadows a BaseModel attribute (#270)
+ * fix: include version file in the distribution (#249)
+
 ## v1.0.29 (2025-04-10)
 
  * Daily Sync with Botocore v1.37.31 on 2025/04/10 (#284)
