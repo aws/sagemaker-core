@@ -512,8 +512,8 @@ def get_all(
     operation_input_args = {{
 {operation_input_args}
     }}
-{custom_key_mapping}
 {extract_name_mapping}
+{custom_key_mapping}
     # serialize the input request
     operation_input_args = serialize(operation_input_args)
     logger.debug(f"Serialized input request: {{operation_input_args}}")
@@ -543,8 +543,8 @@ def get_all(
 
     """
     client = Base.get_sagemaker_client(session=session, region_name=region, service_name="{service_name}")
-{custom_key_mapping}
 {extract_name_mapping}
+{custom_key_mapping}
     return ResourceIterator(
 {resource_iterator_args}
     )

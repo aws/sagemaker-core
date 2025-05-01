@@ -6467,11 +6467,11 @@ class DataQualityJobDefinition(Base):
             "CreationTimeBefore": creation_time_before,
             "CreationTimeAfter": creation_time_after,
         }
+
         custom_key_mapping = {
             "monitoring_job_definition_name": "job_definition_name",
             "monitoring_job_definition_arn": "job_definition_arn",
         }
-
         # serialize the input request
         operation_input_args = serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
@@ -12672,8 +12672,8 @@ class HubContent(Base):
             "SortBy": sort_by,
             "SortOrder": sort_order,
         }
-
         extract_name_mapping = {"HubContentArn": ["hub-content/", "HubName"]}
+
         # serialize the input request
         operation_input_args = serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
@@ -15049,8 +15049,8 @@ class ImageVersion(Base):
             "SortBy": sort_by,
             "SortOrder": sort_order,
         }
-
         extract_name_mapping = {"ImageVersionArn": ["image-version/", "ImageName"]}
+
         # serialize the input request
         operation_input_args = serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
@@ -18654,11 +18654,11 @@ class ModelBiasJobDefinition(Base):
             "CreationTimeBefore": creation_time_before,
             "CreationTimeAfter": creation_time_after,
         }
+
         custom_key_mapping = {
             "monitoring_job_definition_name": "job_definition_name",
             "monitoring_job_definition_arn": "job_definition_arn",
         }
-
         # serialize the input request
         operation_input_args = serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
@@ -19884,11 +19884,11 @@ class ModelExplainabilityJobDefinition(Base):
             "CreationTimeBefore": creation_time_before,
             "CreationTimeAfter": creation_time_after,
         }
+
         custom_key_mapping = {
             "monitoring_job_definition_name": "job_definition_name",
             "monitoring_job_definition_arn": "job_definition_arn",
         }
-
         # serialize the input request
         operation_input_args = serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
@@ -21502,11 +21502,11 @@ class ModelQualityJobDefinition(Base):
             "CreationTimeBefore": creation_time_before,
             "CreationTimeAfter": creation_time_after,
         }
+
         custom_key_mapping = {
             "monitoring_job_definition_name": "job_definition_name",
             "monitoring_job_definition_arn": "job_definition_arn",
         }
-
         # serialize the input request
         operation_input_args = serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
