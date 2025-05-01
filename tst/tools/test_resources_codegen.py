@@ -1122,7 +1122,8 @@ def get_all(
         'SpaceNameEquals': space_name_equals,
     }
 
-    
+
+
     # serialize the input request
     operation_input_args = serialize(operation_input_args)
     logger.debug(f"Serialized input request: {operation_input_args}")
@@ -1160,7 +1161,9 @@ def get_all(
     """
     client = Base.get_sagemaker_client(session=session, region_name=region, service_name="sagemaker")
 
-    
+
+
+
     return ResourceIterator(
         client=client,
         list_method='list_domains',
@@ -1228,6 +1231,7 @@ def get_all(
     }
 
     custom_key_mapping = {"monitoring_job_definition_name": "job_definition_name", "monitoring_job_definition_arn": "job_definition_arn"}
+
     # serialize the input request
     operation_input_args = serialize(operation_input_args)
     logger.debug(f"Serialized input request: {operation_input_args}")
