@@ -1765,13 +1765,15 @@ class ResourcesCodeGen:
                 }
             elif summary_name == "HubContentInfo":
                 # HubContentArn -- arn:<partition>:sagemaker:<region>:<account-id>:hub-content/<hub-name>/<type>/<name>/<version>
+                # {source key from input: (target label in arn, target key in output)}
                 extract_name_mapping = {
-                    "HubContentArn": ("hub-content/", "HubName"),
+                    "hub_content_arn": ("hub-content/", "hub_name"),
                 }
             elif summary_name == "ImageVersion":
                 # ImageVersionArn -- arn:aws:sagemaker:<region>:<account>:image-version/<image-name>/<version-number>
+                # {source key from input: (target label in arn, target key in output)}
                 extract_name_mapping = {
-                    "ImageVersionArn": ("image-version/", "ImageName"),
+                    "image_version_arn": ("image-version/", "image_name"),
                 }
             else:
                 log.warning(

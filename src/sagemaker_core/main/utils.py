@@ -436,9 +436,10 @@ class ResourceIterator(Generic[T]):
                 if self.custom_key_mapping:
                     init_data = {self.custom_key_mapping.get(k, k): v for k, v in init_data.items()}
 
+                # Extract name from arn. Currently implemented for HubContent and ImageVersion
                 if self.extract_name_mapping:
                     for arn, target in self.extract_name_mapping.items():
-                        name = arn.split(target[0])[1].split("/")[0]
+                        name = init_data[arn].split(target[0])[1].split("/")[0]
                         init_data.update({target[1]: name})
 
                 # Filter out the fields that are not in the resource class

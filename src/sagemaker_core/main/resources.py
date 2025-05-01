@@ -6472,6 +6472,7 @@ class DataQualityJobDefinition(Base):
             "monitoring_job_definition_name": "job_definition_name",
             "monitoring_job_definition_arn": "job_definition_arn",
         }
+
         # serialize the input request
         operation_input_args = serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
@@ -12672,7 +12673,7 @@ class HubContent(Base):
             "SortBy": sort_by,
             "SortOrder": sort_order,
         }
-        extract_name_mapping = {"HubContentArn": ["hub-content/", "HubName"]}
+        extract_name_mapping = {"hub_content_arn": ["hub-content/", "hub_name"]}
 
         # serialize the input request
         operation_input_args = serialize(operation_input_args)
@@ -15049,7 +15050,7 @@ class ImageVersion(Base):
             "SortBy": sort_by,
             "SortOrder": sort_order,
         }
-        extract_name_mapping = {"ImageVersionArn": ["image-version/", "ImageName"]}
+        extract_name_mapping = {"image_version_arn": ["image-version/", "image_name"]}
 
         # serialize the input request
         operation_input_args = serialize(operation_input_args)
@@ -18659,6 +18660,7 @@ class ModelBiasJobDefinition(Base):
             "monitoring_job_definition_name": "job_definition_name",
             "monitoring_job_definition_arn": "job_definition_arn",
         }
+
         # serialize the input request
         operation_input_args = serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
@@ -19889,6 +19891,7 @@ class ModelExplainabilityJobDefinition(Base):
             "monitoring_job_definition_name": "job_definition_name",
             "monitoring_job_definition_arn": "job_definition_arn",
         }
+
         # serialize the input request
         operation_input_args = serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
@@ -21507,6 +21510,7 @@ class ModelQualityJobDefinition(Base):
             "monitoring_job_definition_name": "job_definition_name",
             "monitoring_job_definition_arn": "job_definition_arn",
         }
+
         # serialize the input request
         operation_input_args = serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
