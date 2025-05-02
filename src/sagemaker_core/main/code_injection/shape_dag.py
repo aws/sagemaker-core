@@ -124,6 +124,10 @@ SHAPE_DAG = {
         "members": [{"name": "AlarmName", "shape": "AlarmName", "type": "string"}],
         "type": "structure",
     },
+    "AlarmDetails": {
+        "members": [{"name": "AlarmName", "shape": "AlarmName", "type": "string"}],
+        "type": "structure",
+    },
     "AlarmList": {"member_shape": "Alarm", "member_type": "structure", "type": "list"},
     "AlgorithmSpecification": {
         "members": [
@@ -734,6 +738,11 @@ SHAPE_DAG = {
         "type": "structure",
     },
     "AutoParameters": {"member_shape": "AutoParameter", "member_type": "structure", "type": "list"},
+    "AutoRollbackAlarms": {
+        "member_shape": "AlarmDetails",
+        "member_type": "structure",
+        "type": "list",
+    },
     "AutoRollbackConfig": {
         "members": [{"name": "Alarms", "shape": "AlarmList", "type": "list"}],
         "type": "structure",
@@ -1069,6 +1078,13 @@ SHAPE_DAG = {
         ],
         "type": "structure",
     },
+    "CapacitySizeConfig": {
+        "members": [
+            {"name": "Type", "shape": "NodeUnavailabilityType", "type": "string"},
+            {"name": "Value", "shape": "NodeUnavailabilityValue", "type": "integer"},
+        ],
+        "type": "structure",
+    },
     "CaptureContentTypeHeader": {
         "members": [
             {"name": "CsvContentTypes", "shape": "CsvContentTypes", "type": "list"},
@@ -1272,6 +1288,11 @@ SHAPE_DAG = {
                 "type": "string",
             },
             {"name": "OverrideVpcConfig", "shape": "VpcConfig", "type": "structure"},
+            {
+                "name": "ScheduledUpdateConfig",
+                "shape": "ScheduledUpdateConfig",
+                "type": "structure",
+            },
         ],
         "type": "structure",
     },
@@ -1296,6 +1317,11 @@ SHAPE_DAG = {
             {"name": "OnStartDeepHealthChecks", "shape": "OnStartDeepHealthChecks", "type": "list"},
             {"name": "TrainingPlanArn", "shape": "TrainingPlanArn", "type": "string"},
             {"name": "OverrideVpcConfig", "shape": "VpcConfig", "type": "structure"},
+            {
+                "name": "ScheduledUpdateConfig",
+                "shape": "ScheduledUpdateConfig",
+                "type": "structure",
+            },
         ],
         "type": "structure",
     },
@@ -1352,6 +1378,7 @@ SHAPE_DAG = {
             },
             {"name": "InstanceType", "shape": "ClusterInstanceType", "type": "string"},
             {"name": "LaunchTime", "shape": "Timestamp", "type": "timestamp"},
+            {"name": "LastSoftwareUpdateTime", "shape": "Timestamp", "type": "timestamp"},
             {"name": "LifeCycleConfig", "shape": "ClusterLifeCycleConfig", "type": "structure"},
             {"name": "OverrideVpcConfig", "shape": "VpcConfig", "type": "structure"},
             {"name": "ThreadsPerCore", "shape": "ClusterThreadsPerCore", "type": "integer"},
@@ -1379,6 +1406,7 @@ SHAPE_DAG = {
             {"name": "InstanceId", "shape": "String", "type": "string"},
             {"name": "InstanceType", "shape": "ClusterInstanceType", "type": "string"},
             {"name": "LaunchTime", "shape": "Timestamp", "type": "timestamp"},
+            {"name": "LastSoftwareUpdateTime", "shape": "Timestamp", "type": "timestamp"},
             {
                 "name": "InstanceStatus",
                 "shape": "ClusterInstanceStatusDetails",
@@ -3886,6 +3914,22 @@ SHAPE_DAG = {
                 "shape": "AutoRollbackConfig",
                 "type": "structure",
             },
+        ],
+        "type": "structure",
+    },
+    "DeploymentConfiguration": {
+        "members": [
+            {
+                "name": "RollingUpdatePolicy",
+                "shape": "RollingDeploymentPolicy",
+                "type": "structure",
+            },
+            {
+                "name": "WaitIntervalInSeconds",
+                "shape": "WaitTimeIntervalInSeconds",
+                "type": "integer",
+            },
+            {"name": "AutoRollbackConfiguration", "shape": "AutoRollbackAlarms", "type": "list"},
         ],
         "type": "structure",
     },
@@ -13174,6 +13218,17 @@ SHAPE_DAG = {
         ],
         "type": "structure",
     },
+    "RollingDeploymentPolicy": {
+        "members": [
+            {"name": "MaximumBatchSize", "shape": "CapacitySizeConfig", "type": "structure"},
+            {
+                "name": "RollbackMaximumBatchSize",
+                "shape": "CapacitySizeConfig",
+                "type": "structure",
+            },
+        ],
+        "type": "structure",
+    },
     "RollingUpdatePolicy": {
         "members": [
             {"name": "MaximumBatchSize", "shape": "CapacitySize", "type": "structure"},
@@ -13277,6 +13332,13 @@ SHAPE_DAG = {
             {"name": "ScheduleExpression", "shape": "ScheduleExpression", "type": "string"},
             {"name": "DataAnalysisStartTime", "shape": "String", "type": "string"},
             {"name": "DataAnalysisEndTime", "shape": "String", "type": "string"},
+        ],
+        "type": "structure",
+    },
+    "ScheduledUpdateConfig": {
+        "members": [
+            {"name": "ScheduleExpression", "shape": "CronScheduleExpression", "type": "string"},
+            {"name": "DeploymentConfig", "shape": "DeploymentConfiguration", "type": "structure"},
         ],
         "type": "structure",
     },
@@ -14856,8 +14918,27 @@ SHAPE_DAG = {
         ],
         "type": "structure",
     },
+    "UpdateClusterSoftwareInstanceGroupSpecification": {
+        "members": [
+            {"name": "InstanceGroupName", "shape": "ClusterInstanceGroupName", "type": "string"}
+        ],
+        "type": "structure",
+    },
+    "UpdateClusterSoftwareInstanceGroups": {
+        "member_shape": "UpdateClusterSoftwareInstanceGroupSpecification",
+        "member_type": "structure",
+        "type": "list",
+    },
     "UpdateClusterSoftwareRequest": {
-        "members": [{"name": "ClusterName", "shape": "ClusterNameOrArn", "type": "string"}],
+        "members": [
+            {"name": "ClusterName", "shape": "ClusterNameOrArn", "type": "string"},
+            {
+                "name": "InstanceGroups",
+                "shape": "UpdateClusterSoftwareInstanceGroups",
+                "type": "list",
+            },
+            {"name": "DeploymentConfig", "shape": "DeploymentConfiguration", "type": "structure"},
+        ],
         "type": "structure",
     },
     "UpdateClusterSoftwareResponse": {
