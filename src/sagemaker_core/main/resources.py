@@ -3833,6 +3833,7 @@ class Cluster(Base):
     @Base.add_validate_call
     def update_software(
         self,
+        deployment_config: Optional[shapes.DeploymentConfiguration] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> None:
@@ -3840,6 +3841,7 @@ class Cluster(Base):
         Updates the platform software of a SageMaker HyperPod cluster for security patching.
 
         Parameters:
+            deployment_config: The configuration to use when updating the AMI versions.
             session: Boto3 session.
             region: Region name.
 
@@ -3859,6 +3861,8 @@ class Cluster(Base):
 
         operation_input_args = {
             "ClusterName": self.cluster_name,
+            "InstanceGroups": self.instance_groups,
+            "DeploymentConfig": deployment_config,
         }
         # serialize the input request
         operation_input_args = serialize(operation_input_args)
@@ -25812,9 +25816,9 @@ class ProcessingJob(Base):
             processing_inputs: An array of inputs configuring the data to download into the processing container.
             processing_output_config: Output configuration for the processing job.
             stopping_condition: The time limit for how long the processing job is allowed to run.
-            environment: The environment variables to set in the Docker container. Up to 100 key and values entries in the map are supported.
+            environment: The environment variables to set in the Docker container. Up to 100 key and values entries in the map are supported.  Do not include any security-sensitive information including account access IDs, secrets, or tokens in any environment fields. As part of the shared responsibility model, you are responsible for any potential exposure, unauthorized access, or compromise of your sensitive data if caused by security-sensitive information included in the request environment variable or plain text fields.
             network_config: Networking options for a processing job, such as whether to allow inbound and outbound network calls to and from processing containers, and the VPC subnets and security groups to use for VPC-enabled processing jobs.
-            tags: (Optional) An array of key-value pairs. For more information, see Using Cost Allocation Tags in the Amazon Web Services Billing and Cost Management User Guide.
+            tags: (Optional) An array of key-value pairs. For more information, see Using Cost Allocation Tags in the Amazon Web Services Billing and Cost Management User Guide.  Do not include any security-sensitive information including account access IDs, secrets, or tokens in any tags. As part of the shared responsibility model, you are responsible for any potential exposure, unauthorized access, or compromise of your sensitive data if caused by security-sensitive information included in the request tag variable or plain text fields.
             experiment_config:
             session: Boto3 session.
             region: Region name.
@@ -27979,7 +27983,7 @@ class TrainingJob(Base):
         profiler_rule_configurations: Configuration information for Amazon SageMaker Debugger rules for profiling system and framework metrics.
         profiler_rule_evaluation_statuses: Evaluation status of Amazon SageMaker Debugger rules for profiling on a training job.
         profiling_status: Profiling status of a training job.
-        environment: The environment variables to set in the Docker container.
+        environment: The environment variables to set in the Docker container.  Do not include any security-sensitive information including account access IDs, secrets, or tokens in any environment fields. As part of the shared responsibility model, you are responsible for any potential exposure, unauthorized access, or compromise of your sensitive data if caused by security-sensitive information included in the request environment variable or plain text fields.
         retry_strategy: The number of times to retry the job when the job fails due to an InternalServerError.
         remote_debug_config: Configuration for remote debugging. To learn more about the remote debugging functionality of SageMaker, see Access a training container through Amazon Web Services Systems Manager (SSM) for remote debugging.
         infra_check_config: Contains information about the infrastructure health check configuration for the training job.
@@ -28122,10 +28126,10 @@ class TrainingJob(Base):
             output_data_config: Specifies the path to the S3 location where you want to store model artifacts. SageMaker creates subfolders for the artifacts.
             resource_config: The resources, including the ML compute instances and ML storage volumes, to use for model training.  ML storage volumes store model artifacts and incremental states. Training algorithms might also use ML storage volumes for scratch space. If you want SageMaker to use the ML storage volume to store the training data, choose File as the TrainingInputMode in the algorithm specification. For distributed training algorithms, specify an instance count greater than 1.
             stopping_condition: Specifies a limit to how long a model training job can run. It also specifies how long a managed Spot training job has to complete. When the job reaches the time limit, SageMaker ends the training job. Use this API to cap model training costs. To stop a job, SageMaker sends the algorithm the SIGTERM signal, which delays job termination for 120 seconds. Algorithms can use this 120-second window to save the model artifacts, so the results of training are not lost.
-            hyper_parameters: Algorithm-specific parameters that influence the quality of the model. You set hyperparameters before you start the learning process. For a list of hyperparameters for each training algorithm provided by SageMaker, see Algorithms.  You can specify a maximum of 100 hyperparameters. Each hyperparameter is a key-value pair. Each key and value is limited to 256 characters, as specified by the Length Constraint.   Do not include any security-sensitive information including account access IDs, secrets or tokens in any hyperparameter field. If the use of security-sensitive credentials are detected, SageMaker will reject your training job request and return an exception error.
+            hyper_parameters: Algorithm-specific parameters that influence the quality of the model. You set hyperparameters before you start the learning process. For a list of hyperparameters for each training algorithm provided by SageMaker, see Algorithms.  You can specify a maximum of 100 hyperparameters. Each hyperparameter is a key-value pair. Each key and value is limited to 256 characters, as specified by the Length Constraint.   Do not include any security-sensitive information including account access IDs, secrets, or tokens in any hyperparameter fields. As part of the shared responsibility model, you are responsible for any potential exposure, unauthorized access, or compromise of your sensitive data if caused by any security-sensitive information included in the request hyperparameter variable or plain text fields.
             input_data_config: An array of Channel objects. Each channel is a named input source. InputDataConfig describes the input data and its location.  Algorithms can accept input data from one or more channels. For example, an algorithm might have two channels of input data, training_data and validation_data. The configuration for each channel provides the S3, EFS, or FSx location where the input data is stored. It also provides information about the stored data: the MIME type, compression method, and whether the data is wrapped in RecordIO format.  Depending on the input mode that the algorithm supports, SageMaker either copies input data files from an S3 bucket to a local directory in the Docker container, or makes it available as input streams. For example, if you specify an EFS location, input data files are available as input streams. They do not need to be downloaded. Your input must be in the same Amazon Web Services region as your training job.
             vpc_config: A VpcConfig object that specifies the VPC that you want your training job to connect to. Control access to and from your training container by configuring the VPC. For more information, see Protect Training Jobs by Using an Amazon Virtual Private Cloud.
-            tags: An array of key-value pairs. You can use tags to categorize your Amazon Web Services resources in different ways, for example, by purpose, owner, or environment. For more information, see Tagging Amazon Web Services Resources.
+            tags: An array of key-value pairs. You can use tags to categorize your Amazon Web Services resources in different ways, for example, by purpose, owner, or environment. For more information, see Tagging Amazon Web Services Resources.  Do not include any security-sensitive information including account access IDs, secrets, or tokens in any tags. As part of the shared responsibility model, you are responsible for any potential exposure, unauthorized access, or compromise of your sensitive data if caused by any security-sensitive information included in the request tag variable or plain text fields.
             enable_network_isolation: Isolates the training container. No inbound or outbound network calls can be made, except for calls between peers within a training cluster for distributed training. If you enable network isolation for training jobs that are configured to use a VPC, SageMaker downloads and uploads customer data and model artifacts through the specified VPC, but the training container does not have network access.
             enable_inter_container_traffic_encryption: To encrypt all communications between ML compute instances in distributed training, choose True. Encryption provides greater security for distributed training, but training might take longer. How long it takes depends on the amount of communication between compute instances, especially if you use a deep learning algorithm in distributed training. For more information, see Protect Communications Between ML Compute Instances in a Distributed Training Job.
             enable_managed_spot_training: To train models using managed spot training, choose True. Managed spot training provides a fully managed and scalable infrastructure for training machine learning models. this option is useful when training jobs can be interrupted and when there is flexibility when the training job is run.  The complete and intermediate results of jobs are stored in an Amazon S3 bucket, and can be used as a starting point to train models incrementally. Amazon SageMaker provides metrics and logs in CloudWatch. They can be used to see when managed spot training jobs are running, interrupted, resumed, or completed.
@@ -28136,7 +28140,7 @@ class TrainingJob(Base):
             experiment_config:
             profiler_config:
             profiler_rule_configurations: Configuration information for Amazon SageMaker Debugger rules for profiling system and framework metrics.
-            environment: The environment variables to set in the Docker container.
+            environment: The environment variables to set in the Docker container.  Do not include any security-sensitive information including account access IDs, secrets, or tokens in any environment fields. As part of the shared responsibility model, you are responsible for any potential exposure, unauthorized access, or compromise of your sensitive data if caused by security-sensitive information included in the request environment variable or plain text fields.
             retry_strategy: The number of times to retry the job when the job fails due to an InternalServerError.
             remote_debug_config: Configuration for remote debugging. To learn more about the remote debugging functionality of SageMaker, see Access a training container through Amazon Web Services Systems Manager (SSM) for remote debugging.
             infra_check_config: Contains information about the infrastructure health check configuration for the training job.

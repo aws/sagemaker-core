@@ -712,6 +712,19 @@ class Alarm(Base):
     alarm_name: Optional[str] = Unassigned()
 
 
+class AlarmDetails(Base):
+    """
+    AlarmDetails
+      The details of the alarm to monitor during the AMI update.
+
+    Attributes
+    ----------------------
+    alarm_name: The name of the alarm.
+    """
+
+    alarm_name: str
+
+
 class MetricDefinition(Base):
     """
     MetricDefinition
@@ -2873,6 +2886,21 @@ class CanvasAppSettings(Base):
     emr_serverless_settings: Optional[EmrServerlessSettings] = Unassigned()
 
 
+class CapacitySizeConfig(Base):
+    """
+    CapacitySizeConfig
+      The configuration of the size measurements of the AMI update. Using this configuration, you can specify whether SageMaker should update your instance group by an amount or percentage of instances.
+
+    Attributes
+    ----------------------
+    type: Specifies whether SageMaker should process the update by amount or percentage of instances.
+    value: Specifies the amount or percentage of instances SageMaker updates at a time.
+    """
+
+    type: str
+    value: int
+
+
 class CaptureContentTypeHeader(Base):
     """
     CaptureContentTypeHeader
@@ -3153,6 +3181,53 @@ class ClusterInstanceStorageConfig(Base):
     ebs_volume_config: Optional[ClusterEbsVolumeConfig] = Unassigned()
 
 
+class RollingDeploymentPolicy(Base):
+    """
+    RollingDeploymentPolicy
+      The configurations that SageMaker uses when updating the AMI versions.
+
+    Attributes
+    ----------------------
+    maximum_batch_size: The maximum amount of instances in the cluster that SageMaker can update at a time.
+    rollback_maximum_batch_size: The maximum amount of instances in the cluster that SageMaker can roll back at a time.
+    """
+
+    maximum_batch_size: CapacitySizeConfig
+    rollback_maximum_batch_size: Optional[CapacitySizeConfig] = Unassigned()
+
+
+class DeploymentConfiguration(Base):
+    """
+    DeploymentConfiguration
+      The configuration to use when updating the AMI versions.
+
+    Attributes
+    ----------------------
+    rolling_update_policy: The policy that SageMaker uses when updating the AMI versions of the cluster.
+    wait_interval_in_seconds: The duration in seconds that SageMaker waits before updating more instances in the cluster.
+    auto_rollback_configuration: An array that contains the alarms that SageMaker monitors to know whether to roll back the AMI update.
+    """
+
+    rolling_update_policy: Optional[RollingDeploymentPolicy] = Unassigned()
+    wait_interval_in_seconds: Optional[int] = Unassigned()
+    auto_rollback_configuration: Optional[List[AlarmDetails]] = Unassigned()
+
+
+class ScheduledUpdateConfig(Base):
+    """
+    ScheduledUpdateConfig
+      The configuration object of the schedule that SageMaker follows when updating the AMI.
+
+    Attributes
+    ----------------------
+    schedule_expression: A cron expression that specifies the schedule that SageMaker follows when updating the AMI.
+    deployment_config: The configuration to use when updating the AMI versions.
+    """
+
+    schedule_expression: str
+    deployment_config: Optional[DeploymentConfiguration] = Unassigned()
+
+
 class ClusterInstanceGroupDetails(Base):
     """
     ClusterInstanceGroupDetails
@@ -3173,6 +3248,7 @@ class ClusterInstanceGroupDetails(Base):
     training_plan_arn: The Amazon Resource Name (ARN); of the training plan associated with this cluster instance group. For more information about how to reserve GPU capacity for your SageMaker HyperPod clusters using Amazon SageMaker Training Plan, see  CreateTrainingPlan .
     training_plan_status: The current status of the training plan associated with this cluster instance group.
     override_vpc_config: The customized Amazon VPC configuration at the instance group level that overrides the default Amazon VPC configuration of the SageMaker HyperPod cluster.
+    scheduled_update_config: The configuration object of the schedule that SageMaker follows when updating the AMI.
     """
 
     current_count: Optional[int] = Unassigned()
@@ -3188,6 +3264,7 @@ class ClusterInstanceGroupDetails(Base):
     training_plan_arn: Optional[str] = Unassigned()
     training_plan_status: Optional[str] = Unassigned()
     override_vpc_config: Optional[VpcConfig] = Unassigned()
+    scheduled_update_config: Optional[ScheduledUpdateConfig] = Unassigned()
 
 
 class ClusterInstanceGroupSpecification(Base):
@@ -3207,6 +3284,7 @@ class ClusterInstanceGroupSpecification(Base):
     on_start_deep_health_checks: A flag indicating whether deep health checks should be performed when the cluster instance group is created or updated.
     training_plan_arn: The Amazon Resource Name (ARN); of the training plan to use for this cluster instance group. For more information about how to reserve GPU capacity for your SageMaker HyperPod clusters using Amazon SageMaker Training Plan, see  CreateTrainingPlan .
     override_vpc_config: To configure multi-AZ deployments, customize the Amazon VPC configuration at the instance group level. You can specify different subnets and security groups across different AZs in the instance group specification to override a SageMaker HyperPod cluster's default Amazon VPC configuration. For more information about deploying a cluster in multiple AZs, see Setting up SageMaker HyperPod clusters across multiple AZs.  When your Amazon VPC and subnets support IPv6, network communications differ based on the cluster orchestration platform:   Slurm-orchestrated clusters automatically configure nodes with dual IPv6 and IPv4 addresses, allowing immediate IPv6 network communications.   In Amazon EKS-orchestrated clusters, nodes receive dual-stack addressing, but pods can only use IPv6 when the Amazon EKS cluster is explicitly IPv6-enabled. For information about deploying an IPv6 Amazon EKS cluster, see Amazon EKS IPv6 Cluster Deployment.   Additional resources for IPv6 configuration:   For information about adding IPv6 support to your VPC, see to IPv6 Support for VPC.   For information about creating a new IPv6-compatible VPC, see Amazon VPC Creation Guide.   To configure SageMaker HyperPod with a custom Amazon VPC, see Custom Amazon VPC Setup for SageMaker HyperPod.
+    scheduled_update_config: The configuration object of the schedule that SageMaker uses to update the AMI.
     """
 
     instance_count: int
@@ -3219,6 +3297,7 @@ class ClusterInstanceGroupSpecification(Base):
     on_start_deep_health_checks: Optional[List[str]] = Unassigned()
     training_plan_arn: Optional[str] = Unassigned()
     override_vpc_config: Optional[VpcConfig] = Unassigned()
+    scheduled_update_config: Optional[ScheduledUpdateConfig] = Unassigned()
 
 
 class ClusterInstancePlacement(Base):
@@ -3263,6 +3342,7 @@ class ClusterNodeDetails(Base):
     instance_status: The status of the instance.
     instance_type: The type of the instance.
     launch_time: The time when the instance is launched.
+    last_software_update_time: The time of when the cluster was last updated.
     life_cycle_config: The LifeCycle configuration applied to the instance.
     override_vpc_config: The customized Amazon VPC configuration at the instance group level that overrides the default Amazon VPC configuration of the SageMaker HyperPod cluster.
     threads_per_core: The number of threads per CPU core you specified under CreateCluster.
@@ -3278,6 +3358,7 @@ class ClusterNodeDetails(Base):
     instance_status: Optional[ClusterInstanceStatusDetails] = Unassigned()
     instance_type: Optional[str] = Unassigned()
     launch_time: Optional[datetime.datetime] = Unassigned()
+    last_software_update_time: Optional[datetime.datetime] = Unassigned()
     life_cycle_config: Optional[ClusterLifeCycleConfig] = Unassigned()
     override_vpc_config: Optional[VpcConfig] = Unassigned()
     threads_per_core: Optional[int] = Unassigned()
@@ -3299,6 +3380,7 @@ class ClusterNodeSummary(Base):
     instance_id: The ID of the instance.
     instance_type: The type of the instance.
     launch_time: The time when the instance is launched.
+    last_software_update_time: The time of when SageMaker last updated the software of the instances in the cluster.
     instance_status: The status of the instance.
     """
 
@@ -3307,6 +3389,7 @@ class ClusterNodeSummary(Base):
     instance_type: str
     launch_time: datetime.datetime
     instance_status: ClusterInstanceStatusDetails
+    last_software_update_time: Optional[datetime.datetime] = Unassigned()
 
 
 class ClusterOrchestratorEksConfig(Base):
@@ -12598,6 +12681,19 @@ class ThroughputConfigUpdate(Base):
     throughput_mode: Optional[str] = Unassigned()
     provisioned_read_capacity_units: Optional[int] = Unassigned()
     provisioned_write_capacity_units: Optional[int] = Unassigned()
+
+
+class UpdateClusterSoftwareInstanceGroupSpecification(Base):
+    """
+    UpdateClusterSoftwareInstanceGroupSpecification
+      The configuration that describes specifications of the instance groups to update.
+
+    Attributes
+    ----------------------
+    instance_group_name: The name of the instance group to update.
+    """
+
+    instance_group_name: str
 
 
 class VariantProperty(Base):
