@@ -1122,7 +1122,6 @@ def get_all(
         'SpaceNameEquals': space_name_equals,
     }
 
-
     # serialize the input request
     operation_input_args = serialize(operation_input_args)
     logger.debug(f"Serialized input request: {operation_input_args}")
