@@ -114,6 +114,22 @@ class ResourcesTest(unittest.TestCase):
                             f"{name}s": [summary],
                             f"Summaries": [summary],
                         }
+                        if name == "HubContent":
+                            extract_name_mapping = {
+                                "HubContentArn": ("hub-content/", "HubName"),
+                            }
+                            summary.update({"HubContentArn": "arn:aws:sagemaker:us-west-2:123456789012:hub-content/my-hub/Model/my-model/1.0"})
+                            for arn, target in extract_name_mapping.items():
+                                extracted_name = summary[arn].split(target[0])[1].split("/")[0]
+                                summary.update({target[1]: extracted_name})
+                        if name == "ImageVersion":
+                            extract_name_mapping = {
+                                "ImageVersionArn": ("image-version/", "ImageName"),
+                            }
+                            summary.update({"ImageVersionArn": "arn:aws:sagemaker:us-west-2:123456789012:image-version/my-image/Model/my-model/1.0"})
+                            for arn, target in extract_name_mapping.items():
+                                extracted_name = summary[arn].split(target[0])[1].split("/")[0]
+                                summary.update({target[1]: extracted_name})
                         if name == "MlflowTrackingServer":
                             summary_response = {"TrackingServerSummaries": [summary]}
                         with patch.object(
