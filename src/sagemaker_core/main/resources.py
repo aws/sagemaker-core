@@ -6471,10 +6471,12 @@ class DataQualityJobDefinition(Base):
             "CreationTimeBefore": creation_time_before,
             "CreationTimeAfter": creation_time_after,
         }
+
         custom_key_mapping = {
             "monitoring_job_definition_name": "job_definition_name",
             "monitoring_job_definition_arn": "job_definition_arn",
         }
+
         # serialize the input request
         operation_input_args = serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
@@ -12613,6 +12615,84 @@ class HubContent(Base):
             region=region,
         )
 
+    @classmethod
+    @Base.add_validate_call
+    def get_all(
+        cls,
+        hub_name: str,
+        hub_content_type: str,
+        name_contains: Optional[str] = Unassigned(),
+        max_schema_version: Optional[str] = Unassigned(),
+        creation_time_before: Optional[datetime.datetime] = Unassigned(),
+        creation_time_after: Optional[datetime.datetime] = Unassigned(),
+        sort_by: Optional[str] = Unassigned(),
+        sort_order: Optional[str] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> ResourceIterator["HubContent"]:
+        """
+        Get all HubContent resources
+
+        Parameters:
+            hub_name: The name of the hub to list the contents of.
+            hub_content_type: The type of hub content to list.
+            name_contains: Only list hub content if the name contains the specified string.
+            max_schema_version: The upper bound of the hub content schema verion.
+            creation_time_before: Only list hub content that was created before the time specified.
+            creation_time_after: Only list hub content that was created after the time specified.
+            sort_by: Sort hub content versions by either name or creation time.
+            sort_order: Sort hubs by ascending or descending order.
+            max_results: The maximum amount of hub content to list.
+            next_token: If the response to a previous ListHubContents request was truncated, the response includes a NextToken. To retrieve the next set of hub content, use the token in the next request.
+            session: Boto3 session.
+            region: Region name.
+
+        Returns:
+            Iterator for listed HubContent resources.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceNotFound: Resource being access is not found.
+        """
+
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
+
+        operation_input_args = {
+            "HubName": hub_name,
+            "HubContentType": hub_content_type,
+            "NameContains": name_contains,
+            "MaxSchemaVersion": max_schema_version,
+            "CreationTimeBefore": creation_time_before,
+            "CreationTimeAfter": creation_time_after,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
+        }
+        extract_name_mapping = {"hub_content_arn": ["hub-content/", "hub_name"]}
+
+        # serialize the input request
+        operation_input_args = serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+
+        return ResourceIterator(
+            client=client,
+            list_method="list_hub_contents",
+            summaries_key="HubContentSummaries",
+            summary_name="HubContentInfo",
+            resource_cls=HubContent,
+            extract_name_mapping=extract_name_mapping,
+            list_method_kwargs=operation_input_args,
+        )
+
     @Base.add_validate_call
     def get_all_versions(
         self,
@@ -14914,6 +14994,81 @@ class ImageVersion(Base):
                         return
                     raise e
                 time.sleep(poll)
+
+    @classmethod
+    @Base.add_validate_call
+    def get_all(
+        cls,
+        image_name: str,
+        creation_time_after: Optional[datetime.datetime] = Unassigned(),
+        creation_time_before: Optional[datetime.datetime] = Unassigned(),
+        last_modified_time_after: Optional[datetime.datetime] = Unassigned(),
+        last_modified_time_before: Optional[datetime.datetime] = Unassigned(),
+        sort_by: Optional[str] = Unassigned(),
+        sort_order: Optional[str] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> ResourceIterator["ImageVersion"]:
+        """
+        Get all ImageVersion resources
+
+        Parameters:
+            image_name: The name of the image to list the versions of.
+            creation_time_after: A filter that returns only versions created on or after the specified time.
+            creation_time_before: A filter that returns only versions created on or before the specified time.
+            last_modified_time_after: A filter that returns only versions modified on or after the specified time.
+            last_modified_time_before: A filter that returns only versions modified on or before the specified time.
+            max_results: The maximum number of versions to return in the response. The default value is 10.
+            next_token: If the previous call to ListImageVersions didn't return the full set of versions, the call returns a token for getting the next set of versions.
+            sort_by: The property used to sort results. The default value is CREATION_TIME.
+            sort_order: The sort order. The default value is DESCENDING.
+            session: Boto3 session.
+            region: Region name.
+
+        Returns:
+            Iterator for listed ImageVersion resources.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceNotFound: Resource being access is not found.
+        """
+
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
+
+        operation_input_args = {
+            "CreationTimeAfter": creation_time_after,
+            "CreationTimeBefore": creation_time_before,
+            "ImageName": image_name,
+            "LastModifiedTimeAfter": last_modified_time_after,
+            "LastModifiedTimeBefore": last_modified_time_before,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
+        }
+        extract_name_mapping = {"image_version_arn": ["image-version/", "image_name"]}
+
+        # serialize the input request
+        operation_input_args = serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+
+        return ResourceIterator(
+            client=client,
+            list_method="list_image_versions",
+            summaries_key="ImageVersions",
+            summary_name="ImageVersion",
+            resource_cls=ImageVersion,
+            extract_name_mapping=extract_name_mapping,
+            list_method_kwargs=operation_input_args,
+        )
 
 
 class InferenceComponent(Base):
@@ -18504,10 +18659,12 @@ class ModelBiasJobDefinition(Base):
             "CreationTimeBefore": creation_time_before,
             "CreationTimeAfter": creation_time_after,
         }
+
         custom_key_mapping = {
             "monitoring_job_definition_name": "job_definition_name",
             "monitoring_job_definition_arn": "job_definition_arn",
         }
+
         # serialize the input request
         operation_input_args = serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
@@ -19733,10 +19890,12 @@ class ModelExplainabilityJobDefinition(Base):
             "CreationTimeBefore": creation_time_before,
             "CreationTimeAfter": creation_time_after,
         }
+
         custom_key_mapping = {
             "monitoring_job_definition_name": "job_definition_name",
             "monitoring_job_definition_arn": "job_definition_arn",
         }
+
         # serialize the input request
         operation_input_args = serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
@@ -21350,10 +21509,12 @@ class ModelQualityJobDefinition(Base):
             "CreationTimeBefore": creation_time_before,
             "CreationTimeAfter": creation_time_after,
         }
+
         custom_key_mapping = {
             "monitoring_job_definition_name": "job_definition_name",
             "monitoring_job_definition_arn": "job_definition_arn",
         }
+
         # serialize the input request
         operation_input_args = serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")

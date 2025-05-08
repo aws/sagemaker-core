@@ -387,6 +387,7 @@ class ResourceIterator(Generic[T]):
         list_method: str,
         list_method_kwargs: dict = {},
         custom_key_mapping: dict = None,
+        extract_name_mapping: dict = None,
     ):
         """Initialize a ResourceIterator object
 
@@ -398,6 +399,7 @@ class ResourceIterator(Generic[T]):
             list_method (str): The list method string used to make list calls to the client.
             list_method_kwargs (dict, optional): The kwargs used to make list method calls. Defaults to {}.
             custom_key_mapping (dict, optional): The custom key mapping used to map keys from summary object to those expected from resource object during initialization. Defaults to None.
+            extract_name_mapping (dict, optional): The extract name mapping used to extract names from arn in summary object and map to those expected from resource object during initialization. Defaults to None.
         """
         self.summaries_key = summaries_key
         self.summary_name = summary_name
@@ -405,6 +407,7 @@ class ResourceIterator(Generic[T]):
         self.list_method = list_method
         self.list_method_kwargs = list_method_kwargs
         self.custom_key_mapping = custom_key_mapping
+        self.extract_name_mapping = extract_name_mapping
 
         self.resource_cls = resource_cls
         self.index = 0
@@ -432,6 +435,12 @@ class ResourceIterator(Generic[T]):
 
                 if self.custom_key_mapping:
                     init_data = {self.custom_key_mapping.get(k, k): v for k, v in init_data.items()}
+
+                # Extract name from arn. Currently implemented for HubContent and ImageVersion
+                if self.extract_name_mapping:
+                    for arn, target in self.extract_name_mapping.items():
+                        name = init_data[arn].split(target[0])[1].split("/")[0]
+                        init_data.update({target[1]: name})
 
                 # Filter out the fields that are not in the resource class
                 fields = self.resource_cls.__annotations__

@@ -1754,20 +1754,42 @@ class ResourcesCodeGen:
             get_operation_required_input = []
 
         custom_key_mapping_str = ""
+        custom_key_mapping = {}
+        extract_name_mapping_str = ""
+        extract_name_mapping = {}
         if any(member not in summary_members for member in get_operation_required_input):
-            if "MonitoringJobDefinitionSummary" == summary_name:
+            if summary_name == "MonitoringJobDefinitionSummary":
                 custom_key_mapping = {
                     "monitoring_job_definition_name": "job_definition_name",
                     "monitoring_job_definition_arn": "job_definition_arn",
                 }
-                custom_key_mapping_str = f"custom_key_mapping = {json.dumps(custom_key_mapping)}"
-                custom_key_mapping_str = add_indent(custom_key_mapping_str, 4)
+            elif summary_name == "HubContentInfo":
+                # HubContentArn -- arn:<partition>:sagemaker:<region>:<account-id>:hub-content/<hub-name>/<type>/<name>/<version>
+                # {source key from input: (target label in arn, target key in output)}
+                extract_name_mapping = {
+                    "hub_content_arn": ("hub-content/", "hub_name"),
+                }
+            elif summary_name == "ImageVersion":
+                # ImageVersionArn -- arn:aws:sagemaker:<region>:<account>:image-version/<image-name>/<version-number>
+                # {source key from input: (target label in arn, target key in output)}
+                extract_name_mapping = {
+                    "image_version_arn": ("image-version/", "image_name"),
+                }
             else:
                 log.warning(
                     f"Resource {resource_name} summaries do not have required members to create object instance. Resource may require custom key mapping for get_all().\n"
                     f"List {summary_name} Members: {summary_members}, Object Required Members: {get_operation_required_input}"
                 )
                 return ""
+
+            if custom_key_mapping:
+                custom_key_mapping_str = add_indent(
+                    f"custom_key_mapping = {json.dumps(custom_key_mapping)}", 4
+                )
+            if extract_name_mapping:
+                extract_name_mapping_str = add_indent(
+                    f"extract_name_mapping = {json.dumps(extract_name_mapping)}", 4
+                )
 
         resource_iterator_args_list = [
             "client=client",
@@ -1779,6 +1801,9 @@ class ResourcesCodeGen:
 
         if custom_key_mapping_str:
             resource_iterator_args_list.append(f"custom_key_mapping=custom_key_mapping")
+
+        if extract_name_mapping_str:
+            resource_iterator_args_list.append(f"extract_name_mapping=extract_name_mapping")
 
         exclude_list = ["next_token", "max_results"]
         get_all_args = self._generate_method_args(operation_input_shape_name, exclude_list)
@@ -1792,6 +1817,7 @@ class ResourcesCodeGen:
                 resource=resource_name,
                 operation=operation,
                 custom_key_mapping=custom_key_mapping_str,
+                extract_name_mapping=extract_name_mapping_str,
                 resource_iterator_args=resource_iterator_args,
             )
             return formatted_method
@@ -1822,6 +1848,7 @@ class ResourcesCodeGen:
             get_all_args=get_all_args,
             operation_input_args=operation_input_args,
             custom_key_mapping=custom_key_mapping_str,
+            extract_name_mapping=extract_name_mapping_str,
             resource_iterator_args=resource_iterator_args,
         )
         return formatted_method
