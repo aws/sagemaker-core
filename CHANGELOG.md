@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.0.33 (2025-05-08)
+
+ * Support rich 14.0.0 (#297)
+ * Add extract_name_mapping logic to fix get_all method (#294)
+
 ## v1.0.32 (2025-05-08)
 
  * Daily Sync with Botocore v1.38.11 on 2025/05/08 (#296)
