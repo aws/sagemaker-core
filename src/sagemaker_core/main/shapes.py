@@ -3342,7 +3342,7 @@ class ClusterNodeDetails(Base):
     instance_status: The status of the instance.
     instance_type: The type of the instance.
     launch_time: The time when the instance is launched.
-    last_software_update_time: The time of when the cluster was last updated.
+    last_software_update_time: The time when the cluster was last updated.
     life_cycle_config: The LifeCycle configuration applied to the instance.
     override_vpc_config: The customized Amazon VPC configuration at the instance group level that overrides the default Amazon VPC configuration of the SageMaker HyperPod cluster.
     threads_per_core: The number of threads per CPU core you specified under CreateCluster.
@@ -3380,7 +3380,7 @@ class ClusterNodeSummary(Base):
     instance_id: The ID of the instance.
     instance_type: The type of the instance.
     launch_time: The time when the instance is launched.
-    last_software_update_time: The time of when SageMaker last updated the software of the instances in the cluster.
+    last_software_update_time: The time when SageMaker last updated the software of the instances in the cluster.
     instance_status: The status of the instance.
     """
 
@@ -4765,6 +4765,31 @@ class DockerSettings(Base):
     vpc_only_trusted_accounts: Optional[List[str]] = Unassigned()
 
 
+class UnifiedStudioSettings(Base):
+    """
+    UnifiedStudioSettings
+      The settings that apply to an Amazon SageMaker AI domain when you use it in Amazon SageMaker Unified Studio.
+
+    Attributes
+    ----------------------
+    studio_web_portal_access: Sets whether you can access the domain in Amazon SageMaker Studio:  ENABLED  You can access the domain in Amazon SageMaker Studio. If you migrate the domain to Amazon SageMaker Unified Studio, you can access it in both studio interfaces.  DISABLED  You can't access the domain in Amazon SageMaker Studio. If you migrate the domain to Amazon SageMaker Unified Studio, you can access it only in that studio interface.   To migrate a domain to Amazon SageMaker Unified Studio, you specify the UnifiedStudioSettings data type when you use the UpdateDomain action.
+    domain_account_id: The ID of the Amazon Web Services account that has the Amazon SageMaker Unified Studio domain. The default value, if you don't specify an ID, is the ID of the account that has the Amazon SageMaker AI domain.
+    domain_region: The Amazon Web Services Region where the domain is located in Amazon SageMaker Unified Studio. The default value, if you don't specify a Region, is the Region where the Amazon SageMaker AI domain is located.
+    domain_id: The ID of the Amazon SageMaker Unified Studio domain associated with this domain.
+    project_id: The ID of the Amazon SageMaker Unified Studio project that corresponds to the domain.
+    environment_id: The ID of the environment that Amazon SageMaker Unified Studio associates with the domain.
+    project_s3_path: The location where Amazon S3 stores temporary execution data and other artifacts for the project that corresponds to the domain.
+    """
+
+    studio_web_portal_access: Optional[str] = Unassigned()
+    domain_account_id: Optional[str] = Unassigned()
+    domain_region: Optional[str] = Unassigned()
+    domain_id: Optional[str] = Unassigned()
+    project_id: Optional[str] = Unassigned()
+    environment_id: Optional[str] = Unassigned()
+    project_s3_path: Optional[str] = Unassigned()
+
+
 class DomainSettings(Base):
     """
     DomainSettings
@@ -4777,6 +4802,7 @@ class DomainSettings(Base):
     execution_role_identity_config: The configuration for attaching a SageMaker AI user profile name to the execution role as a sts:SourceIdentity key.
     docker_settings: A collection of settings that configure the domain's Docker interaction.
     amazon_q_settings: A collection of settings that configure the Amazon Q experience within the domain. The AuthMode that you use to create the domain must be SSO.
+    unified_studio_settings: The settings that apply to an SageMaker AI domain when you use it in Amazon SageMaker Unified Studio.
     """
 
     security_group_ids: Optional[List[str]] = Unassigned()
@@ -4784,6 +4810,7 @@ class DomainSettings(Base):
     execution_role_identity_config: Optional[str] = Unassigned()
     docker_settings: Optional[DockerSettings] = Unassigned()
     amazon_q_settings: Optional[AmazonQSettings] = Unassigned()
+    unified_studio_settings: Optional[UnifiedStudioSettings] = Unassigned()
 
 
 class DefaultSpaceSettings(Base):
@@ -7446,6 +7473,7 @@ class SpaceSettings(Base):
     jupyter_lab_app_settings: The settings for the JupyterLab application.
     app_type: The type of app created within the space. If using the  UpdateSpace API, you can't change the app type of your space by specifying a different value for this field.
     space_storage_settings: The storage settings for a space.
+    space_managed_resources: If you enable this option, SageMaker AI creates the following resources on your behalf when you create the space:   The user profile that possesses the space.   The app that the space contains.
     custom_file_systems: A file system, created by you, that you assign to a space for an Amazon SageMaker AI Domain. Permitted users can access this file system in Amazon SageMaker AI Studio.
     """
 
@@ -7455,6 +7483,7 @@ class SpaceSettings(Base):
     jupyter_lab_app_settings: Optional[SpaceJupyterLabAppSettings] = Unassigned()
     app_type: Optional[str] = Unassigned()
     space_storage_settings: Optional[SpaceStorageSettings] = Unassigned()
+    space_managed_resources: Optional[str] = Unassigned()
     custom_file_systems: Optional[List[CustomFileSystem]] = Unassigned()
 
 
@@ -9453,6 +9482,7 @@ class DomainSettingsForUpdate(Base):
     security_group_ids: The security groups for the Amazon Virtual Private Cloud that the Domain uses for communication between Domain-level apps and user apps.
     docker_settings: A collection of settings that configure the domain's Docker interaction.
     amazon_q_settings: A collection of settings that configure the Amazon Q experience within the domain.
+    unified_studio_settings: The settings that apply to an SageMaker AI domain when you use it in Amazon SageMaker Unified Studio.
     """
 
     r_studio_server_pro_domain_settings_for_update: Optional[
@@ -9462,6 +9492,7 @@ class DomainSettingsForUpdate(Base):
     security_group_ids: Optional[List[str]] = Unassigned()
     docker_settings: Optional[DockerSettings] = Unassigned()
     amazon_q_settings: Optional[AmazonQSettings] = Unassigned()
+    unified_studio_settings: Optional[UnifiedStudioSettings] = Unassigned()
 
 
 class PredefinedMetricSpecification(Base):
