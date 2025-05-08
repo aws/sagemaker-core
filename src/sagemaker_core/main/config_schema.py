@@ -243,6 +243,9 @@ SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA = {
                                                 "domain_execution_role_arn": {"type": "string"}
                                             },
                                             "execution_role_identity_config": {"type": "string"},
+                                            "unified_studio_settings": {
+                                                "project_s3_path": {"type": "string"}
+                                            },
                                         },
                                         "home_efs_file_system_kms_key_id": {"type": "string"},
                                         "subnet_ids": {
