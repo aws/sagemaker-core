@@ -10291,9 +10291,9 @@ SHAPE_DAG = {
     "MetricDatum": {
         "members": [
             {"name": "MetricName", "shape": "AutoMLMetricEnum", "type": "string"},
+            {"name": "StandardMetricName", "shape": "AutoMLMetricExtendedEnum", "type": "string"},
             {"name": "Value", "shape": "Float", "type": "float"},
             {"name": "Set", "shape": "MetricSetSource", "type": "string"},
-            {"name": "StandardMetricName", "shape": "AutoMLMetricExtendedEnum", "type": "string"},
         ],
         "type": "structure",
     },

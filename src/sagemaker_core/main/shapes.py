@@ -1743,15 +1743,15 @@ class MetricDatum(Base):
     Attributes
     ----------------------
     metric_name: The name of the metric.
+    standard_metric_name: The name of the standard metric.   For definitions of the standard metrics, see  Autopilot candidate metrics .
     value: The value of the metric.
     set: The dataset split from which the AutoML job produced the metric.
-    standard_metric_name: The name of the standard metric.   For definitions of the standard metrics, see  Autopilot candidate metrics .
     """
 
     metric_name: Optional[str] = Unassigned()
+    standard_metric_name: Optional[str] = Unassigned()
     value: Optional[float] = Unassigned()
     set: Optional[str] = Unassigned()
-    standard_metric_name: Optional[str] = Unassigned()
 
 
 class CandidateProperties(Base):
