@@ -6476,7 +6476,6 @@ class DataQualityJobDefinition(Base):
             "monitoring_job_definition_name": "job_definition_name",
             "monitoring_job_definition_arn": "job_definition_arn",
         }
-
         # serialize the input request
         operation_input_args = serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
@@ -7369,6 +7368,7 @@ class Domain(Base):
                         "domain_execution_role_arn": {"type": "string"}
                     },
                     "execution_role_identity_config": {"type": "string"},
+                    "unified_studio_settings": {"project_s3_path": {"type": "string"}},
                 },
                 "home_efs_file_system_kms_key_id": {"type": "string"},
                 "subnet_ids": {"type": "array", "items": {"type": "string"}},
@@ -18664,7 +18664,6 @@ class ModelBiasJobDefinition(Base):
             "monitoring_job_definition_name": "job_definition_name",
             "monitoring_job_definition_arn": "job_definition_arn",
         }
-
         # serialize the input request
         operation_input_args = serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
@@ -19895,7 +19894,6 @@ class ModelExplainabilityJobDefinition(Base):
             "monitoring_job_definition_name": "job_definition_name",
             "monitoring_job_definition_arn": "job_definition_arn",
         }
-
         # serialize the input request
         operation_input_args = serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
@@ -21514,7 +21512,6 @@ class ModelQualityJobDefinition(Base):
             "monitoring_job_definition_name": "job_definition_name",
             "monitoring_job_definition_arn": "job_definition_arn",
         }
-
         # serialize the input request
         operation_input_args = serialize(operation_input_args)
         logger.debug(f"Serialized input request: {operation_input_args}")
