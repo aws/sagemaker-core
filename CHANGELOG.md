@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.0.34 (2025-05-13)
+
+ * Daily Sync with Botocore v1.38.14 on 2025/05/13 (#298)
+
 ## v1.0.33 (2025-05-08)
 
  * Support rich 14.0.0 (#297)
