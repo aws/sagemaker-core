@@ -14,7 +14,7 @@ import botocore
 import datetime
 import time
 import functools
-from pydantic import validate_call
+from pydantic import validate_call, ConfigDict, BaseModel
 from typing import Dict, List, Literal, Optional, Union, Any
 from boto3.session import Session
 from rich.console import Group
@@ -42,8 +42,8 @@ from sagemaker_core.main.intelligent_defaults_helper import (
     get_config_value,
 )
 from sagemaker_core.main.logs import MultiLogStreamHandler
-from sagemaker_core.main.shapes import *
 from sagemaker_core.main.exceptions import *
+import sagemaker_core.main.shapes as shapes
 
 
 logger = get_textual_rich_logger(__name__)
@@ -75,7 +75,9 @@ class Base(BaseModel):
                         configurable_attribute, resource_defaults, global_defaults
                     ):
                         resource_name = snake_to_pascal(configurable_attribute)
-                        class_object = globals()[resource_name]
+                        class_object = getattr(shapes, resource_name, None) or globals().get(
+                            resource_name
+                        )
                         kwargs[configurable_attribute] = class_object(**config_value)
         except BaseException as e:
             logger.debug("Could not load Default Configs. Continuing.", exc_info=True)
@@ -121,7 +123,9 @@ class Base(BaseModel):
     @staticmethod
     def _get_chained_attribute(item_value: Any):
         resource_name = type(item_value).__name__
-        class_object = globals()[resource_name]
+        class_object = globals().get(resource_name) or getattr(shapes, resource_name, None)
+        if class_object is None:
+            return item_value
         return class_object(
             **Base.populate_chained_attributes(
                 resource_name=resource_name, operation_input_args=vars(item_value)
@@ -161,16 +165,16 @@ class Action(Base):
 
     action_name: str
     action_arn: Optional[str] = Unassigned()
-    source: Optional[ActionSource] = Unassigned()
+    source: Optional[shapes.ActionSource] = Unassigned()
     action_type: Optional[str] = Unassigned()
     description: Optional[str] = Unassigned()
     status: Optional[str] = Unassigned()
     properties: Optional[Dict[str, str]] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
-    created_by: Optional[UserContext] = Unassigned()
+    created_by: Optional[shapes.UserContext] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
-    last_modified_by: Optional[UserContext] = Unassigned()
-    metadata_properties: Optional[MetadataProperties] = Unassigned()
+    last_modified_by: Optional[shapes.UserContext] = Unassigned()
+    metadata_properties: Optional[shapes.MetadataProperties] = Unassigned()
     lineage_group_arn: Optional[str] = Unassigned()
 
     def get_name(self) -> str:
@@ -194,13 +198,13 @@ class Action(Base):
     def create(
         cls,
         action_name: str,
-        source: ActionSource,
+        source: shapes.ActionSource,
         action_type: str,
         description: Optional[str] = Unassigned(),
         status: Optional[str] = Unassigned(),
         properties: Optional[Dict[str, str]] = Unassigned(),
-        metadata_properties: Optional[MetadataProperties] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
+        metadata_properties: Optional[shapes.MetadataProperties] = Unassigned(),
+        tags: Optional[List[shapes.Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["Action"]:
@@ -537,11 +541,11 @@ class Algorithm(Base):
     algorithm_arn: Optional[str] = Unassigned()
     algorithm_description: Optional[str] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
-    training_specification: Optional[TrainingSpecification] = Unassigned()
-    inference_specification: Optional[InferenceSpecification] = Unassigned()
-    validation_specification: Optional[AlgorithmValidationSpecification] = Unassigned()
+    training_specification: Optional[shapes.TrainingSpecification] = Unassigned()
+    inference_specification: Optional[shapes.InferenceSpecification] = Unassigned()
+    validation_specification: Optional[shapes.AlgorithmValidationSpecification] = Unassigned()
     algorithm_status: Optional[str] = Unassigned()
-    algorithm_status_details: Optional[AlgorithmStatusDetails] = Unassigned()
+    algorithm_status_details: Optional[shapes.AlgorithmStatusDetails] = Unassigned()
     product_id: Optional[str] = Unassigned()
     certify_for_marketplace: Optional[bool] = Unassigned()
 
@@ -588,12 +592,12 @@ class Algorithm(Base):
     def create(
         cls,
         algorithm_name: str,
-        training_specification: TrainingSpecification,
+        training_specification: shapes.TrainingSpecification,
         algorithm_description: Optional[str] = Unassigned(),
-        inference_specification: Optional[InferenceSpecification] = Unassigned(),
-        validation_specification: Optional[AlgorithmValidationSpecification] = Unassigned(),
+        inference_specification: Optional[shapes.InferenceSpecification] = Unassigned(),
+        validation_specification: Optional[shapes.AlgorithmValidationSpecification] = Unassigned(),
         certify_for_marketplace: Optional[bool] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
+        tags: Optional[List[shapes.Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["Algorithm"]:
@@ -996,7 +1000,7 @@ class App(Base):
     last_user_activity_timestamp: Optional[datetime.datetime] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
     failure_reason: Optional[str] = Unassigned()
-    resource_spec: Optional[ResourceSpec] = Unassigned()
+    resource_spec: Optional[shapes.ResourceSpec] = Unassigned()
     built_in_lifecycle_config_arn: Optional[str] = Unassigned()
 
     def get_name(self) -> str:
@@ -1024,8 +1028,8 @@ class App(Base):
         app_name: str,
         user_profile_name: Optional[Union[str, object]] = Unassigned(),
         space_name: Optional[Union[str, object]] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
-        resource_spec: Optional[ResourceSpec] = Unassigned(),
+        tags: Optional[List[shapes.Tag]] = Unassigned(),
+        resource_spec: Optional[shapes.ResourceSpec] = Unassigned(),
         recovery_mode: Optional[bool] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
@@ -1451,9 +1455,9 @@ class AppImageConfig(Base):
     app_image_config_arn: Optional[str] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
-    kernel_gateway_image_config: Optional[KernelGatewayImageConfig] = Unassigned()
-    jupyter_lab_app_image_config: Optional[JupyterLabAppImageConfig] = Unassigned()
-    code_editor_app_image_config: Optional[CodeEditorAppImageConfig] = Unassigned()
+    kernel_gateway_image_config: Optional[shapes.KernelGatewayImageConfig] = Unassigned()
+    jupyter_lab_app_image_config: Optional[shapes.JupyterLabAppImageConfig] = Unassigned()
+    code_editor_app_image_config: Optional[shapes.CodeEditorAppImageConfig] = Unassigned()
 
     def get_name(self) -> str:
         attributes = vars(self)
@@ -1476,10 +1480,10 @@ class AppImageConfig(Base):
     def create(
         cls,
         app_image_config_name: str,
-        tags: Optional[List[Tag]] = Unassigned(),
-        kernel_gateway_image_config: Optional[KernelGatewayImageConfig] = Unassigned(),
-        jupyter_lab_app_image_config: Optional[JupyterLabAppImageConfig] = Unassigned(),
-        code_editor_app_image_config: Optional[CodeEditorAppImageConfig] = Unassigned(),
+        tags: Optional[List[shapes.Tag]] = Unassigned(),
+        kernel_gateway_image_config: Optional[shapes.KernelGatewayImageConfig] = Unassigned(),
+        jupyter_lab_app_image_config: Optional[shapes.JupyterLabAppImageConfig] = Unassigned(),
+        code_editor_app_image_config: Optional[shapes.CodeEditorAppImageConfig] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["AppImageConfig"]:
@@ -1633,9 +1637,9 @@ class AppImageConfig(Base):
     @Base.add_validate_call
     def update(
         self,
-        kernel_gateway_image_config: Optional[KernelGatewayImageConfig] = Unassigned(),
-        jupyter_lab_app_image_config: Optional[JupyterLabAppImageConfig] = Unassigned(),
-        code_editor_app_image_config: Optional[CodeEditorAppImageConfig] = Unassigned(),
+        kernel_gateway_image_config: Optional[shapes.KernelGatewayImageConfig] = Unassigned(),
+        jupyter_lab_app_image_config: Optional[shapes.JupyterLabAppImageConfig] = Unassigned(),
+        code_editor_app_image_config: Optional[shapes.CodeEditorAppImageConfig] = Unassigned(),
     ) -> Optional["AppImageConfig"]:
         """
         Update a AppImageConfig resource
@@ -1804,14 +1808,14 @@ class Artifact(Base):
 
     artifact_arn: str
     artifact_name: Optional[str] = Unassigned()
-    source: Optional[ArtifactSource] = Unassigned()
+    source: Optional[shapes.ArtifactSource] = Unassigned()
     artifact_type: Optional[str] = Unassigned()
     properties: Optional[Dict[str, str]] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
-    created_by: Optional[UserContext] = Unassigned()
+    created_by: Optional[shapes.UserContext] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
-    last_modified_by: Optional[UserContext] = Unassigned()
-    metadata_properties: Optional[MetadataProperties] = Unassigned()
+    last_modified_by: Optional[shapes.UserContext] = Unassigned()
+    metadata_properties: Optional[shapes.MetadataProperties] = Unassigned()
     lineage_group_arn: Optional[str] = Unassigned()
 
     def get_name(self) -> str:
@@ -1834,12 +1838,12 @@ class Artifact(Base):
     @Base.add_validate_call
     def create(
         cls,
-        source: ArtifactSource,
+        source: shapes.ArtifactSource,
         artifact_type: str,
         artifact_name: Optional[str] = Unassigned(),
         properties: Optional[Dict[str, str]] = Unassigned(),
-        metadata_properties: Optional[MetadataProperties] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
+        metadata_properties: Optional[shapes.MetadataProperties] = Unassigned(),
+        tags: Optional[List[shapes.Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["Artifact"]:
@@ -2173,7 +2177,7 @@ class Association(Base):
     source_name: Optional[str] = Unassigned()
     destination_name: Optional[str] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
-    created_by: Optional[UserContext] = Unassigned()
+    created_by: Optional[shapes.UserContext] = Unassigned()
 
     def get_name(self) -> str:
         attributes = vars(self)
@@ -2387,25 +2391,25 @@ class AutoMLJob(Base):
 
     auto_ml_job_name: str
     auto_ml_job_arn: Optional[str] = Unassigned()
-    input_data_config: Optional[List[AutoMLChannel]] = Unassigned()
-    output_data_config: Optional[AutoMLOutputDataConfig] = Unassigned()
+    input_data_config: Optional[List[shapes.AutoMLChannel]] = Unassigned()
+    output_data_config: Optional[shapes.AutoMLOutputDataConfig] = Unassigned()
     role_arn: Optional[str] = Unassigned()
-    auto_ml_job_objective: Optional[AutoMLJobObjective] = Unassigned()
+    auto_ml_job_objective: Optional[shapes.AutoMLJobObjective] = Unassigned()
     problem_type: Optional[str] = Unassigned()
-    auto_ml_job_config: Optional[AutoMLJobConfig] = Unassigned()
+    auto_ml_job_config: Optional[shapes.AutoMLJobConfig] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
     end_time: Optional[datetime.datetime] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
     failure_reason: Optional[str] = Unassigned()
-    partial_failure_reasons: Optional[List[AutoMLPartialFailureReason]] = Unassigned()
-    best_candidate: Optional[AutoMLCandidate] = Unassigned()
+    partial_failure_reasons: Optional[List[shapes.AutoMLPartialFailureReason]] = Unassigned()
+    best_candidate: Optional[shapes.AutoMLCandidate] = Unassigned()
     auto_ml_job_status: Optional[str] = Unassigned()
     auto_ml_job_secondary_status: Optional[str] = Unassigned()
     generate_candidate_definitions_only: Optional[bool] = Unassigned()
-    auto_ml_job_artifacts: Optional[AutoMLJobArtifacts] = Unassigned()
-    resolved_attributes: Optional[ResolvedAttributes] = Unassigned()
-    model_deploy_config: Optional[ModelDeployConfig] = Unassigned()
-    model_deploy_result: Optional[ModelDeployResult] = Unassigned()
+    auto_ml_job_artifacts: Optional[shapes.AutoMLJobArtifacts] = Unassigned()
+    resolved_attributes: Optional[shapes.ResolvedAttributes] = Unassigned()
+    model_deploy_config: Optional[shapes.ModelDeployConfig] = Unassigned()
+    model_deploy_result: Optional[shapes.ModelDeployResult] = Unassigned()
 
     def get_name(self) -> str:
         attributes = vars(self)
@@ -2460,15 +2464,15 @@ class AutoMLJob(Base):
     def create(
         cls,
         auto_ml_job_name: str,
-        input_data_config: List[AutoMLChannel],
-        output_data_config: AutoMLOutputDataConfig,
+        input_data_config: List[shapes.AutoMLChannel],
+        output_data_config: shapes.AutoMLOutputDataConfig,
         role_arn: str,
         problem_type: Optional[str] = Unassigned(),
-        auto_ml_job_objective: Optional[AutoMLJobObjective] = Unassigned(),
-        auto_ml_job_config: Optional[AutoMLJobConfig] = Unassigned(),
+        auto_ml_job_objective: Optional[shapes.AutoMLJobObjective] = Unassigned(),
+        auto_ml_job_config: Optional[shapes.AutoMLJobConfig] = Unassigned(),
         generate_candidate_definitions_only: Optional[bool] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
-        model_deploy_config: Optional[ModelDeployConfig] = Unassigned(),
+        tags: Optional[List[shapes.Tag]] = Unassigned(),
+        model_deploy_config: Optional[shapes.ModelDeployConfig] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["AutoMLJob"]:
@@ -2804,7 +2808,7 @@ class AutoMLJob(Base):
         sort_by: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> ResourceIterator[AutoMLCandidate]:
+    ) -> ResourceIterator[shapes.AutoMLCandidate]:
         """
         List the candidates created for the job.
 
@@ -2854,7 +2858,7 @@ class AutoMLJob(Base):
             list_method="list_candidates_for_auto_ml_job",
             summaries_key="Candidates",
             summary_name="AutoMLCandidate",
-            resource_cls=AutoMLCandidate,
+            resource_cls=shapes.AutoMLCandidate,
             list_method_kwargs=operation_input_args,
         )
 
@@ -2892,27 +2896,27 @@ class AutoMLJobV2(Base):
 
     auto_ml_job_name: str
     auto_ml_job_arn: Optional[str] = Unassigned()
-    auto_ml_job_input_data_config: Optional[List[AutoMLJobChannel]] = Unassigned()
-    output_data_config: Optional[AutoMLOutputDataConfig] = Unassigned()
+    auto_ml_job_input_data_config: Optional[List[shapes.AutoMLJobChannel]] = Unassigned()
+    output_data_config: Optional[shapes.AutoMLOutputDataConfig] = Unassigned()
     role_arn: Optional[str] = Unassigned()
-    auto_ml_job_objective: Optional[AutoMLJobObjective] = Unassigned()
-    auto_ml_problem_type_config: Optional[AutoMLProblemTypeConfig] = Unassigned()
+    auto_ml_job_objective: Optional[shapes.AutoMLJobObjective] = Unassigned()
+    auto_ml_problem_type_config: Optional[shapes.AutoMLProblemTypeConfig] = Unassigned()
     auto_ml_problem_type_config_name: Optional[str] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
     end_time: Optional[datetime.datetime] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
     failure_reason: Optional[str] = Unassigned()
-    partial_failure_reasons: Optional[List[AutoMLPartialFailureReason]] = Unassigned()
-    best_candidate: Optional[AutoMLCandidate] = Unassigned()
+    partial_failure_reasons: Optional[List[shapes.AutoMLPartialFailureReason]] = Unassigned()
+    best_candidate: Optional[shapes.AutoMLCandidate] = Unassigned()
     auto_ml_job_status: Optional[str] = Unassigned()
     auto_ml_job_secondary_status: Optional[str] = Unassigned()
-    auto_ml_job_artifacts: Optional[AutoMLJobArtifacts] = Unassigned()
-    resolved_attributes: Optional[AutoMLResolvedAttributes] = Unassigned()
-    model_deploy_config: Optional[ModelDeployConfig] = Unassigned()
-    model_deploy_result: Optional[ModelDeployResult] = Unassigned()
-    data_split_config: Optional[AutoMLDataSplitConfig] = Unassigned()
-    security_config: Optional[AutoMLSecurityConfig] = Unassigned()
-    auto_ml_compute_config: Optional[AutoMLComputeConfig] = Unassigned()
+    auto_ml_job_artifacts: Optional[shapes.AutoMLJobArtifacts] = Unassigned()
+    resolved_attributes: Optional[shapes.AutoMLResolvedAttributes] = Unassigned()
+    model_deploy_config: Optional[shapes.ModelDeployConfig] = Unassigned()
+    model_deploy_result: Optional[shapes.ModelDeployResult] = Unassigned()
+    data_split_config: Optional[shapes.AutoMLDataSplitConfig] = Unassigned()
+    security_config: Optional[shapes.AutoMLSecurityConfig] = Unassigned()
+    auto_ml_compute_config: Optional[shapes.AutoMLComputeConfig] = Unassigned()
 
     def get_name(self) -> str:
         attributes = vars(self)
@@ -2971,16 +2975,16 @@ class AutoMLJobV2(Base):
     def create(
         cls,
         auto_ml_job_name: str,
-        auto_ml_job_input_data_config: List[AutoMLJobChannel],
-        output_data_config: AutoMLOutputDataConfig,
-        auto_ml_problem_type_config: AutoMLProblemTypeConfig,
+        auto_ml_job_input_data_config: List[shapes.AutoMLJobChannel],
+        output_data_config: shapes.AutoMLOutputDataConfig,
+        auto_ml_problem_type_config: shapes.AutoMLProblemTypeConfig,
         role_arn: str,
-        tags: Optional[List[Tag]] = Unassigned(),
-        security_config: Optional[AutoMLSecurityConfig] = Unassigned(),
-        auto_ml_job_objective: Optional[AutoMLJobObjective] = Unassigned(),
-        model_deploy_config: Optional[ModelDeployConfig] = Unassigned(),
-        data_split_config: Optional[AutoMLDataSplitConfig] = Unassigned(),
-        auto_ml_compute_config: Optional[AutoMLComputeConfig] = Unassigned(),
+        tags: Optional[List[shapes.Tag]] = Unassigned(),
+        security_config: Optional[shapes.AutoMLSecurityConfig] = Unassigned(),
+        auto_ml_job_objective: Optional[shapes.AutoMLJobObjective] = Unassigned(),
+        model_deploy_config: Optional[shapes.ModelDeployConfig] = Unassigned(),
+        data_split_config: Optional[shapes.AutoMLDataSplitConfig] = Unassigned(),
+        auto_ml_compute_config: Optional[shapes.AutoMLComputeConfig] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["AutoMLJobV2"]:
@@ -3226,9 +3230,9 @@ class Cluster(Base):
     cluster_status: Optional[str] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
     failure_message: Optional[str] = Unassigned()
-    instance_groups: Optional[List[ClusterInstanceGroupDetails]] = Unassigned()
-    vpc_config: Optional[VpcConfig] = Unassigned()
-    orchestrator: Optional[ClusterOrchestrator] = Unassigned()
+    instance_groups: Optional[List[shapes.ClusterInstanceGroupDetails]] = Unassigned()
+    vpc_config: Optional[shapes.VpcConfig] = Unassigned()
+    orchestrator: Optional[shapes.ClusterOrchestrator] = Unassigned()
     node_recovery: Optional[str] = Unassigned()
 
     def get_name(self) -> str:
@@ -3271,10 +3275,10 @@ class Cluster(Base):
     def create(
         cls,
         cluster_name: str,
-        instance_groups: List[ClusterInstanceGroupSpecification],
-        vpc_config: Optional[VpcConfig] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
-        orchestrator: Optional[ClusterOrchestrator] = Unassigned(),
+        instance_groups: List[shapes.ClusterInstanceGroupSpecification],
+        vpc_config: Optional[shapes.VpcConfig] = Unassigned(),
+        tags: Optional[List[shapes.Tag]] = Unassigned(),
+        orchestrator: Optional[shapes.ClusterOrchestrator] = Unassigned(),
         node_recovery: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
@@ -3433,7 +3437,7 @@ class Cluster(Base):
     @Base.add_validate_call
     def update(
         self,
-        instance_groups: List[ClusterInstanceGroupSpecification],
+        instance_groups: List[shapes.ClusterInstanceGroupSpecification],
         node_recovery: Optional[str] = Unassigned(),
         instance_groups_to_delete: Optional[List[str]] = Unassigned(),
     ) -> Optional["Cluster"]:
@@ -3716,7 +3720,7 @@ class Cluster(Base):
         node_id: str,
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[ClusterNodeDetails]:
+    ) -> Optional[shapes.ClusterNodeDetails]:
         """
         Retrieves information of a node (also called a instance interchangeably) of a SageMaker HyperPod cluster.
 
@@ -3726,7 +3730,7 @@ class Cluster(Base):
             region: Region name.
 
         Returns:
-            ClusterNodeDetails
+            shapes.ClusterNodeDetails
 
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
@@ -3758,7 +3762,7 @@ class Cluster(Base):
         logger.debug(f"Response: {response}")
 
         transformed_response = transform(response, "DescribeClusterNodeResponse")
-        return ClusterNodeDetails(**transformed_response)
+        return shapes.ClusterNodeDetails(**transformed_response)
 
     @Base.add_validate_call
     def get_all_nodes(
@@ -3770,7 +3774,7 @@ class Cluster(Base):
         sort_order: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> ResourceIterator[ClusterNodeDetails]:
+    ) -> ResourceIterator[shapes.ClusterNodeDetails]:
         """
         Retrieves the list of instances (also called nodes interchangeably) in a SageMaker HyperPod cluster.
 
@@ -3822,13 +3826,14 @@ class Cluster(Base):
             list_method="list_cluster_nodes",
             summaries_key="ClusterNodeSummaries",
             summary_name="ClusterNodeSummary",
-            resource_cls=ClusterNodeDetails,
+            resource_cls=shapes.ClusterNodeDetails,
             list_method_kwargs=operation_input_args,
         )
 
     @Base.add_validate_call
     def update_software(
         self,
+        deployment_config: Optional[shapes.DeploymentConfiguration] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> None:
@@ -3836,6 +3841,7 @@ class Cluster(Base):
         Updates the platform software of a SageMaker HyperPod cluster for security patching.
 
         Parameters:
+            deployment_config: The configuration to use when updating the AMI versions.
             session: Boto3 session.
             region: Region name.
 
@@ -3855,6 +3861,8 @@ class Cluster(Base):
 
         operation_input_args = {
             "ClusterName": self.cluster_name,
+            "InstanceGroups": self.instance_groups,
+            "DeploymentConfig": deployment_config,
         }
         # serialize the input request
         operation_input_args = serialize(operation_input_args)
@@ -3874,7 +3882,7 @@ class Cluster(Base):
         node_ids: List[str],
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[BatchDeleteClusterNodesResponse]:
+    ) -> Optional[shapes.BatchDeleteClusterNodesResponse]:
         """
         Deletes specific nodes within a SageMaker HyperPod cluster.
 
@@ -3884,7 +3892,7 @@ class Cluster(Base):
             region: Region name.
 
         Returns:
-            BatchDeleteClusterNodesResponse
+            shapes.BatchDeleteClusterNodesResponse
 
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
@@ -3916,7 +3924,7 @@ class Cluster(Base):
         logger.debug(f"Response: {response}")
 
         transformed_response = transform(response, "BatchDeleteClusterNodesResponse")
-        return BatchDeleteClusterNodesResponse(**transformed_response)
+        return shapes.BatchDeleteClusterNodesResponse(**transformed_response)
 
 
 class ClusterSchedulerConfig(Base):
@@ -3947,12 +3955,12 @@ class ClusterSchedulerConfig(Base):
     status: Optional[str] = Unassigned()
     failure_reason: Optional[str] = Unassigned()
     cluster_arn: Optional[str] = Unassigned()
-    scheduler_config: Optional[SchedulerConfig] = Unassigned()
+    scheduler_config: Optional[shapes.SchedulerConfig] = Unassigned()
     description: Optional[str] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
-    created_by: Optional[UserContext] = Unassigned()
+    created_by: Optional[shapes.UserContext] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
-    last_modified_by: Optional[UserContext] = Unassigned()
+    last_modified_by: Optional[shapes.UserContext] = Unassigned()
 
     def get_name(self) -> str:
         attributes = vars(self)
@@ -3976,9 +3984,9 @@ class ClusterSchedulerConfig(Base):
         cls,
         name: str,
         cluster_arn: str,
-        scheduler_config: SchedulerConfig,
+        scheduler_config: shapes.SchedulerConfig,
         description: Optional[str] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
+        tags: Optional[List[shapes.Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["ClusterSchedulerConfig"]:
@@ -4142,7 +4150,7 @@ class ClusterSchedulerConfig(Base):
     def update(
         self,
         target_version: int,
-        scheduler_config: Optional[SchedulerConfig] = Unassigned(),
+        scheduler_config: Optional[shapes.SchedulerConfig] = Unassigned(),
         description: Optional[str] = Unassigned(),
     ) -> Optional["ClusterSchedulerConfig"]:
         """
@@ -4455,7 +4463,7 @@ class CodeRepository(Base):
     code_repository_arn: Optional[str] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
-    git_config: Optional[GitConfig] = Unassigned()
+    git_config: Optional[shapes.GitConfig] = Unassigned()
 
     def get_name(self) -> str:
         attributes = vars(self)
@@ -4478,8 +4486,8 @@ class CodeRepository(Base):
     def create(
         cls,
         code_repository_name: str,
-        git_config: GitConfig,
-        tags: Optional[List[Tag]] = Unassigned(),
+        git_config: shapes.GitConfig,
+        tags: Optional[List[shapes.Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["CodeRepository"]:
@@ -4626,7 +4634,7 @@ class CodeRepository(Base):
     @Base.add_validate_call
     def update(
         self,
-        git_config: Optional[GitConfigForUpdate] = Unassigned(),
+        git_config: Optional[shapes.GitConfigForUpdate] = Unassigned(),
     ) -> Optional["CodeRepository"]:
         """
         Update a CodeRepository resource
@@ -4801,19 +4809,19 @@ class CompilationJob(Base):
     compilation_job_status: Optional[str] = Unassigned()
     compilation_start_time: Optional[datetime.datetime] = Unassigned()
     compilation_end_time: Optional[datetime.datetime] = Unassigned()
-    stopping_condition: Optional[StoppingCondition] = Unassigned()
+    stopping_condition: Optional[shapes.StoppingCondition] = Unassigned()
     inference_image: Optional[str] = Unassigned()
     model_package_version_arn: Optional[str] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
     failure_reason: Optional[str] = Unassigned()
-    model_artifacts: Optional[ModelArtifacts] = Unassigned()
-    model_digests: Optional[ModelDigests] = Unassigned()
+    model_artifacts: Optional[shapes.ModelArtifacts] = Unassigned()
+    model_digests: Optional[shapes.ModelDigests] = Unassigned()
     role_arn: Optional[str] = Unassigned()
-    input_config: Optional[InputConfig] = Unassigned()
-    output_config: Optional[OutputConfig] = Unassigned()
-    vpc_config: Optional[NeoVpcConfig] = Unassigned()
-    derived_information: Optional[DerivedInformation] = Unassigned()
+    input_config: Optional[shapes.InputConfig] = Unassigned()
+    output_config: Optional[shapes.OutputConfig] = Unassigned()
+    vpc_config: Optional[shapes.NeoVpcConfig] = Unassigned()
+    derived_information: Optional[shapes.DerivedInformation] = Unassigned()
 
     def get_name(self) -> str:
         attributes = vars(self)
@@ -4863,12 +4871,12 @@ class CompilationJob(Base):
         cls,
         compilation_job_name: str,
         role_arn: str,
-        output_config: OutputConfig,
-        stopping_condition: StoppingCondition,
+        output_config: shapes.OutputConfig,
+        stopping_condition: shapes.StoppingCondition,
         model_package_version_arn: Optional[str] = Unassigned(),
-        input_config: Optional[InputConfig] = Unassigned(),
-        vpc_config: Optional[NeoVpcConfig] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
+        input_config: Optional[shapes.InputConfig] = Unassigned(),
+        vpc_config: Optional[shapes.NeoVpcConfig] = Unassigned(),
+        tags: Optional[List[shapes.Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["CompilationJob"]:
@@ -5256,13 +5264,13 @@ class ComputeQuota(Base):
     status: Optional[str] = Unassigned()
     failure_reason: Optional[str] = Unassigned()
     cluster_arn: Optional[str] = Unassigned()
-    compute_quota_config: Optional[ComputeQuotaConfig] = Unassigned()
-    compute_quota_target: Optional[ComputeQuotaTarget] = Unassigned()
+    compute_quota_config: Optional[shapes.ComputeQuotaConfig] = Unassigned()
+    compute_quota_target: Optional[shapes.ComputeQuotaTarget] = Unassigned()
     activation_state: Optional[str] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
-    created_by: Optional[UserContext] = Unassigned()
+    created_by: Optional[shapes.UserContext] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
-    last_modified_by: Optional[UserContext] = Unassigned()
+    last_modified_by: Optional[shapes.UserContext] = Unassigned()
 
     def get_name(self) -> str:
         attributes = vars(self)
@@ -5286,11 +5294,11 @@ class ComputeQuota(Base):
         cls,
         name: str,
         cluster_arn: str,
-        compute_quota_config: ComputeQuotaConfig,
-        compute_quota_target: ComputeQuotaTarget,
+        compute_quota_config: shapes.ComputeQuotaConfig,
+        compute_quota_target: shapes.ComputeQuotaTarget,
         description: Optional[str] = Unassigned(),
         activation_state: Optional[str] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
+        tags: Optional[List[shapes.Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["ComputeQuota"]:
@@ -5454,8 +5462,8 @@ class ComputeQuota(Base):
     def update(
         self,
         target_version: int,
-        compute_quota_config: Optional[ComputeQuotaConfig] = Unassigned(),
-        compute_quota_target: Optional[ComputeQuotaTarget] = Unassigned(),
+        compute_quota_config: Optional[shapes.ComputeQuotaConfig] = Unassigned(),
+        compute_quota_target: Optional[shapes.ComputeQuotaTarget] = Unassigned(),
         activation_state: Optional[str] = Unassigned(),
         description: Optional[str] = Unassigned(),
     ) -> Optional["ComputeQuota"]:
@@ -5771,14 +5779,14 @@ class Context(Base):
 
     context_name: str
     context_arn: Optional[str] = Unassigned()
-    source: Optional[ContextSource] = Unassigned()
+    source: Optional[shapes.ContextSource] = Unassigned()
     context_type: Optional[str] = Unassigned()
     description: Optional[str] = Unassigned()
     properties: Optional[Dict[str, str]] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
-    created_by: Optional[UserContext] = Unassigned()
+    created_by: Optional[shapes.UserContext] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
-    last_modified_by: Optional[UserContext] = Unassigned()
+    last_modified_by: Optional[shapes.UserContext] = Unassigned()
     lineage_group_arn: Optional[str] = Unassigned()
 
     def get_name(self) -> str:
@@ -5802,11 +5810,11 @@ class Context(Base):
     def create(
         cls,
         context_name: str,
-        source: ContextSource,
+        source: shapes.ContextSource,
         context_type: str,
         description: Optional[str] = Unassigned(),
         properties: Optional[Dict[str, str]] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
+        tags: Optional[List[shapes.Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["Context"]:
@@ -6136,14 +6144,14 @@ class DataQualityJobDefinition(Base):
     job_definition_name: str
     job_definition_arn: Optional[str] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
-    data_quality_baseline_config: Optional[DataQualityBaselineConfig] = Unassigned()
-    data_quality_app_specification: Optional[DataQualityAppSpecification] = Unassigned()
-    data_quality_job_input: Optional[DataQualityJobInput] = Unassigned()
-    data_quality_job_output_config: Optional[MonitoringOutputConfig] = Unassigned()
-    job_resources: Optional[MonitoringResources] = Unassigned()
-    network_config: Optional[MonitoringNetworkConfig] = Unassigned()
+    data_quality_baseline_config: Optional[shapes.DataQualityBaselineConfig] = Unassigned()
+    data_quality_app_specification: Optional[shapes.DataQualityAppSpecification] = Unassigned()
+    data_quality_job_input: Optional[shapes.DataQualityJobInput] = Unassigned()
+    data_quality_job_output_config: Optional[shapes.MonitoringOutputConfig] = Unassigned()
+    job_resources: Optional[shapes.MonitoringResources] = Unassigned()
+    network_config: Optional[shapes.MonitoringNetworkConfig] = Unassigned()
     role_arn: Optional[str] = Unassigned()
-    stopping_condition: Optional[MonitoringStoppingCondition] = Unassigned()
+    stopping_condition: Optional[shapes.MonitoringStoppingCondition] = Unassigned()
 
     def get_name(self) -> str:
         attributes = vars(self)
@@ -6205,15 +6213,15 @@ class DataQualityJobDefinition(Base):
     def create(
         cls,
         job_definition_name: str,
-        data_quality_app_specification: DataQualityAppSpecification,
-        data_quality_job_input: DataQualityJobInput,
-        data_quality_job_output_config: MonitoringOutputConfig,
-        job_resources: MonitoringResources,
+        data_quality_app_specification: shapes.DataQualityAppSpecification,
+        data_quality_job_input: shapes.DataQualityJobInput,
+        data_quality_job_output_config: shapes.MonitoringOutputConfig,
+        job_resources: shapes.MonitoringResources,
         role_arn: str,
-        data_quality_baseline_config: Optional[DataQualityBaselineConfig] = Unassigned(),
-        network_config: Optional[MonitoringNetworkConfig] = Unassigned(),
-        stopping_condition: Optional[MonitoringStoppingCondition] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
+        data_quality_baseline_config: Optional[shapes.DataQualityBaselineConfig] = Unassigned(),
+        network_config: Optional[shapes.MonitoringNetworkConfig] = Unassigned(),
+        stopping_condition: Optional[shapes.MonitoringStoppingCondition] = Unassigned(),
+        tags: Optional[List[shapes.Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["DataQualityJobDefinition"]:
@@ -6463,6 +6471,7 @@ class DataQualityJobDefinition(Base):
             "CreationTimeBefore": creation_time_before,
             "CreationTimeAfter": creation_time_after,
         }
+
         custom_key_mapping = {
             "monitoring_job_definition_name": "job_definition_name",
             "monitoring_job_definition_arn": "job_definition_arn",
@@ -6508,7 +6517,7 @@ class Device(Base):
     iot_thing_name: Optional[str] = Unassigned()
     registration_time: Optional[datetime.datetime] = Unassigned()
     latest_heartbeat: Optional[datetime.datetime] = Unassigned()
-    models: Optional[List[EdgeModel]] = Unassigned()
+    models: Optional[List[shapes.EdgeModel]] = Unassigned()
     max_models: Optional[int] = Unassigned()
     next_token: Optional[str] = Unassigned()
     agent_version: Optional[str] = Unassigned()
@@ -6704,7 +6713,7 @@ class DeviceFleet(Base):
 
     device_fleet_name: str
     device_fleet_arn: Optional[str] = Unassigned()
-    output_config: Optional[EdgeOutputConfig] = Unassigned()
+    output_config: Optional[shapes.EdgeOutputConfig] = Unassigned()
     description: Optional[str] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
@@ -6753,10 +6762,10 @@ class DeviceFleet(Base):
     def create(
         cls,
         device_fleet_name: str,
-        output_config: EdgeOutputConfig,
+        output_config: shapes.EdgeOutputConfig,
         role_arn: Optional[str] = Unassigned(),
         description: Optional[str] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
+        tags: Optional[List[shapes.Tag]] = Unassigned(),
         enable_iot_role_alias: Optional[bool] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
@@ -6915,7 +6924,7 @@ class DeviceFleet(Base):
     @Base.add_validate_call
     def update(
         self,
-        output_config: EdgeOutputConfig,
+        output_config: shapes.EdgeOutputConfig,
         role_arn: Optional[str] = Unassigned(),
         description: Optional[str] = Unassigned(),
         enable_iot_role_alias: Optional[bool] = Unassigned(),
@@ -7117,7 +7126,7 @@ class DeviceFleet(Base):
         self,
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[GetDeviceFleetReportResponse]:
+    ) -> Optional[shapes.GetDeviceFleetReportResponse]:
         """
         Describes a fleet.
 
@@ -7126,7 +7135,7 @@ class DeviceFleet(Base):
             region: Region name.
 
         Returns:
-            GetDeviceFleetReportResponse
+            shapes.GetDeviceFleetReportResponse
 
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
@@ -7156,13 +7165,13 @@ class DeviceFleet(Base):
         logger.debug(f"Response: {response}")
 
         transformed_response = transform(response, "GetDeviceFleetReportResponse")
-        return GetDeviceFleetReportResponse(**transformed_response)
+        return shapes.GetDeviceFleetReportResponse(**transformed_response)
 
     @Base.add_validate_call
     def register_devices(
         self,
-        devices: List[Device],
-        tags: Optional[List[Tag]] = Unassigned(),
+        devices: List[shapes.Device],
+        tags: Optional[List[shapes.Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> None:
@@ -7208,7 +7217,7 @@ class DeviceFleet(Base):
     @Base.add_validate_call
     def update_devices(
         self,
-        devices: List[Device],
+        devices: List[shapes.Device],
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> None:
@@ -7292,8 +7301,8 @@ class Domain(Base):
     failure_reason: Optional[str] = Unassigned()
     security_group_id_for_domain_boundary: Optional[str] = Unassigned()
     auth_mode: Optional[str] = Unassigned()
-    default_user_settings: Optional[UserSettings] = Unassigned()
-    domain_settings: Optional[DomainSettings] = Unassigned()
+    default_user_settings: Optional[shapes.UserSettings] = Unassigned()
+    domain_settings: Optional[shapes.DomainSettings] = Unassigned()
     app_network_access_type: Optional[str] = Unassigned()
     home_efs_file_system_kms_key_id: Optional[str] = Unassigned()
     subnet_ids: Optional[List[str]] = Unassigned()
@@ -7302,7 +7311,7 @@ class Domain(Base):
     kms_key_id: Optional[str] = Unassigned()
     app_security_group_management: Optional[str] = Unassigned()
     tag_propagation: Optional[str] = Unassigned()
-    default_space_settings: Optional[DefaultSpaceSettings] = Unassigned()
+    default_space_settings: Optional[shapes.DefaultSpaceSettings] = Unassigned()
 
     def get_name(self) -> str:
         attributes = vars(self)
@@ -7359,6 +7368,7 @@ class Domain(Base):
                         "domain_execution_role_arn": {"type": "string"}
                     },
                     "execution_role_identity_config": {"type": "string"},
+                    "unified_studio_settings": {"project_s3_path": {"type": "string"}},
                 },
                 "home_efs_file_system_kms_key_id": {"type": "string"},
                 "subnet_ids": {"type": "array", "items": {"type": "string"}},
@@ -7391,17 +7401,17 @@ class Domain(Base):
         cls,
         domain_name: str,
         auth_mode: str,
-        default_user_settings: UserSettings,
+        default_user_settings: shapes.UserSettings,
         subnet_ids: List[str],
         vpc_id: str,
-        domain_settings: Optional[DomainSettings] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
+        domain_settings: Optional[shapes.DomainSettings] = Unassigned(),
+        tags: Optional[List[shapes.Tag]] = Unassigned(),
         app_network_access_type: Optional[str] = Unassigned(),
         home_efs_file_system_kms_key_id: Optional[str] = Unassigned(),
         kms_key_id: Optional[str] = Unassigned(),
         app_security_group_management: Optional[str] = Unassigned(),
         tag_propagation: Optional[str] = Unassigned(),
-        default_space_settings: Optional[DefaultSpaceSettings] = Unassigned(),
+        default_space_settings: Optional[shapes.DefaultSpaceSettings] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["Domain"]:
@@ -7573,10 +7583,10 @@ class Domain(Base):
     @Base.add_validate_call
     def update(
         self,
-        default_user_settings: Optional[UserSettings] = Unassigned(),
-        domain_settings_for_update: Optional[DomainSettingsForUpdate] = Unassigned(),
+        default_user_settings: Optional[shapes.UserSettings] = Unassigned(),
+        domain_settings_for_update: Optional[shapes.DomainSettingsForUpdate] = Unassigned(),
         app_security_group_management: Optional[str] = Unassigned(),
-        default_space_settings: Optional[DefaultSpaceSettings] = Unassigned(),
+        default_space_settings: Optional[shapes.DefaultSpaceSettings] = Unassigned(),
         subnet_ids: Optional[List[str]] = Unassigned(),
         app_network_access_type: Optional[str] = Unassigned(),
         tag_propagation: Optional[str] = Unassigned(),
@@ -7633,7 +7643,7 @@ class Domain(Base):
     @Base.add_validate_call
     def delete(
         self,
-        retention_policy: Optional[RetentionPolicy] = Unassigned(),
+        retention_policy: Optional[shapes.RetentionPolicy] = Unassigned(),
     ) -> None:
         """
         Delete a Domain resource
@@ -7851,12 +7861,12 @@ class EdgeDeploymentPlan(Base):
 
     edge_deployment_plan_name: str
     edge_deployment_plan_arn: Optional[str] = Unassigned()
-    model_configs: Optional[List[EdgeDeploymentModelConfig]] = Unassigned()
+    model_configs: Optional[List[shapes.EdgeDeploymentModelConfig]] = Unassigned()
     device_fleet_name: Optional[str] = Unassigned()
     edge_deployment_success: Optional[int] = Unassigned()
     edge_deployment_pending: Optional[int] = Unassigned()
     edge_deployment_failed: Optional[int] = Unassigned()
-    stages: Optional[List[DeploymentStageStatusSummary]] = Unassigned()
+    stages: Optional[List[shapes.DeploymentStageStatusSummary]] = Unassigned()
     next_token: Optional[str] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
@@ -7882,10 +7892,10 @@ class EdgeDeploymentPlan(Base):
     def create(
         cls,
         edge_deployment_plan_name: str,
-        model_configs: List[EdgeDeploymentModelConfig],
+        model_configs: List[shapes.EdgeDeploymentModelConfig],
         device_fleet_name: Union[str, object],
-        stages: Optional[List[DeploymentStage]] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
+        stages: Optional[List[shapes.DeploymentStage]] = Unassigned(),
+        tags: Optional[List[shapes.Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["EdgeDeploymentPlan"]:
@@ -8334,7 +8344,7 @@ class EdgeDeploymentPlan(Base):
         exclude_devices_deployed_in_other_stage: Optional[bool] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> ResourceIterator[DeviceDeploymentSummary]:
+    ) -> ResourceIterator[shapes.DeviceDeploymentSummary]:
         """
         Lists devices allocated to the stage, containing detailed device information and deployment status.
 
@@ -8378,7 +8388,7 @@ class EdgeDeploymentPlan(Base):
             list_method="list_stage_devices",
             summaries_key="DeviceDeploymentSummaries",
             summary_name="DeviceDeploymentSummary",
-            resource_cls=DeviceDeploymentSummary,
+            resource_cls=shapes.DeviceDeploymentSummary,
             list_method_kwargs=operation_input_args,
         )
 
@@ -8412,7 +8422,7 @@ class EdgePackagingJob(Base):
     model_name: Optional[str] = Unassigned()
     model_version: Optional[str] = Unassigned()
     role_arn: Optional[str] = Unassigned()
-    output_config: Optional[EdgeOutputConfig] = Unassigned()
+    output_config: Optional[shapes.EdgeOutputConfig] = Unassigned()
     resource_key: Optional[str] = Unassigned()
     edge_packaging_job_status: Optional[str] = Unassigned()
     edge_packaging_job_status_message: Optional[str] = Unassigned()
@@ -8420,7 +8430,7 @@ class EdgePackagingJob(Base):
     last_modified_time: Optional[datetime.datetime] = Unassigned()
     model_artifact: Optional[str] = Unassigned()
     model_signature: Optional[str] = Unassigned()
-    preset_deployment_output: Optional[EdgePresetDeploymentOutput] = Unassigned()
+    preset_deployment_output: Optional[shapes.EdgePresetDeploymentOutput] = Unassigned()
 
     def get_name(self) -> str:
         attributes = vars(self)
@@ -8467,9 +8477,9 @@ class EdgePackagingJob(Base):
         model_name: Union[str, object],
         model_version: str,
         role_arn: str,
-        output_config: EdgeOutputConfig,
+        output_config: shapes.EdgeOutputConfig,
         resource_key: Optional[str] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
+        tags: Optional[List[shapes.Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["EdgePackagingJob"]:
@@ -8823,17 +8833,17 @@ class Endpoint(Base):
     endpoint_name: str
     endpoint_arn: Optional[str] = Unassigned()
     endpoint_config_name: Optional[str] = Unassigned()
-    production_variants: Optional[List[ProductionVariantSummary]] = Unassigned()
-    data_capture_config: Optional[DataCaptureConfigSummary] = Unassigned()
+    production_variants: Optional[List[shapes.ProductionVariantSummary]] = Unassigned()
+    data_capture_config: Optional[shapes.DataCaptureConfigSummary] = Unassigned()
     endpoint_status: Optional[str] = Unassigned()
     failure_reason: Optional[str] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
-    last_deployment_config: Optional[DeploymentConfig] = Unassigned()
-    async_inference_config: Optional[AsyncInferenceConfig] = Unassigned()
-    pending_deployment_summary: Optional[PendingDeploymentSummary] = Unassigned()
-    explainer_config: Optional[ExplainerConfig] = Unassigned()
-    shadow_production_variants: Optional[List[ProductionVariantSummary]] = Unassigned()
+    last_deployment_config: Optional[shapes.DeploymentConfig] = Unassigned()
+    async_inference_config: Optional[shapes.AsyncInferenceConfig] = Unassigned()
+    pending_deployment_summary: Optional[shapes.PendingDeploymentSummary] = Unassigned()
+    explainer_config: Optional[shapes.ExplainerConfig] = Unassigned()
+    shadow_production_variants: Optional[List[shapes.ProductionVariantSummary]] = Unassigned()
 
     def get_name(self) -> str:
         attributes = vars(self)
@@ -8883,8 +8893,8 @@ class Endpoint(Base):
         cls,
         endpoint_name: str,
         endpoint_config_name: Union[str, object],
-        deployment_config: Optional[DeploymentConfig] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
+        deployment_config: Optional[shapes.DeploymentConfig] = Unassigned(),
+        tags: Optional[List[shapes.Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["Endpoint"]:
@@ -9036,8 +9046,8 @@ class Endpoint(Base):
     def update(
         self,
         retain_all_variant_properties: Optional[bool] = Unassigned(),
-        exclude_retained_variant_properties: Optional[List[VariantProperty]] = Unassigned(),
-        deployment_config: Optional[DeploymentConfig] = Unassigned(),
+        exclude_retained_variant_properties: Optional[List[shapes.VariantProperty]] = Unassigned(),
+        deployment_config: Optional[shapes.DeploymentConfig] = Unassigned(),
         retain_deployment_config: Optional[bool] = Unassigned(),
     ) -> Optional["Endpoint"]:
         """
@@ -9325,7 +9335,7 @@ class Endpoint(Base):
     @Base.add_validate_call
     def update_weights_and_capacities(
         self,
-        desired_weights_and_capacities: List[DesiredWeightAndCapacity],
+        desired_weights_and_capacities: List[shapes.DesiredWeightAndCapacity],
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> None:
@@ -9382,7 +9392,7 @@ class Endpoint(Base):
         session_id: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[InvokeEndpointOutput]:
+    ) -> Optional[shapes.InvokeEndpointOutput]:
         """
         After you deploy a model into production using Amazon SageMaker hosting services, your client applications use this API to get inferences from the model hosted at the specified endpoint.
 
@@ -9402,7 +9412,7 @@ class Endpoint(Base):
             region: Region name.
 
         Returns:
-            InvokeEndpointOutput
+            shapes.InvokeEndpointOutput
 
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
@@ -9449,7 +9459,7 @@ class Endpoint(Base):
         logger.debug(f"Response: {response}")
 
         transformed_response = transform(response, "InvokeEndpointOutput")
-        return InvokeEndpointOutput(**transformed_response)
+        return shapes.InvokeEndpointOutput(**transformed_response)
 
     @Base.add_validate_call
     def invoke_async(
@@ -9463,7 +9473,7 @@ class Endpoint(Base):
         invocation_timeout_seconds: Optional[int] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[InvokeEndpointAsyncOutput]:
+    ) -> Optional[shapes.InvokeEndpointAsyncOutput]:
         """
         After you deploy a model into production using Amazon SageMaker hosting services, your client applications use this API to get inferences from the model hosted at the specified endpoint in an asynchronous manner.
 
@@ -9479,7 +9489,7 @@ class Endpoint(Base):
             region: Region name.
 
         Returns:
-            InvokeEndpointAsyncOutput
+            shapes.InvokeEndpointAsyncOutput
 
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
@@ -9519,7 +9529,7 @@ class Endpoint(Base):
         logger.debug(f"Response: {response}")
 
         transformed_response = transform(response, "InvokeEndpointAsyncOutput")
-        return InvokeEndpointAsyncOutput(**transformed_response)
+        return shapes.InvokeEndpointAsyncOutput(**transformed_response)
 
     @Base.add_validate_call
     def invoke_with_response_stream(
@@ -9535,7 +9545,7 @@ class Endpoint(Base):
         session_id: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[InvokeEndpointWithResponseStreamOutput]:
+    ) -> Optional[shapes.InvokeEndpointWithResponseStreamOutput]:
         """
         Invokes a model at the specified endpoint to return the inference response as a stream.
 
@@ -9553,7 +9563,7 @@ class Endpoint(Base):
             region: Region name.
 
         Returns:
-            InvokeEndpointWithResponseStreamOutput
+            shapes.InvokeEndpointWithResponseStreamOutput
 
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
@@ -9598,7 +9608,7 @@ class Endpoint(Base):
         logger.debug(f"Response: {response}")
 
         transformed_response = transform(response, "InvokeEndpointWithResponseStreamOutput")
-        return InvokeEndpointWithResponseStreamOutput(**transformed_response)
+        return shapes.InvokeEndpointWithResponseStreamOutput(**transformed_response)
 
 
 class EndpointConfig(Base):
@@ -9623,15 +9633,15 @@ class EndpointConfig(Base):
 
     endpoint_config_name: str
     endpoint_config_arn: Optional[str] = Unassigned()
-    production_variants: Optional[List[ProductionVariant]] = Unassigned()
-    data_capture_config: Optional[DataCaptureConfig] = Unassigned()
+    production_variants: Optional[List[shapes.ProductionVariant]] = Unassigned()
+    data_capture_config: Optional[shapes.DataCaptureConfig] = Unassigned()
     kms_key_id: Optional[str] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
-    async_inference_config: Optional[AsyncInferenceConfig] = Unassigned()
-    explainer_config: Optional[ExplainerConfig] = Unassigned()
-    shadow_production_variants: Optional[List[ProductionVariant]] = Unassigned()
+    async_inference_config: Optional[shapes.AsyncInferenceConfig] = Unassigned()
+    explainer_config: Optional[shapes.ExplainerConfig] = Unassigned()
+    shadow_production_variants: Optional[List[shapes.ProductionVariant]] = Unassigned()
     execution_role_arn: Optional[str] = Unassigned()
-    vpc_config: Optional[VpcConfig] = Unassigned()
+    vpc_config: Optional[shapes.VpcConfig] = Unassigned()
     enable_network_isolation: Optional[bool] = Unassigned()
 
     def get_name(self) -> str:
@@ -9687,15 +9697,15 @@ class EndpointConfig(Base):
     def create(
         cls,
         endpoint_config_name: str,
-        production_variants: List[ProductionVariant],
-        data_capture_config: Optional[DataCaptureConfig] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
+        production_variants: List[shapes.ProductionVariant],
+        data_capture_config: Optional[shapes.DataCaptureConfig] = Unassigned(),
+        tags: Optional[List[shapes.Tag]] = Unassigned(),
         kms_key_id: Optional[str] = Unassigned(),
-        async_inference_config: Optional[AsyncInferenceConfig] = Unassigned(),
-        explainer_config: Optional[ExplainerConfig] = Unassigned(),
-        shadow_production_variants: Optional[List[ProductionVariant]] = Unassigned(),
+        async_inference_config: Optional[shapes.AsyncInferenceConfig] = Unassigned(),
+        explainer_config: Optional[shapes.ExplainerConfig] = Unassigned(),
+        shadow_production_variants: Optional[List[shapes.ProductionVariant]] = Unassigned(),
         execution_role_arn: Optional[str] = Unassigned(),
-        vpc_config: Optional[VpcConfig] = Unassigned(),
+        vpc_config: Optional[shapes.VpcConfig] = Unassigned(),
         enable_network_isolation: Optional[bool] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
@@ -9976,12 +9986,12 @@ class Experiment(Base):
     experiment_name: str
     experiment_arn: Optional[str] = Unassigned()
     display_name: Optional[str] = Unassigned()
-    source: Optional[ExperimentSource] = Unassigned()
+    source: Optional[shapes.ExperimentSource] = Unassigned()
     description: Optional[str] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
-    created_by: Optional[UserContext] = Unassigned()
+    created_by: Optional[shapes.UserContext] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
-    last_modified_by: Optional[UserContext] = Unassigned()
+    last_modified_by: Optional[shapes.UserContext] = Unassigned()
 
     def get_name(self) -> str:
         attributes = vars(self)
@@ -10006,7 +10016,7 @@ class Experiment(Base):
         experiment_name: str,
         display_name: Optional[str] = Unassigned(),
         description: Optional[str] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
+        tags: Optional[List[shapes.Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["Experiment"]:
@@ -10328,16 +10338,16 @@ class FeatureGroup(Base):
     feature_group_arn: Optional[str] = Unassigned()
     record_identifier_feature_name: Optional[str] = Unassigned()
     event_time_feature_name: Optional[str] = Unassigned()
-    feature_definitions: Optional[List[FeatureDefinition]] = Unassigned()
+    feature_definitions: Optional[List[shapes.FeatureDefinition]] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
-    online_store_config: Optional[OnlineStoreConfig] = Unassigned()
-    offline_store_config: Optional[OfflineStoreConfig] = Unassigned()
-    throughput_config: Optional[ThroughputConfigDescription] = Unassigned()
+    online_store_config: Optional[shapes.OnlineStoreConfig] = Unassigned()
+    offline_store_config: Optional[shapes.OfflineStoreConfig] = Unassigned()
+    throughput_config: Optional[shapes.ThroughputConfigDescription] = Unassigned()
     role_arn: Optional[str] = Unassigned()
     feature_group_status: Optional[str] = Unassigned()
-    offline_store_status: Optional[OfflineStoreStatus] = Unassigned()
-    last_update_status: Optional[LastUpdateStatus] = Unassigned()
+    offline_store_status: Optional[shapes.OfflineStoreStatus] = Unassigned()
+    last_update_status: Optional[shapes.LastUpdateStatus] = Unassigned()
     failure_reason: Optional[str] = Unassigned()
     description: Optional[str] = Unassigned()
     next_token: Optional[str] = Unassigned()
@@ -10390,13 +10400,13 @@ class FeatureGroup(Base):
         feature_group_name: str,
         record_identifier_feature_name: str,
         event_time_feature_name: str,
-        feature_definitions: List[FeatureDefinition],
-        online_store_config: Optional[OnlineStoreConfig] = Unassigned(),
-        offline_store_config: Optional[OfflineStoreConfig] = Unassigned(),
-        throughput_config: Optional[ThroughputConfig] = Unassigned(),
+        feature_definitions: List[shapes.FeatureDefinition],
+        online_store_config: Optional[shapes.OnlineStoreConfig] = Unassigned(),
+        offline_store_config: Optional[shapes.OfflineStoreConfig] = Unassigned(),
+        throughput_config: Optional[shapes.ThroughputConfig] = Unassigned(),
         role_arn: Optional[str] = Unassigned(),
         description: Optional[str] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
+        tags: Optional[List[shapes.Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["FeatureGroup"]:
@@ -10566,9 +10576,9 @@ class FeatureGroup(Base):
     @Base.add_validate_call
     def update(
         self,
-        feature_additions: Optional[List[FeatureDefinition]] = Unassigned(),
-        online_store_config: Optional[OnlineStoreConfigUpdate] = Unassigned(),
-        throughput_config: Optional[ThroughputConfigUpdate] = Unassigned(),
+        feature_additions: Optional[List[shapes.FeatureDefinition]] = Unassigned(),
+        online_store_config: Optional[shapes.OnlineStoreConfigUpdate] = Unassigned(),
+        throughput_config: Optional[shapes.ThroughputConfigUpdate] = Unassigned(),
     ) -> Optional["FeatureGroup"]:
         """
         Update a FeatureGroup resource
@@ -10848,7 +10858,7 @@ class FeatureGroup(Base):
         expiration_time_response: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[GetRecordResponse]:
+    ) -> Optional[shapes.GetRecordResponse]:
         """
         Use for OnlineStore serving from a FeatureStore.
 
@@ -10860,7 +10870,7 @@ class FeatureGroup(Base):
             region: Region name.
 
         Returns:
-            GetRecordResponse
+            shapes.GetRecordResponse
 
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
@@ -10898,14 +10908,14 @@ class FeatureGroup(Base):
         logger.debug(f"Response: {response}")
 
         transformed_response = transform(response, "GetRecordResponse")
-        return GetRecordResponse(**transformed_response)
+        return shapes.GetRecordResponse(**transformed_response)
 
     @Base.add_validate_call
     def put_record(
         self,
-        record: List[FeatureValue],
+        record: List[shapes.FeatureValue],
         target_stores: Optional[List[str]] = Unassigned(),
-        ttl_duration: Optional[TtlDuration] = Unassigned(),
+        ttl_duration: Optional[shapes.TtlDuration] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> None:
@@ -11012,11 +11022,11 @@ class FeatureGroup(Base):
     @Base.add_validate_call
     def batch_get_record(
         self,
-        identifiers: List[BatchGetRecordIdentifier],
+        identifiers: List[shapes.BatchGetRecordIdentifier],
         expiration_time_response: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[BatchGetRecordResponse]:
+    ) -> Optional[shapes.BatchGetRecordResponse]:
         """
         Retrieves a batch of Records from a FeatureGroup.
 
@@ -11027,7 +11037,7 @@ class FeatureGroup(Base):
             region: Region name.
 
         Returns:
-            BatchGetRecordResponse
+            shapes.BatchGetRecordResponse
 
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
@@ -11062,7 +11072,7 @@ class FeatureGroup(Base):
         logger.debug(f"Response: {response}")
 
         transformed_response = transform(response, "BatchGetRecordResponse")
-        return BatchGetRecordResponse(**transformed_response)
+        return shapes.BatchGetRecordResponse(**transformed_response)
 
 
 class FeatureMetadata(Base):
@@ -11088,7 +11098,7 @@ class FeatureMetadata(Base):
     creation_time: Optional[datetime.datetime] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
     description: Optional[str] = Unassigned()
-    parameters: Optional[List[FeatureParameter]] = Unassigned()
+    parameters: Optional[List[shapes.FeatureParameter]] = Unassigned()
 
     def get_name(self) -> str:
         attributes = vars(self)
@@ -11202,7 +11212,7 @@ class FeatureMetadata(Base):
     def update(
         self,
         description: Optional[str] = Unassigned(),
-        parameter_additions: Optional[List[FeatureParameter]] = Unassigned(),
+        parameter_additions: Optional[List[shapes.FeatureParameter]] = Unassigned(),
         parameter_removals: Optional[List[str]] = Unassigned(),
     ) -> Optional["FeatureMetadata"]:
         """
@@ -11273,10 +11283,10 @@ class FlowDefinition(Base):
     flow_definition_arn: Optional[str] = Unassigned()
     flow_definition_status: Optional[str] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
-    human_loop_request_source: Optional[HumanLoopRequestSource] = Unassigned()
-    human_loop_activation_config: Optional[HumanLoopActivationConfig] = Unassigned()
-    human_loop_config: Optional[HumanLoopConfig] = Unassigned()
-    output_config: Optional[FlowDefinitionOutputConfig] = Unassigned()
+    human_loop_request_source: Optional[shapes.HumanLoopRequestSource] = Unassigned()
+    human_loop_activation_config: Optional[shapes.HumanLoopActivationConfig] = Unassigned()
+    human_loop_config: Optional[shapes.HumanLoopConfig] = Unassigned()
+    output_config: Optional[shapes.FlowDefinitionOutputConfig] = Unassigned()
     role_arn: Optional[str] = Unassigned()
     failure_reason: Optional[str] = Unassigned()
 
@@ -11321,12 +11331,12 @@ class FlowDefinition(Base):
     def create(
         cls,
         flow_definition_name: str,
-        output_config: FlowDefinitionOutputConfig,
+        output_config: shapes.FlowDefinitionOutputConfig,
         role_arn: str,
-        human_loop_request_source: Optional[HumanLoopRequestSource] = Unassigned(),
-        human_loop_activation_config: Optional[HumanLoopActivationConfig] = Unassigned(),
-        human_loop_config: Optional[HumanLoopConfig] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
+        human_loop_request_source: Optional[shapes.HumanLoopRequestSource] = Unassigned(),
+        human_loop_activation_config: Optional[shapes.HumanLoopActivationConfig] = Unassigned(),
+        human_loop_config: Optional[shapes.HumanLoopConfig] = Unassigned(),
+        tags: Optional[List[shapes.Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["FlowDefinition"]:
@@ -11721,7 +11731,7 @@ class Hub(Base):
     hub_display_name: Optional[str] = Unassigned()
     hub_description: Optional[str] = Unassigned()
     hub_search_keywords: Optional[List[str]] = Unassigned()
-    s3_storage_config: Optional[HubS3StorageConfig] = Unassigned()
+    s3_storage_config: Optional[shapes.HubS3StorageConfig] = Unassigned()
     hub_status: Optional[str] = Unassigned()
     failure_reason: Optional[str] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
@@ -11767,8 +11777,8 @@ class Hub(Base):
         hub_description: str,
         hub_display_name: Optional[str] = Unassigned(),
         hub_search_keywords: Optional[List[str]] = Unassigned(),
-        s3_storage_config: Optional[HubS3StorageConfig] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
+        s3_storage_config: Optional[shapes.HubS3StorageConfig] = Unassigned(),
+        tags: Optional[List[shapes.Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["Hub"]:
@@ -12244,7 +12254,7 @@ class HubContent(Base):
     reference_min_version: Optional[str] = Unassigned()
     support_status: Optional[str] = Unassigned()
     hub_content_search_keywords: Optional[List[str]] = Unassigned()
-    hub_content_dependencies: Optional[List[HubContentDependency]] = Unassigned()
+    hub_content_dependencies: Optional[List[shapes.HubContentDependency]] = Unassigned()
     hub_content_status: Optional[str] = Unassigned()
     failure_reason: Optional[str] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
@@ -12527,7 +12537,7 @@ class HubContent(Base):
         hub_content_markdown: Optional[str] = Unassigned(),
         support_status: Optional[str] = Unassigned(),
         hub_content_search_keywords: Optional[List[str]] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
+        tags: Optional[List[shapes.Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["HubContent"]:
@@ -12603,6 +12613,84 @@ class HubContent(Base):
             hub_content_name=hub_content_name,
             session=session,
             region=region,
+        )
+
+    @classmethod
+    @Base.add_validate_call
+    def get_all(
+        cls,
+        hub_name: str,
+        hub_content_type: str,
+        name_contains: Optional[str] = Unassigned(),
+        max_schema_version: Optional[str] = Unassigned(),
+        creation_time_before: Optional[datetime.datetime] = Unassigned(),
+        creation_time_after: Optional[datetime.datetime] = Unassigned(),
+        sort_by: Optional[str] = Unassigned(),
+        sort_order: Optional[str] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> ResourceIterator["HubContent"]:
+        """
+        Get all HubContent resources
+
+        Parameters:
+            hub_name: The name of the hub to list the contents of.
+            hub_content_type: The type of hub content to list.
+            name_contains: Only list hub content if the name contains the specified string.
+            max_schema_version: The upper bound of the hub content schema verion.
+            creation_time_before: Only list hub content that was created before the time specified.
+            creation_time_after: Only list hub content that was created after the time specified.
+            sort_by: Sort hub content versions by either name or creation time.
+            sort_order: Sort hubs by ascending or descending order.
+            max_results: The maximum amount of hub content to list.
+            next_token: If the response to a previous ListHubContents request was truncated, the response includes a NextToken. To retrieve the next set of hub content, use the token in the next request.
+            session: Boto3 session.
+            region: Region name.
+
+        Returns:
+            Iterator for listed HubContent resources.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceNotFound: Resource being access is not found.
+        """
+
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
+
+        operation_input_args = {
+            "HubName": hub_name,
+            "HubContentType": hub_content_type,
+            "NameContains": name_contains,
+            "MaxSchemaVersion": max_schema_version,
+            "CreationTimeBefore": creation_time_before,
+            "CreationTimeAfter": creation_time_after,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
+        }
+        extract_name_mapping = {"hub_content_arn": ["hub-content/", "hub_name"]}
+
+        # serialize the input request
+        operation_input_args = serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+
+        return ResourceIterator(
+            client=client,
+            list_method="list_hub_contents",
+            summaries_key="HubContentSummaries",
+            summary_name="HubContentInfo",
+            resource_cls=HubContent,
+            extract_name_mapping=extract_name_mapping,
+            list_method_kwargs=operation_input_args,
         )
 
     @Base.add_validate_call
@@ -12698,7 +12786,7 @@ class HubContentReference(Base):
     hub_content_arn: str
     hub_content_name: Optional[Union[str, object]] = Unassigned()
     min_version: Optional[str] = Unassigned()
-    tags: Optional[List[Tag]] = Unassigned()
+    tags: Optional[List[shapes.Tag]] = Unassigned()
 
     def get_name(self) -> str:
         attributes = vars(self)
@@ -12724,7 +12812,7 @@ class HubContentReference(Base):
         sage_maker_public_hub_content_arn: str,
         hub_content_name: Optional[Union[str, object]] = Unassigned(),
         min_version: Optional[str] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
+        tags: Optional[List[shapes.Tag]] = Unassigned(),
     ) -> Optional["HubContentReference"]:
         """
         Create a HubContentReference resource
@@ -12885,7 +12973,7 @@ class HumanTaskUi(Base):
     human_task_ui_arn: Optional[str] = Unassigned()
     human_task_ui_status: Optional[str] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
-    ui_template: Optional[UiTemplateInfo] = Unassigned()
+    ui_template: Optional[shapes.UiTemplateInfo] = Unassigned()
 
     def get_name(self) -> str:
         attributes = vars(self)
@@ -12908,8 +12996,8 @@ class HumanTaskUi(Base):
     def create(
         cls,
         human_task_ui_name: str,
-        ui_template: UiTemplate,
-        tags: Optional[List[Tag]] = Unassigned(),
+        ui_template: shapes.UiTemplate,
+        tags: Optional[List[shapes.Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["HumanTaskUi"]:
@@ -13293,22 +13381,26 @@ class HyperParameterTuningJob(Base):
 
     hyper_parameter_tuning_job_name: str
     hyper_parameter_tuning_job_arn: Optional[str] = Unassigned()
-    hyper_parameter_tuning_job_config: Optional[HyperParameterTuningJobConfig] = Unassigned()
-    training_job_definition: Optional[HyperParameterTrainingJobDefinition] = Unassigned()
-    training_job_definitions: Optional[List[HyperParameterTrainingJobDefinition]] = Unassigned()
+    hyper_parameter_tuning_job_config: Optional[shapes.HyperParameterTuningJobConfig] = Unassigned()
+    training_job_definition: Optional[shapes.HyperParameterTrainingJobDefinition] = Unassigned()
+    training_job_definitions: Optional[List[shapes.HyperParameterTrainingJobDefinition]] = (
+        Unassigned()
+    )
     hyper_parameter_tuning_job_status: Optional[str] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
     hyper_parameter_tuning_end_time: Optional[datetime.datetime] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
-    training_job_status_counters: Optional[TrainingJobStatusCounters] = Unassigned()
-    objective_status_counters: Optional[ObjectiveStatusCounters] = Unassigned()
-    best_training_job: Optional[HyperParameterTrainingJobSummary] = Unassigned()
-    overall_best_training_job: Optional[HyperParameterTrainingJobSummary] = Unassigned()
-    warm_start_config: Optional[HyperParameterTuningJobWarmStartConfig] = Unassigned()
-    autotune: Optional[Autotune] = Unassigned()
+    training_job_status_counters: Optional[shapes.TrainingJobStatusCounters] = Unassigned()
+    objective_status_counters: Optional[shapes.ObjectiveStatusCounters] = Unassigned()
+    best_training_job: Optional[shapes.HyperParameterTrainingJobSummary] = Unassigned()
+    overall_best_training_job: Optional[shapes.HyperParameterTrainingJobSummary] = Unassigned()
+    warm_start_config: Optional[shapes.HyperParameterTuningJobWarmStartConfig] = Unassigned()
+    autotune: Optional[shapes.Autotune] = Unassigned()
     failure_reason: Optional[str] = Unassigned()
-    tuning_job_completion_details: Optional[HyperParameterTuningJobCompletionDetails] = Unassigned()
-    consumed_resources: Optional[HyperParameterTuningJobConsumedResources] = Unassigned()
+    tuning_job_completion_details: Optional[shapes.HyperParameterTuningJobCompletionDetails] = (
+        Unassigned()
+    )
+    consumed_resources: Optional[shapes.HyperParameterTuningJobConsumedResources] = Unassigned()
 
     def get_name(self) -> str:
         attributes = vars(self)
@@ -13362,14 +13454,16 @@ class HyperParameterTuningJob(Base):
     def create(
         cls,
         hyper_parameter_tuning_job_name: str,
-        hyper_parameter_tuning_job_config: HyperParameterTuningJobConfig,
-        training_job_definition: Optional[HyperParameterTrainingJobDefinition] = Unassigned(),
-        training_job_definitions: Optional[
-            List[HyperParameterTrainingJobDefinition]
+        hyper_parameter_tuning_job_config: shapes.HyperParameterTuningJobConfig,
+        training_job_definition: Optional[
+            shapes.HyperParameterTrainingJobDefinition
         ] = Unassigned(),
-        warm_start_config: Optional[HyperParameterTuningJobWarmStartConfig] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
-        autotune: Optional[Autotune] = Unassigned(),
+        training_job_definitions: Optional[
+            List[shapes.HyperParameterTrainingJobDefinition]
+        ] = Unassigned(),
+        warm_start_config: Optional[shapes.HyperParameterTuningJobWarmStartConfig] = Unassigned(),
+        tags: Optional[List[shapes.Tag]] = Unassigned(),
+        autotune: Optional[shapes.Autotune] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["HyperParameterTuningJob"]:
@@ -13799,7 +13893,7 @@ class HyperParameterTuningJob(Base):
         sort_order: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> ResourceIterator[HyperParameterTrainingJobSummary]:
+    ) -> ResourceIterator[shapes.HyperParameterTrainingJobSummary]:
         """
         Gets a list of TrainingJobSummary objects that describe the training jobs that a hyperparameter tuning job launched.
 
@@ -13847,7 +13941,7 @@ class HyperParameterTuningJob(Base):
             list_method="list_training_jobs_for_hyper_parameter_tuning_job",
             summaries_key="TrainingJobSummaries",
             summary_name="HyperParameterTrainingJobSummary",
-            resource_cls=HyperParameterTrainingJobSummary,
+            resource_cls=shapes.HyperParameterTrainingJobSummary,
             list_method_kwargs=operation_input_args,
         )
 
@@ -13917,7 +14011,7 @@ class Image(Base):
         role_arn: str,
         description: Optional[str] = Unassigned(),
         display_name: Optional[str] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
+        tags: Optional[List[shapes.Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["Image"]:
@@ -14901,6 +14995,81 @@ class ImageVersion(Base):
                     raise e
                 time.sleep(poll)
 
+    @classmethod
+    @Base.add_validate_call
+    def get_all(
+        cls,
+        image_name: str,
+        creation_time_after: Optional[datetime.datetime] = Unassigned(),
+        creation_time_before: Optional[datetime.datetime] = Unassigned(),
+        last_modified_time_after: Optional[datetime.datetime] = Unassigned(),
+        last_modified_time_before: Optional[datetime.datetime] = Unassigned(),
+        sort_by: Optional[str] = Unassigned(),
+        sort_order: Optional[str] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> ResourceIterator["ImageVersion"]:
+        """
+        Get all ImageVersion resources
+
+        Parameters:
+            image_name: The name of the image to list the versions of.
+            creation_time_after: A filter that returns only versions created on or after the specified time.
+            creation_time_before: A filter that returns only versions created on or before the specified time.
+            last_modified_time_after: A filter that returns only versions modified on or after the specified time.
+            last_modified_time_before: A filter that returns only versions modified on or before the specified time.
+            max_results: The maximum number of versions to return in the response. The default value is 10.
+            next_token: If the previous call to ListImageVersions didn't return the full set of versions, the call returns a token for getting the next set of versions.
+            sort_by: The property used to sort results. The default value is CREATION_TIME.
+            sort_order: The sort order. The default value is DESCENDING.
+            session: Boto3 session.
+            region: Region name.
+
+        Returns:
+            Iterator for listed ImageVersion resources.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceNotFound: Resource being access is not found.
+        """
+
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
+
+        operation_input_args = {
+            "CreationTimeAfter": creation_time_after,
+            "CreationTimeBefore": creation_time_before,
+            "ImageName": image_name,
+            "LastModifiedTimeAfter": last_modified_time_after,
+            "LastModifiedTimeBefore": last_modified_time_before,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
+        }
+        extract_name_mapping = {"image_version_arn": ["image-version/", "image_name"]}
+
+        # serialize the input request
+        operation_input_args = serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+
+        return ResourceIterator(
+            client=client,
+            list_method="list_image_versions",
+            summaries_key="ImageVersions",
+            summary_name="ImageVersion",
+            resource_cls=ImageVersion,
+            extract_name_mapping=extract_name_mapping,
+            list_method_kwargs=operation_input_args,
+        )
+
 
 class InferenceComponent(Base):
     """
@@ -14928,12 +15097,12 @@ class InferenceComponent(Base):
     endpoint_arn: Optional[str] = Unassigned()
     variant_name: Optional[str] = Unassigned()
     failure_reason: Optional[str] = Unassigned()
-    specification: Optional[InferenceComponentSpecificationSummary] = Unassigned()
-    runtime_config: Optional[InferenceComponentRuntimeConfigSummary] = Unassigned()
+    specification: Optional[shapes.InferenceComponentSpecificationSummary] = Unassigned()
+    runtime_config: Optional[shapes.InferenceComponentRuntimeConfigSummary] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
     inference_component_status: Optional[str] = Unassigned()
-    last_deployment_config: Optional[InferenceComponentDeploymentConfig] = Unassigned()
+    last_deployment_config: Optional[shapes.InferenceComponentDeploymentConfig] = Unassigned()
 
     def get_name(self) -> str:
         attributes = vars(self)
@@ -14957,10 +15126,10 @@ class InferenceComponent(Base):
         cls,
         inference_component_name: str,
         endpoint_name: Union[str, object],
-        specification: InferenceComponentSpecification,
+        specification: shapes.InferenceComponentSpecification,
         variant_name: Optional[str] = Unassigned(),
-        runtime_config: Optional[InferenceComponentRuntimeConfig] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
+        runtime_config: Optional[shapes.InferenceComponentRuntimeConfig] = Unassigned(),
+        tags: Optional[List[shapes.Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["InferenceComponent"]:
@@ -15116,9 +15285,9 @@ class InferenceComponent(Base):
     @Base.add_validate_call
     def update(
         self,
-        specification: Optional[InferenceComponentSpecification] = Unassigned(),
-        runtime_config: Optional[InferenceComponentRuntimeConfig] = Unassigned(),
-        deployment_config: Optional[InferenceComponentDeploymentConfig] = Unassigned(),
+        specification: Optional[shapes.InferenceComponentSpecification] = Unassigned(),
+        runtime_config: Optional[shapes.InferenceComponentRuntimeConfig] = Unassigned(),
+        deployment_config: Optional[shapes.InferenceComponentDeploymentConfig] = Unassigned(),
     ) -> Optional["InferenceComponent"]:
         """
         Update a InferenceComponent resource
@@ -15404,7 +15573,7 @@ class InferenceComponent(Base):
     @Base.add_validate_call
     def update_runtime_configs(
         self,
-        desired_runtime_config: InferenceComponentRuntimeConfig,
+        desired_runtime_config: shapes.InferenceComponentRuntimeConfig,
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> None:
@@ -15473,7 +15642,7 @@ class InferenceExperiment(Base):
     name: str
     arn: Optional[str] = Unassigned()
     type: Optional[str] = Unassigned()
-    schedule: Optional[InferenceExperimentSchedule] = Unassigned()
+    schedule: Optional[shapes.InferenceExperimentSchedule] = Unassigned()
     status: Optional[str] = Unassigned()
     status_reason: Optional[str] = Unassigned()
     description: Optional[str] = Unassigned()
@@ -15481,10 +15650,10 @@ class InferenceExperiment(Base):
     completion_time: Optional[datetime.datetime] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
     role_arn: Optional[str] = Unassigned()
-    endpoint_metadata: Optional[EndpointMetadata] = Unassigned()
-    model_variants: Optional[List[ModelVariantConfigSummary]] = Unassigned()
-    data_storage_config: Optional[InferenceExperimentDataStorageConfig] = Unassigned()
-    shadow_mode_config: Optional[ShadowModeConfig] = Unassigned()
+    endpoint_metadata: Optional[shapes.EndpointMetadata] = Unassigned()
+    model_variants: Optional[List[shapes.ModelVariantConfigSummary]] = Unassigned()
+    data_storage_config: Optional[shapes.InferenceExperimentDataStorageConfig] = Unassigned()
+    shadow_mode_config: Optional[shapes.ShadowModeConfig] = Unassigned()
     kms_key: Optional[str] = Unassigned()
 
     def get_name(self) -> str:
@@ -15529,13 +15698,13 @@ class InferenceExperiment(Base):
         type: str,
         role_arn: str,
         endpoint_name: Union[str, object],
-        model_variants: List[ModelVariantConfig],
-        shadow_mode_config: ShadowModeConfig,
-        schedule: Optional[InferenceExperimentSchedule] = Unassigned(),
+        model_variants: List[shapes.ModelVariantConfig],
+        shadow_mode_config: shapes.ShadowModeConfig,
+        schedule: Optional[shapes.InferenceExperimentSchedule] = Unassigned(),
         description: Optional[str] = Unassigned(),
-        data_storage_config: Optional[InferenceExperimentDataStorageConfig] = Unassigned(),
+        data_storage_config: Optional[shapes.InferenceExperimentDataStorageConfig] = Unassigned(),
         kms_key: Optional[str] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
+        tags: Optional[List[shapes.Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["InferenceExperiment"]:
@@ -15703,11 +15872,11 @@ class InferenceExperiment(Base):
     @Base.add_validate_call
     def update(
         self,
-        schedule: Optional[InferenceExperimentSchedule] = Unassigned(),
+        schedule: Optional[shapes.InferenceExperimentSchedule] = Unassigned(),
         description: Optional[str] = Unassigned(),
-        model_variants: Optional[List[ModelVariantConfig]] = Unassigned(),
-        data_storage_config: Optional[InferenceExperimentDataStorageConfig] = Unassigned(),
-        shadow_mode_config: Optional[ShadowModeConfig] = Unassigned(),
+        model_variants: Optional[List[shapes.ModelVariantConfig]] = Unassigned(),
+        data_storage_config: Optional[shapes.InferenceExperimentDataStorageConfig] = Unassigned(),
+        shadow_mode_config: Optional[shapes.ShadowModeConfig] = Unassigned(),
     ) -> Optional["InferenceExperiment"]:
         """
         Update a InferenceExperiment resource
@@ -15997,10 +16166,10 @@ class InferenceRecommendationsJob(Base):
     completion_time: Optional[datetime.datetime] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
     failure_reason: Optional[str] = Unassigned()
-    input_config: Optional[RecommendationJobInputConfig] = Unassigned()
-    stopping_conditions: Optional[RecommendationJobStoppingConditions] = Unassigned()
-    inference_recommendations: Optional[List[InferenceRecommendation]] = Unassigned()
-    endpoint_performances: Optional[List[EndpointPerformance]] = Unassigned()
+    input_config: Optional[shapes.RecommendationJobInputConfig] = Unassigned()
+    stopping_conditions: Optional[shapes.RecommendationJobStoppingConditions] = Unassigned()
+    inference_recommendations: Optional[List[shapes.InferenceRecommendation]] = Unassigned()
+    endpoint_performances: Optional[List[shapes.EndpointPerformance]] = Unassigned()
 
     def get_name(self) -> str:
         attributes = vars(self)
@@ -16048,11 +16217,11 @@ class InferenceRecommendationsJob(Base):
         job_name: str,
         job_type: str,
         role_arn: str,
-        input_config: RecommendationJobInputConfig,
+        input_config: shapes.RecommendationJobInputConfig,
         job_description: Optional[str] = Unassigned(),
-        stopping_conditions: Optional[RecommendationJobStoppingConditions] = Unassigned(),
-        output_config: Optional[RecommendationJobOutputConfig] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
+        stopping_conditions: Optional[shapes.RecommendationJobStoppingConditions] = Unassigned(),
+        output_config: Optional[shapes.RecommendationJobOutputConfig] = Unassigned(),
+        tags: Optional[List[shapes.Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["InferenceRecommendationsJob"]:
@@ -16456,7 +16625,7 @@ class InferenceRecommendationsJob(Base):
         step_type: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> ResourceIterator[InferenceRecommendationsJobStep]:
+    ) -> ResourceIterator[shapes.InferenceRecommendationsJobStep]:
         """
         Returns a list of the subtasks for an Inference Recommender job.
 
@@ -16501,7 +16670,7 @@ class InferenceRecommendationsJob(Base):
             list_method="list_inference_recommendations_job_steps",
             summaries_key="Steps",
             summary_name="InferenceRecommendationsJobStep",
-            resource_cls=InferenceRecommendationsJobStep,
+            resource_cls=shapes.InferenceRecommendationsJobStep,
             list_method_kwargs=operation_input_args,
         )
 
@@ -16534,22 +16703,22 @@ class LabelingJob(Base):
 
     labeling_job_name: str
     labeling_job_status: Optional[str] = Unassigned()
-    label_counters: Optional[LabelCounters] = Unassigned()
+    label_counters: Optional[shapes.LabelCounters] = Unassigned()
     failure_reason: Optional[str] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
     job_reference_code: Optional[str] = Unassigned()
     labeling_job_arn: Optional[str] = Unassigned()
     label_attribute_name: Optional[str] = Unassigned()
-    input_config: Optional[LabelingJobInputConfig] = Unassigned()
-    output_config: Optional[LabelingJobOutputConfig] = Unassigned()
+    input_config: Optional[shapes.LabelingJobInputConfig] = Unassigned()
+    output_config: Optional[shapes.LabelingJobOutputConfig] = Unassigned()
     role_arn: Optional[str] = Unassigned()
     label_category_config_s3_uri: Optional[str] = Unassigned()
-    stopping_conditions: Optional[LabelingJobStoppingConditions] = Unassigned()
-    labeling_job_algorithms_config: Optional[LabelingJobAlgorithmsConfig] = Unassigned()
-    human_task_config: Optional[HumanTaskConfig] = Unassigned()
-    tags: Optional[List[Tag]] = Unassigned()
-    labeling_job_output: Optional[LabelingJobOutput] = Unassigned()
+    stopping_conditions: Optional[shapes.LabelingJobStoppingConditions] = Unassigned()
+    labeling_job_algorithms_config: Optional[shapes.LabelingJobAlgorithmsConfig] = Unassigned()
+    human_task_config: Optional[shapes.HumanTaskConfig] = Unassigned()
+    tags: Optional[List[shapes.Tag]] = Unassigned()
+    labeling_job_output: Optional[shapes.LabelingJobOutput] = Unassigned()
 
     def get_name(self) -> str:
         attributes = vars(self)
@@ -16608,14 +16777,14 @@ class LabelingJob(Base):
         cls,
         labeling_job_name: str,
         label_attribute_name: str,
-        input_config: LabelingJobInputConfig,
-        output_config: LabelingJobOutputConfig,
+        input_config: shapes.LabelingJobInputConfig,
+        output_config: shapes.LabelingJobOutputConfig,
         role_arn: str,
-        human_task_config: HumanTaskConfig,
+        human_task_config: shapes.HumanTaskConfig,
         label_category_config_s3_uri: Optional[str] = Unassigned(),
-        stopping_conditions: Optional[LabelingJobStoppingConditions] = Unassigned(),
-        labeling_job_algorithms_config: Optional[LabelingJobAlgorithmsConfig] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
+        stopping_conditions: Optional[shapes.LabelingJobStoppingConditions] = Unassigned(),
+        labeling_job_algorithms_config: Optional[shapes.LabelingJobAlgorithmsConfig] = Unassigned(),
+        tags: Optional[List[shapes.Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["LabelingJob"]:
@@ -16964,9 +17133,9 @@ class LineageGroup(Base):
     display_name: Optional[str] = Unassigned()
     description: Optional[str] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
-    created_by: Optional[UserContext] = Unassigned()
+    created_by: Optional[shapes.UserContext] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
-    last_modified_by: Optional[UserContext] = Unassigned()
+    last_modified_by: Optional[shapes.UserContext] = Unassigned()
 
     def get_name(self) -> str:
         attributes = vars(self)
@@ -17140,7 +17309,7 @@ class LineageGroup(Base):
         self,
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[GetLineageGroupPolicyResponse]:
+    ) -> Optional[shapes.GetLineageGroupPolicyResponse]:
         """
         The resource policy for the lineage group.
 
@@ -17149,7 +17318,7 @@ class LineageGroup(Base):
             region: Region name.
 
         Returns:
-            GetLineageGroupPolicyResponse
+            shapes.GetLineageGroupPolicyResponse
 
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
@@ -17180,7 +17349,7 @@ class LineageGroup(Base):
         logger.debug(f"Response: {response}")
 
         transformed_response = transform(response, "GetLineageGroupPolicyResponse")
-        return GetLineageGroupPolicyResponse(**transformed_response)
+        return shapes.GetLineageGroupPolicyResponse(**transformed_response)
 
 
 class MlflowTrackingServer(Base):
@@ -17218,9 +17387,9 @@ class MlflowTrackingServer(Base):
     weekly_maintenance_window_start: Optional[str] = Unassigned()
     automatic_model_registration: Optional[bool] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
-    created_by: Optional[UserContext] = Unassigned()
+    created_by: Optional[shapes.UserContext] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
-    last_modified_by: Optional[UserContext] = Unassigned()
+    last_modified_by: Optional[shapes.UserContext] = Unassigned()
 
     def get_name(self) -> str:
         attributes = vars(self)
@@ -17263,7 +17432,7 @@ class MlflowTrackingServer(Base):
         mlflow_version: Optional[str] = Unassigned(),
         automatic_model_registration: Optional[bool] = Unassigned(),
         weekly_maintenance_window_start: Optional[str] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
+        tags: Optional[List[shapes.Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["MlflowTrackingServer"]:
@@ -17769,15 +17938,15 @@ class Model(Base):
     """
 
     model_name: str
-    primary_container: Optional[ContainerDefinition] = Unassigned()
-    containers: Optional[List[ContainerDefinition]] = Unassigned()
-    inference_execution_config: Optional[InferenceExecutionConfig] = Unassigned()
+    primary_container: Optional[shapes.ContainerDefinition] = Unassigned()
+    containers: Optional[List[shapes.ContainerDefinition]] = Unassigned()
+    inference_execution_config: Optional[shapes.InferenceExecutionConfig] = Unassigned()
     execution_role_arn: Optional[str] = Unassigned()
-    vpc_config: Optional[VpcConfig] = Unassigned()
+    vpc_config: Optional[shapes.VpcConfig] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
     model_arn: Optional[str] = Unassigned()
     enable_network_isolation: Optional[bool] = Unassigned()
-    deployment_recommendation: Optional[DeploymentRecommendation] = Unassigned()
+    deployment_recommendation: Optional[shapes.DeploymentRecommendation] = Unassigned()
 
     def get_name(self) -> str:
         attributes = vars(self)
@@ -17829,12 +17998,12 @@ class Model(Base):
     def create(
         cls,
         model_name: str,
-        primary_container: Optional[ContainerDefinition] = Unassigned(),
-        containers: Optional[List[ContainerDefinition]] = Unassigned(),
-        inference_execution_config: Optional[InferenceExecutionConfig] = Unassigned(),
+        primary_container: Optional[shapes.ContainerDefinition] = Unassigned(),
+        containers: Optional[List[shapes.ContainerDefinition]] = Unassigned(),
+        inference_execution_config: Optional[shapes.InferenceExecutionConfig] = Unassigned(),
         execution_role_arn: Optional[str] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
-        vpc_config: Optional[VpcConfig] = Unassigned(),
+        tags: Optional[List[shapes.Tag]] = Unassigned(),
+        vpc_config: Optional[shapes.VpcConfig] = Unassigned(),
         enable_network_isolation: Optional[bool] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
@@ -18091,10 +18260,10 @@ class Model(Base):
     @Base.add_validate_call
     def get_all_metadata(
         self,
-        search_expression: Optional[ModelMetadataSearchExpression] = Unassigned(),
+        search_expression: Optional[shapes.ModelMetadataSearchExpression] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> ResourceIterator[ModelMetadataSummary]:
+    ) -> ResourceIterator[shapes.ModelMetadataSummary]:
         """
         Lists the domain, framework, task, and model name of standard machine learning models found in common model zoos.
 
@@ -18136,7 +18305,7 @@ class Model(Base):
             list_method="list_model_metadata",
             summaries_key="ModelMetadataSummaries",
             summary_name="ModelMetadataSummary",
-            resource_cls=ModelMetadataSummary,
+            resource_cls=shapes.ModelMetadataSummary,
             list_method_kwargs=operation_input_args,
         )
 
@@ -18163,14 +18332,14 @@ class ModelBiasJobDefinition(Base):
     job_definition_name: str
     job_definition_arn: Optional[str] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
-    model_bias_baseline_config: Optional[ModelBiasBaselineConfig] = Unassigned()
-    model_bias_app_specification: Optional[ModelBiasAppSpecification] = Unassigned()
-    model_bias_job_input: Optional[ModelBiasJobInput] = Unassigned()
-    model_bias_job_output_config: Optional[MonitoringOutputConfig] = Unassigned()
-    job_resources: Optional[MonitoringResources] = Unassigned()
-    network_config: Optional[MonitoringNetworkConfig] = Unassigned()
+    model_bias_baseline_config: Optional[shapes.ModelBiasBaselineConfig] = Unassigned()
+    model_bias_app_specification: Optional[shapes.ModelBiasAppSpecification] = Unassigned()
+    model_bias_job_input: Optional[shapes.ModelBiasJobInput] = Unassigned()
+    model_bias_job_output_config: Optional[shapes.MonitoringOutputConfig] = Unassigned()
+    job_resources: Optional[shapes.MonitoringResources] = Unassigned()
+    network_config: Optional[shapes.MonitoringNetworkConfig] = Unassigned()
     role_arn: Optional[str] = Unassigned()
-    stopping_condition: Optional[MonitoringStoppingCondition] = Unassigned()
+    stopping_condition: Optional[shapes.MonitoringStoppingCondition] = Unassigned()
 
     def get_name(self) -> str:
         attributes = vars(self)
@@ -18232,15 +18401,15 @@ class ModelBiasJobDefinition(Base):
     def create(
         cls,
         job_definition_name: str,
-        model_bias_app_specification: ModelBiasAppSpecification,
-        model_bias_job_input: ModelBiasJobInput,
-        model_bias_job_output_config: MonitoringOutputConfig,
-        job_resources: MonitoringResources,
+        model_bias_app_specification: shapes.ModelBiasAppSpecification,
+        model_bias_job_input: shapes.ModelBiasJobInput,
+        model_bias_job_output_config: shapes.MonitoringOutputConfig,
+        job_resources: shapes.MonitoringResources,
         role_arn: str,
-        model_bias_baseline_config: Optional[ModelBiasBaselineConfig] = Unassigned(),
-        network_config: Optional[MonitoringNetworkConfig] = Unassigned(),
-        stopping_condition: Optional[MonitoringStoppingCondition] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
+        model_bias_baseline_config: Optional[shapes.ModelBiasBaselineConfig] = Unassigned(),
+        network_config: Optional[shapes.MonitoringNetworkConfig] = Unassigned(),
+        stopping_condition: Optional[shapes.MonitoringStoppingCondition] = Unassigned(),
+        tags: Optional[List[shapes.Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["ModelBiasJobDefinition"]:
@@ -18490,6 +18659,7 @@ class ModelBiasJobDefinition(Base):
             "CreationTimeBefore": creation_time_before,
             "CreationTimeAfter": creation_time_after,
         }
+
         custom_key_mapping = {
             "monitoring_job_definition_name": "job_definition_name",
             "monitoring_job_definition_arn": "job_definition_arn",
@@ -18533,11 +18703,11 @@ class ModelCard(Base):
     model_card_version: Optional[int] = Unassigned()
     content: Optional[str] = Unassigned()
     model_card_status: Optional[str] = Unassigned()
-    security_config: Optional[ModelCardSecurityConfig] = Unassigned()
+    security_config: Optional[shapes.ModelCardSecurityConfig] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
-    created_by: Optional[UserContext] = Unassigned()
+    created_by: Optional[shapes.UserContext] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
-    last_modified_by: Optional[UserContext] = Unassigned()
+    last_modified_by: Optional[shapes.UserContext] = Unassigned()
     model_card_processing_status: Optional[str] = Unassigned()
 
     def get_name(self) -> str:
@@ -18577,8 +18747,8 @@ class ModelCard(Base):
         model_card_name: str,
         content: str,
         model_card_status: str,
-        security_config: Optional[ModelCardSecurityConfig] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
+        security_config: Optional[shapes.ModelCardSecurityConfig] = Unassigned(),
+        tags: Optional[List[shapes.Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["ModelCard"]:
@@ -18945,7 +19115,7 @@ class ModelCard(Base):
         sort_order: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> ResourceIterator[ModelCardVersionSummary]:
+    ) -> ResourceIterator[shapes.ModelCardVersionSummary]:
         """
         List existing versions of an Amazon SageMaker Model Card.
 
@@ -18996,7 +19166,7 @@ class ModelCard(Base):
             list_method="list_model_card_versions",
             summaries_key="ModelCardVersionSummaryList",
             summary_name="ModelCardVersionSummary",
-            resource_cls=ModelCardVersionSummary,
+            resource_cls=shapes.ModelCardVersionSummary,
             list_method_kwargs=operation_input_args,
         )
 
@@ -19024,11 +19194,11 @@ class ModelCardExportJob(Base):
     status: Optional[str] = Unassigned()
     model_card_name: Optional[str] = Unassigned()
     model_card_version: Optional[int] = Unassigned()
-    output_config: Optional[ModelCardExportOutputConfig] = Unassigned()
+    output_config: Optional[shapes.ModelCardExportOutputConfig] = Unassigned()
     created_at: Optional[datetime.datetime] = Unassigned()
     last_modified_at: Optional[datetime.datetime] = Unassigned()
     failure_reason: Optional[str] = Unassigned()
-    export_artifacts: Optional[ModelCardExportArtifacts] = Unassigned()
+    export_artifacts: Optional[shapes.ModelCardExportArtifacts] = Unassigned()
 
     def get_name(self) -> str:
         attributes = vars(self)
@@ -19069,7 +19239,7 @@ class ModelCardExportJob(Base):
         cls,
         model_card_name: Union[str, object],
         model_card_export_job_name: str,
-        output_config: ModelCardExportOutputConfig,
+        output_config: shapes.ModelCardExportOutputConfig,
         model_card_version: Optional[int] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
@@ -19384,16 +19554,18 @@ class ModelExplainabilityJobDefinition(Base):
     job_definition_name: str
     job_definition_arn: Optional[str] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
-    model_explainability_baseline_config: Optional[ModelExplainabilityBaselineConfig] = Unassigned()
-    model_explainability_app_specification: Optional[ModelExplainabilityAppSpecification] = (
+    model_explainability_baseline_config: Optional[shapes.ModelExplainabilityBaselineConfig] = (
         Unassigned()
     )
-    model_explainability_job_input: Optional[ModelExplainabilityJobInput] = Unassigned()
-    model_explainability_job_output_config: Optional[MonitoringOutputConfig] = Unassigned()
-    job_resources: Optional[MonitoringResources] = Unassigned()
-    network_config: Optional[MonitoringNetworkConfig] = Unassigned()
+    model_explainability_app_specification: Optional[shapes.ModelExplainabilityAppSpecification] = (
+        Unassigned()
+    )
+    model_explainability_job_input: Optional[shapes.ModelExplainabilityJobInput] = Unassigned()
+    model_explainability_job_output_config: Optional[shapes.MonitoringOutputConfig] = Unassigned()
+    job_resources: Optional[shapes.MonitoringResources] = Unassigned()
+    network_config: Optional[shapes.MonitoringNetworkConfig] = Unassigned()
     role_arn: Optional[str] = Unassigned()
-    stopping_condition: Optional[MonitoringStoppingCondition] = Unassigned()
+    stopping_condition: Optional[shapes.MonitoringStoppingCondition] = Unassigned()
 
     def get_name(self) -> str:
         attributes = vars(self)
@@ -19454,17 +19626,17 @@ class ModelExplainabilityJobDefinition(Base):
     def create(
         cls,
         job_definition_name: str,
-        model_explainability_app_specification: ModelExplainabilityAppSpecification,
-        model_explainability_job_input: ModelExplainabilityJobInput,
-        model_explainability_job_output_config: MonitoringOutputConfig,
-        job_resources: MonitoringResources,
+        model_explainability_app_specification: shapes.ModelExplainabilityAppSpecification,
+        model_explainability_job_input: shapes.ModelExplainabilityJobInput,
+        model_explainability_job_output_config: shapes.MonitoringOutputConfig,
+        job_resources: shapes.MonitoringResources,
         role_arn: str,
         model_explainability_baseline_config: Optional[
-            ModelExplainabilityBaselineConfig
+            shapes.ModelExplainabilityBaselineConfig
         ] = Unassigned(),
-        network_config: Optional[MonitoringNetworkConfig] = Unassigned(),
-        stopping_condition: Optional[MonitoringStoppingCondition] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
+        network_config: Optional[shapes.MonitoringNetworkConfig] = Unassigned(),
+        stopping_condition: Optional[shapes.MonitoringStoppingCondition] = Unassigned(),
+        tags: Optional[List[shapes.Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["ModelExplainabilityJobDefinition"]:
@@ -19717,6 +19889,7 @@ class ModelExplainabilityJobDefinition(Base):
             "CreationTimeBefore": creation_time_before,
             "CreationTimeAfter": creation_time_after,
         }
+
         custom_key_mapping = {
             "monitoring_job_definition_name": "job_definition_name",
             "monitoring_job_definition_arn": "job_definition_arn",
@@ -19780,32 +19953,32 @@ class ModelPackage(Base):
     model_package_arn: Optional[str] = Unassigned()
     model_package_description: Optional[str] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
-    inference_specification: Optional[InferenceSpecification] = Unassigned()
-    source_algorithm_specification: Optional[SourceAlgorithmSpecification] = Unassigned()
-    validation_specification: Optional[ModelPackageValidationSpecification] = Unassigned()
+    inference_specification: Optional[shapes.InferenceSpecification] = Unassigned()
+    source_algorithm_specification: Optional[shapes.SourceAlgorithmSpecification] = Unassigned()
+    validation_specification: Optional[shapes.ModelPackageValidationSpecification] = Unassigned()
     model_package_status: Optional[str] = Unassigned()
-    model_package_status_details: Optional[ModelPackageStatusDetails] = Unassigned()
+    model_package_status_details: Optional[shapes.ModelPackageStatusDetails] = Unassigned()
     certify_for_marketplace: Optional[bool] = Unassigned()
     model_approval_status: Optional[str] = Unassigned()
-    created_by: Optional[UserContext] = Unassigned()
-    metadata_properties: Optional[MetadataProperties] = Unassigned()
-    model_metrics: Optional[ModelMetrics] = Unassigned()
+    created_by: Optional[shapes.UserContext] = Unassigned()
+    metadata_properties: Optional[shapes.MetadataProperties] = Unassigned()
+    model_metrics: Optional[shapes.ModelMetrics] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
-    last_modified_by: Optional[UserContext] = Unassigned()
+    last_modified_by: Optional[shapes.UserContext] = Unassigned()
     approval_description: Optional[str] = Unassigned()
     domain: Optional[str] = Unassigned()
     task: Optional[str] = Unassigned()
     sample_payload_url: Optional[str] = Unassigned()
     customer_metadata_properties: Optional[Dict[str, str]] = Unassigned()
-    drift_check_baselines: Optional[DriftCheckBaselines] = Unassigned()
+    drift_check_baselines: Optional[shapes.DriftCheckBaselines] = Unassigned()
     additional_inference_specifications: Optional[
-        List[AdditionalInferenceSpecificationDefinition]
+        List[shapes.AdditionalInferenceSpecificationDefinition]
     ] = Unassigned()
     skip_model_validation: Optional[str] = Unassigned()
     source_uri: Optional[str] = Unassigned()
-    security_config: Optional[ModelPackageSecurityConfig] = Unassigned()
-    model_card: Optional[ModelPackageModelCard] = Unassigned()
-    model_life_cycle: Optional[ModelLifeCycle] = Unassigned()
+    security_config: Optional[shapes.ModelPackageSecurityConfig] = Unassigned()
+    model_card: Optional[shapes.ModelPackageModelCard] = Unassigned()
+    model_life_cycle: Optional[shapes.ModelLifeCycle] = Unassigned()
 
     def get_name(self) -> str:
         attributes = vars(self)
@@ -19882,28 +20055,32 @@ class ModelPackage(Base):
         model_package_name: Optional[str] = Unassigned(),
         model_package_group_name: Optional[Union[str, object]] = Unassigned(),
         model_package_description: Optional[str] = Unassigned(),
-        inference_specification: Optional[InferenceSpecification] = Unassigned(),
-        validation_specification: Optional[ModelPackageValidationSpecification] = Unassigned(),
-        source_algorithm_specification: Optional[SourceAlgorithmSpecification] = Unassigned(),
+        inference_specification: Optional[shapes.InferenceSpecification] = Unassigned(),
+        validation_specification: Optional[
+            shapes.ModelPackageValidationSpecification
+        ] = Unassigned(),
+        source_algorithm_specification: Optional[
+            shapes.SourceAlgorithmSpecification
+        ] = Unassigned(),
         certify_for_marketplace: Optional[bool] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
+        tags: Optional[List[shapes.Tag]] = Unassigned(),
         model_approval_status: Optional[str] = Unassigned(),
-        metadata_properties: Optional[MetadataProperties] = Unassigned(),
-        model_metrics: Optional[ModelMetrics] = Unassigned(),
+        metadata_properties: Optional[shapes.MetadataProperties] = Unassigned(),
+        model_metrics: Optional[shapes.ModelMetrics] = Unassigned(),
         client_token: Optional[str] = Unassigned(),
         domain: Optional[str] = Unassigned(),
         task: Optional[str] = Unassigned(),
         sample_payload_url: Optional[str] = Unassigned(),
         customer_metadata_properties: Optional[Dict[str, str]] = Unassigned(),
-        drift_check_baselines: Optional[DriftCheckBaselines] = Unassigned(),
+        drift_check_baselines: Optional[shapes.DriftCheckBaselines] = Unassigned(),
         additional_inference_specifications: Optional[
-            List[AdditionalInferenceSpecificationDefinition]
+            List[shapes.AdditionalInferenceSpecificationDefinition]
         ] = Unassigned(),
         skip_model_validation: Optional[str] = Unassigned(),
         source_uri: Optional[str] = Unassigned(),
-        security_config: Optional[ModelPackageSecurityConfig] = Unassigned(),
-        model_card: Optional[ModelPackageModelCard] = Unassigned(),
-        model_life_cycle: Optional[ModelLifeCycle] = Unassigned(),
+        security_config: Optional[shapes.ModelPackageSecurityConfig] = Unassigned(),
+        model_card: Optional[shapes.ModelPackageModelCard] = Unassigned(),
+        model_life_cycle: Optional[shapes.ModelLifeCycle] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["ModelPackage"]:
@@ -20100,12 +20277,12 @@ class ModelPackage(Base):
         customer_metadata_properties: Optional[Dict[str, str]] = Unassigned(),
         customer_metadata_properties_to_remove: Optional[List[str]] = Unassigned(),
         additional_inference_specifications_to_add: Optional[
-            List[AdditionalInferenceSpecificationDefinition]
+            List[shapes.AdditionalInferenceSpecificationDefinition]
         ] = Unassigned(),
-        inference_specification: Optional[InferenceSpecification] = Unassigned(),
+        inference_specification: Optional[shapes.InferenceSpecification] = Unassigned(),
         source_uri: Optional[str] = Unassigned(),
-        model_card: Optional[ModelPackageModelCard] = Unassigned(),
-        model_life_cycle: Optional[ModelLifeCycle] = Unassigned(),
+        model_card: Optional[shapes.ModelPackageModelCard] = Unassigned(),
+        model_life_cycle: Optional[shapes.ModelLifeCycle] = Unassigned(),
         client_token: Optional[str] = Unassigned(),
     ) -> Optional["ModelPackage"]:
         """
@@ -20393,7 +20570,7 @@ class ModelPackage(Base):
         model_package_arn_list: List[str],
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[BatchDescribeModelPackageOutput]:
+    ) -> Optional[shapes.BatchDescribeModelPackageOutput]:
         """
         This action batch describes a list of versioned model packages.
 
@@ -20403,7 +20580,7 @@ class ModelPackage(Base):
             region: Region name.
 
         Returns:
-            BatchDescribeModelPackageOutput
+            shapes.BatchDescribeModelPackageOutput
 
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
@@ -20433,7 +20610,7 @@ class ModelPackage(Base):
         logger.debug(f"Response: {response}")
 
         transformed_response = transform(response, "BatchDescribeModelPackageOutput")
-        return BatchDescribeModelPackageOutput(**transformed_response)
+        return shapes.BatchDescribeModelPackageOutput(**transformed_response)
 
 
 class ModelPackageGroup(Base):
@@ -20454,7 +20631,7 @@ class ModelPackageGroup(Base):
     model_package_group_arn: Optional[str] = Unassigned()
     model_package_group_description: Optional[str] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
-    created_by: Optional[UserContext] = Unassigned()
+    created_by: Optional[shapes.UserContext] = Unassigned()
     model_package_group_status: Optional[str] = Unassigned()
 
     def get_name(self) -> str:
@@ -20479,7 +20656,7 @@ class ModelPackageGroup(Base):
         cls,
         model_package_group_name: str,
         model_package_group_description: Optional[str] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
+        tags: Optional[List[shapes.Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["ModelPackageGroup"]:
@@ -21003,14 +21180,14 @@ class ModelQualityJobDefinition(Base):
     job_definition_name: str
     job_definition_arn: Optional[str] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
-    model_quality_baseline_config: Optional[ModelQualityBaselineConfig] = Unassigned()
-    model_quality_app_specification: Optional[ModelQualityAppSpecification] = Unassigned()
-    model_quality_job_input: Optional[ModelQualityJobInput] = Unassigned()
-    model_quality_job_output_config: Optional[MonitoringOutputConfig] = Unassigned()
-    job_resources: Optional[MonitoringResources] = Unassigned()
-    network_config: Optional[MonitoringNetworkConfig] = Unassigned()
+    model_quality_baseline_config: Optional[shapes.ModelQualityBaselineConfig] = Unassigned()
+    model_quality_app_specification: Optional[shapes.ModelQualityAppSpecification] = Unassigned()
+    model_quality_job_input: Optional[shapes.ModelQualityJobInput] = Unassigned()
+    model_quality_job_output_config: Optional[shapes.MonitoringOutputConfig] = Unassigned()
+    job_resources: Optional[shapes.MonitoringResources] = Unassigned()
+    network_config: Optional[shapes.MonitoringNetworkConfig] = Unassigned()
     role_arn: Optional[str] = Unassigned()
-    stopping_condition: Optional[MonitoringStoppingCondition] = Unassigned()
+    stopping_condition: Optional[shapes.MonitoringStoppingCondition] = Unassigned()
 
     def get_name(self) -> str:
         attributes = vars(self)
@@ -21072,15 +21249,15 @@ class ModelQualityJobDefinition(Base):
     def create(
         cls,
         job_definition_name: str,
-        model_quality_app_specification: ModelQualityAppSpecification,
-        model_quality_job_input: ModelQualityJobInput,
-        model_quality_job_output_config: MonitoringOutputConfig,
-        job_resources: MonitoringResources,
+        model_quality_app_specification: shapes.ModelQualityAppSpecification,
+        model_quality_job_input: shapes.ModelQualityJobInput,
+        model_quality_job_output_config: shapes.MonitoringOutputConfig,
+        job_resources: shapes.MonitoringResources,
         role_arn: str,
-        model_quality_baseline_config: Optional[ModelQualityBaselineConfig] = Unassigned(),
-        network_config: Optional[MonitoringNetworkConfig] = Unassigned(),
-        stopping_condition: Optional[MonitoringStoppingCondition] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
+        model_quality_baseline_config: Optional[shapes.ModelQualityBaselineConfig] = Unassigned(),
+        network_config: Optional[shapes.MonitoringNetworkConfig] = Unassigned(),
+        stopping_condition: Optional[shapes.MonitoringStoppingCondition] = Unassigned(),
+        tags: Optional[List[shapes.Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["ModelQualityJobDefinition"]:
@@ -21330,6 +21507,7 @@ class ModelQualityJobDefinition(Base):
             "CreationTimeBefore": creation_time_before,
             "CreationTimeAfter": creation_time_after,
         }
+
         custom_key_mapping = {
             "monitoring_job_definition_name": "job_definition_name",
             "monitoring_job_definition_arn": "job_definition_arn",
@@ -21370,7 +21548,7 @@ class MonitoringAlert(Base):
     alert_status: str
     datapoints_to_alert: int
     evaluation_period: int
-    actions: MonitoringAlertActions
+    actions: shapes.MonitoringAlertActions
 
     def get_name(self) -> str:
         attributes = vars(self)
@@ -21507,7 +21685,7 @@ class MonitoringAlert(Base):
         status_equals: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[MonitoringAlertHistorySummary]:
+    ) -> Optional[shapes.MonitoringAlertHistorySummary]:
         """
         Gets a list of past alerts in a model monitoring schedule.
 
@@ -21524,7 +21702,7 @@ class MonitoringAlert(Base):
             region: Region name.
 
         Returns:
-            MonitoringAlertHistorySummary
+            shapes.MonitoringAlertHistorySummary
 
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
@@ -21563,7 +21741,7 @@ class MonitoringAlert(Base):
         logger.debug(f"Response: {response}")
 
         transformed_response = transform(response, "ListMonitoringAlertHistoryResponse")
-        return MonitoringAlertHistorySummary(**transformed_response)
+        return shapes.MonitoringAlertHistorySummary(**transformed_response)
 
 
 class MonitoringExecution(Base):
@@ -21727,9 +21905,9 @@ class MonitoringSchedule(Base):
     failure_reason: Optional[str] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
-    monitoring_schedule_config: Optional[MonitoringScheduleConfig] = Unassigned()
+    monitoring_schedule_config: Optional[shapes.MonitoringScheduleConfig] = Unassigned()
     endpoint_name: Optional[str] = Unassigned()
-    last_monitoring_execution_summary: Optional[MonitoringExecutionSummary] = Unassigned()
+    last_monitoring_execution_summary: Optional[shapes.MonitoringExecutionSummary] = Unassigned()
 
     def get_name(self) -> str:
         attributes = vars(self)
@@ -21789,8 +21967,8 @@ class MonitoringSchedule(Base):
     def create(
         cls,
         monitoring_schedule_name: str,
-        monitoring_schedule_config: MonitoringScheduleConfig,
-        tags: Optional[List[Tag]] = Unassigned(),
+        monitoring_schedule_config: shapes.MonitoringScheduleConfig,
+        tags: Optional[List[shapes.Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["MonitoringSchedule"]:
@@ -21944,7 +22122,7 @@ class MonitoringSchedule(Base):
     @Base.add_validate_call
     def update(
         self,
-        monitoring_schedule_config: MonitoringScheduleConfig,
+        monitoring_schedule_config: shapes.MonitoringScheduleConfig,
     ) -> Optional["MonitoringSchedule"]:
         """
         Update a MonitoringSchedule resource
@@ -22247,9 +22425,9 @@ class NotebookInstance(Base):
     additional_code_repositories: Optional[List[str]] = Unassigned()
     root_access: Optional[str] = Unassigned()
     platform_identifier: Optional[str] = Unassigned()
-    instance_metadata_service_configuration: Optional[InstanceMetadataServiceConfiguration] = (
-        Unassigned()
-    )
+    instance_metadata_service_configuration: Optional[
+        shapes.InstanceMetadataServiceConfiguration
+    ] = Unassigned()
 
     def get_name(self) -> str:
         attributes = vars(self)
@@ -22296,7 +22474,7 @@ class NotebookInstance(Base):
         subnet_id: Optional[str] = Unassigned(),
         security_group_ids: Optional[List[str]] = Unassigned(),
         kms_key_id: Optional[str] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
+        tags: Optional[List[shapes.Tag]] = Unassigned(),
         lifecycle_config_name: Optional[str] = Unassigned(),
         direct_internet_access: Optional[str] = Unassigned(),
         volume_size_in_gb: Optional[int] = Unassigned(),
@@ -22306,7 +22484,7 @@ class NotebookInstance(Base):
         root_access: Optional[str] = Unassigned(),
         platform_identifier: Optional[str] = Unassigned(),
         instance_metadata_service_configuration: Optional[
-            InstanceMetadataServiceConfiguration
+            shapes.InstanceMetadataServiceConfiguration
         ] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
@@ -22497,7 +22675,7 @@ class NotebookInstance(Base):
         disassociate_additional_code_repositories: Optional[bool] = Unassigned(),
         root_access: Optional[str] = Unassigned(),
         instance_metadata_service_configuration: Optional[
-            InstanceMetadataServiceConfiguration
+            shapes.InstanceMetadataServiceConfiguration
         ] = Unassigned(),
     ) -> Optional["NotebookInstance"]:
         """
@@ -22845,8 +23023,8 @@ class NotebookInstanceLifecycleConfig(Base):
 
     notebook_instance_lifecycle_config_name: str
     notebook_instance_lifecycle_config_arn: Optional[str] = Unassigned()
-    on_create: Optional[List[NotebookInstanceLifecycleHook]] = Unassigned()
-    on_start: Optional[List[NotebookInstanceLifecycleHook]] = Unassigned()
+    on_create: Optional[List[shapes.NotebookInstanceLifecycleHook]] = Unassigned()
+    on_start: Optional[List[shapes.NotebookInstanceLifecycleHook]] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
 
@@ -22871,9 +23049,9 @@ class NotebookInstanceLifecycleConfig(Base):
     def create(
         cls,
         notebook_instance_lifecycle_config_name: str,
-        on_create: Optional[List[NotebookInstanceLifecycleHook]] = Unassigned(),
-        on_start: Optional[List[NotebookInstanceLifecycleHook]] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
+        on_create: Optional[List[shapes.NotebookInstanceLifecycleHook]] = Unassigned(),
+        on_start: Optional[List[shapes.NotebookInstanceLifecycleHook]] = Unassigned(),
+        tags: Optional[List[shapes.Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["NotebookInstanceLifecycleConfig"]:
@@ -23028,8 +23206,8 @@ class NotebookInstanceLifecycleConfig(Base):
     @Base.add_validate_call
     def update(
         self,
-        on_create: Optional[List[NotebookInstanceLifecycleHook]] = Unassigned(),
-        on_start: Optional[List[NotebookInstanceLifecycleHook]] = Unassigned(),
+        on_create: Optional[List[shapes.NotebookInstanceLifecycleHook]] = Unassigned(),
+        on_start: Optional[List[shapes.NotebookInstanceLifecycleHook]] = Unassigned(),
     ) -> Optional["NotebookInstanceLifecycleConfig"]:
         """
         Update a NotebookInstanceLifecycleConfig resource
@@ -23208,15 +23386,15 @@ class OptimizationJob(Base):
     creation_time: Optional[datetime.datetime] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
     failure_reason: Optional[str] = Unassigned()
-    model_source: Optional[OptimizationJobModelSource] = Unassigned()
+    model_source: Optional[shapes.OptimizationJobModelSource] = Unassigned()
     optimization_environment: Optional[Dict[str, str]] = Unassigned()
     deployment_instance_type: Optional[str] = Unassigned()
-    optimization_configs: Optional[List[OptimizationConfig]] = Unassigned()
-    output_config: Optional[OptimizationJobOutputConfig] = Unassigned()
-    optimization_output: Optional[OptimizationOutput] = Unassigned()
+    optimization_configs: Optional[List[shapes.OptimizationConfig]] = Unassigned()
+    output_config: Optional[shapes.OptimizationJobOutputConfig] = Unassigned()
+    optimization_output: Optional[shapes.OptimizationOutput] = Unassigned()
     role_arn: Optional[str] = Unassigned()
-    stopping_condition: Optional[StoppingCondition] = Unassigned()
-    vpc_config: Optional[OptimizationVpcConfig] = Unassigned()
+    stopping_condition: Optional[shapes.StoppingCondition] = Unassigned()
+    vpc_config: Optional[shapes.OptimizationVpcConfig] = Unassigned()
 
     def get_name(self) -> str:
         attributes = vars(self)
@@ -23265,14 +23443,14 @@ class OptimizationJob(Base):
         cls,
         optimization_job_name: str,
         role_arn: str,
-        model_source: OptimizationJobModelSource,
+        model_source: shapes.OptimizationJobModelSource,
         deployment_instance_type: str,
-        optimization_configs: List[OptimizationConfig],
-        output_config: OptimizationJobOutputConfig,
-        stopping_condition: StoppingCondition,
+        optimization_configs: List[shapes.OptimizationConfig],
+        output_config: shapes.OptimizationJobOutputConfig,
+        stopping_condition: shapes.StoppingCondition,
         optimization_environment: Optional[Dict[str, str]] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
-        vpc_config: Optional[OptimizationVpcConfig] = Unassigned(),
+        tags: Optional[List[shapes.Tag]] = Unassigned(),
+        vpc_config: Optional[shapes.OptimizationVpcConfig] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["OptimizationJob"]:
@@ -23671,13 +23849,13 @@ class PartnerApp(Base):
     execution_role_arn: Optional[str] = Unassigned()
     kms_key_id: Optional[str] = Unassigned()
     base_url: Optional[str] = Unassigned()
-    maintenance_config: Optional[PartnerAppMaintenanceConfig] = Unassigned()
+    maintenance_config: Optional[shapes.PartnerAppMaintenanceConfig] = Unassigned()
     tier: Optional[str] = Unassigned()
     version: Optional[str] = Unassigned()
-    application_config: Optional[PartnerAppConfig] = Unassigned()
+    application_config: Optional[shapes.PartnerAppConfig] = Unassigned()
     auth_type: Optional[str] = Unassigned()
     enable_iam_session_based_identity: Optional[bool] = Unassigned()
-    error: Optional[ErrorInfo] = Unassigned()
+    error: Optional[shapes.ErrorInfo] = Unassigned()
 
     def get_name(self) -> str:
         attributes = vars(self)
@@ -23722,11 +23900,11 @@ class PartnerApp(Base):
         tier: str,
         auth_type: str,
         kms_key_id: Optional[str] = Unassigned(),
-        maintenance_config: Optional[PartnerAppMaintenanceConfig] = Unassigned(),
-        application_config: Optional[PartnerAppConfig] = Unassigned(),
+        maintenance_config: Optional[shapes.PartnerAppMaintenanceConfig] = Unassigned(),
+        application_config: Optional[shapes.PartnerAppConfig] = Unassigned(),
         enable_iam_session_based_identity: Optional[bool] = Unassigned(),
         client_token: Optional[str] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
+        tags: Optional[List[shapes.Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["PartnerApp"]:
@@ -23894,12 +24072,12 @@ class PartnerApp(Base):
     @Base.add_validate_call
     def update(
         self,
-        maintenance_config: Optional[PartnerAppMaintenanceConfig] = Unassigned(),
+        maintenance_config: Optional[shapes.PartnerAppMaintenanceConfig] = Unassigned(),
         tier: Optional[str] = Unassigned(),
-        application_config: Optional[PartnerAppConfig] = Unassigned(),
+        application_config: Optional[shapes.PartnerAppConfig] = Unassigned(),
         enable_iam_session_based_identity: Optional[bool] = Unassigned(),
         client_token: Optional[str] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
+        tags: Optional[List[shapes.Tag]] = Unassigned(),
     ) -> Optional["PartnerApp"]:
         """
         Update a PartnerApp resource
@@ -24261,9 +24439,9 @@ class Pipeline(Base):
     creation_time: Optional[datetime.datetime] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
     last_run_time: Optional[datetime.datetime] = Unassigned()
-    created_by: Optional[UserContext] = Unassigned()
-    last_modified_by: Optional[UserContext] = Unassigned()
-    parallelism_configuration: Optional[ParallelismConfiguration] = Unassigned()
+    created_by: Optional[shapes.UserContext] = Unassigned()
+    last_modified_by: Optional[shapes.UserContext] = Unassigned()
+    parallelism_configuration: Optional[shapes.ParallelismConfiguration] = Unassigned()
 
     def get_name(self) -> str:
         attributes = vars(self)
@@ -24304,10 +24482,12 @@ class Pipeline(Base):
         role_arn: str,
         pipeline_display_name: Optional[str] = Unassigned(),
         pipeline_definition: Optional[str] = Unassigned(),
-        pipeline_definition_s3_location: Optional[PipelineDefinitionS3Location] = Unassigned(),
+        pipeline_definition_s3_location: Optional[
+            shapes.PipelineDefinitionS3Location
+        ] = Unassigned(),
         pipeline_description: Optional[str] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
-        parallelism_configuration: Optional[ParallelismConfiguration] = Unassigned(),
+        tags: Optional[List[shapes.Tag]] = Unassigned(),
+        parallelism_configuration: Optional[shapes.ParallelismConfiguration] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["Pipeline"]:
@@ -24474,10 +24654,12 @@ class Pipeline(Base):
         self,
         pipeline_display_name: Optional[str] = Unassigned(),
         pipeline_definition: Optional[str] = Unassigned(),
-        pipeline_definition_s3_location: Optional[PipelineDefinitionS3Location] = Unassigned(),
+        pipeline_definition_s3_location: Optional[
+            shapes.PipelineDefinitionS3Location
+        ] = Unassigned(),
         pipeline_description: Optional[str] = Unassigned(),
         role_arn: Optional[str] = Unassigned(),
-        parallelism_configuration: Optional[ParallelismConfiguration] = Unassigned(),
+        parallelism_configuration: Optional[shapes.ParallelismConfiguration] = Unassigned(),
     ) -> Optional["Pipeline"]:
         """
         Update a Pipeline resource
@@ -24767,14 +24949,14 @@ class PipelineExecution(Base):
     pipeline_execution_display_name: Optional[str] = Unassigned()
     pipeline_execution_status: Optional[str] = Unassigned()
     pipeline_execution_description: Optional[str] = Unassigned()
-    pipeline_experiment_config: Optional[PipelineExperimentConfig] = Unassigned()
+    pipeline_experiment_config: Optional[shapes.PipelineExperimentConfig] = Unassigned()
     failure_reason: Optional[str] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
-    created_by: Optional[UserContext] = Unassigned()
-    last_modified_by: Optional[UserContext] = Unassigned()
-    parallelism_configuration: Optional[ParallelismConfiguration] = Unassigned()
-    selective_execution_config: Optional[SelectiveExecutionConfig] = Unassigned()
+    created_by: Optional[shapes.UserContext] = Unassigned()
+    last_modified_by: Optional[shapes.UserContext] = Unassigned()
+    parallelism_configuration: Optional[shapes.ParallelismConfiguration] = Unassigned()
+    selective_execution_config: Optional[shapes.SelectiveExecutionConfig] = Unassigned()
 
     def get_name(self) -> str:
         attributes = vars(self)
@@ -24885,7 +25067,7 @@ class PipelineExecution(Base):
         self,
         pipeline_execution_description: Optional[str] = Unassigned(),
         pipeline_execution_display_name: Optional[str] = Unassigned(),
-        parallelism_configuration: Optional[ParallelismConfiguration] = Unassigned(),
+        parallelism_configuration: Optional[shapes.ParallelismConfiguration] = Unassigned(),
     ) -> Optional["PipelineExecution"]:
         """
         Update a PipelineExecution resource
@@ -25093,7 +25275,7 @@ class PipelineExecution(Base):
         self,
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[DescribePipelineDefinitionForExecutionResponse]:
+    ) -> Optional[shapes.DescribePipelineDefinitionForExecutionResponse]:
         """
         Describes the details of an execution's pipeline definition.
 
@@ -25102,7 +25284,7 @@ class PipelineExecution(Base):
             region: Region name.
 
         Returns:
-            DescribePipelineDefinitionForExecutionResponse
+            shapes.DescribePipelineDefinitionForExecutionResponse
 
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
@@ -25133,7 +25315,7 @@ class PipelineExecution(Base):
         logger.debug(f"Response: {response}")
 
         transformed_response = transform(response, "DescribePipelineDefinitionForExecutionResponse")
-        return DescribePipelineDefinitionForExecutionResponse(**transformed_response)
+        return shapes.DescribePipelineDefinitionForExecutionResponse(**transformed_response)
 
     @Base.add_validate_call
     def get_all_steps(
@@ -25141,7 +25323,7 @@ class PipelineExecution(Base):
         sort_order: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> ResourceIterator[PipelineExecutionStep]:
+    ) -> ResourceIterator[shapes.PipelineExecutionStep]:
         """
         Gets a list of PipeLineExecutionStep objects.
 
@@ -25185,7 +25367,7 @@ class PipelineExecution(Base):
             list_method="list_pipeline_execution_steps",
             summaries_key="PipelineExecutionSteps",
             summary_name="PipelineExecutionStep",
-            resource_cls=PipelineExecutionStep,
+            resource_cls=shapes.PipelineExecutionStep,
             list_method_kwargs=operation_input_args,
         )
 
@@ -25194,7 +25376,7 @@ class PipelineExecution(Base):
         self,
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> ResourceIterator[Parameter]:
+    ) -> ResourceIterator[shapes.Parameter]:
         """
         Gets a list of parameters for a pipeline execution.
 
@@ -25236,7 +25418,7 @@ class PipelineExecution(Base):
             list_method="list_pipeline_parameters_for_execution",
             summaries_key="PipelineParameters",
             summary_name="Parameter",
-            resource_cls=Parameter,
+            resource_cls=shapes.Parameter,
             list_method_kwargs=operation_input_args,
         )
 
@@ -25340,7 +25522,7 @@ class PipelineExecution(Base):
     def send_execution_step_success(
         self,
         callback_token: str,
-        output_parameters: Optional[List[OutputParameter]] = Unassigned(),
+        output_parameters: Optional[List[shapes.OutputParameter]] = Unassigned(),
         client_request_token: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
@@ -25700,15 +25882,15 @@ class ProcessingJob(Base):
     """
 
     processing_job_name: str
-    processing_inputs: Optional[List[ProcessingInput]] = Unassigned()
-    processing_output_config: Optional[ProcessingOutputConfig] = Unassigned()
-    processing_resources: Optional[ProcessingResources] = Unassigned()
-    stopping_condition: Optional[ProcessingStoppingCondition] = Unassigned()
-    app_specification: Optional[AppSpecification] = Unassigned()
+    processing_inputs: Optional[List[shapes.ProcessingInput]] = Unassigned()
+    processing_output_config: Optional[shapes.ProcessingOutputConfig] = Unassigned()
+    processing_resources: Optional[shapes.ProcessingResources] = Unassigned()
+    stopping_condition: Optional[shapes.ProcessingStoppingCondition] = Unassigned()
+    app_specification: Optional[shapes.AppSpecification] = Unassigned()
     environment: Optional[Dict[str, str]] = Unassigned()
-    network_config: Optional[NetworkConfig] = Unassigned()
+    network_config: Optional[shapes.NetworkConfig] = Unassigned()
     role_arn: Optional[str] = Unassigned()
-    experiment_config: Optional[ExperimentConfig] = Unassigned()
+    experiment_config: Optional[shapes.ExperimentConfig] = Unassigned()
     processing_job_arn: Optional[str] = Unassigned()
     processing_job_status: Optional[str] = Unassigned()
     exit_message: Optional[str] = Unassigned()
@@ -25768,16 +25950,16 @@ class ProcessingJob(Base):
     def create(
         cls,
         processing_job_name: str,
-        processing_resources: ProcessingResources,
-        app_specification: AppSpecification,
+        processing_resources: shapes.ProcessingResources,
+        app_specification: shapes.AppSpecification,
         role_arn: str,
-        processing_inputs: Optional[List[ProcessingInput]] = Unassigned(),
-        processing_output_config: Optional[ProcessingOutputConfig] = Unassigned(),
-        stopping_condition: Optional[ProcessingStoppingCondition] = Unassigned(),
+        processing_inputs: Optional[List[shapes.ProcessingInput]] = Unassigned(),
+        processing_output_config: Optional[shapes.ProcessingOutputConfig] = Unassigned(),
+        stopping_condition: Optional[shapes.ProcessingStoppingCondition] = Unassigned(),
         environment: Optional[Dict[str, str]] = Unassigned(),
-        network_config: Optional[NetworkConfig] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
-        experiment_config: Optional[ExperimentConfig] = Unassigned(),
+        network_config: Optional[shapes.NetworkConfig] = Unassigned(),
+        tags: Optional[List[shapes.Tag]] = Unassigned(),
+        experiment_config: Optional[shapes.ExperimentConfig] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["ProcessingJob"]:
@@ -25792,9 +25974,9 @@ class ProcessingJob(Base):
             processing_inputs: An array of inputs configuring the data to download into the processing container.
             processing_output_config: Output configuration for the processing job.
             stopping_condition: The time limit for how long the processing job is allowed to run.
-            environment: The environment variables to set in the Docker container. Up to 100 key and values entries in the map are supported.
+            environment: The environment variables to set in the Docker container. Up to 100 key and values entries in the map are supported.  Do not include any security-sensitive information including account access IDs, secrets, or tokens in any environment fields. As part of the shared responsibility model, you are responsible for any potential exposure, unauthorized access, or compromise of your sensitive data if caused by security-sensitive information included in the request environment variable or plain text fields.
             network_config: Networking options for a processing job, such as whether to allow inbound and outbound network calls to and from processing containers, and the VPC subnets and security groups to use for VPC-enabled processing jobs.
-            tags: (Optional) An array of key-value pairs. For more information, see Using Cost Allocation Tags in the Amazon Web Services Billing and Cost Management User Guide.
+            tags: (Optional) An array of key-value pairs. For more information, see Using Cost Allocation Tags in the Amazon Web Services Billing and Cost Management User Guide.  Do not include any security-sensitive information including account access IDs, secrets, or tokens in any tags. As part of the shared responsibility model, you are responsible for any potential exposure, unauthorized access, or compromise of your sensitive data if caused by security-sensitive information included in the request tag variable or plain text fields.
             experiment_config:
             session: Boto3 session.
             region: Region name.
@@ -26131,10 +26313,10 @@ class Project(Base):
         project_arn: The Amazon Resource Name (ARN) of the project.
         project_name: The name of the project.
         project_id: The ID of the project.
-        service_catalog_provisioning_details: Information used to provision a service catalog product. For information, see What is Amazon Web Services Service Catalog.
         project_status: The status of the project.
         creation_time: The time when the project was created.
         project_description: The description of the project.
+        service_catalog_provisioning_details: Information used to provision a service catalog product. For information, see What is Amazon Web Services Service Catalog.
         service_catalog_provisioned_product_details: Information about a provisioned service catalog product.
         created_by:
         last_modified_time: The timestamp when project was last modified.
@@ -26146,15 +26328,17 @@ class Project(Base):
     project_arn: Optional[str] = Unassigned()
     project_id: Optional[str] = Unassigned()
     project_description: Optional[str] = Unassigned()
-    service_catalog_provisioning_details: Optional[ServiceCatalogProvisioningDetails] = Unassigned()
+    service_catalog_provisioning_details: Optional[shapes.ServiceCatalogProvisioningDetails] = (
+        Unassigned()
+    )
     service_catalog_provisioned_product_details: Optional[
-        ServiceCatalogProvisionedProductDetails
+        shapes.ServiceCatalogProvisionedProductDetails
     ] = Unassigned()
     project_status: Optional[str] = Unassigned()
-    created_by: Optional[UserContext] = Unassigned()
+    created_by: Optional[shapes.UserContext] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
-    last_modified_by: Optional[UserContext] = Unassigned()
+    last_modified_by: Optional[shapes.UserContext] = Unassigned()
 
     def get_name(self) -> str:
         attributes = vars(self)
@@ -26177,9 +26361,11 @@ class Project(Base):
     def create(
         cls,
         project_name: str,
-        service_catalog_provisioning_details: ServiceCatalogProvisioningDetails,
         project_description: Optional[str] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
+        service_catalog_provisioning_details: Optional[
+            shapes.ServiceCatalogProvisioningDetails
+        ] = Unassigned(),
+        tags: Optional[List[shapes.Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["Project"]:
@@ -26188,8 +26374,8 @@ class Project(Base):
 
         Parameters:
             project_name: The name of the project.
-            service_catalog_provisioning_details: The product ID and provisioning artifact ID to provision a service catalog. The provisioning artifact ID will default to the latest provisioning artifact ID of the product, if you don't provide the provisioning artifact ID. For more information, see What is Amazon Web Services Service Catalog.
             project_description: A description for the project.
+            service_catalog_provisioning_details: The product ID and provisioning artifact ID to provision a service catalog. The provisioning artifact ID will default to the latest provisioning artifact ID of the product, if you don't provide the provisioning artifact ID. For more information, see What is Amazon Web Services Service Catalog.
             tags: An array of key-value pairs that you want to use to organize and track your Amazon Web Services resource costs. For more information, see Tagging Amazon Web Services resources in the Amazon Web Services General Reference Guide.
             session: Boto3 session.
             region: Region name.
@@ -26331,9 +26517,9 @@ class Project(Base):
         self,
         project_description: Optional[str] = Unassigned(),
         service_catalog_provisioning_update_details: Optional[
-            ServiceCatalogProvisioningUpdateDetails
+            shapes.ServiceCatalogProvisioningUpdateDetails
         ] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
+        tags: Optional[List[shapes.Tag]] = Unassigned(),
     ) -> Optional["Project"]:
         """
         Update a Project resource
@@ -26786,9 +26972,9 @@ class Space(Base):
     last_modified_time: Optional[datetime.datetime] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
     failure_reason: Optional[str] = Unassigned()
-    space_settings: Optional[SpaceSettings] = Unassigned()
-    ownership_settings: Optional[OwnershipSettings] = Unassigned()
-    space_sharing_settings: Optional[SpaceSharingSettings] = Unassigned()
+    space_settings: Optional[shapes.SpaceSettings] = Unassigned()
+    ownership_settings: Optional[shapes.OwnershipSettings] = Unassigned()
+    space_sharing_settings: Optional[shapes.SpaceSharingSettings] = Unassigned()
     space_display_name: Optional[str] = Unassigned()
     url: Optional[str] = Unassigned()
 
@@ -26814,10 +27000,10 @@ class Space(Base):
         cls,
         domain_id: str,
         space_name: str,
-        tags: Optional[List[Tag]] = Unassigned(),
-        space_settings: Optional[SpaceSettings] = Unassigned(),
-        ownership_settings: Optional[OwnershipSettings] = Unassigned(),
-        space_sharing_settings: Optional[SpaceSharingSettings] = Unassigned(),
+        tags: Optional[List[shapes.Tag]] = Unassigned(),
+        space_settings: Optional[shapes.SpaceSettings] = Unassigned(),
+        ownership_settings: Optional[shapes.OwnershipSettings] = Unassigned(),
+        space_sharing_settings: Optional[shapes.SpaceSharingSettings] = Unassigned(),
         space_display_name: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
@@ -26981,7 +27167,7 @@ class Space(Base):
     @Base.add_validate_call
     def update(
         self,
-        space_settings: Optional[SpaceSettings] = Unassigned(),
+        space_settings: Optional[shapes.SpaceSettings] = Unassigned(),
         space_display_name: Optional[str] = Unassigned(),
     ) -> Optional["Space"]:
         """
@@ -27302,7 +27488,7 @@ class StudioLifecycleConfig(Base):
         studio_lifecycle_config_name: str,
         studio_lifecycle_config_content: str,
         studio_lifecycle_config_app_type: str,
-        tags: Optional[List[Tag]] = Unassigned(),
+        tags: Optional[List[shapes.Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["StudioLifecycleConfig"]:
@@ -27576,7 +27762,7 @@ class SubscribedWorkteam(Base):
     """
 
     workteam_arn: str
-    subscribed_workteam: Optional[SubscribedWorkteam] = Unassigned()
+    subscribed_workteam: Optional[shapes.SubscribedWorkteam] = Unassigned()
 
     def get_name(self) -> str:
         attributes = vars(self)
@@ -27823,7 +28009,7 @@ class Tag(Base):
     def add_tags(
         cls,
         resource_arn: str,
-        tags: List[Tag],
+        tags: List[shapes.Tag],
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> None:
@@ -27955,7 +28141,7 @@ class TrainingJob(Base):
         profiler_rule_configurations: Configuration information for Amazon SageMaker Debugger rules for profiling system and framework metrics.
         profiler_rule_evaluation_statuses: Evaluation status of Amazon SageMaker Debugger rules for profiling on a training job.
         profiling_status: Profiling status of a training job.
-        environment: The environment variables to set in the Docker container.
+        environment: The environment variables to set in the Docker container.  Do not include any security-sensitive information including account access IDs, secrets, or tokens in any environment fields. As part of the shared responsibility model, you are responsible for any potential exposure, unauthorized access, or compromise of your sensitive data if caused by security-sensitive information included in the request environment variable or plain text fields.
         retry_strategy: The number of times to retry the job when the job fails due to an InternalServerError.
         remote_debug_config: Configuration for remote debugging. To learn more about the remote debugging functionality of SageMaker, see Access a training container through Amazon Web Services Systems Manager (SSM) for remote debugging.
         infra_check_config: Contains information about the infrastructure health check configuration for the training job.
@@ -27967,44 +28153,46 @@ class TrainingJob(Base):
     tuning_job_arn: Optional[str] = Unassigned()
     labeling_job_arn: Optional[str] = Unassigned()
     auto_ml_job_arn: Optional[str] = Unassigned()
-    model_artifacts: Optional[ModelArtifacts] = Unassigned()
+    model_artifacts: Optional[shapes.ModelArtifacts] = Unassigned()
     training_job_status: Optional[str] = Unassigned()
     secondary_status: Optional[str] = Unassigned()
     failure_reason: Optional[str] = Unassigned()
     hyper_parameters: Optional[Dict[str, str]] = Unassigned()
-    algorithm_specification: Optional[AlgorithmSpecification] = Unassigned()
+    algorithm_specification: Optional[shapes.AlgorithmSpecification] = Unassigned()
     role_arn: Optional[str] = Unassigned()
-    input_data_config: Optional[List[Channel]] = Unassigned()
-    output_data_config: Optional[OutputDataConfig] = Unassigned()
-    resource_config: Optional[ResourceConfig] = Unassigned()
-    warm_pool_status: Optional[WarmPoolStatus] = Unassigned()
-    vpc_config: Optional[VpcConfig] = Unassigned()
-    stopping_condition: Optional[StoppingCondition] = Unassigned()
+    input_data_config: Optional[List[shapes.Channel]] = Unassigned()
+    output_data_config: Optional[shapes.OutputDataConfig] = Unassigned()
+    resource_config: Optional[shapes.ResourceConfig] = Unassigned()
+    warm_pool_status: Optional[shapes.WarmPoolStatus] = Unassigned()
+    vpc_config: Optional[shapes.VpcConfig] = Unassigned()
+    stopping_condition: Optional[shapes.StoppingCondition] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
     training_start_time: Optional[datetime.datetime] = Unassigned()
     training_end_time: Optional[datetime.datetime] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
-    secondary_status_transitions: Optional[List[SecondaryStatusTransition]] = Unassigned()
-    final_metric_data_list: Optional[List[MetricData]] = Unassigned()
+    secondary_status_transitions: Optional[List[shapes.SecondaryStatusTransition]] = Unassigned()
+    final_metric_data_list: Optional[List[shapes.MetricData]] = Unassigned()
     enable_network_isolation: Optional[bool] = Unassigned()
     enable_inter_container_traffic_encryption: Optional[bool] = Unassigned()
     enable_managed_spot_training: Optional[bool] = Unassigned()
-    checkpoint_config: Optional[CheckpointConfig] = Unassigned()
+    checkpoint_config: Optional[shapes.CheckpointConfig] = Unassigned()
     training_time_in_seconds: Optional[int] = Unassigned()
     billable_time_in_seconds: Optional[int] = Unassigned()
-    debug_hook_config: Optional[DebugHookConfig] = Unassigned()
-    experiment_config: Optional[ExperimentConfig] = Unassigned()
-    debug_rule_configurations: Optional[List[DebugRuleConfiguration]] = Unassigned()
-    tensor_board_output_config: Optional[TensorBoardOutputConfig] = Unassigned()
-    debug_rule_evaluation_statuses: Optional[List[DebugRuleEvaluationStatus]] = Unassigned()
-    profiler_config: Optional[ProfilerConfig] = Unassigned()
-    profiler_rule_configurations: Optional[List[ProfilerRuleConfiguration]] = Unassigned()
-    profiler_rule_evaluation_statuses: Optional[List[ProfilerRuleEvaluationStatus]] = Unassigned()
+    debug_hook_config: Optional[shapes.DebugHookConfig] = Unassigned()
+    experiment_config: Optional[shapes.ExperimentConfig] = Unassigned()
+    debug_rule_configurations: Optional[List[shapes.DebugRuleConfiguration]] = Unassigned()
+    tensor_board_output_config: Optional[shapes.TensorBoardOutputConfig] = Unassigned()
+    debug_rule_evaluation_statuses: Optional[List[shapes.DebugRuleEvaluationStatus]] = Unassigned()
+    profiler_config: Optional[shapes.ProfilerConfig] = Unassigned()
+    profiler_rule_configurations: Optional[List[shapes.ProfilerRuleConfiguration]] = Unassigned()
+    profiler_rule_evaluation_statuses: Optional[List[shapes.ProfilerRuleEvaluationStatus]] = (
+        Unassigned()
+    )
     profiling_status: Optional[str] = Unassigned()
     environment: Optional[Dict[str, str]] = Unassigned()
-    retry_strategy: Optional[RetryStrategy] = Unassigned()
-    remote_debug_config: Optional[RemoteDebugConfig] = Unassigned()
-    infra_check_config: Optional[InfraCheckConfig] = Unassigned()
+    retry_strategy: Optional[shapes.RetryStrategy] = Unassigned()
+    remote_debug_config: Optional[shapes.RemoteDebugConfig] = Unassigned()
+    infra_check_config: Optional[shapes.InfraCheckConfig] = Unassigned()
 
     def get_name(self) -> str:
         attributes = vars(self)
@@ -28057,30 +28245,32 @@ class TrainingJob(Base):
     def create(
         cls,
         training_job_name: str,
-        algorithm_specification: AlgorithmSpecification,
+        algorithm_specification: shapes.AlgorithmSpecification,
         role_arn: str,
-        output_data_config: OutputDataConfig,
-        resource_config: ResourceConfig,
-        stopping_condition: StoppingCondition,
+        output_data_config: shapes.OutputDataConfig,
+        resource_config: shapes.ResourceConfig,
+        stopping_condition: shapes.StoppingCondition,
         hyper_parameters: Optional[Dict[str, str]] = Unassigned(),
-        input_data_config: Optional[List[Channel]] = Unassigned(),
-        vpc_config: Optional[VpcConfig] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
+        input_data_config: Optional[List[shapes.Channel]] = Unassigned(),
+        vpc_config: Optional[shapes.VpcConfig] = Unassigned(),
+        tags: Optional[List[shapes.Tag]] = Unassigned(),
         enable_network_isolation: Optional[bool] = Unassigned(),
         enable_inter_container_traffic_encryption: Optional[bool] = Unassigned(),
         enable_managed_spot_training: Optional[bool] = Unassigned(),
-        checkpoint_config: Optional[CheckpointConfig] = Unassigned(),
-        debug_hook_config: Optional[DebugHookConfig] = Unassigned(),
-        debug_rule_configurations: Optional[List[DebugRuleConfiguration]] = Unassigned(),
-        tensor_board_output_config: Optional[TensorBoardOutputConfig] = Unassigned(),
-        experiment_config: Optional[ExperimentConfig] = Unassigned(),
-        profiler_config: Optional[ProfilerConfig] = Unassigned(),
-        profiler_rule_configurations: Optional[List[ProfilerRuleConfiguration]] = Unassigned(),
+        checkpoint_config: Optional[shapes.CheckpointConfig] = Unassigned(),
+        debug_hook_config: Optional[shapes.DebugHookConfig] = Unassigned(),
+        debug_rule_configurations: Optional[List[shapes.DebugRuleConfiguration]] = Unassigned(),
+        tensor_board_output_config: Optional[shapes.TensorBoardOutputConfig] = Unassigned(),
+        experiment_config: Optional[shapes.ExperimentConfig] = Unassigned(),
+        profiler_config: Optional[shapes.ProfilerConfig] = Unassigned(),
+        profiler_rule_configurations: Optional[
+            List[shapes.ProfilerRuleConfiguration]
+        ] = Unassigned(),
         environment: Optional[Dict[str, str]] = Unassigned(),
-        retry_strategy: Optional[RetryStrategy] = Unassigned(),
-        remote_debug_config: Optional[RemoteDebugConfig] = Unassigned(),
-        infra_check_config: Optional[InfraCheckConfig] = Unassigned(),
-        session_chaining_config: Optional[SessionChainingConfig] = Unassigned(),
+        retry_strategy: Optional[shapes.RetryStrategy] = Unassigned(),
+        remote_debug_config: Optional[shapes.RemoteDebugConfig] = Unassigned(),
+        infra_check_config: Optional[shapes.InfraCheckConfig] = Unassigned(),
+        session_chaining_config: Optional[shapes.SessionChainingConfig] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["TrainingJob"]:
@@ -28094,10 +28284,10 @@ class TrainingJob(Base):
             output_data_config: Specifies the path to the S3 location where you want to store model artifacts. SageMaker creates subfolders for the artifacts.
             resource_config: The resources, including the ML compute instances and ML storage volumes, to use for model training.  ML storage volumes store model artifacts and incremental states. Training algorithms might also use ML storage volumes for scratch space. If you want SageMaker to use the ML storage volume to store the training data, choose File as the TrainingInputMode in the algorithm specification. For distributed training algorithms, specify an instance count greater than 1.
             stopping_condition: Specifies a limit to how long a model training job can run. It also specifies how long a managed Spot training job has to complete. When the job reaches the time limit, SageMaker ends the training job. Use this API to cap model training costs. To stop a job, SageMaker sends the algorithm the SIGTERM signal, which delays job termination for 120 seconds. Algorithms can use this 120-second window to save the model artifacts, so the results of training are not lost.
-            hyper_parameters: Algorithm-specific parameters that influence the quality of the model. You set hyperparameters before you start the learning process. For a list of hyperparameters for each training algorithm provided by SageMaker, see Algorithms.  You can specify a maximum of 100 hyperparameters. Each hyperparameter is a key-value pair. Each key and value is limited to 256 characters, as specified by the Length Constraint.   Do not include any security-sensitive information including account access IDs, secrets or tokens in any hyperparameter field. If the use of security-sensitive credentials are detected, SageMaker will reject your training job request and return an exception error.
+            hyper_parameters: Algorithm-specific parameters that influence the quality of the model. You set hyperparameters before you start the learning process. For a list of hyperparameters for each training algorithm provided by SageMaker, see Algorithms.  You can specify a maximum of 100 hyperparameters. Each hyperparameter is a key-value pair. Each key and value is limited to 256 characters, as specified by the Length Constraint.   Do not include any security-sensitive information including account access IDs, secrets, or tokens in any hyperparameter fields. As part of the shared responsibility model, you are responsible for any potential exposure, unauthorized access, or compromise of your sensitive data if caused by any security-sensitive information included in the request hyperparameter variable or plain text fields.
             input_data_config: An array of Channel objects. Each channel is a named input source. InputDataConfig describes the input data and its location.  Algorithms can accept input data from one or more channels. For example, an algorithm might have two channels of input data, training_data and validation_data. The configuration for each channel provides the S3, EFS, or FSx location where the input data is stored. It also provides information about the stored data: the MIME type, compression method, and whether the data is wrapped in RecordIO format.  Depending on the input mode that the algorithm supports, SageMaker either copies input data files from an S3 bucket to a local directory in the Docker container, or makes it available as input streams. For example, if you specify an EFS location, input data files are available as input streams. They do not need to be downloaded. Your input must be in the same Amazon Web Services region as your training job.
             vpc_config: A VpcConfig object that specifies the VPC that you want your training job to connect to. Control access to and from your training container by configuring the VPC. For more information, see Protect Training Jobs by Using an Amazon Virtual Private Cloud.
-            tags: An array of key-value pairs. You can use tags to categorize your Amazon Web Services resources in different ways, for example, by purpose, owner, or environment. For more information, see Tagging Amazon Web Services Resources.
+            tags: An array of key-value pairs. You can use tags to categorize your Amazon Web Services resources in different ways, for example, by purpose, owner, or environment. For more information, see Tagging Amazon Web Services Resources.  Do not include any security-sensitive information including account access IDs, secrets, or tokens in any tags. As part of the shared responsibility model, you are responsible for any potential exposure, unauthorized access, or compromise of your sensitive data if caused by any security-sensitive information included in the request tag variable or plain text fields.
             enable_network_isolation: Isolates the training container. No inbound or outbound network calls can be made, except for calls between peers within a training cluster for distributed training. If you enable network isolation for training jobs that are configured to use a VPC, SageMaker downloads and uploads customer data and model artifacts through the specified VPC, but the training container does not have network access.
             enable_inter_container_traffic_encryption: To encrypt all communications between ML compute instances in distributed training, choose True. Encryption provides greater security for distributed training, but training might take longer. How long it takes depends on the amount of communication between compute instances, especially if you use a deep learning algorithm in distributed training. For more information, see Protect Communications Between ML Compute Instances in a Distributed Training Job.
             enable_managed_spot_training: To train models using managed spot training, choose True. Managed spot training provides a fully managed and scalable infrastructure for training machine learning models. this option is useful when training jobs can be interrupted and when there is flexibility when the training job is run.  The complete and intermediate results of jobs are stored in an Amazon S3 bucket, and can be used as a starting point to train models incrementally. Amazon SageMaker provides metrics and logs in CloudWatch. They can be used to see when managed spot training jobs are running, interrupted, resumed, or completed.
@@ -28108,7 +28298,7 @@ class TrainingJob(Base):
             experiment_config:
             profiler_config:
             profiler_rule_configurations: Configuration information for Amazon SageMaker Debugger rules for profiling system and framework metrics.
-            environment: The environment variables to set in the Docker container.
+            environment: The environment variables to set in the Docker container.  Do not include any security-sensitive information including account access IDs, secrets, or tokens in any environment fields. As part of the shared responsibility model, you are responsible for any potential exposure, unauthorized access, or compromise of your sensitive data if caused by security-sensitive information included in the request environment variable or plain text fields.
             retry_strategy: The number of times to retry the job when the job fails due to an InternalServerError.
             remote_debug_config: Configuration for remote debugging. To learn more about the remote debugging functionality of SageMaker, see Access a training container through Amazon Web Services Systems Manager (SSM) for remote debugging.
             infra_check_config: Contains information about the infrastructure health check configuration for the training job.
@@ -28277,10 +28467,12 @@ class TrainingJob(Base):
     @Base.add_validate_call
     def update(
         self,
-        profiler_config: Optional[ProfilerConfigForUpdate] = Unassigned(),
-        profiler_rule_configurations: Optional[List[ProfilerRuleConfiguration]] = Unassigned(),
-        resource_config: Optional[ResourceConfigForUpdate] = Unassigned(),
-        remote_debug_config: Optional[RemoteDebugConfigForUpdate] = Unassigned(),
+        profiler_config: Optional[shapes.ProfilerConfigForUpdate] = Unassigned(),
+        profiler_rule_configurations: Optional[
+            List[shapes.ProfilerRuleConfiguration]
+        ] = Unassigned(),
+        resource_config: Optional[shapes.ResourceConfigForUpdate] = Unassigned(),
+        remote_debug_config: Optional[shapes.RemoteDebugConfigForUpdate] = Unassigned(),
     ) -> Optional["TrainingJob"]:
         """
         Update a TrainingJob resource
@@ -28557,7 +28749,7 @@ class TrainingPlan(Base):
     available_instance_count: Optional[int] = Unassigned()
     in_use_instance_count: Optional[int] = Unassigned()
     target_resources: Optional[List[str]] = Unassigned()
-    reserved_capacity_summaries: Optional[List[ReservedCapacitySummary]] = Unassigned()
+    reserved_capacity_summaries: Optional[List[shapes.ReservedCapacitySummary]] = Unassigned()
 
     def get_name(self) -> str:
         attributes = vars(self)
@@ -28581,7 +28773,7 @@ class TrainingPlan(Base):
         cls,
         training_plan_name: str,
         training_plan_offering_id: str,
-        tags: Optional[List[Tag]] = Unassigned(),
+        tags: Optional[List[shapes.Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["TrainingPlan"]:
@@ -28796,7 +28988,7 @@ class TrainingPlan(Base):
         start_time_before: Optional[datetime.datetime] = Unassigned(),
         sort_by: Optional[str] = Unassigned(),
         sort_order: Optional[str] = Unassigned(),
-        filters: Optional[List[TrainingPlanFilter]] = Unassigned(),
+        filters: Optional[List[shapes.TrainingPlanFilter]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> ResourceIterator["TrainingPlan"]:
@@ -28890,21 +29082,21 @@ class TransformJob(Base):
     failure_reason: Optional[str] = Unassigned()
     model_name: Optional[str] = Unassigned()
     max_concurrent_transforms: Optional[int] = Unassigned()
-    model_client_config: Optional[ModelClientConfig] = Unassigned()
+    model_client_config: Optional[shapes.ModelClientConfig] = Unassigned()
     max_payload_in_mb: Optional[int] = Unassigned()
     batch_strategy: Optional[str] = Unassigned()
     environment: Optional[Dict[str, str]] = Unassigned()
-    transform_input: Optional[TransformInput] = Unassigned()
-    transform_output: Optional[TransformOutput] = Unassigned()
-    data_capture_config: Optional[BatchDataCaptureConfig] = Unassigned()
-    transform_resources: Optional[TransformResources] = Unassigned()
+    transform_input: Optional[shapes.TransformInput] = Unassigned()
+    transform_output: Optional[shapes.TransformOutput] = Unassigned()
+    data_capture_config: Optional[shapes.BatchDataCaptureConfig] = Unassigned()
+    transform_resources: Optional[shapes.TransformResources] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
     transform_start_time: Optional[datetime.datetime] = Unassigned()
     transform_end_time: Optional[datetime.datetime] = Unassigned()
     labeling_job_arn: Optional[str] = Unassigned()
     auto_ml_job_arn: Optional[str] = Unassigned()
-    data_processing: Optional[DataProcessing] = Unassigned()
-    experiment_config: Optional[ExperimentConfig] = Unassigned()
+    data_processing: Optional[shapes.DataProcessing] = Unassigned()
+    experiment_config: Optional[shapes.ExperimentConfig] = Unassigned()
 
     def get_name(self) -> str:
         attributes = vars(self)
@@ -28960,18 +29152,18 @@ class TransformJob(Base):
         cls,
         transform_job_name: str,
         model_name: Union[str, object],
-        transform_input: TransformInput,
-        transform_output: TransformOutput,
-        transform_resources: TransformResources,
+        transform_input: shapes.TransformInput,
+        transform_output: shapes.TransformOutput,
+        transform_resources: shapes.TransformResources,
         max_concurrent_transforms: Optional[int] = Unassigned(),
-        model_client_config: Optional[ModelClientConfig] = Unassigned(),
+        model_client_config: Optional[shapes.ModelClientConfig] = Unassigned(),
         max_payload_in_mb: Optional[int] = Unassigned(),
         batch_strategy: Optional[str] = Unassigned(),
         environment: Optional[Dict[str, str]] = Unassigned(),
-        data_capture_config: Optional[BatchDataCaptureConfig] = Unassigned(),
-        data_processing: Optional[DataProcessing] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
-        experiment_config: Optional[ExperimentConfig] = Unassigned(),
+        data_capture_config: Optional[shapes.BatchDataCaptureConfig] = Unassigned(),
+        data_processing: Optional[shapes.DataProcessing] = Unassigned(),
+        tags: Optional[List[shapes.Tag]] = Unassigned(),
+        experiment_config: Optional[shapes.ExperimentConfig] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["TransformJob"]:
@@ -29345,12 +29537,12 @@ class Trial(Base):
     trial_arn: Optional[str] = Unassigned()
     display_name: Optional[str] = Unassigned()
     experiment_name: Optional[str] = Unassigned()
-    source: Optional[TrialSource] = Unassigned()
+    source: Optional[shapes.TrialSource] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
-    created_by: Optional[UserContext] = Unassigned()
+    created_by: Optional[shapes.UserContext] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
-    last_modified_by: Optional[UserContext] = Unassigned()
-    metadata_properties: Optional[MetadataProperties] = Unassigned()
+    last_modified_by: Optional[shapes.UserContext] = Unassigned()
+    metadata_properties: Optional[shapes.MetadataProperties] = Unassigned()
 
     def get_name(self) -> str:
         attributes = vars(self)
@@ -29375,8 +29567,8 @@ class Trial(Base):
         trial_name: str,
         experiment_name: Union[str, object],
         display_name: Optional[str] = Unassigned(),
-        metadata_properties: Optional[MetadataProperties] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
+        metadata_properties: Optional[shapes.MetadataProperties] = Unassigned(),
+        tags: Optional[List[shapes.Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["Trial"]:
@@ -29705,21 +29897,21 @@ class TrialComponent(Base):
     trial_component_name: str
     trial_component_arn: Optional[str] = Unassigned()
     display_name: Optional[str] = Unassigned()
-    source: Optional[TrialComponentSource] = Unassigned()
-    status: Optional[TrialComponentStatus] = Unassigned()
+    source: Optional[shapes.TrialComponentSource] = Unassigned()
+    status: Optional[shapes.TrialComponentStatus] = Unassigned()
     start_time: Optional[datetime.datetime] = Unassigned()
     end_time: Optional[datetime.datetime] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
-    created_by: Optional[UserContext] = Unassigned()
+    created_by: Optional[shapes.UserContext] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
-    last_modified_by: Optional[UserContext] = Unassigned()
-    parameters: Optional[Dict[str, TrialComponentParameterValue]] = Unassigned()
-    input_artifacts: Optional[Dict[str, TrialComponentArtifact]] = Unassigned()
-    output_artifacts: Optional[Dict[str, TrialComponentArtifact]] = Unassigned()
-    metadata_properties: Optional[MetadataProperties] = Unassigned()
-    metrics: Optional[List[TrialComponentMetricSummary]] = Unassigned()
+    last_modified_by: Optional[shapes.UserContext] = Unassigned()
+    parameters: Optional[Dict[str, shapes.TrialComponentParameterValue]] = Unassigned()
+    input_artifacts: Optional[Dict[str, shapes.TrialComponentArtifact]] = Unassigned()
+    output_artifacts: Optional[Dict[str, shapes.TrialComponentArtifact]] = Unassigned()
+    metadata_properties: Optional[shapes.MetadataProperties] = Unassigned()
+    metrics: Optional[List[shapes.TrialComponentMetricSummary]] = Unassigned()
     lineage_group_arn: Optional[str] = Unassigned()
-    sources: Optional[List[TrialComponentSource]] = Unassigned()
+    sources: Optional[List[shapes.TrialComponentSource]] = Unassigned()
 
     def get_name(self) -> str:
         attributes = vars(self)
@@ -29743,14 +29935,14 @@ class TrialComponent(Base):
         cls,
         trial_component_name: str,
         display_name: Optional[str] = Unassigned(),
-        status: Optional[TrialComponentStatus] = Unassigned(),
+        status: Optional[shapes.TrialComponentStatus] = Unassigned(),
         start_time: Optional[datetime.datetime] = Unassigned(),
         end_time: Optional[datetime.datetime] = Unassigned(),
-        parameters: Optional[Dict[str, TrialComponentParameterValue]] = Unassigned(),
-        input_artifacts: Optional[Dict[str, TrialComponentArtifact]] = Unassigned(),
-        output_artifacts: Optional[Dict[str, TrialComponentArtifact]] = Unassigned(),
-        metadata_properties: Optional[MetadataProperties] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
+        parameters: Optional[Dict[str, shapes.TrialComponentParameterValue]] = Unassigned(),
+        input_artifacts: Optional[Dict[str, shapes.TrialComponentArtifact]] = Unassigned(),
+        output_artifacts: Optional[Dict[str, shapes.TrialComponentArtifact]] = Unassigned(),
+        metadata_properties: Optional[shapes.MetadataProperties] = Unassigned(),
+        tags: Optional[List[shapes.Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["TrialComponent"]:
@@ -29915,14 +30107,14 @@ class TrialComponent(Base):
     def update(
         self,
         display_name: Optional[str] = Unassigned(),
-        status: Optional[TrialComponentStatus] = Unassigned(),
+        status: Optional[shapes.TrialComponentStatus] = Unassigned(),
         start_time: Optional[datetime.datetime] = Unassigned(),
         end_time: Optional[datetime.datetime] = Unassigned(),
-        parameters: Optional[Dict[str, TrialComponentParameterValue]] = Unassigned(),
+        parameters: Optional[Dict[str, shapes.TrialComponentParameterValue]] = Unassigned(),
         parameters_to_remove: Optional[List[str]] = Unassigned(),
-        input_artifacts: Optional[Dict[str, TrialComponentArtifact]] = Unassigned(),
+        input_artifacts: Optional[Dict[str, shapes.TrialComponentArtifact]] = Unassigned(),
         input_artifacts_to_remove: Optional[List[str]] = Unassigned(),
-        output_artifacts: Optional[Dict[str, TrialComponentArtifact]] = Unassigned(),
+        output_artifacts: Optional[Dict[str, shapes.TrialComponentArtifact]] = Unassigned(),
         output_artifacts_to_remove: Optional[List[str]] = Unassigned(),
     ) -> Optional["TrialComponent"]:
         """
@@ -30232,7 +30424,7 @@ class TrialComponent(Base):
     @Base.add_validate_call
     def batch_put_metrics(
         self,
-        metric_data: List[RawMetricData],
+        metric_data: List[shapes.RawMetricData],
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> None:
@@ -30276,10 +30468,10 @@ class TrialComponent(Base):
     @Base.add_validate_call
     def batch_get_metrics(
         cls,
-        metric_queries: List[MetricQuery],
+        metric_queries: List[shapes.MetricQuery],
         session: Optional[Session] = None,
         region: Optional[str] = None,
-    ) -> Optional[BatchGetMetricsResponse]:
+    ) -> Optional[shapes.BatchGetMetricsResponse]:
         """
         Used to retrieve training metrics from SageMaker.
 
@@ -30289,7 +30481,7 @@ class TrialComponent(Base):
             region: Region name.
 
         Returns:
-            BatchGetMetricsResponse
+            shapes.BatchGetMetricsResponse
 
         Raises:
             botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
@@ -30319,7 +30511,7 @@ class TrialComponent(Base):
         logger.debug(f"Response: {response}")
 
         transformed_response = transform(response, "BatchGetMetricsResponse")
-        return BatchGetMetricsResponse(**transformed_response)
+        return shapes.BatchGetMetricsResponse(**transformed_response)
 
 
 class UserProfile(Base):
@@ -30351,7 +30543,7 @@ class UserProfile(Base):
     failure_reason: Optional[str] = Unassigned()
     single_sign_on_user_identifier: Optional[str] = Unassigned()
     single_sign_on_user_value: Optional[str] = Unassigned()
-    user_settings: Optional[UserSettings] = Unassigned()
+    user_settings: Optional[shapes.UserSettings] = Unassigned()
 
     def get_name(self) -> str:
         attributes = vars(self)
@@ -30420,8 +30612,8 @@ class UserProfile(Base):
         user_profile_name: str,
         single_sign_on_user_identifier: Optional[str] = Unassigned(),
         single_sign_on_user_value: Optional[str] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
-        user_settings: Optional[UserSettings] = Unassigned(),
+        tags: Optional[List[shapes.Tag]] = Unassigned(),
+        user_settings: Optional[shapes.UserSettings] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["UserProfile"]:
@@ -30587,7 +30779,7 @@ class UserProfile(Base):
     @Base.add_validate_call
     def update(
         self,
-        user_settings: Optional[UserSettings] = Unassigned(),
+        user_settings: Optional[shapes.UserSettings] = Unassigned(),
     ) -> Optional["UserProfile"]:
         """
         Update a UserProfile resource
@@ -30876,7 +31068,7 @@ class Workforce(Base):
     """
 
     workforce_name: str
-    workforce: Optional[Workforce] = Unassigned()
+    workforce: Optional[shapes.Workforce] = Unassigned()
 
     def get_name(self) -> str:
         attributes = vars(self)
@@ -30920,11 +31112,11 @@ class Workforce(Base):
     def create(
         cls,
         workforce_name: str,
-        cognito_config: Optional[CognitoConfig] = Unassigned(),
-        oidc_config: Optional[OidcConfig] = Unassigned(),
-        source_ip_config: Optional[SourceIpConfig] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
-        workforce_vpc_config: Optional[WorkforceVpcConfigRequest] = Unassigned(),
+        cognito_config: Optional[shapes.CognitoConfig] = Unassigned(),
+        oidc_config: Optional[shapes.OidcConfig] = Unassigned(),
+        source_ip_config: Optional[shapes.SourceIpConfig] = Unassigned(),
+        tags: Optional[List[shapes.Tag]] = Unassigned(),
+        workforce_vpc_config: Optional[shapes.WorkforceVpcConfigRequest] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["Workforce"]:
@@ -31078,9 +31270,9 @@ class Workforce(Base):
     @Base.add_validate_call
     def update(
         self,
-        source_ip_config: Optional[SourceIpConfig] = Unassigned(),
-        oidc_config: Optional[OidcConfig] = Unassigned(),
-        workforce_vpc_config: Optional[WorkforceVpcConfigRequest] = Unassigned(),
+        source_ip_config: Optional[shapes.SourceIpConfig] = Unassigned(),
+        oidc_config: Optional[shapes.OidcConfig] = Unassigned(),
+        workforce_vpc_config: Optional[shapes.WorkforceVpcConfigRequest] = Unassigned(),
     ) -> Optional["Workforce"]:
         """
         Update a Workforce resource
@@ -31347,7 +31539,7 @@ class Workteam(Base):
     """
 
     workteam_name: str
-    workteam: Optional[Workteam] = Unassigned()
+    workteam: Optional[shapes.Workteam] = Unassigned()
 
     def get_name(self) -> str:
         attributes = vars(self)
@@ -31370,12 +31562,12 @@ class Workteam(Base):
     def create(
         cls,
         workteam_name: str,
-        member_definitions: List[MemberDefinition],
+        member_definitions: List[shapes.MemberDefinition],
         description: str,
         workforce_name: Optional[Union[str, object]] = Unassigned(),
-        notification_configuration: Optional[NotificationConfiguration] = Unassigned(),
-        worker_access_configuration: Optional[WorkerAccessConfiguration] = Unassigned(),
-        tags: Optional[List[Tag]] = Unassigned(),
+        notification_configuration: Optional[shapes.NotificationConfiguration] = Unassigned(),
+        worker_access_configuration: Optional[shapes.WorkerAccessConfiguration] = Unassigned(),
+        tags: Optional[List[shapes.Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["Workteam"]:
@@ -31532,10 +31724,10 @@ class Workteam(Base):
     @Base.add_validate_call
     def update(
         self,
-        member_definitions: Optional[List[MemberDefinition]] = Unassigned(),
+        member_definitions: Optional[List[shapes.MemberDefinition]] = Unassigned(),
         description: Optional[str] = Unassigned(),
-        notification_configuration: Optional[NotificationConfiguration] = Unassigned(),
-        worker_access_configuration: Optional[WorkerAccessConfiguration] = Unassigned(),
+        notification_configuration: Optional[shapes.NotificationConfiguration] = Unassigned(),
+        worker_access_configuration: Optional[shapes.WorkerAccessConfiguration] = Unassigned(),
     ) -> Optional["Workteam"]:
         """
         Update a Workteam resource

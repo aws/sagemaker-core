@@ -177,7 +177,7 @@ class ResourcesCodeGen:
             "import datetime",
             "import time",
             "import functools",
-            "from pydantic import validate_call",
+            "from pydantic import validate_call, ConfigDict, BaseModel",
             "from typing import Dict, List, Literal, Optional, Union, Any\n"
             "from boto3.session import Session",
             "from rich.console import Group",
@@ -192,8 +192,8 @@ class ResourcesCodeGen:
             "snake_to_pascal, pascal_to_snake, is_not_primitive, is_not_str_dict, is_primitive_list, serialize",
             "from sagemaker_core.main.intelligent_defaults_helper import load_default_configs_for_resource_name, get_config_value",
             "from sagemaker_core.main.logs import MultiLogStreamHandler",
-            "from sagemaker_core.main.shapes import *",
             "from sagemaker_core.main.exceptions import *",
+            "import sagemaker_core.main.shapes as shapes",
         ]
 
         formated_imports = "\n".join(imports)
@@ -1388,9 +1388,12 @@ class ResourcesCodeGen:
                 return_type_conversion = "cls"
                 return_string = f"Returns:\n" f"    {method.resource_name}\n"
             else:
-                return_type = f"Optional[{method.return_type}]"
                 return_type_conversion = method.return_type
-                return_string = f"Returns:\n" f"    {method.return_type}\n"
+                if method.resource_name != method.return_type and method.return_type in self.shapes:
+                    return_type_conversion = f"shapes.{method.return_type}"
+                return_type = f"Optional[{return_type_conversion}]"
+
+                return_string = f"Returns:\n" f"    {return_type_conversion}\n"
             operation_output_shape = operation_metadata["output"]["shape"]
             deserialize_response = DESERIALIZE_RESPONSE_TEMPLATE.format(
                 operation_output_shape=operation_output_shape,
@@ -1471,10 +1474,14 @@ class ResourcesCodeGen:
         method_args += add_indent("session: Optional[Session] = None,\n", 4)
         method_args += add_indent("region: Optional[str] = None,", 4)
 
+        iterator_return_type = method.return_type
+        if method.resource_name != method.return_type and method.return_type in self.shapes:
+            iterator_return_type = f"shapes.{method.return_type}"
+
         if method.return_type == method.resource_name:
-            return_type = f'ResourceIterator["{method.resource_name}"]'
+            method_return_type = f'ResourceIterator["{method.resource_name}"]'
         else:
-            return_type = f"ResourceIterator[{method.return_type}]"
+            method_return_type = f"ResourceIterator[{iterator_return_type}]"
         return_string = f"Returns:\n" f"    Iterator for listed {method.return_type}.\n"
 
         get_list_operation_output_shape = operation_metadata["output"]["shape"]
@@ -1497,7 +1504,7 @@ class ResourcesCodeGen:
             f"list_method='{list_method}'",
             f"summaries_key='{summaries_key}'",
             f"summary_name='{summary_name}'",
-            f"resource_cls={method.return_type}",
+            f"resource_cls={iterator_return_type}",
             "list_method_kwargs=operation_input_args",
         ]
 
@@ -1527,7 +1534,7 @@ class ResourcesCodeGen:
             decorator=decorator,
             method_name=method.method_name,
             method_args=method_args,
-            return_type=return_type,
+            return_type=method_return_type,
             serialize_operation_input=serialize_operation_input,
             initialize_client=initialize_client,
             call_operation_api="",
@@ -1747,20 +1754,42 @@ class ResourcesCodeGen:
             get_operation_required_input = []
 
         custom_key_mapping_str = ""
+        custom_key_mapping = {}
+        extract_name_mapping_str = ""
+        extract_name_mapping = {}
         if any(member not in summary_members for member in get_operation_required_input):
-            if "MonitoringJobDefinitionSummary" == summary_name:
+            if summary_name == "MonitoringJobDefinitionSummary":
                 custom_key_mapping = {
                     "monitoring_job_definition_name": "job_definition_name",
                     "monitoring_job_definition_arn": "job_definition_arn",
                 }
-                custom_key_mapping_str = f"custom_key_mapping = {json.dumps(custom_key_mapping)}"
-                custom_key_mapping_str = add_indent(custom_key_mapping_str, 4)
+            elif summary_name == "HubContentInfo":
+                # HubContentArn -- arn:<partition>:sagemaker:<region>:<account-id>:hub-content/<hub-name>/<type>/<name>/<version>
+                # {source key from input: (target label in arn, target key in output)}
+                extract_name_mapping = {
+                    "hub_content_arn": ("hub-content/", "hub_name"),
+                }
+            elif summary_name == "ImageVersion":
+                # ImageVersionArn -- arn:aws:sagemaker:<region>:<account>:image-version/<image-name>/<version-number>
+                # {source key from input: (target label in arn, target key in output)}
+                extract_name_mapping = {
+                    "image_version_arn": ("image-version/", "image_name"),
+                }
             else:
                 log.warning(
                     f"Resource {resource_name} summaries do not have required members to create object instance. Resource may require custom key mapping for get_all().\n"
                     f"List {summary_name} Members: {summary_members}, Object Required Members: {get_operation_required_input}"
                 )
                 return ""
+
+            if custom_key_mapping:
+                custom_key_mapping_str = add_indent(
+                    f"custom_key_mapping = {json.dumps(custom_key_mapping)}", 4
+                )
+            if extract_name_mapping:
+                extract_name_mapping_str = add_indent(
+                    f"extract_name_mapping = {json.dumps(extract_name_mapping)}", 4
+                )
 
         resource_iterator_args_list = [
             "client=client",
@@ -1772,6 +1801,9 @@ class ResourcesCodeGen:
 
         if custom_key_mapping_str:
             resource_iterator_args_list.append(f"custom_key_mapping=custom_key_mapping")
+
+        if extract_name_mapping_str:
+            resource_iterator_args_list.append(f"extract_name_mapping=extract_name_mapping")
 
         exclude_list = ["next_token", "max_results"]
         get_all_args = self._generate_method_args(operation_input_shape_name, exclude_list)
@@ -1785,6 +1817,7 @@ class ResourcesCodeGen:
                 resource=resource_name,
                 operation=operation,
                 custom_key_mapping=custom_key_mapping_str,
+                extract_name_mapping=extract_name_mapping_str,
                 resource_iterator_args=resource_iterator_args,
             )
             return formatted_method
@@ -1815,6 +1848,7 @@ class ResourcesCodeGen:
             get_all_args=get_all_args,
             operation_input_args=operation_input_args,
             custom_key_mapping=custom_key_mapping_str,
+            extract_name_mapping=extract_name_mapping_str,
             resource_iterator_args=resource_iterator_args,
         )
         return formatted_method
@@ -1901,6 +1935,8 @@ class ResourcesCodeGen:
             new_val = value.split("=")[0].strip()
             if new_val.startswith("Optional"):
                 new_val = new_val.replace("Optional[", "")[:-1]
+            if new_val.startswith("shapes."):
+                new_val = new_val.replace("shapes.", "")
             cleaned_class_attributes[key] = new_val
         return cleaned_class_attributes
 

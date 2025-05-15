@@ -10,9 +10,10 @@ from sklearn.datasets import load_iris
 from sklearn.model_selection import train_test_split
 
 from sagemaker_cleaner import handle_cleanup
-from sagemaker_core.main.shapes import ContainerDefinition, ProductionVariant, ProfilerConfig
-from sagemaker_core.main.resources import (
-    TrainingJob,
+from sagemaker_core.main.shapes import (
+    ContainerDefinition,
+    ProductionVariant,
+    ProfilerConfig,
     AlgorithmSpecification,
     Channel,
     DataSource,
@@ -20,6 +21,9 @@ from sagemaker_core.main.resources import (
     OutputDataConfig,
     ResourceConfig,
     StoppingCondition,
+)
+from sagemaker_core.main.resources import (
+    TrainingJob,
     Model,
     EndpointConfig,
     Endpoint,

@@ -1,5 +1,31 @@
 # Changelog
 
+## v1.0.34 (2025-05-13)
+
+ * Daily Sync with Botocore v1.38.14 on 2025/05/13 (#298)
+
+## v1.0.33 (2025-05-08)
+
+ * Support rich 14.0.0 (#297)
+ * Add extract_name_mapping logic to fix get_all method (#294)
+
+## v1.0.32 (2025-05-08)
+
+ * Daily Sync with Botocore v1.38.11 on 2025/05/08 (#296)
+
+## v1.0.31 (2025-05-02)
+
+ * Daily Sync with Botocore v1.38.7 on 2025/05/02 (#295)
+
+## v1.0.30 (2025-04-30)
+
+ * Daily Sync with Botocore v1.38.5 on 2025/04/30 (#292)
+ * Daily Sync with Botocore v1.37.37 on 2025/04/21 (#290)
+ * Fix logging behavior (#287)
+ * fix: explicit reference of shapes in resources.py (#285)
+ * fix: Changes to address the field name error: json shadows a BaseModel attribute (#270)
+ * fix: include version file in the distribution (#249)
+
 ## v1.0.29 (2025-04-10)
 
  * Daily Sync with Botocore v1.37.31 on 2025/04/10 (#284)

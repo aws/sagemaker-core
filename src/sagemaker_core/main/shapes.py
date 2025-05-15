@@ -12,7 +12,7 @@
 # language governing permissions and limitations under the License.
 import datetime
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from typing import List, Dict, Optional, Any, Union
 from sagemaker_core.main.utils import Unassigned
 
@@ -712,6 +712,19 @@ class Alarm(Base):
     alarm_name: Optional[str] = Unassigned()
 
 
+class AlarmDetails(Base):
+    """
+    AlarmDetails
+      The details of the alarm to monitor during the AMI update.
+
+    Attributes
+    ----------------------
+    alarm_name: The name of the alarm.
+    """
+
+    alarm_name: str
+
+
 class MetricDefinition(Base):
     """
     MetricDefinition
@@ -1013,7 +1026,7 @@ class StoppingCondition(Base):
     ----------------------
     max_runtime_in_seconds: The maximum length of time, in seconds, that a training or compilation job can run before it is stopped. For compilation jobs, if the job does not complete during this time, a TimeOut error is generated. We recommend starting with 900 seconds and increasing as necessary based on your model. For all other jobs, if the job does not complete during this time, SageMaker ends the job. When RetryStrategy is specified in the job request, MaxRuntimeInSeconds specifies the maximum time for all of the attempts in total, not each individual attempt. The default value is 1 day. The maximum value is 28 days. The maximum time that a TrainingJob can run in total, including any time spent publishing metrics or archiving and uploading models after it has been stopped, is 30 days.
     max_wait_time_in_seconds: The maximum length of time, in seconds, that a managed Spot training job has to complete. It is the amount of time spent waiting for Spot capacity plus the amount of time the job can run. It must be equal to or greater than MaxRuntimeInSeconds. If the job does not complete during this time, SageMaker ends the job. When RetryStrategy is specified in the job request, MaxWaitTimeInSeconds specifies the maximum time for all of the attempts in total, not each individual attempt.
-    max_pending_time_in_seconds: The maximum length of time, in seconds, that a training or compilation job can be pending before it is stopped.
+    max_pending_time_in_seconds: The maximum length of time, in seconds, that a training or compilation job can be pending before it is stopped.  When working with training jobs that use capacity from training plans, not all Pending job states count against the MaxPendingTimeInSeconds limit. The following scenarios do not increment the MaxPendingTimeInSeconds counter:   The plan is in a Scheduled state: Jobs queued (in Pending status) before a plan's start date (waiting for scheduled start time)   Between capacity reservations: Jobs temporarily back to Pending status between two capacity reservation periods    MaxPendingTimeInSeconds only increments when jobs are actively waiting for capacity in an Active plan.
     """
 
     max_runtime_in_seconds: Optional[int] = Unassigned()
@@ -1730,15 +1743,15 @@ class MetricDatum(Base):
     Attributes
     ----------------------
     metric_name: The name of the metric.
+    standard_metric_name: The name of the standard metric.   For definitions of the standard metrics, see  Autopilot candidate metrics .
     value: The value of the metric.
     set: The dataset split from which the AutoML job produced the metric.
-    standard_metric_name: The name of the standard metric.   For definitions of the standard metrics, see  Autopilot candidate metrics .
     """
 
     metric_name: Optional[str] = Unassigned()
+    standard_metric_name: Optional[str] = Unassigned()
     value: Optional[float] = Unassigned()
     set: Optional[str] = Unassigned()
-    standard_metric_name: Optional[str] = Unassigned()
 
 
 class CandidateProperties(Base):
@@ -2543,12 +2556,12 @@ class MonitoringDatasetFormat(Base):
     Attributes
     ----------------------
     csv: The CSV dataset used in the monitoring job.
-    json: The JSON dataset used in the monitoring job
+    json_format: The JSON dataset used in the monitoring job
     parquet: The Parquet dataset used in the monitoring job
     """
 
     csv: Optional[MonitoringCsvDatasetFormat] = Unassigned()
-    json: Optional[MonitoringJsonDatasetFormat] = Unassigned()
+    json_format: Optional[MonitoringJsonDatasetFormat] = Field(default=Unassigned(), alias="json")
     parquet: Optional[MonitoringParquetDatasetFormat] = Unassigned()
 
 
@@ -2873,6 +2886,21 @@ class CanvasAppSettings(Base):
     emr_serverless_settings: Optional[EmrServerlessSettings] = Unassigned()
 
 
+class CapacitySizeConfig(Base):
+    """
+    CapacitySizeConfig
+      The configuration of the size measurements of the AMI update. Using this configuration, you can specify whether SageMaker should update your instance group by an amount or percentage of instances.
+
+    Attributes
+    ----------------------
+    type: Specifies whether SageMaker should process the update by amount or percentage of instances.
+    value: Specifies the amount or percentage of instances SageMaker updates at a time.
+    """
+
+    type: str
+    value: int
+
+
 class CaptureContentTypeHeader(Base):
     """
     CaptureContentTypeHeader
@@ -3153,6 +3181,53 @@ class ClusterInstanceStorageConfig(Base):
     ebs_volume_config: Optional[ClusterEbsVolumeConfig] = Unassigned()
 
 
+class RollingDeploymentPolicy(Base):
+    """
+    RollingDeploymentPolicy
+      The configurations that SageMaker uses when updating the AMI versions.
+
+    Attributes
+    ----------------------
+    maximum_batch_size: The maximum amount of instances in the cluster that SageMaker can update at a time.
+    rollback_maximum_batch_size: The maximum amount of instances in the cluster that SageMaker can roll back at a time.
+    """
+
+    maximum_batch_size: CapacitySizeConfig
+    rollback_maximum_batch_size: Optional[CapacitySizeConfig] = Unassigned()
+
+
+class DeploymentConfiguration(Base):
+    """
+    DeploymentConfiguration
+      The configuration to use when updating the AMI versions.
+
+    Attributes
+    ----------------------
+    rolling_update_policy: The policy that SageMaker uses when updating the AMI versions of the cluster.
+    wait_interval_in_seconds: The duration in seconds that SageMaker waits before updating more instances in the cluster.
+    auto_rollback_configuration: An array that contains the alarms that SageMaker monitors to know whether to roll back the AMI update.
+    """
+
+    rolling_update_policy: Optional[RollingDeploymentPolicy] = Unassigned()
+    wait_interval_in_seconds: Optional[int] = Unassigned()
+    auto_rollback_configuration: Optional[List[AlarmDetails]] = Unassigned()
+
+
+class ScheduledUpdateConfig(Base):
+    """
+    ScheduledUpdateConfig
+      The configuration object of the schedule that SageMaker follows when updating the AMI.
+
+    Attributes
+    ----------------------
+    schedule_expression: A cron expression that specifies the schedule that SageMaker follows when updating the AMI.
+    deployment_config: The configuration to use when updating the AMI versions.
+    """
+
+    schedule_expression: str
+    deployment_config: Optional[DeploymentConfiguration] = Unassigned()
+
+
 class ClusterInstanceGroupDetails(Base):
     """
     ClusterInstanceGroupDetails
@@ -3173,6 +3248,7 @@ class ClusterInstanceGroupDetails(Base):
     training_plan_arn: The Amazon Resource Name (ARN); of the training plan associated with this cluster instance group. For more information about how to reserve GPU capacity for your SageMaker HyperPod clusters using Amazon SageMaker Training Plan, see  CreateTrainingPlan .
     training_plan_status: The current status of the training plan associated with this cluster instance group.
     override_vpc_config: The customized Amazon VPC configuration at the instance group level that overrides the default Amazon VPC configuration of the SageMaker HyperPod cluster.
+    scheduled_update_config: The configuration object of the schedule that SageMaker follows when updating the AMI.
     """
 
     current_count: Optional[int] = Unassigned()
@@ -3188,6 +3264,7 @@ class ClusterInstanceGroupDetails(Base):
     training_plan_arn: Optional[str] = Unassigned()
     training_plan_status: Optional[str] = Unassigned()
     override_vpc_config: Optional[VpcConfig] = Unassigned()
+    scheduled_update_config: Optional[ScheduledUpdateConfig] = Unassigned()
 
 
 class ClusterInstanceGroupSpecification(Base):
@@ -3207,6 +3284,7 @@ class ClusterInstanceGroupSpecification(Base):
     on_start_deep_health_checks: A flag indicating whether deep health checks should be performed when the cluster instance group is created or updated.
     training_plan_arn: The Amazon Resource Name (ARN); of the training plan to use for this cluster instance group. For more information about how to reserve GPU capacity for your SageMaker HyperPod clusters using Amazon SageMaker Training Plan, see  CreateTrainingPlan .
     override_vpc_config: To configure multi-AZ deployments, customize the Amazon VPC configuration at the instance group level. You can specify different subnets and security groups across different AZs in the instance group specification to override a SageMaker HyperPod cluster's default Amazon VPC configuration. For more information about deploying a cluster in multiple AZs, see Setting up SageMaker HyperPod clusters across multiple AZs.  When your Amazon VPC and subnets support IPv6, network communications differ based on the cluster orchestration platform:   Slurm-orchestrated clusters automatically configure nodes with dual IPv6 and IPv4 addresses, allowing immediate IPv6 network communications.   In Amazon EKS-orchestrated clusters, nodes receive dual-stack addressing, but pods can only use IPv6 when the Amazon EKS cluster is explicitly IPv6-enabled. For information about deploying an IPv6 Amazon EKS cluster, see Amazon EKS IPv6 Cluster Deployment.   Additional resources for IPv6 configuration:   For information about adding IPv6 support to your VPC, see to IPv6 Support for VPC.   For information about creating a new IPv6-compatible VPC, see Amazon VPC Creation Guide.   To configure SageMaker HyperPod with a custom Amazon VPC, see Custom Amazon VPC Setup for SageMaker HyperPod.
+    scheduled_update_config: The configuration object of the schedule that SageMaker uses to update the AMI.
     """
 
     instance_count: int
@@ -3219,6 +3297,7 @@ class ClusterInstanceGroupSpecification(Base):
     on_start_deep_health_checks: Optional[List[str]] = Unassigned()
     training_plan_arn: Optional[str] = Unassigned()
     override_vpc_config: Optional[VpcConfig] = Unassigned()
+    scheduled_update_config: Optional[ScheduledUpdateConfig] = Unassigned()
 
 
 class ClusterInstancePlacement(Base):
@@ -3263,6 +3342,7 @@ class ClusterNodeDetails(Base):
     instance_status: The status of the instance.
     instance_type: The type of the instance.
     launch_time: The time when the instance is launched.
+    last_software_update_time: The time when the cluster was last updated.
     life_cycle_config: The LifeCycle configuration applied to the instance.
     override_vpc_config: The customized Amazon VPC configuration at the instance group level that overrides the default Amazon VPC configuration of the SageMaker HyperPod cluster.
     threads_per_core: The number of threads per CPU core you specified under CreateCluster.
@@ -3278,6 +3358,7 @@ class ClusterNodeDetails(Base):
     instance_status: Optional[ClusterInstanceStatusDetails] = Unassigned()
     instance_type: Optional[str] = Unassigned()
     launch_time: Optional[datetime.datetime] = Unassigned()
+    last_software_update_time: Optional[datetime.datetime] = Unassigned()
     life_cycle_config: Optional[ClusterLifeCycleConfig] = Unassigned()
     override_vpc_config: Optional[VpcConfig] = Unassigned()
     threads_per_core: Optional[int] = Unassigned()
@@ -3299,6 +3380,7 @@ class ClusterNodeSummary(Base):
     instance_id: The ID of the instance.
     instance_type: The type of the instance.
     launch_time: The time when the instance is launched.
+    last_software_update_time: The time when SageMaker last updated the software of the instances in the cluster.
     instance_status: The status of the instance.
     """
 
@@ -3307,6 +3389,7 @@ class ClusterNodeSummary(Base):
     instance_type: str
     launch_time: datetime.datetime
     instance_status: ClusterInstanceStatusDetails
+    last_software_update_time: Optional[datetime.datetime] = Unassigned()
 
 
 class ClusterOrchestratorEksConfig(Base):
@@ -4682,6 +4765,31 @@ class DockerSettings(Base):
     vpc_only_trusted_accounts: Optional[List[str]] = Unassigned()
 
 
+class UnifiedStudioSettings(Base):
+    """
+    UnifiedStudioSettings
+      The settings that apply to an Amazon SageMaker AI domain when you use it in Amazon SageMaker Unified Studio.
+
+    Attributes
+    ----------------------
+    studio_web_portal_access: Sets whether you can access the domain in Amazon SageMaker Studio:  ENABLED  You can access the domain in Amazon SageMaker Studio. If you migrate the domain to Amazon SageMaker Unified Studio, you can access it in both studio interfaces.  DISABLED  You can't access the domain in Amazon SageMaker Studio. If you migrate the domain to Amazon SageMaker Unified Studio, you can access it only in that studio interface.   To migrate a domain to Amazon SageMaker Unified Studio, you specify the UnifiedStudioSettings data type when you use the UpdateDomain action.
+    domain_account_id: The ID of the Amazon Web Services account that has the Amazon SageMaker Unified Studio domain. The default value, if you don't specify an ID, is the ID of the account that has the Amazon SageMaker AI domain.
+    domain_region: The Amazon Web Services Region where the domain is located in Amazon SageMaker Unified Studio. The default value, if you don't specify a Region, is the Region where the Amazon SageMaker AI domain is located.
+    domain_id: The ID of the Amazon SageMaker Unified Studio domain associated with this domain.
+    project_id: The ID of the Amazon SageMaker Unified Studio project that corresponds to the domain.
+    environment_id: The ID of the environment that Amazon SageMaker Unified Studio associates with the domain.
+    project_s3_path: The location where Amazon S3 stores temporary execution data and other artifacts for the project that corresponds to the domain.
+    """
+
+    studio_web_portal_access: Optional[str] = Unassigned()
+    domain_account_id: Optional[str] = Unassigned()
+    domain_region: Optional[str] = Unassigned()
+    domain_id: Optional[str] = Unassigned()
+    project_id: Optional[str] = Unassigned()
+    environment_id: Optional[str] = Unassigned()
+    project_s3_path: Optional[str] = Unassigned()
+
+
 class DomainSettings(Base):
     """
     DomainSettings
@@ -4694,6 +4802,7 @@ class DomainSettings(Base):
     execution_role_identity_config: The configuration for attaching a SageMaker AI user profile name to the execution role as a sts:SourceIdentity key.
     docker_settings: A collection of settings that configure the domain's Docker interaction.
     amazon_q_settings: A collection of settings that configure the Amazon Q experience within the domain. The AuthMode that you use to create the domain must be SSO.
+    unified_studio_settings: The settings that apply to an SageMaker AI domain when you use it in Amazon SageMaker Unified Studio.
     """
 
     security_group_ids: Optional[List[str]] = Unassigned()
@@ -4701,6 +4810,7 @@ class DomainSettings(Base):
     execution_role_identity_config: Optional[str] = Unassigned()
     docker_settings: Optional[DockerSettings] = Unassigned()
     amazon_q_settings: Optional[AmazonQSettings] = Unassigned()
+    unified_studio_settings: Optional[UnifiedStudioSettings] = Unassigned()
 
 
 class DefaultSpaceSettings(Base):
@@ -4877,7 +4987,7 @@ class ProductionVariant(Base):
     enable_ssm_access:  You can use this parameter to turn on native Amazon Web Services Systems Manager (SSM) access for a production variant behind an endpoint. By default, SSM access is disabled for all production variants behind an endpoint. You can turn on or turn off SSM access for a production variant behind an existing endpoint by creating a new endpoint configuration and calling UpdateEndpoint.
     managed_instance_scaling: Settings that control the range in the number of instances that the endpoint provisions as it scales up or down to accommodate traffic.
     routing_config: Settings that control how the endpoint routes incoming traffic to the instances that the endpoint hosts.
-    inference_ami_version: Specifies an option from a collection of preconfigured Amazon Machine Image (AMI) images. Each image is configured by Amazon Web Services with a set of software and driver versions. Amazon Web Services optimizes these configurations for different machine learning workloads. By selecting an AMI version, you can ensure that your inference environment is compatible with specific software requirements, such as CUDA driver versions, Linux kernel versions, or Amazon Web Services Neuron driver versions. The AMI version names, and their configurations, are the following:  al2-ami-sagemaker-inference-gpu-2    Accelerator: GPU   NVIDIA driver version: 535   CUDA version: 12.2    al2-ami-sagemaker-inference-gpu-2-1    Accelerator: GPU   NVIDIA driver version: 535   CUDA version: 12.2   NVIDIA Container Toolkit with disabled CUDA-compat mounting    al2-ami-sagemaker-inference-gpu-3-1    Accelerator: GPU   NVIDIA driver version: 550   CUDA version: 12.4   NVIDIA Container Toolkit with disabled CUDA-compat mounting
+    inference_ami_version: Specifies an option from a collection of preconfigured Amazon Machine Image (AMI) images. Each image is configured by Amazon Web Services with a set of software and driver versions. Amazon Web Services optimizes these configurations for different machine learning workloads. By selecting an AMI version, you can ensure that your inference environment is compatible with specific software requirements, such as CUDA driver versions, Linux kernel versions, or Amazon Web Services Neuron driver versions. The AMI version names, and their configurations, are the following:  al2-ami-sagemaker-inference-gpu-2    Accelerator: GPU   NVIDIA driver version: 535   CUDA version: 12.2    al2-ami-sagemaker-inference-gpu-2-1    Accelerator: GPU   NVIDIA driver version: 535   CUDA version: 12.2   NVIDIA Container Toolkit with disabled CUDA-compat mounting    al2-ami-sagemaker-inference-gpu-3-1    Accelerator: GPU   NVIDIA driver version: 550   CUDA version: 12.4   NVIDIA Container Toolkit with disabled CUDA-compat mounting    al2-ami-sagemaker-inference-neuron-2    Accelerator: Inferentia2 and Trainium   Neuron driver version: 2.19
     """
 
     variant_name: str
@@ -7363,6 +7473,7 @@ class SpaceSettings(Base):
     jupyter_lab_app_settings: The settings for the JupyterLab application.
     app_type: The type of app created within the space. If using the  UpdateSpace API, you can't change the app type of your space by specifying a different value for this field.
     space_storage_settings: The storage settings for a space.
+    space_managed_resources: If you enable this option, SageMaker AI creates the following resources on your behalf when you create the space:   The user profile that possesses the space.   The app that the space contains.
     custom_file_systems: A file system, created by you, that you assign to a space for an Amazon SageMaker AI Domain. Permitted users can access this file system in Amazon SageMaker AI Studio.
     """
 
@@ -7372,6 +7483,7 @@ class SpaceSettings(Base):
     jupyter_lab_app_settings: Optional[SpaceJupyterLabAppSettings] = Unassigned()
     app_type: Optional[str] = Unassigned()
     space_storage_settings: Optional[SpaceStorageSettings] = Unassigned()
+    space_managed_resources: Optional[str] = Unassigned()
     custom_file_systems: Optional[List[CustomFileSystem]] = Unassigned()
 
 
@@ -9370,6 +9482,7 @@ class DomainSettingsForUpdate(Base):
     security_group_ids: The security groups for the Amazon Virtual Private Cloud that the Domain uses for communication between Domain-level apps and user apps.
     docker_settings: A collection of settings that configure the domain's Docker interaction.
     amazon_q_settings: A collection of settings that configure the Amazon Q experience within the domain.
+    unified_studio_settings: The settings that apply to an SageMaker AI domain when you use it in Amazon SageMaker Unified Studio.
     """
 
     r_studio_server_pro_domain_settings_for_update: Optional[
@@ -9379,6 +9492,7 @@ class DomainSettingsForUpdate(Base):
     security_group_ids: Optional[List[str]] = Unassigned()
     docker_settings: Optional[DockerSettings] = Unassigned()
     amazon_q_settings: Optional[AmazonQSettings] = Unassigned()
+    unified_studio_settings: Optional[UnifiedStudioSettings] = Unassigned()
 
 
 class PredefinedMetricSpecification(Base):
@@ -10680,6 +10794,7 @@ class ModelPackageSummary(Base):
     creation_time: A timestamp that shows when the model package was created.
     model_package_status: The overall status of the model package.
     model_approval_status: The approval status of the model. This can be one of the following values.    APPROVED - The model is approved    REJECTED - The model is rejected.    PENDING_MANUAL_APPROVAL - The model is waiting for manual approval.
+    model_life_cycle
     """
 
     model_package_arn: str
@@ -10690,6 +10805,7 @@ class ModelPackageSummary(Base):
     model_package_version: Optional[int] = Unassigned()
     model_package_description: Optional[str] = Unassigned()
     model_approval_status: Optional[str] = Unassigned()
+    model_life_cycle: Optional[ModelLifeCycle] = Unassigned()
 
 
 class ModelSummary(Base):
@@ -12596,6 +12712,19 @@ class ThroughputConfigUpdate(Base):
     throughput_mode: Optional[str] = Unassigned()
     provisioned_read_capacity_units: Optional[int] = Unassigned()
     provisioned_write_capacity_units: Optional[int] = Unassigned()
+
+
+class UpdateClusterSoftwareInstanceGroupSpecification(Base):
+    """
+    UpdateClusterSoftwareInstanceGroupSpecification
+      The configuration that describes specifications of the instance groups to update.
+
+    Attributes
+    ----------------------
+    instance_group_name: The name of the instance group to update.
+    """
+
+    instance_group_name: str
 
 
 class VariantProperty(Base):
