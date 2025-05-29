@@ -88,7 +88,7 @@ METRICS_SERVICE_JSON_FILE_PATH = os.getcwd() + "/sample/sagemaker-metrics/2022-0
 
 GENERATED_CLASSES_LOCATION = os.getcwd() + "/src/sagemaker_core/main"
 UTILS_CODEGEN_FILE_NAME = "utils.py"
-INTELLIGENT_DEFAULTS_HELPER_CODEGEN_FILE_NAME = "intelligent_defaults_helper.py"
+DEFAULT_CONFIGS_CODEGEN_FILE_NAME = "default_configs_helper.py"
 
 RESOURCES_CODEGEN_FILE_NAME = "resources.py"
 

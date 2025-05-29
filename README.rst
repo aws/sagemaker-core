@@ -31,13 +31,13 @@ Key Features
 * **Abstraction of Low-Level Details**: Automatically handles resource state transitions and polling logic, freeing developers from managing these intricacies and allowing them to focus on higher-level tasks.
 * **Auto Code Completion**: Enhances the developer experience by offering real-time suggestions and completions in popular IDEs, reducing syntax errors and speeding up the coding process.
 * **Comprehensive Documentation and Type Hints**: Provides detailed guidance and type hints to help developers understand functionalities, write code faster, and reduce errors without complex API navigation.
-* **Incorporation of Intelligent Defaults**: Integrates the previous SageMaker SDK feature of intelligent defaults, allowing developers to set default values for parameters like IAM roles and VPC configurations. This streamlines the setup process, enabling developers to focus on customizations specific to their use case.
+* **Incorporation of Default Configs**: Integrates the previous SageMaker SDK feature of default configs, allowing developers to set default values for parameters like IAM roles and VPC configurations. This streamlines the setup process, enabling developers to focus on customizations specific to their use case.
 
 
 Benefits
 --------
 
-* **Simplified Development**: By abstracting low-level details and providing intelligent defaults, developers can focus on building and deploying machine learning models without getting bogged down by repetitive tasks.
+* **Simplified Development**: By abstracting low-level details and providing default configs, developers can focus on building and deploying machine learning models without getting bogged down by repetitive tasks.
 * **Increased Productivity**: The SDK's features, such as auto code completion and type hints, help developers write code faster and with fewer errors.
 * **Enhanced Readability**: Resource chaining and dedicated resource classes result in more readable and maintainable code.
 
