@@ -29,7 +29,7 @@ from sagemaker_core.main.config_schema import SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA
 from sagemaker_core.main.exceptions import (
     LocalConfigNotFoundError,
     S3ConfigNotFoundError,
-    IntelligentDefaultsError,
+    DefaultConfigsError,
     ConfigSchemaValidationError,
 )
 from sagemaker_core.main.utils import get_textual_rich_logger
@@ -116,7 +116,7 @@ def _load_config_from_s3(s3_uri, s3_resource_for_config) -> dict:
         boto_session = boto3.DEFAULT_SESSION or boto3.Session()
         boto_region_name = boto_session.region_name
         if boto_region_name is None:
-            raise IntelligentDefaultsError(
+            raise DefaultConfigsError(
                 message=(
                     "Valid region is not provided in the Boto3 session."
                     + "Setup local AWS configuration with a valid region supported by SageMaker."
