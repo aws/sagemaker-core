@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.0.35 (2025-05-30)
+
+ * Daily Sync with Botocore v1.38.26 on 2025/05/30 (#302)
+ * Fix: next_token causing infinite loop in fetching Clusters (#301)
+ * Add blob handler to transform endpoint output method (#299)
+
 ## v1.0.34 (2025-05-13)
 
  * Daily Sync with Botocore v1.38.14 on 2025/05/13 (#298)
