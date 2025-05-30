@@ -5098,6 +5098,11 @@ SHAPE_DAG = {
             {"name": "MlflowVersion", "shape": "MlflowVersion", "type": "string"},
             {"name": "RoleArn", "shape": "RoleArn", "type": "string"},
             {"name": "TrackingServerStatus", "shape": "TrackingServerStatus", "type": "string"},
+            {
+                "name": "TrackingServerMaintenanceStatus",
+                "shape": "TrackingServerMaintenanceStatus",
+                "type": "string",
+            },
             {"name": "IsActive", "shape": "IsTrackingServerActive", "type": "string"},
             {"name": "TrackingServerUrl", "shape": "TrackingServerUrl", "type": "string"},
             {
