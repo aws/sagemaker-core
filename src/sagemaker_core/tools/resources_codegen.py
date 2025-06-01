@@ -859,7 +859,7 @@ class ResourcesCodeGen:
             operation_input_shape_name=operation_input_shape_name,
             include_session_region=True,
             include_return_resource_docstring=True,
-            include_default_config_errors=True,
+            include_default_configs_errors=True,
         )
 
         if "Describe" + resource_name in self.operations:
@@ -956,7 +956,7 @@ class ResourcesCodeGen:
         include_session_region: bool = False,
         include_return_resource_docstring: bool = False,
         return_string: str = None,
-        include_default_config_errors: bool = False,
+        include_default_configs_errors: bool = False,
         exclude_resource_attrs: list = None,
     ) -> str:
         """
@@ -970,7 +970,7 @@ class ResourcesCodeGen:
             include_session_region (bool): Whether to include session and region documentation.
             include_return_resource_docstring (bool): Whether to include resource-specific documentation.
             return_string (str): The return string.
-            include_default_config_errors (bool): Whether to include default config errors.
+            include_default_configs_errors (bool): Whether to include default configs errors.
             exclude_resource_attrs (list): A list of attributes to exclude from the docstring.
 
         Returns:
@@ -1000,7 +1000,7 @@ class ResourcesCodeGen:
 
         docstring += self._exception_docstring(operation_name)
 
-        if include_default_config_errors:
+        if include_default_configs_errors:
             subclasses = set(DefaultConfigsError.__subclasses__())
             _id_exception_docstrings = [
                 f"\n    {subclass.__name__}: {subclass.__doc__}" for subclass in subclasses

@@ -91,7 +91,7 @@ class TimeoutExceededError(WaiterError):
         super().__init__(resource_type=resource_type, status=status, reason=reason)
 
 
-### Default Configs Error
+### Default Configs Errors
 class DefaultConfigsError(SageMakerCoreError):
     """Raised when an error occurs in the Default Configs"""
 
