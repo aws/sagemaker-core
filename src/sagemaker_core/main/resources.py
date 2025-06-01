@@ -17364,6 +17364,7 @@ class MlflowTrackingServer(Base):
         mlflow_version: The MLflow version used for the described tracking server.
         role_arn: The Amazon Resource Name (ARN) for an IAM role in your account that the described MLflow Tracking Server uses to access the artifact store in Amazon S3.
         tracking_server_status: The current creation status of the described MLflow Tracking Server.
+        tracking_server_maintenance_status:  The current maintenance status of the described MLflow Tracking Server.
         is_active: Whether the described MLflow Tracking Server is currently active.
         tracking_server_url: The URL to connect to the MLflow user interface for the described tracking server.
         weekly_maintenance_window_start: The day and time of the week when weekly maintenance occurs on the described tracking server.
@@ -17382,6 +17383,7 @@ class MlflowTrackingServer(Base):
     mlflow_version: Optional[str] = Unassigned()
     role_arn: Optional[str] = Unassigned()
     tracking_server_status: Optional[str] = Unassigned()
+    tracking_server_maintenance_status: Optional[str] = Unassigned()
     is_active: Optional[str] = Unassigned()
     tracking_server_url: Optional[str] = Unassigned()
     weekly_maintenance_window_start: Optional[str] = Unassigned()
