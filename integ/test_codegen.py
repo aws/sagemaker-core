@@ -153,11 +153,11 @@ class TestSageMakerCore(unittest.TestCase):
         )
         endpoint.wait_for_status("InService")
 
-    def test_intelligent_defaults(self):
+    def test_default_configs(self):
         os.environ["SAGEMAKER_CORE_ADMIN_CONFIG_OVERRIDE"] = (
-            self._setup_intelligent_default_configs_and_fetch_path()
+            self._setup_default_configs_and_fetch_path()
         )
-        job_name_v3 = "xgboost-test-intelligent-default-" + time.strftime(
+        job_name_v3 = "xgboost-test-default-configs-" + time.strftime(
             "%Y-%m-%d-%H-%M-%S", time.gmtime()
         )
 
@@ -207,7 +207,7 @@ class TestSageMakerCore(unittest.TestCase):
     def tearDown(self) -> None:
         handle_cleanup()
 
-    def _setup_intelligent_default_configs_and_fetch_path(self) -> str:
+    def _setup_default_configs_and_fetch_path(self) -> str:
         DEFAULTS_CONTENT = {
             "SchemaVesion": "1.0",
             "SageMaker": {

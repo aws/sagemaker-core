@@ -91,21 +91,21 @@ class TimeoutExceededError(WaiterError):
         super().__init__(resource_type=resource_type, status=status, reason=reason)
 
 
-### Intelligent Defaults Errors
-class IntelligentDefaultsError(SageMakerCoreError):
-    """Raised when an error occurs in the Intelligent Defaults"""
+### Default Configs Errors
+class DefaultConfigsError(SageMakerCoreError):
+    """Raised when an error occurs in the Default Configs"""
 
-    fmt = "An error occurred while loading Intelligent Default. {message}"
+    fmt = "An error occurred while loading Default Configs. {message}"
 
     def __init__(self, message="", **kwargs):
-        """Initialize an IntelligentDefaultsError exception.
+        """Initialize an DefaultConfigsError exception.
         Args:
             message (str): A message describing the error.
         """
         super().__init__(message=message, **kwargs)
 
 
-class LocalConfigNotFoundError(IntelligentDefaultsError):
+class LocalConfigNotFoundError(DefaultConfigsError):
     """Raised when a configuration file is not found in local file system"""
 
     fmt = "Failed to load configuration file from location: {file_path}. {message}"
@@ -119,7 +119,7 @@ class LocalConfigNotFoundError(IntelligentDefaultsError):
         super().__init__(file_path=file_path, message=message)
 
 
-class S3ConfigNotFoundError(IntelligentDefaultsError):
+class S3ConfigNotFoundError(DefaultConfigsError):
     """Raised when a configuration file is not found in S3"""
 
     fmt = "Failed to load configuration file from S3 location: {s3_uri}. {message}"
@@ -133,7 +133,7 @@ class S3ConfigNotFoundError(IntelligentDefaultsError):
         super().__init__(s3_uri=s3_uri, message=message)
 
 
-class ConfigSchemaValidationError(IntelligentDefaultsError, ValidationError):
+class ConfigSchemaValidationError(DefaultConfigsError, ValidationError):
     """Raised when a configuration file does not adhere to the schema"""
 
     fmt = "Failed to validate configuration file from location: {file_path}. {message}"

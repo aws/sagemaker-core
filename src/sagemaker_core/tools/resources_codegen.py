@@ -17,7 +17,7 @@ import os
 import json
 from sagemaker_core.main.code_injection.codec import pascal_to_snake
 from sagemaker_core.main.config_schema import SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA
-from sagemaker_core.main.exceptions import IntelligentDefaultsError
+from sagemaker_core.main.exceptions import DefaultConfigsError
 from sagemaker_core.main.utils import get_textual_rich_logger
 from sagemaker_core.tools.constants import (
     BASIC_RETURN_TYPES,
@@ -190,7 +190,7 @@ class ResourcesCodeGen:
             "from sagemaker_core.main.code_injection.constants import Color",
             "from sagemaker_core.main.utils import SageMakerClient, ResourceIterator, Unassigned, get_textual_rich_logger, "
             "snake_to_pascal, pascal_to_snake, is_not_primitive, is_not_str_dict, is_primitive_list, serialize",
-            "from sagemaker_core.main.intelligent_defaults_helper import load_default_configs_for_resource_name, get_config_value",
+            "from sagemaker_core.main.default_configs_helper import load_default_configs_for_resource_name, get_config_value",
             "from sagemaker_core.main.logs import MultiLogStreamHandler",
             "from sagemaker_core.main.exceptions import *",
             "import sagemaker_core.main.shapes as shapes",
@@ -859,7 +859,7 @@ class ResourcesCodeGen:
             operation_input_shape_name=operation_input_shape_name,
             include_session_region=True,
             include_return_resource_docstring=True,
-            include_intelligent_defaults_errors=True,
+            include_default_configs_errors=True,
         )
 
         if "Describe" + resource_name in self.operations:
@@ -956,7 +956,7 @@ class ResourcesCodeGen:
         include_session_region: bool = False,
         include_return_resource_docstring: bool = False,
         return_string: str = None,
-        include_intelligent_defaults_errors: bool = False,
+        include_default_configs_errors: bool = False,
         exclude_resource_attrs: list = None,
     ) -> str:
         """
@@ -970,7 +970,7 @@ class ResourcesCodeGen:
             include_session_region (bool): Whether to include session and region documentation.
             include_return_resource_docstring (bool): Whether to include resource-specific documentation.
             return_string (str): The return string.
-            include_intelligent_defaults_errors (bool): Whether to include intelligent defaults errors.
+            include_default_configs_errors (bool): Whether to include default configs errors.
             exclude_resource_attrs (list): A list of attributes to exclude from the docstring.
 
         Returns:
@@ -1000,8 +1000,8 @@ class ResourcesCodeGen:
 
         docstring += self._exception_docstring(operation_name)
 
-        if include_intelligent_defaults_errors:
-            subclasses = set(IntelligentDefaultsError.__subclasses__())
+        if include_default_configs_errors:
+            subclasses = set(DefaultConfigsError.__subclasses__())
             _id_exception_docstrings = [
                 f"\n    {subclass.__name__}: {subclass.__doc__}" for subclass in subclasses
             ]

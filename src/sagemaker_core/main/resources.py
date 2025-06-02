@@ -37,7 +37,7 @@ from sagemaker_core.main.utils import (
     is_primitive_list,
     serialize,
 )
-from sagemaker_core.main.intelligent_defaults_helper import (
+from sagemaker_core.main.default_configs_helper import (
     load_default_configs_for_resource_name,
     get_config_value,
 )
