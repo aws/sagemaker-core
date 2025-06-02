@@ -4779,6 +4779,7 @@ class UnifiedStudioSettings(Base):
     project_id: The ID of the Amazon SageMaker Unified Studio project that corresponds to the domain.
     environment_id: The ID of the environment that Amazon SageMaker Unified Studio associates with the domain.
     project_s3_path: The location where Amazon S3 stores temporary execution data and other artifacts for the project that corresponds to the domain.
+    single_sign_on_application_arn: The ARN of the application managed by SageMaker AI and SageMaker Unified Studio in the Amazon Web Services IAM Identity Center.
     """
 
     studio_web_portal_access: Optional[str] = Unassigned()
@@ -4788,6 +4789,7 @@ class UnifiedStudioSettings(Base):
     project_id: Optional[str] = Unassigned()
     environment_id: Optional[str] = Unassigned()
     project_s3_path: Optional[str] = Unassigned()
+    single_sign_on_application_arn: Optional[str] = Unassigned()
 
 
 class DomainSettings(Base):
@@ -4966,6 +4968,21 @@ class ProductionVariantRoutingConfig(Base):
     routing_strategy: str
 
 
+class ProductionVariantCapacityReservationConfig(Base):
+    """
+    ProductionVariantCapacityReservationConfig
+      Settings for the capacity reservation for the compute instances that SageMaker AI reserves for an endpoint.
+
+    Attributes
+    ----------------------
+    capacity_reservation_preference: Options that you can choose for the capacity reservation. SageMaker AI supports the following options:  capacity-reservations-only  SageMaker AI launches instances only into an ML capacity reservation. If no capacity is available, the instances fail to launch.
+    ml_reservation_arn: The Amazon Resource Name (ARN) that uniquely identifies the ML capacity reservation that SageMaker AI applies when it deploys the endpoint.
+    """
+
+    capacity_reservation_preference: Optional[str] = Unassigned()
+    ml_reservation_arn: Optional[str] = Unassigned()
+
+
 class ProductionVariant(Base):
     """
     ProductionVariant
@@ -4988,6 +5005,7 @@ class ProductionVariant(Base):
     managed_instance_scaling: Settings that control the range in the number of instances that the endpoint provisions as it scales up or down to accommodate traffic.
     routing_config: Settings that control how the endpoint routes incoming traffic to the instances that the endpoint hosts.
     inference_ami_version: Specifies an option from a collection of preconfigured Amazon Machine Image (AMI) images. Each image is configured by Amazon Web Services with a set of software and driver versions. Amazon Web Services optimizes these configurations for different machine learning workloads. By selecting an AMI version, you can ensure that your inference environment is compatible with specific software requirements, such as CUDA driver versions, Linux kernel versions, or Amazon Web Services Neuron driver versions. The AMI version names, and their configurations, are the following:  al2-ami-sagemaker-inference-gpu-2    Accelerator: GPU   NVIDIA driver version: 535   CUDA version: 12.2    al2-ami-sagemaker-inference-gpu-2-1    Accelerator: GPU   NVIDIA driver version: 535   CUDA version: 12.2   NVIDIA Container Toolkit with disabled CUDA-compat mounting    al2-ami-sagemaker-inference-gpu-3-1    Accelerator: GPU   NVIDIA driver version: 550   CUDA version: 12.4   NVIDIA Container Toolkit with disabled CUDA-compat mounting    al2-ami-sagemaker-inference-neuron-2    Accelerator: Inferentia2 and Trainium   Neuron driver version: 2.19
+    capacity_reservation_config: Settings for the capacity reservation for the compute instances that SageMaker AI reserves for an endpoint.
     """
 
     variant_name: str
@@ -5005,6 +5023,7 @@ class ProductionVariant(Base):
     managed_instance_scaling: Optional[ProductionVariantManagedInstanceScaling] = Unassigned()
     routing_config: Optional[ProductionVariantRoutingConfig] = Unassigned()
     inference_ami_version: Optional[str] = Unassigned()
+    capacity_reservation_config: Optional[ProductionVariantCapacityReservationConfig] = Unassigned()
 
 
 class DataCaptureConfig(Base):
@@ -8164,6 +8183,48 @@ class ProductionVariantStatus(Base):
     start_time: Optional[datetime.datetime] = Unassigned()
 
 
+class Ec2CapacityReservation(Base):
+    """
+    Ec2CapacityReservation
+      The EC2 capacity reservations that are shared to an ML capacity reservation.
+
+    Attributes
+    ----------------------
+    ec2_capacity_reservation_id: The unique identifier for an EC2 capacity reservation that's part of the ML capacity reservation.
+    total_instance_count: The number of instances that you allocated to the EC2 capacity reservation.
+    available_instance_count: The number of instances that are currently available in the EC2 capacity reservation.
+    used_by_current_endpoint: The number of instances from the EC2 capacity reservation that are being used by the endpoint.
+    """
+
+    ec2_capacity_reservation_id: Optional[str] = Unassigned()
+    total_instance_count: Optional[int] = Unassigned()
+    available_instance_count: Optional[int] = Unassigned()
+    used_by_current_endpoint: Optional[int] = Unassigned()
+
+
+class ProductionVariantCapacityReservationSummary(Base):
+    """
+    ProductionVariantCapacityReservationSummary
+      Details about an ML capacity reservation.
+
+    Attributes
+    ----------------------
+    ml_reservation_arn: The Amazon Resource Name (ARN) that uniquely identifies the ML capacity reservation that SageMaker AI applies when it deploys the endpoint.
+    capacity_reservation_preference: The option that you chose for the capacity reservation. SageMaker AI supports the following options:  capacity-reservations-only  SageMaker AI launches instances only into an ML capacity reservation. If no capacity is available, the instances fail to launch.
+    total_instance_count: The number of instances that you allocated to the ML capacity reservation.
+    available_instance_count: The number of instances that are currently available in the ML capacity reservation.
+    used_by_current_endpoint: The number of instances from the ML capacity reservation that are being used by the endpoint.
+    ec2_capacity_reservations: The EC2 capacity reservations that are shared to this ML capacity reservation, if any.
+    """
+
+    ml_reservation_arn: Optional[str] = Unassigned()
+    capacity_reservation_preference: Optional[str] = Unassigned()
+    total_instance_count: Optional[int] = Unassigned()
+    available_instance_count: Optional[int] = Unassigned()
+    used_by_current_endpoint: Optional[int] = Unassigned()
+    ec2_capacity_reservations: Optional[List[Ec2CapacityReservation]] = Unassigned()
+
+
 class ProductionVariantSummary(Base):
     """
     ProductionVariantSummary
@@ -8182,6 +8243,7 @@ class ProductionVariantSummary(Base):
     desired_serverless_config: The serverless configuration requested for the endpoint update.
     managed_instance_scaling: Settings that control the range in the number of instances that the endpoint provisions as it scales up or down to accommodate traffic.
     routing_config: Settings that control how the endpoint routes incoming traffic to the instances that the endpoint hosts.
+    capacity_reservation_config: Settings for the capacity reservation for the compute instances that SageMaker AI reserves for an endpoint.
     """
 
     variant_name: str
@@ -8195,6 +8257,9 @@ class ProductionVariantSummary(Base):
     desired_serverless_config: Optional[ProductionVariantServerlessConfig] = Unassigned()
     managed_instance_scaling: Optional[ProductionVariantManagedInstanceScaling] = Unassigned()
     routing_config: Optional[ProductionVariantRoutingConfig] = Unassigned()
+    capacity_reservation_config: Optional[ProductionVariantCapacityReservationSummary] = (
+        Unassigned()
+    )
 
 
 class PendingProductionVariantSummary(Base):

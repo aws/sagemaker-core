@@ -6296,6 +6296,24 @@ SHAPE_DAG = {
         ],
         "type": "structure",
     },
+    "Ec2CapacityReservation": {
+        "members": [
+            {
+                "name": "Ec2CapacityReservationId",
+                "shape": "Ec2CapacityReservationId",
+                "type": "string",
+            },
+            {"name": "TotalInstanceCount", "shape": "TaskCount", "type": "integer"},
+            {"name": "AvailableInstanceCount", "shape": "TaskCount", "type": "integer"},
+            {"name": "UsedByCurrentEndpoint", "shape": "TaskCount", "type": "integer"},
+        ],
+        "type": "structure",
+    },
+    "Ec2CapacityReservationsList": {
+        "member_shape": "Ec2CapacityReservation",
+        "member_type": "structure",
+        "type": "list",
+    },
     "Edge": {
         "members": [
             {"name": "SourceArn", "shape": "AssociationEntityArn", "type": "string"},
@@ -12393,6 +12411,41 @@ SHAPE_DAG = {
                 "shape": "ProductionVariantInferenceAmiVersion",
                 "type": "string",
             },
+            {
+                "name": "CapacityReservationConfig",
+                "shape": "ProductionVariantCapacityReservationConfig",
+                "type": "structure",
+            },
+        ],
+        "type": "structure",
+    },
+    "ProductionVariantCapacityReservationConfig": {
+        "members": [
+            {
+                "name": "CapacityReservationPreference",
+                "shape": "CapacityReservationPreference",
+                "type": "string",
+            },
+            {"name": "MlReservationArn", "shape": "MlReservationArn", "type": "string"},
+        ],
+        "type": "structure",
+    },
+    "ProductionVariantCapacityReservationSummary": {
+        "members": [
+            {"name": "MlReservationArn", "shape": "MlReservationArn", "type": "string"},
+            {
+                "name": "CapacityReservationPreference",
+                "shape": "CapacityReservationPreference",
+                "type": "string",
+            },
+            {"name": "TotalInstanceCount", "shape": "TaskCount", "type": "integer"},
+            {"name": "AvailableInstanceCount", "shape": "TaskCount", "type": "integer"},
+            {"name": "UsedByCurrentEndpoint", "shape": "TaskCount", "type": "integer"},
+            {
+                "name": "Ec2CapacityReservations",
+                "shape": "Ec2CapacityReservationsList",
+                "type": "list",
+            },
         ],
         "type": "structure",
     },
@@ -12491,6 +12544,11 @@ SHAPE_DAG = {
             {
                 "name": "RoutingConfig",
                 "shape": "ProductionVariantRoutingConfig",
+                "type": "structure",
+            },
+            {
+                "name": "CapacityReservationConfig",
+                "shape": "ProductionVariantCapacityReservationSummary",
                 "type": "structure",
             },
         ],
@@ -14833,6 +14891,11 @@ SHAPE_DAG = {
             {"name": "ProjectId", "shape": "UnifiedStudioProjectId", "type": "string"},
             {"name": "EnvironmentId", "shape": "UnifiedStudioEnvironmentId", "type": "string"},
             {"name": "ProjectS3Path", "shape": "S3Uri", "type": "string"},
+            {
+                "name": "SingleSignOnApplicationArn",
+                "shape": "SingleSignOnApplicationArn",
+                "type": "string",
+            },
         ],
         "type": "structure",
     },
