@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.0.37 (2025-06-05)
+
+ * Daily Sync with Botocore v1.38.30 on 2025/06/05 (#307)
+ * Refactoring Intelligent Defaults for parity with documentations (#304)
+
 ## v1.0.36 (2025-06-02)
 
  * Daily Sync with Botocore v1.38.27 on 2025/06/02 (#305)
