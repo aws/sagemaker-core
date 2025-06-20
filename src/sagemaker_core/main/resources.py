@@ -26320,6 +26320,7 @@ class Project(Base):
         project_description: The description of the project.
         service_catalog_provisioning_details: Information used to provision a service catalog product. For information, see What is Amazon Web Services Service Catalog.
         service_catalog_provisioned_product_details: Information about a provisioned service catalog product.
+        template_provider_details:  An array of template providers associated with the project.
         created_by:
         last_modified_time: The timestamp when project was last modified.
         last_modified_by:
@@ -26337,6 +26338,7 @@ class Project(Base):
         shapes.ServiceCatalogProvisionedProductDetails
     ] = Unassigned()
     project_status: Optional[str] = Unassigned()
+    template_provider_details: Optional[List[shapes.TemplateProviderDetail]] = Unassigned()
     created_by: Optional[shapes.UserContext] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
@@ -26368,6 +26370,7 @@ class Project(Base):
             shapes.ServiceCatalogProvisioningDetails
         ] = Unassigned(),
         tags: Optional[List[shapes.Tag]] = Unassigned(),
+        template_providers: Optional[List[shapes.CreateTemplateProvider]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["Project"]:
@@ -26379,6 +26382,7 @@ class Project(Base):
             project_description: A description for the project.
             service_catalog_provisioning_details: The product ID and provisioning artifact ID to provision a service catalog. The provisioning artifact ID will default to the latest provisioning artifact ID of the product, if you don't provide the provisioning artifact ID. For more information, see What is Amazon Web Services Service Catalog.
             tags: An array of key-value pairs that you want to use to organize and track your Amazon Web Services resource costs. For more information, see Tagging Amazon Web Services resources in the Amazon Web Services General Reference Guide.
+            template_providers:  An array of template provider configurations for creating infrastructure resources for the project.
             session: Boto3 session.
             region: Region name.
 
@@ -26411,6 +26415,7 @@ class Project(Base):
             "ProjectDescription": project_description,
             "ServiceCatalogProvisioningDetails": service_catalog_provisioning_details,
             "Tags": tags,
+            "TemplateProviders": template_providers,
         }
 
         operation_input_args = Base.populate_chained_attributes(
@@ -26522,6 +26527,7 @@ class Project(Base):
             shapes.ServiceCatalogProvisioningUpdateDetails
         ] = Unassigned(),
         tags: Optional[List[shapes.Tag]] = Unassigned(),
+        template_providers_to_update: Optional[List[shapes.UpdateTemplateProvider]] = Unassigned(),
     ) -> Optional["Project"]:
         """
         Update a Project resource
@@ -26529,6 +26535,7 @@ class Project(Base):
         Parameters:
             service_catalog_provisioning_update_details: The product ID and provisioning artifact ID to provision a service catalog. The provisioning artifact ID will default to the latest provisioning artifact ID of the product, if you don't provide the provisioning artifact ID. For more information, see What is Amazon Web Services Service Catalog.
             tags: An array of key-value pairs. You can use tags to categorize your Amazon Web Services resources in different ways, for example, by purpose, owner, or environment. For more information, see Tagging Amazon Web Services Resources. In addition, the project must have tag update constraints set in order to include this parameter in the request. For more information, see Amazon Web Services Service Catalog Tag Update Constraints.
+            template_providers_to_update:  The template providers to update in the project.
 
         Returns:
             The Project resource.
@@ -26554,6 +26561,7 @@ class Project(Base):
             "ProjectDescription": project_description,
             "ServiceCatalogProvisioningUpdateDetails": service_catalog_provisioning_update_details,
             "Tags": tags,
+            "TemplateProvidersToUpdate": template_providers_to_update,
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
