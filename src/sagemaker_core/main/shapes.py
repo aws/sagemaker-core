@@ -999,7 +999,7 @@ class ResourceConfig(Base):
 
     Attributes
     ----------------------
-    instance_type: The ML compute instance type.   SageMaker Training on Amazon Elastic Compute Cloud (EC2) P4de instances is in preview release starting December 9th, 2022.   Amazon EC2 P4de instances (currently in preview) are powered by 8 NVIDIA A100 GPUs with 80GB high-performance HBM2e GPU memory, which accelerate the speed of training ML models that need to be trained on large datasets of high-resolution data. In this preview release, Amazon SageMaker supports ML training jobs on P4de instances (ml.p4de.24xlarge) to reduce model training time. The ml.p4de.24xlarge instances are available in the following Amazon Web Services Regions.    US East (N. Virginia) (us-east-1)   US West (Oregon) (us-west-2)   To request quota limit increase and start using P4de instances, contact the SageMaker Training service team through your account team.
+    instance_type: The ML compute instance type.
     instance_count: The number of ML compute instances to use. For distributed training, provide a value greater than 1.
     volume_size_in_gb: The size of the ML storage volume that you want to provision.  ML storage volumes store model artifacts and incremental states. Training algorithms might also use the ML storage volume for scratch space. If you want to store the training data in the ML storage volume, choose File as the TrainingInputMode in the algorithm specification.  When using an ML instance with NVMe SSD volumes, SageMaker doesn't provision Amazon EBS General Purpose SSD (gp2) storage. Available storage is fixed to the NVMe-type instance's storage capacity. SageMaker configures storage paths for training datasets, checkpoints, model artifacts, and outputs to use the entire capacity of the instance storage. For example, ML instance families with the NVMe-type instance storage include ml.p4d, ml.g4dn, and ml.g5.  When using an ML instance with the EBS-only storage option and without instance storage, you must define the size of EBS volume through VolumeSizeInGB in the ResourceConfig API. For example, ML instance families that use EBS volumes include ml.c5 and ml.p2.  To look up instance types and their instance storage types and volumes, see Amazon EC2 Instance Types. To find the default local paths defined by the SageMaker training platform, see Amazon SageMaker Training Storage Folders for Training Datasets, Checkpoints, Model Artifacts, and Outputs.
     volume_kms_key_id: The Amazon Web Services KMS key that SageMaker uses to encrypt data on the storage volume attached to the ML compute instance(s) that run the training job.  Certain Nitro-based instances include local storage, dependent on the instance type. Local storage volumes are encrypted using a hardware module on the instance. You can't request a VolumeKmsKeyId when using an instance type with local storage. For a list of instance types that support local instance storage, see Instance Store Volumes. For more information about local instance storage encryption, see SSD Instance Store Volumes.  The VolumeKmsKeyId can be in any of the following formats:   // KMS Key ID  "1234abcd-12ab-34cd-56ef-1234567890ab"    // Amazon Resource Name (ARN) of a KMS Key  "arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab"
@@ -2970,6 +2970,125 @@ class CategoricalParameterRangeSpecification(Base):
     """
 
     values: List[str]
+
+
+class CfnStackCreateParameter(Base):
+    """
+    CfnStackCreateParameter
+       A key-value pair that represents a parameter for the CloudFormation stack.
+
+    Attributes
+    ----------------------
+    key:  The name of the CloudFormation parameter.
+    value:  The value of the CloudFormation parameter.
+    """
+
+    key: str
+    value: Optional[str] = Unassigned()
+
+
+class CfnCreateTemplateProvider(Base):
+    """
+    CfnCreateTemplateProvider
+       The CloudFormation template provider configuration for creating infrastructure resources.
+
+    Attributes
+    ----------------------
+    template_name:  A unique identifier for the template within the project.
+    template_url:  The Amazon S3 URL of the CloudFormation template.
+    role_arn:  The IAM role that CloudFormation assumes when creating the stack.
+    parameters:  An array of CloudFormation stack parameters.
+    """
+
+    template_name: str
+    template_url: str
+    role_arn: Optional[str] = Unassigned()
+    parameters: Optional[List[CfnStackCreateParameter]] = Unassigned()
+
+
+class CfnStackDetail(Base):
+    """
+    CfnStackDetail
+       Details about the CloudFormation stack.
+
+    Attributes
+    ----------------------
+    name:  The name of the CloudFormation stack.
+    id:  The unique identifier of the CloudFormation stack.
+    status_message:  A human-readable message about the stack's current status.
+    """
+
+    status_message: str
+    name: Optional[str] = Unassigned()
+    id: Optional[str] = Unassigned()
+
+
+class CfnStackParameter(Base):
+    """
+    CfnStackParameter
+       A key-value pair representing a parameter used in the CloudFormation stack.
+
+    Attributes
+    ----------------------
+    key:  The name of the CloudFormation parameter.
+    value:  The value of the CloudFormation parameter.
+    """
+
+    key: str
+    value: Optional[str] = Unassigned()
+
+
+class CfnStackUpdateParameter(Base):
+    """
+    CfnStackUpdateParameter
+       A key-value pair representing a parameter used in the CloudFormation stack.
+
+    Attributes
+    ----------------------
+    key:  The name of the CloudFormation parameter.
+    value:  The value of the CloudFormation parameter.
+    """
+
+    key: str
+    value: Optional[str] = Unassigned()
+
+
+class CfnTemplateProviderDetail(Base):
+    """
+    CfnTemplateProviderDetail
+       Details about a CloudFormation template provider configuration and associated provisioning information.
+
+    Attributes
+    ----------------------
+    template_name:  The unique identifier of the template within the project.
+    template_url:  The Amazon S3 URL of the CloudFormation template.
+    role_arn:  The IAM role used by CloudFormation to create the stack.
+    parameters:  An array of CloudFormation stack parameters.
+    stack_detail:  Information about the CloudFormation stack created by the template provider.
+    """
+
+    template_name: str
+    template_url: str
+    role_arn: Optional[str] = Unassigned()
+    parameters: Optional[List[CfnStackParameter]] = Unassigned()
+    stack_detail: Optional[CfnStackDetail] = Unassigned()
+
+
+class CfnUpdateTemplateProvider(Base):
+    """
+    CfnUpdateTemplateProvider
+       Contains configuration details for updating an existing CloudFormation template provider in the project.
+
+    Attributes
+    ----------------------
+    template_name:  The unique identifier of the template to update within the project.
+    template_url:  The Amazon S3 URL of the CloudFormation template.
+    parameters:  An array of CloudFormation stack parameters.
+    """
+
+    template_name: str
+    template_url: str
+    parameters: Optional[List[CfnStackUpdateParameter]] = Unassigned()
 
 
 class ChannelSpecification(Base):
@@ -7354,6 +7473,19 @@ class ServiceCatalogProvisioningDetails(Base):
     provisioning_parameters: Optional[List[ProvisioningParameter]] = Unassigned()
 
 
+class CreateTemplateProvider(Base):
+    """
+    CreateTemplateProvider
+       Contains configuration details for a template provider. Only one type of template provider can be specified.
+
+    Attributes
+    ----------------------
+    cfn_template_provider:  The CloudFormation template provider configuration for creating infrastructure resources.
+    """
+
+    cfn_template_provider: Optional[CfnCreateTemplateProvider] = Unassigned()
+
+
 class SpaceIdleSettings(Base):
     """
     SpaceIdleSettings
@@ -9030,6 +9162,19 @@ class ServiceCatalogProvisionedProductDetails(Base):
 
     provisioned_product_id: Optional[str] = Unassigned()
     provisioned_product_status_message: Optional[str] = Unassigned()
+
+
+class TemplateProviderDetail(Base):
+    """
+    TemplateProviderDetail
+       Details about a template provider configuration and associated provisioning information.
+
+    Attributes
+    ----------------------
+    cfn_template_provider_detail:  Details about a CloudFormation template provider configuration and associated provisioning information.
+    """
+
+    cfn_template_provider_detail: Optional[CfnTemplateProviderDetail] = Unassigned()
 
 
 class SubscribedWorkteam(Base):
@@ -12245,6 +12390,7 @@ class Project(Base):
     project_status: The status of the project.
     created_by: Who created the project.
     creation_time: A timestamp specifying when the project was created.
+    template_provider_details:  An array of template providers associated with the project.
     tags: An array of key-value pairs. You can use tags to categorize your Amazon Web Services resources in different ways, for example, by purpose, owner, or environment. For more information, see Tagging Amazon Web Services Resources.
     last_modified_time: A timestamp container for when the project was last modified.
     last_modified_by
@@ -12261,6 +12407,7 @@ class Project(Base):
     project_status: Optional[str] = Unassigned()
     created_by: Optional[UserContext] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
+    template_provider_details: Optional[List[TemplateProviderDetail]] = Unassigned()
     tags: Optional[List[Tag]] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
     last_modified_by: Optional[UserContext] = Unassigned()
@@ -12803,3 +12950,16 @@ class VariantProperty(Base):
     """
 
     variant_property_type: str
+
+
+class UpdateTemplateProvider(Base):
+    """
+    UpdateTemplateProvider
+       Contains configuration details for updating an existing template provider in the project.
+
+    Attributes
+    ----------------------
+    cfn_template_provider:  The CloudFormation template provider configuration to update.
+    """
+
+    cfn_template_provider: Optional[CfnUpdateTemplateProvider] = Unassigned()

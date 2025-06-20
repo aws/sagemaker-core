@@ -1134,6 +1134,77 @@ SHAPE_DAG = {
         "member_type": "structure",
         "type": "list",
     },
+    "CfnCreateTemplateProvider": {
+        "members": [
+            {"name": "TemplateName", "shape": "CfnTemplateName", "type": "string"},
+            {"name": "TemplateURL", "shape": "CfnTemplateURL", "type": "string"},
+            {"name": "RoleARN", "shape": "RoleArn", "type": "string"},
+            {"name": "Parameters", "shape": "CfnStackCreateParameters", "type": "list"},
+        ],
+        "type": "structure",
+    },
+    "CfnStackCreateParameter": {
+        "members": [
+            {"name": "Key", "shape": "CfnStackParameterKey", "type": "string"},
+            {"name": "Value", "shape": "CfnStackParameterValue", "type": "string"},
+        ],
+        "type": "structure",
+    },
+    "CfnStackCreateParameters": {
+        "member_shape": "CfnStackCreateParameter",
+        "member_type": "structure",
+        "type": "list",
+    },
+    "CfnStackDetail": {
+        "members": [
+            {"name": "Name", "shape": "CfnStackName", "type": "string"},
+            {"name": "Id", "shape": "CfnStackId", "type": "string"},
+            {"name": "StatusMessage", "shape": "CfnStackStatusMessage", "type": "string"},
+        ],
+        "type": "structure",
+    },
+    "CfnStackParameter": {
+        "members": [
+            {"name": "Key", "shape": "CfnStackParameterKey", "type": "string"},
+            {"name": "Value", "shape": "CfnStackParameterValue", "type": "string"},
+        ],
+        "type": "structure",
+    },
+    "CfnStackParameters": {
+        "member_shape": "CfnStackParameter",
+        "member_type": "structure",
+        "type": "list",
+    },
+    "CfnStackUpdateParameter": {
+        "members": [
+            {"name": "Key", "shape": "CfnStackParameterKey", "type": "string"},
+            {"name": "Value", "shape": "CfnStackParameterValue", "type": "string"},
+        ],
+        "type": "structure",
+    },
+    "CfnStackUpdateParameters": {
+        "member_shape": "CfnStackUpdateParameter",
+        "member_type": "structure",
+        "type": "list",
+    },
+    "CfnTemplateProviderDetail": {
+        "members": [
+            {"name": "TemplateName", "shape": "CfnTemplateName", "type": "string"},
+            {"name": "TemplateURL", "shape": "CfnTemplateURL", "type": "string"},
+            {"name": "RoleARN", "shape": "RoleArn", "type": "string"},
+            {"name": "Parameters", "shape": "CfnStackParameters", "type": "list"},
+            {"name": "StackDetail", "shape": "CfnStackDetail", "type": "structure"},
+        ],
+        "type": "structure",
+    },
+    "CfnUpdateTemplateProvider": {
+        "members": [
+            {"name": "TemplateName", "shape": "CfnTemplateName", "type": "string"},
+            {"name": "TemplateURL", "shape": "CfnTemplateURL", "type": "string"},
+            {"name": "Parameters", "shape": "CfnStackUpdateParameters", "type": "list"},
+        ],
+        "type": "structure",
+    },
     "Channel": {
         "members": [
             {"name": "ChannelName", "shape": "ChannelName", "type": "string"},
@@ -2975,6 +3046,7 @@ SHAPE_DAG = {
                 "type": "structure",
             },
             {"name": "Tags", "shape": "TagList", "type": "list"},
+            {"name": "TemplateProviders", "shape": "CreateTemplateProviderList", "type": "list"},
         ],
         "type": "structure",
     },
@@ -3031,6 +3103,21 @@ SHAPE_DAG = {
             }
         ],
         "type": "structure",
+    },
+    "CreateTemplateProvider": {
+        "members": [
+            {
+                "name": "CfnTemplateProvider",
+                "shape": "CfnCreateTemplateProvider",
+                "type": "structure",
+            }
+        ],
+        "type": "structure",
+    },
+    "CreateTemplateProviderList": {
+        "member_shape": "CreateTemplateProvider",
+        "member_type": "structure",
+        "type": "list",
     },
     "CreateTrainingJobRequest": {
         "members": [
@@ -5713,6 +5800,11 @@ SHAPE_DAG = {
                 "type": "structure",
             },
             {"name": "ProjectStatus", "shape": "ProjectStatus", "type": "string"},
+            {
+                "name": "TemplateProviderDetails",
+                "shape": "TemplateProviderDetailList",
+                "type": "list",
+            },
             {"name": "CreatedBy", "shape": "UserContext", "type": "structure"},
             {"name": "CreationTime", "shape": "Timestamp", "type": "timestamp"},
             {"name": "LastModifiedTime", "shape": "Timestamp", "type": "timestamp"},
@@ -12643,6 +12735,11 @@ SHAPE_DAG = {
             {"name": "ProjectStatus", "shape": "ProjectStatus", "type": "string"},
             {"name": "CreatedBy", "shape": "UserContext", "type": "structure"},
             {"name": "CreationTime", "shape": "Timestamp", "type": "timestamp"},
+            {
+                "name": "TemplateProviderDetails",
+                "shape": "TemplateProviderDetailList",
+                "type": "list",
+            },
             {"name": "Tags", "shape": "TagList", "type": "list"},
             {"name": "LastModifiedTime", "shape": "Timestamp", "type": "timestamp"},
             {"name": "LastModifiedBy", "shape": "UserContext", "type": "structure"},
@@ -14110,6 +14207,21 @@ SHAPE_DAG = {
         "type": "structure",
     },
     "TaskKeywords": {"member_shape": "TaskKeyword", "member_type": "string", "type": "list"},
+    "TemplateProviderDetail": {
+        "members": [
+            {
+                "name": "CfnTemplateProviderDetail",
+                "shape": "CfnTemplateProviderDetail",
+                "type": "structure",
+            }
+        ],
+        "type": "structure",
+    },
+    "TemplateProviderDetailList": {
+        "member_shape": "TemplateProviderDetail",
+        "member_type": "structure",
+        "type": "list",
+    },
     "TensorBoardAppSettings": {
         "members": [{"name": "DefaultResourceSpec", "shape": "ResourceSpec", "type": "structure"}],
         "type": "structure",
@@ -15596,6 +15708,11 @@ SHAPE_DAG = {
                 "type": "structure",
             },
             {"name": "Tags", "shape": "TagList", "type": "list"},
+            {
+                "name": "TemplateProvidersToUpdate",
+                "shape": "UpdateTemplateProviderList",
+                "type": "list",
+            },
         ],
         "type": "structure",
     },
@@ -15615,6 +15732,21 @@ SHAPE_DAG = {
     "UpdateSpaceResponse": {
         "members": [{"name": "SpaceArn", "shape": "SpaceArn", "type": "string"}],
         "type": "structure",
+    },
+    "UpdateTemplateProvider": {
+        "members": [
+            {
+                "name": "CfnTemplateProvider",
+                "shape": "CfnUpdateTemplateProvider",
+                "type": "structure",
+            }
+        ],
+        "type": "structure",
+    },
+    "UpdateTemplateProviderList": {
+        "member_shape": "UpdateTemplateProvider",
+        "member_type": "structure",
+        "type": "list",
     },
     "UpdateTrainingJobRequest": {
         "members": [
