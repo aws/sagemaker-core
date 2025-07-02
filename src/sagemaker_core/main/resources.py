@@ -3275,7 +3275,7 @@ class Cluster(Base):
     def create(
         cls,
         cluster_name: str,
-        instance_groups: List[shapes.ClusterInstanceGroupSpecification],
+        instance_groups: Optional[List[shapes.ClusterInstanceGroupSpecification]] = Unassigned(),
         vpc_config: Optional[shapes.VpcConfig] = Unassigned(),
         tags: Optional[List[shapes.Tag]] = Unassigned(),
         orchestrator: Optional[shapes.ClusterOrchestrator] = Unassigned(),
@@ -3437,7 +3437,7 @@ class Cluster(Base):
     @Base.add_validate_call
     def update(
         self,
-        instance_groups: List[shapes.ClusterInstanceGroupSpecification],
+        instance_groups: Optional[List[shapes.ClusterInstanceGroupSpecification]] = Unassigned(),
         node_recovery: Optional[str] = Unassigned(),
         instance_groups_to_delete: Optional[List[str]] = Unassigned(),
     ) -> Optional["Cluster"]:
@@ -3664,7 +3664,7 @@ class Cluster(Base):
         Parameters:
             creation_time_after: Set a start time for the time range during which you want to list SageMaker HyperPod clusters. Timestamps are formatted according to the ISO 8601 standard.  Acceptable formats include:    YYYY-MM-DDThh:mm:ss.sssTZD (UTC), for example, 2014-10-01T20:30:00.000Z     YYYY-MM-DDThh:mm:ss.sssTZD (with offset), for example, 2014-10-01T12:30:00.000-08:00     YYYY-MM-DD, for example, 2014-10-01    Unix time in seconds, for example, 1412195400. This is also referred to as Unix Epoch time and represents the number of seconds since midnight, January 1, 1970 UTC.   For more information about the timestamp format, see Timestamp in the Amazon Web Services Command Line Interface User Guide.
             creation_time_before: Set an end time for the time range during which you want to list SageMaker HyperPod clusters. A filter that returns nodes in a SageMaker HyperPod cluster created before the specified time. The acceptable formats are the same as the timestamp formats for CreationTimeAfter. For more information about the timestamp format, see Timestamp in the Amazon Web Services Command Line Interface User Guide.
-            max_results: Set the maximum number of SageMaker HyperPod clusters to list.
+            max_results: Specifies the maximum number of clusters to evaluate for the operation (not necessarily the number of matching items). After SageMaker processes the number of clusters up to MaxResults, it stops the operation and returns the matching clusters up to that point. If all the matching clusters are desired, SageMaker will go through all the clusters until NextToken is empty.
             name_contains: Set the maximum number of instances to print in the list.
             next_token: Set the next token to retrieve the list of SageMaker HyperPod clusters.
             sort_by: The field by which to sort results. The default value is CREATION_TIME.
