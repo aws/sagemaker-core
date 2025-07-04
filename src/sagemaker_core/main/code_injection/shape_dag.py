@@ -421,6 +421,18 @@ SHAPE_DAG = {
         "value_shape": "AuthenticationRequestExtraParamsValue",
         "value_type": "string",
     },
+    "AuthorizedUrl": {
+        "members": [
+            {"name": "Url", "shape": "LongS3Uri", "type": "string"},
+            {"name": "LocalPath", "shape": "LocalPath", "type": "string"},
+        ],
+        "type": "structure",
+    },
+    "AuthorizedUrlConfigs": {
+        "member_shape": "AuthorizedUrl",
+        "member_type": "structure",
+        "type": "list",
+    },
     "AutoMLAlgorithmConfig": {
         "members": [{"name": "AutoMLAlgorithms", "shape": "AutoMLAlgorithms", "type": "list"}],
         "type": "structure",
@@ -2298,6 +2310,25 @@ SHAPE_DAG = {
     },
     "CreateFlowDefinitionResponse": {
         "members": [{"name": "FlowDefinitionArn", "shape": "FlowDefinitionArn", "type": "string"}],
+        "type": "structure",
+    },
+    "CreateHubContentPresignedUrlsRequest": {
+        "members": [
+            {"name": "HubName", "shape": "HubNameOrArn", "type": "string"},
+            {"name": "HubContentType", "shape": "HubContentType", "type": "string"},
+            {"name": "HubContentName", "shape": "HubContentName", "type": "string"},
+            {"name": "HubContentVersion", "shape": "HubContentVersion", "type": "string"},
+            {"name": "AccessConfig", "shape": "PresignedUrlAccessConfig", "type": "structure"},
+            {"name": "MaxResults", "shape": "MaxResults", "type": "integer"},
+            {"name": "NextToken", "shape": "NextToken", "type": "string"},
+        ],
+        "type": "structure",
+    },
+    "CreateHubContentPresignedUrlsResponse": {
+        "members": [
+            {"name": "AuthorizedUrlConfigs", "shape": "AuthorizedUrlConfigs", "type": "list"},
+            {"name": "NextToken", "shape": "NextToken", "type": "string"},
+        ],
         "type": "structure",
     },
     "CreateHubContentReferenceRequest": {
@@ -12282,6 +12313,13 @@ SHAPE_DAG = {
         "members": [{"name": "PredefinedMetricType", "shape": "String", "type": "string"}],
         "type": "structure",
     },
+    "PresignedUrlAccessConfig": {
+        "members": [
+            {"name": "AcceptEula", "shape": "Boolean", "type": "boolean"},
+            {"name": "ExpectedS3Url", "shape": "S3ModelUri", "type": "string"},
+        ],
+        "type": "structure",
+    },
     "PriorityClass": {
         "members": [
             {"name": "Name", "shape": "ClusterSchedulerPriorityClassName", "type": "string"},
@@ -13861,12 +13899,14 @@ SHAPE_DAG = {
             {"name": "SpaceStorageSettings", "shape": "SpaceStorageSettings", "type": "structure"},
             {"name": "SpaceManagedResources", "shape": "FeatureStatus", "type": "string"},
             {"name": "CustomFileSystems", "shape": "CustomFileSystems", "type": "list"},
+            {"name": "RemoteAccess", "shape": "FeatureStatus", "type": "string"},
         ],
         "type": "structure",
     },
     "SpaceSettingsSummary": {
         "members": [
             {"name": "AppType", "shape": "AppType", "type": "string"},
+            {"name": "RemoteAccess", "shape": "FeatureStatus", "type": "string"},
             {"name": "SpaceStorageSettings", "shape": "SpaceStorageSettings", "type": "structure"},
         ],
         "type": "structure",
@@ -13963,6 +14003,20 @@ SHAPE_DAG = {
     "StartPipelineExecutionResponse": {
         "members": [
             {"name": "PipelineExecutionArn", "shape": "PipelineExecutionArn", "type": "string"}
+        ],
+        "type": "structure",
+    },
+    "StartSessionRequest": {
+        "members": [
+            {"name": "ResourceIdentifier", "shape": "ResourceIdentifier", "type": "string"}
+        ],
+        "type": "structure",
+    },
+    "StartSessionResponse": {
+        "members": [
+            {"name": "SessionId", "shape": "SessionId", "type": "string"},
+            {"name": "StreamUrl", "shape": "StreamUrl", "type": "string"},
+            {"name": "TokenValue", "shape": "TokenValue", "type": "string"},
         ],
         "type": "structure",
     },

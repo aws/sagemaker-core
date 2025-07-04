@@ -1652,6 +1652,21 @@ class AthenaDatasetDefinition(Base):
     output_compression: Optional[str] = Unassigned()
 
 
+class AuthorizedUrl(Base):
+    """
+    AuthorizedUrl
+      Contains a presigned URL and its associated local file path for downloading hub content artifacts.
+
+    Attributes
+    ----------------------
+    url: The presigned S3 URL that provides temporary, secure access to download the file. URLs expire within 15 minutes for security purposes.
+    local_path: The recommended local file path where the downloaded file should be stored to maintain proper directory structure and file organization.
+    """
+
+    url: Optional[str] = Unassigned()
+    local_path: Optional[str] = Unassigned()
+
+
 class AutoMLAlgorithmConfig(Base):
     """
     AutoMLAlgorithmConfig
@@ -5451,6 +5466,21 @@ class FlowDefinitionOutputConfig(Base):
     kms_key_id: Optional[str] = Unassigned()
 
 
+class PresignedUrlAccessConfig(Base):
+    """
+    PresignedUrlAccessConfig
+      Configuration for accessing hub content through presigned URLs, including license agreement acceptance and URL validation settings.
+
+    Attributes
+    ----------------------
+    accept_eula: Indicates acceptance of the End User License Agreement (EULA) for gated models. Set to true to acknowledge acceptance of the license terms required for accessing gated content.
+    expected_s3_url: The expected S3 URL prefix for validation purposes. This parameter helps ensure consistency between the resolved S3 URIs and the deployment configuration, reducing potential compatibility issues.
+    """
+
+    accept_eula: Optional[bool] = Unassigned()
+    expected_s3_url: Optional[str] = Unassigned()
+
+
 class HubS3StorageConfig(Base):
     """
     HubS3StorageConfig
@@ -7626,6 +7656,7 @@ class SpaceSettings(Base):
     space_storage_settings: The storage settings for a space.
     space_managed_resources: If you enable this option, SageMaker AI creates the following resources on your behalf when you create the space:   The user profile that possesses the space.   The app that the space contains.
     custom_file_systems: A file system, created by you, that you assign to a space for an Amazon SageMaker AI Domain. Permitted users can access this file system in Amazon SageMaker AI Studio.
+    remote_access: A setting that enables or disables remote access for a SageMaker space. When enabled, this allows you to connect to the remote space from your local IDE.
     """
 
     jupyter_server_app_settings: Optional[JupyterServerAppSettings] = Unassigned()
@@ -7636,6 +7667,7 @@ class SpaceSettings(Base):
     space_storage_settings: Optional[SpaceStorageSettings] = Unassigned()
     space_managed_resources: Optional[str] = Unassigned()
     custom_file_systems: Optional[List[CustomFileSystem]] = Unassigned()
+    remote_access: Optional[str] = Unassigned()
 
 
 class OwnershipSettings(Base):
@@ -11572,10 +11604,12 @@ class SpaceSettingsSummary(Base):
     Attributes
     ----------------------
     app_type: The type of app created within the space.
+    remote_access: A setting that enables or disables remote access for a SageMaker space. When enabled, this allows you to connect to the remote space from your local IDE.
     space_storage_settings: The storage settings for a space.
     """
 
     app_type: Optional[str] = Unassigned()
+    remote_access: Optional[str] = Unassigned()
     space_storage_settings: Optional[SpaceStorageSettings] = Unassigned()
 
 

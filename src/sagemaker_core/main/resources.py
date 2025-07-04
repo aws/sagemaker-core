@@ -7402,9 +7402,9 @@ class Domain(Base):
         domain_name: str,
         auth_mode: str,
         default_user_settings: shapes.UserSettings,
-        subnet_ids: List[str],
-        vpc_id: str,
         domain_settings: Optional[shapes.DomainSettings] = Unassigned(),
+        subnet_ids: Optional[List[str]] = Unassigned(),
+        vpc_id: Optional[str] = Unassigned(),
         tags: Optional[List[shapes.Tag]] = Unassigned(),
         app_network_access_type: Optional[str] = Unassigned(),
         home_efs_file_system_kms_key_id: Optional[str] = Unassigned(),
@@ -7422,9 +7422,9 @@ class Domain(Base):
             domain_name: A name for the domain.
             auth_mode: The mode of authentication that members use to access the domain.
             default_user_settings: The default settings to use to create a user profile when UserSettings isn't specified in the call to the CreateUserProfile API.  SecurityGroups is aggregated when specified in both calls. For all other settings in UserSettings, the values specified in CreateUserProfile take precedence over those specified in CreateDomain.
+            domain_settings: A collection of Domain settings.
             subnet_ids: The VPC subnets that the domain uses for communication.
             vpc_id: The ID of the Amazon Virtual Private Cloud (VPC) that the domain uses for communication.
-            domain_settings: A collection of Domain settings.
             tags: Tags to associated with the Domain. Each tag consists of a key and an optional value. Tag keys must be unique per resource. Tags are searchable using the Search API. Tags that you specify for the Domain are also added to all Apps that the Domain launches.
             app_network_access_type: Specifies the VPC used for non-EFS traffic. The default value is PublicInternetOnly.    PublicInternetOnly - Non-EFS traffic is through a VPC managed by Amazon SageMaker AI, which allows direct internet access    VpcOnly - All traffic is through the specified VPC and subnets
             home_efs_file_system_kms_key_id: Use KmsKeyId.
@@ -12763,6 +12763,116 @@ class HubContent(Base):
             resource_cls=HubContent,
             list_method_kwargs=operation_input_args,
         )
+
+
+class HubContentPresignedUrls(Base):
+    """
+    Class representing resource HubContentPresignedUrls
+
+    Attributes:
+        hub_name: The name or Amazon Resource Name (ARN) of the hub that contains the content. For public content, use SageMakerPublicHub.
+        hub_content_type: The type of hub content to access. Valid values include Model, Notebook, and ModelReference.
+        hub_content_name: The name of the hub content for which to generate presigned URLs. This identifies the specific model or content within the hub.
+        authorized_url_configs: An array of authorized URL configurations, each containing a presigned URL and its corresponding local file path for proper file organization during download.
+        hub_content_version: The version of the hub content. If not specified, the latest version is used.
+        access_config: Configuration settings for accessing the hub content, including end-user license agreement acceptance for gated models and expected S3 URL validation.
+        max_results: The maximum number of presigned URLs to return in the response. Default value is 100. Large models may contain hundreds of files, requiring pagination to retrieve all URLs.
+        next_token: A token for pagination. If present, indicates that more presigned URLs are available. Use this token in a subsequent request to retrieve additional URLs.
+
+    """
+
+    hub_name: Union[str, object]
+    hub_content_type: str
+    hub_content_name: Union[str, object]
+    authorized_url_configs: List[shapes.AuthorizedUrl]
+    hub_content_version: Optional[str] = Unassigned()
+    access_config: Optional[shapes.PresignedUrlAccessConfig] = Unassigned()
+    max_results: Optional[int] = Unassigned()
+    next_token: Optional[str] = Unassigned()
+
+    def get_name(self) -> str:
+        attributes = vars(self)
+        resource_name = "hub_content_presigned_urls_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
+        for attribute, value in attributes.items():
+            if attribute == "name" or attribute in attribute_name_candidates:
+                return value
+        logger.error("Name attribute not found for object hub_content_presigned_urls")
+        return None
+
+    @classmethod
+    @Base.add_validate_call
+    def create(
+        cls,
+        hub_name: Union[str, object],
+        hub_content_type: str,
+        hub_content_name: Union[str, object],
+        hub_content_version: Optional[str] = Unassigned(),
+        access_config: Optional[shapes.PresignedUrlAccessConfig] = Unassigned(),
+        max_results: Optional[int] = Unassigned(),
+        next_token: Optional[str] = Unassigned(),
+    ) -> Optional["HubContentPresignedUrls"]:
+        """
+        Create a HubContentPresignedUrls resource
+
+        Parameters:
+            hub_name: The name or Amazon Resource Name (ARN) of the hub that contains the content. For public content, use SageMakerPublicHub.
+            hub_content_type: The type of hub content to access. Valid values include Model, Notebook, and ModelReference.
+            hub_content_name: The name of the hub content for which to generate presigned URLs. This identifies the specific model or content within the hub.
+            hub_content_version: The version of the hub content. If not specified, the latest version is used.
+            access_config: Configuration settings for accessing the hub content, including end-user license agreement acceptance for gated models and expected S3 URL validation.
+            max_results: The maximum number of presigned URLs to return in the response. Default value is 100. Large models may contain hundreds of files, requiring pagination to retrieve all URLs.
+            next_token:  A token for pagination. Use this token to retrieve the next set of presigned URLs when the response is truncated.
+            session: Boto3 session.
+            region: Region name.
+
+        Returns:
+            The HubContentPresignedUrls resource.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ConfigSchemaValidationError: Raised when a configuration file does not adhere to the schema
+            LocalConfigNotFoundError: Raised when a configuration file is not found in local file system
+            S3ConfigNotFoundError: Raised when a configuration file is not found in S3
+        """
+
+        operation_input_args = {
+            "HubName": hub_name,
+            "HubContentType": hub_content_type,
+            "HubContentName": hub_content_name,
+            "HubContentVersion": hub_content_version,
+            "AccessConfig": access_config,
+            "MaxResults": max_results,
+            "NextToken": next_token,
+        }
+        # serialize the input request
+        operation_input_args = serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
+
+        logger.debug(f"Calling create_hub_content_presigned_urls API")
+        response = client.create_hub_content_presigned_urls(**operation_input_args)
+        logger.debug(f"Response: {response}")
+
+        transformed_response = transform(response, "CreateHubContentPresignedUrlsResponse")
+        return cls(**operation_input_args, **transformed_response)
 
 
 class HubContentReference(Base):
@@ -26951,6 +27061,13 @@ class SagemakerServicecatalogPortfolio(Base):
         logger.debug(f"Response: {response}")
 
         return list(response.values())[0]
+
+
+class Session(Base):
+    """
+    Class representing resource Session
+
+    """
 
 
 class Space(Base):
