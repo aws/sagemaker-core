@@ -99,3 +99,5 @@ CONFIG_SCHEMA_FILE_NAME = "config_schema.py"
 API_COVERAGE_JSON_FILE_PATH = os.getcwd() + "/src/sagemaker_core/tools/api_coverage.json"
 
 SHAPES_WITH_JSON_FIELD_ALIAS = ["MonitoringDatasetFormat"]  # Shapes with field name with "json"
+
+EXCLUDED_RESOURCES = {"Session"}

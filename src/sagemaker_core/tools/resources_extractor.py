@@ -16,7 +16,7 @@ from typing import Optional
 import pandas as pd
 
 from sagemaker_core.main.utils import get_textual_rich_logger
-from sagemaker_core.tools.constants import CLASS_METHODS, OBJECT_METHODS
+from sagemaker_core.tools.constants import CLASS_METHODS, OBJECT_METHODS, EXCLUDED_RESOURCES
 from sagemaker_core.tools.data_extractor import (
     load_additional_operations_data,
     load_combined_operations_data,
@@ -161,14 +161,16 @@ class ResourcesExtractor:
         self.import_resources = set(
             [key[len("Import") :] for key in self.actions if key.startswith("Import")]
         )
-
-        self.resources.update(
+        combined_resources = (
             self.create_resources
             | self.add_resources
             | self.start_resources
             | self.register_resources
             | self.import_resources
         )
+        combined_resources = combined_resources - EXCLUDED_RESOURCES
+
+        self.resources.update(combined_resources)
 
         self._filter_actions_for_resources(self.resources)
 
