@@ -16,4 +16,4 @@ class TestAPICoverage:
         # Check the numbers of current and previous apis being the same here
         # to ensure that developers update api_coverage.json when updating codegen
         assert current_supported_apis == previous_supported_apis - len(EXCLUDED_RESOURCES)
-        assert current_unsupported_apis == previous_unsupported_apis
+        assert current_unsupported_apis == previous_unsupported_apis + len(EXCLUDED_RESOURCES)
