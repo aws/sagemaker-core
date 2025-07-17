@@ -1946,3 +1946,30 @@ def put_record(
             self.resource_generator.generate_method(method, ["feature_group_name"])
             == expected_output
         )
+
+    def test_empty_resource_no_methods_or_attributes(self):
+        """Test that resource with no methods or attributes returns empty string.i.e., resource class not generated"""
+        result = self.resource_generator.generate_resource_class(
+            resource_name="EmptyResource",
+            class_methods=[],
+            object_methods=[],
+            additional_methods=[],
+            raw_actions=[],
+            resource_status_chain=[],
+            resource_states=[],
+        )
+        assert result == ""
+
+    def test_resource_with_random_class_method_no_attributes(self):
+        """Test that resource with random method but no other attributes returns empty string.i.e., resource class not generated"""
+        """current supported methods are create, get, refresh, update, delete, stop, wait, wait_for_status, wait_for_delete, get_all """
+        result = self.resource_generator.generate_resource_class(
+            resource_name="EmptyResource",
+            class_methods=["random"],
+            object_methods=[],
+            additional_methods=[],
+            raw_actions=[],
+            resource_status_chain=[],
+            resource_states=[],
+        )
+        assert result == ""
