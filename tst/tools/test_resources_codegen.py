@@ -1253,7 +1253,7 @@ def get_all(
 @Base.add_validate_call
 def get_node(
     self,
-    node_id: str,
+    node_id: Optional[str] = Unassigned(),
     session: Optional[Session] = None,
     region: Optional[str] = None,
 ) -> Optional[shapes.ClusterNodeDetails]:

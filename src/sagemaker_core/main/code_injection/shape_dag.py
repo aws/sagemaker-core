@@ -1506,6 +1506,71 @@ SHAPE_DAG = {
         "members": [{"name": "ClusterArn", "shape": "EksClusterArn", "type": "string"}],
         "type": "structure",
     },
+    "ClusterRestrictedInstanceGroupDetails": {
+        "members": [
+            {"name": "CurrentCount", "shape": "ClusterNonNegativeInstanceCount", "type": "integer"},
+            {"name": "TargetCount", "shape": "ClusterInstanceCount", "type": "integer"},
+            {"name": "InstanceGroupName", "shape": "ClusterInstanceGroupName", "type": "string"},
+            {"name": "InstanceType", "shape": "ClusterInstanceType", "type": "string"},
+            {"name": "ExecutionRole", "shape": "RoleArn", "type": "string"},
+            {"name": "ThreadsPerCore", "shape": "ClusterThreadsPerCore", "type": "integer"},
+            {
+                "name": "InstanceStorageConfigs",
+                "shape": "ClusterInstanceStorageConfigs",
+                "type": "list",
+            },
+            {"name": "OnStartDeepHealthChecks", "shape": "OnStartDeepHealthChecks", "type": "list"},
+            {"name": "Status", "shape": "InstanceGroupStatus", "type": "string"},
+            {"name": "TrainingPlanArn", "shape": "TrainingPlanArn", "type": "string"},
+            {
+                "name": "TrainingPlanStatus",
+                "shape": "InstanceGroupTrainingPlanStatus",
+                "type": "string",
+            },
+            {"name": "OverrideVpcConfig", "shape": "VpcConfig", "type": "structure"},
+            {
+                "name": "ScheduledUpdateConfig",
+                "shape": "ScheduledUpdateConfig",
+                "type": "structure",
+            },
+            {"name": "EnvironmentConfig", "shape": "EnvironmentConfigDetails", "type": "structure"},
+        ],
+        "type": "structure",
+    },
+    "ClusterRestrictedInstanceGroupDetailsList": {
+        "member_shape": "ClusterRestrictedInstanceGroupDetails",
+        "member_type": "structure",
+        "type": "list",
+    },
+    "ClusterRestrictedInstanceGroupSpecification": {
+        "members": [
+            {"name": "InstanceCount", "shape": "ClusterInstanceCount", "type": "integer"},
+            {"name": "InstanceGroupName", "shape": "ClusterInstanceGroupName", "type": "string"},
+            {"name": "InstanceType", "shape": "ClusterInstanceType", "type": "string"},
+            {"name": "ExecutionRole", "shape": "RoleArn", "type": "string"},
+            {"name": "ThreadsPerCore", "shape": "ClusterThreadsPerCore", "type": "integer"},
+            {
+                "name": "InstanceStorageConfigs",
+                "shape": "ClusterInstanceStorageConfigs",
+                "type": "list",
+            },
+            {"name": "OnStartDeepHealthChecks", "shape": "OnStartDeepHealthChecks", "type": "list"},
+            {"name": "TrainingPlanArn", "shape": "TrainingPlanArn", "type": "string"},
+            {"name": "OverrideVpcConfig", "shape": "VpcConfig", "type": "structure"},
+            {
+                "name": "ScheduledUpdateConfig",
+                "shape": "ScheduledUpdateConfig",
+                "type": "structure",
+            },
+            {"name": "EnvironmentConfig", "shape": "EnvironmentConfig", "type": "structure"},
+        ],
+        "type": "structure",
+    },
+    "ClusterRestrictedInstanceGroupSpecifications": {
+        "member_shape": "ClusterRestrictedInstanceGroupSpecification",
+        "member_type": "structure",
+        "type": "list",
+    },
     "ClusterSchedulerConfigSummary": {
         "members": [
             {
@@ -2008,6 +2073,11 @@ SHAPE_DAG = {
             {
                 "name": "InstanceGroups",
                 "shape": "ClusterInstanceGroupSpecifications",
+                "type": "list",
+            },
+            {
+                "name": "RestrictedInstanceGroups",
+                "shape": "ClusterRestrictedInstanceGroupSpecifications",
                 "type": "list",
             },
             {"name": "VpcConfig", "shape": "VpcConfig", "type": "structure"},
@@ -4372,6 +4442,11 @@ SHAPE_DAG = {
             {"name": "CreationTime", "shape": "Timestamp", "type": "timestamp"},
             {"name": "FailureMessage", "shape": "String", "type": "string"},
             {"name": "InstanceGroups", "shape": "ClusterInstanceGroupDetailsList", "type": "list"},
+            {
+                "name": "RestrictedInstanceGroups",
+                "shape": "ClusterRestrictedInstanceGroupDetailsList",
+                "type": "list",
+            },
             {"name": "VpcConfig", "shape": "VpcConfig", "type": "structure"},
             {"name": "Orchestrator", "shape": "ClusterOrchestrator", "type": "structure"},
             {"name": "NodeRecovery", "shape": "ClusterNodeRecovery", "type": "string"},
@@ -5743,11 +5818,15 @@ SHAPE_DAG = {
                 "shape": "SelectiveExecutionConfig",
                 "type": "structure",
             },
+            {"name": "PipelineVersionId", "shape": "PipelineVersionId", "type": "long"},
         ],
         "type": "structure",
     },
     "DescribePipelineRequest": {
-        "members": [{"name": "PipelineName", "shape": "PipelineNameOrArn", "type": "string"}],
+        "members": [
+            {"name": "PipelineName", "shape": "PipelineNameOrArn", "type": "string"},
+            {"name": "PipelineVersionId", "shape": "PipelineVersionId", "type": "long"},
+        ],
         "type": "structure",
     },
     "DescribePipelineResponse": {
@@ -5768,6 +5847,16 @@ SHAPE_DAG = {
                 "name": "ParallelismConfiguration",
                 "shape": "ParallelismConfiguration",
                 "type": "structure",
+            },
+            {
+                "name": "PipelineVersionDisplayName",
+                "shape": "PipelineVersionName",
+                "type": "string",
+            },
+            {
+                "name": "PipelineVersionDescription",
+                "shape": "PipelineVersionDescription",
+                "type": "string",
             },
         ],
         "type": "structure",
@@ -6734,6 +6823,17 @@ SHAPE_DAG = {
         "type": "list",
     },
     "Endpoints": {"member_shape": "EndpointInfo", "member_type": "structure", "type": "list"},
+    "EnvironmentConfig": {
+        "members": [{"name": "FSxLustreConfig", "shape": "FSxLustreConfig", "type": "structure"}],
+        "type": "structure",
+    },
+    "EnvironmentConfigDetails": {
+        "members": [
+            {"name": "FSxLustreConfig", "shape": "FSxLustreConfig", "type": "structure"},
+            {"name": "S3OutputPath", "shape": "S3Uri", "type": "string"},
+        ],
+        "type": "structure",
+    },
     "EnvironmentMap": {
         "key_shape": "EnvironmentKey",
         "key_type": "string",
@@ -6830,6 +6930,17 @@ SHAPE_DAG = {
                 "shape": "ClarifyExplainerConfig",
                 "type": "structure",
             }
+        ],
+        "type": "structure",
+    },
+    "FSxLustreConfig": {
+        "members": [
+            {"name": "SizeInGiB", "shape": "FSxLustreSizeInGiB", "type": "integer"},
+            {
+                "name": "PerUnitStorageThroughput",
+                "shape": "FSxLustrePerUnitStorageThroughput",
+                "type": "integer",
+            },
         ],
         "type": "structure",
     },
@@ -10037,6 +10148,28 @@ SHAPE_DAG = {
         ],
         "type": "structure",
     },
+    "ListPipelineVersionsRequest": {
+        "members": [
+            {"name": "PipelineName", "shape": "PipelineNameOrArn", "type": "string"},
+            {"name": "CreatedAfter", "shape": "Timestamp", "type": "timestamp"},
+            {"name": "CreatedBefore", "shape": "Timestamp", "type": "timestamp"},
+            {"name": "SortOrder", "shape": "SortOrder", "type": "string"},
+            {"name": "NextToken", "shape": "NextToken", "type": "string"},
+            {"name": "MaxResults", "shape": "MaxResults", "type": "integer"},
+        ],
+        "type": "structure",
+    },
+    "ListPipelineVersionsResponse": {
+        "members": [
+            {
+                "name": "PipelineVersionSummaries",
+                "shape": "PipelineVersionSummaryList",
+                "type": "list",
+            },
+            {"name": "NextToken", "shape": "NextToken", "type": "string"},
+        ],
+        "type": "structure",
+    },
     "ListPipelinesRequest": {
         "members": [
             {"name": "PipelineNamePrefix", "shape": "PipelineName", "type": "string"},
@@ -12207,6 +12340,12 @@ SHAPE_DAG = {
                 "type": "structure",
             },
             {"name": "PipelineParameters", "shape": "ParameterList", "type": "list"},
+            {"name": "PipelineVersionId", "shape": "PipelineVersionId", "type": "long"},
+            {
+                "name": "PipelineVersionDisplayName",
+                "shape": "PipelineVersionName",
+                "type": "string",
+            },
         ],
         "type": "structure",
     },
@@ -12306,6 +12445,70 @@ SHAPE_DAG = {
     },
     "PipelineSummaryList": {
         "member_shape": "PipelineSummary",
+        "member_type": "structure",
+        "type": "list",
+    },
+    "PipelineVersion": {
+        "members": [
+            {"name": "PipelineArn", "shape": "PipelineArn", "type": "string"},
+            {"name": "PipelineVersionId", "shape": "PipelineVersionId", "type": "long"},
+            {
+                "name": "PipelineVersionDisplayName",
+                "shape": "PipelineVersionName",
+                "type": "string",
+            },
+            {
+                "name": "PipelineVersionDescription",
+                "shape": "PipelineVersionDescription",
+                "type": "string",
+            },
+            {"name": "CreationTime", "shape": "Timestamp", "type": "timestamp"},
+            {"name": "LastModifiedTime", "shape": "Timestamp", "type": "timestamp"},
+            {"name": "CreatedBy", "shape": "UserContext", "type": "structure"},
+            {"name": "LastModifiedBy", "shape": "UserContext", "type": "structure"},
+            {
+                "name": "LastExecutedPipelineExecutionArn",
+                "shape": "PipelineExecutionArn",
+                "type": "string",
+            },
+            {
+                "name": "LastExecutedPipelineExecutionDisplayName",
+                "shape": "PipelineExecutionName",
+                "type": "string",
+            },
+            {
+                "name": "LastExecutedPipelineExecutionStatus",
+                "shape": "PipelineExecutionStatus",
+                "type": "string",
+            },
+        ],
+        "type": "structure",
+    },
+    "PipelineVersionSummary": {
+        "members": [
+            {"name": "PipelineArn", "shape": "PipelineArn", "type": "string"},
+            {"name": "PipelineVersionId", "shape": "PipelineVersionId", "type": "long"},
+            {"name": "CreationTime", "shape": "Timestamp", "type": "timestamp"},
+            {
+                "name": "PipelineVersionDescription",
+                "shape": "PipelineVersionDescription",
+                "type": "string",
+            },
+            {
+                "name": "PipelineVersionDisplayName",
+                "shape": "PipelineVersionName",
+                "type": "string",
+            },
+            {
+                "name": "LastExecutionPipelineExecutionArn",
+                "shape": "PipelineExecutionArn",
+                "type": "string",
+            },
+        ],
+        "type": "structure",
+    },
+    "PipelineVersionSummaryList": {
+        "member_shape": "PipelineVersionSummary",
         "member_type": "structure",
         "type": "list",
     },
@@ -13582,6 +13785,7 @@ SHAPE_DAG = {
             {"name": "ModelPackageGroup", "shape": "ModelPackageGroup", "type": "structure"},
             {"name": "Pipeline", "shape": "Pipeline", "type": "structure"},
             {"name": "PipelineExecution", "shape": "PipelineExecution", "type": "structure"},
+            {"name": "PipelineVersion", "shape": "PipelineVersion", "type": "structure"},
             {"name": "FeatureGroup", "shape": "FeatureGroup", "type": "structure"},
             {"name": "FeatureMetadata", "shape": "FeatureMetadata", "type": "structure"},
             {"name": "Project", "shape": "Project", "type": "structure"},
@@ -13997,6 +14201,7 @@ SHAPE_DAG = {
                 "shape": "SelectiveExecutionConfig",
                 "type": "structure",
             },
+            {"name": "PipelineVersionId", "shape": "PipelineVersionId", "type": "long"},
         ],
         "type": "structure",
     },
@@ -15138,6 +15343,11 @@ SHAPE_DAG = {
                 "shape": "ClusterInstanceGroupSpecifications",
                 "type": "list",
             },
+            {
+                "name": "RestrictedInstanceGroups",
+                "shape": "ClusterRestrictedInstanceGroupSpecifications",
+                "type": "list",
+            },
             {"name": "NodeRecovery", "shape": "ClusterNodeRecovery", "type": "string"},
             {
                 "name": "InstanceGroupsToDelete",
@@ -15749,7 +15959,34 @@ SHAPE_DAG = {
         "type": "structure",
     },
     "UpdatePipelineResponse": {
-        "members": [{"name": "PipelineArn", "shape": "PipelineArn", "type": "string"}],
+        "members": [
+            {"name": "PipelineArn", "shape": "PipelineArn", "type": "string"},
+            {"name": "PipelineVersionId", "shape": "PipelineVersionId", "type": "long"},
+        ],
+        "type": "structure",
+    },
+    "UpdatePipelineVersionRequest": {
+        "members": [
+            {"name": "PipelineArn", "shape": "PipelineArn", "type": "string"},
+            {"name": "PipelineVersionId", "shape": "PipelineVersionId", "type": "long"},
+            {
+                "name": "PipelineVersionDisplayName",
+                "shape": "PipelineVersionName",
+                "type": "string",
+            },
+            {
+                "name": "PipelineVersionDescription",
+                "shape": "PipelineVersionDescription",
+                "type": "string",
+            },
+        ],
+        "type": "structure",
+    },
+    "UpdatePipelineVersionResponse": {
+        "members": [
+            {"name": "PipelineArn", "shape": "PipelineArn", "type": "string"},
+            {"name": "PipelineVersionId", "shape": "PipelineVersionId", "type": "long"},
+        ],
         "type": "structure",
     },
     "UpdateProjectInput": {

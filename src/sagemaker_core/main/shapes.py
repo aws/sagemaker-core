@@ -1516,7 +1516,7 @@ class IamIdentity(Base):
 class UserContext(Base):
     """
     UserContext
-      Information about the user who created or modified an experiment, trial, trial component, lineage group, project, or model card.
+      Information about the user who created or modified a SageMaker resource.
 
     Attributes
     ----------------------
@@ -3550,6 +3550,121 @@ class ClusterOrchestrator(Base):
     """
 
     eks: ClusterOrchestratorEksConfig
+
+
+class FSxLustreConfig(Base):
+    """
+    FSxLustreConfig
+      Configuration settings for an Amazon FSx for Lustre file system to be used with the cluster.
+
+    Attributes
+    ----------------------
+    size_in_gi_b: The storage capacity of the Amazon FSx for Lustre file system, specified in gibibytes (GiB).
+    per_unit_storage_throughput: The throughput capacity of the Amazon FSx for Lustre file system, measured in MB/s per TiB of storage.
+    """
+
+    size_in_gi_b: int
+    per_unit_storage_throughput: int
+
+
+class EnvironmentConfigDetails(Base):
+    """
+    EnvironmentConfigDetails
+      The configuration details for the restricted instance groups (RIG) environment.
+
+    Attributes
+    ----------------------
+    f_sx_lustre_config: Configuration settings for an Amazon FSx for Lustre file system to be used with the cluster.
+    s3_output_path: The Amazon S3 path where output data from the restricted instance group (RIG) environment will be stored.
+    """
+
+    f_sx_lustre_config: Optional[FSxLustreConfig] = Unassigned()
+    s3_output_path: Optional[str] = Unassigned()
+
+
+class ClusterRestrictedInstanceGroupDetails(Base):
+    """
+    ClusterRestrictedInstanceGroupDetails
+      The instance group details of the restricted instance group (RIG).
+
+    Attributes
+    ----------------------
+    current_count: The number of instances that are currently in the restricted instance group of a SageMaker HyperPod cluster.
+    target_count: The number of instances you specified to add to the restricted instance group of a SageMaker HyperPod cluster.
+    instance_group_name: The name of the restricted instance group of a SageMaker HyperPod cluster.
+    instance_type: The instance type of the restricted instance group of a SageMaker HyperPod cluster.
+    execution_role: The execution role for the restricted instance group to assume.
+    threads_per_core: The number you specified to TreadsPerCore in CreateCluster for enabling or disabling multithreading. For instance types that support multithreading, you can specify 1 for disabling multithreading and 2 for enabling multithreading. For more information, see the reference table of CPU cores and threads per CPU core per instance type in the Amazon Elastic Compute Cloud User Guide.
+    instance_storage_configs: The additional storage configurations for the instances in the SageMaker HyperPod cluster restricted instance group.
+    on_start_deep_health_checks: A flag indicating whether deep health checks should be performed when the cluster's restricted instance group is created or updated.
+    status: The current status of the cluster's restricted instance group.    InService: The restricted instance group is active and healthy.    Creating: The restricted instance group is being provisioned.    Updating: The restricted instance group is being updated.    Failed: The restricted instance group has failed to provision or is no longer healthy.    Degraded: The restricted instance group is degraded, meaning that some instances have failed to provision or are no longer healthy.    Deleting: The restricted instance group is being deleted.
+    training_plan_arn: The Amazon Resource Name (ARN) of the training plan to filter clusters by. For more information about reserving GPU capacity for your SageMaker HyperPod clusters using Amazon SageMaker Training Plan, see  CreateTrainingPlan .
+    training_plan_status: The current status of the training plan associated with this cluster restricted instance group.
+    override_vpc_config
+    scheduled_update_config
+    environment_config: The configuration for the restricted instance groups (RIG) environment.
+    """
+
+    current_count: Optional[int] = Unassigned()
+    target_count: Optional[int] = Unassigned()
+    instance_group_name: Optional[str] = Unassigned()
+    instance_type: Optional[str] = Unassigned()
+    execution_role: Optional[str] = Unassigned()
+    threads_per_core: Optional[int] = Unassigned()
+    instance_storage_configs: Optional[List[ClusterInstanceStorageConfig]] = Unassigned()
+    on_start_deep_health_checks: Optional[List[str]] = Unassigned()
+    status: Optional[str] = Unassigned()
+    training_plan_arn: Optional[str] = Unassigned()
+    training_plan_status: Optional[str] = Unassigned()
+    override_vpc_config: Optional[VpcConfig] = Unassigned()
+    scheduled_update_config: Optional[ScheduledUpdateConfig] = Unassigned()
+    environment_config: Optional[EnvironmentConfigDetails] = Unassigned()
+
+
+class EnvironmentConfig(Base):
+    """
+    EnvironmentConfig
+      The configuration for the restricted instance groups (RIG) environment.
+
+    Attributes
+    ----------------------
+    f_sx_lustre_config: Configuration settings for an Amazon FSx for Lustre file system to be used with the cluster.
+    """
+
+    f_sx_lustre_config: Optional[FSxLustreConfig] = Unassigned()
+
+
+class ClusterRestrictedInstanceGroupSpecification(Base):
+    """
+    ClusterRestrictedInstanceGroupSpecification
+      The specifications of a restricted instance group that you need to define.
+
+    Attributes
+    ----------------------
+    instance_count: Specifies the number of instances to add to the restricted instance group of a SageMaker HyperPod cluster.
+    instance_group_name: Specifies the name of the restricted instance group.
+    instance_type: Specifies the instance type of the restricted instance group.
+    execution_role: Specifies an IAM execution role to be assumed by the restricted instance group.
+    threads_per_core: The number you specified to TreadsPerCore in CreateCluster for enabling or disabling multithreading. For instance types that support multithreading, you can specify 1 for disabling multithreading and 2 for enabling multithreading. For more information, see the reference table of CPU cores and threads per CPU core per instance type in the Amazon Elastic Compute Cloud User Guide.
+    instance_storage_configs: Specifies the additional storage configurations for the instances in the SageMaker HyperPod cluster restricted instance group.
+    on_start_deep_health_checks: A flag indicating whether deep health checks should be performed when the cluster restricted instance group is created or updated.
+    training_plan_arn: The Amazon Resource Name (ARN) of the training plan to filter clusters by. For more information about reserving GPU capacity for your SageMaker HyperPod clusters using Amazon SageMaker Training Plan, see  CreateTrainingPlan .
+    override_vpc_config
+    scheduled_update_config
+    environment_config: The configuration for the restricted instance groups (RIG) environment.
+    """
+
+    instance_count: int
+    instance_group_name: str
+    instance_type: str
+    execution_role: str
+    environment_config: EnvironmentConfig
+    threads_per_core: Optional[int] = Unassigned()
+    instance_storage_configs: Optional[List[ClusterInstanceStorageConfig]] = Unassigned()
+    on_start_deep_health_checks: Optional[List[str]] = Unassigned()
+    training_plan_arn: Optional[str] = Unassigned()
+    override_vpc_config: Optional[VpcConfig] = Unassigned()
+    scheduled_update_config: Optional[ScheduledUpdateConfig] = Unassigned()
 
 
 class ClusterSchedulerConfigSummary(Base):
@@ -11500,6 +11615,29 @@ class Parameter(Base):
     value: str
 
 
+class PipelineVersionSummary(Base):
+    """
+    PipelineVersionSummary
+      The summary of the pipeline version.
+
+    Attributes
+    ----------------------
+    pipeline_arn: The Amazon Resource Name (ARN) of the pipeline.
+    pipeline_version_id: The ID of the pipeline version.
+    creation_time: The creation time of the pipeline version.
+    pipeline_version_description: The description of the pipeline version.
+    pipeline_version_display_name: The display name of the pipeline version.
+    last_execution_pipeline_execution_arn: The Amazon Resource Name (ARN) of the most recent pipeline execution created from this pipeline version.
+    """
+
+    pipeline_arn: Optional[str] = Unassigned()
+    pipeline_version_id: Optional[int] = Unassigned()
+    creation_time: Optional[datetime.datetime] = Unassigned()
+    pipeline_version_description: Optional[str] = Unassigned()
+    pipeline_version_display_name: Optional[str] = Unassigned()
+    last_execution_pipeline_execution_arn: Optional[str] = Unassigned()
+
+
 class PipelineSummary(Base):
     """
     PipelineSummary
@@ -12316,6 +12454,8 @@ class PipelineExecution(Base):
     parallelism_configuration: The parallelism configuration applied to the pipeline execution.
     selective_execution_config: The selective execution configuration applied to the pipeline run.
     pipeline_parameters: Contains a list of pipeline parameters. This list can be empty.
+    pipeline_version_id: The ID of the pipeline version that started this execution.
+    pipeline_version_display_name: The display name of the pipeline version that started this execution.
     """
 
     pipeline_arn: Optional[str] = Unassigned()
@@ -12332,6 +12472,41 @@ class PipelineExecution(Base):
     parallelism_configuration: Optional[ParallelismConfiguration] = Unassigned()
     selective_execution_config: Optional[SelectiveExecutionConfig] = Unassigned()
     pipeline_parameters: Optional[List[Parameter]] = Unassigned()
+    pipeline_version_id: Optional[int] = Unassigned()
+    pipeline_version_display_name: Optional[str] = Unassigned()
+
+
+class PipelineVersion(Base):
+    """
+    PipelineVersion
+      The version of the pipeline.
+
+    Attributes
+    ----------------------
+    pipeline_arn: The Amazon Resource Name (ARN) of the pipeline.
+    pipeline_version_id: The ID of the pipeline version.
+    pipeline_version_display_name: The display name of the pipeline version.
+    pipeline_version_description: The description of the pipeline version.
+    creation_time: The creation time of the pipeline version.
+    last_modified_time: The time when the pipeline version was last modified.
+    created_by
+    last_modified_by
+    last_executed_pipeline_execution_arn: The Amazon Resource Name (ARN) of the most recent pipeline execution created from this pipeline version.
+    last_executed_pipeline_execution_display_name: The display name of the most recent pipeline execution created from this pipeline version.
+    last_executed_pipeline_execution_status: The status of the most recent pipeline execution created from this pipeline version.
+    """
+
+    pipeline_arn: Optional[str] = Unassigned()
+    pipeline_version_id: Optional[int] = Unassigned()
+    pipeline_version_display_name: Optional[str] = Unassigned()
+    pipeline_version_description: Optional[str] = Unassigned()
+    creation_time: Optional[datetime.datetime] = Unassigned()
+    last_modified_time: Optional[datetime.datetime] = Unassigned()
+    created_by: Optional[UserContext] = Unassigned()
+    last_modified_by: Optional[UserContext] = Unassigned()
+    last_executed_pipeline_execution_arn: Optional[str] = Unassigned()
+    last_executed_pipeline_execution_display_name: Optional[str] = Unassigned()
+    last_executed_pipeline_execution_status: Optional[str] = Unassigned()
 
 
 class ProcessingJob(Base):
@@ -12844,6 +13019,7 @@ class SearchRecord(Base):
     model_package_group
     pipeline
     pipeline_execution
+    pipeline_version: The version of the pipeline.
     feature_group
     feature_metadata: The feature metadata used to search through the features.
     project: The properties of a project.
@@ -12861,6 +13037,7 @@ class SearchRecord(Base):
     model_package_group: Optional[ModelPackageGroup] = Unassigned()
     pipeline: Optional[Pipeline] = Unassigned()
     pipeline_execution: Optional[PipelineExecution] = Unassigned()
+    pipeline_version: Optional[PipelineVersion] = Unassigned()
     feature_group: Optional[FeatureGroup] = Unassigned()
     feature_metadata: Optional[FeatureMetadata] = Unassigned()
     project: Optional[Project] = Unassigned()
