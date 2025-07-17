@@ -320,10 +320,18 @@ class SingletonMeta(type):
         return cls._instances[cls]
 
 
-class SageMakerClient(metaclass=SingletonMeta):
+class SageMakerClient:
     """
     A singleton class for creating a SageMaker client.
     """
+
+    _instance = None
+    _initialized = False
+
+    def __new__(cls, *args, **kwargs):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
 
     def __init__(
         self,
@@ -335,6 +343,12 @@ class SageMakerClient(metaclass=SingletonMeta):
         Initializes the SageMakerClient with a boto3 session, region name, and service name.
         Creates a boto3 client using the provided session, region, and service.
         """
+
+        # Only skip reinitialization if region is the same
+        if self._initialized and session is None and config is None:
+            if region_name is None or region_name == self._instance.region_name:
+                return
+
         if session is None:
             logger.warning("No boto3 session provided. Creating a new session.")
             session = Session(region_name=region_name)
@@ -360,6 +374,8 @@ class SageMakerClient(metaclass=SingletonMeta):
         self.sagemaker_metrics_client = session.client(
             "sagemaker-metrics", region_name, config=self.config
         )
+
+        self._initialized = True
 
     def get_client(self, service_name: str) -> Any:
         """
