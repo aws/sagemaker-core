@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.0.44 (2025-07-17)
+
+ * Fix: Do not generate empty classes (#320)
+ * Update importlib-metadata version boundary (#319)
+
 ## v1.0.43 (2025-07-16)
 
  * Daily Sync with Botocore v1.39.6 on 2025/07/16 (#316)
