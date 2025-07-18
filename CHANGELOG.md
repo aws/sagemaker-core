@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.0.45 (2025-07-18)
+
+ * Update rich boundary (#322)
+ * Address pylint issue in PR:320 (#321)
+
 ## v1.0.44 (2025-07-17)
 
  * Fix: Do not generate empty classes (#320)
