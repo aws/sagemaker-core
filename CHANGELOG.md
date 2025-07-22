@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.0.46 (2025-07-22)
+
+ * Daily Sync with Botocore v1.39.10 on 2025/07/22 (#323)
+
 ## v1.0.45 (2025-07-18)
 
  * Update rich boundary (#322)
