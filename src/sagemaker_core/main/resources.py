@@ -7436,8 +7436,8 @@ class Domain(Base):
             auth_mode: The mode of authentication that members use to access the domain.
             default_user_settings: The default settings to use to create a user profile when UserSettings isn't specified in the call to the CreateUserProfile API.  SecurityGroups is aggregated when specified in both calls. For all other settings in UserSettings, the values specified in CreateUserProfile take precedence over those specified in CreateDomain.
             domain_settings: A collection of Domain settings.
-            subnet_ids: The VPC subnets that the domain uses for communication.
-            vpc_id: The ID of the Amazon Virtual Private Cloud (VPC) that the domain uses for communication.
+            subnet_ids: The VPC subnets that the domain uses for communication. The field is optional when the AppNetworkAccessType parameter is set to PublicInternetOnly for domains created from Amazon SageMaker Unified Studio.
+            vpc_id: The ID of the Amazon Virtual Private Cloud (VPC) that the domain uses for communication. The field is optional when the AppNetworkAccessType parameter is set to PublicInternetOnly for domains created from Amazon SageMaker Unified Studio.
             tags: Tags to associated with the Domain. Each tag consists of a key and an optional value. Tag keys must be unique per resource. Tags are searchable using the Search API. Tags that you specify for the Domain are also added to all Apps that the Domain launches.
             app_network_access_type: Specifies the VPC used for non-EFS traffic. The default value is PublicInternetOnly.    PublicInternetOnly - Non-EFS traffic is through a VPC managed by Amazon SageMaker AI, which allows direct internet access    VpcOnly - All traffic is through the specified VPC and subnets
             home_efs_file_system_kms_key_id: Use KmsKeyId.
@@ -31261,6 +31261,7 @@ class Workforce(Base):
         source_ip_config: Optional[shapes.SourceIpConfig] = Unassigned(),
         tags: Optional[List[shapes.Tag]] = Unassigned(),
         workforce_vpc_config: Optional[shapes.WorkforceVpcConfigRequest] = Unassigned(),
+        ip_address_type: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["Workforce"]:
@@ -31274,6 +31275,7 @@ class Workforce(Base):
             source_ip_config:
             tags: An array of key-value pairs that contain metadata to help you categorize and organize our workforce. Each tag consists of a key and a value, both of which you define.
             workforce_vpc_config: Use this parameter to configure a workforce using VPC.
+            ip_address_type: Use this parameter to specify whether you want IPv4 only or dualstack (IPv4 and IPv6) to support your labeling workforce.
             session: Boto3 session.
             region: Region name.
 
@@ -31307,6 +31309,7 @@ class Workforce(Base):
             "WorkforceName": workforce_name,
             "Tags": tags,
             "WorkforceVpcConfig": workforce_vpc_config,
+            "IpAddressType": ip_address_type,
         }
 
         operation_input_args = Base.populate_chained_attributes(
@@ -31417,6 +31420,7 @@ class Workforce(Base):
         source_ip_config: Optional[shapes.SourceIpConfig] = Unassigned(),
         oidc_config: Optional[shapes.OidcConfig] = Unassigned(),
         workforce_vpc_config: Optional[shapes.WorkforceVpcConfigRequest] = Unassigned(),
+        ip_address_type: Optional[str] = Unassigned(),
     ) -> Optional["Workforce"]:
         """
         Update a Workforce resource
@@ -31425,6 +31429,7 @@ class Workforce(Base):
             source_ip_config: A list of one to ten worker IP address ranges (CIDRs) that can be used to access tasks assigned to this workforce. Maximum: Ten CIDR values
             oidc_config: Use this parameter to update your OIDC Identity Provider (IdP) configuration for a workforce made using your own IdP.
             workforce_vpc_config: Use this parameter to update your VPC configuration for a workforce.
+            ip_address_type: Use this parameter to specify whether you want IPv4 only or dualstack (IPv4 and IPv6) to support your labeling workforce.
 
         Returns:
             The Workforce resource.
@@ -31450,6 +31455,7 @@ class Workforce(Base):
             "SourceIpConfig": source_ip_config,
             "OidcConfig": oidc_config,
             "WorkforceVpcConfig": workforce_vpc_config,
+            "IpAddressType": ip_address_type,
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
