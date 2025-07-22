@@ -3377,6 +3377,7 @@ SHAPE_DAG = {
                 "shape": "WorkforceVpcConfigRequest",
                 "type": "structure",
             },
+            {"name": "IpAddressType", "shape": "WorkforceIpAddressType", "type": "string"},
         ],
         "type": "structure",
     },
@@ -3413,6 +3414,7 @@ SHAPE_DAG = {
         "members": [
             {"name": "EFSFileSystem", "shape": "EFSFileSystem", "type": "structure"},
             {"name": "FSxLustreFileSystem", "shape": "FSxLustreFileSystem", "type": "structure"},
+            {"name": "S3FileSystem", "shape": "S3FileSystem", "type": "structure"},
         ],
         "type": "structure",
     },
@@ -3424,6 +3426,7 @@ SHAPE_DAG = {
                 "shape": "FSxLustreFileSystemConfig",
                 "type": "structure",
             },
+            {"name": "S3FileSystemConfig", "shape": "S3FileSystemConfig", "type": "structure"},
         ],
         "type": "structure",
     },
@@ -13672,6 +13675,17 @@ SHAPE_DAG = {
         ],
         "type": "structure",
     },
+    "S3FileSystem": {
+        "members": [{"name": "S3Uri", "shape": "S3SchemaUri", "type": "string"}],
+        "type": "structure",
+    },
+    "S3FileSystemConfig": {
+        "members": [
+            {"name": "MountPath", "shape": "String1024", "type": "string"},
+            {"name": "S3Uri", "shape": "S3SchemaUri", "type": "string"},
+        ],
+        "type": "structure",
+    },
     "S3ModelDataSource": {
         "members": [
             {"name": "S3Uri", "shape": "S3ModelUri", "type": "string"},
@@ -16118,6 +16132,7 @@ SHAPE_DAG = {
                 "shape": "WorkforceVpcConfigRequest",
                 "type": "structure",
             },
+            {"name": "IpAddressType", "shape": "WorkforceIpAddressType", "type": "string"},
         ],
         "type": "structure",
     },
@@ -16326,6 +16341,7 @@ SHAPE_DAG = {
             },
             {"name": "Status", "shape": "WorkforceStatus", "type": "string"},
             {"name": "FailureReason", "shape": "WorkforceFailureReason", "type": "string"},
+            {"name": "IpAddressType", "shape": "WorkforceIpAddressType", "type": "string"},
         ],
         "type": "structure",
     },
