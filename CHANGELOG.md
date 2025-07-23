@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.0.47 (2025-07-23)
+
+ * Update boto3 version constraint (#324)
+
 ## v1.0.46 (2025-07-22)
 
  * Daily Sync with Botocore v1.39.10 on 2025/07/22 (#323)
