@@ -339,8 +339,11 @@ class ResourcesCodeGen:
             str: The formatted resource class.
 
         """
-        # Initialize an empty string for the resource class
-        resource_class = ""
+        resource_class = f"class {resource_name}(Base):\n"
+        class_documentation_string = f"Class representing resource {resource_name}\n"
+        basic_class_content = resource_class + add_indent(
+            f'"""\n{class_documentation_string}\n"""\n', 4
+        )
 
         # _get_class_attributes will return value only if the resource has get or get_all method
         if class_attribute_info := self._get_class_attributes(resource_name, class_methods):
@@ -348,11 +351,7 @@ class ResourcesCodeGen:
                 class_attribute_info
             )
 
-            # Start defining the class
-            resource_class = f"class {resource_name}(Base):\n"
-
-            class_documentation_string = f"Class representing resource {resource_name}\n\n"
-            class_documentation_string += f"Attributes:\n"
+            class_documentation_string += f"\nAttributes:\n"
             class_documentation_string += self._get_shape_attr_documentation_string(
                 attributes_and_documentation
             )
@@ -444,9 +443,12 @@ class ResourcesCodeGen:
         else:
             # If there's no 'get' or 'list' or 'create' method, generate a class with no attributes
             resource_attributes = []
-            resource_class = f"class {resource_name}(Base):\n"
-            class_documentation_string = f"Class representing resource {resource_name}\n"
-            resource_class += add_indent(f'"""\n{class_documentation_string}\n"""\n', 4)
+            resource_class = basic_class_content
+
+            # if there are no attributes or methods including addition operations
+            # class need not be generated
+            if resource_name not in self.resource_methods:
+                return ""
 
         if resource_name in self.resource_methods:
             # TODO: use resource_methods for all methods

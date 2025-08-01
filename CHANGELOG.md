@@ -1,5 +1,27 @@
 # Changelog
 
+## v1.0.47 (2025-07-23)
+
+ * Update boto3 version constraint (#324)
+
+## v1.0.46 (2025-07-22)
+
+ * Daily Sync with Botocore v1.39.10 on 2025/07/22 (#323)
+
+## v1.0.45 (2025-07-18)
+
+ * Update rich boundary (#322)
+ * Address pylint issue in PR:320 (#321)
+
+## v1.0.44 (2025-07-17)
+
+ * Fix: Do not generate empty classes (#320)
+ * Update importlib-metadata version boundary (#319)
+
+## v1.0.43 (2025-07-16)
+
+ * Daily Sync with Botocore v1.39.6 on 2025/07/16 (#316)
+
 ## v1.0.42 (2025-07-04)
 
  * Daily Sync with Botocore v1.39.3 on 2025/07/04 (#314)

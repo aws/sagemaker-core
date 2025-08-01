@@ -3219,6 +3219,7 @@ class Cluster(Base):
         cluster_name: The name of the SageMaker HyperPod cluster.
         creation_time: The time when the SageMaker Cluster is created.
         failure_message: The failure message of the SageMaker HyperPod cluster.
+        restricted_instance_groups: The specialized instance groups for training models like Amazon Nova to be created in the SageMaker HyperPod cluster.
         vpc_config:
         orchestrator: The type of orchestrator used for the SageMaker HyperPod cluster.
         node_recovery: The node recovery mode configured for the SageMaker HyperPod cluster.
@@ -3231,6 +3232,9 @@ class Cluster(Base):
     creation_time: Optional[datetime.datetime] = Unassigned()
     failure_message: Optional[str] = Unassigned()
     instance_groups: Optional[List[shapes.ClusterInstanceGroupDetails]] = Unassigned()
+    restricted_instance_groups: Optional[List[shapes.ClusterRestrictedInstanceGroupDetails]] = (
+        Unassigned()
+    )
     vpc_config: Optional[shapes.VpcConfig] = Unassigned()
     orchestrator: Optional[shapes.ClusterOrchestrator] = Unassigned()
     node_recovery: Optional[str] = Unassigned()
@@ -3276,6 +3280,9 @@ class Cluster(Base):
         cls,
         cluster_name: str,
         instance_groups: Optional[List[shapes.ClusterInstanceGroupSpecification]] = Unassigned(),
+        restricted_instance_groups: Optional[
+            List[shapes.ClusterRestrictedInstanceGroupSpecification]
+        ] = Unassigned(),
         vpc_config: Optional[shapes.VpcConfig] = Unassigned(),
         tags: Optional[List[shapes.Tag]] = Unassigned(),
         orchestrator: Optional[shapes.ClusterOrchestrator] = Unassigned(),
@@ -3289,6 +3296,7 @@ class Cluster(Base):
         Parameters:
             cluster_name: The name for the new SageMaker HyperPod cluster.
             instance_groups: The instance groups to be created in the SageMaker HyperPod cluster.
+            restricted_instance_groups: The specialized instance groups for training models like Amazon Nova to be created in the SageMaker HyperPod cluster.
             vpc_config: Specifies the Amazon Virtual Private Cloud (VPC) that is associated with the Amazon SageMaker HyperPod cluster. You can control access to and from your resources by configuring your VPC. For more information, see Give SageMaker access to resources in your Amazon VPC.  When your Amazon VPC and subnets support IPv6, network communications differ based on the cluster orchestration platform:   Slurm-orchestrated clusters automatically configure nodes with dual IPv6 and IPv4 addresses, allowing immediate IPv6 network communications.   In Amazon EKS-orchestrated clusters, nodes receive dual-stack addressing, but pods can only use IPv6 when the Amazon EKS cluster is explicitly IPv6-enabled. For information about deploying an IPv6 Amazon EKS cluster, see Amazon EKS IPv6 Cluster Deployment.   Additional resources for IPv6 configuration:   For information about adding IPv6 support to your VPC, see to IPv6 Support for VPC.   For information about creating a new IPv6-compatible VPC, see Amazon VPC Creation Guide.   To configure SageMaker HyperPod with a custom Amazon VPC, see Custom Amazon VPC Setup for SageMaker HyperPod.
             tags: Custom tags for managing the SageMaker HyperPod cluster as an Amazon Web Services resource. You can add tags to your cluster in the same way you add them in other Amazon Web Services services that support tagging. To learn more about tagging Amazon Web Services resources in general, see Tagging Amazon Web Services Resources User Guide.
             orchestrator: The type of orchestrator to use for the SageMaker HyperPod cluster. Currently, the only supported value is "eks", which is to use an Amazon Elastic Kubernetes Service (EKS) cluster as the orchestrator.
@@ -3324,6 +3332,7 @@ class Cluster(Base):
         operation_input_args = {
             "ClusterName": cluster_name,
             "InstanceGroups": instance_groups,
+            "RestrictedInstanceGroups": restricted_instance_groups,
             "VpcConfig": vpc_config,
             "Tags": tags,
             "Orchestrator": orchestrator,
@@ -3438,6 +3447,9 @@ class Cluster(Base):
     def update(
         self,
         instance_groups: Optional[List[shapes.ClusterInstanceGroupSpecification]] = Unassigned(),
+        restricted_instance_groups: Optional[
+            List[shapes.ClusterRestrictedInstanceGroupSpecification]
+        ] = Unassigned(),
         node_recovery: Optional[str] = Unassigned(),
         instance_groups_to_delete: Optional[List[str]] = Unassigned(),
     ) -> Optional["Cluster"]:
@@ -3471,6 +3483,7 @@ class Cluster(Base):
         operation_input_args = {
             "ClusterName": self.cluster_name,
             "InstanceGroups": instance_groups,
+            "RestrictedInstanceGroups": restricted_instance_groups,
             "NodeRecovery": node_recovery,
             "InstanceGroupsToDelete": instance_groups_to_delete,
         }
@@ -3717,7 +3730,7 @@ class Cluster(Base):
     @Base.add_validate_call
     def get_node(
         self,
-        node_id: str,
+        node_id: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[shapes.ClusterNodeDetails]:
@@ -3879,7 +3892,7 @@ class Cluster(Base):
     @Base.add_validate_call
     def batch_delete_nodes(
         self,
-        node_ids: List[str],
+        node_ids: Optional[List[str]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[shapes.BatchDeleteClusterNodesResponse]:
@@ -7423,8 +7436,8 @@ class Domain(Base):
             auth_mode: The mode of authentication that members use to access the domain.
             default_user_settings: The default settings to use to create a user profile when UserSettings isn't specified in the call to the CreateUserProfile API.  SecurityGroups is aggregated when specified in both calls. For all other settings in UserSettings, the values specified in CreateUserProfile take precedence over those specified in CreateDomain.
             domain_settings: A collection of Domain settings.
-            subnet_ids: The VPC subnets that the domain uses for communication.
-            vpc_id: The ID of the Amazon Virtual Private Cloud (VPC) that the domain uses for communication.
+            subnet_ids: The VPC subnets that the domain uses for communication. The field is optional when the AppNetworkAccessType parameter is set to PublicInternetOnly for domains created from Amazon SageMaker Unified Studio.
+            vpc_id: The ID of the Amazon Virtual Private Cloud (VPC) that the domain uses for communication. The field is optional when the AppNetworkAccessType parameter is set to PublicInternetOnly for domains created from Amazon SageMaker Unified Studio.
             tags: Tags to associated with the Domain. Each tag consists of a key and an optional value. Tag keys must be unique per resource. Tags are searchable using the Search API. Tags that you specify for the Domain are also added to all Apps that the Domain launches.
             app_network_access_type: Specifies the VPC used for non-EFS traffic. The default value is PublicInternetOnly.    PublicInternetOnly - Non-EFS traffic is through a VPC managed by Amazon SageMaker AI, which allows direct internet access    VpcOnly - All traffic is through the specified VPC and subnets
             home_efs_file_system_kms_key_id: Use KmsKeyId.
@@ -24538,6 +24551,8 @@ class Pipeline(Base):
         created_by:
         last_modified_by:
         parallelism_configuration: Lists the parallelism configuration applied to the pipeline.
+        pipeline_version_display_name: The display name of the pipeline version.
+        pipeline_version_description: The description of the pipeline version.
 
     """
 
@@ -24554,6 +24569,8 @@ class Pipeline(Base):
     created_by: Optional[shapes.UserContext] = Unassigned()
     last_modified_by: Optional[shapes.UserContext] = Unassigned()
     parallelism_configuration: Optional[shapes.ParallelismConfiguration] = Unassigned()
+    pipeline_version_display_name: Optional[str] = Unassigned()
+    pipeline_version_description: Optional[str] = Unassigned()
 
     def get_name(self) -> str:
         attributes = vars(self)
@@ -24677,6 +24694,7 @@ class Pipeline(Base):
     def get(
         cls,
         pipeline_name: str,
+        pipeline_version_id: Optional[int] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["Pipeline"]:
@@ -24685,6 +24703,7 @@ class Pipeline(Base):
 
         Parameters:
             pipeline_name: The name or Amazon Resource Name (ARN) of the pipeline to describe.
+            pipeline_version_id: The ID of the pipeline version to describe.
             session: Boto3 session.
             region: Region name.
 
@@ -24706,6 +24725,7 @@ class Pipeline(Base):
 
         operation_input_args = {
             "PipelineName": pipeline_name,
+            "PipelineVersionId": pipeline_version_id,
         }
         # serialize the input request
         operation_input_args = serialize(operation_input_args)
@@ -24726,6 +24746,7 @@ class Pipeline(Base):
     @Base.add_validate_call
     def refresh(
         self,
+        pipeline_version_id: Optional[int] = Unassigned(),
     ) -> Optional["Pipeline"]:
         """
         Refresh a Pipeline resource
@@ -24748,6 +24769,7 @@ class Pipeline(Base):
 
         operation_input_args = {
             "PipelineName": self.pipeline_name,
+            "PipelineVersionId": pipeline_version_id,
         }
         # serialize the input request
         operation_input_args = serialize(operation_input_args)
@@ -25053,6 +25075,7 @@ class PipelineExecution(Base):
         last_modified_by:
         parallelism_configuration: The parallelism configuration applied to the pipeline.
         selective_execution_config: The selective execution configuration applied to the pipeline run.
+        pipeline_version_id: The ID of the pipeline version.
 
     """
 
@@ -25069,6 +25092,7 @@ class PipelineExecution(Base):
     last_modified_by: Optional[shapes.UserContext] = Unassigned()
     parallelism_configuration: Optional[shapes.ParallelismConfiguration] = Unassigned()
     selective_execution_config: Optional[shapes.SelectiveExecutionConfig] = Unassigned()
+    pipeline_version_id: Optional[int] = Unassigned()
 
     def get_name(self) -> str:
         attributes = vars(self)
@@ -27061,13 +27085,6 @@ class SagemakerServicecatalogPortfolio(Base):
         logger.debug(f"Response: {response}")
 
         return list(response.values())[0]
-
-
-class Session(Base):
-    """
-    Class representing resource Session
-
-    """
 
 
 class Space(Base):
@@ -31244,6 +31261,7 @@ class Workforce(Base):
         source_ip_config: Optional[shapes.SourceIpConfig] = Unassigned(),
         tags: Optional[List[shapes.Tag]] = Unassigned(),
         workforce_vpc_config: Optional[shapes.WorkforceVpcConfigRequest] = Unassigned(),
+        ip_address_type: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["Workforce"]:
@@ -31257,6 +31275,7 @@ class Workforce(Base):
             source_ip_config:
             tags: An array of key-value pairs that contain metadata to help you categorize and organize our workforce. Each tag consists of a key and a value, both of which you define.
             workforce_vpc_config: Use this parameter to configure a workforce using VPC.
+            ip_address_type: Use this parameter to specify whether you want IPv4 only or dualstack (IPv4 and IPv6) to support your labeling workforce.
             session: Boto3 session.
             region: Region name.
 
@@ -31290,6 +31309,7 @@ class Workforce(Base):
             "WorkforceName": workforce_name,
             "Tags": tags,
             "WorkforceVpcConfig": workforce_vpc_config,
+            "IpAddressType": ip_address_type,
         }
 
         operation_input_args = Base.populate_chained_attributes(
@@ -31400,6 +31420,7 @@ class Workforce(Base):
         source_ip_config: Optional[shapes.SourceIpConfig] = Unassigned(),
         oidc_config: Optional[shapes.OidcConfig] = Unassigned(),
         workforce_vpc_config: Optional[shapes.WorkforceVpcConfigRequest] = Unassigned(),
+        ip_address_type: Optional[str] = Unassigned(),
     ) -> Optional["Workforce"]:
         """
         Update a Workforce resource
@@ -31408,6 +31429,7 @@ class Workforce(Base):
             source_ip_config: A list of one to ten worker IP address ranges (CIDRs) that can be used to access tasks assigned to this workforce. Maximum: Ten CIDR values
             oidc_config: Use this parameter to update your OIDC Identity Provider (IdP) configuration for a workforce made using your own IdP.
             workforce_vpc_config: Use this parameter to update your VPC configuration for a workforce.
+            ip_address_type: Use this parameter to specify whether you want IPv4 only or dualstack (IPv4 and IPv6) to support your labeling workforce.
 
         Returns:
             The Workforce resource.
@@ -31433,6 +31455,7 @@ class Workforce(Base):
             "SourceIpConfig": source_ip_config,
             "OidcConfig": oidc_config,
             "WorkforceVpcConfig": workforce_vpc_config,
+            "IpAddressType": ip_address_type,
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
