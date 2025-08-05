@@ -5045,7 +5045,7 @@ class UnifiedStudioSettings(Base):
     project_id: The ID of the Amazon SageMaker Unified Studio project that corresponds to the domain.
     environment_id: The ID of the environment that Amazon SageMaker Unified Studio associates with the domain.
     project_s3_path: The location where Amazon S3 stores temporary execution data and other artifacts for the project that corresponds to the domain.
-    single_sign_on_application_arn: The ARN of the application managed by SageMaker AI and SageMaker Unified Studio in the Amazon Web Services IAM Identity Center.
+    single_sign_on_application_arn: The ARN of the Amazon DataZone application managed by Amazon SageMaker Unified Studio in the Amazon Web Services IAM Identity Center.
     """
 
     studio_web_portal_access: Optional[str] = Unassigned()
