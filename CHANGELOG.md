@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.0.48 (2025-08-05)
+
+ * Daily Sync with Botocore v1.40.2 on 2025/08/05 (#326)
+ * Update Rich logging to be enabled only when required. (#325)
+
 ## v1.0.47 (2025-07-23)
 
  * Update boto3 version constraint (#324)
