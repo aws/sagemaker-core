@@ -413,6 +413,25 @@ SHAPE_DAG = {
         ],
         "type": "structure",
     },
+    "AttachClusterNodeVolumeRequest": {
+        "members": [
+            {"name": "ClusterArn", "shape": "ClusterArn", "type": "string"},
+            {"name": "NodeId", "shape": "ClusterNodeId", "type": "string"},
+            {"name": "VolumeId", "shape": "VolumeId", "type": "string"},
+        ],
+        "type": "structure",
+    },
+    "AttachClusterNodeVolumeResponse": {
+        "members": [
+            {"name": "ClusterArn", "shape": "ClusterArn", "type": "string"},
+            {"name": "NodeId", "shape": "ClusterNodeId", "type": "string"},
+            {"name": "VolumeId", "shape": "VolumeId", "type": "string"},
+            {"name": "AttachTime", "shape": "Timestamp", "type": "timestamp"},
+            {"name": "Status", "shape": "VolumeAttachmentStatus", "type": "string"},
+            {"name": "DeviceName", "shape": "VolumeDeviceName", "type": "string"},
+        ],
+        "type": "structure",
+    },
     "AttributeNames": {"member_shape": "AttributeName", "member_type": "string", "type": "list"},
     "AuthenticationRequestExtraParams": {
         "key_shape": "AuthenticationRequestExtraParamsKey",
@@ -6261,6 +6280,25 @@ SHAPE_DAG = {
         "member_shape": "DesiredWeightAndCapacity",
         "member_type": "structure",
         "type": "list",
+    },
+    "DetachClusterNodeVolumeRequest": {
+        "members": [
+            {"name": "ClusterArn", "shape": "ClusterArn", "type": "string"},
+            {"name": "NodeId", "shape": "ClusterNodeId", "type": "string"},
+            {"name": "VolumeId", "shape": "VolumeId", "type": "string"},
+        ],
+        "type": "structure",
+    },
+    "DetachClusterNodeVolumeResponse": {
+        "members": [
+            {"name": "ClusterArn", "shape": "ClusterArn", "type": "string"},
+            {"name": "NodeId", "shape": "ClusterNodeId", "type": "string"},
+            {"name": "VolumeId", "shape": "VolumeId", "type": "string"},
+            {"name": "AttachTime", "shape": "Timestamp", "type": "timestamp"},
+            {"name": "Status", "shape": "VolumeAttachmentStatus", "type": "string"},
+            {"name": "DeviceName", "shape": "VolumeDeviceName", "type": "string"},
+        ],
+        "type": "structure",
     },
     "Device": {
         "members": [
