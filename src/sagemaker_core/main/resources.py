@@ -3223,6 +3223,7 @@ class Cluster(Base):
         vpc_config:
         orchestrator: The type of orchestrator used for the SageMaker HyperPod cluster.
         node_recovery: The node recovery mode configured for the SageMaker HyperPod cluster.
+        node_provisioning_mode: The mode used for provisioning nodes in the cluster.
 
     """
 
@@ -3238,6 +3239,7 @@ class Cluster(Base):
     vpc_config: Optional[shapes.VpcConfig] = Unassigned()
     orchestrator: Optional[shapes.ClusterOrchestrator] = Unassigned()
     node_recovery: Optional[str] = Unassigned()
+    node_provisioning_mode: Optional[str] = Unassigned()
 
     def get_name(self) -> str:
         attributes = vars(self)
@@ -3287,6 +3289,7 @@ class Cluster(Base):
         tags: Optional[List[shapes.Tag]] = Unassigned(),
         orchestrator: Optional[shapes.ClusterOrchestrator] = Unassigned(),
         node_recovery: Optional[str] = Unassigned(),
+        node_provisioning_mode: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["Cluster"]:
@@ -3301,6 +3304,7 @@ class Cluster(Base):
             tags: Custom tags for managing the SageMaker HyperPod cluster as an Amazon Web Services resource. You can add tags to your cluster in the same way you add them in other Amazon Web Services services that support tagging. To learn more about tagging Amazon Web Services resources in general, see Tagging Amazon Web Services Resources User Guide.
             orchestrator: The type of orchestrator to use for the SageMaker HyperPod cluster. Currently, the only supported value is "eks", which is to use an Amazon Elastic Kubernetes Service (EKS) cluster as the orchestrator.
             node_recovery: The node recovery mode for the SageMaker HyperPod cluster. When set to Automatic, SageMaker HyperPod will automatically reboot or replace faulty nodes when issues are detected. When set to None, cluster administrators will need to manually manage any faulty cluster instances.
+            node_provisioning_mode: The mode for provisioning nodes in the cluster. You can specify the following modes:    Continuous: Scaling behavior that enables 1) concurrent operation execution within instance groups, 2) continuous retry mechanisms for failed operations, 3) enhanced customer visibility into cluster events through detailed event streams, 4) partial provisioning capabilities. Your clusters and instance groups remain InService while scaling. This mode is only supported for EKS orchestrated clusters.
             session: Boto3 session.
             region: Region name.
 
@@ -3337,6 +3341,7 @@ class Cluster(Base):
             "Tags": tags,
             "Orchestrator": orchestrator,
             "NodeRecovery": node_recovery,
+            "NodeProvisioningMode": node_provisioning_mode,
         }
 
         operation_input_args = Base.populate_chained_attributes(
@@ -3731,6 +3736,7 @@ class Cluster(Base):
     def get_node(
         self,
         node_id: Optional[str] = Unassigned(),
+        node_logical_id: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[shapes.ClusterNodeDetails]:
@@ -3739,6 +3745,7 @@ class Cluster(Base):
 
         Parameters:
             node_id: The ID of the SageMaker HyperPod cluster node.
+            node_logical_id: The logical identifier of the node to describe. You can specify either NodeLogicalId or InstanceId, but not both. NodeLogicalId can be used to describe nodes that are still being provisioned and don't yet have an InstanceId assigned.
             session: Boto3 session.
             region: Region name.
 
@@ -3761,6 +3768,7 @@ class Cluster(Base):
         operation_input_args = {
             "ClusterName": self.cluster_name,
             "NodeId": node_id,
+            "NodeLogicalId": node_logical_id,
         }
         # serialize the input request
         operation_input_args = serialize(operation_input_args)
@@ -3785,6 +3793,7 @@ class Cluster(Base):
         instance_group_name_contains: Optional[str] = Unassigned(),
         sort_by: Optional[str] = Unassigned(),
         sort_order: Optional[str] = Unassigned(),
+        include_node_logical_ids: Optional[bool] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> ResourceIterator[shapes.ClusterNodeDetails]:
@@ -3799,6 +3808,7 @@ class Cluster(Base):
             next_token: If the result of the previous ListClusterNodes request was truncated, the response includes a NextToken. To retrieve the next set of cluster nodes, use the token in the next request.
             sort_by: The field by which to sort results. The default value is CREATION_TIME.
             sort_order: The sort order for results. The default value is Ascending.
+            include_node_logical_ids: Specifies whether to include nodes that are still being provisioned in the response. When set to true, the response includes all nodes regardless of their provisioning status. When set to False (default), only nodes with assigned InstanceIds are returned.
             session: Boto3 session.
             region: Region name.
 
@@ -3825,6 +3835,7 @@ class Cluster(Base):
             "InstanceGroupNameContains": instance_group_name_contains,
             "SortBy": sort_by,
             "SortOrder": sort_order,
+            "IncludeNodeLogicalIds": include_node_logical_ids,
         }
         # serialize the input request
         operation_input_args = serialize(operation_input_args)
@@ -3847,6 +3858,7 @@ class Cluster(Base):
     def update_software(
         self,
         deployment_config: Optional[shapes.DeploymentConfiguration] = Unassigned(),
+        image_id: Optional[str] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> None:
@@ -3855,6 +3867,7 @@ class Cluster(Base):
 
         Parameters:
             deployment_config: The configuration to use when updating the AMI versions.
+            image_id: When configuring your HyperPod cluster, you can specify an image ID using one of the following options:    HyperPodPublicAmiId: Use a HyperPod public AMI    CustomAmiId: Use your custom AMI    default: Use the default latest system image   f you choose to use a custom AMI (CustomAmiId), ensure it meets the following requirements:   Encryption: The custom AMI must be unencrypted.   Ownership: The custom AMI must be owned by the same Amazon Web Services account that is creating the HyperPod cluster.   Volume support: Only the primary AMI snapshot volume is supported; additional AMI volumes are not supported.   When updating the instance group's AMI through the UpdateClusterSoftware operation, if an instance group uses a custom AMI, you must provide an ImageId or use the default as input.
             session: Boto3 session.
             region: Region name.
 
@@ -3876,6 +3889,7 @@ class Cluster(Base):
             "ClusterName": self.cluster_name,
             "InstanceGroups": self.instance_groups,
             "DeploymentConfig": deployment_config,
+            "ImageId": image_id,
         }
         # serialize the input request
         operation_input_args = serialize(operation_input_args)
@@ -3893,6 +3907,7 @@ class Cluster(Base):
     def batch_delete_nodes(
         self,
         node_ids: Optional[List[str]] = Unassigned(),
+        node_logical_ids: Optional[List[str]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional[shapes.BatchDeleteClusterNodesResponse]:
@@ -3901,6 +3916,7 @@ class Cluster(Base):
 
         Parameters:
             node_ids: A list of node IDs to be deleted from the specified cluster.    For SageMaker HyperPod clusters using the Slurm workload manager, you cannot remove instances that are configured as Slurm controller nodes.   If you need to delete more than 99 instances, contact Support for assistance.
+            node_logical_ids: A list of NodeLogicalIds identifying the nodes to be deleted. You can specify up to 50 NodeLogicalIds. You must specify either NodeLogicalIds, InstanceIds, or both, with a combined maximum of 50 identifiers.
             session: Boto3 session.
             region: Region name.
 
@@ -3923,6 +3939,7 @@ class Cluster(Base):
         operation_input_args = {
             "ClusterName": self.cluster_name,
             "NodeIds": node_ids,
+            "NodeLogicalIds": node_logical_ids,
         }
         # serialize the input request
         operation_input_args = serialize(operation_input_args)

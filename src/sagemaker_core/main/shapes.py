@@ -494,6 +494,21 @@ class ActionSummary(Base):
     last_modified_time: Optional[datetime.datetime] = Unassigned()
 
 
+class AddClusterNodeSpecification(Base):
+    """
+    AddClusterNodeSpecification
+      Specifies an instance group and the number of nodes to add to it.
+
+    Attributes
+    ----------------------
+    instance_group_name: The name of the instance group to which you want to add nodes.
+    increment_target_count_by: The number of nodes to add to the specified instance group. The total number of nodes across all instance groups in a single request cannot exceed 50.
+    """
+
+    instance_group_name: str
+    increment_target_count_by: int
+
+
 class Tag(Base):
     """
     Tag
@@ -507,6 +522,19 @@ class Tag(Base):
 
     key: str
     value: str
+
+
+class AdditionalEnis(Base):
+    """
+    AdditionalEnis
+      Information about additional Elastic Network Interfaces (ENIs) associated with an instance.
+
+    Attributes
+    ----------------------
+    efa_enis: A list of Elastic Fabric Adapter (EFA) ENIs associated with the instance.
+    """
+
+    efa_enis: Optional[List[str]] = Unassigned()
 
 
 class ModelAccessConfig(Base):
@@ -2400,6 +2428,42 @@ class Autotune(Base):
     mode: str
 
 
+class BatchAddClusterNodesError(Base):
+    """
+    BatchAddClusterNodesError
+      Information about an error that occurred during the node addition operation.
+
+    Attributes
+    ----------------------
+    instance_group_name: The name of the instance group for which the error occurred.
+    error_code: The error code associated with the failure. Possible values include InstanceGroupNotFound and InvalidInstanceGroupState.
+    failed_count: The number of nodes that failed to be added to the specified instance group.
+    message: A descriptive message providing additional details about the error.
+    """
+
+    instance_group_name: str
+    error_code: str
+    failed_count: int
+    message: Optional[str] = Unassigned()
+
+
+class NodeAdditionResult(Base):
+    """
+    NodeAdditionResult
+      Information about a node that was successfully added to the cluster.
+
+    Attributes
+    ----------------------
+    node_logical_id: A unique identifier assigned to the node that can be used to track its provisioning status through the DescribeClusterNode operation.
+    instance_group_name: The name of the instance group to which the node was added.
+    status: The current status of the node. Possible values include Pending, Running, Failed, ShuttingDown, SystemUpdating, DeepHealthCheckInProgress, and NotFound.
+    """
+
+    node_logical_id: str
+    instance_group_name: str
+    status: str
+
+
 class BatchDataCaptureConfig(Base):
     """
     BatchDataCaptureConfig
@@ -2415,6 +2479,23 @@ class BatchDataCaptureConfig(Base):
     destination_s3_uri: str
     kms_key_id: Optional[str] = Unassigned()
     generate_inference_id: Optional[bool] = Unassigned()
+
+
+class BatchDeleteClusterNodeLogicalIdsError(Base):
+    """
+    BatchDeleteClusterNodeLogicalIdsError
+      Information about an error that occurred when attempting to delete a node identified by its NodeLogicalId.
+
+    Attributes
+    ----------------------
+    code: The error code associated with the failure. Possible values include NodeLogicalIdNotFound, InvalidNodeStatus, and InternalError.
+    message: A descriptive message providing additional details about the error.
+    node_logical_id: The NodeLogicalId of the node that could not be deleted.
+    """
+
+    code: str
+    message: str
+    node_logical_id: str
 
 
 class BatchDeleteClusterNodesError(Base):
@@ -2442,10 +2523,14 @@ class BatchDeleteClusterNodesResponse(Base):
     ----------------------
     failed: A list of errors encountered when deleting the specified nodes.
     successful: A list of node IDs that were successfully deleted from the specified cluster.
+    failed_node_logical_ids: A list of NodeLogicalIds that could not be deleted, along with error information explaining why the deletion failed.
+    successful_node_logical_ids: A list of NodeLogicalIds that were successfully deleted from the cluster.
     """
 
     failed: Optional[List[BatchDeleteClusterNodesError]] = Unassigned()
     successful: Optional[List[str]] = Unassigned()
+    failed_node_logical_ids: Optional[List[BatchDeleteClusterNodeLogicalIdsError]] = Unassigned()
+    successful_node_logical_ids: Optional[List[str]] = Unassigned()
 
 
 class BatchDescribeModelPackageError(Base):
@@ -2901,6 +2986,21 @@ class CanvasAppSettings(Base):
     emr_serverless_settings: Optional[EmrServerlessSettings] = Unassigned()
 
 
+class CapacityReservation(Base):
+    """
+    CapacityReservation
+      Information about the Capacity Reservation used by an instance or instance group.
+
+    Attributes
+    ----------------------
+    arn: The Amazon Resource Name (ARN) of the Capacity Reservation.
+    type: The type of Capacity Reservation. Valid values are ODCR (On-Demand Capacity Reservation) or CRG (Capacity Reservation Group).
+    """
+
+    arn: Optional[str] = Unassigned()
+    type: Optional[str] = Unassigned()
+
+
 class CapacitySizeConfig(Base):
     """
     CapacitySizeConfig
@@ -3287,6 +3387,174 @@ class ClusterEbsVolumeConfig(Base):
     volume_size_in_gb: Optional[int] = Unassigned()
 
 
+class ClusterMetadata(Base):
+    """
+    ClusterMetadata
+      Metadata information about a SageMaker HyperPod cluster showing information about the cluster level operations, such as creating, updating, and deleting.
+
+    Attributes
+    ----------------------
+    failure_message: An error message describing why the cluster level operation (such as creating, updating, or deleting) failed.
+    eks_role_access_entries: A list of Amazon EKS IAM role ARNs associated with the cluster. This is created by SageMaker HyperPod on your behalf and only applies for EKS-orchestrated clusters.
+    slr_access_entry: The Service-Linked Role (SLR) associated with the cluster. This is created by SageMaker HyperPod on your behalf and only applies for EKS-orchestrated clusters.
+    """
+
+    failure_message: Optional[str] = Unassigned()
+    eks_role_access_entries: Optional[List[str]] = Unassigned()
+    slr_access_entry: Optional[str] = Unassigned()
+
+
+class InstanceGroupMetadata(Base):
+    """
+    InstanceGroupMetadata
+      Metadata information about an instance group in a SageMaker HyperPod cluster.
+
+    Attributes
+    ----------------------
+    failure_message: An error message describing why the instance group level operation (such as creating, scaling, or deleting) failed.
+    availability_zone_id: The ID of the Availability Zone where the instance group is located.
+    capacity_reservation: Information about the Capacity Reservation used by the instance group.
+    subnet_id: The ID of the subnet where the instance group is located.
+    security_group_ids: A list of security group IDs associated with the instance group.
+    ami_override: If you use a custom Amazon Machine Image (AMI) for the instance group, this field shows the ID of the custom AMI.
+    """
+
+    failure_message: Optional[str] = Unassigned()
+    availability_zone_id: Optional[str] = Unassigned()
+    capacity_reservation: Optional[CapacityReservation] = Unassigned()
+    subnet_id: Optional[str] = Unassigned()
+    security_group_ids: Optional[List[str]] = Unassigned()
+    ami_override: Optional[str] = Unassigned()
+
+
+class InstanceGroupScalingMetadata(Base):
+    """
+    InstanceGroupScalingMetadata
+      Metadata information about scaling operations for an instance group.
+
+    Attributes
+    ----------------------
+    instance_count: The current number of instances in the group.
+    target_count: The desired number of instances for the group after scaling.
+    failure_message: An error message describing why the scaling operation failed, if applicable.
+    """
+
+    instance_count: Optional[int] = Unassigned()
+    target_count: Optional[int] = Unassigned()
+    failure_message: Optional[str] = Unassigned()
+
+
+class InstanceMetadata(Base):
+    """
+    InstanceMetadata
+      Metadata information about an instance in a HyperPod cluster.
+
+    Attributes
+    ----------------------
+    customer_eni: The ID of the customer-managed Elastic Network Interface (ENI) associated with the instance.
+    additional_enis: Information about additional Elastic Network Interfaces (ENIs) associated with the instance.
+    capacity_reservation: Information about the Capacity Reservation used by the instance.
+    failure_message: An error message describing why the instance creation or update failed, if applicable.
+    lcs_execution_state: The execution state of the Lifecycle Script (LCS) for the instance.
+    node_logical_id: The unique logical identifier of the node within the cluster. The ID used here is the same object as in the BatchAddClusterNodes API.
+    """
+
+    customer_eni: Optional[str] = Unassigned()
+    additional_enis: Optional[AdditionalEnis] = Unassigned()
+    capacity_reservation: Optional[CapacityReservation] = Unassigned()
+    failure_message: Optional[str] = Unassigned()
+    lcs_execution_state: Optional[str] = Unassigned()
+    node_logical_id: Optional[str] = Unassigned()
+
+
+class EventMetadata(Base):
+    """
+    EventMetadata
+      Metadata associated with a cluster event, which may include details about various resource types.
+
+    Attributes
+    ----------------------
+    cluster: Metadata specific to cluster-level events.
+    instance_group: Metadata specific to instance group-level events.
+    instance_group_scaling: Metadata related to instance group scaling events.
+    instance: Metadata specific to instance-level events.
+    """
+
+    cluster: Optional[ClusterMetadata] = Unassigned()
+    instance_group: Optional[InstanceGroupMetadata] = Unassigned()
+    instance_group_scaling: Optional[InstanceGroupScalingMetadata] = Unassigned()
+    instance: Optional[InstanceMetadata] = Unassigned()
+
+
+class EventDetails(Base):
+    """
+    EventDetails
+      Detailed information about a specific event, including event metadata.
+
+    Attributes
+    ----------------------
+    event_metadata: Metadata specific to the event, which may include information about the cluster, instance group, or instance involved.
+    """
+
+    event_metadata: Optional[EventMetadata] = Unassigned()
+
+
+class ClusterEventDetail(Base):
+    """
+    ClusterEventDetail
+      Detailed information about a specific event in a HyperPod cluster.
+
+    Attributes
+    ----------------------
+    event_id: The unique identifier (UUID) of the event.
+    cluster_arn: The Amazon Resource Name (ARN) of the SageMaker HyperPod cluster associated with the event.
+    cluster_name: The name of the SageMaker HyperPod cluster associated with the event.
+    instance_group_name: The name of the instance group associated with the event, if applicable.
+    instance_id: The EC2 instance ID associated with the event, if applicable.
+    resource_type: The type of resource associated with the event. Valid values are "Cluster", "InstanceGroup", or "Instance".
+    event_time: The timestamp when the event occurred.
+    event_details: Additional details about the event, including event-specific metadata.
+    description: A human-readable description of the event.
+    """
+
+    event_id: str
+    cluster_arn: str
+    cluster_name: Union[str, object]
+    resource_type: str
+    event_time: datetime.datetime
+    instance_group_name: Optional[str] = Unassigned()
+    instance_id: Optional[str] = Unassigned()
+    event_details: Optional[EventDetails] = Unassigned()
+    description: Optional[str] = Unassigned()
+
+
+class ClusterEventSummary(Base):
+    """
+    ClusterEventSummary
+      A summary of an event in a SageMaker HyperPod cluster.
+
+    Attributes
+    ----------------------
+    event_id: The unique identifier (UUID) of the event.
+    cluster_arn: The Amazon Resource Name (ARN) of the SageMaker HyperPod cluster associated with the event.
+    cluster_name: The name of the SageMaker HyperPod cluster associated with the event.
+    instance_group_name: The name of the instance group associated with the event, if applicable.
+    instance_id: The EC2 instance ID associated with the event, if applicable.
+    resource_type: The type of resource associated with the event. Valid values are "Cluster", "InstanceGroup", or "Instance".
+    event_time: The timestamp when the event occurred.
+    description: A brief, human-readable description of the event.
+    """
+
+    event_id: str
+    cluster_arn: str
+    cluster_name: Union[str, object]
+    resource_type: str
+    event_time: datetime.datetime
+    instance_group_name: Optional[str] = Unassigned()
+    instance_id: Optional[str] = Unassigned()
+    description: Optional[str] = Unassigned()
+
+
 class ClusterLifeCycleConfig(Base):
     """
     ClusterLifeCycleConfig
@@ -3383,6 +3651,8 @@ class ClusterInstanceGroupDetails(Base):
     training_plan_status: The current status of the training plan associated with this cluster instance group.
     override_vpc_config: The customized Amazon VPC configuration at the instance group level that overrides the default Amazon VPC configuration of the SageMaker HyperPod cluster.
     scheduled_update_config: The configuration object of the schedule that SageMaker follows when updating the AMI.
+    current_image_id: The ID of the Amazon Machine Image (AMI) currently in use by the instance group.
+    desired_image_id: The ID of the Amazon Machine Image (AMI) desired for the instance group.
     """
 
     current_count: Optional[int] = Unassigned()
@@ -3399,6 +3669,8 @@ class ClusterInstanceGroupDetails(Base):
     training_plan_status: Optional[str] = Unassigned()
     override_vpc_config: Optional[VpcConfig] = Unassigned()
     scheduled_update_config: Optional[ScheduledUpdateConfig] = Unassigned()
+    current_image_id: Optional[str] = Unassigned()
+    desired_image_id: Optional[str] = Unassigned()
 
 
 class ClusterInstanceGroupSpecification(Base):
@@ -3419,6 +3691,7 @@ class ClusterInstanceGroupSpecification(Base):
     training_plan_arn: The Amazon Resource Name (ARN); of the training plan to use for this cluster instance group. For more information about how to reserve GPU capacity for your SageMaker HyperPod clusters using Amazon SageMaker Training Plan, see  CreateTrainingPlan .
     override_vpc_config: To configure multi-AZ deployments, customize the Amazon VPC configuration at the instance group level. You can specify different subnets and security groups across different AZs in the instance group specification to override a SageMaker HyperPod cluster's default Amazon VPC configuration. For more information about deploying a cluster in multiple AZs, see Setting up SageMaker HyperPod clusters across multiple AZs.  When your Amazon VPC and subnets support IPv6, network communications differ based on the cluster orchestration platform:   Slurm-orchestrated clusters automatically configure nodes with dual IPv6 and IPv4 addresses, allowing immediate IPv6 network communications.   In Amazon EKS-orchestrated clusters, nodes receive dual-stack addressing, but pods can only use IPv6 when the Amazon EKS cluster is explicitly IPv6-enabled. For information about deploying an IPv6 Amazon EKS cluster, see Amazon EKS IPv6 Cluster Deployment.   Additional resources for IPv6 configuration:   For information about adding IPv6 support to your VPC, see to IPv6 Support for VPC.   For information about creating a new IPv6-compatible VPC, see Amazon VPC Creation Guide.   To configure SageMaker HyperPod with a custom Amazon VPC, see Custom Amazon VPC Setup for SageMaker HyperPod.
     scheduled_update_config: The configuration object of the schedule that SageMaker uses to update the AMI.
+    image_id: When configuring your HyperPod cluster, you can specify an image ID using one of the following options:    HyperPodPublicAmiId: Use a HyperPod public AMI    CustomAmiId: Use your custom AMI    default: Use the default latest system image   f you choose to use a custom AMI (CustomAmiId), ensure it meets the following requirements:   Encryption: The custom AMI must be unencrypted.   Ownership: The custom AMI must be owned by the same Amazon Web Services account that is creating the HyperPod cluster.   Volume support: Only the primary AMI snapshot volume is supported; additional AMI volumes are not supported.   When updating the instance group's AMI through the UpdateClusterSoftware operation, if an instance group uses a custom AMI, you must provide an ImageId or use the default as input.
     """
 
     instance_count: int
@@ -3432,6 +3705,7 @@ class ClusterInstanceGroupSpecification(Base):
     training_plan_arn: Optional[str] = Unassigned()
     override_vpc_config: Optional[VpcConfig] = Unassigned()
     scheduled_update_config: Optional[ScheduledUpdateConfig] = Unassigned()
+    image_id: Optional[str] = Unassigned()
 
 
 class ClusterInstancePlacement(Base):
@@ -3473,6 +3747,7 @@ class ClusterNodeDetails(Base):
     ----------------------
     instance_group_name: The instance group name in which the instance is.
     instance_id: The ID of the instance.
+    node_logical_id: A unique identifier for the node that persists throughout its lifecycle, from provisioning request to termination. This identifier can be used to track the node even before it has an assigned InstanceId.
     instance_status: The status of the instance.
     instance_type: The type of the instance.
     launch_time: The time when the instance is launched.
@@ -3485,10 +3760,13 @@ class ClusterNodeDetails(Base):
     private_primary_ipv6: The private primary IPv6 address of the SageMaker HyperPod cluster node when configured with an Amazon VPC that supports IPv6 and includes subnets with IPv6 addressing enabled in either the cluster Amazon VPC configuration or the instance group Amazon VPC configuration.
     private_dns_hostname: The private DNS hostname of the SageMaker HyperPod cluster node.
     placement: The placement details of the SageMaker HyperPod cluster node.
+    current_image_id: The ID of the Amazon Machine Image (AMI) currently in use by the node.
+    desired_image_id: The ID of the Amazon Machine Image (AMI) desired for the node.
     """
 
     instance_group_name: Optional[str] = Unassigned()
     instance_id: Optional[str] = Unassigned()
+    node_logical_id: Optional[str] = Unassigned()
     instance_status: Optional[ClusterInstanceStatusDetails] = Unassigned()
     instance_type: Optional[str] = Unassigned()
     launch_time: Optional[datetime.datetime] = Unassigned()
@@ -3501,6 +3779,8 @@ class ClusterNodeDetails(Base):
     private_primary_ipv6: Optional[str] = Unassigned()
     private_dns_hostname: Optional[str] = Unassigned()
     placement: Optional[ClusterInstancePlacement] = Unassigned()
+    current_image_id: Optional[str] = Unassigned()
+    desired_image_id: Optional[str] = Unassigned()
 
 
 class ClusterNodeSummary(Base):
@@ -3512,6 +3792,7 @@ class ClusterNodeSummary(Base):
     ----------------------
     instance_group_name: The name of the instance group in which the instance is.
     instance_id: The ID of the instance.
+    node_logical_id: A unique identifier for the node that persists throughout its lifecycle, from provisioning request to termination. This identifier can be used to track the node even before it has an assigned InstanceId. This field is only included when IncludeNodeLogicalIds is set to True in the ListClusterNodes request.
     instance_type: The type of the instance.
     launch_time: The time when the instance is launched.
     last_software_update_time: The time when SageMaker last updated the software of the instances in the cluster.
@@ -3523,6 +3804,7 @@ class ClusterNodeSummary(Base):
     instance_type: str
     launch_time: datetime.datetime
     instance_status: ClusterInstanceStatusDetails
+    node_logical_id: Optional[str] = Unassigned()
     last_software_update_time: Optional[datetime.datetime] = Unassigned()
 
 

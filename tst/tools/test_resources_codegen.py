@@ -1254,6 +1254,7 @@ def get_all(
 def get_node(
     self,
     node_id: Optional[str] = Unassigned(),
+    node_logical_id: Optional[str] = Unassigned(),
     session: Optional[Session] = None,
     region: Optional[str] = None,
 ) -> Optional[shapes.ClusterNodeDetails]:
@@ -1262,6 +1263,7 @@ def get_node(
     
     Parameters:
         node_id: The ID of the SageMaker HyperPod cluster node.
+        node_logical_id: The logical identifier of the node to describe. You can specify either NodeLogicalId or InstanceId, but not both. NodeLogicalId can be used to describe nodes that are still being provisioned and don't yet have an InstanceId assigned.
         session: Boto3 session.
         region: Region name.
     
@@ -1285,6 +1287,7 @@ def get_node(
     operation_input_args = {
         'ClusterName': self.cluster_name,
         'NodeId': node_id,
+        'NodeLogicalId': node_logical_id,
     }
     # serialize the input request
     operation_input_args = serialize(operation_input_args)
