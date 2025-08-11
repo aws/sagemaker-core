@@ -3302,7 +3302,7 @@ class Cluster(Base):
             restricted_instance_groups: The specialized instance groups for training models like Amazon Nova to be created in the SageMaker HyperPod cluster.
             vpc_config: Specifies the Amazon Virtual Private Cloud (VPC) that is associated with the Amazon SageMaker HyperPod cluster. You can control access to and from your resources by configuring your VPC. For more information, see Give SageMaker access to resources in your Amazon VPC.  When your Amazon VPC and subnets support IPv6, network communications differ based on the cluster orchestration platform:   Slurm-orchestrated clusters automatically configure nodes with dual IPv6 and IPv4 addresses, allowing immediate IPv6 network communications.   In Amazon EKS-orchestrated clusters, nodes receive dual-stack addressing, but pods can only use IPv6 when the Amazon EKS cluster is explicitly IPv6-enabled. For information about deploying an IPv6 Amazon EKS cluster, see Amazon EKS IPv6 Cluster Deployment.   Additional resources for IPv6 configuration:   For information about adding IPv6 support to your VPC, see to IPv6 Support for VPC.   For information about creating a new IPv6-compatible VPC, see Amazon VPC Creation Guide.   To configure SageMaker HyperPod with a custom Amazon VPC, see Custom Amazon VPC Setup for SageMaker HyperPod.
             tags: Custom tags for managing the SageMaker HyperPod cluster as an Amazon Web Services resource. You can add tags to your cluster in the same way you add them in other Amazon Web Services services that support tagging. To learn more about tagging Amazon Web Services resources in general, see Tagging Amazon Web Services Resources User Guide.
-            orchestrator: The type of orchestrator to use for the SageMaker HyperPod cluster. Currently, the only supported value is "eks", which is to use an Amazon Elastic Kubernetes Service (EKS) cluster as the orchestrator.
+            orchestrator: The type of orchestrator to use for the SageMaker HyperPod cluster. Currently, the only supported value is "eks", which is to use an Amazon Elastic Kubernetes Service cluster as the orchestrator.
             node_recovery: The node recovery mode for the SageMaker HyperPod cluster. When set to Automatic, SageMaker HyperPod will automatically reboot or replace faulty nodes when issues are detected. When set to None, cluster administrators will need to manually manage any faulty cluster instances.
             node_provisioning_mode: The mode for provisioning nodes in the cluster. You can specify the following modes:    Continuous: Scaling behavior that enables 1) concurrent operation execution within instance groups, 2) continuous retry mechanisms for failed operations, 3) enhanced customer visibility into cluster events through detailed event streams, 4) partial provisioning capabilities. Your clusters and instance groups remain InService while scaling. This mode is only supported for EKS orchestrated clusters.
             session: Boto3 session.
@@ -28891,6 +28891,9 @@ class TrainingPlan(Base):
         total_instance_count: The total number of instances reserved in this training plan.
         available_instance_count: The number of instances currently available for use in this training plan.
         in_use_instance_count: The number of instances currently in use from this training plan.
+        unhealthy_instance_count: The number of instances in the training plan that are currently in an unhealthy state.
+        available_spare_instance_count: The number of available spare instances in the training plan.
+        total_ultra_server_count: The total number of UltraServers reserved to this training plan.
         target_resources: The target resources (e.g., SageMaker Training Jobs, SageMaker HyperPod) that can use this training plan. Training plans are specific to their target resource.   A training plan designed for SageMaker training jobs can only be used to schedule and run training jobs.   A training plan for HyperPod clusters can be used exclusively to provide compute resources to a cluster's instance group.
         reserved_capacity_summaries: The list of Reserved Capacity providing the underlying compute resources of the plan.
 
@@ -28909,6 +28912,9 @@ class TrainingPlan(Base):
     total_instance_count: Optional[int] = Unassigned()
     available_instance_count: Optional[int] = Unassigned()
     in_use_instance_count: Optional[int] = Unassigned()
+    unhealthy_instance_count: Optional[int] = Unassigned()
+    available_spare_instance_count: Optional[int] = Unassigned()
+    total_ultra_server_count: Optional[int] = Unassigned()
     target_resources: Optional[List[str]] = Unassigned()
     reserved_capacity_summaries: Optional[List[shapes.ReservedCapacitySummary]] = Unassigned()
 
@@ -28934,6 +28940,7 @@ class TrainingPlan(Base):
         cls,
         training_plan_name: str,
         training_plan_offering_id: str,
+        spare_instance_count_per_ultra_server: Optional[int] = Unassigned(),
         tags: Optional[List[shapes.Tag]] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
@@ -28944,6 +28951,7 @@ class TrainingPlan(Base):
         Parameters:
             training_plan_name: The name of the training plan to create.
             training_plan_offering_id: The unique identifier of the training plan offering to use for creating this plan.
+            spare_instance_count_per_ultra_server: Number of spare instances to reserve per UltraServer for enhanced resiliency. Default is 1.
             tags: An array of key-value pairs to apply to this training plan.
             session: Boto3 session.
             region: Region name.
@@ -28977,6 +28985,7 @@ class TrainingPlan(Base):
         operation_input_args = {
             "TrainingPlanName": training_plan_name,
             "TrainingPlanOfferingId": training_plan_offering_id,
+            "SpareInstanceCountPerUltraServer": spare_instance_count_per_ultra_server,
             "Tags": tags,
         }
 

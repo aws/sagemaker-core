@@ -1020,6 +1020,36 @@ class InstanceGroup(Base):
     instance_group_name: str
 
 
+class PlacementSpecification(Base):
+    """
+    PlacementSpecification
+      Specifies how instances should be placed on a specific UltraServer.
+
+    Attributes
+    ----------------------
+    ultra_server_id: The unique identifier of the UltraServer where instances should be placed.
+    instance_count: The number of ML compute instances required to be placed together on the same UltraServer. Minimum value of 1.
+    """
+
+    instance_count: int
+    ultra_server_id: Optional[str] = Unassigned()
+
+
+class InstancePlacementConfig(Base):
+    """
+    InstancePlacementConfig
+      Configuration for how instances are placed and allocated within UltraServers. This is only applicable for UltraServer capacity.
+
+    Attributes
+    ----------------------
+    enable_multiple_jobs: If set to true, allows multiple jobs to share the same UltraServer instances. If set to false, ensures this job's instances are placed on an UltraServer exclusively, with no other jobs sharing the same UltraServer. Default is false.
+    placement_specifications: A list of specifications for how instances should be placed on specific UltraServers. Maximum of 10 items is supported.
+    """
+
+    enable_multiple_jobs: Optional[bool] = Unassigned()
+    placement_specifications: Optional[List[PlacementSpecification]] = Unassigned()
+
+
 class ResourceConfig(Base):
     """
     ResourceConfig
@@ -1034,6 +1064,7 @@ class ResourceConfig(Base):
     keep_alive_period_in_seconds: The duration of time in seconds to retain configured resources in a warm pool for subsequent training jobs.
     instance_groups: The configuration of a heterogeneous cluster in JSON format.
     training_plan_arn: The Amazon Resource Name (ARN); of the training plan to use for this resource configuration.
+    instance_placement_config: Configuration for how training job instances are placed and allocated within UltraServers. Only applicable for UltraServer capacity.
     """
 
     volume_size_in_gb: int
@@ -1043,6 +1074,7 @@ class ResourceConfig(Base):
     keep_alive_period_in_seconds: Optional[int] = Unassigned()
     instance_groups: Optional[List[InstanceGroup]] = Unassigned()
     training_plan_arn: Optional[str] = Unassigned()
+    instance_placement_config: Optional[InstancePlacementConfig] = Unassigned()
 
 
 class StoppingCondition(Base):
@@ -3390,13 +3422,13 @@ class ClusterEbsVolumeConfig(Base):
 class ClusterMetadata(Base):
     """
     ClusterMetadata
-      Metadata information about a SageMaker HyperPod cluster showing information about the cluster level operations, such as creating, updating, and deleting.
+      Metadata information about a HyperPod cluster showing information about the cluster level operations, such as creating, updating, and deleting.
 
     Attributes
     ----------------------
     failure_message: An error message describing why the cluster level operation (such as creating, updating, or deleting) failed.
-    eks_role_access_entries: A list of Amazon EKS IAM role ARNs associated with the cluster. This is created by SageMaker HyperPod on your behalf and only applies for EKS-orchestrated clusters.
-    slr_access_entry: The Service-Linked Role (SLR) associated with the cluster. This is created by SageMaker HyperPod on your behalf and only applies for EKS-orchestrated clusters.
+    eks_role_access_entries: A list of Amazon EKS IAM role ARNs associated with the cluster. This is created by HyperPod on your behalf and only applies for EKS orchestrated clusters.
+    slr_access_entry: The Service-Linked Role (SLR) associated with the cluster. This is created by HyperPod on your behalf and only applies for EKS orchestrated clusters.
     """
 
     failure_message: Optional[str] = Unassigned()
@@ -3407,7 +3439,7 @@ class ClusterMetadata(Base):
 class InstanceGroupMetadata(Base):
     """
     InstanceGroupMetadata
-      Metadata information about an instance group in a SageMaker HyperPod cluster.
+      Metadata information about an instance group in a HyperPod cluster.
 
     Attributes
     ----------------------
@@ -3507,11 +3539,11 @@ class ClusterEventDetail(Base):
     Attributes
     ----------------------
     event_id: The unique identifier (UUID) of the event.
-    cluster_arn: The Amazon Resource Name (ARN) of the SageMaker HyperPod cluster associated with the event.
-    cluster_name: The name of the SageMaker HyperPod cluster associated with the event.
+    cluster_arn: The Amazon Resource Name (ARN) of the HyperPod cluster associated with the event.
+    cluster_name: The name of the HyperPod cluster associated with the event.
     instance_group_name: The name of the instance group associated with the event, if applicable.
     instance_id: The EC2 instance ID associated with the event, if applicable.
-    resource_type: The type of resource associated with the event. Valid values are "Cluster", "InstanceGroup", or "Instance".
+    resource_type: The type of resource associated with the event. Valid values are Cluster, InstanceGroup, or Instance.
     event_time: The timestamp when the event occurred.
     event_details: Additional details about the event, including event-specific metadata.
     description: A human-readable description of the event.
@@ -3531,16 +3563,16 @@ class ClusterEventDetail(Base):
 class ClusterEventSummary(Base):
     """
     ClusterEventSummary
-      A summary of an event in a SageMaker HyperPod cluster.
+      A summary of an event in a HyperPod cluster.
 
     Attributes
     ----------------------
     event_id: The unique identifier (UUID) of the event.
-    cluster_arn: The Amazon Resource Name (ARN) of the SageMaker HyperPod cluster associated with the event.
-    cluster_name: The name of the SageMaker HyperPod cluster associated with the event.
+    cluster_arn: The Amazon Resource Name (ARN) of the HyperPod cluster associated with the event.
+    cluster_name: The name of the HyperPod cluster associated with the event.
     instance_group_name: The name of the instance group associated with the event, if applicable.
-    instance_id: The EC2 instance ID associated with the event, if applicable.
-    resource_type: The type of resource associated with the event. Valid values are "Cluster", "InstanceGroup", or "Instance".
+    instance_id: The Amazon Elastic Compute Cloud (EC2) instance ID associated with the event, if applicable.
+    resource_type: The type of resource associated with the event. Valid values are Cluster, InstanceGroup, or Instance.
     event_time: The timestamp when the event occurred.
     description: A brief, human-readable description of the event.
     """
@@ -3738,6 +3770,19 @@ class ClusterInstanceStatusDetails(Base):
     message: Optional[str] = Unassigned()
 
 
+class UltraServerInfo(Base):
+    """
+    UltraServerInfo
+      Contains information about the UltraServer object.
+
+    Attributes
+    ----------------------
+    id: The unique identifier of the UltraServer.
+    """
+
+    id: Optional[str] = Unassigned()
+
+
 class ClusterNodeDetails(Base):
     """
     ClusterNodeDetails
@@ -3762,6 +3807,7 @@ class ClusterNodeDetails(Base):
     placement: The placement details of the SageMaker HyperPod cluster node.
     current_image_id: The ID of the Amazon Machine Image (AMI) currently in use by the node.
     desired_image_id: The ID of the Amazon Machine Image (AMI) desired for the node.
+    ultra_server_info: Contains information about the UltraServer.
     """
 
     instance_group_name: Optional[str] = Unassigned()
@@ -3781,6 +3827,7 @@ class ClusterNodeDetails(Base):
     placement: Optional[ClusterInstancePlacement] = Unassigned()
     current_image_id: Optional[str] = Unassigned()
     desired_image_id: Optional[str] = Unassigned()
+    ultra_server_info: Optional[UltraServerInfo] = Unassigned()
 
 
 class ClusterNodeSummary(Base):
@@ -3797,6 +3844,7 @@ class ClusterNodeSummary(Base):
     launch_time: The time when the instance is launched.
     last_software_update_time: The time when SageMaker last updated the software of the instances in the cluster.
     instance_status: The status of the instance.
+    ultra_server_info: Contains information about the UltraServer.
     """
 
     instance_group_name: str
@@ -3806,6 +3854,7 @@ class ClusterNodeSummary(Base):
     instance_status: ClusterInstanceStatusDetails
     node_logical_id: Optional[str] = Unassigned()
     last_software_update_time: Optional[datetime.datetime] = Unassigned()
+    ultra_server_info: Optional[UltraServerInfo] = Unassigned()
 
 
 class ClusterOrchestratorEksConfig(Base):
@@ -9638,6 +9687,27 @@ class TemplateProviderDetail(Base):
     cfn_template_provider_detail: Optional[CfnTemplateProviderDetail] = Unassigned()
 
 
+class UltraServerSummary(Base):
+    """
+    UltraServerSummary
+      A summary of UltraServer resources and their current status.
+
+    Attributes
+    ----------------------
+    ultra_server_type: The type of UltraServer, such as ml.u-p6e-gb200x72.
+    instance_type: The Amazon EC2 instance type used in the UltraServer.
+    ultra_server_count: The number of UltraServers of this type.
+    available_spare_instance_count: The number of available spare instances in the UltraServers.
+    unhealthy_instance_count: The total number of instances across all UltraServers of this type that are currently in an unhealthy state.
+    """
+
+    ultra_server_type: str
+    instance_type: str
+    ultra_server_count: Optional[int] = Unassigned()
+    available_spare_instance_count: Optional[int] = Unassigned()
+    unhealthy_instance_count: Optional[int] = Unassigned()
+
+
 class SubscribedWorkteam(Base):
     """
     SubscribedWorkteam
@@ -9741,6 +9811,9 @@ class ReservedCapacitySummary(Base):
     Attributes
     ----------------------
     reserved_capacity_arn: The Amazon Resource Name (ARN); of the reserved capacity.
+    reserved_capacity_type: The type of reserved capacity.
+    ultra_server_type: The type of UltraServer included in this reserved capacity, such as ml.u-p6e-gb200x72.
+    ultra_server_count: The number of UltraServers included in this reserved capacity.
     instance_type: The instance type for the reserved capacity.
     total_instance_count: The total number of instances in the reserved capacity.
     status: The current status of the reserved capacity.
@@ -9755,6 +9828,9 @@ class ReservedCapacitySummary(Base):
     instance_type: str
     total_instance_count: int
     status: str
+    reserved_capacity_type: Optional[str] = Unassigned()
+    ultra_server_type: Optional[str] = Unassigned()
+    ultra_server_count: Optional[int] = Unassigned()
     availability_zone: Optional[str] = Unassigned()
     duration_hours: Optional[int] = Unassigned()
     duration_minutes: Optional[int] = Unassigned()
@@ -12207,6 +12283,7 @@ class TrainingPlanSummary(Base):
     total_instance_count: The total number of instances reserved in this training plan.
     available_instance_count: The number of instances currently available for use in this training plan.
     in_use_instance_count: The number of instances currently in use from this training plan.
+    total_ultra_server_count: The total number of UltraServers allocated to this training plan.
     target_resources: The target resources (e.g., training jobs, HyperPod clusters) that can use this training plan. Training plans are specific to their target resource.   A training plan designed for SageMaker training jobs can only be used to schedule and run training jobs.   A training plan for HyperPod clusters can be used exclusively to provide compute resources to a cluster's instance group.
     reserved_capacity_summaries: A list of reserved capacities associated with this training plan, including details such as instance types, counts, and availability zones.
     """
@@ -12224,6 +12301,7 @@ class TrainingPlanSummary(Base):
     total_instance_count: Optional[int] = Unassigned()
     available_instance_count: Optional[int] = Unassigned()
     in_use_instance_count: Optional[int] = Unassigned()
+    total_ultra_server_count: Optional[int] = Unassigned()
     target_resources: Optional[List[str]] = Unassigned()
     reserved_capacity_summaries: Optional[List[ReservedCapacitySummary]] = Unassigned()
 
@@ -12307,6 +12385,39 @@ class TrialSummary(Base):
     trial_source: Optional[TrialSource] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
+
+
+class UltraServer(Base):
+    """
+    UltraServer
+      Represents a high-performance compute server used for distributed training in SageMaker AI. An UltraServer consists of multiple instances within a shared NVLink interconnect domain.
+
+    Attributes
+    ----------------------
+    ultra_server_id: The unique identifier for the UltraServer.
+    ultra_server_type: The type of UltraServer, such as ml.u-p6e-gb200x72.
+    availability_zone: The name of the Availability Zone where the UltraServer is provisioned.
+    instance_type: The Amazon EC2 instance type used in the UltraServer.
+    total_instance_count: The total number of instances in this UltraServer.
+    configured_spare_instance_count: The number of spare instances configured for this UltraServer to provide enhanced resiliency.
+    available_instance_count: The number of instances currently available for use in this UltraServer.
+    in_use_instance_count: The number of instances currently in use in this UltraServer.
+    available_spare_instance_count: The number of available spare instances in the UltraServer.
+    unhealthy_instance_count: The number of instances in this UltraServer that are currently in an unhealthy state.
+    health_status: The overall health status of the UltraServer.
+    """
+
+    ultra_server_id: str
+    ultra_server_type: str
+    availability_zone: str
+    instance_type: str
+    total_instance_count: int
+    configured_spare_instance_count: Optional[int] = Unassigned()
+    available_instance_count: Optional[int] = Unassigned()
+    in_use_instance_count: Optional[int] = Unassigned()
+    available_spare_instance_count: Optional[int] = Unassigned()
+    unhealthy_instance_count: Optional[int] = Unassigned()
+    health_status: Optional[str] = Unassigned()
 
 
 class UserProfileDetails(Base):
@@ -13028,6 +13139,9 @@ class ReservedCapacityOffering(Base):
 
     Attributes
     ----------------------
+    reserved_capacity_type: The type of reserved capacity offering.
+    ultra_server_type: The type of UltraServer included in this reserved capacity offering, such as ml.u-p6e-gb200x72.
+    ultra_server_count: The number of UltraServers included in this reserved capacity offering.
     instance_type: The instance type for the reserved capacity offering.
     instance_count: The number of instances in the reserved capacity offering.
     availability_zone: The availability zone for the reserved capacity offering.
@@ -13039,6 +13153,9 @@ class ReservedCapacityOffering(Base):
 
     instance_type: str
     instance_count: int
+    reserved_capacity_type: Optional[str] = Unassigned()
+    ultra_server_type: Optional[str] = Unassigned()
+    ultra_server_count: Optional[int] = Unassigned()
     availability_zone: Optional[str] = Unassigned()
     duration_hours: Optional[int] = Unassigned()
     duration_minutes: Optional[int] = Unassigned()
