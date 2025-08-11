@@ -1623,6 +1623,7 @@ SHAPE_DAG = {
             {"name": "Placement", "shape": "ClusterInstancePlacement", "type": "structure"},
             {"name": "CurrentImageId", "shape": "ImageId", "type": "string"},
             {"name": "DesiredImageId", "shape": "ImageId", "type": "string"},
+            {"name": "UltraServerInfo", "shape": "UltraServerInfo", "type": "structure"},
         ],
         "type": "structure",
     },
@@ -1650,6 +1651,7 @@ SHAPE_DAG = {
                 "shape": "ClusterInstanceStatusDetails",
                 "type": "structure",
             },
+            {"name": "UltraServerInfo", "shape": "UltraServerInfo", "type": "structure"},
         ],
         "type": "structure",
     },
@@ -3438,6 +3440,11 @@ SHAPE_DAG = {
         "members": [
             {"name": "TrainingPlanName", "shape": "TrainingPlanName", "type": "string"},
             {"name": "TrainingPlanOfferingId", "shape": "TrainingPlanOfferingId", "type": "string"},
+            {
+                "name": "SpareInstanceCountPerUltraServer",
+                "shape": "SpareInstanceCountPerUltraServer",
+                "type": "integer",
+            },
             {"name": "Tags", "shape": "TagList", "type": "list"},
         ],
         "type": "structure",
@@ -6112,6 +6119,34 @@ SHAPE_DAG = {
         ],
         "type": "structure",
     },
+    "DescribeReservedCapacityRequest": {
+        "members": [
+            {"name": "ReservedCapacityArn", "shape": "ReservedCapacityArn", "type": "string"}
+        ],
+        "type": "structure",
+    },
+    "DescribeReservedCapacityResponse": {
+        "members": [
+            {"name": "ReservedCapacityArn", "shape": "ReservedCapacityArn", "type": "string"},
+            {"name": "ReservedCapacityType", "shape": "ReservedCapacityType", "type": "string"},
+            {"name": "Status", "shape": "ReservedCapacityStatus", "type": "string"},
+            {"name": "AvailabilityZone", "shape": "AvailabilityZone", "type": "string"},
+            {"name": "DurationHours", "shape": "ReservedCapacityDurationHours", "type": "long"},
+            {"name": "DurationMinutes", "shape": "ReservedCapacityDurationMinutes", "type": "long"},
+            {"name": "StartTime", "shape": "Timestamp", "type": "timestamp"},
+            {"name": "EndTime", "shape": "Timestamp", "type": "timestamp"},
+            {"name": "InstanceType", "shape": "ReservedCapacityInstanceType", "type": "string"},
+            {"name": "TotalInstanceCount", "shape": "TotalInstanceCount", "type": "integer"},
+            {
+                "name": "AvailableInstanceCount",
+                "shape": "AvailableInstanceCount",
+                "type": "integer",
+            },
+            {"name": "InUseInstanceCount", "shape": "InUseInstanceCount", "type": "integer"},
+            {"name": "UltraServerSummary", "shape": "UltraServerSummary", "type": "structure"},
+        ],
+        "type": "structure",
+    },
     "DescribeSpaceRequest": {
         "members": [
             {"name": "DomainId", "shape": "DomainId", "type": "string"},
@@ -6287,6 +6322,17 @@ SHAPE_DAG = {
                 "type": "integer",
             },
             {"name": "InUseInstanceCount", "shape": "InUseInstanceCount", "type": "integer"},
+            {
+                "name": "UnhealthyInstanceCount",
+                "shape": "UnhealthyInstanceCount",
+                "type": "integer",
+            },
+            {
+                "name": "AvailableSpareInstanceCount",
+                "shape": "AvailableSpareInstanceCount",
+                "type": "integer",
+            },
+            {"name": "TotalUltraServerCount", "shape": "UltraServerCount", "type": "integer"},
             {"name": "TargetResources", "shape": "SageMakerResourceNames", "type": "list"},
             {
                 "name": "ReservedCapacitySummaries",
@@ -8589,6 +8635,13 @@ SHAPE_DAG = {
         ],
         "type": "structure",
     },
+    "InstancePlacementConfig": {
+        "members": [
+            {"name": "EnableMultipleJobs", "shape": "Boolean", "type": "boolean"},
+            {"name": "PlacementSpecifications", "shape": "PlacementSpecifications", "type": "list"},
+        ],
+        "type": "structure",
+    },
     "IntegerParameterRange": {
         "members": [
             {"name": "Name", "shape": "ParameterKey", "type": "string"},
@@ -10756,6 +10809,21 @@ SHAPE_DAG = {
         ],
         "type": "structure",
     },
+    "ListUltraServersByReservedCapacityRequest": {
+        "members": [
+            {"name": "ReservedCapacityArn", "shape": "ReservedCapacityArn", "type": "string"},
+            {"name": "MaxResults", "shape": "MaxResults", "type": "integer"},
+            {"name": "NextToken", "shape": "NextToken", "type": "string"},
+        ],
+        "type": "structure",
+    },
+    "ListUltraServersByReservedCapacityResponse": {
+        "members": [
+            {"name": "NextToken", "shape": "NextToken", "type": "string"},
+            {"name": "UltraServers", "shape": "UltraServers", "type": "list"},
+        ],
+        "type": "structure",
+    },
     "ListUserProfilesRequest": {
         "members": [
             {"name": "NextToken", "shape": "NextToken", "type": "string"},
@@ -12800,6 +12868,18 @@ SHAPE_DAG = {
         "member_type": "structure",
         "type": "list",
     },
+    "PlacementSpecification": {
+        "members": [
+            {"name": "UltraServerId", "shape": "String256", "type": "string"},
+            {"name": "InstanceCount", "shape": "TrainingInstanceCount", "type": "integer"},
+        ],
+        "type": "structure",
+    },
+    "PlacementSpecifications": {
+        "member_shape": "PlacementSpecification",
+        "member_type": "structure",
+        "type": "list",
+    },
     "PredefinedMetricSpecification": {
         "members": [{"name": "PredefinedMetricType", "shape": "String", "type": "string"}],
         "type": "structure",
@@ -13737,6 +13817,9 @@ SHAPE_DAG = {
     },
     "ReservedCapacityOffering": {
         "members": [
+            {"name": "ReservedCapacityType", "shape": "ReservedCapacityType", "type": "string"},
+            {"name": "UltraServerType", "shape": "UltraServerType", "type": "string"},
+            {"name": "UltraServerCount", "shape": "UltraServerCount", "type": "integer"},
             {"name": "InstanceType", "shape": "ReservedCapacityInstanceType", "type": "string"},
             {"name": "InstanceCount", "shape": "ReservedCapacityInstanceCount", "type": "integer"},
             {"name": "AvailabilityZone", "shape": "AvailabilityZone", "type": "string"},
@@ -13760,6 +13843,9 @@ SHAPE_DAG = {
     "ReservedCapacitySummary": {
         "members": [
             {"name": "ReservedCapacityArn", "shape": "ReservedCapacityArn", "type": "string"},
+            {"name": "ReservedCapacityType", "shape": "ReservedCapacityType", "type": "string"},
+            {"name": "UltraServerType", "shape": "UltraServerType", "type": "string"},
+            {"name": "UltraServerCount", "shape": "UltraServerCount", "type": "integer"},
             {"name": "InstanceType", "shape": "ReservedCapacityInstanceType", "type": "string"},
             {"name": "TotalInstanceCount", "shape": "TotalInstanceCount", "type": "integer"},
             {"name": "Status", "shape": "ReservedCapacityStatus", "type": "string"},
@@ -13810,6 +13896,11 @@ SHAPE_DAG = {
             },
             {"name": "InstanceGroups", "shape": "InstanceGroups", "type": "list"},
             {"name": "TrainingPlanArn", "shape": "TrainingPlanArn", "type": "string"},
+            {
+                "name": "InstancePlacementConfig",
+                "shape": "InstancePlacementConfig",
+                "type": "structure",
+            },
         ],
         "type": "structure",
     },
@@ -14132,6 +14223,8 @@ SHAPE_DAG = {
         "members": [
             {"name": "InstanceType", "shape": "ReservedCapacityInstanceType", "type": "string"},
             {"name": "InstanceCount", "shape": "ReservedCapacityInstanceCount", "type": "integer"},
+            {"name": "UltraServerType", "shape": "UltraServerType", "type": "string"},
+            {"name": "UltraServerCount", "shape": "UltraServerCount", "type": "integer"},
             {"name": "StartTimeAfter", "shape": "Timestamp", "type": "timestamp"},
             {"name": "EndTimeBefore", "shape": "Timestamp", "type": "timestamp"},
             {"name": "DurationHours", "shape": "TrainingPlanDurationHoursInput", "type": "long"},
@@ -15153,6 +15246,7 @@ SHAPE_DAG = {
                 "type": "integer",
             },
             {"name": "InUseInstanceCount", "shape": "InUseInstanceCount", "type": "integer"},
+            {"name": "TotalUltraServerCount", "shape": "UltraServerCount", "type": "integer"},
             {"name": "TargetResources", "shape": "SageMakerResourceNames", "type": "list"},
             {
                 "name": "ReservedCapacitySummaries",
@@ -15552,6 +15646,61 @@ SHAPE_DAG = {
         ],
         "type": "structure",
     },
+    "UltraServer": {
+        "members": [
+            {"name": "UltraServerId", "shape": "NonEmptyString256", "type": "string"},
+            {"name": "UltraServerType", "shape": "UltraServerType", "type": "string"},
+            {"name": "AvailabilityZone", "shape": "AvailabilityZone", "type": "string"},
+            {"name": "InstanceType", "shape": "ReservedCapacityInstanceType", "type": "string"},
+            {"name": "TotalInstanceCount", "shape": "TotalInstanceCount", "type": "integer"},
+            {
+                "name": "ConfiguredSpareInstanceCount",
+                "shape": "ConfiguredSpareInstanceCount",
+                "type": "integer",
+            },
+            {
+                "name": "AvailableInstanceCount",
+                "shape": "AvailableInstanceCount",
+                "type": "integer",
+            },
+            {"name": "InUseInstanceCount", "shape": "InUseInstanceCount", "type": "integer"},
+            {
+                "name": "AvailableSpareInstanceCount",
+                "shape": "AvailableSpareInstanceCount",
+                "type": "integer",
+            },
+            {
+                "name": "UnhealthyInstanceCount",
+                "shape": "UnhealthyInstanceCount",
+                "type": "integer",
+            },
+            {"name": "HealthStatus", "shape": "UltraServerHealthStatus", "type": "string"},
+        ],
+        "type": "structure",
+    },
+    "UltraServerInfo": {
+        "members": [{"name": "Id", "shape": "String", "type": "string"}],
+        "type": "structure",
+    },
+    "UltraServerSummary": {
+        "members": [
+            {"name": "UltraServerType", "shape": "UltraServerType", "type": "string"},
+            {"name": "InstanceType", "shape": "ReservedCapacityInstanceType", "type": "string"},
+            {"name": "UltraServerCount", "shape": "UltraServerCount", "type": "integer"},
+            {
+                "name": "AvailableSpareInstanceCount",
+                "shape": "AvailableSpareInstanceCount",
+                "type": "integer",
+            },
+            {
+                "name": "UnhealthyInstanceCount",
+                "shape": "UnhealthyInstanceCount",
+                "type": "integer",
+            },
+        ],
+        "type": "structure",
+    },
+    "UltraServers": {"member_shape": "UltraServer", "member_type": "structure", "type": "list"},
     "UnifiedStudioSettings": {
         "members": [
             {"name": "StudioWebPortalAccess", "shape": "FeatureStatus", "type": "string"},
