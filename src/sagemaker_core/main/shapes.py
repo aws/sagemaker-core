@@ -5347,6 +5347,19 @@ class RStudioServerProDomainSettings(Base):
     default_resource_spec: Optional[ResourceSpec] = Unassigned()
 
 
+class TrustedIdentityPropagationSettings(Base):
+    """
+    TrustedIdentityPropagationSettings
+      The Trusted Identity Propagation (TIP) settings for the SageMaker domain. These settings determine how user identities from IAM Identity Center are propagated through the domain to TIP enabled Amazon Web Services services.
+
+    Attributes
+    ----------------------
+    status: The status of Trusted Identity Propagation (TIP) at the SageMaker domain level.  When disabled, standard IAM role-based access is used.  When enabled:   User identities from IAM Identity Center are propagated through the application to TIP enabled Amazon Web Services services.   New applications or existing applications that are automatically patched, will use the domain level configuration.
+    """
+
+    status: str
+
+
 class DockerSettings(Base):
     """
     DockerSettings
@@ -5399,6 +5412,7 @@ class DomainSettings(Base):
     security_group_ids: The security groups for the Amazon Virtual Private Cloud that the Domain uses for communication between Domain-level apps and user apps.
     r_studio_server_pro_domain_settings: A collection of settings that configure the RStudioServerPro Domain-level app.
     execution_role_identity_config: The configuration for attaching a SageMaker AI user profile name to the execution role as a sts:SourceIdentity key.
+    trusted_identity_propagation_settings: The Trusted Identity Propagation (TIP) settings for the SageMaker domain. These settings determine how user identities from IAM Identity Center are propagated through the domain to TIP enabled Amazon Web Services services.
     docker_settings: A collection of settings that configure the domain's Docker interaction.
     amazon_q_settings: A collection of settings that configure the Amazon Q experience within the domain. The AuthMode that you use to create the domain must be SSO.
     unified_studio_settings: The settings that apply to an SageMaker AI domain when you use it in Amazon SageMaker Unified Studio.
@@ -5407,6 +5421,9 @@ class DomainSettings(Base):
     security_group_ids: Optional[List[str]] = Unassigned()
     r_studio_server_pro_domain_settings: Optional[RStudioServerProDomainSettings] = Unassigned()
     execution_role_identity_config: Optional[str] = Unassigned()
+    trusted_identity_propagation_settings: Optional[TrustedIdentityPropagationSettings] = (
+        Unassigned()
+    )
     docker_settings: Optional[DockerSettings] = Unassigned()
     amazon_q_settings: Optional[AmazonQSettings] = Unassigned()
     unified_studio_settings: Optional[UnifiedStudioSettings] = Unassigned()
@@ -10229,6 +10246,7 @@ class DomainSettingsForUpdate(Base):
     r_studio_server_pro_domain_settings_for_update: A collection of RStudioServerPro Domain-level app settings to update. A single RStudioServerPro application is created for a domain.
     execution_role_identity_config: The configuration for attaching a SageMaker AI user profile name to the execution role as a sts:SourceIdentity key. This configuration can only be modified if there are no apps in the InService or Pending state.
     security_group_ids: The security groups for the Amazon Virtual Private Cloud that the Domain uses for communication between Domain-level apps and user apps.
+    trusted_identity_propagation_settings: The Trusted Identity Propagation (TIP) settings for the SageMaker domain. These settings determine how user identities from IAM Identity Center are propagated through the domain to TIP enabled Amazon Web Services services.
     docker_settings: A collection of settings that configure the domain's Docker interaction.
     amazon_q_settings: A collection of settings that configure the Amazon Q experience within the domain.
     unified_studio_settings: The settings that apply to an SageMaker AI domain when you use it in Amazon SageMaker Unified Studio.
@@ -10239,6 +10257,9 @@ class DomainSettingsForUpdate(Base):
     ] = Unassigned()
     execution_role_identity_config: Optional[str] = Unassigned()
     security_group_ids: Optional[List[str]] = Unassigned()
+    trusted_identity_propagation_settings: Optional[TrustedIdentityPropagationSettings] = (
+        Unassigned()
+    )
     docker_settings: Optional[DockerSettings] = Unassigned()
     amazon_q_settings: Optional[AmazonQSettings] = Unassigned()
     unified_studio_settings: Optional[UnifiedStudioSettings] = Unassigned()
