@@ -4457,6 +4457,11 @@ SHAPE_DAG = {
             {"name": "UserProfileName", "shape": "UserProfileName", "type": "string"},
             {"name": "SpaceName", "shape": "SpaceName", "type": "string"},
             {"name": "Status", "shape": "AppStatus", "type": "string"},
+            {
+                "name": "EffectiveTrustedIdentityPropagationStatus",
+                "shape": "FeatureStatus",
+                "type": "string",
+            },
             {"name": "RecoveryMode", "shape": "Boolean", "type": "boolean"},
             {"name": "LastHealthCheckTimestamp", "shape": "Timestamp", "type": "timestamp"},
             {"name": "LastUserActivityTimestamp", "shape": "Timestamp", "type": "timestamp"},
@@ -6642,6 +6647,11 @@ SHAPE_DAG = {
                 "shape": "ExecutionRoleIdentityConfig",
                 "type": "string",
             },
+            {
+                "name": "TrustedIdentityPropagationSettings",
+                "shape": "TrustedIdentityPropagationSettings",
+                "type": "structure",
+            },
             {"name": "DockerSettings", "shape": "DockerSettings", "type": "structure"},
             {"name": "AmazonQSettings", "shape": "AmazonQSettings", "type": "structure"},
             {
@@ -6665,6 +6675,11 @@ SHAPE_DAG = {
                 "type": "string",
             },
             {"name": "SecurityGroupIds", "shape": "DomainSecurityGroupIds", "type": "list"},
+            {
+                "name": "TrustedIdentityPropagationSettings",
+                "shape": "TrustedIdentityPropagationSettings",
+                "type": "structure",
+            },
             {"name": "DockerSettings", "shape": "DockerSettings", "type": "structure"},
             {"name": "AmazonQSettings", "shape": "AmazonQSettings", "type": "structure"},
             {
@@ -15591,6 +15606,10 @@ SHAPE_DAG = {
             {"name": "CreationTime", "shape": "Timestamp", "type": "timestamp"},
             {"name": "LastModifiedTime", "shape": "Timestamp", "type": "timestamp"},
         ],
+        "type": "structure",
+    },
+    "TrustedIdentityPropagationSettings": {
+        "members": [{"name": "Status", "shape": "FeatureStatus", "type": "string"}],
         "type": "structure",
     },
     "TtlDuration": {
