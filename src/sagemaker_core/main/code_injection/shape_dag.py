@@ -1910,6 +1910,9 @@ SHAPE_DAG = {
         "members": [
             {"name": "InstanceType", "shape": "ClusterInstanceType", "type": "string"},
             {"name": "Count", "shape": "InstanceCount", "type": "integer"},
+            {"name": "Accelerators", "shape": "AcceleratorsAmount", "type": "integer"},
+            {"name": "VCpu", "shape": "VCpuAmount", "type": "float"},
+            {"name": "MemoryInGiB", "shape": "MemoryInGiBAmount", "type": "float"},
         ],
         "type": "structure",
     },
