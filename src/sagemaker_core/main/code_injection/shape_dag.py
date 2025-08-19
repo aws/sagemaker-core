@@ -1447,7 +1447,9 @@ SHAPE_DAG = {
     },
     "ClusterEbsVolumeConfig": {
         "members": [
-            {"name": "VolumeSizeInGB", "shape": "ClusterEbsVolumeSizeInGB", "type": "integer"}
+            {"name": "VolumeSizeInGB", "shape": "ClusterEbsVolumeSizeInGB", "type": "integer"},
+            {"name": "VolumeKmsKeyId", "shape": "KmsKeyId", "type": "string"},
+            {"name": "RootVolume", "shape": "Boolean", "type": "boolean"},
         ],
         "type": "structure",
     },
