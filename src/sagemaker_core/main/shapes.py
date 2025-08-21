@@ -5236,8 +5236,8 @@ class S3FileSystemConfig(Base):
     s3_uri: The Amazon S3 URI of the S3 file system configuration.
     """
 
+    s3_uri: str
     mount_path: Optional[str] = Unassigned()
-    s3_uri: Optional[str] = Unassigned()
 
 
 class CustomFileSystemConfig(Base):
@@ -8126,7 +8126,7 @@ class S3FileSystem(Base):
     s3_uri: The Amazon S3 URI that specifies the location in S3 where files are stored, which is mounted within the Studio environment. For example: s3://&lt;bucket-name&gt;/&lt;prefix&gt;/.
     """
 
-    s3_uri: Optional[str] = Unassigned()
+    s3_uri: str
 
 
 class CustomFileSystem(Base):
