@@ -6618,6 +6618,7 @@ SHAPE_DAG = {
         "members": [
             {"name": "EnableDockerAccess", "shape": "FeatureStatus", "type": "string"},
             {"name": "VpcOnlyTrustedAccounts", "shape": "VpcOnlyTrustedAccounts", "type": "list"},
+            {"name": "RootlessDocker", "shape": "FeatureStatus", "type": "string"},
         ],
         "type": "structure",
     },
