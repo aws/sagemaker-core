@@ -1977,4 +1977,3 @@ def put_record(
             resource_states=[],
         )
         assert result == ""
-        assert result == ""
