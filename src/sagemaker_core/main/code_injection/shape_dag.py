@@ -1445,6 +1445,22 @@ SHAPE_DAG = {
         ],
         "type": "structure",
     },
+    "ClusterAutoScalingConfig": {
+        "members": [
+            {"name": "Mode", "shape": "ClusterAutoScalingMode", "type": "string"},
+            {"name": "AutoScalerType", "shape": "ClusterAutoScalerType", "type": "string"},
+        ],
+        "type": "structure",
+    },
+    "ClusterAutoScalingConfigOutput": {
+        "members": [
+            {"name": "Mode", "shape": "ClusterAutoScalingMode", "type": "string"},
+            {"name": "AutoScalerType", "shape": "ClusterAutoScalerType", "type": "string"},
+            {"name": "Status", "shape": "ClusterAutoScalingStatus", "type": "string"},
+            {"name": "FailureMessage", "shape": "String", "type": "string"},
+        ],
+        "type": "structure",
+    },
     "ClusterEbsVolumeConfig": {
         "members": [
             {"name": "VolumeSizeInGB", "shape": "ClusterEbsVolumeSizeInGB", "type": "integer"},
@@ -2251,6 +2267,8 @@ SHAPE_DAG = {
                 "shape": "ClusterNodeProvisioningMode",
                 "type": "string",
             },
+            {"name": "ClusterRole", "shape": "RoleArn", "type": "string"},
+            {"name": "AutoScaling", "shape": "ClusterAutoScalingConfig", "type": "structure"},
         ],
         "type": "structure",
     },
@@ -4647,6 +4665,8 @@ SHAPE_DAG = {
                 "shape": "ClusterNodeProvisioningMode",
                 "type": "string",
             },
+            {"name": "ClusterRole", "shape": "RoleArn", "type": "string"},
+            {"name": "AutoScaling", "shape": "ClusterAutoScalingConfigOutput", "type": "structure"},
         ],
         "type": "structure",
     },
@@ -15827,6 +15847,8 @@ SHAPE_DAG = {
                 "shape": "ClusterInstanceGroupsToDelete",
                 "type": "list",
             },
+            {"name": "ClusterRole", "shape": "RoleArn", "type": "string"},
+            {"name": "AutoScaling", "shape": "ClusterAutoScalingConfig", "type": "structure"},
         ],
         "type": "structure",
     },

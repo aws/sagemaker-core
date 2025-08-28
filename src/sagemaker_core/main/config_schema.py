@@ -106,7 +106,8 @@ SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA = {
                                                 "type": "array",
                                                 "items": {"type": "string"},
                                             },
-                                        }
+                                        },
+                                        "cluster_role": {"type": "string"},
                                     },
                                 },
                                 "CompilationJob": {

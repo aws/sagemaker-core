@@ -3226,6 +3226,8 @@ class Cluster(Base):
         orchestrator: The type of orchestrator used for the SageMaker HyperPod cluster.
         node_recovery: The node recovery mode configured for the SageMaker HyperPod cluster.
         node_provisioning_mode: The mode used for provisioning nodes in the cluster.
+        cluster_role: The Amazon Resource Name (ARN) of the IAM role that HyperPod uses for cluster autoscaling operations.
+        auto_scaling: The current autoscaling configuration and status for the autoscaler.
 
     """
 
@@ -3242,6 +3244,8 @@ class Cluster(Base):
     orchestrator: Optional[shapes.ClusterOrchestrator] = Unassigned()
     node_recovery: Optional[str] = Unassigned()
     node_provisioning_mode: Optional[str] = Unassigned()
+    cluster_role: Optional[str] = Unassigned()
+    auto_scaling: Optional[shapes.ClusterAutoScalingConfigOutput] = Unassigned()
 
     def get_name(self) -> str:
         attributes = vars(self)
@@ -3292,6 +3296,8 @@ class Cluster(Base):
         orchestrator: Optional[shapes.ClusterOrchestrator] = Unassigned(),
         node_recovery: Optional[str] = Unassigned(),
         node_provisioning_mode: Optional[str] = Unassigned(),
+        cluster_role: Optional[str] = Unassigned(),
+        auto_scaling: Optional[shapes.ClusterAutoScalingConfig] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["Cluster"]:
@@ -3307,6 +3313,8 @@ class Cluster(Base):
             orchestrator: The type of orchestrator to use for the SageMaker HyperPod cluster. Currently, the only supported value is "eks", which is to use an Amazon Elastic Kubernetes Service cluster as the orchestrator.
             node_recovery: The node recovery mode for the SageMaker HyperPod cluster. When set to Automatic, SageMaker HyperPod will automatically reboot or replace faulty nodes when issues are detected. When set to None, cluster administrators will need to manually manage any faulty cluster instances.
             node_provisioning_mode: The mode for provisioning nodes in the cluster. You can specify the following modes:    Continuous: Scaling behavior that enables 1) concurrent operation execution within instance groups, 2) continuous retry mechanisms for failed operations, 3) enhanced customer visibility into cluster events through detailed event streams, 4) partial provisioning capabilities. Your clusters and instance groups remain InService while scaling. This mode is only supported for EKS orchestrated clusters.
+            cluster_role: The Amazon Resource Name (ARN) of the IAM role that HyperPod assumes to perform cluster autoscaling operations. This role must have permissions for sagemaker:BatchAddClusterNodes and sagemaker:BatchDeleteClusterNodes. This is only required when autoscaling is enabled and when HyperPod is performing autoscaling operations.
+            auto_scaling: The autoscaling configuration for the cluster. Enables automatic scaling of cluster nodes based on workload demand using a Karpenter-based system.
             session: Boto3 session.
             region: Region name.
 
@@ -3344,6 +3352,8 @@ class Cluster(Base):
             "Orchestrator": orchestrator,
             "NodeRecovery": node_recovery,
             "NodeProvisioningMode": node_provisioning_mode,
+            "ClusterRole": cluster_role,
+            "AutoScaling": auto_scaling,
         }
 
         operation_input_args = Base.populate_chained_attributes(
@@ -3459,6 +3469,8 @@ class Cluster(Base):
         ] = Unassigned(),
         node_recovery: Optional[str] = Unassigned(),
         instance_groups_to_delete: Optional[List[str]] = Unassigned(),
+        cluster_role: Optional[str] = Unassigned(),
+        auto_scaling: Optional[shapes.ClusterAutoScalingConfig] = Unassigned(),
     ) -> Optional["Cluster"]:
         """
         Update a Cluster resource
@@ -3493,6 +3505,8 @@ class Cluster(Base):
             "RestrictedInstanceGroups": restricted_instance_groups,
             "NodeRecovery": node_recovery,
             "InstanceGroupsToDelete": instance_groups_to_delete,
+            "ClusterRole": cluster_role,
+            "AutoScaling": auto_scaling,
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
