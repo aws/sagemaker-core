@@ -3406,6 +3406,40 @@ class ClarifyExplainerConfig(Base):
     inference_config: Optional[ClarifyInferenceConfig] = Unassigned()
 
 
+class ClusterAutoScalingConfig(Base):
+    """
+    ClusterAutoScalingConfig
+      Specifies the autoscaling configuration for a HyperPod cluster.
+
+    Attributes
+    ----------------------
+    mode: Describes whether autoscaling is enabled or disabled for the cluster. Valid values are Enable and Disable.
+    auto_scaler_type: The type of autoscaler to use. Currently supported value is Karpenter.
+    """
+
+    mode: str
+    auto_scaler_type: Optional[str] = Unassigned()
+
+
+class ClusterAutoScalingConfigOutput(Base):
+    """
+    ClusterAutoScalingConfigOutput
+      The autoscaling configuration and status information for a HyperPod cluster.
+
+    Attributes
+    ----------------------
+    mode: Describes whether autoscaling is enabled or disabled for the cluster.
+    auto_scaler_type: The type of autoscaler configured for the cluster.
+    status: The current status of the autoscaling configuration. Valid values are InService, Failed, Creating, and Deleting.
+    failure_message: If the autoscaling status is Failed, this field contains a message describing the failure.
+    """
+
+    mode: str
+    status: str
+    auto_scaler_type: Optional[str] = Unassigned()
+    failure_message: Optional[str] = Unassigned()
+
+
 class ClusterEbsVolumeConfig(Base):
     """
     ClusterEbsVolumeConfig
