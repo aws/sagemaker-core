@@ -179,7 +179,7 @@ jobs:
       - name: Execute Python Coverage compute script and capture output
         id: execute_coverage_parse_script
         run: |
-          if [[ "${{ github.event.pull_request.user.login }}" == ${{ secrets.SAGEMAKER_BOT_USER_LOGIN }}* ]]; then
+          if [[ "${{ needs.collab-check.outputs.approval-env }}" == "auto-approve" ]]; then
             aws cloudwatch put-metric-data --metric-name UnitTestCoverage --namespace SageMakerPySdkCoreMonitoringMetrics --value $(python workflow_helper/compute_resource_coverage.py) --unit Count --dimensions MetricCategory=Unit-${{ matrix.python-version }}
           else
             echo "Putting metrics has been skipped"
@@ -204,7 +204,7 @@ jobs:
           role-duration-seconds: 10800
       - name: Execute Boto API Coverage compute script and capture output
         run: |
-          if [[ "${{ github.event.pull_request.user.login }}" == ${{ secrets.SAGEMAKER_BOT_USER_LOGIN }}* ]]; then
+          if [[ "${{ needs.collab-check.outputs.approval-env }}" == "auto-approve" ]]; then
             output=$(python workflow_helper/compute_boto_api_coverage.py)
             unsupported_apis=$(echo $output | cut -d ' ' -f1)
             supported_apis=$(echo $output | cut -d ' ' -f2)
