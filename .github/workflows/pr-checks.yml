@@ -82,8 +82,9 @@ jobs:
         if: ${{ failure() }}
         run: |
           if [[ "${{ github.event.pull_request.user.login }}" == ${{ secrets.SAGEMAKER_BOT_USER_LOGIN }} ]]; then
-            echo "Integration test Failed. Putting Failure Metrics onto Cloudwatch"
+            echo "Integration test Failed. Putting Failure Metrics = 1 and Success = 0 onto Cloudwatch"
             aws cloudwatch put-metric-data --metric-name IntegrationTestFailure --namespace SageMakerPySdkCoreMonitoringMetrics --value 1 --unit Count --dimensions MetricCategory=Integration
+            aws cloudwatch put-metric-data --metric-name IntegrationTestSuccess --namespace SageMakerPySdkCoreMonitoringMetrics --value 0 --unit Count --dimensions MetricCategory=Integration
           else
             echo "Putting metrics has been skipped"
           fi
@@ -91,8 +92,9 @@ jobs:
         if: ${{ success() }}
         run: |
           if [[ "${{ github.event.pull_request.user.login }}" == ${{ secrets.SAGEMAKER_BOT_USER_LOGIN }} ]]; then
-            echo "Integration test Succeeded. Putting Success Metrics onto Cloudwatch"
+            echo "Integration test Succeeded. Putting Success Metrics = 1 and Failure = 0onto Cloudwatch"
             aws cloudwatch put-metric-data --metric-name IntegrationTestSuccess --namespace SageMakerPySdkCoreMonitoringMetrics --value 1 --unit Count --dimensions MetricCategory=Integration
+            aws cloudwatch put-metric-data --metric-name IntegrationTestFailure --namespace SageMakerPySdkCoreMonitoringMetrics --value 0 --unit Count --dimensions MetricCategory=Integration
           else
             echo "Putting metrics has been skipped"
           fi
@@ -130,8 +132,9 @@ jobs:
         if: ${{ failure() }}
         run: |
           if [[ "${{ github.event.pull_request.user.login }}" == ${{ secrets.SAGEMAKER_BOT_USER_LOGIN }} ]]; then
-            echo "Unit test run Failed. Putting Failure Metrics onto Cloudwatch"
+            echo "Unit test run Failed. Putting Failure Metrics = 1 and Success = 0 onto Cloudwatch"
             aws cloudwatch put-metric-data --metric-name UnitTestFailure --namespace SageMakerPySdkCoreMonitoringMetrics --value 1 --unit Count --dimensions MetricCategory=Unit-${{ matrix.python-version }}
+            aws cloudwatch put-metric-data --metric-name UnitTestSuccess --namespace SageMakerPySdkCoreMonitoringMetrics --value 0 --unit Count --dimensions MetricCategory=Unit-${{ matrix.python-version }}
           else
             echo "Putting metrics has been skipped"
           fi
@@ -139,8 +142,9 @@ jobs:
         if: ${{ success() }}
         run: |
           if [[ "${{ github.event.pull_request.user.login }}" == ${{ secrets.SAGEMAKER_BOT_USER_LOGIN }} ]]; then
-            echo "Unit test run Succeeded. Putting Success Metrics onto Cloudwatch"
+            echo "Unit test run Succeeded. Putting Success Metrics = 1 and Failure = 0 onto Cloudwatch"
             aws cloudwatch put-metric-data --metric-name UnitTestSuccess --namespace SageMakerPySdkCoreMonitoringMetrics --value 1 --unit Count --dimensions MetricCategory=Unit-${{ matrix.python-version }}
+            aws cloudwatch put-metric-data --metric-name UnitTestFailure --namespace SageMakerPySdkCoreMonitoringMetrics --value 0 --unit Count --dimensions MetricCategory=Unit-${{ matrix.python-version }}
           else
             echo "Putting metrics has been skipped"
           fi
