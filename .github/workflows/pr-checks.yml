@@ -92,7 +92,7 @@ jobs:
         if: ${{ success() }}
         run: |
           if [[ "${{ github.event.pull_request.user.login }}" == ${{ secrets.SAGEMAKER_BOT_USER_LOGIN }} ]]; then
-            echo "Integration test Succeeded. Putting Success Metrics = 1 and Failure = 0onto Cloudwatch"
+            echo "Integration test Succeeded. Putting Success Metrics = 1 and Failure = 0 onto Cloudwatch"
             aws cloudwatch put-metric-data --metric-name IntegrationTestSuccess --namespace SageMakerPySdkCoreMonitoringMetrics --value 1 --unit Count --dimensions MetricCategory=Integration
             aws cloudwatch put-metric-data --metric-name IntegrationTestFailure --namespace SageMakerPySdkCoreMonitoringMetrics --value 0 --unit Count --dimensions MetricCategory=Integration
           else
