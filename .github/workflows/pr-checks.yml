@@ -107,7 +107,7 @@ jobs:
         python-version: [ "3.8", "3.9", "3.10", "3.11", "3.12" ]
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha }}
       - name: Set up Python ${{ matrix.python-version }}
@@ -183,7 +183,7 @@ jobs:
       - name: Execute Python Coverage compute script and capture output
         id: execute_coverage_parse_script
         run: |
-          if [[ "${{ github.event.pull_request.user.login }}" == ${{ secrets.SAGEMAKER_BOT_USER_LOGIN }}* ]]; then
+          if [[ "${{ github.event.pull_request.user.login }}" == ${{ secrets.SAGEMAKER_BOT_USER_LOGIN }} ]]; then
             aws cloudwatch put-metric-data --metric-name UnitTestCoverage --namespace SageMakerPySdkCoreMonitoringMetrics --value $(python workflow_helper/compute_resource_coverage.py) --unit Count --dimensions MetricCategory=Unit-${{ matrix.python-version }}
           else
             echo "Putting metrics has been skipped"
@@ -208,7 +208,7 @@ jobs:
           role-duration-seconds: 10800
       - name: Execute Boto API Coverage compute script and capture output
         run: |
-          if [[ "${{ github.event.pull_request.user.login }}" == ${{ secrets.SAGEMAKER_BOT_USER_LOGIN }}* ]]; then
+          if [[ "${{ github.event.pull_request.user.login }}" == ${{ secrets.SAGEMAKER_BOT_USER_LOGIN }} ]]; then
             output=$(python workflow_helper/compute_boto_api_coverage.py)
             unsupported_apis=$(echo $output | cut -d ' ' -f1)
             supported_apis=$(echo $output | cut -d ' ' -f2)
@@ -221,7 +221,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [wait-for-approval]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha }}
       - name: Set up Python
