@@ -3224,6 +3224,7 @@ class Cluster(Base):
         restricted_instance_groups: The specialized instance groups for training models like Amazon Nova to be created in the SageMaker HyperPod cluster.
         vpc_config:
         orchestrator: The type of orchestrator used for the SageMaker HyperPod cluster.
+        tiered_storage_config: The current configuration for managed tier checkpointing on the HyperPod cluster. For example, this shows whether the feature is enabled and the percentage of cluster memory allocated for checkpoint storage.
         node_recovery: The node recovery mode configured for the SageMaker HyperPod cluster.
         node_provisioning_mode: The mode used for provisioning nodes in the cluster.
         cluster_role: The Amazon Resource Name (ARN) of the IAM role that HyperPod uses for cluster autoscaling operations.
@@ -3242,6 +3243,7 @@ class Cluster(Base):
     )
     vpc_config: Optional[shapes.VpcConfig] = Unassigned()
     orchestrator: Optional[shapes.ClusterOrchestrator] = Unassigned()
+    tiered_storage_config: Optional[shapes.ClusterTieredStorageConfig] = Unassigned()
     node_recovery: Optional[str] = Unassigned()
     node_provisioning_mode: Optional[str] = Unassigned()
     cluster_role: Optional[str] = Unassigned()
@@ -3270,7 +3272,8 @@ class Cluster(Base):
                 "vpc_config": {
                     "security_group_ids": {"type": "array", "items": {"type": "string"}},
                     "subnets": {"type": "array", "items": {"type": "string"}},
-                }
+                },
+                "cluster_role": {"type": "string"},
             }
             return create_func(
                 *args,
@@ -3295,6 +3298,7 @@ class Cluster(Base):
         tags: Optional[List[shapes.Tag]] = Unassigned(),
         orchestrator: Optional[shapes.ClusterOrchestrator] = Unassigned(),
         node_recovery: Optional[str] = Unassigned(),
+        tiered_storage_config: Optional[shapes.ClusterTieredStorageConfig] = Unassigned(),
         node_provisioning_mode: Optional[str] = Unassigned(),
         cluster_role: Optional[str] = Unassigned(),
         auto_scaling: Optional[shapes.ClusterAutoScalingConfig] = Unassigned(),
@@ -3312,6 +3316,7 @@ class Cluster(Base):
             tags: Custom tags for managing the SageMaker HyperPod cluster as an Amazon Web Services resource. You can add tags to your cluster in the same way you add them in other Amazon Web Services services that support tagging. To learn more about tagging Amazon Web Services resources in general, see Tagging Amazon Web Services Resources User Guide.
             orchestrator: The type of orchestrator to use for the SageMaker HyperPod cluster. Currently, the only supported value is "eks", which is to use an Amazon Elastic Kubernetes Service cluster as the orchestrator.
             node_recovery: The node recovery mode for the SageMaker HyperPod cluster. When set to Automatic, SageMaker HyperPod will automatically reboot or replace faulty nodes when issues are detected. When set to None, cluster administrators will need to manually manage any faulty cluster instances.
+            tiered_storage_config: The configuration for managed tier checkpointing on the HyperPod cluster. When enabled, this feature uses a multi-tier storage approach for storing model checkpoints, providing faster checkpoint operations and improved fault tolerance across cluster nodes.
             node_provisioning_mode: The mode for provisioning nodes in the cluster. You can specify the following modes:    Continuous: Scaling behavior that enables 1) concurrent operation execution within instance groups, 2) continuous retry mechanisms for failed operations, 3) enhanced customer visibility into cluster events through detailed event streams, 4) partial provisioning capabilities. Your clusters and instance groups remain InService while scaling. This mode is only supported for EKS orchestrated clusters.
             cluster_role: The Amazon Resource Name (ARN) of the IAM role that HyperPod assumes to perform cluster autoscaling operations. This role must have permissions for sagemaker:BatchAddClusterNodes and sagemaker:BatchDeleteClusterNodes. This is only required when autoscaling is enabled and when HyperPod is performing autoscaling operations.
             auto_scaling: The autoscaling configuration for the cluster. Enables automatic scaling of cluster nodes based on workload demand using a Karpenter-based system.
@@ -3351,6 +3356,7 @@ class Cluster(Base):
             "Tags": tags,
             "Orchestrator": orchestrator,
             "NodeRecovery": node_recovery,
+            "TieredStorageConfig": tiered_storage_config,
             "NodeProvisioningMode": node_provisioning_mode,
             "ClusterRole": cluster_role,
             "AutoScaling": auto_scaling,
@@ -3467,6 +3473,7 @@ class Cluster(Base):
         restricted_instance_groups: Optional[
             List[shapes.ClusterRestrictedInstanceGroupSpecification]
         ] = Unassigned(),
+        tiered_storage_config: Optional[shapes.ClusterTieredStorageConfig] = Unassigned(),
         node_recovery: Optional[str] = Unassigned(),
         instance_groups_to_delete: Optional[List[str]] = Unassigned(),
         cluster_role: Optional[str] = Unassigned(),
@@ -3503,6 +3510,7 @@ class Cluster(Base):
             "ClusterName": self.cluster_name,
             "InstanceGroups": instance_groups,
             "RestrictedInstanceGroups": restricted_instance_groups,
+            "TieredStorageConfig": tiered_storage_config,
             "NodeRecovery": node_recovery,
             "InstanceGroupsToDelete": instance_groups_to_delete,
             "ClusterRole": cluster_role,
@@ -16949,7 +16957,7 @@ class LabelingJob(Base):
 
         Parameters:
             labeling_job_name: The name of the labeling job. This name is used to identify the job in a list of labeling jobs. Labeling job names must be unique within an Amazon Web Services account and region. LabelingJobName is not case sensitive. For example, Example-job and example-job are considered the same labeling job name by Ground Truth.
-            label_attribute_name: The attribute name to use for the label in the output manifest file. This is the key for the key/value pair formed with the label that a worker assigns to the object. The LabelAttributeName must meet the following requirements.   The name can't end with "-metadata".    If you are using one of the following built-in task types, the attribute name must end with "-ref". If the task type you are using is not listed below, the attribute name must not end with "-ref".   Verification (VerificationSemanticSegmentation) labeling jobs for this task type.   Video frame object detection (VideoObjectDetection), and adjustment and verification (AdjustmentVideoObjectDetection) labeling jobs for this task type.   Video frame object tracking (VideoObjectTracking), and adjustment and verification (AdjustmentVideoObjectTracking) labeling jobs for this task type.   3D point cloud semantic segmentation (3DPointCloudSemanticSegmentation), and adjustment and verification (Adjustment3DPointCloudSemanticSegmentation) labeling jobs for this task type.    3D point cloud object tracking (3DPointCloudObjectTracking), and adjustment and verification (Adjustment3DPointCloudObjectTracking) labeling jobs for this task type.        If you are creating an adjustment or verification labeling job, you must use a different LabelAttributeName than the one used in the original labeling job. The original labeling job is the Ground Truth labeling job that produced the labels that you want verified or adjusted. To learn more about adjustment and verification labeling jobs, see Verify and Adjust Labels.
+            label_attribute_name: The attribute name to use for the label in the output manifest file. This is the key for the key/value pair formed with the label that a worker assigns to the object. The LabelAttributeName must meet the following requirements.   The name can't end with "-metadata".    If you are using one of the built-in task types or one of the following, the attribute name must end with "-ref".   Image semantic segmentation (SemanticSegmentation) and adjustment (AdjustmentSemanticSegmentation) labeling jobs for this task type. One exception is that verification (VerificationSemanticSegmentation) must not end with -"ref".   Video frame object detection (VideoObjectDetection), and adjustment and verification (AdjustmentVideoObjectDetection) labeling jobs for this task type.   Video frame object tracking (VideoObjectTracking), and adjustment and verification (AdjustmentVideoObjectTracking) labeling jobs for this task type.   3D point cloud semantic segmentation (3DPointCloudSemanticSegmentation), and adjustment and verification (Adjustment3DPointCloudSemanticSegmentation) labeling jobs for this task type.    3D point cloud object tracking (3DPointCloudObjectTracking), and adjustment and verification (Adjustment3DPointCloudObjectTracking) labeling jobs for this task type.        If you are creating an adjustment or verification labeling job, you must use a different LabelAttributeName than the one used in the original labeling job. The original labeling job is the Ground Truth labeling job that produced the labels that you want verified or adjusted. To learn more about adjustment and verification labeling jobs, see Verify and Adjust Labels.
             input_config: Input data for the labeling job, such as the Amazon S3 location of the data objects and the location of the manifest file that describes the data objects. You must specify at least one of the following: S3DataSource or SnsDataSource.    Use SnsDataSource to specify an SNS input topic for a streaming labeling job. If you do not specify and SNS input topic ARN, Ground Truth will create a one-time labeling job that stops after all data objects in the input manifest file have been labeled.   Use S3DataSource to specify an input manifest file for both streaming and one-time labeling jobs. Adding an S3DataSource is optional if you use SnsDataSource to create a streaming labeling job.   If you use the Amazon Mechanical Turk workforce, your input data should not include confidential information, personal information or protected health information. Use ContentClassifiers to specify that your data is free of personally identifiable information and adult content.
             output_config: The location of the output data and the Amazon Web Services Key Management Service key ID for the key used to encrypt the output data, if any.
             role_arn: The Amazon Resource Number (ARN) that Amazon SageMaker assumes to perform tasks on your behalf during data labeling. You must grant this role the necessary permissions so that Amazon SageMaker can successfully complete data labeling.
@@ -22543,6 +22551,7 @@ class NotebookInstance(Base):
         failure_reason: If status is Failed, the reason it failed.
         url: The URL that you use to connect to the Jupyter notebook that is running in your notebook instance.
         instance_type: The type of ML compute instance running on the notebook instance.
+        ip_address_type: The IP address type configured for the notebook instance. Returns ipv4 for IPv4-only connectivity or dualstack for both IPv4 and IPv6 connectivity.
         subnet_id: The ID of the VPC subnet.
         security_groups: The IDs of the VPC security groups.
         role_arn: The Amazon Resource Name (ARN) of the IAM role associated with the instance.
@@ -22568,6 +22577,7 @@ class NotebookInstance(Base):
     failure_reason: Optional[str] = Unassigned()
     url: Optional[str] = Unassigned()
     instance_type: Optional[str] = Unassigned()
+    ip_address_type: Optional[str] = Unassigned()
     subnet_id: Optional[str] = Unassigned()
     security_groups: Optional[List[str]] = Unassigned()
     role_arn: Optional[str] = Unassigned()
@@ -22631,6 +22641,7 @@ class NotebookInstance(Base):
         role_arn: str,
         subnet_id: Optional[str] = Unassigned(),
         security_group_ids: Optional[List[str]] = Unassigned(),
+        ip_address_type: Optional[str] = Unassigned(),
         kms_key_id: Optional[str] = Unassigned(),
         tags: Optional[List[shapes.Tag]] = Unassigned(),
         lifecycle_config_name: Optional[str] = Unassigned(),
@@ -22656,6 +22667,7 @@ class NotebookInstance(Base):
             role_arn:  When you send any requests to Amazon Web Services resources from the notebook instance, SageMaker AI assumes this role to perform tasks on your behalf. You must grant this role necessary permissions so SageMaker AI can perform these tasks. The policy must allow the SageMaker AI service principal (sagemaker.amazonaws.com) permissions to assume this role. For more information, see SageMaker AI Roles.   To be able to pass this role to SageMaker AI, the caller of this API must have the iam:PassRole permission.
             subnet_id: The ID of the subnet in a VPC to which you would like to have a connectivity from your ML compute instance.
             security_group_ids: The VPC security group IDs, in the form sg-xxxxxxxx. The security groups must be for the same VPC as specified in the subnet.
+            ip_address_type: The IP address type for the notebook instance. Specify ipv4 for IPv4-only connectivity or dualstack for both IPv4 and IPv6 connectivity. When you specify dualstack, the subnet must support IPv6 CIDR blocks. If not specified, defaults to ipv4.
             kms_key_id: The Amazon Resource Name (ARN) of a Amazon Web Services Key Management Service key that SageMaker AI uses to encrypt data on the storage volume attached to your notebook instance. The KMS key you provide must be enabled. For information, see Enabling and Disabling Keys in the Amazon Web Services Key Management Service Developer Guide.
             tags: An array of key-value pairs. You can use tags to categorize your Amazon Web Services resources in different ways, for example, by purpose, owner, or environment. For more information, see Tagging Amazon Web Services Resources.
             lifecycle_config_name: The name of a lifecycle configuration to associate with the notebook instance. For information about lifestyle configurations, see Step 2.1: (Optional) Customize a Notebook Instance.
@@ -22699,6 +22711,7 @@ class NotebookInstance(Base):
             "InstanceType": instance_type,
             "SubnetId": subnet_id,
             "SecurityGroupIds": security_group_ids,
+            "IpAddressType": ip_address_type,
             "RoleArn": role_arn,
             "KmsKeyId": kms_key_id,
             "Tags": tags,
@@ -22821,6 +22834,7 @@ class NotebookInstance(Base):
     def update(
         self,
         instance_type: Optional[str] = Unassigned(),
+        ip_address_type: Optional[str] = Unassigned(),
         role_arn: Optional[str] = Unassigned(),
         lifecycle_config_name: Optional[str] = Unassigned(),
         disassociate_lifecycle_config: Optional[bool] = Unassigned(),
@@ -22868,6 +22882,7 @@ class NotebookInstance(Base):
         operation_input_args = {
             "NotebookInstanceName": self.notebook_instance_name,
             "InstanceType": instance_type,
+            "IpAddressType": ip_address_type,
             "RoleArn": role_arn,
             "LifecycleConfigName": lifecycle_config_name,
             "DisassociateLifecycleConfig": disassociate_lifecycle_config,
@@ -23982,7 +23997,7 @@ class PartnerApp(Base):
         arn: The ARN of the SageMaker Partner AI App that was described.
         name: The name of the SageMaker Partner AI App.
         type: The type of SageMaker Partner AI App. Must be one of the following: lakera-guard, comet, deepchecks-llm-evaluation, or fiddler.
-        status: The status of the SageMaker Partner AI App.
+        status: The status of the SageMaker Partner AI App.   Creating: SageMaker AI is creating the partner AI app. The partner AI app is not available during creation.   Updating: SageMaker AI is updating the partner AI app. The partner AI app is not available when updating.   Deleting: SageMaker AI is deleting the partner AI app. The partner AI app is not available during deletion.   Available: The partner AI app is provisioned and accessible.   Failed: The partner AI app is in a failed state and isn't available. SageMaker AI is investigating the issue. For further guidance, contact Amazon Web Services Support.   UpdateFailed: The partner AI app couldn't be updated but is available.   Deleted: The partner AI app is permanently deleted and not available.
         creation_time: The time that the SageMaker Partner AI App was created.
         last_modified_time: The time that the SageMaker Partner AI App was last modified.
         execution_role_arn: The ARN of the IAM role associated with the SageMaker Partner AI App.
