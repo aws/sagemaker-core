@@ -1787,6 +1787,17 @@ SHAPE_DAG = {
         ],
         "type": "structure",
     },
+    "ClusterTieredStorageConfig": {
+        "members": [
+            {"name": "Mode", "shape": "ClusterConfigMode", "type": "string"},
+            {
+                "name": "InstanceMemoryAllocationPercentage",
+                "shape": "ClusterInstanceMemoryAllocationPercentage",
+                "type": "integer",
+            },
+        ],
+        "type": "structure",
+    },
     "CodeEditorAppImageConfig": {
         "members": [
             {"name": "FileSystemConfig", "shape": "FileSystemConfig", "type": "structure"},
@@ -2262,6 +2273,11 @@ SHAPE_DAG = {
             {"name": "Tags", "shape": "TagList", "type": "list"},
             {"name": "Orchestrator", "shape": "ClusterOrchestrator", "type": "structure"},
             {"name": "NodeRecovery", "shape": "ClusterNodeRecovery", "type": "string"},
+            {
+                "name": "TieredStorageConfig",
+                "shape": "ClusterTieredStorageConfig",
+                "type": "structure",
+            },
             {
                 "name": "NodeProvisioningMode",
                 "shape": "ClusterNodeProvisioningMode",
@@ -3085,6 +3101,7 @@ SHAPE_DAG = {
             {"name": "InstanceType", "shape": "InstanceType", "type": "string"},
             {"name": "SubnetId", "shape": "SubnetId", "type": "string"},
             {"name": "SecurityGroupIds", "shape": "SecurityGroupIds", "type": "list"},
+            {"name": "IpAddressType", "shape": "IPAddressType", "type": "string"},
             {"name": "RoleArn", "shape": "RoleArn", "type": "string"},
             {"name": "KmsKeyId", "shape": "KmsKeyId", "type": "string"},
             {"name": "Tags", "shape": "TagList", "type": "list"},
@@ -4659,6 +4676,11 @@ SHAPE_DAG = {
             },
             {"name": "VpcConfig", "shape": "VpcConfig", "type": "structure"},
             {"name": "Orchestrator", "shape": "ClusterOrchestrator", "type": "structure"},
+            {
+                "name": "TieredStorageConfig",
+                "shape": "ClusterTieredStorageConfig",
+                "type": "structure",
+            },
             {"name": "NodeRecovery", "shape": "ClusterNodeRecovery", "type": "string"},
             {
                 "name": "NodeProvisioningMode",
@@ -5875,6 +5897,7 @@ SHAPE_DAG = {
             {"name": "FailureReason", "shape": "FailureReason", "type": "string"},
             {"name": "Url", "shape": "NotebookInstanceUrl", "type": "string"},
             {"name": "InstanceType", "shape": "InstanceType", "type": "string"},
+            {"name": "IpAddressType", "shape": "IPAddressType", "type": "string"},
             {"name": "SubnetId", "shape": "SubnetId", "type": "string"},
             {"name": "SecurityGroups", "shape": "SecurityGroupIds", "type": "list"},
             {"name": "RoleArn", "shape": "RoleArn", "type": "string"},
@@ -15841,6 +15864,11 @@ SHAPE_DAG = {
                 "shape": "ClusterRestrictedInstanceGroupSpecifications",
                 "type": "list",
             },
+            {
+                "name": "TieredStorageConfig",
+                "shape": "ClusterTieredStorageConfig",
+                "type": "structure",
+            },
             {"name": "NodeRecovery", "shape": "ClusterNodeRecovery", "type": "string"},
             {
                 "name": "InstanceGroupsToDelete",
@@ -16322,6 +16350,7 @@ SHAPE_DAG = {
         "members": [
             {"name": "NotebookInstanceName", "shape": "NotebookInstanceName", "type": "string"},
             {"name": "InstanceType", "shape": "InstanceType", "type": "string"},
+            {"name": "IpAddressType", "shape": "IPAddressType", "type": "string"},
             {"name": "RoleArn", "shape": "RoleArn", "type": "string"},
             {
                 "name": "LifecycleConfigName",
