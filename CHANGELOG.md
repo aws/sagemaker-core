@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.0.59 (2025-09-10)
+
+ * Daily Sync with Botocore v1.40.27 on 2025/09/10 (#343)
+ * chore: remove deleted bucket (#342)
+ * Fix missing put metrics (#341)
+
 ## v1.0.58 (2025-09-08)
 
  * Daily Sync with Botocore v1.40.25 on 2025/09/08 (#340)
