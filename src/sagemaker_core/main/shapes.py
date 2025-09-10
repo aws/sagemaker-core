@@ -5477,6 +5477,7 @@ class DomainSettings(Base):
     docker_settings: A collection of settings that configure the domain's Docker interaction.
     amazon_q_settings: A collection of settings that configure the Amazon Q experience within the domain. The AuthMode that you use to create the domain must be SSO.
     unified_studio_settings: The settings that apply to an SageMaker AI domain when you use it in Amazon SageMaker Unified Studio.
+    ip_address_type: The IP address type for the domain. Specify ipv4 for IPv4-only connectivity or dualstack for both IPv4 and IPv6 connectivity. When you specify dualstack, the subnet must support IPv6 CIDR blocks. If not specified, defaults to ipv4.
     """
 
     security_group_ids: Optional[List[str]] = Unassigned()
@@ -5488,6 +5489,7 @@ class DomainSettings(Base):
     docker_settings: Optional[DockerSettings] = Unassigned()
     amazon_q_settings: Optional[AmazonQSettings] = Unassigned()
     unified_studio_settings: Optional[UnifiedStudioSettings] = Unassigned()
+    ip_address_type: Optional[str] = Unassigned()
 
 
 class DefaultSpaceSettings(Base):
@@ -10311,6 +10313,7 @@ class DomainSettingsForUpdate(Base):
     docker_settings: A collection of settings that configure the domain's Docker interaction.
     amazon_q_settings: A collection of settings that configure the Amazon Q experience within the domain.
     unified_studio_settings: The settings that apply to an SageMaker AI domain when you use it in Amazon SageMaker Unified Studio.
+    ip_address_type: The IP address type for the domain. Specify ipv4 for IPv4-only connectivity or dualstack for both IPv4 and IPv6 connectivity. When you specify dualstack, the subnet must support IPv6 CIDR blocks.
     """
 
     r_studio_server_pro_domain_settings_for_update: Optional[
@@ -10324,6 +10327,7 @@ class DomainSettingsForUpdate(Base):
     docker_settings: Optional[DockerSettings] = Unassigned()
     amazon_q_settings: Optional[AmazonQSettings] = Unassigned()
     unified_studio_settings: Optional[UnifiedStudioSettings] = Unassigned()
+    ip_address_type: Optional[str] = Unassigned()
 
 
 class PredefinedMetricSpecification(Base):
