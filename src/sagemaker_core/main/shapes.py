@@ -6377,6 +6377,19 @@ class InferenceComponentComputeResourceRequirements(Base):
     max_memory_required_in_mb: Optional[int] = Unassigned()
 
 
+class InferenceComponentDataCacheConfig(Base):
+    """
+    InferenceComponentDataCacheConfig
+      Settings that affect how the inference component caches data.
+
+    Attributes
+    ----------------------
+    enable_caching: Sets whether the endpoint that hosts the inference component caches the model artifacts and container image. With caching enabled, the endpoint caches this data in each instance that it provisions for the inference component. That way, the inference component deploys faster during the auto scaling process. If caching isn't enabled, the inference component takes longer to deploy because of the time it spends downloading the data.
+    """
+
+    enable_caching: bool
+
+
 class InferenceComponentSpecification(Base):
     """
     InferenceComponentSpecification
@@ -6389,6 +6402,7 @@ class InferenceComponentSpecification(Base):
     startup_parameters: Settings that take effect while the model container starts up.
     compute_resource_requirements: The compute resources allocated to run the model, plus any adapter models, that you assign to the inference component. Omit this parameter if your request is meant to create an adapter inference component. An adapter inference component is loaded by a base inference component, and it uses the compute resources of the base inference component.
     base_inference_component_name: The name of an existing inference component that is to contain the inference component that you're creating with your request. Specify this parameter only if your request is meant to create an adapter inference component. An adapter inference component contains the path to an adapter model. The purpose of the adapter model is to tailor the inference output of a base foundation model, which is hosted by the base inference component. The adapter inference component uses the compute resources that you assigned to the base inference component. When you create an adapter inference component, use the Container parameter to specify the location of the adapter artifacts. In the parameter value, use the ArtifactUrl parameter of the InferenceComponentContainerSpecification data type. Before you can create an adapter inference component, you must have an existing inference component that contains the foundation model that you want to adapt.
+    data_cache_config: Settings that affect how the inference component caches data.
     """
 
     model_name: Optional[Union[str, object]] = Unassigned()
@@ -6398,6 +6412,7 @@ class InferenceComponentSpecification(Base):
         Unassigned()
     )
     base_inference_component_name: Optional[str] = Unassigned()
+    data_cache_config: Optional[InferenceComponentDataCacheConfig] = Unassigned()
 
 
 class InferenceComponentRuntimeConfig(Base):
@@ -7803,7 +7818,7 @@ class ProcessingS3Input(Base):
     local_path: The local path in your container where you want Amazon SageMaker to write input data to. LocalPath is an absolute path to the input data and must begin with /opt/ml/processing/. LocalPath is a required parameter when AppManaged is False (default).
     s3_data_type: Whether you use an S3Prefix or a ManifestFile for the data type. If you choose S3Prefix, S3Uri identifies a key name prefix. Amazon SageMaker uses all objects with the specified key name prefix for the processing job. If you choose ManifestFile, S3Uri identifies an object that is a manifest file containing a list of object keys that you want Amazon SageMaker to use for the processing job.
     s3_input_mode: Whether to use File or Pipe input mode. In File mode, Amazon SageMaker copies the data from the input source onto the local ML storage volume before starting your processing container. This is the most commonly used input mode. In Pipe mode, Amazon SageMaker streams input data from the source directly to your processing container into named pipes without using the ML storage volume.
-    s3_data_distribution_type: Whether to distribute the data from Amazon S3 to all processing instances with FullyReplicated, or whether the data from Amazon S3 is shared by Amazon S3 key, downloading one shard of data to each processing instance.
+    s3_data_distribution_type: Whether to distribute the data from Amazon S3 to all processing instances with FullyReplicated, or whether the data from Amazon S3 is sharded by Amazon S3 key, downloading one shard of data to each processing instance.
     s3_compression_type: Whether to GZIP-decompress the data in Amazon S3 as it is streamed into the processing container. Gzip can only be used when Pipe mode is specified as the S3InputMode. In Pipe mode, Amazon SageMaker streams input data from the source directly to your container without using the EBS volume.
     """
 
@@ -9284,6 +9299,19 @@ class InferenceComponentContainerSpecificationSummary(Base):
     environment: Optional[Dict[str, str]] = Unassigned()
 
 
+class InferenceComponentDataCacheConfigSummary(Base):
+    """
+    InferenceComponentDataCacheConfigSummary
+      Settings that affect how the inference component caches data.
+
+    Attributes
+    ----------------------
+    enable_caching: Indicates whether the inference component caches model artifacts as part of the auto scaling process.
+    """
+
+    enable_caching: bool
+
+
 class InferenceComponentSpecificationSummary(Base):
     """
     InferenceComponentSpecificationSummary
@@ -9296,6 +9324,7 @@ class InferenceComponentSpecificationSummary(Base):
     startup_parameters: Settings that take effect while the model container starts up.
     compute_resource_requirements: The compute resources allocated to run the model, plus any adapter models, that you assign to the inference component.
     base_inference_component_name: The name of the base inference component that contains this inference component.
+    data_cache_config: Settings that affect how the inference component caches data.
     """
 
     model_name: Optional[Union[str, object]] = Unassigned()
@@ -9305,6 +9334,7 @@ class InferenceComponentSpecificationSummary(Base):
         Unassigned()
     )
     base_inference_component_name: Optional[str] = Unassigned()
+    data_cache_config: Optional[InferenceComponentDataCacheConfigSummary] = Unassigned()
 
 
 class InferenceComponentRuntimeConfigSummary(Base):
