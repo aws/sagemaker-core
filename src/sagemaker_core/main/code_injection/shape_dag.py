@@ -8365,6 +8365,14 @@ SHAPE_DAG = {
         ],
         "type": "structure",
     },
+    "InferenceComponentDataCacheConfig": {
+        "members": [{"name": "EnableCaching", "shape": "EnableCaching", "type": "boolean"}],
+        "type": "structure",
+    },
+    "InferenceComponentDataCacheConfigSummary": {
+        "members": [{"name": "EnableCaching", "shape": "EnableCaching", "type": "boolean"}],
+        "type": "structure",
+    },
     "InferenceComponentDeploymentConfig": {
         "members": [
             {
@@ -8437,6 +8445,11 @@ SHAPE_DAG = {
                 "shape": "InferenceComponentName",
                 "type": "string",
             },
+            {
+                "name": "DataCacheConfig",
+                "shape": "InferenceComponentDataCacheConfig",
+                "type": "structure",
+            },
         ],
         "type": "structure",
     },
@@ -8462,6 +8475,11 @@ SHAPE_DAG = {
                 "name": "BaseInferenceComponentName",
                 "shape": "InferenceComponentName",
                 "type": "string",
+            },
+            {
+                "name": "DataCacheConfig",
+                "shape": "InferenceComponentDataCacheConfigSummary",
+                "type": "structure",
             },
         ],
         "type": "structure",
