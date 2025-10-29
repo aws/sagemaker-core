@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.0.61 (2025-10-29)
+
+ * Daily Sync with Botocore v1.40.61 on 2025/10/29 (#345)
+
 ## v1.0.60 (2025-10-27)
 
  * Daily Sync with Botocore v1.40.59 on 2025/10/27 (#344)
