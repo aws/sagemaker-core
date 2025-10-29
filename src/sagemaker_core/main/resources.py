@@ -26309,6 +26309,40 @@ class ProcessingJob(Base):
         return self
 
     @Base.add_validate_call
+    def delete(
+        self,
+    ) -> None:
+        """
+        Delete a ProcessingJob resource
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceInUse: Resource being accessed is in use.
+            ResourceNotFound: Resource being access is not found.
+        """
+
+        client = Base.get_sagemaker_client()
+
+        operation_input_args = {
+            "ProcessingJobName": self.processing_job_name,
+        }
+        # serialize the input request
+        operation_input_args = serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+
+        client.delete_processing_job(**operation_input_args)
+
+        logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+
+    @Base.add_validate_call
     def stop(self) -> None:
         """
         Stop a ProcessingJob resource
@@ -28709,6 +28743,40 @@ class TrainingJob(Base):
         return self
 
     @Base.add_validate_call
+    def delete(
+        self,
+    ) -> None:
+        """
+        Delete a TrainingJob resource
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceInUse: Resource being accessed is in use.
+            ResourceNotFound: Resource being access is not found.
+        """
+
+        client = Base.get_sagemaker_client()
+
+        operation_input_args = {
+            "TrainingJobName": self.training_job_name,
+        }
+        # serialize the input request
+        operation_input_args = serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+
+        client.delete_training_job(**operation_input_args)
+
+        logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+
+    @Base.add_validate_call
     def stop(self) -> None:
         """
         Stop a TrainingJob resource
@@ -28820,6 +28888,69 @@ class TrainingJob(Base):
 
                 if timeout is not None and time.time() - start_time >= timeout:
                     raise TimeoutExceededError(resouce_type="TrainingJob", status=current_status)
+                time.sleep(poll)
+
+    @Base.add_validate_call
+    def wait_for_delete(
+        self,
+        poll: int = 5,
+        timeout: Optional[int] = None,
+    ) -> None:
+        """
+        Wait for a TrainingJob resource to be deleted.
+
+        Parameters:
+            poll: The number of seconds to wait between each poll.
+            timeout: The maximum number of seconds to wait before timing out.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
+            DeleteFailedStatusError:   If the resource reaches a failed state.
+            WaiterError: Raised when an error occurs while waiting.
+        """
+        start_time = time.time()
+
+        progress = Progress(
+            SpinnerColumn("bouncingBar"),
+            TextColumn("{task.description}"),
+            TimeElapsedColumn(),
+        )
+        progress.add_task("Waiting for TrainingJob to be deleted...")
+        status = Status("Current status:")
+
+        with Live(
+            Panel(
+                Group(progress, status),
+                title="Wait Log Panel",
+                border_style=Style(color=Color.BLUE.value),
+            )
+        ):
+            while True:
+                try:
+                    self.refresh()
+                    current_status = self.training_job_status
+                    status.update(f"Current status: [bold]{current_status}")
+
+                    if timeout is not None and time.time() - start_time >= timeout:
+                        raise TimeoutExceededError(
+                            resouce_type="TrainingJob", status=current_status
+                        )
+                except botocore.exceptions.ClientError as e:
+                    error_code = e.response["Error"]["Code"]
+
+                    if "ResourceNotFound" in error_code or "ValidationException" in error_code:
+                        logger.info("Resource was not found. It may have been deleted.")
+                        return
+                    raise e
                 time.sleep(poll)
 
     @classmethod

@@ -4213,6 +4213,10 @@ SHAPE_DAG = {
         "members": [{"name": "PipelineArn", "shape": "PipelineArn", "type": "string"}],
         "type": "structure",
     },
+    "DeleteProcessingJobRequest": {
+        "members": [{"name": "ProcessingJobName", "shape": "ProcessingJobName", "type": "string"}],
+        "type": "structure",
+    },
     "DeleteProjectInput": {
         "members": [{"name": "ProjectName", "shape": "ProjectEntityName", "type": "string"}],
         "type": "structure",
@@ -4252,6 +4256,10 @@ SHAPE_DAG = {
         "type": "structure",
     },
     "DeleteTagsOutput": {"members": [], "type": "structure"},
+    "DeleteTrainingJobRequest": {
+        "members": [{"name": "TrainingJobName", "shape": "TrainingJobName", "type": "string"}],
+        "type": "structure",
+    },
     "DeleteTrialComponentRequest": {
         "members": [
             {"name": "TrialComponentName", "shape": "ExperimentEntityName", "type": "string"}
