@@ -16379,6 +16379,7 @@ SHAPE_DAG = {
             {"name": "NotebookInstanceName", "shape": "NotebookInstanceName", "type": "string"},
             {"name": "InstanceType", "shape": "InstanceType", "type": "string"},
             {"name": "IpAddressType", "shape": "IPAddressType", "type": "string"},
+            {"name": "PlatformIdentifier", "shape": "PlatformIdentifier", "type": "string"},
             {"name": "RoleArn", "shape": "RoleArn", "type": "string"},
             {
                 "name": "LifecycleConfigName",
