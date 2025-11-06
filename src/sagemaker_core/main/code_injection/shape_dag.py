@@ -1531,6 +1531,13 @@ SHAPE_DAG = {
             },
             {"name": "CurrentImageId", "shape": "ImageId", "type": "string"},
             {"name": "DesiredImageId", "shape": "ImageId", "type": "string"},
+            {"name": "TargetStateCount", "shape": "ClusterInstanceCount", "type": "integer"},
+            {"name": "SoftwareUpdateStatus", "shape": "SoftwareUpdateStatus", "type": "string"},
+            {
+                "name": "ActiveSoftwareUpdateConfig",
+                "shape": "DeploymentConfiguration",
+                "type": "structure",
+            },
         ],
         "type": "structure",
     },

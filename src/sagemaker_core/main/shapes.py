@@ -3723,6 +3723,9 @@ class ClusterInstanceGroupDetails(Base):
     scheduled_update_config: The configuration object of the schedule that SageMaker follows when updating the AMI.
     current_image_id: The ID of the Amazon Machine Image (AMI) currently in use by the instance group.
     desired_image_id: The ID of the Amazon Machine Image (AMI) desired for the instance group.
+    target_state_count: The number of nodes running a specific image ID since the last software update request.
+    software_update_status: Status of the last software udpate request.
+    active_software_update_config
     """
 
     current_count: Optional[int] = Unassigned()
@@ -3741,6 +3744,9 @@ class ClusterInstanceGroupDetails(Base):
     scheduled_update_config: Optional[ScheduledUpdateConfig] = Unassigned()
     current_image_id: Optional[str] = Unassigned()
     desired_image_id: Optional[str] = Unassigned()
+    target_state_count: Optional[int] = Unassigned()
+    software_update_status: Optional[str] = Unassigned()
+    active_software_update_config: Optional[DeploymentConfiguration] = Unassigned()
 
 
 class ClusterInstanceGroupSpecification(Base):
