@@ -3476,6 +3476,7 @@ class Cluster(Base):
         tiered_storage_config: Optional[shapes.ClusterTieredStorageConfig] = Unassigned(),
         node_recovery: Optional[str] = Unassigned(),
         instance_groups_to_delete: Optional[List[str]] = Unassigned(),
+        node_provisioning_mode: Optional[str] = Unassigned(),
         cluster_role: Optional[str] = Unassigned(),
         auto_scaling: Optional[shapes.ClusterAutoScalingConfig] = Unassigned(),
     ) -> Optional["Cluster"]:
@@ -3513,6 +3514,7 @@ class Cluster(Base):
             "TieredStorageConfig": tiered_storage_config,
             "NodeRecovery": node_recovery,
             "InstanceGroupsToDelete": instance_groups_to_delete,
+            "NodeProvisioningMode": node_provisioning_mode,
             "ClusterRole": cluster_role,
             "AutoScaling": auto_scaling,
         }
@@ -7644,6 +7646,7 @@ class Domain(Base):
         subnet_ids: Optional[List[str]] = Unassigned(),
         app_network_access_type: Optional[str] = Unassigned(),
         tag_propagation: Optional[str] = Unassigned(),
+        vpc_id: Optional[str] = Unassigned(),
     ) -> Optional["Domain"]:
         """
         Update a Domain resource
@@ -7681,6 +7684,7 @@ class Domain(Base):
             "SubnetIds": subnet_ids,
             "AppNetworkAccessType": app_network_access_type,
             "TagPropagation": tag_propagation,
+            "VpcId": vpc_id,
         }
         logger.debug(f"Input request: {operation_input_args}")
         # serialize the input request
