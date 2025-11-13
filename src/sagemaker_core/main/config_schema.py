@@ -801,13 +801,13 @@ SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA = {
                                         "model_artifacts": {
                                             "s3_model_artifacts": {"type": "string"}
                                         },
-                                        "resource_config": {
-                                            "volume_kms_key_id": {"type": "string"}
-                                        },
                                         "role_arn": {"type": "string"},
                                         "output_data_config": {
                                             "s3_output_path": {"type": "string"},
                                             "kms_key_id": {"type": "string"},
+                                        },
+                                        "resource_config": {
+                                            "volume_kms_key_id": {"type": "string"}
                                         },
                                         "vpc_config": {
                                             "security_group_ids": {

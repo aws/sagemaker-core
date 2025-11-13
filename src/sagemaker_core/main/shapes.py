@@ -657,8 +657,8 @@ class ModelPackageContainerDefinition(Base):
     model_data_e_tag: The ETag associated with Model Data URL.
     """
 
-    image: str
     container_hostname: Optional[str] = Unassigned()
+    image: Optional[str] = Unassigned()
     image_digest: Optional[str] = Unassigned()
     model_data_url: Optional[str] = Unassigned()
     model_data_source: Optional[ModelDataSource] = Unassigned()
