@@ -339,6 +339,11 @@ SHAPE_DAG = {
         ],
         "type": "structure",
     },
+    "AssignedGroupPatternsList": {
+        "member_shape": "GroupNamePattern",
+        "member_type": "string",
+        "type": "list",
+    },
     "AssociateTrialComponentRequest": {
         "members": [
             {"name": "TrialComponentName", "shape": "ExperimentEntityName", "type": "string"},
@@ -800,6 +805,13 @@ SHAPE_DAG = {
     },
     "Autotune": {
         "members": [{"name": "Mode", "shape": "AutotuneMode", "type": "string"}],
+        "type": "structure",
+    },
+    "AvailableUpgrade": {
+        "members": [
+            {"name": "Version", "shape": "MajorMinorVersion", "type": "string"},
+            {"name": "ReleaseNotes", "shape": "ReleaseNotesList", "type": "list"},
+        ],
         "type": "structure",
     },
     "BatchAddClusterNodesError": {
@@ -3233,6 +3245,7 @@ SHAPE_DAG = {
             {"name": "ApplicationConfig", "shape": "PartnerAppConfig", "type": "structure"},
             {"name": "AuthType", "shape": "PartnerAppAuthType", "type": "string"},
             {"name": "EnableIamSessionBasedIdentity", "shape": "Boolean", "type": "boolean"},
+            {"name": "EnableAutoMinorVersionUpgrade", "shape": "Boolean", "type": "boolean"},
             {"name": "ClientToken", "shape": "ClientToken", "type": "string"},
             {"name": "Tags", "shape": "TagList", "type": "list"},
         ],
@@ -5987,7 +6000,10 @@ SHAPE_DAG = {
         "type": "structure",
     },
     "DescribePartnerAppRequest": {
-        "members": [{"name": "Arn", "shape": "PartnerAppArn", "type": "string"}],
+        "members": [
+            {"name": "Arn", "shape": "PartnerAppArn", "type": "string"},
+            {"name": "IncludeAvailableUpgrade", "shape": "Boolean", "type": "boolean"},
+        ],
         "type": "structure",
     },
     "DescribePartnerAppResponse": {
@@ -6012,6 +6028,9 @@ SHAPE_DAG = {
             {"name": "AuthType", "shape": "PartnerAppAuthType", "type": "string"},
             {"name": "EnableIamSessionBasedIdentity", "shape": "Boolean", "type": "boolean"},
             {"name": "Error", "shape": "ErrorInfo", "type": "structure"},
+            {"name": "EnableAutoMinorVersionUpgrade", "shape": "Boolean", "type": "boolean"},
+            {"name": "CurrentVersionEolDate", "shape": "Timestamp", "type": "timestamp"},
+            {"name": "AvailableUpgrade", "shape": "AvailableUpgrade", "type": "structure"},
         ],
         "type": "structure",
     },
@@ -7646,6 +7665,11 @@ SHAPE_DAG = {
     "GitConfigForUpdate": {
         "members": [{"name": "SecretArn", "shape": "SecretArn", "type": "string"}],
         "type": "structure",
+    },
+    "GroupPatternsList": {
+        "member_shape": "GroupNamePattern",
+        "member_type": "string",
+        "type": "list",
     },
     "GroupingAttributeNames": {
         "member_shape": "GroupingAttributeName",
@@ -12624,6 +12648,8 @@ SHAPE_DAG = {
         "members": [
             {"name": "AdminUsers", "shape": "PartnerAppAdminUserList", "type": "list"},
             {"name": "Arguments", "shape": "PartnerAppArguments", "type": "map"},
+            {"name": "AssignedGroupPatterns", "shape": "AssignedGroupPatternsList", "type": "list"},
+            {"name": "RoleGroupAssignments", "shape": "RoleGroupAssignmentsList", "type": "list"},
         ],
         "type": "structure",
     },
@@ -13864,6 +13890,7 @@ SHAPE_DAG = {
         "members": [{"name": "Arn", "shape": "String256", "type": "string"}],
         "type": "structure",
     },
+    "ReleaseNotesList": {"member_shape": "String1024", "member_type": "string", "type": "list"},
     "RemoteDebugConfig": {
         "members": [{"name": "EnableRemoteDebug", "shape": "EnableRemoteDebug", "type": "boolean"}],
         "type": "structure",
@@ -14106,6 +14133,18 @@ SHAPE_DAG = {
             {"name": "MaximumRetryAttempts", "shape": "MaximumRetryAttempts", "type": "integer"}
         ],
         "type": "structure",
+    },
+    "RoleGroupAssignment": {
+        "members": [
+            {"name": "RoleName", "shape": "NonEmptyString256", "type": "string"},
+            {"name": "GroupPatterns", "shape": "GroupPatternsList", "type": "list"},
+        ],
+        "type": "structure",
+    },
+    "RoleGroupAssignmentsList": {
+        "member_shape": "RoleGroupAssignment",
+        "member_type": "structure",
+        "type": "list",
     },
     "RollingDeploymentPolicy": {
         "members": [
@@ -16469,6 +16508,8 @@ SHAPE_DAG = {
             {"name": "Tier", "shape": "NonEmptyString64", "type": "string"},
             {"name": "ApplicationConfig", "shape": "PartnerAppConfig", "type": "structure"},
             {"name": "EnableIamSessionBasedIdentity", "shape": "Boolean", "type": "boolean"},
+            {"name": "EnableAutoMinorVersionUpgrade", "shape": "Boolean", "type": "boolean"},
+            {"name": "AppVersion", "shape": "MajorMinorVersion", "type": "string"},
             {"name": "ClientToken", "shape": "ClientToken", "type": "string"},
             {"name": "Tags", "shape": "TagList", "type": "list"},
         ],

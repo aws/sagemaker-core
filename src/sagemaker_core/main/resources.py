@@ -24016,6 +24016,9 @@ class PartnerApp(Base):
         auth_type: The authorization type that users use to access the SageMaker Partner AI App.
         enable_iam_session_based_identity: When set to TRUE, the SageMaker Partner AI App sets the Amazon Web Services IAM session name or the authenticated IAM user as the identity of the SageMaker Partner AI App user.
         error: This is an error field object that contains the error code and the reason for an operation failure.
+        enable_auto_minor_version_upgrade: Indicates whether the SageMaker Partner AI App is configured for automatic minor version upgrades during scheduled maintenance windows.
+        current_version_eol_date: The end-of-life date for the current version of the SageMaker Partner AI App.
+        available_upgrade: A map of available minor version upgrades for the SageMaker Partner AI App. The key is the semantic version number, and the value is a list of release notes for that version. A null value indicates no upgrades are available.
 
     """
 
@@ -24035,6 +24038,9 @@ class PartnerApp(Base):
     auth_type: Optional[str] = Unassigned()
     enable_iam_session_based_identity: Optional[bool] = Unassigned()
     error: Optional[shapes.ErrorInfo] = Unassigned()
+    enable_auto_minor_version_upgrade: Optional[bool] = Unassigned()
+    current_version_eol_date: Optional[datetime.datetime] = Unassigned()
+    available_upgrade: Optional[shapes.AvailableUpgrade] = Unassigned()
 
     def get_name(self) -> str:
         attributes = vars(self)
@@ -24082,6 +24088,7 @@ class PartnerApp(Base):
         maintenance_config: Optional[shapes.PartnerAppMaintenanceConfig] = Unassigned(),
         application_config: Optional[shapes.PartnerAppConfig] = Unassigned(),
         enable_iam_session_based_identity: Optional[bool] = Unassigned(),
+        enable_auto_minor_version_upgrade: Optional[bool] = Unassigned(),
         client_token: Optional[str] = Unassigned(),
         tags: Optional[List[shapes.Tag]] = Unassigned(),
         session: Optional[Session] = None,
@@ -24100,6 +24107,7 @@ class PartnerApp(Base):
             maintenance_config: Maintenance configuration settings for the SageMaker Partner AI App.
             application_config: Configuration settings for the SageMaker Partner AI App.
             enable_iam_session_based_identity: When set to TRUE, the SageMaker Partner AI App sets the Amazon Web Services IAM session name or the authenticated IAM user as the identity of the SageMaker Partner AI App user.
+            enable_auto_minor_version_upgrade: When set to TRUE, the SageMaker Partner AI App is automatically upgraded to the latest minor version during the next scheduled maintenance window, if one is available. Default is FALSE.
             client_token: A unique token that guarantees that the call to this API is idempotent.
             tags: Each tag consists of a key and an optional value. Tag keys must be unique per resource.
             session: Boto3 session.
@@ -24140,6 +24148,7 @@ class PartnerApp(Base):
             "ApplicationConfig": application_config,
             "AuthType": auth_type,
             "EnableIamSessionBasedIdentity": enable_iam_session_based_identity,
+            "EnableAutoMinorVersionUpgrade": enable_auto_minor_version_upgrade,
             "ClientToken": client_token,
             "Tags": tags,
         }
@@ -24164,6 +24173,7 @@ class PartnerApp(Base):
     def get(
         cls,
         arn: str,
+        include_available_upgrade: Optional[bool] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["PartnerApp"]:
@@ -24172,6 +24182,7 @@ class PartnerApp(Base):
 
         Parameters:
             arn: The ARN of the SageMaker Partner AI App to describe.
+            include_available_upgrade: When set to TRUE, the response includes available upgrade information for the SageMaker Partner AI App. Default is FALSE.
             session: Boto3 session.
             region: Region name.
 
@@ -24193,6 +24204,7 @@ class PartnerApp(Base):
 
         operation_input_args = {
             "Arn": arn,
+            "IncludeAvailableUpgrade": include_available_upgrade,
         }
         # serialize the input request
         operation_input_args = serialize(operation_input_args)
@@ -24213,6 +24225,7 @@ class PartnerApp(Base):
     @Base.add_validate_call
     def refresh(
         self,
+        include_available_upgrade: Optional[bool] = Unassigned(),
     ) -> Optional["PartnerApp"]:
         """
         Refresh a PartnerApp resource
@@ -24235,6 +24248,7 @@ class PartnerApp(Base):
 
         operation_input_args = {
             "Arn": self.arn,
+            "IncludeAvailableUpgrade": include_available_upgrade,
         }
         # serialize the input request
         operation_input_args = serialize(operation_input_args)
@@ -24255,6 +24269,8 @@ class PartnerApp(Base):
         tier: Optional[str] = Unassigned(),
         application_config: Optional[shapes.PartnerAppConfig] = Unassigned(),
         enable_iam_session_based_identity: Optional[bool] = Unassigned(),
+        enable_auto_minor_version_upgrade: Optional[bool] = Unassigned(),
+        app_version: Optional[str] = Unassigned(),
         client_token: Optional[str] = Unassigned(),
         tags: Optional[List[shapes.Tag]] = Unassigned(),
     ) -> Optional["PartnerApp"]:
@@ -24262,6 +24278,7 @@ class PartnerApp(Base):
         Update a PartnerApp resource
 
         Parameters:
+            app_version: The semantic version to upgrade the SageMaker Partner AI App to. Must be the same semantic version returned in the AvailableUpgrade field from DescribePartnerApp. Version skipping and downgrades are not supported.
             client_token: A unique token that guarantees that the call to this API is idempotent.
             tags: Each tag consists of a key and an optional value. Tag keys must be unique per resource.
 
@@ -24291,6 +24308,8 @@ class PartnerApp(Base):
             "Tier": tier,
             "ApplicationConfig": application_config,
             "EnableIamSessionBasedIdentity": enable_iam_session_based_identity,
+            "EnableAutoMinorVersionUpgrade": enable_auto_minor_version_upgrade,
+            "AppVersion": app_version,
             "ClientToken": client_token,
             "Tags": tags,
         }
@@ -28447,12 +28466,12 @@ class TrainingJob(Base):
         def wrapper(*args, **kwargs):
             config_schema_for_resource = {
                 "model_artifacts": {"s3_model_artifacts": {"type": "string"}},
-                "resource_config": {"volume_kms_key_id": {"type": "string"}},
                 "role_arn": {"type": "string"},
                 "output_data_config": {
                     "s3_output_path": {"type": "string"},
                     "kms_key_id": {"type": "string"},
                 },
+                "resource_config": {"volume_kms_key_id": {"type": "string"}},
                 "vpc_config": {
                     "security_group_ids": {"type": "array", "items": {"type": "string"}},
                     "subnets": {"type": "array", "items": {"type": "string"}},
