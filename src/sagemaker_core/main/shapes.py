@@ -2460,6 +2460,21 @@ class Autotune(Base):
     mode: str
 
 
+class AvailableUpgrade(Base):
+    """
+    AvailableUpgrade
+      Contains information about an available upgrade for a SageMaker Partner AI App, including the version number and release notes.
+
+    Attributes
+    ----------------------
+    version: The semantic version number of the available upgrade for the SageMaker Partner AI App.
+    release_notes: A list of release notes describing the changes and improvements included in the available upgrade version.
+    """
+
+    version: Optional[str] = Unassigned()
+    release_notes: Optional[List[str]] = Unassigned()
+
+
 class BatchAddClusterNodesError(Base):
     """
     BatchAddClusterNodesError
@@ -7768,6 +7783,21 @@ class PartnerAppMaintenanceConfig(Base):
     maintenance_window_start: Optional[str] = Unassigned()
 
 
+class RoleGroupAssignment(Base):
+    """
+    RoleGroupAssignment
+      Defines the mapping between an in-app role and the AWS IAM Identity Center group patterns that should be assigned to that role within the SageMaker Partner AI App.
+
+    Attributes
+    ----------------------
+    role_name: The name of the in-app role within the SageMaker Partner AI App. The specific roles available depend on the app type and version.
+    group_patterns: A list of AWS IAM Identity Center group patterns that should be assigned to the specified role. Group patterns support wildcard matching using \*.
+    """
+
+    role_name: str
+    group_patterns: List[str]
+
+
 class PartnerAppConfig(Base):
     """
     PartnerAppConfig
@@ -7777,10 +7807,14 @@ class PartnerAppConfig(Base):
     ----------------------
     admin_users: The list of users that are given admin access to the SageMaker Partner AI App.
     arguments: This is a map of required inputs for a SageMaker Partner AI App. Based on the application type, the map is populated with a key and value pair that is specific to the user and application.
+    assigned_group_patterns: A list of Amazon Web Services IAM Identity Center group patterns that can access the SageMaker Partner AI App. Group names support wildcard matching using \*. An empty list indicates the app will not use Identity Center group features. All groups specified in RoleGroupAssignments must match patterns in this list.
+    role_group_assignments: A map of in-app roles to Amazon Web Services IAM Identity Center group patterns. Groups assigned to specific roles receive those permissions, while groups in AssignedGroupPatterns but not in this map receive default in-app role depending on app type. Group patterns support wildcard matching using \*. Currently supported by Fiddler version 1.3 and later with roles: ORG_MEMBER (default) and ORG_ADMIN.
     """
 
     admin_users: Optional[List[str]] = Unassigned()
     arguments: Optional[Dict[str, str]] = Unassigned()
+    assigned_group_patterns: Optional[List[str]] = Unassigned()
+    role_group_assignments: Optional[List[RoleGroupAssignment]] = Unassigned()
 
 
 class PipelineDefinitionS3Location(Base):
