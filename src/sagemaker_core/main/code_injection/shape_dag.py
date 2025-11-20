@@ -2526,6 +2526,7 @@ SHAPE_DAG = {
             {"name": "ExecutionRoleArn", "shape": "RoleArn", "type": "string"},
             {"name": "VpcConfig", "shape": "VpcConfig", "type": "structure"},
             {"name": "EnableNetworkIsolation", "shape": "Boolean", "type": "boolean"},
+            {"name": "MetricsConfig", "shape": "MetricsConfig", "type": "structure"},
         ],
         "type": "structure",
     },
@@ -5044,6 +5045,7 @@ SHAPE_DAG = {
             {"name": "ExecutionRoleArn", "shape": "RoleArn", "type": "string"},
             {"name": "VpcConfig", "shape": "VpcConfig", "type": "structure"},
             {"name": "EnableNetworkIsolation", "shape": "Boolean", "type": "boolean"},
+            {"name": "MetricsConfig", "shape": "MetricsConfig", "type": "structure"},
         ],
         "type": "structure",
     },
@@ -5075,6 +5077,7 @@ SHAPE_DAG = {
                 "shape": "ProductionVariantSummaryList",
                 "type": "list",
             },
+            {"name": "MetricsConfig", "shape": "MetricsConfig", "type": "structure"},
         ],
         "type": "structure",
     },
@@ -11089,6 +11092,17 @@ SHAPE_DAG = {
         "type": "structure",
     },
     "MetricValues": {"member_shape": "Double", "member_type": "double", "type": "list"},
+    "MetricsConfig": {
+        "members": [
+            {"name": "EnableEnhancedMetrics", "shape": "EnableEnhancedMetrics", "type": "boolean"},
+            {
+                "name": "MetricPublishFrequencyInSeconds",
+                "shape": "MetricPublishFrequencyInSeconds",
+                "type": "integer",
+            },
+        ],
+        "type": "structure",
+    },
     "MetricsSource": {
         "members": [
             {"name": "ContentType", "shape": "ContentType", "type": "string"},
@@ -14013,7 +14027,7 @@ SHAPE_DAG = {
         "members": [
             {"name": "InstanceType", "shape": "TrainingInstanceType", "type": "string"},
             {"name": "InstanceCount", "shape": "TrainingInstanceCount", "type": "integer"},
-            {"name": "VolumeSizeInGB", "shape": "VolumeSizeInGB", "type": "integer"},
+            {"name": "VolumeSizeInGB", "shape": "OptionalVolumeSizeInGB", "type": "integer"},
             {"name": "VolumeKmsKeyId", "shape": "KmsKeyId", "type": "string"},
             {
                 "name": "KeepAlivePeriodInSeconds",

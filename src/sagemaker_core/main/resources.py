@@ -8885,6 +8885,7 @@ class Endpoint(Base):
         pending_deployment_summary: Returns the summary of an in-progress deployment. This field is only returned when the endpoint is creating or updating with a new endpoint configuration.
         explainer_config: The configuration parameters for an explainer.
         shadow_production_variants: An array of ProductionVariantSummary objects, one for each model that you want to host at this endpoint in shadow mode with production traffic replicated from the model specified on ProductionVariants.
+        metrics_config: The configuration parameters for utilization metrics.
 
     """
 
@@ -8902,6 +8903,7 @@ class Endpoint(Base):
     pending_deployment_summary: Optional[shapes.PendingDeploymentSummary] = Unassigned()
     explainer_config: Optional[shapes.ExplainerConfig] = Unassigned()
     shadow_production_variants: Optional[List[shapes.ProductionVariantSummary]] = Unassigned()
+    metrics_config: Optional[shapes.MetricsConfig] = Unassigned()
 
     def get_name(self) -> str:
         attributes = vars(self)
@@ -9686,6 +9688,7 @@ class EndpointConfig(Base):
         execution_role_arn: The Amazon Resource Name (ARN) of the IAM role that you assigned to the endpoint configuration.
         vpc_config:
         enable_network_isolation: Indicates whether all model containers deployed to the endpoint are isolated. If they are, no inbound or outbound network calls can be made to or from the model containers.
+        metrics_config: The configuration parameters for utilization metrics.
 
     """
 
@@ -9701,6 +9704,7 @@ class EndpointConfig(Base):
     execution_role_arn: Optional[str] = Unassigned()
     vpc_config: Optional[shapes.VpcConfig] = Unassigned()
     enable_network_isolation: Optional[bool] = Unassigned()
+    metrics_config: Optional[shapes.MetricsConfig] = Unassigned()
 
     def get_name(self) -> str:
         attributes = vars(self)
@@ -9765,6 +9769,7 @@ class EndpointConfig(Base):
         execution_role_arn: Optional[str] = Unassigned(),
         vpc_config: Optional[shapes.VpcConfig] = Unassigned(),
         enable_network_isolation: Optional[bool] = Unassigned(),
+        metrics_config: Optional[shapes.MetricsConfig] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["EndpointConfig"]:
@@ -9783,6 +9788,7 @@ class EndpointConfig(Base):
             execution_role_arn: The Amazon Resource Name (ARN) of an IAM role that Amazon SageMaker AI can assume to perform actions on your behalf. For more information, see SageMaker AI Roles.   To be able to pass this role to Amazon SageMaker AI, the caller of this action must have the iam:PassRole permission.
             vpc_config:
             enable_network_isolation: Sets whether all model containers deployed to the endpoint are isolated. If they are, no inbound or outbound network calls can be made to or from the model containers.
+            metrics_config: The configuration parameters for utilization metrics.
             session: Boto3 session.
             region: Region name.
 
@@ -9822,6 +9828,7 @@ class EndpointConfig(Base):
             "ExecutionRoleArn": execution_role_arn,
             "VpcConfig": vpc_config,
             "EnableNetworkIsolation": enable_network_isolation,
+            "MetricsConfig": metrics_config,
         }
 
         operation_input_args = Base.populate_chained_attributes(
