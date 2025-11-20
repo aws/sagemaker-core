@@ -1067,9 +1067,9 @@ class ResourceConfig(Base):
     instance_placement_config: Configuration for how training job instances are placed and allocated within UltraServers. Only applicable for UltraServer capacity.
     """
 
-    volume_size_in_gb: int
     instance_type: Optional[str] = Unassigned()
     instance_count: Optional[int] = Unassigned()
+    volume_size_in_gb: Optional[int] = Unassigned()
     volume_kms_key_id: Optional[str] = Unassigned()
     keep_alive_period_in_seconds: Optional[int] = Unassigned()
     instance_groups: Optional[List[InstanceGroup]] = Unassigned()
@@ -5760,6 +5760,21 @@ class ExplainerConfig(Base):
     clarify_explainer_config: Optional[ClarifyExplainerConfig] = Unassigned()
 
 
+class MetricsConfig(Base):
+    """
+    MetricsConfig
+      The configuration for Utilization metrics.
+
+    Attributes
+    ----------------------
+    enable_enhanced_metrics: Specifies whether to enable enhanced metrics for the endpoint. Enhanced metrics provide utilization data at instance and container granularity. Container granularity is supported for Inference Components. The default is False.
+    metric_publish_frequency_in_seconds: The frequency, in seconds, at which utilization metrics are published to Amazon CloudWatch. The default is 60 seconds.
+    """
+
+    enable_enhanced_metrics: Optional[bool] = Unassigned()
+    metric_publish_frequency_in_seconds: Optional[int] = Unassigned()
+
+
 class RollingUpdatePolicy(Base):
     """
     RollingUpdatePolicy
@@ -7786,12 +7801,12 @@ class PartnerAppMaintenanceConfig(Base):
 class RoleGroupAssignment(Base):
     """
     RoleGroupAssignment
-      Defines the mapping between an in-app role and the AWS IAM Identity Center group patterns that should be assigned to that role within the SageMaker Partner AI App.
+      Defines the mapping between an in-app role and the Amazon Web Services IAM Identity Center group patterns that should be assigned to that role within the SageMaker Partner AI App.
 
     Attributes
     ----------------------
     role_name: The name of the in-app role within the SageMaker Partner AI App. The specific roles available depend on the app type and version.
-    group_patterns: A list of AWS IAM Identity Center group patterns that should be assigned to the specified role. Group patterns support wildcard matching using \*.
+    group_patterns: A list of Amazon Web Services IAM Identity Center group patterns that should be assigned to the specified role. Group patterns support wildcard matching using \*.
     """
 
     role_name: str
