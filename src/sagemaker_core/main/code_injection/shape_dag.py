@@ -1,4 +1,11 @@
 SHAPE_DAG = {
+    "AcceleratorPartitionConfig": {
+        "members": [
+            {"name": "Type", "shape": "MIGProfileType", "type": "string"},
+            {"name": "Count", "shape": "AcceleratorPartitionConfigCountInteger", "type": "integer"},
+        ],
+        "type": "structure",
+    },
     "AccessForbidden": {
         "members": [{"name": "Message", "shape": "Message", "type": "string"}],
         "type": "structure",
@@ -1047,6 +1054,144 @@ SHAPE_DAG = {
         "members": [{"name": "Errors", "shape": "BatchPutMetricsErrorList", "type": "list"}],
         "type": "structure",
     },
+    "BatchRebootClusterNodeLogicalIdsError": {
+        "members": [
+            {"name": "NodeLogicalId", "shape": "ClusterNodeLogicalId", "type": "string"},
+            {"name": "ErrorCode", "shape": "BatchRebootClusterNodesErrorCode", "type": "string"},
+            {"name": "Message", "shape": "String", "type": "string"},
+        ],
+        "type": "structure",
+    },
+    "BatchRebootClusterNodeLogicalIdsErrors": {
+        "member_shape": "BatchRebootClusterNodeLogicalIdsError",
+        "member_type": "structure",
+        "type": "list",
+    },
+    "BatchRebootClusterNodesError": {
+        "members": [
+            {"name": "NodeId", "shape": "ClusterNodeId", "type": "string"},
+            {"name": "ErrorCode", "shape": "BatchRebootClusterNodesErrorCode", "type": "string"},
+            {"name": "Message", "shape": "String", "type": "string"},
+        ],
+        "type": "structure",
+    },
+    "BatchRebootClusterNodesErrors": {
+        "member_shape": "BatchRebootClusterNodesError",
+        "member_type": "structure",
+        "type": "list",
+    },
+    "BatchRebootClusterNodesRequest": {
+        "members": [
+            {"name": "ClusterName", "shape": "ClusterNameOrArn", "type": "string"},
+            {
+                "name": "NodeIds",
+                "shape": "BatchRebootClusterNodesRequestNodeIdsList",
+                "type": "list",
+            },
+            {
+                "name": "NodeLogicalIds",
+                "shape": "BatchRebootClusterNodesRequestNodeLogicalIdsList",
+                "type": "list",
+            },
+        ],
+        "type": "structure",
+    },
+    "BatchRebootClusterNodesRequestNodeIdsList": {
+        "member_shape": "ClusterNodeId",
+        "member_type": "string",
+        "type": "list",
+    },
+    "BatchRebootClusterNodesRequestNodeLogicalIdsList": {
+        "member_shape": "ClusterNodeLogicalId",
+        "member_type": "string",
+        "type": "list",
+    },
+    "BatchRebootClusterNodesResponse": {
+        "members": [
+            {"name": "Successful", "shape": "ClusterNodeIds", "type": "list"},
+            {"name": "Failed", "shape": "BatchRebootClusterNodesErrors", "type": "list"},
+            {
+                "name": "FailedNodeLogicalIds",
+                "shape": "BatchRebootClusterNodeLogicalIdsErrors",
+                "type": "list",
+            },
+            {
+                "name": "SuccessfulNodeLogicalIds",
+                "shape": "ClusterNodeLogicalIdList",
+                "type": "list",
+            },
+        ],
+        "type": "structure",
+    },
+    "BatchReplaceClusterNodeLogicalIdsError": {
+        "members": [
+            {"name": "NodeLogicalId", "shape": "ClusterNodeLogicalId", "type": "string"},
+            {"name": "ErrorCode", "shape": "BatchReplaceClusterNodesErrorCode", "type": "string"},
+            {"name": "Message", "shape": "String", "type": "string"},
+        ],
+        "type": "structure",
+    },
+    "BatchReplaceClusterNodeLogicalIdsErrors": {
+        "member_shape": "BatchReplaceClusterNodeLogicalIdsError",
+        "member_type": "structure",
+        "type": "list",
+    },
+    "BatchReplaceClusterNodesError": {
+        "members": [
+            {"name": "NodeId", "shape": "ClusterNodeId", "type": "string"},
+            {"name": "ErrorCode", "shape": "BatchReplaceClusterNodesErrorCode", "type": "string"},
+            {"name": "Message", "shape": "String", "type": "string"},
+        ],
+        "type": "structure",
+    },
+    "BatchReplaceClusterNodesErrors": {
+        "member_shape": "BatchReplaceClusterNodesError",
+        "member_type": "structure",
+        "type": "list",
+    },
+    "BatchReplaceClusterNodesRequest": {
+        "members": [
+            {"name": "ClusterName", "shape": "ClusterNameOrArn", "type": "string"},
+            {
+                "name": "NodeIds",
+                "shape": "BatchReplaceClusterNodesRequestNodeIdsList",
+                "type": "list",
+            },
+            {
+                "name": "NodeLogicalIds",
+                "shape": "BatchReplaceClusterNodesRequestNodeLogicalIdsList",
+                "type": "list",
+            },
+        ],
+        "type": "structure",
+    },
+    "BatchReplaceClusterNodesRequestNodeIdsList": {
+        "member_shape": "ClusterNodeId",
+        "member_type": "string",
+        "type": "list",
+    },
+    "BatchReplaceClusterNodesRequestNodeLogicalIdsList": {
+        "member_shape": "ClusterNodeLogicalId",
+        "member_type": "string",
+        "type": "list",
+    },
+    "BatchReplaceClusterNodesResponse": {
+        "members": [
+            {"name": "Successful", "shape": "ClusterNodeIds", "type": "list"},
+            {"name": "Failed", "shape": "BatchReplaceClusterNodesErrors", "type": "list"},
+            {
+                "name": "FailedNodeLogicalIds",
+                "shape": "BatchReplaceClusterNodeLogicalIdsErrors",
+                "type": "list",
+            },
+            {
+                "name": "SuccessfulNodeLogicalIds",
+                "shape": "ClusterNodeLogicalIdList",
+                "type": "list",
+            },
+        ],
+        "type": "structure",
+    },
     "BatchTransformInput": {
         "members": [
             {"name": "DataCapturedDestinationS3Uri", "shape": "DestinationS3Uri", "type": "string"},
@@ -1689,6 +1834,7 @@ SHAPE_DAG = {
                 "type": "structure",
             },
             {"name": "UltraServerInfo", "shape": "UltraServerInfo", "type": "structure"},
+            {"name": "PrivateDnsHostname", "shape": "ClusterPrivateDnsHostname", "type": "string"},
         ],
         "type": "structure",
     },
@@ -1961,6 +2107,11 @@ SHAPE_DAG = {
             {"name": "Accelerators", "shape": "AcceleratorsAmount", "type": "integer"},
             {"name": "VCpu", "shape": "VCpuAmount", "type": "float"},
             {"name": "MemoryInGiB", "shape": "MemoryInGiBAmount", "type": "float"},
+            {
+                "name": "AcceleratorPartition",
+                "shape": "AcceleratorPartitionConfig",
+                "type": "structure",
+            },
         ],
         "type": "structure",
     },
