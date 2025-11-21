@@ -29088,7 +29088,7 @@ class TrainingPlan(Base):
         unhealthy_instance_count: The number of instances in the training plan that are currently in an unhealthy state.
         available_spare_instance_count: The number of available spare instances in the training plan.
         total_ultra_server_count: The total number of UltraServers reserved to this training plan.
-        target_resources: The target resources (e.g., SageMaker Training Jobs, SageMaker HyperPod) that can use this training plan. Training plans are specific to their target resource.   A training plan designed for SageMaker training jobs can only be used to schedule and run training jobs.   A training plan for HyperPod clusters can be used exclusively to provide compute resources to a cluster's instance group.
+        target_resources: The target resources (e.g., SageMaker Training Jobs, SageMaker HyperPod, SageMaker Endpoints) that can use this training plan. Training plans are specific to their target resource.   A training plan designed for SageMaker training jobs can only be used to schedule and run training jobs.   A training plan for HyperPod clusters can be used exclusively to provide compute resources to a cluster's instance group.   A training plan for SageMaker endpoints can be used exclusively to provide compute resources to SageMaker endpoints for model deployment.
         reserved_capacity_summaries: The list of Reserved Capacity providing the underlying compute resources of the plan.
 
     """

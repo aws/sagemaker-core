@@ -452,6 +452,21 @@ class RawMetricData(Base):
     step: Optional[int] = Unassigned()
 
 
+class AcceleratorPartitionConfig(Base):
+    """
+    AcceleratorPartitionConfig
+      Configuration for allocating accelerator partitions.
+
+    Attributes
+    ----------------------
+    type: The Multi-Instance GPU (MIG) profile type that defines the partition configuration. The profile specifies the compute and memory allocation for each partition instance. The available profile types depend on the instance type specified in the compute quota configuration.
+    count: The number of accelerator partitions to allocate with the specified partition type. If you don't specify a value for vCPU and MemoryInGiB, SageMaker AI automatically allocates ratio-based values for those parameters based on the accelerator partition count you provide.
+    """
+
+    type: str
+    count: int
+
+
 class ActionSource(Base):
     """
     ActionSource
@@ -2659,6 +2674,74 @@ class BatchDescribeModelPackageOutput(Base):
     )
 
 
+class BatchRebootClusterNodeLogicalIdsError(Base):
+    """
+    BatchRebootClusterNodeLogicalIdsError
+      Represents an error encountered when rebooting a node (identified by its logical node ID) from a SageMaker HyperPod cluster.
+
+    Attributes
+    ----------------------
+    node_logical_id: The logical node ID of the node that encountered an error during the reboot operation.
+    error_code: The error code associated with the error encountered when rebooting a node by logical node ID. Possible values:    InstanceIdNotFound: The node does not exist in the specified cluster.    InvalidInstanceStatus: The node is in a state that does not allow rebooting. Wait for the node to finish any ongoing changes before retrying.    InstanceIdInUse: Another operation is already in progress for this node. Wait for the operation to complete before retrying.    InternalServerError: An internal error occurred while processing this node.
+    message: A human-readable message describing the error encountered when rebooting a node by logical node ID.
+    """
+
+    node_logical_id: str
+    error_code: str
+    message: str
+
+
+class BatchRebootClusterNodesError(Base):
+    """
+    BatchRebootClusterNodesError
+      Represents an error encountered when rebooting a node from a SageMaker HyperPod cluster.
+
+    Attributes
+    ----------------------
+    node_id: The EC2 instance ID of the node that encountered an error during the reboot operation.
+    error_code: The error code associated with the error encountered when rebooting a node. Possible values:    InstanceIdNotFound: The instance does not exist in the specified cluster.    InvalidInstanceStatus: The instance is in a state that does not allow rebooting. Wait for the instance to finish any ongoing changes before retrying.    InstanceIdInUse: Another operation is already in progress for this node. Wait for the operation to complete before retrying.    InternalServerError: An internal error occurred while processing this node.
+    message: A human-readable message describing the error encountered when rebooting a node.
+    """
+
+    node_id: str
+    error_code: str
+    message: str
+
+
+class BatchReplaceClusterNodeLogicalIdsError(Base):
+    """
+    BatchReplaceClusterNodeLogicalIdsError
+      Represents an error encountered when replacing a node (identified by its logical node ID) in a SageMaker HyperPod cluster.
+
+    Attributes
+    ----------------------
+    node_logical_id: The logical node ID of the node that encountered an error during the replacement operation.
+    error_code: The error code associated with the error encountered when replacing a node by logical node ID. Possible values:    InstanceIdNotFound: The node does not exist in the specified cluster.    InvalidInstanceStatus: The node is in a state that does not allow replacement. Wait for the node to finish any ongoing changes before retrying.    InstanceIdInUse: Another operation is already in progress for this node. Wait for the operation to complete before retrying.    InternalServerError: An internal error occurred while processing this node.
+    message: A human-readable message describing the error encountered when replacing a node by logical node ID.
+    """
+
+    node_logical_id: str
+    error_code: str
+    message: str
+
+
+class BatchReplaceClusterNodesError(Base):
+    """
+    BatchReplaceClusterNodesError
+      Represents an error encountered when replacing a node in a SageMaker HyperPod cluster.
+
+    Attributes
+    ----------------------
+    node_id: The EC2 instance ID of the node that encountered an error during the replacement operation.
+    error_code: The error code associated with the error encountered when replacing a node. Possible values:    InstanceIdNotFound: The instance does not exist in the specified cluster.    InvalidInstanceStatus: The instance is in a state that does not allow replacement. Wait for the instance to finish any ongoing changes before retrying.    InstanceIdInUse: Another operation is already in progress for this node. Wait for the operation to complete before retrying.    InternalServerError: An internal error occurred while processing this node.
+    message: A human-readable message describing the error encountered when replacing a node.
+    """
+
+    node_id: str
+    error_code: str
+    message: str
+
+
 class MonitoringCsvDatasetFormat(Base):
     """
     MonitoringCsvDatasetFormat
@@ -3904,6 +3987,7 @@ class ClusterNodeSummary(Base):
     last_software_update_time: The time when SageMaker last updated the software of the instances in the cluster.
     instance_status: The status of the instance.
     ultra_server_info: Contains information about the UltraServer.
+    private_dns_hostname: The private DNS hostname of the SageMaker HyperPod cluster node.
     """
 
     instance_group_name: str
@@ -3914,6 +3998,7 @@ class ClusterNodeSummary(Base):
     node_logical_id: Optional[str] = Unassigned()
     last_software_update_time: Optional[datetime.datetime] = Unassigned()
     ultra_server_info: Optional[UltraServerInfo] = Unassigned()
+    private_dns_hostname: Optional[str] = Unassigned()
 
 
 class ClusterOrchestratorEksConfig(Base):
@@ -4327,6 +4412,7 @@ class ComputeQuotaResourceConfig(Base):
     accelerators: The number of accelerators to allocate. If you don't specify a value for vCPU and MemoryInGiB, SageMaker AI automatically allocates ratio-based values for those parameters based on the number of accelerators you provide. For example, if you allocate 16 out of 32 total accelerators, SageMaker AI uses the ratio of 0.5 and allocates values to vCPU and MemoryInGiB.
     v_cpu: The number of vCPU to allocate. If you specify a value only for vCPU, SageMaker AI automatically allocates ratio-based values for MemoryInGiB based on this vCPU parameter. For example, if you allocate 20 out of 40 total vCPU, SageMaker AI uses the ratio of 0.5 and allocates values to MemoryInGiB. Accelerators are set to 0.
     memory_in_gi_b: The amount of memory in GiB to allocate. If you specify a value only for this parameter, SageMaker AI automatically allocates a ratio-based value for vCPU based on this memory that you provide. For example, if you allocate 200 out of 400 total memory in GiB, SageMaker AI uses the ratio of 0.5 and allocates values to vCPU. Accelerators are set to 0.
+    accelerator_partition: The accelerator partition configuration for fractional GPU allocation.
     """
 
     instance_type: str
@@ -4334,6 +4420,7 @@ class ComputeQuotaResourceConfig(Base):
     accelerators: Optional[int] = Unassigned()
     v_cpu: Optional[float] = Unassigned()
     memory_in_gi_b: Optional[float] = Unassigned()
+    accelerator_partition: Optional[AcceleratorPartitionConfig] = Unassigned()
 
 
 class ResourceSharingConfig(Base):
@@ -12455,7 +12542,7 @@ class TrainingPlanSummary(Base):
     available_instance_count: The number of instances currently available for use in this training plan.
     in_use_instance_count: The number of instances currently in use from this training plan.
     total_ultra_server_count: The total number of UltraServers allocated to this training plan.
-    target_resources: The target resources (e.g., training jobs, HyperPod clusters) that can use this training plan. Training plans are specific to their target resource.   A training plan designed for SageMaker training jobs can only be used to schedule and run training jobs.   A training plan for HyperPod clusters can be used exclusively to provide compute resources to a cluster's instance group.
+    target_resources: The target resources (e.g., training jobs, HyperPod clusters, Endpoints) that can use this training plan. Training plans are specific to their target resource.   A training plan designed for SageMaker training jobs can only be used to schedule and run training jobs.   A training plan for HyperPod clusters can be used exclusively to provide compute resources to a cluster's instance group.   A training plan for SageMaker endpoints can be used exclusively to provide compute resources to SageMaker endpoints for model deployment.
     reserved_capacity_summaries: A list of reserved capacities associated with this training plan, including details such as instance types, counts, and availability zones.
     """
 
@@ -13688,7 +13775,7 @@ class TrainingPlanOffering(Base):
     Attributes
     ----------------------
     training_plan_offering_id: The unique identifier for this training plan offering.
-    target_resources: The target resources (e.g., SageMaker Training Jobs, SageMaker HyperPod) for this training plan offering. Training plans are specific to their target resource.   A training plan designed for SageMaker training jobs can only be used to schedule and run training jobs.   A training plan for HyperPod clusters can be used exclusively to provide compute resources to a cluster's instance group.
+    target_resources: The target resources (e.g., SageMaker Training Jobs, SageMaker HyperPod, SageMaker Endpoints) for this training plan offering. Training plans are specific to their target resource.   A training plan designed for SageMaker training jobs can only be used to schedule and run training jobs.   A training plan for HyperPod clusters can be used exclusively to provide compute resources to a cluster's instance group.   A training plan for SageMaker endpoints can be used exclusively to provide compute resources to SageMaker endpoints for model deployment.
     requested_start_time_after: The requested start time that the user specified when searching for the training plan offering.
     requested_end_time_before: The requested end time that the user specified when searching for the training plan offering.
     duration_hours: The number of whole hours in the total duration for this training plan offering.
