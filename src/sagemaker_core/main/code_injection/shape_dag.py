@@ -35,6 +35,13 @@ SHAPE_DAG = {
         ],
         "type": "structure",
     },
+    "ActiveOperations": {
+        "key_shape": "ActiveClusterOperationName",
+        "key_type": "string",
+        "type": "map",
+        "value_shape": "ActiveClusterOperationCount",
+        "value_type": "integer",
+    },
     "AddAssociationRequest": {
         "members": [
             {"name": "SourceArn", "shape": "AssociationEntityArn", "type": "string"},
@@ -1618,6 +1625,13 @@ SHAPE_DAG = {
         ],
         "type": "structure",
     },
+    "ClusterCapacityRequirements": {
+        "members": [
+            {"name": "Spot", "shape": "ClusterSpotOptions", "type": "structure"},
+            {"name": "OnDemand", "shape": "ClusterOnDemandOptions", "type": "structure"},
+        ],
+        "type": "structure",
+    },
     "ClusterEbsVolumeConfig": {
         "members": [
             {"name": "VolumeSizeInGB", "shape": "ClusterEbsVolumeSizeInGB", "type": "integer"},
@@ -1662,6 +1676,7 @@ SHAPE_DAG = {
         "members": [
             {"name": "CurrentCount", "shape": "ClusterNonNegativeInstanceCount", "type": "integer"},
             {"name": "TargetCount", "shape": "ClusterInstanceCount", "type": "integer"},
+            {"name": "MinCount", "shape": "ClusterInstanceCount", "type": "integer"},
             {"name": "InstanceGroupName", "shape": "ClusterInstanceGroupName", "type": "string"},
             {"name": "InstanceType", "shape": "ClusterInstanceType", "type": "string"},
             {"name": "LifeCycleConfig", "shape": "ClusterLifeCycleConfig", "type": "structure"},
@@ -1688,6 +1703,17 @@ SHAPE_DAG = {
             },
             {"name": "CurrentImageId", "shape": "ImageId", "type": "string"},
             {"name": "DesiredImageId", "shape": "ImageId", "type": "string"},
+            {"name": "ActiveOperations", "shape": "ActiveOperations", "type": "map"},
+            {
+                "name": "KubernetesConfig",
+                "shape": "ClusterKubernetesConfigDetails",
+                "type": "structure",
+            },
+            {
+                "name": "CapacityRequirements",
+                "shape": "ClusterCapacityRequirements",
+                "type": "structure",
+            },
             {"name": "TargetStateCount", "shape": "ClusterInstanceCount", "type": "integer"},
             {"name": "SoftwareUpdateStatus", "shape": "SoftwareUpdateStatus", "type": "string"},
             {
@@ -1706,6 +1732,7 @@ SHAPE_DAG = {
     "ClusterInstanceGroupSpecification": {
         "members": [
             {"name": "InstanceCount", "shape": "ClusterInstanceCount", "type": "integer"},
+            {"name": "MinInstanceCount", "shape": "ClusterInstanceCount", "type": "integer"},
             {"name": "InstanceGroupName", "shape": "ClusterInstanceGroupName", "type": "string"},
             {"name": "InstanceType", "shape": "ClusterInstanceType", "type": "string"},
             {"name": "LifeCycleConfig", "shape": "ClusterLifeCycleConfig", "type": "structure"},
@@ -1725,6 +1752,12 @@ SHAPE_DAG = {
                 "type": "structure",
             },
             {"name": "ImageId", "shape": "ImageId", "type": "string"},
+            {"name": "KubernetesConfig", "shape": "ClusterKubernetesConfig", "type": "structure"},
+            {
+                "name": "CapacityRequirements",
+                "shape": "ClusterCapacityRequirements",
+                "type": "structure",
+            },
         ],
         "type": "structure",
     },
@@ -1760,6 +1793,51 @@ SHAPE_DAG = {
     },
     "ClusterInstanceStorageConfigs": {
         "member_shape": "ClusterInstanceStorageConfig",
+        "member_type": "structure",
+        "type": "list",
+    },
+    "ClusterKubernetesConfig": {
+        "members": [
+            {"name": "Labels", "shape": "ClusterKubernetesLabels", "type": "map"},
+            {"name": "Taints", "shape": "ClusterKubernetesTaints", "type": "list"},
+        ],
+        "type": "structure",
+    },
+    "ClusterKubernetesConfigDetails": {
+        "members": [
+            {"name": "CurrentLabels", "shape": "ClusterKubernetesLabels", "type": "map"},
+            {"name": "DesiredLabels", "shape": "ClusterKubernetesLabels", "type": "map"},
+            {"name": "CurrentTaints", "shape": "ClusterKubernetesTaints", "type": "list"},
+            {"name": "DesiredTaints", "shape": "ClusterKubernetesTaints", "type": "list"},
+        ],
+        "type": "structure",
+    },
+    "ClusterKubernetesConfigNodeDetails": {
+        "members": [
+            {"name": "CurrentLabels", "shape": "ClusterKubernetesLabels", "type": "map"},
+            {"name": "DesiredLabels", "shape": "ClusterKubernetesLabels", "type": "map"},
+            {"name": "CurrentTaints", "shape": "ClusterKubernetesTaints", "type": "list"},
+            {"name": "DesiredTaints", "shape": "ClusterKubernetesTaints", "type": "list"},
+        ],
+        "type": "structure",
+    },
+    "ClusterKubernetesLabels": {
+        "key_shape": "ClusterKubernetesLabelKey",
+        "key_type": "string",
+        "type": "map",
+        "value_shape": "ClusterKubernetesLabelValue",
+        "value_type": "string",
+    },
+    "ClusterKubernetesTaint": {
+        "members": [
+            {"name": "Key", "shape": "ClusterKubernetesTaintKey", "type": "string"},
+            {"name": "Value", "shape": "ClusterKubernetesTaintValue", "type": "string"},
+            {"name": "Effect", "shape": "ClusterKubernetesTaintEffect", "type": "string"},
+        ],
+        "type": "structure",
+    },
+    "ClusterKubernetesTaints": {
+        "member_shape": "ClusterKubernetesTaint",
         "member_type": "structure",
         "type": "list",
     },
@@ -1806,6 +1884,12 @@ SHAPE_DAG = {
             {"name": "CurrentImageId", "shape": "ImageId", "type": "string"},
             {"name": "DesiredImageId", "shape": "ImageId", "type": "string"},
             {"name": "UltraServerInfo", "shape": "UltraServerInfo", "type": "structure"},
+            {
+                "name": "KubernetesConfig",
+                "shape": "ClusterKubernetesConfigNodeDetails",
+                "type": "structure",
+            },
+            {"name": "CapacityType", "shape": "ClusterCapacityType", "type": "string"},
         ],
         "type": "structure",
     },
@@ -1838,6 +1922,7 @@ SHAPE_DAG = {
         ],
         "type": "structure",
     },
+    "ClusterOnDemandOptions": {"members": [], "type": "structure"},
     "ClusterOrchestrator": {
         "members": [{"name": "Eks", "shape": "ClusterOrchestratorEksConfig", "type": "structure"}],
         "type": "structure",
@@ -1937,6 +2022,7 @@ SHAPE_DAG = {
         "member_type": "structure",
         "type": "list",
     },
+    "ClusterSpotOptions": {"members": [], "type": "structure"},
     "ClusterSummaries": {
         "member_shape": "ClusterSummary",
         "member_type": "structure",
@@ -3346,6 +3432,11 @@ SHAPE_DAG = {
                 "name": "DeploymentInstanceType",
                 "shape": "OptimizationJobDeploymentInstanceType",
                 "type": "string",
+            },
+            {
+                "name": "MaxInstanceCount",
+                "shape": "OptimizationJobMaxInstanceCount",
+                "type": "integer",
             },
             {
                 "name": "OptimizationEnvironment",
@@ -6144,6 +6235,11 @@ SHAPE_DAG = {
                 "shape": "OptimizationJobDeploymentInstanceType",
                 "type": "string",
             },
+            {
+                "name": "MaxInstanceCount",
+                "shape": "OptimizationJobMaxInstanceCount",
+                "type": "integer",
+            },
             {"name": "OptimizationConfigs", "shape": "OptimizationConfigs", "type": "list"},
             {"name": "OutputConfig", "shape": "OptimizationJobOutputConfig", "type": "structure"},
             {"name": "OptimizationOutput", "shape": "OptimizationOutput", "type": "structure"},
@@ -8886,6 +8982,7 @@ SHAPE_DAG = {
         "members": [
             {"name": "InstanceCount", "shape": "InstanceCount", "type": "integer"},
             {"name": "TargetCount", "shape": "TargetCount", "type": "integer"},
+            {"name": "MinCount", "shape": "InstanceCount", "type": "integer"},
             {"name": "FailureMessage", "shape": "String", "type": "string"},
         ],
         "type": "structure",
@@ -11956,6 +12053,24 @@ SHAPE_DAG = {
         ],
         "type": "structure",
     },
+    "ModelSpeculativeDecodingConfig": {
+        "members": [
+            {"name": "Technique", "shape": "ModelSpeculativeDecodingTechnique", "type": "string"},
+            {
+                "name": "TrainingDataSource",
+                "shape": "ModelSpeculativeDecodingTrainingDataSource",
+                "type": "structure",
+            },
+        ],
+        "type": "structure",
+    },
+    "ModelSpeculativeDecodingTrainingDataSource": {
+        "members": [
+            {"name": "S3Uri", "shape": "S3Uri", "type": "string"},
+            {"name": "S3DataType", "shape": "ModelSpeculativeDecodingS3DataType", "type": "string"},
+        ],
+        "type": "structure",
+    },
     "ModelStepMetadata": {
         "members": [{"name": "Arn", "shape": "String256", "type": "string"}],
         "type": "structure",
@@ -12578,6 +12693,11 @@ SHAPE_DAG = {
                 "type": "structure",
             },
             {"name": "ModelShardingConfig", "shape": "ModelShardingConfig", "type": "structure"},
+            {
+                "name": "ModelSpeculativeDecodingConfig",
+                "shape": "ModelSpeculativeDecodingConfig",
+                "type": "structure",
+            },
         ],
         "type": "structure",
     },
@@ -12594,7 +12714,10 @@ SHAPE_DAG = {
         "value_type": "string",
     },
     "OptimizationJobModelSource": {
-        "members": [{"name": "S3", "shape": "OptimizationJobModelSourceS3", "type": "structure"}],
+        "members": [
+            {"name": "S3", "shape": "OptimizationJobModelSourceS3", "type": "structure"},
+            {"name": "SageMakerModel", "shape": "OptimizationSageMakerModel", "type": "structure"},
+        ],
         "type": "structure",
     },
     "OptimizationJobModelSourceS3": {
@@ -12612,6 +12735,7 @@ SHAPE_DAG = {
         "members": [
             {"name": "KmsKeyId", "shape": "KmsKeyId", "type": "string"},
             {"name": "S3OutputLocation", "shape": "S3Uri", "type": "string"},
+            {"name": "SageMakerModel", "shape": "OptimizationSageMakerModel", "type": "structure"},
         ],
         "type": "structure",
     },
@@ -12634,6 +12758,11 @@ SHAPE_DAG = {
                 "shape": "OptimizationJobDeploymentInstanceType",
                 "type": "string",
             },
+            {
+                "name": "MaxInstanceCount",
+                "shape": "OptimizationJobMaxInstanceCount",
+                "type": "integer",
+            },
             {"name": "OptimizationTypes", "shape": "OptimizationTypes", "type": "list"},
         ],
         "type": "structure",
@@ -12652,6 +12781,10 @@ SHAPE_DAG = {
                 "type": "string",
             }
         ],
+        "type": "structure",
+    },
+    "OptimizationSageMakerModel": {
+        "members": [{"name": "ModelName", "shape": "ModelName", "type": "string"}],
         "type": "structure",
     },
     "OptimizationTypes": {

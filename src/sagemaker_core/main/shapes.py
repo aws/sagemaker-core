@@ -3538,6 +3538,41 @@ class ClusterAutoScalingConfigOutput(Base):
     failure_message: Optional[str] = Unassigned()
 
 
+class ClusterSpotOptions(Base):
+    """
+    ClusterSpotOptions
+      Configuration options specific to Spot instances.
+
+    Attributes
+    ----------------------
+    """
+
+
+class ClusterOnDemandOptions(Base):
+    """
+    ClusterOnDemandOptions
+      Configuration options specific to On-Demand instances.
+
+    Attributes
+    ----------------------
+    """
+
+
+class ClusterCapacityRequirements(Base):
+    """
+    ClusterCapacityRequirements
+      Defines the instance capacity requirements for an instance group, including configurations for both Spot and On-Demand capacity types.
+
+    Attributes
+    ----------------------
+    spot: Configuration options specific to Spot instances.
+    on_demand: Configuration options specific to On-Demand instances.
+    """
+
+    spot: Optional[ClusterSpotOptions] = Unassigned()
+    on_demand: Optional[ClusterOnDemandOptions] = Unassigned()
+
+
 class ClusterEbsVolumeConfig(Base):
     """
     ClusterEbsVolumeConfig
@@ -3604,11 +3639,13 @@ class InstanceGroupScalingMetadata(Base):
     ----------------------
     instance_count: The current number of instances in the group.
     target_count: The desired number of instances for the group after scaling.
+    min_count: Minimum instance count of the instance group.
     failure_message: An error message describing why the scaling operation failed, if applicable.
     """
 
     instance_count: Optional[int] = Unassigned()
     target_count: Optional[int] = Unassigned()
+    min_count: Optional[int] = Unassigned()
     failure_message: Optional[str] = Unassigned()
 
 
@@ -3798,6 +3835,42 @@ class ScheduledUpdateConfig(Base):
     deployment_config: Optional[DeploymentConfiguration] = Unassigned()
 
 
+class ClusterKubernetesTaint(Base):
+    """
+    ClusterKubernetesTaint
+      A Kubernetes taint that can be applied to cluster nodes.
+
+    Attributes
+    ----------------------
+    key: The key of the taint.
+    value: The value of the taint.
+    effect: The effect of the taint. Valid values are NoSchedule, PreferNoSchedule, and NoExecute.
+    """
+
+    key: str
+    effect: str
+    value: Optional[str] = Unassigned()
+
+
+class ClusterKubernetesConfigDetails(Base):
+    """
+    ClusterKubernetesConfigDetails
+      Detailed Kubernetes configuration showing both the current and desired state of labels and taints for cluster nodes.
+
+    Attributes
+    ----------------------
+    current_labels: The current labels applied to cluster nodes of an instance group.
+    desired_labels: The desired labels to be applied to cluster nodes of an instance group.
+    current_taints: The current taints applied to cluster nodes of an instance group.
+    desired_taints: The desired taints to be applied to cluster nodes of an instance group.
+    """
+
+    current_labels: Optional[Dict[str, str]] = Unassigned()
+    desired_labels: Optional[Dict[str, str]] = Unassigned()
+    current_taints: Optional[List[ClusterKubernetesTaint]] = Unassigned()
+    desired_taints: Optional[List[ClusterKubernetesTaint]] = Unassigned()
+
+
 class ClusterInstanceGroupDetails(Base):
     """
     ClusterInstanceGroupDetails
@@ -3807,6 +3880,7 @@ class ClusterInstanceGroupDetails(Base):
     ----------------------
     current_count: The number of instances that are currently in the instance group of a SageMaker HyperPod cluster.
     target_count: The number of instances you specified to add to the instance group of a SageMaker HyperPod cluster.
+    min_count: The minimum number of instances that must be available in the instance group of a SageMaker HyperPod cluster before it transitions to InService status.
     instance_group_name: The name of the instance group of a SageMaker HyperPod cluster.
     instance_type: The instance type of the instance group of a SageMaker HyperPod cluster.
     life_cycle_config: Details of LifeCycle configuration for the instance group.
@@ -3821,6 +3895,9 @@ class ClusterInstanceGroupDetails(Base):
     scheduled_update_config: The configuration object of the schedule that SageMaker follows when updating the AMI.
     current_image_id: The ID of the Amazon Machine Image (AMI) currently in use by the instance group.
     desired_image_id: The ID of the Amazon Machine Image (AMI) desired for the instance group.
+    active_operations: A map indicating active operations currently in progress for the instance group of a SageMaker HyperPod cluster. When there is a scaling operation in progress, this map contains a key Scaling with value 1.
+    kubernetes_config: The Kubernetes configuration for the instance group that contains labels and taints to be applied for the nodes in this instance group.
+    capacity_requirements: The instance capacity requirements for the instance group.
     target_state_count: The number of nodes running a specific image ID since the last software update request.
     software_update_status: Status of the last software udpate request.
     active_software_update_config
@@ -3828,6 +3905,7 @@ class ClusterInstanceGroupDetails(Base):
 
     current_count: Optional[int] = Unassigned()
     target_count: Optional[int] = Unassigned()
+    min_count: Optional[int] = Unassigned()
     instance_group_name: Optional[str] = Unassigned()
     instance_type: Optional[str] = Unassigned()
     life_cycle_config: Optional[ClusterLifeCycleConfig] = Unassigned()
@@ -3842,9 +3920,27 @@ class ClusterInstanceGroupDetails(Base):
     scheduled_update_config: Optional[ScheduledUpdateConfig] = Unassigned()
     current_image_id: Optional[str] = Unassigned()
     desired_image_id: Optional[str] = Unassigned()
+    active_operations: Optional[Dict[str, int]] = Unassigned()
+    kubernetes_config: Optional[ClusterKubernetesConfigDetails] = Unassigned()
+    capacity_requirements: Optional[ClusterCapacityRequirements] = Unassigned()
     target_state_count: Optional[int] = Unassigned()
     software_update_status: Optional[str] = Unassigned()
     active_software_update_config: Optional[DeploymentConfiguration] = Unassigned()
+
+
+class ClusterKubernetesConfig(Base):
+    """
+    ClusterKubernetesConfig
+      Kubernetes configuration that specifies labels and taints to be applied to cluster nodes in an instance group.
+
+    Attributes
+    ----------------------
+    labels: Key-value pairs of labels to be applied to cluster nodes.
+    taints: List of taints to be applied to cluster nodes.
+    """
+
+    labels: Optional[Dict[str, str]] = Unassigned()
+    taints: Optional[List[ClusterKubernetesTaint]] = Unassigned()
 
 
 class ClusterInstanceGroupSpecification(Base):
@@ -3855,6 +3951,7 @@ class ClusterInstanceGroupSpecification(Base):
     Attributes
     ----------------------
     instance_count: Specifies the number of instances to add to the instance group of a SageMaker HyperPod cluster.
+    min_instance_count: Defines the minimum number of instances required for an instance group to become InService. If this threshold isn't met within 3 hours, the instance group rolls back to its previous state - zero instances for new instance groups, or previous settings for existing instance groups. MinInstanceCount only affects the initial transition to InService and does not guarantee maintaining this minimum afterward.
     instance_group_name: Specifies the name of the instance group.
     instance_type: Specifies the instance type of the instance group.
     life_cycle_config: Specifies the LifeCycle configuration for the instance group.
@@ -3866,6 +3963,8 @@ class ClusterInstanceGroupSpecification(Base):
     override_vpc_config: To configure multi-AZ deployments, customize the Amazon VPC configuration at the instance group level. You can specify different subnets and security groups across different AZs in the instance group specification to override a SageMaker HyperPod cluster's default Amazon VPC configuration. For more information about deploying a cluster in multiple AZs, see Setting up SageMaker HyperPod clusters across multiple AZs.  When your Amazon VPC and subnets support IPv6, network communications differ based on the cluster orchestration platform:   Slurm-orchestrated clusters automatically configure nodes with dual IPv6 and IPv4 addresses, allowing immediate IPv6 network communications.   In Amazon EKS-orchestrated clusters, nodes receive dual-stack addressing, but pods can only use IPv6 when the Amazon EKS cluster is explicitly IPv6-enabled. For information about deploying an IPv6 Amazon EKS cluster, see Amazon EKS IPv6 Cluster Deployment.   Additional resources for IPv6 configuration:   For information about adding IPv6 support to your VPC, see to IPv6 Support for VPC.   For information about creating a new IPv6-compatible VPC, see Amazon VPC Creation Guide.   To configure SageMaker HyperPod with a custom Amazon VPC, see Custom Amazon VPC Setup for SageMaker HyperPod.
     scheduled_update_config: The configuration object of the schedule that SageMaker uses to update the AMI.
     image_id: When configuring your HyperPod cluster, you can specify an image ID using one of the following options:    HyperPodPublicAmiId: Use a HyperPod public AMI    CustomAmiId: Use your custom AMI    default: Use the default latest system image   If you choose to use a custom AMI (CustomAmiId), ensure it meets the following requirements:   Encryption: The custom AMI must be unencrypted.   Ownership: The custom AMI must be owned by the same Amazon Web Services account that is creating the HyperPod cluster.   Volume support: Only the primary AMI snapshot volume is supported; additional AMI volumes are not supported.   When updating the instance group's AMI through the UpdateClusterSoftware operation, if an instance group uses a custom AMI, you must provide an ImageId or use the default as input. Note that if you don't specify an instance group in your UpdateClusterSoftware request, then all of the instance groups are patched with the specified image.
+    kubernetes_config: Specifies the Kubernetes configuration for the instance group. You describe what you want the labels and taints to look like, and the cluster works to reconcile the actual state with the declared state for nodes in this instance group.
+    capacity_requirements: Specifies the capacity requirements for the instance group.
     """
 
     instance_count: int
@@ -3873,6 +3972,7 @@ class ClusterInstanceGroupSpecification(Base):
     instance_type: str
     life_cycle_config: ClusterLifeCycleConfig
     execution_role: str
+    min_instance_count: Optional[int] = Unassigned()
     threads_per_core: Optional[int] = Unassigned()
     instance_storage_configs: Optional[List[ClusterInstanceStorageConfig]] = Unassigned()
     on_start_deep_health_checks: Optional[List[str]] = Unassigned()
@@ -3880,6 +3980,8 @@ class ClusterInstanceGroupSpecification(Base):
     override_vpc_config: Optional[VpcConfig] = Unassigned()
     scheduled_update_config: Optional[ScheduledUpdateConfig] = Unassigned()
     image_id: Optional[str] = Unassigned()
+    kubernetes_config: Optional[ClusterKubernetesConfig] = Unassigned()
+    capacity_requirements: Optional[ClusterCapacityRequirements] = Unassigned()
 
 
 class ClusterInstancePlacement(Base):
@@ -3910,6 +4012,25 @@ class ClusterInstanceStatusDetails(Base):
 
     status: str
     message: Optional[str] = Unassigned()
+
+
+class ClusterKubernetesConfigNodeDetails(Base):
+    """
+    ClusterKubernetesConfigNodeDetails
+      Node-specific Kubernetes configuration showing both current and desired state of labels and taints for an individual cluster node.
+
+    Attributes
+    ----------------------
+    current_labels: The current labels applied to the cluster node.
+    desired_labels: The desired labels to be applied to the cluster node.
+    current_taints: The current taints applied to the cluster node.
+    desired_taints: The desired taints to be applied to the cluster node.
+    """
+
+    current_labels: Optional[Dict[str, str]] = Unassigned()
+    desired_labels: Optional[Dict[str, str]] = Unassigned()
+    current_taints: Optional[List[ClusterKubernetesTaint]] = Unassigned()
+    desired_taints: Optional[List[ClusterKubernetesTaint]] = Unassigned()
 
 
 class UltraServerInfo(Base):
@@ -3950,6 +4071,8 @@ class ClusterNodeDetails(Base):
     current_image_id: The ID of the Amazon Machine Image (AMI) currently in use by the node.
     desired_image_id: The ID of the Amazon Machine Image (AMI) desired for the node.
     ultra_server_info: Contains information about the UltraServer.
+    kubernetes_config: The Kubernetes configuration applied to this node, showing both the current and desired state of labels and taints. The cluster works to reconcile the actual state with the declared state.
+    capacity_type: The capacity type of the node. Valid values are OnDemand and Spot. When set to OnDemand, the node is launched as an On-Demand instance. When set to Spot, the node is launched as a Spot instance.
     """
 
     instance_group_name: Optional[str] = Unassigned()
@@ -3970,6 +4093,8 @@ class ClusterNodeDetails(Base):
     current_image_id: Optional[str] = Unassigned()
     desired_image_id: Optional[str] = Unassigned()
     ultra_server_info: Optional[UltraServerInfo] = Unassigned()
+    kubernetes_config: Optional[ClusterKubernetesConfigNodeDetails] = Unassigned()
+    capacity_type: Optional[str] = Unassigned()
 
 
 class ClusterNodeSummary(Base):
@@ -7767,6 +7892,19 @@ class OptimizationJobModelSourceS3(Base):
     model_access_config: Optional[OptimizationModelAccessConfig] = Unassigned()
 
 
+class OptimizationSageMakerModel(Base):
+    """
+    OptimizationSageMakerModel
+      A SageMaker model to use as the source or destination for an optimization job.
+
+    Attributes
+    ----------------------
+    model_name: The name of a SageMaker model.
+    """
+
+    model_name: Optional[Union[str, object]] = Unassigned()
+
+
 class OptimizationJobModelSource(Base):
     """
     OptimizationJobModelSource
@@ -7775,9 +7913,11 @@ class OptimizationJobModelSource(Base):
     Attributes
     ----------------------
     s3: The Amazon S3 location of a source model to optimize with an optimization job.
+    sage_maker_model: The name of an existing SageMaker model to optimize with an optimization job.
     """
 
     s3: Optional[OptimizationJobModelSourceS3] = Unassigned()
+    sage_maker_model: Optional[OptimizationSageMakerModel] = Unassigned()
 
 
 class ModelQuantizationConfig(Base):
@@ -7825,6 +7965,36 @@ class ModelShardingConfig(Base):
     override_environment: Optional[Dict[str, str]] = Unassigned()
 
 
+class ModelSpeculativeDecodingTrainingDataSource(Base):
+    """
+    ModelSpeculativeDecodingTrainingDataSource
+      Contains information about the training data source for speculative decoding.
+
+    Attributes
+    ----------------------
+    s3_uri: The Amazon S3 URI that points to the training data for speculative decoding.
+    s3_data_type: The type of data stored in the Amazon S3 location. Valid values are S3Prefix or ManifestFile.
+    """
+
+    s3_uri: str
+    s3_data_type: str
+
+
+class ModelSpeculativeDecodingConfig(Base):
+    """
+    ModelSpeculativeDecodingConfig
+      Settings for the model speculative decoding technique that's applied by a model optimization job.
+
+    Attributes
+    ----------------------
+    technique: The speculative decoding technique to apply during model optimization.
+    training_data_source: The location of the training data to use for speculative decoding. The data must be formatted as ShareGPT, OpenAI Completions or OpenAI Chat Completions. The input can also be unencrypted captured data from a SageMaker endpoint as long as the endpoint uses one of the above formats.
+    """
+
+    technique: str
+    training_data_source: Optional[ModelSpeculativeDecodingTrainingDataSource] = Unassigned()
+
+
 class OptimizationConfig(Base):
     """
     OptimizationConfig
@@ -7835,11 +8005,13 @@ class OptimizationConfig(Base):
     model_quantization_config: Settings for the model quantization technique that's applied by a model optimization job.
     model_compilation_config: Settings for the model compilation technique that's applied by a model optimization job.
     model_sharding_config: Settings for the model sharding technique that's applied by a model optimization job.
+    model_speculative_decoding_config: Settings for the model speculative decoding technique that's applied by a model optimization job.
     """
 
     model_quantization_config: Optional[ModelQuantizationConfig] = Unassigned()
     model_compilation_config: Optional[ModelCompilationConfig] = Unassigned()
     model_sharding_config: Optional[ModelShardingConfig] = Unassigned()
+    model_speculative_decoding_config: Optional[ModelSpeculativeDecodingConfig] = Unassigned()
 
 
 class OptimizationJobOutputConfig(Base):
@@ -7851,10 +8023,12 @@ class OptimizationJobOutputConfig(Base):
     ----------------------
     kms_key_id: The Amazon Resource Name (ARN) of a key in Amazon Web Services KMS. SageMaker uses they key to encrypt the artifacts of the optimized model when SageMaker uploads the model to Amazon S3.
     s3_output_location: The Amazon S3 URI for where to store the optimized model that you create with an optimization job.
+    sage_maker_model: The name of a SageMaker model to use as the output destination for an optimization job.
     """
 
     s3_output_location: str
     kms_key_id: Optional[str] = Unassigned()
+    sage_maker_model: Optional[OptimizationSageMakerModel] = Unassigned()
 
 
 class OptimizationVpcConfig(Base):
@@ -11994,6 +12168,7 @@ class OptimizationJobSummary(Base):
     optimization_end_time: The time when the optimization job finished processing.
     last_modified_time: The time when the optimization job was last updated.
     deployment_instance_type: The type of instance that hosts the optimized model that you create with the optimization job.
+    max_instance_count: The maximum number of instances to use for the optimization job.
     optimization_types: The optimization techniques that are applied by the optimization job.
     """
 
@@ -12006,6 +12181,7 @@ class OptimizationJobSummary(Base):
     optimization_start_time: Optional[datetime.datetime] = Unassigned()
     optimization_end_time: Optional[datetime.datetime] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
+    max_instance_count: Optional[int] = Unassigned()
 
 
 class PartnerAppSummary(Base):

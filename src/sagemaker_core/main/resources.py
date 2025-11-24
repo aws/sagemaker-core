@@ -23559,6 +23559,7 @@ class OptimizationJob(Base):
         optimization_end_time: The time when the optimization job finished processing.
         failure_reason: If the optimization job status is FAILED, the reason for the failure.
         optimization_environment: The environment variables to set in the model container.
+        max_instance_count: The maximum number of instances to use for the optimization job.
         optimization_output: Output values produced by an optimization job.
         vpc_config: A VPC in Amazon VPC that your optimized model has access to.
 
@@ -23575,6 +23576,7 @@ class OptimizationJob(Base):
     model_source: Optional[shapes.OptimizationJobModelSource] = Unassigned()
     optimization_environment: Optional[Dict[str, str]] = Unassigned()
     deployment_instance_type: Optional[str] = Unassigned()
+    max_instance_count: Optional[int] = Unassigned()
     optimization_configs: Optional[List[shapes.OptimizationConfig]] = Unassigned()
     output_config: Optional[shapes.OptimizationJobOutputConfig] = Unassigned()
     optimization_output: Optional[shapes.OptimizationOutput] = Unassigned()
@@ -23634,6 +23636,7 @@ class OptimizationJob(Base):
         optimization_configs: List[shapes.OptimizationConfig],
         output_config: shapes.OptimizationJobOutputConfig,
         stopping_condition: shapes.StoppingCondition,
+        max_instance_count: Optional[int] = Unassigned(),
         optimization_environment: Optional[Dict[str, str]] = Unassigned(),
         tags: Optional[List[shapes.Tag]] = Unassigned(),
         vpc_config: Optional[shapes.OptimizationVpcConfig] = Unassigned(),
@@ -23651,6 +23654,7 @@ class OptimizationJob(Base):
             optimization_configs: Settings for each of the optimization techniques that the job applies.
             output_config: Details for where to store the optimized model that you create with the optimization job.
             stopping_condition:
+            max_instance_count: The maximum number of instances to use for the optimization job.
             optimization_environment: The environment variables to set in the model container.
             tags: A list of key-value pairs associated with the optimization job. For more information, see Tagging Amazon Web Services resources in the Amazon Web Services General Reference Guide.
             vpc_config: A VPC in Amazon VPC that your optimized model has access to.
@@ -23687,6 +23691,7 @@ class OptimizationJob(Base):
             "RoleArn": role_arn,
             "ModelSource": model_source,
             "DeploymentInstanceType": deployment_instance_type,
+            "MaxInstanceCount": max_instance_count,
             "OptimizationEnvironment": optimization_environment,
             "OptimizationConfigs": optimization_configs,
             "OutputConfig": output_config,
