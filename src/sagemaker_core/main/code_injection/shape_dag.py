@@ -372,6 +372,18 @@ SHAPE_DAG = {
         ],
         "type": "structure",
     },
+    "AssociationInfo": {
+        "members": [
+            {"name": "SourceArn", "shape": "String2048", "type": "string"},
+            {"name": "DestinationArn", "shape": "String2048", "type": "string"},
+        ],
+        "type": "structure",
+    },
+    "AssociationInfoList": {
+        "member_shape": "AssociationInfo",
+        "member_type": "structure",
+        "type": "list",
+    },
     "AssociationSummaries": {
         "member_shape": "AssociationSummary",
         "member_type": "structure",
@@ -828,6 +840,14 @@ SHAPE_DAG = {
         ],
         "type": "structure",
     },
+    "BaseModel": {
+        "members": [
+            {"name": "HubContentName", "shape": "HubContentName", "type": "string"},
+            {"name": "HubContentVersion", "shape": "HubContentVersion", "type": "string"},
+            {"name": "RecipeName", "shape": "RecipeName", "type": "string"},
+        ],
+        "type": "structure",
+    },
     "BatchAddClusterNodesError": {
         "members": [
             {"name": "InstanceGroupName", "shape": "InstanceGroupName", "type": "string"},
@@ -965,6 +985,11 @@ SHAPE_DAG = {
             },
             {"name": "ModelPackageStatus", "shape": "ModelPackageStatus", "type": "string"},
             {"name": "ModelApprovalStatus", "shape": "ModelApprovalStatus", "type": "string"},
+            {
+                "name": "ModelPackageRegistrationType",
+                "shape": "ModelPackageRegistrationType",
+                "type": "string",
+            },
         ],
         "type": "structure",
     },
@@ -1226,6 +1251,22 @@ SHAPE_DAG = {
                 "type": "string",
             },
         ],
+        "type": "structure",
+    },
+    "BedrockCustomModelDeploymentMetadata": {
+        "members": [{"name": "Arn", "shape": "String1024", "type": "string"}],
+        "type": "structure",
+    },
+    "BedrockCustomModelMetadata": {
+        "members": [{"name": "Arn", "shape": "String1024", "type": "string"}],
+        "type": "structure",
+    },
+    "BedrockModelImportMetadata": {
+        "members": [{"name": "Arn", "shape": "String1024", "type": "string"}],
+        "type": "structure",
+    },
+    "BedrockProvisionedModelThroughputMetadata": {
+        "members": [{"name": "Arn", "shape": "String1024", "type": "string"}],
         "type": "structure",
     },
     "BestObjectiveNotImproving": {
@@ -3276,6 +3317,11 @@ SHAPE_DAG = {
             {"name": "ModelPackageGroupName", "shape": "ArnOrName", "type": "string"},
             {"name": "ModelPackageDescription", "shape": "EntityDescription", "type": "string"},
             {
+                "name": "ModelPackageRegistrationType",
+                "shape": "ModelPackageRegistrationType",
+                "type": "string",
+            },
+            {
                 "name": "InferenceSpecification",
                 "shape": "InferenceSpecification",
                 "type": "structure",
@@ -3769,6 +3815,9 @@ SHAPE_DAG = {
                 "shape": "SessionChainingConfig",
                 "type": "structure",
             },
+            {"name": "ServerlessJobConfig", "shape": "ServerlessJobConfig", "type": "structure"},
+            {"name": "MlflowConfig", "shape": "MlflowConfig", "type": "structure"},
+            {"name": "ModelPackageConfig", "shape": "ModelPackageConfig", "type": "structure"},
         ],
         "type": "structure",
     },
@@ -4079,6 +4128,7 @@ SHAPE_DAG = {
         "members": [
             {"name": "S3DataSource", "shape": "S3DataSource", "type": "structure"},
             {"name": "FileSystemDataSource", "shape": "FileSystemDataSource", "type": "structure"},
+            {"name": "DatasetSource", "shape": "DatasetSource", "type": "structure"},
         ],
         "type": "structure",
     },
@@ -4098,6 +4148,10 @@ SHAPE_DAG = {
             {"name": "DataDistributionType", "shape": "DataDistributionType", "type": "string"},
             {"name": "InputMode", "shape": "InputMode", "type": "string"},
         ],
+        "type": "structure",
+    },
+    "DatasetSource": {
+        "members": [{"name": "DatasetArn", "shape": "HubDataSetArn", "type": "string"}],
         "type": "structure",
     },
     "DebugHookConfig": {
@@ -6084,6 +6138,11 @@ SHAPE_DAG = {
             {"name": "ModelPackageName", "shape": "EntityName", "type": "string"},
             {"name": "ModelPackageGroupName", "shape": "EntityName", "type": "string"},
             {"name": "ModelPackageVersion", "shape": "ModelPackageVersion", "type": "integer"},
+            {
+                "name": "ModelPackageRegistrationType",
+                "shape": "ModelPackageRegistrationType",
+                "type": "string",
+            },
             {"name": "ModelPackageArn", "shape": "ModelPackageArn", "type": "string"},
             {"name": "ModelPackageDescription", "shape": "EntityDescription", "type": "string"},
             {"name": "CreationTime", "shape": "CreationTime", "type": "timestamp"},
@@ -6417,6 +6476,7 @@ SHAPE_DAG = {
                 "type": "structure",
             },
             {"name": "PipelineVersionId", "shape": "PipelineVersionId", "type": "long"},
+            {"name": "MLflowConfig", "shape": "MLflowConfiguration", "type": "structure"},
         ],
         "type": "structure",
     },
@@ -6678,6 +6738,7 @@ SHAPE_DAG = {
             {"name": "CheckpointConfig", "shape": "CheckpointConfig", "type": "structure"},
             {"name": "TrainingTimeInSeconds", "shape": "TrainingTimeInSeconds", "type": "integer"},
             {"name": "BillableTimeInSeconds", "shape": "BillableTimeInSeconds", "type": "integer"},
+            {"name": "BillableTokenCount", "shape": "BillableTokenCount", "type": "long"},
             {"name": "DebugHookConfig", "shape": "DebugHookConfig", "type": "structure"},
             {"name": "ExperimentConfig", "shape": "ExperimentConfig", "type": "structure"},
             {"name": "DebugRuleConfigurations", "shape": "DebugRuleConfigurations", "type": "list"},
@@ -6707,6 +6768,12 @@ SHAPE_DAG = {
             {"name": "RetryStrategy", "shape": "RetryStrategy", "type": "structure"},
             {"name": "RemoteDebugConfig", "shape": "RemoteDebugConfig", "type": "structure"},
             {"name": "InfraCheckConfig", "shape": "InfraCheckConfig", "type": "structure"},
+            {"name": "ServerlessJobConfig", "shape": "ServerlessJobConfig", "type": "structure"},
+            {"name": "MlflowConfig", "shape": "MlflowConfig", "type": "structure"},
+            {"name": "ModelPackageConfig", "shape": "ModelPackageConfig", "type": "structure"},
+            {"name": "MlflowDetails", "shape": "MlflowDetails", "type": "structure"},
+            {"name": "ProgressInfo", "shape": "TrainingProgressInfo", "type": "structure"},
+            {"name": "OutputModelPackageArn", "shape": "ModelPackageArn", "type": "string"},
         ],
         "type": "structure",
     },
@@ -8751,6 +8818,10 @@ SHAPE_DAG = {
         ],
         "type": "structure",
     },
+    "InferenceComponentMetadata": {
+        "members": [{"name": "Arn", "shape": "String2048", "type": "string"}],
+        "type": "structure",
+    },
     "InferenceComponentRollingUpdatePolicy": {
         "members": [
             {
@@ -9464,6 +9535,15 @@ SHAPE_DAG = {
             {"name": "DisplayName", "shape": "ExperimentEntityName", "type": "string"},
             {"name": "CreationTime", "shape": "Timestamp", "type": "timestamp"},
             {"name": "LastModifiedTime", "shape": "Timestamp", "type": "timestamp"},
+        ],
+        "type": "structure",
+    },
+    "LineageMetadata": {
+        "members": [
+            {"name": "ActionArns", "shape": "MapString2048", "type": "map"},
+            {"name": "ArtifactArns", "shape": "MapString2048", "type": "map"},
+            {"name": "ContextArns", "shape": "MapString2048", "type": "map"},
+            {"name": "Associations", "shape": "AssociationInfoList", "type": "list"},
         ],
         "type": "structure",
     },
@@ -11346,6 +11426,24 @@ SHAPE_DAG = {
         ],
         "type": "structure",
     },
+    "MLflowConfiguration": {
+        "members": [
+            {"name": "MlflowResourceArn", "shape": "MLflowArn", "type": "string"},
+            {
+                "name": "MlflowExperimentName",
+                "shape": "MlflowExperimentEntityName",
+                "type": "string",
+            },
+        ],
+        "type": "structure",
+    },
+    "MapString2048": {
+        "key_shape": "String2048",
+        "key_type": "string",
+        "type": "map",
+        "value_shape": "String2048",
+        "value_type": "string",
+    },
     "MemberDefinition": {
         "members": [
             {
@@ -11468,6 +11566,21 @@ SHAPE_DAG = {
             {"name": "CreationTime", "shape": "Timestamp", "type": "timestamp"},
             {"name": "LastModifiedTime", "shape": "Timestamp", "type": "timestamp"},
             {"name": "MlflowVersion", "shape": "MlflowVersion", "type": "string"},
+        ],
+        "type": "structure",
+    },
+    "MlflowConfig": {
+        "members": [
+            {"name": "MlflowResourceArn", "shape": "MlFlowResourceArn", "type": "string"},
+            {"name": "MlflowExperimentName", "shape": "MlflowExperimentName", "type": "string"},
+            {"name": "MlflowRunName", "shape": "MlflowRunName", "type": "string"},
+        ],
+        "type": "structure",
+    },
+    "MlflowDetails": {
+        "members": [
+            {"name": "MlflowExperimentId", "shape": "MlflowExperimentId", "type": "string"},
+            {"name": "MlflowRunId", "shape": "MlflowRunId", "type": "string"},
         ],
         "type": "structure",
     },
@@ -11884,6 +11997,11 @@ SHAPE_DAG = {
             {"name": "ModelPackageName", "shape": "EntityName", "type": "string"},
             {"name": "ModelPackageGroupName", "shape": "EntityName", "type": "string"},
             {"name": "ModelPackageVersion", "shape": "ModelPackageVersion", "type": "integer"},
+            {
+                "name": "ModelPackageRegistrationType",
+                "shape": "ModelPackageRegistrationType",
+                "type": "string",
+            },
             {"name": "ModelPackageArn", "shape": "ModelPackageArn", "type": "string"},
             {"name": "ModelPackageDescription", "shape": "EntityDescription", "type": "string"},
             {"name": "CreationTime", "shape": "CreationTime", "type": "timestamp"},
@@ -11940,6 +12058,13 @@ SHAPE_DAG = {
         "member_type": "string",
         "type": "list",
     },
+    "ModelPackageConfig": {
+        "members": [
+            {"name": "ModelPackageGroupArn", "shape": "ModelPackageGroupArn", "type": "string"},
+            {"name": "SourceModelPackageArn", "shape": "ModelPackageArn", "type": "string"},
+        ],
+        "type": "structure",
+    },
     "ModelPackageContainerDefinition": {
         "members": [
             {"name": "ContainerHostname", "shape": "ContainerHostname", "type": "string"},
@@ -11959,6 +12084,8 @@ SHAPE_DAG = {
                 "type": "structure",
             },
             {"name": "ModelDataETag", "shape": "String", "type": "string"},
+            {"name": "IsCheckpoint", "shape": "Boolean", "type": "boolean"},
+            {"name": "BaseModel", "shape": "BaseModel", "type": "structure"},
         ],
         "type": "structure",
     },
@@ -12059,6 +12186,11 @@ SHAPE_DAG = {
             {"name": "ModelPackageStatus", "shape": "ModelPackageStatus", "type": "string"},
             {"name": "ModelApprovalStatus", "shape": "ModelApprovalStatus", "type": "string"},
             {"name": "ModelLifeCycle", "shape": "ModelLifeCycle", "type": "structure"},
+            {
+                "name": "ModelPackageRegistrationType",
+                "shape": "ModelPackageRegistrationType",
+                "type": "string",
+            },
         ],
         "type": "structure",
     },
@@ -13283,6 +13415,32 @@ SHAPE_DAG = {
             {"name": "AutoMLJob", "shape": "AutoMLJobStepMetadata", "type": "structure"},
             {"name": "Endpoint", "shape": "EndpointStepMetadata", "type": "structure"},
             {"name": "EndpointConfig", "shape": "EndpointConfigStepMetadata", "type": "structure"},
+            {
+                "name": "BedrockCustomModel",
+                "shape": "BedrockCustomModelMetadata",
+                "type": "structure",
+            },
+            {
+                "name": "BedrockCustomModelDeployment",
+                "shape": "BedrockCustomModelDeploymentMetadata",
+                "type": "structure",
+            },
+            {
+                "name": "BedrockProvisionedModelThroughput",
+                "shape": "BedrockProvisionedModelThroughputMetadata",
+                "type": "structure",
+            },
+            {
+                "name": "BedrockModelImport",
+                "shape": "BedrockModelImportMetadata",
+                "type": "structure",
+            },
+            {
+                "name": "InferenceComponent",
+                "shape": "InferenceComponentMetadata",
+                "type": "structure",
+            },
+            {"name": "Lineage", "shape": "LineageMetadata", "type": "structure"},
         ],
         "type": "structure",
     },
@@ -14863,6 +15021,18 @@ SHAPE_DAG = {
         ],
         "type": "structure",
     },
+    "ServerlessJobConfig": {
+        "members": [
+            {"name": "BaseModelArn", "shape": "ServerlessJobBaseModelArn", "type": "string"},
+            {"name": "AcceptEula", "shape": "AcceptEula", "type": "boolean"},
+            {"name": "JobType", "shape": "ServerlessJobType", "type": "string"},
+            {"name": "CustomizationTechnique", "shape": "CustomizationTechnique", "type": "string"},
+            {"name": "Peft", "shape": "Peft", "type": "string"},
+            {"name": "EvaluationType", "shape": "EvaluationType", "type": "string"},
+            {"name": "EvaluatorArn", "shape": "EvaluatorArn", "type": "string"},
+        ],
+        "type": "structure",
+    },
     "ServiceCatalogProvisionedProductDetails": {
         "members": [
             {"name": "ProvisionedProductId", "shape": "ServiceCatalogEntityId", "type": "string"},
@@ -15142,6 +15312,11 @@ SHAPE_DAG = {
                 "type": "structure",
             },
             {"name": "PipelineVersionId", "shape": "PipelineVersionId", "type": "long"},
+            {
+                "name": "MlflowExperimentName",
+                "shape": "MlflowExperimentEntityName",
+                "type": "string",
+            },
         ],
         "type": "structure",
     },
@@ -15679,6 +15854,8 @@ SHAPE_DAG = {
                 "shape": "DebugRuleEvaluationStatuses",
                 "type": "list",
             },
+            {"name": "OutputModelPackageArn", "shape": "ModelPackageArn", "type": "string"},
+            {"name": "ModelPackageConfig", "shape": "ModelPackageConfig", "type": "structure"},
             {"name": "ProfilerConfig", "shape": "ProfilerConfig", "type": "structure"},
             {"name": "Environment", "shape": "TrainingEnvironmentMap", "type": "map"},
             {"name": "RetryStrategy", "shape": "RetryStrategy", "type": "structure"},
@@ -15801,6 +15978,15 @@ SHAPE_DAG = {
                 "shape": "ReservedCapacitySummaries",
                 "type": "list",
             },
+        ],
+        "type": "structure",
+    },
+    "TrainingProgressInfo": {
+        "members": [
+            {"name": "TotalStepCountPerEpoch", "shape": "TotalStepCountPerEpoch", "type": "long"},
+            {"name": "CurrentStep", "shape": "TrainingStepIndex", "type": "long"},
+            {"name": "CurrentEpoch", "shape": "TrainingEpochIndex", "type": "long"},
+            {"name": "MaxEpoch", "shape": "TrainingEpochCount", "type": "long"},
         ],
         "type": "structure",
     },
@@ -16791,6 +16977,11 @@ SHAPE_DAG = {
         "members": [
             {"name": "ModelPackageArn", "shape": "ModelPackageArn", "type": "string"},
             {"name": "ModelApprovalStatus", "shape": "ModelApprovalStatus", "type": "string"},
+            {
+                "name": "ModelPackageRegistrationType",
+                "shape": "ModelPackageRegistrationType",
+                "type": "string",
+            },
             {"name": "ApprovalDescription", "shape": "ApprovalDescription", "type": "string"},
             {"name": "CustomerMetadataProperties", "shape": "CustomerMetadataMap", "type": "map"},
             {
