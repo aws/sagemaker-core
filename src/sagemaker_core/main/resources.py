@@ -17527,6 +17527,523 @@ class LineageGroup(Base):
         return shapes.GetLineageGroupPolicyResponse(**transformed_response)
 
 
+class MlflowApp(Base):
+    """
+    Class representing resource MlflowApp
+
+    Attributes:
+        arn: The ARN of the MLflow App.
+        name: The name of the MLflow App.
+        artifact_store_uri: The S3 URI of the general purpose bucket used as the MLflow App artifact store.
+        mlflow_version: The MLflow version used.
+        role_arn: The Amazon Resource Name (ARN) for an IAM role in your account that the MLflow App uses to access the artifact store in Amazon S3.
+        status: The current creation status of the described MLflow App.
+        model_registration_mode: Whether automatic registration of new MLflow models to the SageMaker Model Registry is enabled.
+        account_default_status: Indicates whether this MLflow app is the default for the entire account.
+        default_domain_id_list: List of SageMaker Domain IDs for which this MLflow App is the default.
+        creation_time: The timestamp when the MLflow App was created.
+        created_by:
+        last_modified_time: The timestamp when the MLflow App was last modified.
+        last_modified_by:
+        weekly_maintenance_window_start: The day and time of the week when weekly maintenance occurs.
+        maintenance_status: Current maintenance status of the MLflow App.
+
+    """
+
+    arn: str
+    name: Optional[str] = Unassigned()
+    artifact_store_uri: Optional[str] = Unassigned()
+    mlflow_version: Optional[str] = Unassigned()
+    role_arn: Optional[str] = Unassigned()
+    status: Optional[str] = Unassigned()
+    model_registration_mode: Optional[str] = Unassigned()
+    account_default_status: Optional[str] = Unassigned()
+    default_domain_id_list: Optional[List[str]] = Unassigned()
+    creation_time: Optional[datetime.datetime] = Unassigned()
+    created_by: Optional[shapes.UserContext] = Unassigned()
+    last_modified_time: Optional[datetime.datetime] = Unassigned()
+    last_modified_by: Optional[shapes.UserContext] = Unassigned()
+    weekly_maintenance_window_start: Optional[str] = Unassigned()
+    maintenance_status: Optional[str] = Unassigned()
+
+    def get_name(self) -> str:
+        attributes = vars(self)
+        resource_name = "mlflow_app_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
+        for attribute, value in attributes.items():
+            if attribute == "name" or attribute in attribute_name_candidates:
+                return value
+        logger.error("Name attribute not found for object mlflow_app")
+        return None
+
+    @classmethod
+    @Base.add_validate_call
+    def create(
+        cls,
+        name: str,
+        artifact_store_uri: str,
+        role_arn: str,
+        model_registration_mode: Optional[str] = Unassigned(),
+        weekly_maintenance_window_start: Optional[str] = Unassigned(),
+        account_default_status: Optional[str] = Unassigned(),
+        default_domain_id_list: Optional[List[str]] = Unassigned(),
+        tags: Optional[List[shapes.Tag]] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional["MlflowApp"]:
+        """
+        Create a MlflowApp resource
+
+        Parameters:
+            name: A string identifying the MLflow app name. This string is not part of the tracking server ARN.
+            artifact_store_uri: The S3 URI for a general purpose bucket to use as the MLflow App artifact store.
+            role_arn: The Amazon Resource Name (ARN) for an IAM role in your account that the MLflow App uses to access the artifact store in Amazon S3. The role should have the AmazonS3FullAccess permission.
+            model_registration_mode: Whether to enable or disable automatic registration of new MLflow models to the SageMaker Model Registry. To enable automatic model registration, set this value to AutoModelRegistrationEnabled. To disable automatic model registration, set this value to AutoModelRegistrationDisabled. If not specified, AutomaticModelRegistration defaults to AutoModelRegistrationDisabled.
+            weekly_maintenance_window_start: The day and time of the week in Coordinated Universal Time (UTC) 24-hour standard time that weekly maintenance updates are scheduled. For example: TUE:03:30.
+            account_default_status: Indicates whether this MLflow app is the default for the entire account.
+            default_domain_id_list: List of SageMaker domain IDs for which this MLflow App is used as the default.
+            tags: Tags consisting of key-value pairs used to manage metadata for the MLflow App.
+            session: Boto3 session.
+            region: Region name.
+
+        Returns:
+            The MlflowApp resource.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceLimitExceeded: You have exceeded an SageMaker resource limit. For example, you might have too many training jobs created.
+            ConfigSchemaValidationError: Raised when a configuration file does not adhere to the schema
+            LocalConfigNotFoundError: Raised when a configuration file is not found in local file system
+            S3ConfigNotFoundError: Raised when a configuration file is not found in S3
+        """
+
+        logger.info("Creating mlflow_app resource.")
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
+
+        operation_input_args = {
+            "Name": name,
+            "ArtifactStoreUri": artifact_store_uri,
+            "RoleArn": role_arn,
+            "ModelRegistrationMode": model_registration_mode,
+            "WeeklyMaintenanceWindowStart": weekly_maintenance_window_start,
+            "AccountDefaultStatus": account_default_status,
+            "DefaultDomainIdList": default_domain_id_list,
+            "Tags": tags,
+        }
+
+        operation_input_args = Base.populate_chained_attributes(
+            resource_name="MlflowApp", operation_input_args=operation_input_args
+        )
+
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+
+        # create the resource
+        response = client.create_mlflow_app(**operation_input_args)
+        logger.debug(f"Response: {response}")
+
+        return cls.get(arn=response["Arn"], session=session, region=region)
+
+    @classmethod
+    @Base.add_validate_call
+    def get(
+        cls,
+        arn: str,
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional["MlflowApp"]:
+        """
+        Get a MlflowApp resource
+
+        Parameters:
+            arn: The ARN of the MLflow App for which to get information.
+            session: Boto3 session.
+            region: Region name.
+
+        Returns:
+            The MlflowApp resource.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceNotFound: Resource being access is not found.
+        """
+
+        operation_input_args = {
+            "Arn": arn,
+        }
+        # serialize the input request
+        operation_input_args = serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
+        response = client.describe_mlflow_app(**operation_input_args)
+
+        logger.debug(response)
+
+        # deserialize the response
+        transformed_response = transform(response, "DescribeMlflowAppResponse")
+        mlflow_app = cls(**transformed_response)
+        return mlflow_app
+
+    @Base.add_validate_call
+    def refresh(
+        self,
+    ) -> Optional["MlflowApp"]:
+        """
+        Refresh a MlflowApp resource
+
+        Returns:
+            The MlflowApp resource.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceNotFound: Resource being access is not found.
+        """
+
+        operation_input_args = {
+            "Arn": self.arn,
+        }
+        # serialize the input request
+        operation_input_args = serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+
+        client = Base.get_sagemaker_client()
+        response = client.describe_mlflow_app(**operation_input_args)
+
+        # deserialize response and update self
+        transform(response, "DescribeMlflowAppResponse", self)
+        return self
+
+    @Base.add_validate_call
+    def update(
+        self,
+        name: Optional[str] = Unassigned(),
+        artifact_store_uri: Optional[str] = Unassigned(),
+        model_registration_mode: Optional[str] = Unassigned(),
+        weekly_maintenance_window_start: Optional[str] = Unassigned(),
+        default_domain_id_list: Optional[List[str]] = Unassigned(),
+        account_default_status: Optional[str] = Unassigned(),
+    ) -> Optional["MlflowApp"]:
+        """
+        Update a MlflowApp resource
+
+        Returns:
+            The MlflowApp resource.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ConflictException: There was a conflict when you attempted to modify a SageMaker entity such as an Experiment or Artifact.
+            ResourceNotFound: Resource being access is not found.
+        """
+
+        logger.info("Updating mlflow_app resource.")
+        client = Base.get_sagemaker_client()
+
+        operation_input_args = {
+            "Arn": self.arn,
+            "Name": name,
+            "ArtifactStoreUri": artifact_store_uri,
+            "ModelRegistrationMode": model_registration_mode,
+            "WeeklyMaintenanceWindowStart": weekly_maintenance_window_start,
+            "DefaultDomainIdList": default_domain_id_list,
+            "AccountDefaultStatus": account_default_status,
+        }
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+
+        # create the resource
+        response = client.update_mlflow_app(**operation_input_args)
+        logger.debug(f"Response: {response}")
+        self.refresh()
+
+        return self
+
+    @Base.add_validate_call
+    def delete(
+        self,
+    ) -> None:
+        """
+        Delete a MlflowApp resource
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceNotFound: Resource being access is not found.
+        """
+
+        client = Base.get_sagemaker_client()
+
+        operation_input_args = {
+            "Arn": self.arn,
+        }
+        # serialize the input request
+        operation_input_args = serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+
+        client.delete_mlflow_app(**operation_input_args)
+
+        logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+
+    @Base.add_validate_call
+    def wait_for_status(
+        self,
+        target_status: Literal[
+            "Creating",
+            "Created",
+            "CreateFailed",
+            "Updating",
+            "Updated",
+            "UpdateFailed",
+            "Deleting",
+            "DeleteFailed",
+            "Deleted",
+        ],
+        poll: int = 5,
+        timeout: Optional[int] = None,
+    ) -> None:
+        """
+        Wait for a MlflowApp resource to reach certain status.
+
+        Parameters:
+            target_status: The status to wait for.
+            poll: The number of seconds to wait between each poll.
+            timeout: The maximum number of seconds to wait before timing out.
+
+        Raises:
+            TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
+            FailedStatusError:   If the resource reaches a failed state.
+            WaiterError: Raised when an error occurs while waiting.
+        """
+        start_time = time.time()
+
+        progress = Progress(
+            SpinnerColumn("bouncingBar"),
+            TextColumn("{task.description}"),
+            TimeElapsedColumn(),
+        )
+        progress.add_task(f"Waiting for MlflowApp to reach [bold]{target_status} status...")
+        status = Status("Current status:")
+
+        with Live(
+            Panel(
+                Group(progress, status),
+                title="Wait Log Panel",
+                border_style=Style(color=Color.BLUE.value),
+            ),
+            transient=True,
+        ):
+            while True:
+                self.refresh()
+                current_status = self.status
+                status.update(f"Current status: [bold]{current_status}")
+
+                if target_status == current_status:
+                    logger.info(f"Final Resource Status: [bold]{current_status}")
+                    return
+
+                if "failed" in current_status.lower():
+                    raise FailedStatusError(
+                        resource_type="MlflowApp", status=current_status, reason="(Unknown)"
+                    )
+
+                if timeout is not None and time.time() - start_time >= timeout:
+                    raise TimeoutExceededError(resouce_type="MlflowApp", status=current_status)
+                time.sleep(poll)
+
+    @Base.add_validate_call
+    def wait_for_delete(
+        self,
+        poll: int = 5,
+        timeout: Optional[int] = None,
+    ) -> None:
+        """
+        Wait for a MlflowApp resource to be deleted.
+
+        Parameters:
+            poll: The number of seconds to wait between each poll.
+            timeout: The maximum number of seconds to wait before timing out.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
+            DeleteFailedStatusError:   If the resource reaches a failed state.
+            WaiterError: Raised when an error occurs while waiting.
+        """
+        start_time = time.time()
+
+        progress = Progress(
+            SpinnerColumn("bouncingBar"),
+            TextColumn("{task.description}"),
+            TimeElapsedColumn(),
+        )
+        progress.add_task("Waiting for MlflowApp to be deleted...")
+        status = Status("Current status:")
+
+        with Live(
+            Panel(
+                Group(progress, status),
+                title="Wait Log Panel",
+                border_style=Style(color=Color.BLUE.value),
+            )
+        ):
+            while True:
+                try:
+                    self.refresh()
+                    current_status = self.status
+                    status.update(f"Current status: [bold]{current_status}")
+
+                    if current_status.lower() == "deleted":
+                        print("Resource was deleted.")
+                        return
+
+                    if timeout is not None and time.time() - start_time >= timeout:
+                        raise TimeoutExceededError(resouce_type="MlflowApp", status=current_status)
+                except botocore.exceptions.ClientError as e:
+                    error_code = e.response["Error"]["Code"]
+
+                    if "ResourceNotFound" in error_code or "ValidationException" in error_code:
+                        logger.info("Resource was not found. It may have been deleted.")
+                        return
+                    raise e
+                time.sleep(poll)
+
+    @classmethod
+    @Base.add_validate_call
+    def get_all(
+        cls,
+        created_after: Optional[datetime.datetime] = Unassigned(),
+        created_before: Optional[datetime.datetime] = Unassigned(),
+        status: Optional[str] = Unassigned(),
+        mlflow_version: Optional[str] = Unassigned(),
+        default_for_domain_id: Optional[str] = Unassigned(),
+        account_default_status: Optional[str] = Unassigned(),
+        sort_by: Optional[str] = Unassigned(),
+        sort_order: Optional[str] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> ResourceIterator["MlflowApp"]:
+        """
+        Get all MlflowApp resources
+
+        Parameters:
+            created_after: Use the CreatedAfter filter to only list MLflow Apps created after a specific date and time. Listed MLflow Apps are shown with a date and time such as "2024-03-16T01:46:56+00:00". The CreatedAfter parameter takes in a Unix timestamp.
+            created_before: Use the CreatedBefore filter to only list MLflow Apps created before a specific date and time. Listed MLflow Apps are shown with a date and time such as "2024-03-16T01:46:56+00:00". The CreatedAfter parameter takes in a Unix timestamp.
+            status: Filter for Mlflow apps with a specific creation status.
+            mlflow_version: Filter for Mlflow Apps with the specified version.
+            default_for_domain_id: Filter for MLflow Apps with the specified default SageMaker Domain ID.
+            account_default_status: Filter for MLflow Apps with the specified AccountDefaultStatus.
+            sort_by: Filter for MLflow Apps sorting by name, creation time, or creation status.
+            sort_order: Change the order of the listed MLflow Apps. By default, MLflow Apps are listed in Descending order by creation time. To change the list order, specify SortOrder to be Ascending.
+            next_token: If the previous response was truncated, use this token in your next request to receive the next set of results.
+            max_results: The maximum number of MLflow Apps to list.
+            session: Boto3 session.
+            region: Region name.
+
+        Returns:
+            Iterator for listed MlflowApp resources.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+        """
+
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
+
+        operation_input_args = {
+            "CreatedAfter": created_after,
+            "CreatedBefore": created_before,
+            "Status": status,
+            "MlflowVersion": mlflow_version,
+            "DefaultForDomainId": default_for_domain_id,
+            "AccountDefaultStatus": account_default_status,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
+        }
+
+        # serialize the input request
+        operation_input_args = serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+
+        return ResourceIterator(
+            client=client,
+            list_method="list_mlflow_apps",
+            summaries_key="Summaries",
+            summary_name="MlflowAppSummary",
+            resource_cls=MlflowApp,
+            list_method_kwargs=operation_input_args,
+        )
+
+
 class MlflowTrackingServer(Base):
     """
     Class representing resource MlflowTrackingServer
@@ -25894,6 +26411,97 @@ class PresignedDomainUrl(Base):
         logger.debug(f"Response: {response}")
 
         transformed_response = transform(response, "CreatePresignedDomainUrlResponse")
+        return cls(**operation_input_args, **transformed_response)
+
+
+class PresignedMlflowAppUrl(Base):
+    """
+    Class representing resource PresignedMlflowAppUrl
+
+    Attributes:
+        arn: The ARN of the MLflow App to connect to your MLflow UI.
+        expires_in_seconds: The duration in seconds that your presigned URL is valid. The presigned URL can be used only once.
+        session_expiration_duration_in_seconds: The duration in seconds that your presigned URL is valid. The presigned URL can be used only once.
+        authorized_url: A presigned URL with an authorization token.
+
+    """
+
+    arn: str
+    expires_in_seconds: Optional[int] = Unassigned()
+    session_expiration_duration_in_seconds: Optional[int] = Unassigned()
+    authorized_url: Optional[str] = Unassigned()
+
+    def get_name(self) -> str:
+        attributes = vars(self)
+        resource_name = "presigned_mlflow_app_url_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
+        for attribute, value in attributes.items():
+            if attribute == "name" or attribute in attribute_name_candidates:
+                return value
+        logger.error("Name attribute not found for object presigned_mlflow_app_url")
+        return None
+
+    @classmethod
+    @Base.add_validate_call
+    def create(
+        cls,
+        arn: str,
+        expires_in_seconds: Optional[int] = Unassigned(),
+        session_expiration_duration_in_seconds: Optional[int] = Unassigned(),
+    ) -> Optional["PresignedMlflowAppUrl"]:
+        """
+        Create a PresignedMlflowAppUrl resource
+
+        Parameters:
+            arn: The ARN of the MLflow App to connect to your MLflow UI.
+            expires_in_seconds: The duration in seconds that your presigned URL is valid. The presigned URL can be used only once.
+            session_expiration_duration_in_seconds: The duration in seconds that your presigned URL is valid. The presigned URL can be used only once.
+            session: Boto3 session.
+            region: Region name.
+
+        Returns:
+            The PresignedMlflowAppUrl resource.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceNotFound: Resource being access is not found.
+            ConfigSchemaValidationError: Raised when a configuration file does not adhere to the schema
+            LocalConfigNotFoundError: Raised when a configuration file is not found in local file system
+            S3ConfigNotFoundError: Raised when a configuration file is not found in S3
+        """
+
+        operation_input_args = {
+            "Arn": arn,
+            "ExpiresInSeconds": expires_in_seconds,
+            "SessionExpirationDurationInSeconds": session_expiration_duration_in_seconds,
+        }
+        # serialize the input request
+        operation_input_args = serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
+
+        logger.debug(f"Calling create_presigned_mlflow_app_url API")
+        response = client.create_presigned_mlflow_app_url(**operation_input_args)
+        logger.debug(f"Response: {response}")
+
+        transformed_response = transform(response, "CreatePresignedMlflowAppUrlResponse")
         return cls(**operation_input_args, **transformed_response)
 
 

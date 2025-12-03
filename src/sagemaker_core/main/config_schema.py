@@ -461,6 +461,10 @@ SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA = {
                                         },
                                     },
                                 },
+                                "MlflowApp": {
+                                    "type": "object",
+                                    "properties": {"role_arn": {"type": "string"}},
+                                },
                                 "MlflowTrackingServer": {
                                     "type": "object",
                                     "properties": {"role_arn": {"type": "string"}},

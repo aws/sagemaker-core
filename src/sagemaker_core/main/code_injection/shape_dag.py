@@ -3082,6 +3082,27 @@ SHAPE_DAG = {
         "members": [{"name": "LabelingJobArn", "shape": "LabelingJobArn", "type": "string"}],
         "type": "structure",
     },
+    "CreateMlflowAppRequest": {
+        "members": [
+            {"name": "Name", "shape": "MlflowAppName", "type": "string"},
+            {"name": "ArtifactStoreUri", "shape": "S3Uri", "type": "string"},
+            {"name": "RoleArn", "shape": "RoleArn", "type": "string"},
+            {"name": "ModelRegistrationMode", "shape": "ModelRegistrationMode", "type": "string"},
+            {
+                "name": "WeeklyMaintenanceWindowStart",
+                "shape": "WeeklyMaintenanceWindowStart",
+                "type": "string",
+            },
+            {"name": "AccountDefaultStatus", "shape": "AccountDefaultStatus", "type": "string"},
+            {"name": "DefaultDomainIdList", "shape": "DefaultDomainIdList", "type": "list"},
+            {"name": "Tags", "shape": "TagList", "type": "list"},
+        ],
+        "type": "structure",
+    },
+    "CreateMlflowAppResponse": {
+        "members": [{"name": "Arn", "shape": "MlflowAppArn", "type": "string"}],
+        "type": "structure",
+    },
     "CreateMlflowTrackingServerRequest": {
         "members": [
             {"name": "TrackingServerName", "shape": "TrackingServerName", "type": "string"},
@@ -3541,6 +3562,22 @@ SHAPE_DAG = {
     },
     "CreatePresignedDomainUrlResponse": {
         "members": [{"name": "AuthorizedUrl", "shape": "PresignedDomainUrl", "type": "string"}],
+        "type": "structure",
+    },
+    "CreatePresignedMlflowAppUrlRequest": {
+        "members": [
+            {"name": "Arn", "shape": "MlflowAppArn", "type": "string"},
+            {"name": "ExpiresInSeconds", "shape": "ExpiresInSeconds", "type": "integer"},
+            {
+                "name": "SessionExpirationDurationInSeconds",
+                "shape": "SessionExpirationDurationInSeconds",
+                "type": "integer",
+            },
+        ],
+        "type": "structure",
+    },
+    "CreatePresignedMlflowAppUrlResponse": {
+        "members": [{"name": "AuthorizedUrl", "shape": "MlflowAppUrl", "type": "string"}],
         "type": "structure",
     },
     "CreatePresignedMlflowTrackingServerUrlRequest": {
@@ -4108,6 +4145,7 @@ SHAPE_DAG = {
         "member_type": "structure",
         "type": "list",
     },
+    "DefaultDomainIdList": {"member_shape": "DomainId", "member_type": "string", "type": "list"},
     "DefaultEbsStorageSettings": {
         "members": [
             {
@@ -4378,6 +4416,14 @@ SHAPE_DAG = {
         "members": [
             {"name": "InferenceExperimentArn", "shape": "InferenceExperimentArn", "type": "string"}
         ],
+        "type": "structure",
+    },
+    "DeleteMlflowAppRequest": {
+        "members": [{"name": "Arn", "shape": "MlflowAppArn", "type": "string"}],
+        "type": "structure",
+    },
+    "DeleteMlflowAppResponse": {
+        "members": [{"name": "Arn", "shape": "MlflowAppArn", "type": "string"}],
         "type": "structure",
     },
     "DeleteMlflowTrackingServerRequest": {
@@ -5785,6 +5831,34 @@ SHAPE_DAG = {
             {"name": "CreatedBy", "shape": "UserContext", "type": "structure"},
             {"name": "LastModifiedTime", "shape": "Timestamp", "type": "timestamp"},
             {"name": "LastModifiedBy", "shape": "UserContext", "type": "structure"},
+        ],
+        "type": "structure",
+    },
+    "DescribeMlflowAppRequest": {
+        "members": [{"name": "Arn", "shape": "MlflowAppArn", "type": "string"}],
+        "type": "structure",
+    },
+    "DescribeMlflowAppResponse": {
+        "members": [
+            {"name": "Arn", "shape": "MlflowAppArn", "type": "string"},
+            {"name": "Name", "shape": "MlflowAppName", "type": "string"},
+            {"name": "ArtifactStoreUri", "shape": "S3Uri", "type": "string"},
+            {"name": "MlflowVersion", "shape": "MlflowVersion", "type": "string"},
+            {"name": "RoleArn", "shape": "RoleArn", "type": "string"},
+            {"name": "Status", "shape": "MlflowAppStatus", "type": "string"},
+            {"name": "ModelRegistrationMode", "shape": "ModelRegistrationMode", "type": "string"},
+            {"name": "AccountDefaultStatus", "shape": "AccountDefaultStatus", "type": "string"},
+            {"name": "DefaultDomainIdList", "shape": "DefaultDomainIdList", "type": "list"},
+            {"name": "CreationTime", "shape": "Timestamp", "type": "timestamp"},
+            {"name": "CreatedBy", "shape": "UserContext", "type": "structure"},
+            {"name": "LastModifiedTime", "shape": "Timestamp", "type": "timestamp"},
+            {"name": "LastModifiedBy", "shape": "UserContext", "type": "structure"},
+            {
+                "name": "WeeklyMaintenanceWindowStart",
+                "shape": "WeeklyMaintenanceWindowStart",
+                "type": "string",
+            },
+            {"name": "MaintenanceStatus", "shape": "MaintenanceStatus", "type": "string"},
         ],
         "type": "structure",
     },
@@ -8010,7 +8084,7 @@ SHAPE_DAG = {
         "type": "list",
     },
     "HubContentSearchKeywordList": {
-        "member_shape": "HubSearchKeyword",
+        "member_shape": "HubContentSearchKeyword",
         "member_type": "string",
         "type": "list",
     },
@@ -10315,6 +10389,28 @@ SHAPE_DAG = {
         ],
         "type": "structure",
     },
+    "ListMlflowAppsRequest": {
+        "members": [
+            {"name": "CreatedAfter", "shape": "Timestamp", "type": "timestamp"},
+            {"name": "CreatedBefore", "shape": "Timestamp", "type": "timestamp"},
+            {"name": "Status", "shape": "MlflowAppStatus", "type": "string"},
+            {"name": "MlflowVersion", "shape": "MlflowVersion", "type": "string"},
+            {"name": "DefaultForDomainId", "shape": "String", "type": "string"},
+            {"name": "AccountDefaultStatus", "shape": "AccountDefaultStatus", "type": "string"},
+            {"name": "SortBy", "shape": "SortMlflowAppBy", "type": "string"},
+            {"name": "SortOrder", "shape": "SortOrder", "type": "string"},
+            {"name": "NextToken", "shape": "NextToken", "type": "string"},
+            {"name": "MaxResults", "shape": "MaxResults", "type": "integer"},
+        ],
+        "type": "structure",
+    },
+    "ListMlflowAppsResponse": {
+        "members": [
+            {"name": "Summaries", "shape": "MlflowAppSummaries", "type": "list"},
+            {"name": "NextToken", "shape": "NextToken", "type": "string"},
+        ],
+        "type": "structure",
+    },
     "ListMlflowTrackingServersRequest": {
         "members": [
             {"name": "CreatedAfter", "shape": "Timestamp", "type": "timestamp"},
@@ -11356,6 +11452,22 @@ SHAPE_DAG = {
             {"name": "ContentType", "shape": "ContentType", "type": "string"},
             {"name": "ContentDigest", "shape": "ContentDigest", "type": "string"},
             {"name": "S3Uri", "shape": "S3Uri", "type": "string"},
+        ],
+        "type": "structure",
+    },
+    "MlflowAppSummaries": {
+        "member_shape": "MlflowAppSummary",
+        "member_type": "structure",
+        "type": "list",
+    },
+    "MlflowAppSummary": {
+        "members": [
+            {"name": "Arn", "shape": "MlflowAppArn", "type": "string"},
+            {"name": "Name", "shape": "MlflowAppName", "type": "string"},
+            {"name": "Status", "shape": "MlflowAppStatus", "type": "string"},
+            {"name": "CreationTime", "shape": "Timestamp", "type": "timestamp"},
+            {"name": "LastModifiedTime", "shape": "Timestamp", "type": "timestamp"},
+            {"name": "MlflowVersion", "shape": "MlflowVersion", "type": "string"},
         ],
         "type": "structure",
     },
@@ -16623,6 +16735,26 @@ SHAPE_DAG = {
         "members": [
             {"name": "InferenceExperimentArn", "shape": "InferenceExperimentArn", "type": "string"}
         ],
+        "type": "structure",
+    },
+    "UpdateMlflowAppRequest": {
+        "members": [
+            {"name": "Arn", "shape": "MlflowAppArn", "type": "string"},
+            {"name": "Name", "shape": "MlflowAppName", "type": "string"},
+            {"name": "ArtifactStoreUri", "shape": "S3Uri", "type": "string"},
+            {"name": "ModelRegistrationMode", "shape": "ModelRegistrationMode", "type": "string"},
+            {
+                "name": "WeeklyMaintenanceWindowStart",
+                "shape": "WeeklyMaintenanceWindowStart",
+                "type": "string",
+            },
+            {"name": "DefaultDomainIdList", "shape": "DefaultDomainIdList", "type": "list"},
+            {"name": "AccountDefaultStatus", "shape": "AccountDefaultStatus", "type": "string"},
+        ],
+        "type": "structure",
+    },
+    "UpdateMlflowAppResponse": {
+        "members": [{"name": "Arn", "shape": "MlflowAppArn", "type": "string"}],
         "type": "structure",
     },
     "UpdateMlflowTrackingServerRequest": {

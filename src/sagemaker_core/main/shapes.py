@@ -3898,8 +3898,8 @@ class ClusterInstanceGroupDetails(Base):
     active_operations: A map indicating active operations currently in progress for the instance group of a SageMaker HyperPod cluster. When there is a scaling operation in progress, this map contains a key Scaling with value 1.
     kubernetes_config: The Kubernetes configuration for the instance group that contains labels and taints to be applied for the nodes in this instance group.
     capacity_requirements: The instance capacity requirements for the instance group.
-    target_state_count: The number of nodes running a specific image ID since the last software update request.
-    software_update_status: Status of the last software udpate request.
+    target_state_count: Represents the number of running nodes using the desired Image ID.    During software update operations: This count shows the number of nodes running on the desired Image ID. If a rollback occurs, the current image ID and desired image ID (both included in the describe cluster response) swap values. The TargetStateCount then shows the number of nodes running on the newly designated desired image ID (which was previously the current image ID).    During simultaneous scaling and software update operations: This count shows the number of instances running on the desired image ID, including any new instances created as part of the scaling request. New nodes are always created using the desired image ID, so TargetStateCount reflects the total count of nodes running on the desired image ID, even during rollback scenarios.
+    software_update_status: Status of the last software udpate request. Status transitions follow these possible sequences:   Pending -&gt; InProgress -&gt; Succeeded   Pending -&gt; InProgress -&gt; RollbackInProgress -&gt; RollbackComplete   Pending -&gt; InProgress -&gt; RollbackInProgress -&gt; Failed
     active_software_update_config
     """
 
@@ -4149,7 +4149,7 @@ class ClusterOrchestrator(Base):
     eks: The Amazon EKS cluster used as the orchestrator for the SageMaker HyperPod cluster.
     """
 
-    eks: ClusterOrchestratorEksConfig
+    eks: Optional[ClusterOrchestratorEksConfig] = Unassigned()
 
 
 class FSxLustreConfig(Base):
@@ -11794,6 +11794,29 @@ class MonitoringJobDefinitionSummary(Base):
     monitoring_job_definition_arn: str
     creation_time: datetime.datetime
     endpoint_name: Union[str, object]
+
+
+class MlflowAppSummary(Base):
+    """
+    MlflowAppSummary
+      The summary of the Mlflow App to list.
+
+    Attributes
+    ----------------------
+    arn: The ARN of a listed MLflow App.
+    name: The name of the MLflow App.
+    status: The status of the MLflow App.
+    creation_time: The creation time of a listed MLflow App.
+    last_modified_time: The last modified time of a listed MLflow App.
+    mlflow_version: The version of a listed MLflow App.
+    """
+
+    arn: Optional[str] = Unassigned()
+    name: Optional[str] = Unassigned()
+    status: Optional[str] = Unassigned()
+    creation_time: Optional[datetime.datetime] = Unassigned()
+    last_modified_time: Optional[datetime.datetime] = Unassigned()
+    mlflow_version: Optional[str] = Unassigned()
 
 
 class TrackingServerSummary(Base):
