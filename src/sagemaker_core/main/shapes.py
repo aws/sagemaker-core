@@ -650,6 +650,23 @@ class AdditionalS3DataSource(Base):
     e_tag: Optional[str] = Unassigned()
 
 
+class BaseModel(Base):
+    """
+    BaseModel
+      Identifies the foundation model that was used as the starting point for model customization.
+
+    Attributes
+    ----------------------
+    hub_content_name:  The hub content name of the base model.
+    hub_content_version:  The hub content version of the base model.
+    recipe_name:  The recipe name of the base model.
+    """
+
+    hub_content_name: Optional[Union[str, object]] = Unassigned()
+    hub_content_version: Optional[str] = Unassigned()
+    recipe_name: Optional[str] = Unassigned()
+
+
 class ModelPackageContainerDefinition(Base):
     """
     ModelPackageContainerDefinition
@@ -670,6 +687,8 @@ class ModelPackageContainerDefinition(Base):
     nearest_model_name: The name of a pre-trained machine learning benchmarked by Amazon SageMaker Inference Recommender model that matches your model. You can find a list of benchmarked models by calling ListModelMetadata.
     additional_s3_data_source: The additional data source that is used during inference in the Docker container for your model package.
     model_data_e_tag: The ETag associated with Model Data URL.
+    is_checkpoint:  The checkpoint of the model package.
+    base_model:  The base model of the package.
     """
 
     container_hostname: Optional[str] = Unassigned()
@@ -685,6 +704,8 @@ class ModelPackageContainerDefinition(Base):
     nearest_model_name: Optional[str] = Unassigned()
     additional_s3_data_source: Optional[AdditionalS3DataSource] = Unassigned()
     model_data_e_tag: Optional[str] = Unassigned()
+    is_checkpoint: Optional[bool] = Unassigned()
+    base_model: Optional[BaseModel] = Unassigned()
 
 
 class AdditionalInferenceSpecificationDefinition(Base):
@@ -948,6 +969,19 @@ class FileSystemDataSource(Base):
     directory_path: str
 
 
+class DatasetSource(Base):
+    """
+    DatasetSource
+       Specifies a dataset source for a channel.
+
+    Attributes
+    ----------------------
+    dataset_arn:  The Amazon Resource Name (ARN) of the dataset resource.
+    """
+
+    dataset_arn: str
+
+
 class DataSource(Base):
     """
     DataSource
@@ -957,10 +991,12 @@ class DataSource(Base):
     ----------------------
     s3_data_source: The S3 location of the data source that is associated with a channel.
     file_system_data_source: The file system that is associated with a channel.
+    dataset_source:  The dataset resource that's associated with a channel.
     """
 
     s3_data_source: Optional[S3DataSource] = Unassigned()
     file_system_data_source: Optional[FileSystemDataSource] = Unassigned()
+    dataset_source: Optional[DatasetSource] = Unassigned()
 
 
 class ShuffleConfig(Base):
@@ -1074,7 +1110,7 @@ class ResourceConfig(Base):
     ----------------------
     instance_type: The ML compute instance type.
     instance_count: The number of ML compute instances to use. For distributed training, provide a value greater than 1.
-    volume_size_in_gb: The size of the ML storage volume that you want to provision.  ML storage volumes store model artifacts and incremental states. Training algorithms might also use the ML storage volume for scratch space. If you want to store the training data in the ML storage volume, choose File as the TrainingInputMode in the algorithm specification.  When using an ML instance with NVMe SSD volumes, SageMaker doesn't provision Amazon EBS General Purpose SSD (gp2) storage. Available storage is fixed to the NVMe-type instance's storage capacity. SageMaker configures storage paths for training datasets, checkpoints, model artifacts, and outputs to use the entire capacity of the instance storage. For example, ML instance families with the NVMe-type instance storage include ml.p4d, ml.g4dn, and ml.g5.  When using an ML instance with the EBS-only storage option and without instance storage, you must define the size of EBS volume through VolumeSizeInGB in the ResourceConfig API. For example, ML instance families that use EBS volumes include ml.c5 and ml.p2.  To look up instance types and their instance storage types and volumes, see Amazon EC2 Instance Types. To find the default local paths defined by the SageMaker training platform, see Amazon SageMaker Training Storage Folders for Training Datasets, Checkpoints, Model Artifacts, and Outputs.
+    volume_size_in_gb: The size of the ML storage volume that you want to provision.  SageMaker automatically selects the volume size for serverless training jobs. You cannot customize this setting. ML storage volumes store model artifacts and incremental states. Training algorithms might also use the ML storage volume for scratch space. If you want to store the training data in the ML storage volume, choose File as the TrainingInputMode in the algorithm specification.  When using an ML instance with NVMe SSD volumes, SageMaker doesn't provision Amazon EBS General Purpose SSD (gp2) storage. Available storage is fixed to the NVMe-type instance's storage capacity. SageMaker configures storage paths for training datasets, checkpoints, model artifacts, and outputs to use the entire capacity of the instance storage. For example, ML instance families with the NVMe-type instance storage include ml.p4d, ml.g4dn, and ml.g5.  When using an ML instance with the EBS-only storage option and without instance storage, you must define the size of EBS volume through VolumeSizeInGB in the ResourceConfig API. For example, ML instance families that use EBS volumes include ml.c5 and ml.p2.  To look up instance types and their instance storage types and volumes, see Amazon EC2 Instance Types. To find the default local paths defined by the SageMaker training platform, see Amazon SageMaker Training Storage Folders for Training Datasets, Checkpoints, Model Artifacts, and Outputs.
     volume_kms_key_id: The Amazon Web Services KMS key that SageMaker uses to encrypt data on the storage volume attached to the ML compute instance(s) that run the training job.  Certain Nitro-based instances include local storage, dependent on the instance type. Local storage volumes are encrypted using a hardware module on the instance. You can't request a VolumeKmsKeyId when using an instance type with local storage. For a list of instance types that support local instance storage, see Instance Store Volumes. For more information about local instance storage encryption, see SSD Instance Store Volumes.  The VolumeKmsKeyId can be in any of the following formats:   // KMS Key ID  "1234abcd-12ab-34cd-56ef-1234567890ab"    // Amazon Resource Name (ARN) of a KMS Key  "arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab"
     keep_alive_period_in_seconds: The duration of time in seconds to retain configured resources in a warm pool for subsequent training jobs.
     instance_groups: The configuration of a heterogeneous cluster in JSON format.
@@ -1569,6 +1605,21 @@ class ArtifactSummary(Base):
     artifact_type: Optional[str] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
+
+
+class AssociationInfo(Base):
+    """
+    AssociationInfo
+       The data type used to describe the relationship between different sources.
+
+    Attributes
+    ----------------------
+    source_arn:  The Amazon Resource Name (ARN) of the AssociationInfo source.
+    destination_arn:  The Amazon Resource Name (ARN) of the AssociationInfo destination.
+    """
+
+    source_arn: str
+    destination_arn: str
 
 
 class IamIdentity(Base):
@@ -2646,6 +2697,7 @@ class BatchDescribeModelPackageSummary(Base):
     inference_specification
     model_package_status: The status of the mortgage package.
     model_approval_status: The approval status of the model.
+    model_package_registration_type:  The package registration type of the model package summary.
     """
 
     model_package_group_name: Union[str, object]
@@ -2656,6 +2708,7 @@ class BatchDescribeModelPackageSummary(Base):
     model_package_version: Optional[int] = Unassigned()
     model_package_description: Optional[str] = Unassigned()
     model_approval_status: Optional[str] = Unassigned()
+    model_package_registration_type: Optional[str] = Unassigned()
 
 
 class BatchDescribeModelPackageOutput(Base):
@@ -2828,6 +2881,58 @@ class BatchTransformInput(Base):
     start_time_offset: Optional[str] = Unassigned()
     end_time_offset: Optional[str] = Unassigned()
     exclude_features_attribute: Optional[str] = Unassigned()
+
+
+class BedrockCustomModelDeploymentMetadata(Base):
+    """
+    BedrockCustomModelDeploymentMetadata
+       The metadata of the Amazon Bedrock custom model deployment.
+
+    Attributes
+    ----------------------
+    arn:  The Amazon Resource Name (ARN) of the metadata for the Amazon Bedrock custom model deployment.
+    """
+
+    arn: Optional[str] = Unassigned()
+
+
+class BedrockCustomModelMetadata(Base):
+    """
+    BedrockCustomModelMetadata
+       The metadata of the Amazon Bedrock custom model.
+
+    Attributes
+    ----------------------
+    arn:  The Amazon Resource Name (ARN) of the Amazon Bedrock custom model metadata.
+    """
+
+    arn: Optional[str] = Unassigned()
+
+
+class BedrockModelImportMetadata(Base):
+    """
+    BedrockModelImportMetadata
+       The metadata of the Amazon Bedrock model import.
+
+    Attributes
+    ----------------------
+    arn:  The Amazon Resource Name (ARN) of the Amazon Bedrock model import metadata.
+    """
+
+    arn: Optional[str] = Unassigned()
+
+
+class BedrockProvisionedModelThroughputMetadata(Base):
+    """
+    BedrockProvisionedModelThroughputMetadata
+       The metadata of the Amazon Bedrock provisioned model throughput.
+
+    Attributes
+    ----------------------
+    arn:  The Amazon Resource Name (ARN) of the Amazon Bedrock provisioned model throughput metadata.
+    """
+
+    arn: Optional[str] = Unassigned()
 
 
 class BestObjectiveNotImproving(Base):
@@ -4149,7 +4254,7 @@ class ClusterOrchestrator(Base):
     eks: The Amazon EKS cluster used as the orchestrator for the SageMaker HyperPod cluster.
     """
 
-    eks: Optional[ClusterOrchestratorEksConfig] = Unassigned()
+    eks: ClusterOrchestratorEksConfig
 
 
 class FSxLustreConfig(Base):
@@ -8727,6 +8832,63 @@ class SessionChainingConfig(Base):
     enable_session_tag_chaining: Optional[bool] = Unassigned()
 
 
+class ServerlessJobConfig(Base):
+    """
+    ServerlessJobConfig
+       The configuration for the serverless training job.
+
+    Attributes
+    ----------------------
+    base_model_arn:  The base model Amazon Resource Name (ARN) in SageMaker Public Hub. SageMaker always selects the latest version of the provided model.
+    accept_eula:  Specifies agreement to the model end-user license agreement (EULA). The AcceptEula value must be explicitly defined as True in order to accept the EULA that this model requires. You are responsible for reviewing and complying with any applicable license terms and making sure they are acceptable for your use case before downloading or using a model. For more information, see End-user license agreements section for more details on accepting the EULA.
+    job_type:  The serverless training job type.
+    customization_technique:  The model customization technique.
+    peft:  The parameter-efficient fine-tuning configuration.
+    evaluation_type:  The evaluation job type. Required when serverless job type is Evaluation.
+    evaluator_arn:  The evaluator Amazon Resource Name (ARN) used as reward function or reward prompt.
+    """
+
+    base_model_arn: str
+    job_type: str
+    accept_eula: Optional[bool] = Unassigned()
+    customization_technique: Optional[str] = Unassigned()
+    peft: Optional[str] = Unassigned()
+    evaluation_type: Optional[str] = Unassigned()
+    evaluator_arn: Optional[str] = Unassigned()
+
+
+class MlflowConfig(Base):
+    """
+    MlflowConfig
+       The MLflow configuration using SageMaker managed MLflow.
+
+    Attributes
+    ----------------------
+    mlflow_resource_arn:  The Amazon Resource Name (ARN) of the MLflow resource.
+    mlflow_experiment_name:  The MLflow experiment name used for this job.
+    mlflow_run_name:  The MLflow run name used for this job.
+    """
+
+    mlflow_resource_arn: str
+    mlflow_experiment_name: Optional[str] = Unassigned()
+    mlflow_run_name: Optional[str] = Unassigned()
+
+
+class ModelPackageConfig(Base):
+    """
+    ModelPackageConfig
+       The configuration for the Model package.
+
+    Attributes
+    ----------------------
+    model_package_group_arn:  The Amazon Resource Name (ARN) of the model package group of output model package.
+    source_model_package_arn:  The Amazon Resource Name (ARN) of the source model package used for continued fine-tuning and custom model evaluation.
+    """
+
+    model_package_group_arn: str
+    source_model_package_arn: Optional[str] = Unassigned()
+
+
 class ModelClientConfig(Base):
     """
     ModelClientConfig
@@ -10085,6 +10247,21 @@ class SelectiveExecutionConfig(Base):
     source_pipeline_execution_arn: Optional[str] = Unassigned()
 
 
+class MLflowConfiguration(Base):
+    """
+    MLflowConfiguration
+       The MLflow configuration.
+
+    Attributes
+    ----------------------
+    mlflow_resource_arn:  The Amazon Resource Name (ARN) of MLflow configuration resource.
+    mlflow_experiment_name:  The name of the MLflow configuration.
+    """
+
+    mlflow_resource_arn: Optional[str] = Unassigned()
+    mlflow_experiment_name: Optional[str] = Unassigned()
+
+
 class ServiceCatalogProvisionedProductDetails(Base):
     """
     ServiceCatalogProvisionedProductDetails
@@ -10227,6 +10404,40 @@ class ProfilerRuleEvaluationStatus(Base):
     rule_evaluation_status: Optional[str] = Unassigned()
     status_details: Optional[str] = Unassigned()
     last_modified_time: Optional[datetime.datetime] = Unassigned()
+
+
+class MlflowDetails(Base):
+    """
+    MlflowDetails
+       The MLflow details of this job.
+
+    Attributes
+    ----------------------
+    mlflow_experiment_id:  The MLflow experiment ID used for this job.
+    mlflow_run_id:  The MLflow run ID used for this job.
+    """
+
+    mlflow_experiment_id: Optional[str] = Unassigned()
+    mlflow_run_id: Optional[str] = Unassigned()
+
+
+class TrainingProgressInfo(Base):
+    """
+    TrainingProgressInfo
+       The serverless training job progress information.
+
+    Attributes
+    ----------------------
+    total_step_count_per_epoch:  The total step count per epoch.
+    current_step:  The current step number.
+    current_epoch:  The current epoch number.
+    max_epoch:  The maximum number of epochs for this job.
+    """
+
+    total_step_count_per_epoch: Optional[int] = Unassigned()
+    current_step: Optional[int] = Unassigned()
+    current_epoch: Optional[int] = Unassigned()
+    max_epoch: Optional[int] = Unassigned()
 
 
 class ReservedCapacitySummary(Base):
@@ -11527,6 +11738,19 @@ class ImageVersion(Base):
     failure_reason: Optional[str] = Unassigned()
 
 
+class InferenceComponentMetadata(Base):
+    """
+    InferenceComponentMetadata
+       The metadata of the inference component.
+
+    Attributes
+    ----------------------
+    arn:  The Amazon Resource Name (ARN) of the inference component metadata.
+    """
+
+    arn: Optional[str] = Unassigned()
+
+
 class InferenceComponentSummary(Base):
     """
     InferenceComponentSummary
@@ -11777,6 +12001,25 @@ class LineageGroupSummary(Base):
     last_modified_time: Optional[datetime.datetime] = Unassigned()
 
 
+class LineageMetadata(Base):
+    """
+    LineageMetadata
+       The metadata that tracks relationships between ML artifacts, actions, and contexts.
+
+    Attributes
+    ----------------------
+    action_arns:  The Amazon Resource Name (ARN) of the lineage metadata action.
+    artifact_arns:  The Amazon Resource Name (ARN) of the lineage metadata artifact.
+    context_arns:  The Amazon Resource Name (ARN) of the lineage metadata context.
+    associations:  The lineage metadata associations.
+    """
+
+    action_arns: Optional[Dict[str, str]] = Unassigned()
+    artifact_arns: Optional[Dict[str, str]] = Unassigned()
+    context_arns: Optional[Dict[str, str]] = Unassigned()
+    associations: Optional[List[AssociationInfo]] = Unassigned()
+
+
 class MonitoringJobDefinitionSummary(Base):
     """
     MonitoringJobDefinitionSummary
@@ -11999,6 +12242,7 @@ class ModelPackageSummary(Base):
     model_package_status: The overall status of the model package.
     model_approval_status: The approval status of the model. This can be one of the following values.    APPROVED - The model is approved    REJECTED - The model is rejected.    PENDING_MANUAL_APPROVAL - The model is waiting for manual approval.
     model_life_cycle
+    model_package_registration_type:  The package registration type of the model package summary.
     """
 
     model_package_arn: str
@@ -12010,6 +12254,7 @@ class ModelPackageSummary(Base):
     model_package_description: Optional[str] = Unassigned()
     model_approval_status: Optional[str] = Unassigned()
     model_life_cycle: Optional[ModelLifeCycle] = Unassigned()
+    model_package_registration_type: Optional[str] = Unassigned()
 
 
 class ModelSummary(Base):
@@ -12360,6 +12605,12 @@ class PipelineExecutionStepMetadata(Base):
     auto_ml_job: The Amazon Resource Name (ARN) of the AutoML job that was run by this step.
     endpoint: The endpoint that was invoked during this step execution.
     endpoint_config: The endpoint configuration used to create an endpoint during this step execution.
+    bedrock_custom_model:  The metadata of the Amazon Bedrock custom model used in the pipeline execution step.
+    bedrock_custom_model_deployment:  The metadata of the Amazon Bedrock custom model deployment used in pipeline execution step.
+    bedrock_provisioned_model_throughput:  The metadata of the Amazon Bedrock provisioned model throughput used in the pipeline execution step.
+    bedrock_model_import:  The metadata of Amazon Bedrock model import used in pipeline execution step.
+    inference_component:  The metadata of the inference component used in pipeline execution step.
+    lineage:  The metadata of the lineage used in pipeline execution step.
     """
 
     training_job: Optional[TrainingJobStepMetadata] = Unassigned()
@@ -12378,6 +12629,14 @@ class PipelineExecutionStepMetadata(Base):
     auto_ml_job: Optional[AutoMLJobStepMetadata] = Unassigned()
     endpoint: Optional[EndpointStepMetadata] = Unassigned()
     endpoint_config: Optional[EndpointConfigStepMetadata] = Unassigned()
+    bedrock_custom_model: Optional[BedrockCustomModelMetadata] = Unassigned()
+    bedrock_custom_model_deployment: Optional[BedrockCustomModelDeploymentMetadata] = Unassigned()
+    bedrock_provisioned_model_throughput: Optional[BedrockProvisionedModelThroughputMetadata] = (
+        Unassigned()
+    )
+    bedrock_model_import: Optional[BedrockModelImportMetadata] = Unassigned()
+    inference_component: Optional[InferenceComponentMetadata] = Unassigned()
+    lineage: Optional[LineageMetadata] = Unassigned()
 
 
 class SelectiveExecutionResult(Base):
@@ -13147,6 +13406,7 @@ class ModelPackage(Base):
     model_package_name: The name of the model package. The name can be as follows:   For a versioned model, the name is automatically generated by SageMaker Model Registry and follows the format 'ModelPackageGroupName/ModelPackageVersion'.   For an unversioned model, you must provide the name.
     model_package_group_name: The model group to which the model belongs.
     model_package_version: The version number of a versioned model.
+    model_package_registration_type:  The package registration type of the model package.
     model_package_arn: The Amazon Resource Name (ARN) of the model package.
     model_package_description: The description of the model package.
     creation_time: The time that the model package was created.
@@ -13180,6 +13440,7 @@ class ModelPackage(Base):
     model_package_name: Optional[Union[str, object]] = Unassigned()
     model_package_group_name: Optional[Union[str, object]] = Unassigned()
     model_package_version: Optional[int] = Unassigned()
+    model_package_registration_type: Optional[str] = Unassigned()
     model_package_arn: Optional[str] = Unassigned()
     model_package_description: Optional[str] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
@@ -13719,6 +13980,8 @@ class TrainingJob(Base):
     debug_rule_configurations: Information about the debug rule configuration.
     tensor_board_output_config
     debug_rule_evaluation_statuses: Information about the evaluation status of the rules for the training job.
+    output_model_package_arn:  The output model package Amazon Resource Name (ARN) that contains model weights or checkpoint.
+    model_package_config:  The model package configuration.
     profiler_config
     environment: The environment variables to set in the Docker container.
     retry_strategy: The number of times to retry the job when the job fails due to an InternalServerError.
@@ -13759,6 +14022,8 @@ class TrainingJob(Base):
     debug_rule_configurations: Optional[List[DebugRuleConfiguration]] = Unassigned()
     tensor_board_output_config: Optional[TensorBoardOutputConfig] = Unassigned()
     debug_rule_evaluation_statuses: Optional[List[DebugRuleEvaluationStatus]] = Unassigned()
+    output_model_package_arn: Optional[str] = Unassigned()
+    model_package_config: Optional[ModelPackageConfig] = Unassigned()
     profiler_config: Optional[ProfilerConfig] = Unassigned()
     environment: Optional[Dict[str, str]] = Unassigned()
     retry_strategy: Optional[RetryStrategy] = Unassigned()

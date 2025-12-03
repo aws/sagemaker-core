@@ -17582,7 +17582,21 @@ class MlflowApp(Base):
         logger.error("Name attribute not found for object mlflow_app")
         return None
 
+    def populate_inputs_decorator(create_func):
+        @functools.wraps(create_func)
+        def wrapper(*args, **kwargs):
+            config_schema_for_resource = {"role_arn": {"type": "string"}}
+            return create_func(
+                *args,
+                **Base.get_updated_kwargs_with_configured_attributes(
+                    config_schema_for_resource, "MlflowApp", **kwargs
+                ),
+            )
+
+        return wrapper
+
     @classmethod
+    @populate_inputs_decorator
     @Base.add_validate_call
     def create(
         cls,
@@ -17750,6 +17764,7 @@ class MlflowApp(Base):
         transform(response, "DescribeMlflowAppResponse", self)
         return self
 
+    @populate_inputs_decorator
     @Base.add_validate_call
     def update(
         self,
@@ -20615,6 +20630,7 @@ class ModelPackage(Base):
         model_package_status_details: Details about the current status of the model package.
         model_package_group_name: If the model is a versioned model, the name of the model group that the versioned model belongs to.
         model_package_version: The version of the model package.
+        model_package_registration_type:  The package registration type of the model package output.
         model_package_description: A brief summary of the model package.
         inference_specification: Details about inference jobs that you can run with models based on this model package.
         source_algorithm_specification: Details about the algorithm that was used to create the model package.
@@ -20644,6 +20660,7 @@ class ModelPackage(Base):
     model_package_name: str
     model_package_group_name: Optional[str] = Unassigned()
     model_package_version: Optional[int] = Unassigned()
+    model_package_registration_type: Optional[str] = Unassigned()
     model_package_arn: Optional[str] = Unassigned()
     model_package_description: Optional[str] = Unassigned()
     creation_time: Optional[datetime.datetime] = Unassigned()
@@ -20749,6 +20766,7 @@ class ModelPackage(Base):
         model_package_name: Optional[str] = Unassigned(),
         model_package_group_name: Optional[Union[str, object]] = Unassigned(),
         model_package_description: Optional[str] = Unassigned(),
+        model_package_registration_type: Optional[str] = Unassigned(),
         inference_specification: Optional[shapes.InferenceSpecification] = Unassigned(),
         validation_specification: Optional[
             shapes.ModelPackageValidationSpecification
@@ -20785,6 +20803,7 @@ class ModelPackage(Base):
             model_package_name: The name of the model package. The name must have 1 to 63 characters. Valid characters are a-z, A-Z, 0-9, and - (hyphen). This parameter is required for unversioned models. It is not applicable to versioned models.
             model_package_group_name: The name or Amazon Resource Name (ARN) of the model package group that this model version belongs to. This parameter is required for versioned models, and does not apply to unversioned models.
             model_package_description: A description of the model package.
+            model_package_registration_type:  The package registration type of the model package input.
             inference_specification: Specifies details about inference jobs that you can run with models based on this model package, including the following information:   The Amazon ECR paths of containers that contain the inference code and model artifacts.   The instance types that the model package supports for transform jobs and real-time endpoints used for inference.   The input and output content formats that the model package supports for inference.
             validation_specification: Specifies configurations for one or more transform jobs that SageMaker runs to test the model package.
             source_algorithm_specification: Details about the algorithm that was used to create the model package.
@@ -20837,6 +20856,7 @@ class ModelPackage(Base):
             "ModelPackageName": model_package_name,
             "ModelPackageGroupName": model_package_group_name,
             "ModelPackageDescription": model_package_description,
+            "ModelPackageRegistrationType": model_package_registration_type,
             "InferenceSpecification": inference_specification,
             "ValidationSpecification": validation_specification,
             "SourceAlgorithmSpecification": source_algorithm_specification,
@@ -20967,6 +20987,7 @@ class ModelPackage(Base):
     def update(
         self,
         model_approval_status: Optional[str] = Unassigned(),
+        model_package_registration_type: Optional[str] = Unassigned(),
         approval_description: Optional[str] = Unassigned(),
         customer_metadata_properties: Optional[Dict[str, str]] = Unassigned(),
         customer_metadata_properties_to_remove: Optional[List[str]] = Unassigned(),
@@ -21009,6 +21030,7 @@ class ModelPackage(Base):
         operation_input_args = {
             "ModelPackageArn": self.model_package_arn,
             "ModelApprovalStatus": model_approval_status,
+            "ModelPackageRegistrationType": model_package_registration_type,
             "ApprovalDescription": approval_description,
             "CustomerMetadataProperties": customer_metadata_properties,
             "CustomerMetadataPropertiesToRemove": customer_metadata_properties_to_remove,
@@ -25678,6 +25700,7 @@ class PipelineExecution(Base):
         parallelism_configuration: The parallelism configuration applied to the pipeline.
         selective_execution_config: The selective execution configuration applied to the pipeline run.
         pipeline_version_id: The ID of the pipeline version.
+        m_lflow_config:  The MLflow configuration of the pipeline execution.
 
     """
 
@@ -25695,6 +25718,7 @@ class PipelineExecution(Base):
     parallelism_configuration: Optional[shapes.ParallelismConfiguration] = Unassigned()
     selective_execution_config: Optional[shapes.SelectiveExecutionConfig] = Unassigned()
     pipeline_version_id: Optional[int] = Unassigned()
+    m_lflow_config: Optional[shapes.MLflowConfiguration] = Unassigned()
 
     def get_name(self) -> str:
         attributes = vars(self)
@@ -28977,7 +29001,7 @@ class TrainingJob(Base):
         training_job_arn: The Amazon Resource Name (ARN) of the training job.
         model_artifacts: Information about the Amazon S3 location that is configured for storing model artifacts.
         training_job_status: The status of the training job. SageMaker provides the following training job statuses:    InProgress - The training is in progress.    Completed - The training job has completed.    Failed - The training job has failed. To see the reason for the failure, see the FailureReason field in the response to a DescribeTrainingJobResponse call.    Stopping - The training job is stopping.    Stopped - The training job has stopped.   For more detailed information, see SecondaryStatus.
-        secondary_status:  Provides detailed information about the state of the training job. For detailed information on the secondary status of the training job, see StatusMessage under SecondaryStatusTransition. SageMaker provides primary statuses and secondary statuses that apply to each of them:  InProgress     Starting - Starting the training job.    Downloading - An optional stage for algorithms that support File training input mode. It indicates that data is being downloaded to the ML storage volumes.    Training - Training is in progress.    Interrupted - The job stopped because the managed spot training instances were interrupted.     Uploading - Training is complete and the model artifacts are being uploaded to the S3 location.    Completed     Completed - The training job has completed.    Failed     Failed - The training job has failed. The reason for the failure is returned in the FailureReason field of DescribeTrainingJobResponse.    Stopped     MaxRuntimeExceeded - The job stopped because it exceeded the maximum allowed runtime.    MaxWaitTimeExceeded - The job stopped because it exceeded the maximum allowed wait time.    Stopped - The training job has stopped.    Stopping     Stopping - Stopping the training job.      Valid values for SecondaryStatus are subject to change.   We no longer support the following secondary statuses:    LaunchingMLInstances     PreparingTraining     DownloadingTrainingImage
+        secondary_status:  Provides detailed information about the state of the training job. For detailed information on the secondary status of the training job, see StatusMessage under SecondaryStatusTransition. SageMaker provides primary statuses and secondary statuses that apply to each of them:  InProgress     Starting - Starting the training job.    Pending - The training job is waiting for compute capacity or compute resource provision.    Downloading - An optional stage for algorithms that support File training input mode. It indicates that data is being downloaded to the ML storage volumes.    Training - Training is in progress.    Interrupted - The job stopped because the managed spot training instances were interrupted.     Uploading - Training is complete and the model artifacts are being uploaded to the S3 location.    Completed     Completed - The training job has completed.    Failed     Failed - The training job has failed. The reason for the failure is returned in the FailureReason field of DescribeTrainingJobResponse.    Stopped     MaxRuntimeExceeded - The job stopped because it exceeded the maximum allowed runtime.    MaxWaitTimeExceeded - The job stopped because it exceeded the maximum allowed wait time.    Stopped - The training job has stopped.    Stopping     Stopping - Stopping the training job.      Valid values for SecondaryStatus are subject to change.   We no longer support the following secondary statuses:    LaunchingMLInstances     PreparingTraining     DownloadingTrainingImage
         stopping_condition: Specifies a limit to how long a model training job can run. It also specifies how long a managed Spot training job has to complete. When the job reaches the time limit, SageMaker ends the training job. Use this API to cap model training costs. To stop a job, SageMaker sends the algorithm the SIGTERM signal, which delays job termination for 120 seconds. Algorithms can use this 120-second window to save the model artifacts, so the results of training are not lost.
         creation_time: A timestamp that indicates when the training job was created.
         tuning_job_arn: The Amazon Resource Name (ARN) of the associated hyperparameter tuning job if the training job was launched by a hyperparameter tuning job.
@@ -29003,6 +29027,7 @@ class TrainingJob(Base):
         checkpoint_config:
         training_time_in_seconds: The training time in seconds.
         billable_time_in_seconds: The billable time in seconds. Billable time refers to the absolute wall-clock time. Multiply BillableTimeInSeconds by the number of instances (InstanceCount) in your training cluster to get the total compute time SageMaker bills you if you run distributed training. The formula is as follows: BillableTimeInSeconds \* InstanceCount . You can calculate the savings from using managed spot training using the formula (1 - BillableTimeInSeconds / TrainingTimeInSeconds) \* 100. For example, if BillableTimeInSeconds is 100 and TrainingTimeInSeconds is 500, the savings is 80%.
+        billable_token_count:  The billable token count for eligible serverless training jobs.
         debug_hook_config:
         experiment_config:
         debug_rule_configurations: Configuration information for Amazon SageMaker Debugger rules for debugging output tensors.
@@ -29016,6 +29041,12 @@ class TrainingJob(Base):
         retry_strategy: The number of times to retry the job when the job fails due to an InternalServerError.
         remote_debug_config: Configuration for remote debugging. To learn more about the remote debugging functionality of SageMaker, see Access a training container through Amazon Web Services Systems Manager (SSM) for remote debugging.
         infra_check_config: Contains information about the infrastructure health check configuration for the training job.
+        serverless_job_config:  The configuration for serverless training jobs.
+        mlflow_config:  The MLflow configuration using SageMaker managed MLflow.
+        model_package_config:  The configuration for the model package.
+        mlflow_details:  The MLflow details of this job.
+        progress_info:  The Serverless training job progress information.
+        output_model_package_arn:  The Amazon Resource Name (ARN) of the output model package containing model weights or checkpoints.
 
     """
 
@@ -29049,6 +29080,7 @@ class TrainingJob(Base):
     checkpoint_config: Optional[shapes.CheckpointConfig] = Unassigned()
     training_time_in_seconds: Optional[int] = Unassigned()
     billable_time_in_seconds: Optional[int] = Unassigned()
+    billable_token_count: Optional[int] = Unassigned()
     debug_hook_config: Optional[shapes.DebugHookConfig] = Unassigned()
     experiment_config: Optional[shapes.ExperimentConfig] = Unassigned()
     debug_rule_configurations: Optional[List[shapes.DebugRuleConfiguration]] = Unassigned()
@@ -29064,6 +29096,12 @@ class TrainingJob(Base):
     retry_strategy: Optional[shapes.RetryStrategy] = Unassigned()
     remote_debug_config: Optional[shapes.RemoteDebugConfig] = Unassigned()
     infra_check_config: Optional[shapes.InfraCheckConfig] = Unassigned()
+    serverless_job_config: Optional[shapes.ServerlessJobConfig] = Unassigned()
+    mlflow_config: Optional[shapes.MlflowConfig] = Unassigned()
+    model_package_config: Optional[shapes.ModelPackageConfig] = Unassigned()
+    mlflow_details: Optional[shapes.MlflowDetails] = Unassigned()
+    progress_info: Optional[shapes.TrainingProgressInfo] = Unassigned()
+    output_model_package_arn: Optional[str] = Unassigned()
 
     def get_name(self) -> str:
         attributes = vars(self)
@@ -29142,6 +29180,9 @@ class TrainingJob(Base):
         remote_debug_config: Optional[shapes.RemoteDebugConfig] = Unassigned(),
         infra_check_config: Optional[shapes.InfraCheckConfig] = Unassigned(),
         session_chaining_config: Optional[shapes.SessionChainingConfig] = Unassigned(),
+        serverless_job_config: Optional[shapes.ServerlessJobConfig] = Unassigned(),
+        mlflow_config: Optional[shapes.MlflowConfig] = Unassigned(),
+        model_package_config: Optional[shapes.ModelPackageConfig] = Unassigned(),
         session: Optional[Session] = None,
         region: Optional[str] = None,
     ) -> Optional["TrainingJob"]:
@@ -29174,6 +29215,9 @@ class TrainingJob(Base):
             remote_debug_config: Configuration for remote debugging. To learn more about the remote debugging functionality of SageMaker, see Access a training container through Amazon Web Services Systems Manager (SSM) for remote debugging.
             infra_check_config: Contains information about the infrastructure health check configuration for the training job.
             session_chaining_config: Contains information about attribute-based access control (ABAC) for the training job.
+            serverless_job_config:  The configuration for serverless training jobs.
+            mlflow_config:  The MLflow configuration using SageMaker managed MLflow.
+            model_package_config:  The configuration for the model package.
             session: Boto3 session.
             region: Region name.
 
@@ -29229,6 +29273,9 @@ class TrainingJob(Base):
             "RemoteDebugConfig": remote_debug_config,
             "InfraCheckConfig": infra_check_config,
             "SessionChainingConfig": session_chaining_config,
+            "ServerlessJobConfig": serverless_job_config,
+            "MlflowConfig": mlflow_config,
+            "ModelPackageConfig": model_package_config,
         }
 
         operation_input_args = Base.populate_chained_attributes(
