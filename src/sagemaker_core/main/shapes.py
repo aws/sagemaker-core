@@ -4254,7 +4254,7 @@ class ClusterOrchestrator(Base):
     eks: The Amazon EKS cluster used as the orchestrator for the SageMaker HyperPod cluster.
     """
 
-    eks: ClusterOrchestratorEksConfig
+    eks: Optional[ClusterOrchestratorEksConfig] = Unassigned()
 
 
 class FSxLustreConfig(Base):
