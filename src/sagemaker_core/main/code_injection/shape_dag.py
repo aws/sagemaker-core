@@ -16417,7 +16417,10 @@ SHAPE_DAG = {
         "type": "structure",
     },
     "UltraServerInfo": {
-        "members": [{"name": "Id", "shape": "String", "type": "string"}],
+        "members": [
+            {"name": "Id", "shape": "String", "type": "string"},
+            {"name": "Type", "shape": "String", "type": "string"},
+        ],
         "type": "structure",
     },
     "UltraServerSummary": {

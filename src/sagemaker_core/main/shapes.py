@@ -687,8 +687,8 @@ class ModelPackageContainerDefinition(Base):
     nearest_model_name: The name of a pre-trained machine learning benchmarked by Amazon SageMaker Inference Recommender model that matches your model. You can find a list of benchmarked models by calling ListModelMetadata.
     additional_s3_data_source: The additional data source that is used during inference in the Docker container for your model package.
     model_data_e_tag: The ETag associated with Model Data URL.
-    is_checkpoint:  The checkpoint of the model package.
-    base_model:  The base model of the package.
+    is_checkpoint:  Specifies whether the model data is a training checkpoint.
+    base_model:  Identifies the foundation model that was used as the starting point for model customization.
     """
 
     container_hostname: Optional[str] = Unassigned()
@@ -2890,7 +2890,7 @@ class BedrockCustomModelDeploymentMetadata(Base):
 
     Attributes
     ----------------------
-    arn:  The Amazon Resource Name (ARN) of the metadata for the Amazon Bedrock custom model deployment.
+    arn:  The Amazon Resource Name (ARN) for the Amazon Bedrock custom model deployment.
     """
 
     arn: Optional[str] = Unassigned()
@@ -2903,7 +2903,7 @@ class BedrockCustomModelMetadata(Base):
 
     Attributes
     ----------------------
-    arn:  The Amazon Resource Name (ARN) of the Amazon Bedrock custom model metadata.
+    arn:  The Amazon Resource Name (ARN) of the Amazon Bedrock custom model.
     """
 
     arn: Optional[str] = Unassigned()
@@ -2916,7 +2916,7 @@ class BedrockModelImportMetadata(Base):
 
     Attributes
     ----------------------
-    arn:  The Amazon Resource Name (ARN) of the Amazon Bedrock model import metadata.
+    arn:  The Amazon Resource Name (ARN) of the Amazon Bedrock model import.
     """
 
     arn: Optional[str] = Unassigned()
@@ -2929,7 +2929,7 @@ class BedrockProvisionedModelThroughputMetadata(Base):
 
     Attributes
     ----------------------
-    arn:  The Amazon Resource Name (ARN) of the Amazon Bedrock provisioned model throughput metadata.
+    arn:  The Amazon Resource Name (ARN) of the Amazon Bedrock provisioned model throughput.
     """
 
     arn: Optional[str] = Unassigned()
@@ -4146,9 +4146,11 @@ class UltraServerInfo(Base):
     Attributes
     ----------------------
     id: The unique identifier of the UltraServer.
+    type: The type of the UltraServer.
     """
 
     id: Optional[str] = Unassigned()
+    type: Optional[str] = Unassigned()
 
 
 class ClusterNodeDetails(Base):
@@ -11745,7 +11747,7 @@ class InferenceComponentMetadata(Base):
 
     Attributes
     ----------------------
-    arn:  The Amazon Resource Name (ARN) of the inference component metadata.
+    arn:  The Amazon Resource Name (ARN) of the inference component.
     """
 
     arn: Optional[str] = Unassigned()
@@ -12008,10 +12010,10 @@ class LineageMetadata(Base):
 
     Attributes
     ----------------------
-    action_arns:  The Amazon Resource Name (ARN) of the lineage metadata action.
-    artifact_arns:  The Amazon Resource Name (ARN) of the lineage metadata artifact.
-    context_arns:  The Amazon Resource Name (ARN) of the lineage metadata context.
-    associations:  The lineage metadata associations.
+    action_arns:  The Amazon Resource Name (ARN) of the lineage action.
+    artifact_arns:  The Amazon Resource Name (ARN) of the lineage artifact.
+    context_arns:  The Amazon Resource Name (ARN) of the lineage context.
+    associations:  The lineage associations.
     """
 
     action_arns: Optional[Dict[str, str]] = Unassigned()
