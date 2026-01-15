@@ -11326,6 +11326,82 @@ class FeatureMetadata(Base):
         return self
 
 
+class FeatureStore(Base):
+    """
+    Class representing resource FeatureStore
+
+    """
+
+    @staticmethod
+    @Base.add_validate_call
+    def search(
+        resource: str,
+        search_expression: Optional[shapes.SearchExpression] = Unassigned(),
+        sort_by: Optional[str] = Unassigned(),
+        sort_order: Optional[str] = Unassigned(),
+        next_token: Optional[str] = Unassigned(),
+        max_results: Optional[int] = Unassigned(),
+        cross_account_filter_option: Optional[str] = Unassigned(),
+        visibility_conditions: Optional[List[shapes.VisibilityConditions]] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional[shapes.SearchResponse]:
+        """
+        Finds SageMaker resources that match a search query.
+
+        Parameters:
+            resource: The name of the SageMaker resource to search for.
+            search_expression: A Boolean conditional statement. Resources must satisfy this condition to be included in search results. You must provide at least one subexpression, filter, or nested filter. The maximum number of recursive SubExpressions, NestedFilters, and Filters that can be included in a SearchExpression object is 50.
+            sort_by: The name of the resource property used to sort the SearchResults. The default is LastModifiedTime.
+            sort_order: How SearchResults are ordered. Valid values are Ascending or Descending. The default is Descending.
+            next_token: If more than MaxResults resources match the specified SearchExpression, the response includes a NextToken. The NextToken can be passed to the next SearchRequest to continue retrieving results.
+            max_results: The maximum number of results to return.
+            cross_account_filter_option:  A cross account filter option. When the value is "CrossAccount" the search results will only include resources made discoverable to you from other accounts. When the value is "SameAccount" or null the search results will only include resources from your account. Default is null. For more information on searching for resources made discoverable to your account, see  Search discoverable resources in the SageMaker Developer Guide. The maximum number of ResourceCatalogs viewable is 1000.
+            visibility_conditions:  Limits the results of your search request to the resources that you can access.
+            session: Boto3 session.
+            region: Region name.
+
+        Returns:
+            shapes.SearchResponse
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+        """
+
+        operation_input_args = {
+            "Resource": resource,
+            "SearchExpression": search_expression,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
+            "NextToken": next_token,
+            "MaxResults": max_results,
+            "CrossAccountFilterOption": cross_account_filter_option,
+            "VisibilityConditions": visibility_conditions,
+        }
+        # serialize the input request
+        operation_input_args = serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
+
+        logger.debug(f"Calling search API")
+        response = client.search(**operation_input_args)
+        logger.debug(f"Response: {response}")
+
+        transformed_response = transform(response, "SearchResponse")
+        return shapes.SearchResponse(**transformed_response)
+
+
 class FlowDefinition(Base):
     """
     Class representing resource FlowDefinition

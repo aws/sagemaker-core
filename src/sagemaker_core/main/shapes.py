@@ -14233,6 +14233,22 @@ class TotalHits(Base):
     relation: Optional[str] = Unassigned()
 
 
+class SearchResponse(Base):
+    """
+    SearchResponse
+
+    Attributes
+    ----------------------
+    results: A list of SearchRecord objects.
+    next_token: If the result of the previous Search request was truncated, the response includes a NextToken. To retrieve the next set of results, use the token in the next request.
+    total_hits: The total number of matching results.
+    """
+
+    results: Optional[List[SearchRecord]] = Unassigned()
+    next_token: Optional[str] = Unassigned()
+    total_hits: Optional[TotalHits] = Unassigned()
+
+
 class TrainingPlanOffering(Base):
     """
     TrainingPlanOffering
