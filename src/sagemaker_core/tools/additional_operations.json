@@ -1,4 +1,14 @@
 {
+    "FeatureStore": {
+        "Search": {
+            "operation_name": "Search",
+            "resource_name": "FeatureStore",
+            "method_name": "search",
+            "return_type": "SearchResponse",
+            "method_type": "static",
+            "service_name": "sagemaker"
+        }
+    },
     "Cluster": {
         "DescribeClusterNode": {
             "operation_name": "DescribeClusterNode",
