@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.0.74 (2026-01-19)
+
+ * Daily Sync with Botocore v1.42.30 on 2026/01/19 (#360)
+ * Support additional search method (#359)
+
 ## v1.0.73 (2026-01-13)
 
  * Daily Sync with Botocore v1.42.26 on 2026/01/13 (#358)
