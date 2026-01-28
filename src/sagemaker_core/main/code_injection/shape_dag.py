@@ -1,4 +1,9 @@
 SHAPE_DAG = {
+    "AbsoluteBorrowLimitResourceList": {
+        "member_shape": "ComputeQuotaResourceConfig",
+        "member_type": "structure",
+        "type": "list",
+    },
     "AcceleratorPartitionConfig": {
         "members": [
             {"name": "Type", "shape": "MIGProfileType", "type": "string"},
@@ -5090,6 +5095,7 @@ SHAPE_DAG = {
             {"name": "ClusterSchedulerConfigVersion", "shape": "Integer", "type": "integer"},
             {"name": "Status", "shape": "SchedulerResourceStatus", "type": "string"},
             {"name": "FailureReason", "shape": "FailureReason", "type": "string"},
+            {"name": "StatusDetails", "shape": "StatusDetailsMap", "type": "map"},
             {"name": "ClusterArn", "shape": "ClusterArn", "type": "string"},
             {"name": "SchedulerConfig", "shape": "SchedulerConfig", "type": "structure"},
             {"name": "Description", "shape": "EntityDescription", "type": "string"},
@@ -14644,6 +14650,11 @@ SHAPE_DAG = {
         "members": [
             {"name": "Strategy", "shape": "ResourceSharingStrategy", "type": "string"},
             {"name": "BorrowLimit", "shape": "BorrowLimit", "type": "integer"},
+            {
+                "name": "AbsoluteBorrowLimits",
+                "shape": "AbsoluteBorrowLimitResourceList",
+                "type": "list",
+            },
         ],
         "type": "structure",
     },
@@ -14853,6 +14864,7 @@ SHAPE_DAG = {
         "members": [
             {"name": "PriorityClasses", "shape": "PriorityClassList", "type": "list"},
             {"name": "FairShare", "shape": "FairShare", "type": "string"},
+            {"name": "IdleResourceSharing", "shape": "IdleResourceSharing", "type": "string"},
         ],
         "type": "structure",
     },
@@ -15339,6 +15351,13 @@ SHAPE_DAG = {
             {"name": "TokenValue", "shape": "TokenValue", "type": "string"},
         ],
         "type": "structure",
+    },
+    "StatusDetailsMap": {
+        "key_shape": "SchedulerConfigComponent",
+        "key_type": "string",
+        "type": "map",
+        "value_shape": "SchedulerResourceStatus",
+        "value_type": "string",
     },
     "StopAutoMLJobRequest": {
         "members": [{"name": "AutoMLJobName", "shape": "AutoMLJobName", "type": "string"}],

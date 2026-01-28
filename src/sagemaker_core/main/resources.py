@@ -3995,6 +3995,7 @@ class ClusterSchedulerConfig(Base):
         status: Status of the cluster policy.
         creation_time: Creation time of the cluster policy.
         failure_reason: Failure reason of the cluster policy.
+        status_details: Additional details about the status of the cluster policy. This field provides context when the policy is in a non-active state, such as during creation, updates, or if failures occur.
         cluster_arn: ARN of the cluster where the cluster policy is applied.
         scheduler_config: Cluster policy configuration. This policy is used for task prioritization and fair-share allocation. This helps prioritize critical workloads and distributes idle compute across entities.
         description: Description of the cluster policy.
@@ -4010,6 +4011,7 @@ class ClusterSchedulerConfig(Base):
     cluster_scheduler_config_version: Optional[int] = Unassigned()
     status: Optional[str] = Unassigned()
     failure_reason: Optional[str] = Unassigned()
+    status_details: Optional[Dict[str, str]] = Unassigned()
     cluster_arn: Optional[str] = Unassigned()
     scheduler_config: Optional[shapes.SchedulerConfig] = Unassigned()
     description: Optional[str] = Unassigned()
