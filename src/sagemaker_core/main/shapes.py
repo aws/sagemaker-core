@@ -4664,10 +4664,12 @@ class ResourceSharingConfig(Base):
     ----------------------
     strategy: The strategy of how idle compute is shared within the cluster. The following are the options of strategies.    DontLend: entities do not lend idle compute.    Lend: entities can lend idle compute to entities that can borrow.    LendandBorrow: entities can lend idle compute and borrow idle compute from other entities.   Default is LendandBorrow.
     borrow_limit: The limit on how much idle compute can be borrowed.The values can be 1 - 500 percent of idle compute that the team is allowed to borrow. Default is 50.
+    absolute_borrow_limits: The absolute limits on compute resources that can be borrowed from idle compute. When specified, these limits define the maximum amount of specific resource types (such as accelerators, vCPU, or memory) that an entity can borrow, regardless of the percentage-based BorrowLimit.
     """
 
     strategy: str
     borrow_limit: Optional[int] = Unassigned()
+    absolute_borrow_limits: Optional[List[ComputeQuotaResourceConfig]] = Unassigned()
 
 
 class ComputeQuotaConfig(Base):
@@ -5089,10 +5091,12 @@ class SchedulerConfig(Base):
     ----------------------
     priority_classes: List of the priority classes, PriorityClass, of the cluster policy. When specified, these class configurations define how tasks are queued.
     fair_share: When enabled, entities borrow idle compute based on their assigned FairShareWeight. When disabled, entities borrow idle compute based on a first-come first-serve basis. Default is Enabled.
+    idle_resource_sharing: Configuration for sharing idle compute resources across entities in the cluster. When enabled, unallocated resources are automatically calculated and made available for entities to borrow.
     """
 
     priority_classes: Optional[List[PriorityClass]] = Unassigned()
     fair_share: Optional[str] = Unassigned()
+    idle_resource_sharing: Optional[str] = Unassigned()
 
 
 class InputConfig(Base):
