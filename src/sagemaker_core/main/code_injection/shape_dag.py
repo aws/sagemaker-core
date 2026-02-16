@@ -1718,6 +1718,21 @@ SHAPE_DAG = {
         ],
         "type": "structure",
     },
+    "ClusterFsxLustreConfig": {
+        "members": [
+            {"name": "DnsName", "shape": "ClusterDnsName", "type": "string"},
+            {"name": "MountName", "shape": "ClusterMountName", "type": "string"},
+            {"name": "MountPath", "shape": "ClusterFsxMountPath", "type": "string"},
+        ],
+        "type": "structure",
+    },
+    "ClusterFsxOpenZfsConfig": {
+        "members": [
+            {"name": "DnsName", "shape": "ClusterDnsName", "type": "string"},
+            {"name": "MountPath", "shape": "ClusterFsxMountPath", "type": "string"},
+        ],
+        "type": "structure",
+    },
     "ClusterInstanceGroupDetails": {
         "members": [
             {"name": "CurrentCount", "shape": "ClusterNonNegativeInstanceCount", "type": "integer"},
@@ -1767,6 +1782,7 @@ SHAPE_DAG = {
                 "shape": "DeploymentConfiguration",
                 "type": "structure",
             },
+            {"name": "SlurmConfig", "shape": "ClusterSlurmConfigDetails", "type": "structure"},
         ],
         "type": "structure",
     },
@@ -1799,6 +1815,7 @@ SHAPE_DAG = {
             },
             {"name": "ImageId", "shape": "ImageId", "type": "string"},
             {"name": "KubernetesConfig", "shape": "ClusterKubernetesConfig", "type": "structure"},
+            {"name": "SlurmConfig", "shape": "ClusterSlurmConfig", "type": "structure"},
             {
                 "name": "CapacityRequirements",
                 "shape": "ClusterCapacityRequirements",
@@ -1833,7 +1850,9 @@ SHAPE_DAG = {
     },
     "ClusterInstanceStorageConfig": {
         "members": [
-            {"name": "EbsVolumeConfig", "shape": "ClusterEbsVolumeConfig", "type": "structure"}
+            {"name": "EbsVolumeConfig", "shape": "ClusterEbsVolumeConfig", "type": "structure"},
+            {"name": "FsxLustreConfig", "shape": "ClusterFsxLustreConfig", "type": "structure"},
+            {"name": "FsxOpenZfsConfig", "shape": "ClusterFsxOpenZfsConfig", "type": "structure"},
         ],
         "type": "structure",
     },
@@ -1970,12 +1989,26 @@ SHAPE_DAG = {
     },
     "ClusterOnDemandOptions": {"members": [], "type": "structure"},
     "ClusterOrchestrator": {
-        "members": [{"name": "Eks", "shape": "ClusterOrchestratorEksConfig", "type": "structure"}],
+        "members": [
+            {"name": "Eks", "shape": "ClusterOrchestratorEksConfig", "type": "structure"},
+            {"name": "Slurm", "shape": "ClusterOrchestratorSlurmConfig", "type": "structure"},
+        ],
         "type": "structure",
     },
     "ClusterOrchestratorEksConfig": {
         "members": [{"name": "ClusterArn", "shape": "EksClusterArn", "type": "string"}],
         "type": "structure",
+    },
+    "ClusterOrchestratorSlurmConfig": {
+        "members": [
+            {"name": "SlurmConfigStrategy", "shape": "ClusterSlurmConfigStrategy", "type": "string"}
+        ],
+        "type": "structure",
+    },
+    "ClusterPartitionNames": {
+        "member_shape": "ClusterPartitionName",
+        "member_type": "string",
+        "type": "list",
     },
     "ClusterRestrictedInstanceGroupDetails": {
         "members": [
@@ -2067,6 +2100,20 @@ SHAPE_DAG = {
         "member_shape": "ClusterSchedulerConfigSummary",
         "member_type": "structure",
         "type": "list",
+    },
+    "ClusterSlurmConfig": {
+        "members": [
+            {"name": "NodeType", "shape": "ClusterSlurmNodeType", "type": "string"},
+            {"name": "PartitionNames", "shape": "ClusterPartitionNames", "type": "list"},
+        ],
+        "type": "structure",
+    },
+    "ClusterSlurmConfigDetails": {
+        "members": [
+            {"name": "NodeType", "shape": "ClusterSlurmNodeType", "type": "string"},
+            {"name": "PartitionNames", "shape": "ClusterPartitionNames", "type": "list"},
+        ],
+        "type": "structure",
     },
     "ClusterSpotOptions": {"members": [], "type": "structure"},
     "ClusterSummaries": {
@@ -16574,6 +16621,7 @@ SHAPE_DAG = {
             },
             {"name": "ClusterRole", "shape": "RoleArn", "type": "string"},
             {"name": "AutoScaling", "shape": "ClusterAutoScalingConfig", "type": "structure"},
+            {"name": "Orchestrator", "shape": "ClusterOrchestrator", "type": "structure"},
         ],
         "type": "structure",
     },
