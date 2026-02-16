@@ -3865,6 +3865,38 @@ class ClusterEventSummary(Base):
     description: Optional[str] = Unassigned()
 
 
+class ClusterFsxLustreConfig(Base):
+    """
+    ClusterFsxLustreConfig
+      Defines the configuration for attaching an Amazon FSx for Lustre file system to instances in a SageMaker HyperPod cluster instance group.
+
+    Attributes
+    ----------------------
+    dns_name: The DNS name of the Amazon FSx for Lustre file system.
+    mount_name: The mount name of the Amazon FSx for Lustre file system.
+    mount_path: The local path where the Amazon FSx for Lustre file system is mounted on instances.
+    """
+
+    dns_name: str
+    mount_name: str
+    mount_path: Optional[str] = Unassigned()
+
+
+class ClusterFsxOpenZfsConfig(Base):
+    """
+    ClusterFsxOpenZfsConfig
+      Defines the configuration for attaching an Amazon FSx for OpenZFS file system to instances in a SageMaker HyperPod cluster instance group.
+
+    Attributes
+    ----------------------
+    dns_name: The DNS name of the Amazon FSx for OpenZFS file system.
+    mount_path: The local path where the Amazon FSx for OpenZFS file system is mounted on instances.
+    """
+
+    dns_name: str
+    mount_path: Optional[str] = Unassigned()
+
+
 class ClusterLifeCycleConfig(Base):
     """
     ClusterLifeCycleConfig
@@ -3888,9 +3920,13 @@ class ClusterInstanceStorageConfig(Base):
     Attributes
     ----------------------
     ebs_volume_config: Defines the configuration for attaching additional Amazon Elastic Block Store (EBS) volumes to the instances in the SageMaker HyperPod cluster instance group. The additional EBS volume is attached to each instance within the SageMaker HyperPod cluster instance group and mounted to /opt/sagemaker.
+    fsx_lustre_config: Defines the configuration for attaching an Amazon FSx for Lustre file system to the instances in the SageMaker HyperPod cluster instance group.
+    fsx_open_zfs_config: Defines the configuration for attaching an Amazon FSx for OpenZFS file system to the instances in the SageMaker HyperPod cluster instance group.
     """
 
     ebs_volume_config: Optional[ClusterEbsVolumeConfig] = Unassigned()
+    fsx_lustre_config: Optional[ClusterFsxLustreConfig] = Unassigned()
+    fsx_open_zfs_config: Optional[ClusterFsxOpenZfsConfig] = Unassigned()
 
 
 class RollingDeploymentPolicy(Base):
@@ -3976,6 +4012,21 @@ class ClusterKubernetesConfigDetails(Base):
     desired_taints: Optional[List[ClusterKubernetesTaint]] = Unassigned()
 
 
+class ClusterSlurmConfigDetails(Base):
+    """
+    ClusterSlurmConfigDetails
+      The Slurm configuration details for an instance group in a SageMaker HyperPod cluster.
+
+    Attributes
+    ----------------------
+    node_type: The type of Slurm node for the instance group. Valid values are Controller, Worker, and Login.
+    partition_names: The list of Slurm partition names that the instance group belongs to.
+    """
+
+    node_type: str
+    partition_names: Optional[List[str]] = Unassigned()
+
+
 class ClusterInstanceGroupDetails(Base):
     """
     ClusterInstanceGroupDetails
@@ -4006,6 +4057,7 @@ class ClusterInstanceGroupDetails(Base):
     target_state_count: Represents the number of running nodes using the desired Image ID.    During software update operations: This count shows the number of nodes running on the desired Image ID. If a rollback occurs, the current image ID and desired image ID (both included in the describe cluster response) swap values. The TargetStateCount then shows the number of nodes running on the newly designated desired image ID (which was previously the current image ID).    During simultaneous scaling and software update operations: This count shows the number of instances running on the desired image ID, including any new instances created as part of the scaling request. New nodes are always created using the desired image ID, so TargetStateCount reflects the total count of nodes running on the desired image ID, even during rollback scenarios.
     software_update_status: Status of the last software udpate request. Status transitions follow these possible sequences:   Pending -&gt; InProgress -&gt; Succeeded   Pending -&gt; InProgress -&gt; RollbackInProgress -&gt; RollbackComplete   Pending -&gt; InProgress -&gt; RollbackInProgress -&gt; Failed
     active_software_update_config
+    slurm_config: The Slurm configuration for the instance group.
     """
 
     current_count: Optional[int] = Unassigned()
@@ -4031,6 +4083,7 @@ class ClusterInstanceGroupDetails(Base):
     target_state_count: Optional[int] = Unassigned()
     software_update_status: Optional[str] = Unassigned()
     active_software_update_config: Optional[DeploymentConfiguration] = Unassigned()
+    slurm_config: Optional[ClusterSlurmConfigDetails] = Unassigned()
 
 
 class ClusterKubernetesConfig(Base):
@@ -4046,6 +4099,21 @@ class ClusterKubernetesConfig(Base):
 
     labels: Optional[Dict[str, str]] = Unassigned()
     taints: Optional[List[ClusterKubernetesTaint]] = Unassigned()
+
+
+class ClusterSlurmConfig(Base):
+    """
+    ClusterSlurmConfig
+      The Slurm configuration for an instance group in a SageMaker HyperPod cluster.
+
+    Attributes
+    ----------------------
+    node_type: The type of Slurm node for the instance group. Valid values are Controller, Worker, and Login.
+    partition_names: The list of Slurm partition names that the instance group belongs to.
+    """
+
+    node_type: str
+    partition_names: Optional[List[str]] = Unassigned()
 
 
 class ClusterInstanceGroupSpecification(Base):
@@ -4069,6 +4137,7 @@ class ClusterInstanceGroupSpecification(Base):
     scheduled_update_config: The configuration object of the schedule that SageMaker uses to update the AMI.
     image_id: When configuring your HyperPod cluster, you can specify an image ID using one of the following options:    HyperPodPublicAmiId: Use a HyperPod public AMI    CustomAmiId: Use your custom AMI    default: Use the default latest system image   If you choose to use a custom AMI (CustomAmiId), ensure it meets the following requirements:   Encryption: The custom AMI must be unencrypted.   Ownership: The custom AMI must be owned by the same Amazon Web Services account that is creating the HyperPod cluster.   Volume support: Only the primary AMI snapshot volume is supported; additional AMI volumes are not supported.   When updating the instance group's AMI through the UpdateClusterSoftware operation, if an instance group uses a custom AMI, you must provide an ImageId or use the default as input. Note that if you don't specify an instance group in your UpdateClusterSoftware request, then all of the instance groups are patched with the specified image.
     kubernetes_config: Specifies the Kubernetes configuration for the instance group. You describe what you want the labels and taints to look like, and the cluster works to reconcile the actual state with the declared state for nodes in this instance group.
+    slurm_config: Specifies the Slurm configuration for the instance group.
     capacity_requirements: Specifies the capacity requirements for the instance group.
     """
 
@@ -4086,6 +4155,7 @@ class ClusterInstanceGroupSpecification(Base):
     scheduled_update_config: Optional[ScheduledUpdateConfig] = Unassigned()
     image_id: Optional[str] = Unassigned()
     kubernetes_config: Optional[ClusterKubernetesConfig] = Unassigned()
+    slurm_config: Optional[ClusterSlurmConfig] = Unassigned()
     capacity_requirements: Optional[ClusterCapacityRequirements] = Unassigned()
 
 
@@ -4246,6 +4316,19 @@ class ClusterOrchestratorEksConfig(Base):
     cluster_arn: str
 
 
+class ClusterOrchestratorSlurmConfig(Base):
+    """
+    ClusterOrchestratorSlurmConfig
+      The configuration settings for the Slurm orchestrator used with the SageMaker HyperPod cluster.
+
+    Attributes
+    ----------------------
+    slurm_config_strategy: The strategy for managing partitions for the Slurm configuration. Valid values are Managed, Overwrite, and Merge.
+    """
+
+    slurm_config_strategy: Optional[str] = Unassigned()
+
+
 class ClusterOrchestrator(Base):
     """
     ClusterOrchestrator
@@ -4254,9 +4337,11 @@ class ClusterOrchestrator(Base):
     Attributes
     ----------------------
     eks: The Amazon EKS cluster used as the orchestrator for the SageMaker HyperPod cluster.
+    slurm: The Slurm orchestrator configuration for the SageMaker HyperPod cluster.
     """
 
     eks: Optional[ClusterOrchestratorEksConfig] = Unassigned()
+    slurm: Optional[ClusterOrchestratorSlurmConfig] = Unassigned()
 
 
 class FSxLustreConfig(Base):
