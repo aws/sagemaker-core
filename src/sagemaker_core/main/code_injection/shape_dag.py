@@ -9255,6 +9255,12 @@ SHAPE_DAG = {
             {"name": "CustomAttributes", "shape": "CustomAttributesHeader", "type": "string"},
             {"name": "InferenceId", "shape": "InferenceId", "type": "string"},
             {"name": "InputLocation", "shape": "InputLocationHeader", "type": "string"},
+            {
+                "name": "S3OutputPathExtension",
+                "shape": "S3OutputPathExtensionHeader",
+                "type": "string",
+            },
+            {"name": "Filename", "shape": "FilenameHeader", "type": "string"},
             {"name": "RequestTTLSeconds", "shape": "RequestTTLSecondsHeader", "type": "integer"},
             {
                 "name": "InvocationTimeoutSeconds",
