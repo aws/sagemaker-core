@@ -9533,6 +9533,8 @@ class Endpoint(Base):
         accept: Optional[str] = Unassigned(),
         custom_attributes: Optional[str] = Unassigned(),
         inference_id: Optional[str] = Unassigned(),
+        s3_output_path_extension: Optional[str] = Unassigned(),
+        filename: Optional[str] = Unassigned(),
         request_ttl_seconds: Optional[int] = Unassigned(),
         invocation_timeout_seconds: Optional[int] = Unassigned(),
         session: Optional[Session] = None,
@@ -9547,6 +9549,8 @@ class Endpoint(Base):
             accept: The desired MIME type of the inference response from the model container.
             custom_attributes: Provides additional information about a request for an inference submitted to a model hosted at an Amazon SageMaker AI endpoint. The information is an opaque value that is forwarded verbatim. You could use this value, for example, to provide an ID that you can use to track a request or to provide other metadata that a service endpoint was programmed to process. The value must consist of no more than 1024 visible US-ASCII characters as specified in Section 3.3.6. Field Value Components of the Hypertext Transfer Protocol (HTTP/1.1).  The code in your model is responsible for setting or updating any custom attributes in the response. If your code does not set this value in the response, an empty value is returned. For example, if a custom attribute represents the trace ID, your model can prepend the custom attribute with Trace ID: in your post-processing function.  This feature is currently supported in the Amazon Web Services SDKs but not in the Amazon SageMaker AI Python SDK.
             inference_id: The identifier for the inference request. Amazon SageMaker AI will generate an identifier for you if none is specified.
+            s3_output_path_extension: The path extension that is appended to the Amazon S3 output path where the inference response payload is stored.
+            filename: The filename for the inference response payload stored in Amazon S3. If not specified, Amazon SageMaker AI generates a filename based on the inference ID.
             request_ttl_seconds: Maximum age in seconds a request can be in the queue before it is marked as expired. The default is 6 hours, or 21,600 seconds.
             invocation_timeout_seconds: Maximum amount of time in seconds a request can be processed before it is marked as expired. The default is 15 minutes, or 900 seconds.
             session: Boto3 session.
@@ -9577,6 +9581,8 @@ class Endpoint(Base):
             "CustomAttributes": custom_attributes,
             "InferenceId": inference_id,
             "InputLocation": input_location,
+            "S3OutputPathExtension": s3_output_path_extension,
+            "Filename": filename,
             "RequestTTLSeconds": request_ttl_seconds,
             "InvocationTimeoutSeconds": invocation_timeout_seconds,
         }
