@@ -6110,7 +6110,7 @@ class ProductionVariant(Base):
     enable_ssm_access:  You can use this parameter to turn on native Amazon Web Services Systems Manager (SSM) access for a production variant behind an endpoint. By default, SSM access is disabled for all production variants behind an endpoint. You can turn on or turn off SSM access for a production variant behind an existing endpoint by creating a new endpoint configuration and calling UpdateEndpoint.
     managed_instance_scaling: Settings that control the range in the number of instances that the endpoint provisions as it scales up or down to accommodate traffic.
     routing_config: Settings that control how the endpoint routes incoming traffic to the instances that the endpoint hosts.
-    inference_ami_version: Specifies an option from a collection of preconfigured Amazon Machine Image (AMI) images. Each image is configured by Amazon Web Services with a set of software and driver versions. Amazon Web Services optimizes these configurations for different machine learning workloads. By selecting an AMI version, you can ensure that your inference environment is compatible with specific software requirements, such as CUDA driver versions, Linux kernel versions, or Amazon Web Services Neuron driver versions. The AMI version names, and their configurations, are the following:  al2-ami-sagemaker-inference-gpu-2    Accelerator: GPU   NVIDIA driver version: 535   CUDA version: 12.2    al2-ami-sagemaker-inference-gpu-2-1    Accelerator: GPU   NVIDIA driver version: 535   CUDA version: 12.2   NVIDIA Container Toolkit with disabled CUDA-compat mounting    al2-ami-sagemaker-inference-gpu-3-1    Accelerator: GPU   NVIDIA driver version: 550   CUDA version: 12.4   NVIDIA Container Toolkit with disabled CUDA-compat mounting    al2-ami-sagemaker-inference-neuron-2    Accelerator: Inferentia2 and Trainium   Neuron driver version: 2.19
+    inference_ami_version: Specifies an option from a collection of preconfigured Amazon Machine Image (AMI) images. Each image is configured by Amazon Web Services with a set of software and driver versions. Amazon Web Services optimizes these configurations for different machine learning workloads. By selecting an AMI version, you can ensure that your inference environment is compatible with specific software requirements, such as CUDA driver versions, Linux kernel versions, or Amazon Web Services Neuron driver versions. The AMI version names, and their configurations, are the following:  al2-ami-sagemaker-inference-gpu-2    Accelerator: GPU   NVIDIA driver version: 535   CUDA version: 12.2    al2-ami-sagemaker-inference-gpu-2-1    Accelerator: GPU   NVIDIA driver version: 535   CUDA version: 12.2   NVIDIA Container Toolkit with disabled CUDA-compat mounting    al2-ami-sagemaker-inference-gpu-3-1    Accelerator: GPU   NVIDIA driver version: 550   CUDA version: 12.4   NVIDIA Container Toolkit with disabled CUDA-compat mounting    al2023-ami-sagemaker-inference-gpu-4-1    Accelerator: GPU   NVIDIA driver version: 580   CUDA version: 13.0   NVIDIA Container Toolkit with disabled CUDA-compat mounting    al2-ami-sagemaker-inference-neuron-2    Accelerator: Inferentia2 and Trainium   Neuron driver version: 2.19
     capacity_reservation_config: Settings for the capacity reservation for the compute instances that SageMaker AI reserves for an endpoint.
     """
 
@@ -10531,6 +10531,39 @@ class TrainingProgressInfo(Base):
     max_epoch: Optional[int] = Unassigned()
 
 
+class TrainingPlanExtension(Base):
+    """
+    TrainingPlanExtension
+      Details about an extension to a training plan, including the offering ID, dates, status, and cost information.
+
+    Attributes
+    ----------------------
+    training_plan_extension_offering_id: The unique identifier of the extension offering that was used to create this extension.
+    extended_at: The timestamp when the extension was created.
+    start_date: The start date of the extension period.
+    end_date: The end date of the extension period.
+    status: The current status of the extension (e.g., Pending, Active, Scheduled, Failed, Expired).
+    payment_status: The payment processing status of the extension.
+    availability_zone: The Availability Zone of the extension.
+    availability_zone_id: The Availability Zone ID of the extension.
+    duration_hours: The duration of the extension in hours.
+    upfront_fee: The upfront fee for the extension.
+    currency_code: The currency code for the upfront fee (e.g., USD).
+    """
+
+    training_plan_extension_offering_id: str
+    extended_at: Optional[datetime.datetime] = Unassigned()
+    start_date: Optional[datetime.datetime] = Unassigned()
+    end_date: Optional[datetime.datetime] = Unassigned()
+    status: Optional[str] = Unassigned()
+    payment_status: Optional[str] = Unassigned()
+    availability_zone: Optional[str] = Unassigned()
+    availability_zone_id: Optional[str] = Unassigned()
+    duration_hours: Optional[int] = Unassigned()
+    upfront_fee: Optional[str] = Unassigned()
+    currency_code: Optional[str] = Unassigned()
+
+
 class ReservedCapacitySummary(Base):
     """
     ReservedCapacitySummary
@@ -13958,6 +13991,8 @@ class ReservedCapacityOffering(Base):
     duration_minutes: The additional minutes beyond whole hours in the total duration for this reserved capacity offering.
     start_time: The start time of the reserved capacity offering.
     end_time: The end time of the reserved capacity offering.
+    extension_start_time: The start time of the extension for the reserved capacity offering.
+    extension_end_time: The end time of the extension for the reserved capacity offering.
     """
 
     instance_type: str
@@ -13970,6 +14005,8 @@ class ReservedCapacityOffering(Base):
     duration_minutes: Optional[int] = Unassigned()
     start_time: Optional[datetime.datetime] = Unassigned()
     end_time: Optional[datetime.datetime] = Unassigned()
+    extension_start_time: Optional[datetime.datetime] = Unassigned()
+    extension_end_time: Optional[datetime.datetime] = Unassigned()
 
 
 class ResourceConfigForUpdate(Base):
@@ -14365,6 +14402,31 @@ class TrainingPlanOffering(Base):
     upfront_fee: Optional[str] = Unassigned()
     currency_code: Optional[str] = Unassigned()
     reserved_capacity_offerings: Optional[List[ReservedCapacityOffering]] = Unassigned()
+
+
+class TrainingPlanExtensionOffering(Base):
+    """
+    TrainingPlanExtensionOffering
+      Details about an available extension offering for a training plan. Use the offering ID with the  ExtendTrainingPlan  API to extend a training plan.
+
+    Attributes
+    ----------------------
+    training_plan_extension_offering_id: The unique identifier for this extension offering.
+    availability_zone: The Availability Zone for this extension offering.
+    start_date: The start date of this extension offering.
+    end_date: The end date of this extension offering.
+    duration_hours: The duration of this extension offering in hours.
+    upfront_fee: The upfront fee for this extension offering.
+    currency_code: The currency code for the upfront fee (e.g., USD).
+    """
+
+    training_plan_extension_offering_id: str
+    availability_zone: Optional[str] = Unassigned()
+    start_date: Optional[datetime.datetime] = Unassigned()
+    end_date: Optional[datetime.datetime] = Unassigned()
+    duration_hours: Optional[int] = Unassigned()
+    upfront_fee: Optional[str] = Unassigned()
+    currency_code: Optional[str] = Unassigned()
 
 
 class ServiceCatalogProvisioningUpdateDetails(Base):
