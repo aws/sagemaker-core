@@ -3210,6 +3210,8 @@ SHAPE_DAG = {
                 "type": "string",
             },
             {"name": "Tags", "shape": "TagList", "type": "list"},
+            {"name": "S3BucketOwnerAccountId", "shape": "AccountId", "type": "string"},
+            {"name": "S3BucketOwnerVerification", "shape": "Boolean", "type": "boolean"},
         ],
         "type": "structure",
     },
@@ -6001,6 +6003,8 @@ SHAPE_DAG = {
             {"name": "CreatedBy", "shape": "UserContext", "type": "structure"},
             {"name": "LastModifiedTime", "shape": "Timestamp", "type": "timestamp"},
             {"name": "LastModifiedBy", "shape": "UserContext", "type": "structure"},
+            {"name": "S3BucketOwnerAccountId", "shape": "AccountId", "type": "string"},
+            {"name": "S3BucketOwnerVerification", "shape": "Boolean", "type": "boolean"},
         ],
         "type": "structure",
     },
@@ -6827,6 +6831,21 @@ SHAPE_DAG = {
             {"name": "MlflowDetails", "shape": "MlflowDetails", "type": "structure"},
             {"name": "ProgressInfo", "shape": "TrainingProgressInfo", "type": "structure"},
             {"name": "OutputModelPackageArn", "shape": "ModelPackageArn", "type": "string"},
+        ],
+        "type": "structure",
+    },
+    "DescribeTrainingPlanExtensionHistoryRequest": {
+        "members": [
+            {"name": "TrainingPlanArn", "shape": "TrainingPlanArn", "type": "string"},
+            {"name": "NextToken", "shape": "NextToken", "type": "string"},
+            {"name": "MaxResults", "shape": "MaxResults", "type": "integer"},
+        ],
+        "type": "structure",
+    },
+    "DescribeTrainingPlanExtensionHistoryResponse": {
+        "members": [
+            {"name": "TrainingPlanExtensions", "shape": "TrainingPlanExtensions", "type": "list"},
+            {"name": "NextToken", "shape": "NextToken", "type": "string"},
         ],
         "type": "structure",
     },
@@ -7738,6 +7757,22 @@ SHAPE_DAG = {
                 "shape": "ClarifyExplainerConfig",
                 "type": "structure",
             }
+        ],
+        "type": "structure",
+    },
+    "ExtendTrainingPlanRequest": {
+        "members": [
+            {
+                "name": "TrainingPlanExtensionOfferingId",
+                "shape": "TrainingPlanExtensionOfferingId",
+                "type": "string",
+            }
+        ],
+        "type": "structure",
+    },
+    "ExtendTrainingPlanResponse": {
+        "members": [
+            {"name": "TrainingPlanExtensions", "shape": "TrainingPlanExtensions", "type": "list"}
         ],
         "type": "structure",
     },
@@ -9255,6 +9290,12 @@ SHAPE_DAG = {
             {"name": "CustomAttributes", "shape": "CustomAttributesHeader", "type": "string"},
             {"name": "InferenceId", "shape": "InferenceId", "type": "string"},
             {"name": "InputLocation", "shape": "InputLocationHeader", "type": "string"},
+            {
+                "name": "S3OutputPathExtension",
+                "shape": "S3OutputPathExtensionHeader",
+                "type": "string",
+            },
+            {"name": "Filename", "shape": "FilenameHeader", "type": "string"},
             {"name": "RequestTTLSeconds", "shape": "RequestTTLSecondsHeader", "type": "integer"},
             {
                 "name": "InvocationTimeoutSeconds",
@@ -14574,6 +14615,8 @@ SHAPE_DAG = {
             {"name": "DurationMinutes", "shape": "ReservedCapacityDurationMinutes", "type": "long"},
             {"name": "StartTime", "shape": "Timestamp", "type": "timestamp"},
             {"name": "EndTime", "shape": "Timestamp", "type": "timestamp"},
+            {"name": "ExtensionStartTime", "shape": "Timestamp", "type": "timestamp"},
+            {"name": "ExtensionEndTime", "shape": "Timestamp", "type": "timestamp"},
         ],
         "type": "structure",
     },
@@ -14994,12 +15037,18 @@ SHAPE_DAG = {
             {"name": "EndTimeBefore", "shape": "Timestamp", "type": "timestamp"},
             {"name": "DurationHours", "shape": "TrainingPlanDurationHoursInput", "type": "long"},
             {"name": "TargetResources", "shape": "SageMakerResourceNames", "type": "list"},
+            {"name": "TrainingPlanArn", "shape": "String", "type": "string"},
         ],
         "type": "structure",
     },
     "SearchTrainingPlanOfferingsResponse": {
         "members": [
-            {"name": "TrainingPlanOfferings", "shape": "TrainingPlanOfferings", "type": "list"}
+            {"name": "TrainingPlanOfferings", "shape": "TrainingPlanOfferings", "type": "list"},
+            {
+                "name": "TrainingPlanExtensionOfferings",
+                "shape": "TrainingPlanExtensionOfferings",
+                "type": "list",
+            },
         ],
         "type": "structure",
     },
@@ -15976,6 +16025,60 @@ SHAPE_DAG = {
     "TrainingPlanArns": {
         "member_shape": "TrainingPlanArn",
         "member_type": "string",
+        "type": "list",
+    },
+    "TrainingPlanExtension": {
+        "members": [
+            {
+                "name": "TrainingPlanExtensionOfferingId",
+                "shape": "TrainingPlanExtensionOfferingId",
+                "type": "string",
+            },
+            {"name": "ExtendedAt", "shape": "Timestamp", "type": "timestamp"},
+            {"name": "StartDate", "shape": "Timestamp", "type": "timestamp"},
+            {"name": "EndDate", "shape": "Timestamp", "type": "timestamp"},
+            {"name": "Status", "shape": "String256", "type": "string"},
+            {"name": "PaymentStatus", "shape": "String256", "type": "string"},
+            {"name": "AvailabilityZone", "shape": "String256", "type": "string"},
+            {"name": "AvailabilityZoneId", "shape": "AvailabilityZoneId", "type": "string"},
+            {
+                "name": "DurationHours",
+                "shape": "TrainingPlanExtensionDurationHours",
+                "type": "integer",
+            },
+            {"name": "UpfrontFee", "shape": "String256", "type": "string"},
+            {"name": "CurrencyCode", "shape": "CurrencyCode", "type": "string"},
+        ],
+        "type": "structure",
+    },
+    "TrainingPlanExtensionOffering": {
+        "members": [
+            {
+                "name": "TrainingPlanExtensionOfferingId",
+                "shape": "TrainingPlanExtensionOfferingId",
+                "type": "string",
+            },
+            {"name": "AvailabilityZone", "shape": "String256", "type": "string"},
+            {"name": "StartDate", "shape": "Timestamp", "type": "timestamp"},
+            {"name": "EndDate", "shape": "Timestamp", "type": "timestamp"},
+            {
+                "name": "DurationHours",
+                "shape": "TrainingPlanExtensionDurationHours",
+                "type": "integer",
+            },
+            {"name": "UpfrontFee", "shape": "String256", "type": "string"},
+            {"name": "CurrencyCode", "shape": "CurrencyCode", "type": "string"},
+        ],
+        "type": "structure",
+    },
+    "TrainingPlanExtensionOfferings": {
+        "member_shape": "TrainingPlanExtensionOffering",
+        "member_type": "structure",
+        "type": "list",
+    },
+    "TrainingPlanExtensions": {
+        "member_shape": "TrainingPlanExtension",
+        "member_type": "structure",
         "type": "list",
     },
     "TrainingPlanFilter": {
@@ -17024,6 +17127,8 @@ SHAPE_DAG = {
                 "shape": "WeeklyMaintenanceWindowStart",
                 "type": "string",
             },
+            {"name": "S3BucketOwnerAccountId", "shape": "AccountId", "type": "string"},
+            {"name": "S3BucketOwnerVerification", "shape": "Boolean", "type": "boolean"},
         ],
         "type": "structure",
     },
