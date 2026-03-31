@@ -467,7 +467,11 @@ SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA = {
                                 },
                                 "MlflowTrackingServer": {
                                     "type": "object",
-                                    "properties": {"role_arn": {"type": "string"}},
+                                    "properties": {
+                                        "role_arn": {"type": "string"},
+                                        "s3_bucket_owner_account_id": {"type": "string"},
+                                        "s3_bucket_owner_verification": {"type": "boolean"},
+                                    },
                                 },
                                 "Model": {
                                     "type": "object",
