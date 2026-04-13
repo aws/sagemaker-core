@@ -518,10 +518,14 @@ class AddClusterNodeSpecification(Base):
     ----------------------
     instance_group_name: The name of the instance group to which you want to add nodes.
     increment_target_count_by: The number of nodes to add to the specified instance group. The total number of nodes across all instance groups in a single request cannot exceed 50.
+    availability_zones: The availability zones in which to add nodes. Use this to target node placement in specific availability zones within a flexible instance group.
+    instance_types: The instance types to use when adding nodes. Use this to target specific instance types within a flexible instance group.
     """
 
     instance_group_name: str
     increment_target_count_by: int
+    availability_zones: Optional[List[str]] = Unassigned()
+    instance_types: Optional[List[str]] = Unassigned()
 
 
 class Tag(Base):
@@ -2551,12 +2555,16 @@ class BatchAddClusterNodesError(Base):
     instance_group_name: The name of the instance group for which the error occurred.
     error_code: The error code associated with the failure. Possible values include InstanceGroupNotFound and InvalidInstanceGroupState.
     failed_count: The number of nodes that failed to be added to the specified instance group.
+    availability_zones: The availability zones associated with the failed node addition request.
+    instance_types: The instance types associated with the failed node addition request.
     message: A descriptive message providing additional details about the error.
     """
 
     instance_group_name: str
     error_code: str
     failed_count: int
+    availability_zones: Optional[List[str]] = Unassigned()
+    instance_types: Optional[List[str]] = Unassigned()
     message: Optional[str] = Unassigned()
 
 
@@ -2570,11 +2578,15 @@ class NodeAdditionResult(Base):
     node_logical_id: A unique identifier assigned to the node that can be used to track its provisioning status through the DescribeClusterNode operation.
     instance_group_name: The name of the instance group to which the node was added.
     status: The current status of the node. Possible values include Pending, Running, Failed, ShuttingDown, SystemUpdating, DeepHealthCheckInProgress, and NotFound.
+    availability_zones: The availability zones associated with the successfully added node.
+    instance_types: The instance types associated with the successfully added node.
     """
 
     node_logical_id: str
     instance_group_name: str
     status: str
+    availability_zones: Optional[List[str]] = Unassigned()
+    instance_types: Optional[List[str]] = Unassigned()
 
 
 class BatchDataCaptureConfig(Base):
@@ -3897,6 +3909,38 @@ class ClusterFsxOpenZfsConfig(Base):
     mount_path: Optional[str] = Unassigned()
 
 
+class ClusterInstanceRequirementDetails(Base):
+    """
+    ClusterInstanceRequirementDetails
+      The instance requirement details for a flexible instance group, including the current and desired instance types.
+
+    Attributes
+    ----------------------
+    current_instance_types: The instance types currently in use by the instance group.
+    desired_instance_types: The desired instance types for the instance group, as specified in the most recent update request.
+    """
+
+    current_instance_types: Optional[List[str]] = Unassigned()
+    desired_instance_types: Optional[List[str]] = Unassigned()
+
+
+class ClusterInstanceTypeDetail(Base):
+    """
+    ClusterInstanceTypeDetail
+      Details about a specific instance type within a flexible instance group, including the count and configuration.
+
+    Attributes
+    ----------------------
+    instance_type: The instance type.
+    current_count: The number of instances of this type currently running in the instance group.
+    threads_per_core: The number of threads per CPU core for this instance type.
+    """
+
+    instance_type: Optional[str] = Unassigned()
+    current_count: Optional[int] = Unassigned()
+    threads_per_core: Optional[int] = Unassigned()
+
+
 class ClusterLifeCycleConfig(Base):
     """
     ClusterLifeCycleConfig
@@ -3908,8 +3952,8 @@ class ClusterLifeCycleConfig(Base):
     on_create: The file name of the entrypoint script of lifecycle scripts under SourceS3Uri. This entrypoint script runs during cluster creation.
     """
 
-    source_s3_uri: str
-    on_create: str
+    source_s3_uri: Optional[str] = Unassigned()
+    on_create: Optional[str] = Unassigned()
 
 
 class ClusterInstanceStorageConfig(Base):
@@ -4039,6 +4083,8 @@ class ClusterInstanceGroupDetails(Base):
     min_count: The minimum number of instances that must be available in the instance group of a SageMaker HyperPod cluster before it transitions to InService status.
     instance_group_name: The name of the instance group of a SageMaker HyperPod cluster.
     instance_type: The instance type of the instance group of a SageMaker HyperPod cluster.
+    instance_requirements: The instance requirements for the instance group, including the current and desired instance types. This field is present for flexible instance groups that support multiple instance types.
+    instance_type_details: Details about the instance types in the instance group, including the count and configuration of each instance type. This field is present for flexible instance groups that support multiple instance types.
     life_cycle_config: Details of LifeCycle configuration for the instance group.
     execution_role: The execution role for the instance group to assume.
     threads_per_core: The number you specified to TreadsPerCore in CreateCluster for enabling or disabling multithreading. For instance types that support multithreading, you can specify 1 for disabling multithreading and 2 for enabling multithreading. For more information, see the reference table of CPU cores and threads per CPU core per instance type in the Amazon Elastic Compute Cloud User Guide.
@@ -4065,6 +4111,8 @@ class ClusterInstanceGroupDetails(Base):
     min_count: Optional[int] = Unassigned()
     instance_group_name: Optional[str] = Unassigned()
     instance_type: Optional[str] = Unassigned()
+    instance_requirements: Optional[ClusterInstanceRequirementDetails] = Unassigned()
+    instance_type_details: Optional[List[ClusterInstanceTypeDetail]] = Unassigned()
     life_cycle_config: Optional[ClusterLifeCycleConfig] = Unassigned()
     execution_role: Optional[str] = Unassigned()
     threads_per_core: Optional[int] = Unassigned()
@@ -4084,6 +4132,19 @@ class ClusterInstanceGroupDetails(Base):
     software_update_status: Optional[str] = Unassigned()
     active_software_update_config: Optional[DeploymentConfiguration] = Unassigned()
     slurm_config: Optional[ClusterSlurmConfigDetails] = Unassigned()
+
+
+class ClusterInstanceRequirements(Base):
+    """
+    ClusterInstanceRequirements
+      The instance requirements for a flexible instance group. Use this to specify multiple instance types that the instance group can use. The order of instance types in the list determines the priority for instance provisioning.
+
+    Attributes
+    ----------------------
+    instance_types: The list of instance types that the instance group can use. The order of instance types determines the priority—HyperPod attempts to provision instances using the first instance type in the list and falls back to subsequent types if capacity is unavailable.
+    """
+
+    instance_types: List[str]
 
 
 class ClusterKubernetesConfig(Base):
@@ -4127,6 +4188,7 @@ class ClusterInstanceGroupSpecification(Base):
     min_instance_count: Defines the minimum number of instances required for an instance group to become InService. If this threshold isn't met within 3 hours, the instance group rolls back to its previous state - zero instances for new instance groups, or previous settings for existing instance groups. MinInstanceCount only affects the initial transition to InService and does not guarantee maintaining this minimum afterward.
     instance_group_name: Specifies the name of the instance group.
     instance_type: Specifies the instance type of the instance group.
+    instance_requirements: The instance requirements for the instance group, including the instance types to use. Use this to create a flexible instance group that supports multiple instance types. The InstanceType and InstanceRequirements properties are mutually exclusive.
     life_cycle_config: Specifies the LifeCycle configuration for the instance group.
     execution_role: Specifies an IAM execution role to be assumed by the instance group.
     threads_per_core: Specifies the value for Threads per core. For instance types that support multithreading, you can specify 1 for disabling multithreading and 2 for enabling multithreading. For instance types that doesn't support multithreading, specify 1. For more information, see the reference table of CPU cores and threads per CPU core per instance type in the Amazon Elastic Compute Cloud User Guide.
@@ -4143,10 +4205,11 @@ class ClusterInstanceGroupSpecification(Base):
 
     instance_count: int
     instance_group_name: str
-    instance_type: str
-    life_cycle_config: ClusterLifeCycleConfig
     execution_role: str
     min_instance_count: Optional[int] = Unassigned()
+    instance_type: Optional[str] = Unassigned()
+    instance_requirements: Optional[ClusterInstanceRequirements] = Unassigned()
+    life_cycle_config: Optional[ClusterLifeCycleConfig] = Unassigned()
     threads_per_core: Optional[int] = Unassigned()
     instance_storage_configs: Optional[List[ClusterInstanceStorageConfig]] = Unassigned()
     on_start_deep_health_checks: Optional[List[str]] = Unassigned()
@@ -6044,6 +6107,23 @@ class ProductionVariantServerlessConfig(Base):
     provisioned_concurrency: Optional[int] = Unassigned()
 
 
+class ProductionVariantManagedInstanceScalingScaleInPolicy(Base):
+    """
+    ProductionVariantManagedInstanceScalingScaleInPolicy
+      Configures the scale-in behavior for managed instance scaling.
+
+    Attributes
+    ----------------------
+    strategy: The strategy for scaling in instances.  IDLE_RELEASE  Releases instances that have no hosted inference component copies.  CONSOLIDATION  Consolidates inference component copies onto fewer instances to release more instances. Consolidation honors the scheduling configuration of each inference component. For example, if an inference component specifies Availability Zone balance, consolidation only proceeds when the resulting distribution does not increase the imbalance.
+    maximum_step_size: The maximum number of instances that the endpoint can terminate at a time during a consolidation scale-in operation. Default value: 1.
+    cooldown_in_minutes: The cooldown period, in minutes, after the last endpoint operation before the endpoint evaluates consolidation scale-in opportunities. Default value: 20.
+    """
+
+    strategy: str
+    maximum_step_size: Optional[int] = Unassigned()
+    cooldown_in_minutes: Optional[int] = Unassigned()
+
+
 class ProductionVariantManagedInstanceScaling(Base):
     """
     ProductionVariantManagedInstanceScaling
@@ -6054,11 +6134,13 @@ class ProductionVariantManagedInstanceScaling(Base):
     status: Indicates whether managed instance scaling is enabled.
     min_instance_count: The minimum number of instances that the endpoint must retain when it scales down to accommodate a decrease in traffic.
     max_instance_count: The maximum number of instances that the endpoint can provision when it scales up to accommodate an increase in traffic.
+    scale_in_policy: Configures the scale-in behavior for managed instance scaling.
     """
 
     status: Optional[str] = Unassigned()
     min_instance_count: Optional[int] = Unassigned()
     max_instance_count: Optional[int] = Unassigned()
+    scale_in_policy: Optional[ProductionVariantManagedInstanceScalingScaleInPolicy] = Unassigned()
 
 
 class ProductionVariantRoutingConfig(Base):
@@ -6110,7 +6192,7 @@ class ProductionVariant(Base):
     enable_ssm_access:  You can use this parameter to turn on native Amazon Web Services Systems Manager (SSM) access for a production variant behind an endpoint. By default, SSM access is disabled for all production variants behind an endpoint. You can turn on or turn off SSM access for a production variant behind an existing endpoint by creating a new endpoint configuration and calling UpdateEndpoint.
     managed_instance_scaling: Settings that control the range in the number of instances that the endpoint provisions as it scales up or down to accommodate traffic.
     routing_config: Settings that control how the endpoint routes incoming traffic to the instances that the endpoint hosts.
-    inference_ami_version: Specifies an option from a collection of preconfigured Amazon Machine Image (AMI) images. Each image is configured by Amazon Web Services with a set of software and driver versions. Amazon Web Services optimizes these configurations for different machine learning workloads. By selecting an AMI version, you can ensure that your inference environment is compatible with specific software requirements, such as CUDA driver versions, Linux kernel versions, or Amazon Web Services Neuron driver versions. The AMI version names, and their configurations, are the following:  al2-ami-sagemaker-inference-gpu-2    Accelerator: GPU   NVIDIA driver version: 535   CUDA version: 12.2    al2-ami-sagemaker-inference-gpu-2-1    Accelerator: GPU   NVIDIA driver version: 535   CUDA version: 12.2   NVIDIA Container Toolkit with disabled CUDA-compat mounting    al2-ami-sagemaker-inference-gpu-3-1    Accelerator: GPU   NVIDIA driver version: 550   CUDA version: 12.4   NVIDIA Container Toolkit with disabled CUDA-compat mounting    al2-ami-sagemaker-inference-neuron-2    Accelerator: Inferentia2 and Trainium   Neuron driver version: 2.19
+    inference_ami_version: Specifies an option from a collection of preconfigured Amazon Machine Image (AMI) images. Each image is configured by Amazon Web Services with a set of software and driver versions. Amazon Web Services optimizes these configurations for different machine learning workloads. By selecting an AMI version, you can ensure that your inference environment is compatible with specific software requirements, such as CUDA driver versions, Linux kernel versions, or Amazon Web Services Neuron driver versions. The AMI version names, and their configurations, are the following:  al2-ami-sagemaker-inference-gpu-2    Accelerator: GPU   NVIDIA driver version: 535   CUDA version: 12.2    al2-ami-sagemaker-inference-gpu-2-1    Accelerator: GPU   NVIDIA driver version: 535   CUDA version: 12.2   NVIDIA Container Toolkit with disabled CUDA-compat mounting    al2-ami-sagemaker-inference-gpu-3-1    Accelerator: GPU   NVIDIA driver version: 550   CUDA version: 12.4   NVIDIA Container Toolkit with disabled CUDA-compat mounting    al2023-ami-sagemaker-inference-gpu-4-1    Accelerator: GPU   NVIDIA driver version: 580   CUDA version: 13.0   NVIDIA Container Toolkit with disabled CUDA-compat mounting    al2-ami-sagemaker-inference-neuron-2    Accelerator: Inferentia2 and Trainium   Neuron driver version: 2.19
     capacity_reservation_config: Settings for the capacity reservation for the compute instances that SageMaker AI reserves for an endpoint.
     """
 
@@ -6834,6 +6916,36 @@ class InferenceComponentDataCacheConfig(Base):
     enable_caching: bool
 
 
+class InferenceComponentAvailabilityZoneBalance(Base):
+    """
+    InferenceComponentAvailabilityZoneBalance
+      Configuration for balancing inference component copies across Availability Zones.
+
+    Attributes
+    ----------------------
+    enforcement_mode: Determines how strictly the Availability Zone balance constraint is enforced.  PERMISSIVE  The endpoint attempts to balance copies across Availability Zones but proceeds with scheduling even if balance can't be achieved due to available capacity or instance distribution across Availability Zones.
+    max_imbalance: The maximum allowed difference in the number of inference component copies between any two Availability Zones. This parameter applies only when the endpoint has instances across two or more Availability Zones. A copy placement is allowed if it reduces imbalance or the resulting imbalance is within this value. Default value: 0.
+    """
+
+    enforcement_mode: str
+    max_imbalance: Optional[int] = Unassigned()
+
+
+class InferenceComponentSchedulingConfig(Base):
+    """
+    InferenceComponentSchedulingConfig
+      The scheduling configuration that determines how inference component copies are placed across available instances when copies are added or removed.
+
+    Attributes
+    ----------------------
+    placement_strategy: The strategy for placing inference component copies across available instances. If you also set AvailabilityZoneBalance, this strategy applies to placement within each Availability Zone.  SPREAD  Distributes copies evenly across available instances for better resilience.  BINPACK  Packs copies onto fewer instances to optimize resource utilization.
+    availability_zone_balance: Configuration for balancing inference component copies across Availability Zones.
+    """
+
+    placement_strategy: str
+    availability_zone_balance: Optional[InferenceComponentAvailabilityZoneBalance] = Unassigned()
+
+
 class InferenceComponentSpecification(Base):
     """
     InferenceComponentSpecification
@@ -6847,6 +6959,7 @@ class InferenceComponentSpecification(Base):
     compute_resource_requirements: The compute resources allocated to run the model, plus any adapter models, that you assign to the inference component. Omit this parameter if your request is meant to create an adapter inference component. An adapter inference component is loaded by a base inference component, and it uses the compute resources of the base inference component.
     base_inference_component_name: The name of an existing inference component that is to contain the inference component that you're creating with your request. Specify this parameter only if your request is meant to create an adapter inference component. An adapter inference component contains the path to an adapter model. The purpose of the adapter model is to tailor the inference output of a base foundation model, which is hosted by the base inference component. The adapter inference component uses the compute resources that you assigned to the base inference component. When you create an adapter inference component, use the Container parameter to specify the location of the adapter artifacts. In the parameter value, use the ArtifactUrl parameter of the InferenceComponentContainerSpecification data type. Before you can create an adapter inference component, you must have an existing inference component that contains the foundation model that you want to adapt.
     data_cache_config: Settings that affect how the inference component caches data.
+    scheduling_config: The scheduling configuration that determines how inference component copies are placed across available instances when copies are added or removed.
     """
 
     model_name: Optional[Union[str, object]] = Unassigned()
@@ -6857,6 +6970,7 @@ class InferenceComponentSpecification(Base):
     )
     base_inference_component_name: Optional[str] = Unassigned()
     data_cache_config: Optional[InferenceComponentDataCacheConfig] = Unassigned()
+    scheduling_config: Optional[InferenceComponentSchedulingConfig] = Unassigned()
 
 
 class InferenceComponentRuntimeConfig(Base):
@@ -9894,6 +10008,7 @@ class InferenceComponentSpecificationSummary(Base):
     compute_resource_requirements: The compute resources allocated to run the model, plus any adapter models, that you assign to the inference component.
     base_inference_component_name: The name of the base inference component that contains this inference component.
     data_cache_config: Settings that affect how the inference component caches data.
+    scheduling_config: The scheduling configuration that determines how inference component copies are placed across available instances when copies are added or removed.
     """
 
     model_name: Optional[Union[str, object]] = Unassigned()
@@ -9904,6 +10019,7 @@ class InferenceComponentSpecificationSummary(Base):
     )
     base_inference_component_name: Optional[str] = Unassigned()
     data_cache_config: Optional[InferenceComponentDataCacheConfigSummary] = Unassigned()
+    scheduling_config: Optional[InferenceComponentSchedulingConfig] = Unassigned()
 
 
 class InferenceComponentRuntimeConfigSummary(Base):
@@ -10529,6 +10645,39 @@ class TrainingProgressInfo(Base):
     current_step: Optional[int] = Unassigned()
     current_epoch: Optional[int] = Unassigned()
     max_epoch: Optional[int] = Unassigned()
+
+
+class TrainingPlanExtension(Base):
+    """
+    TrainingPlanExtension
+      Details about an extension to a training plan, including the offering ID, dates, status, and cost information.
+
+    Attributes
+    ----------------------
+    training_plan_extension_offering_id: The unique identifier of the extension offering that was used to create this extension.
+    extended_at: The timestamp when the extension was created.
+    start_date: The start date of the extension period.
+    end_date: The end date of the extension period.
+    status: The current status of the extension (e.g., Pending, Active, Scheduled, Failed, Expired).
+    payment_status: The payment processing status of the extension.
+    availability_zone: The Availability Zone of the extension.
+    availability_zone_id: The Availability Zone ID of the extension.
+    duration_hours: The duration of the extension in hours.
+    upfront_fee: The upfront fee for the extension.
+    currency_code: The currency code for the upfront fee (e.g., USD).
+    """
+
+    training_plan_extension_offering_id: str
+    extended_at: Optional[datetime.datetime] = Unassigned()
+    start_date: Optional[datetime.datetime] = Unassigned()
+    end_date: Optional[datetime.datetime] = Unassigned()
+    status: Optional[str] = Unassigned()
+    payment_status: Optional[str] = Unassigned()
+    availability_zone: Optional[str] = Unassigned()
+    availability_zone_id: Optional[str] = Unassigned()
+    duration_hours: Optional[int] = Unassigned()
+    upfront_fee: Optional[str] = Unassigned()
+    currency_code: Optional[str] = Unassigned()
 
 
 class ReservedCapacitySummary(Base):
@@ -11979,6 +12128,23 @@ class InferenceRecommendationsJobStep(Base):
     job_name: str
     status: str
     inference_benchmark: Optional[RecommendationJobInferenceBenchmark] = Unassigned()
+
+
+class InstanceGroupHealthCheckConfiguration(Base):
+    """
+    InstanceGroupHealthCheckConfiguration
+      The configuration of deep health checks for an instance group.  Overlapping deep health check configurations will be merged into a single operation.
+
+    Attributes
+    ----------------------
+    instance_group_name: The name of the instance group.
+    instance_ids: A list of Amazon Elastic Compute Cloud (EC2) instance IDs on which to perform deep health checks.  Leave this field blank to perform deep health checks on the entire instance group.
+    deep_health_checks: A list of deep health checks to be performed.
+    """
+
+    instance_group_name: str
+    deep_health_checks: List[str]
+    instance_ids: Optional[List[str]] = Unassigned()
 
 
 class LabelCountersForWorkteam(Base):
@@ -13958,6 +14124,8 @@ class ReservedCapacityOffering(Base):
     duration_minutes: The additional minutes beyond whole hours in the total duration for this reserved capacity offering.
     start_time: The start time of the reserved capacity offering.
     end_time: The end time of the reserved capacity offering.
+    extension_start_time: The start time of the extension for the reserved capacity offering.
+    extension_end_time: The end time of the extension for the reserved capacity offering.
     """
 
     instance_type: str
@@ -13970,6 +14138,8 @@ class ReservedCapacityOffering(Base):
     duration_minutes: Optional[int] = Unassigned()
     start_time: Optional[datetime.datetime] = Unassigned()
     end_time: Optional[datetime.datetime] = Unassigned()
+    extension_start_time: Optional[datetime.datetime] = Unassigned()
+    extension_end_time: Optional[datetime.datetime] = Unassigned()
 
 
 class ResourceConfigForUpdate(Base):
@@ -14365,6 +14535,31 @@ class TrainingPlanOffering(Base):
     upfront_fee: Optional[str] = Unassigned()
     currency_code: Optional[str] = Unassigned()
     reserved_capacity_offerings: Optional[List[ReservedCapacityOffering]] = Unassigned()
+
+
+class TrainingPlanExtensionOffering(Base):
+    """
+    TrainingPlanExtensionOffering
+      Details about an available extension offering for a training plan. Use the offering ID with the  ExtendTrainingPlan  API to extend a training plan.
+
+    Attributes
+    ----------------------
+    training_plan_extension_offering_id: The unique identifier for this extension offering.
+    availability_zone: The Availability Zone for this extension offering.
+    start_date: The start date of this extension offering.
+    end_date: The end date of this extension offering.
+    duration_hours: The duration of this extension offering in hours.
+    upfront_fee: The upfront fee for this extension offering.
+    currency_code: The currency code for the upfront fee (e.g., USD).
+    """
+
+    training_plan_extension_offering_id: str
+    availability_zone: Optional[str] = Unassigned()
+    start_date: Optional[datetime.datetime] = Unassigned()
+    end_date: Optional[datetime.datetime] = Unassigned()
+    duration_hours: Optional[int] = Unassigned()
+    upfront_fee: Optional[str] = Unassigned()
+    currency_code: Optional[str] = Unassigned()
 
 
 class ServiceCatalogProvisioningUpdateDetails(Base):
