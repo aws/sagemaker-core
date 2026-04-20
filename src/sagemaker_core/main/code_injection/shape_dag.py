@@ -1798,6 +1798,11 @@ SHAPE_DAG = {
                 "type": "structure",
             },
             {"name": "SlurmConfig", "shape": "ClusterSlurmConfigDetails", "type": "structure"},
+            {
+                "name": "NetworkInterface",
+                "shape": "ClusterNetworkInterfaceDetails",
+                "type": "structure",
+            },
         ],
         "type": "structure",
     },
@@ -1841,6 +1846,7 @@ SHAPE_DAG = {
                 "shape": "ClusterCapacityRequirements",
                 "type": "structure",
             },
+            {"name": "NetworkInterface", "shape": "ClusterNetworkInterface", "type": "structure"},
         ],
         "type": "structure",
     },
@@ -1959,6 +1965,7 @@ SHAPE_DAG = {
         "members": [
             {"name": "SourceS3Uri", "shape": "S3Uri", "type": "string"},
             {"name": "OnCreate", "shape": "ClusterLifeCycleConfigFileName", "type": "string"},
+            {"name": "OnInitComplete", "shape": "ClusterLifeCycleConfigFileName", "type": "string"},
         ],
         "type": "structure",
     },
@@ -1968,6 +1975,14 @@ SHAPE_DAG = {
             {"name": "EksRoleAccessEntries", "shape": "EksRoleAccessEntries", "type": "list"},
             {"name": "SlrAccessEntry", "shape": "String", "type": "string"},
         ],
+        "type": "structure",
+    },
+    "ClusterNetworkInterface": {
+        "members": [{"name": "InterfaceType", "shape": "ClusterInterfaceType", "type": "string"}],
+        "type": "structure",
+    },
+    "ClusterNetworkInterfaceDetails": {
+        "members": [{"name": "InterfaceType", "shape": "ClusterInterfaceType", "type": "string"}],
         "type": "structure",
     },
     "ClusterNodeDetails": {
@@ -2004,6 +2019,11 @@ SHAPE_DAG = {
                 "type": "structure",
             },
             {"name": "CapacityType", "shape": "ClusterCapacityType", "type": "string"},
+            {
+                "name": "NetworkInterface",
+                "shape": "ClusterNetworkInterfaceDetails",
+                "type": "structure",
+            },
         ],
         "type": "structure",
     },
