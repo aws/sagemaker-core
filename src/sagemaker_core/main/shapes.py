@@ -3950,10 +3950,12 @@ class ClusterLifeCycleConfig(Base):
     ----------------------
     source_s3_uri: An Amazon S3 bucket path where your lifecycle scripts are stored.  Make sure that the S3 bucket path starts with s3://sagemaker-. The IAM role for SageMaker HyperPod has the managed  AmazonSageMakerClusterInstanceRolePolicy  attached, which allows access to S3 buckets with the specific prefix sagemaker-.
     on_create: The file name of the entrypoint script of lifecycle scripts under SourceS3Uri. This entrypoint script runs during cluster creation.
+    on_init_complete: The file name of the entrypoint script of lifecycle scripts under SourceS3Uri. This script runs on the node after the AMI-based initialization is complete.
     """
 
     source_s3_uri: Optional[str] = Unassigned()
     on_create: Optional[str] = Unassigned()
+    on_init_complete: Optional[str] = Unassigned()
 
 
 class ClusterInstanceStorageConfig(Base):
@@ -4071,6 +4073,19 @@ class ClusterSlurmConfigDetails(Base):
     partition_names: Optional[List[str]] = Unassigned()
 
 
+class ClusterNetworkInterfaceDetails(Base):
+    """
+    ClusterNetworkInterfaceDetails
+      The network interface configuration details for a Amazon SageMaker HyperPod cluster instance group.
+
+    Attributes
+    ----------------------
+    interface_type: The type of network interface for the instance group. Valid values are efa and efa-only.
+    """
+
+    interface_type: Optional[str] = Unassigned()
+
+
 class ClusterInstanceGroupDetails(Base):
     """
     ClusterInstanceGroupDetails
@@ -4104,6 +4119,7 @@ class ClusterInstanceGroupDetails(Base):
     software_update_status: Status of the last software udpate request. Status transitions follow these possible sequences:   Pending -&gt; InProgress -&gt; Succeeded   Pending -&gt; InProgress -&gt; RollbackInProgress -&gt; RollbackComplete   Pending -&gt; InProgress -&gt; RollbackInProgress -&gt; Failed
     active_software_update_config
     slurm_config: The Slurm configuration for the instance group.
+    network_interface: The network interface configuration for the instance group.
     """
 
     current_count: Optional[int] = Unassigned()
@@ -4132,6 +4148,7 @@ class ClusterInstanceGroupDetails(Base):
     software_update_status: Optional[str] = Unassigned()
     active_software_update_config: Optional[DeploymentConfiguration] = Unassigned()
     slurm_config: Optional[ClusterSlurmConfigDetails] = Unassigned()
+    network_interface: Optional[ClusterNetworkInterfaceDetails] = Unassigned()
 
 
 class ClusterInstanceRequirements(Base):
@@ -4177,6 +4194,19 @@ class ClusterSlurmConfig(Base):
     partition_names: Optional[List[str]] = Unassigned()
 
 
+class ClusterNetworkInterface(Base):
+    """
+    ClusterNetworkInterface
+      The network interface configuration for a Amazon SageMaker HyperPod cluster instance group.
+
+    Attributes
+    ----------------------
+    interface_type: The type of network interface for the instance group. Valid values:    efa – An EFA with ENA interface, which provides both the EFA device for low-latency, high-throughput communication and the ENA device for IP networking.    efa-only – An EFA-only interface, which provides only the EFA device capabilities without the ENA device for traditional IP networking.   For more information, see Elastic Fabric Adapter.
+    """
+
+    interface_type: Optional[str] = Unassigned()
+
+
 class ClusterInstanceGroupSpecification(Base):
     """
     ClusterInstanceGroupSpecification
@@ -4201,6 +4231,7 @@ class ClusterInstanceGroupSpecification(Base):
     kubernetes_config: Specifies the Kubernetes configuration for the instance group. You describe what you want the labels and taints to look like, and the cluster works to reconcile the actual state with the declared state for nodes in this instance group.
     slurm_config: Specifies the Slurm configuration for the instance group.
     capacity_requirements: Specifies the capacity requirements for the instance group.
+    network_interface: The network interface configuration for the instance group.
     """
 
     instance_count: int
@@ -4220,6 +4251,7 @@ class ClusterInstanceGroupSpecification(Base):
     kubernetes_config: Optional[ClusterKubernetesConfig] = Unassigned()
     slurm_config: Optional[ClusterSlurmConfig] = Unassigned()
     capacity_requirements: Optional[ClusterCapacityRequirements] = Unassigned()
+    network_interface: Optional[ClusterNetworkInterface] = Unassigned()
 
 
 class ClusterInstancePlacement(Base):
@@ -4313,6 +4345,7 @@ class ClusterNodeDetails(Base):
     ultra_server_info: Contains information about the UltraServer.
     kubernetes_config: The Kubernetes configuration applied to this node, showing both the current and desired state of labels and taints. The cluster works to reconcile the actual state with the declared state.
     capacity_type: The capacity type of the node. Valid values are OnDemand and Spot. When set to OnDemand, the node is launched as an On-Demand instance. When set to Spot, the node is launched as a Spot instance.
+    network_interface: The network interface configuration for the cluster node.
     """
 
     instance_group_name: Optional[str] = Unassigned()
@@ -4335,6 +4368,7 @@ class ClusterNodeDetails(Base):
     ultra_server_info: Optional[UltraServerInfo] = Unassigned()
     kubernetes_config: Optional[ClusterKubernetesConfigNodeDetails] = Unassigned()
     capacity_type: Optional[str] = Unassigned()
+    network_interface: Optional[ClusterNetworkInterfaceDetails] = Unassigned()
 
 
 class ClusterNodeSummary(Base):

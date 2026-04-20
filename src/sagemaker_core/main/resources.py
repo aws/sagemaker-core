@@ -18209,7 +18209,11 @@ class MlflowTrackingServer(Base):
     def populate_inputs_decorator(create_func):
         @functools.wraps(create_func)
         def wrapper(*args, **kwargs):
-            config_schema_for_resource = {"role_arn": {"type": "string"}}
+            config_schema_for_resource = {
+                "role_arn": {"type": "string"},
+                "s3_bucket_owner_account_id": {"type": "string"},
+                "s3_bucket_owner_verification": {"type": "boolean"},
+            }
             return create_func(
                 *args,
                 **Base.get_updated_kwargs_with_configured_attributes(
