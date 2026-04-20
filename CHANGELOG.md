@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.0.78 (2026-04-20)
+
+ * Daily Sync with Botocore v1.42.91 on 2026/04/20 (#403)
+ * Unit test fix (#402)
+ * prepare release v1.0.77
+
 ## v1.0.77 (2026-02-16)
 
  * Daily Sync with Botocore v1.42.49 on 2026/02/16 (#363)
