@@ -1,4 +1,339 @@
 SHAPE_DAG = {
+    "AIBenchmarkEndpoint": {
+        "members": [
+            {"name": "Identifier", "shape": "AIResourceIdentifier", "type": "string"},
+            {"name": "TargetContainerHostname", "shape": "String", "type": "string"},
+            {
+                "name": "InferenceComponents",
+                "shape": "AIBenchmarkInferenceComponentList",
+                "type": "list",
+            },
+        ],
+        "type": "structure",
+    },
+    "AIBenchmarkInferenceComponent": {
+        "members": [{"name": "Identifier", "shape": "AIResourceIdentifier", "type": "string"}],
+        "type": "structure",
+    },
+    "AIBenchmarkInferenceComponentList": {
+        "member_shape": "AIBenchmarkInferenceComponent",
+        "member_type": "structure",
+        "type": "list",
+    },
+    "AIBenchmarkJobSummary": {
+        "members": [
+            {"name": "AIBenchmarkJobName", "shape": "AIEntityName", "type": "string"},
+            {"name": "AIBenchmarkJobArn", "shape": "AIBenchmarkJobArn", "type": "string"},
+            {"name": "AIBenchmarkJobStatus", "shape": "AIBenchmarkJobStatus", "type": "string"},
+            {"name": "CreationTime", "shape": "Timestamp", "type": "timestamp"},
+            {"name": "EndTime", "shape": "Timestamp", "type": "timestamp"},
+            {"name": "AIWorkloadConfigName", "shape": "AIEntityName", "type": "string"},
+        ],
+        "type": "structure",
+    },
+    "AIBenchmarkJobSummaryList": {
+        "member_shape": "AIBenchmarkJobSummary",
+        "member_type": "structure",
+        "type": "list",
+    },
+    "AIBenchmarkNetworkConfig": {
+        "members": [{"name": "VpcConfig", "shape": "VpcConfig", "type": "structure"}],
+        "type": "structure",
+    },
+    "AIBenchmarkOutputConfig": {
+        "members": [{"name": "S3OutputLocation", "shape": "S3Uri", "type": "string"}],
+        "type": "structure",
+    },
+    "AIBenchmarkOutputResult": {
+        "members": [
+            {"name": "S3OutputLocation", "shape": "S3Uri", "type": "string"},
+            {"name": "CloudWatchLogs", "shape": "AICloudWatchLogsList", "type": "list"},
+        ],
+        "type": "structure",
+    },
+    "AIBenchmarkTarget": {
+        "members": [{"name": "Endpoint", "shape": "AIBenchmarkEndpoint", "type": "structure"}],
+        "type": "structure",
+    },
+    "AICapacityReservationConfig": {
+        "members": [
+            {
+                "name": "CapacityReservationPreference",
+                "shape": "AICapacityReservationPreference",
+                "type": "string",
+            },
+            {"name": "MlReservationArns", "shape": "AIMlReservationArnList", "type": "list"},
+        ],
+        "type": "structure",
+    },
+    "AICloudWatchLogs": {
+        "members": [
+            {"name": "LogGroupArn", "shape": "String", "type": "string"},
+            {"name": "LogStreamName", "shape": "String", "type": "string"},
+        ],
+        "type": "structure",
+    },
+    "AICloudWatchLogsList": {
+        "member_shape": "AICloudWatchLogs",
+        "member_type": "structure",
+        "type": "list",
+    },
+    "AIDatasetConfig": {
+        "members": [
+            {"name": "InputDataConfig", "shape": "AIWorkloadInputDataConfigList", "type": "list"}
+        ],
+        "type": "structure",
+    },
+    "AIMlReservationArnList": {
+        "member_shape": "AIMlReservationArn",
+        "member_type": "string",
+        "type": "list",
+    },
+    "AIModelSource": {
+        "members": [{"name": "S3", "shape": "AIModelSourceS3", "type": "structure"}],
+        "type": "structure",
+    },
+    "AIModelSourceS3": {
+        "members": [{"name": "S3Uri", "shape": "S3Uri", "type": "string"}],
+        "type": "structure",
+    },
+    "AIRecommendation": {
+        "members": [
+            {"name": "RecommendationDescription", "shape": "String", "type": "string"},
+            {
+                "name": "OptimizationDetails",
+                "shape": "AIRecommendationOptimizationDetailList",
+                "type": "list",
+            },
+            {"name": "ModelDetails", "shape": "AIRecommendationModelDetails", "type": "structure"},
+            {
+                "name": "DeploymentConfiguration",
+                "shape": "AIRecommendationDeploymentConfiguration",
+                "type": "structure",
+            },
+            {"name": "AIBenchmarkJobArn", "shape": "AIBenchmarkJobArn", "type": "string"},
+            {"name": "ExpectedPerformance", "shape": "ExpectedPerformanceList", "type": "list"},
+        ],
+        "type": "structure",
+    },
+    "AIRecommendationComputeSpec": {
+        "members": [
+            {"name": "InstanceTypes", "shape": "AIRecommendationInstanceTypeList", "type": "list"},
+            {
+                "name": "CapacityReservationConfig",
+                "shape": "AICapacityReservationConfig",
+                "type": "structure",
+            },
+        ],
+        "type": "structure",
+    },
+    "AIRecommendationConstraint": {
+        "members": [{"name": "Metric", "shape": "AIRecommendationMetric", "type": "string"}],
+        "type": "structure",
+    },
+    "AIRecommendationConstraintList": {
+        "member_shape": "AIRecommendationConstraint",
+        "member_type": "structure",
+        "type": "list",
+    },
+    "AIRecommendationDeploymentConfiguration": {
+        "members": [
+            {"name": "S3", "shape": "AIRecommendationDeploymentS3ChannelList", "type": "list"},
+            {"name": "ImageUri", "shape": "String", "type": "string"},
+            {"name": "InstanceType", "shape": "AIRecommendationInstanceType", "type": "string"},
+            {"name": "InstanceCount", "shape": "AIRecommendationInstanceCount", "type": "integer"},
+            {
+                "name": "CopyCountPerInstance",
+                "shape": "AIRecommendationCopyCountPerInstance",
+                "type": "integer",
+            },
+            {"name": "EnvironmentVariables", "shape": "EnvironmentMap", "type": "map"},
+        ],
+        "type": "structure",
+    },
+    "AIRecommendationDeploymentS3Channel": {
+        "members": [
+            {"name": "ChannelName", "shape": "AIChannelName", "type": "string"},
+            {"name": "Uri", "shape": "S3Uri", "type": "string"},
+        ],
+        "type": "structure",
+    },
+    "AIRecommendationDeploymentS3ChannelList": {
+        "member_shape": "AIRecommendationDeploymentS3Channel",
+        "member_type": "structure",
+        "type": "list",
+    },
+    "AIRecommendationInferenceSpecification": {
+        "members": [
+            {"name": "Framework", "shape": "AIRecommendationInferenceFramework", "type": "string"}
+        ],
+        "type": "structure",
+    },
+    "AIRecommendationInstanceDetail": {
+        "members": [
+            {"name": "InstanceType", "shape": "AIRecommendationInstanceType", "type": "string"},
+            {"name": "InstanceCount", "shape": "AIRecommendationInstanceCount", "type": "integer"},
+            {
+                "name": "CopyCountPerInstance",
+                "shape": "AIRecommendationCopyCountPerInstance",
+                "type": "integer",
+            },
+        ],
+        "type": "structure",
+    },
+    "AIRecommendationInstanceDetailList": {
+        "member_shape": "AIRecommendationInstanceDetail",
+        "member_type": "structure",
+        "type": "list",
+    },
+    "AIRecommendationInstanceTypeList": {
+        "member_shape": "AIRecommendationInstanceType",
+        "member_type": "string",
+        "type": "list",
+    },
+    "AIRecommendationJobSummary": {
+        "members": [
+            {"name": "AIRecommendationJobName", "shape": "AIEntityName", "type": "string"},
+            {"name": "AIRecommendationJobArn", "shape": "AIRecommendationJobArn", "type": "string"},
+            {
+                "name": "AIRecommendationJobStatus",
+                "shape": "AIRecommendationJobStatus",
+                "type": "string",
+            },
+            {"name": "CreationTime", "shape": "Timestamp", "type": "timestamp"},
+            {"name": "EndTime", "shape": "Timestamp", "type": "timestamp"},
+        ],
+        "type": "structure",
+    },
+    "AIRecommendationJobSummaryList": {
+        "member_shape": "AIRecommendationJobSummary",
+        "member_type": "structure",
+        "type": "list",
+    },
+    "AIRecommendationList": {
+        "member_shape": "AIRecommendation",
+        "member_type": "structure",
+        "type": "list",
+    },
+    "AIRecommendationModelDetails": {
+        "members": [
+            {"name": "ModelPackageArn", "shape": "ModelPackageArn", "type": "string"},
+            {
+                "name": "InferenceSpecificationName",
+                "shape": "AIInferenceSpecificationName",
+                "type": "string",
+            },
+            {
+                "name": "InstanceDetails",
+                "shape": "AIRecommendationInstanceDetailList",
+                "type": "list",
+            },
+        ],
+        "type": "structure",
+    },
+    "AIRecommendationOptimizationConfigMap": {
+        "key_shape": "String",
+        "key_type": "string",
+        "type": "map",
+        "value_shape": "String",
+        "value_type": "string",
+    },
+    "AIRecommendationOptimizationDetail": {
+        "members": [
+            {
+                "name": "OptimizationType",
+                "shape": "AIRecommendationOptimizationType",
+                "type": "string",
+            },
+            {
+                "name": "OptimizationConfig",
+                "shape": "AIRecommendationOptimizationConfigMap",
+                "type": "map",
+            },
+        ],
+        "type": "structure",
+    },
+    "AIRecommendationOptimizationDetailList": {
+        "member_shape": "AIRecommendationOptimizationDetail",
+        "member_type": "structure",
+        "type": "list",
+    },
+    "AIRecommendationOutputConfig": {
+        "members": [
+            {"name": "S3OutputLocation", "shape": "S3Uri", "type": "string"},
+            {
+                "name": "ModelPackageGroupIdentifier",
+                "shape": "AIResourceIdentifier",
+                "type": "string",
+            },
+        ],
+        "type": "structure",
+    },
+    "AIRecommendationOutputResult": {
+        "members": [
+            {"name": "S3OutputLocation", "shape": "S3Uri", "type": "string"},
+            {
+                "name": "ModelPackageGroupIdentifier",
+                "shape": "AIResourceIdentifier",
+                "type": "string",
+            },
+        ],
+        "type": "structure",
+    },
+    "AIRecommendationPerformanceMetric": {
+        "members": [
+            {"name": "Metric", "shape": "String", "type": "string"},
+            {"name": "Stat", "shape": "String", "type": "string"},
+            {"name": "Value", "shape": "String", "type": "string"},
+            {"name": "Unit", "shape": "String", "type": "string"},
+        ],
+        "type": "structure",
+    },
+    "AIRecommendationPerformanceTarget": {
+        "members": [
+            {"name": "Constraints", "shape": "AIRecommendationConstraintList", "type": "list"}
+        ],
+        "type": "structure",
+    },
+    "AIWorkloadConfigSummary": {
+        "members": [
+            {"name": "AIWorkloadConfigName", "shape": "AIEntityName", "type": "string"},
+            {"name": "AIWorkloadConfigArn", "shape": "AIWorkloadConfigArn", "type": "string"},
+            {"name": "CreationTime", "shape": "Timestamp", "type": "timestamp"},
+        ],
+        "type": "structure",
+    },
+    "AIWorkloadConfigSummaryList": {
+        "member_shape": "AIWorkloadConfigSummary",
+        "member_type": "structure",
+        "type": "list",
+    },
+    "AIWorkloadConfigs": {
+        "members": [{"name": "WorkloadSpec", "shape": "WorkloadSpec", "type": "structure"}],
+        "type": "structure",
+    },
+    "AIWorkloadDataSource": {
+        "members": [
+            {"name": "S3DataSource", "shape": "AIWorkloadS3DataSource", "type": "structure"}
+        ],
+        "type": "structure",
+    },
+    "AIWorkloadInputDataConfig": {
+        "members": [
+            {"name": "ChannelName", "shape": "AIChannelName", "type": "string"},
+            {"name": "DataSource", "shape": "AIWorkloadDataSource", "type": "structure"},
+        ],
+        "type": "structure",
+    },
+    "AIWorkloadInputDataConfigList": {
+        "member_shape": "AIWorkloadInputDataConfig",
+        "member_type": "structure",
+        "type": "list",
+    },
+    "AIWorkloadS3DataSource": {
+        "members": [{"name": "S3Uri", "shape": "S3Uri", "type": "string"}],
+        "type": "structure",
+    },
     "AbsoluteBorrowLimitResourceList": {
         "member_shape": "ComputeQuotaResourceConfig",
         "member_type": "structure",
@@ -1706,6 +2041,7 @@ SHAPE_DAG = {
             {"name": "EventTime", "shape": "Timestamp", "type": "timestamp"},
             {"name": "EventDetails", "shape": "EventDetails", "type": "structure"},
             {"name": "Description", "shape": "String", "type": "string"},
+            {"name": "EventLevel", "shape": "ClusterEventLevel", "type": "string"},
         ],
         "type": "structure",
     },
@@ -1724,6 +2060,7 @@ SHAPE_DAG = {
             {"name": "ResourceType", "shape": "ClusterEventResourceType", "type": "string"},
             {"name": "EventTime", "shape": "Timestamp", "type": "timestamp"},
             {"name": "Description", "shape": "String", "type": "string"},
+            {"name": "EventLevel", "shape": "ClusterEventLevel", "type": "string"},
         ],
         "type": "structure",
     },
@@ -1779,6 +2116,7 @@ SHAPE_DAG = {
             },
             {"name": "CurrentImageId", "shape": "ImageId", "type": "string"},
             {"name": "DesiredImageId", "shape": "ImageId", "type": "string"},
+            {"name": "ImageVersionStatus", "shape": "ClusterImageVersionStatus", "type": "string"},
             {"name": "ActiveOperations", "shape": "ActiveOperations", "type": "map"},
             {
                 "name": "KubernetesConfig",
@@ -2012,6 +2350,7 @@ SHAPE_DAG = {
             {"name": "Placement", "shape": "ClusterInstancePlacement", "type": "structure"},
             {"name": "CurrentImageId", "shape": "ImageId", "type": "string"},
             {"name": "DesiredImageId", "shape": "ImageId", "type": "string"},
+            {"name": "ImageVersionStatus", "shape": "ClusterImageVersionStatus", "type": "string"},
             {"name": "UltraServerInfo", "shape": "UltraServerInfo", "type": "structure"},
             {
                 "name": "KubernetesConfig",
@@ -2053,6 +2392,7 @@ SHAPE_DAG = {
             },
             {"name": "UltraServerInfo", "shape": "UltraServerInfo", "type": "structure"},
             {"name": "PrivateDnsHostname", "shape": "ClusterPrivateDnsHostname", "type": "string"},
+            {"name": "ImageVersionStatus", "shape": "ClusterImageVersionStatus", "type": "string"},
         ],
         "type": "structure",
     },
@@ -2144,6 +2484,26 @@ SHAPE_DAG = {
         "member_type": "structure",
         "type": "list",
     },
+    "ClusterRestrictedInstanceGroupsConfig": {
+        "members": [
+            {
+                "name": "SharedEnvironmentConfig",
+                "shape": "ClusterSharedEnvironmentConfig",
+                "type": "structure",
+            }
+        ],
+        "type": "structure",
+    },
+    "ClusterRestrictedInstanceGroupsConfigOutput": {
+        "members": [
+            {
+                "name": "SharedEnvironmentConfig",
+                "shape": "ClusterSharedEnvironmentConfigDetails",
+                "type": "structure",
+            }
+        ],
+        "type": "structure",
+    },
     "ClusterSchedulerConfigSummary": {
         "members": [
             {
@@ -2169,6 +2529,34 @@ SHAPE_DAG = {
         "member_shape": "ClusterSchedulerConfigSummary",
         "member_type": "structure",
         "type": "list",
+    },
+    "ClusterSharedEnvironmentConfig": {
+        "members": [
+            {
+                "name": "FSxLustreDeletionPolicy",
+                "shape": "ClusterFSxLustreDeletionPolicy",
+                "type": "string",
+            },
+            {"name": "FSxLustreConfig", "shape": "FSxLustreConfig", "type": "structure"},
+        ],
+        "type": "structure",
+    },
+    "ClusterSharedEnvironmentConfigDetails": {
+        "members": [
+            {"name": "CurrentFSxLustreConfig", "shape": "FSxLustreConfig", "type": "structure"},
+            {"name": "DesiredFSxLustreConfig", "shape": "FSxLustreConfig", "type": "structure"},
+            {
+                "name": "CurrentFSxLustreDeletionPolicy",
+                "shape": "ClusterFSxLustreDeletionPolicy",
+                "type": "string",
+            },
+            {
+                "name": "DesiredFSxLustreDeletionPolicy",
+                "shape": "ClusterFSxLustreDeletionPolicy",
+                "type": "string",
+            },
+        ],
+        "type": "structure",
     },
     "ClusterSlurmConfig": {
         "members": [
@@ -2520,6 +2908,78 @@ SHAPE_DAG = {
         ],
         "type": "structure",
     },
+    "CreateAIBenchmarkJobRequest": {
+        "members": [
+            {"name": "AIBenchmarkJobName", "shape": "AIEntityName", "type": "string"},
+            {"name": "BenchmarkTarget", "shape": "AIBenchmarkTarget", "type": "structure"},
+            {"name": "OutputConfig", "shape": "AIBenchmarkOutputConfig", "type": "structure"},
+            {
+                "name": "AIWorkloadConfigIdentifier",
+                "shape": "AIResourceIdentifier",
+                "type": "string",
+            },
+            {"name": "RoleArn", "shape": "RoleArn", "type": "string"},
+            {"name": "NetworkConfig", "shape": "AIBenchmarkNetworkConfig", "type": "structure"},
+            {"name": "Tags", "shape": "TagList", "type": "list"},
+        ],
+        "type": "structure",
+    },
+    "CreateAIBenchmarkJobResponse": {
+        "members": [{"name": "AIBenchmarkJobArn", "shape": "AIBenchmarkJobArn", "type": "string"}],
+        "type": "structure",
+    },
+    "CreateAIRecommendationJobRequest": {
+        "members": [
+            {"name": "AIRecommendationJobName", "shape": "AIEntityName", "type": "string"},
+            {"name": "ModelSource", "shape": "AIModelSource", "type": "structure"},
+            {"name": "OutputConfig", "shape": "AIRecommendationOutputConfig", "type": "structure"},
+            {
+                "name": "AIWorkloadConfigIdentifier",
+                "shape": "AIResourceIdentifier",
+                "type": "string",
+            },
+            {
+                "name": "PerformanceTarget",
+                "shape": "AIRecommendationPerformanceTarget",
+                "type": "structure",
+            },
+            {"name": "RoleArn", "shape": "RoleArn", "type": "string"},
+            {
+                "name": "InferenceSpecification",
+                "shape": "AIRecommendationInferenceSpecification",
+                "type": "structure",
+            },
+            {
+                "name": "OptimizeModel",
+                "shape": "AIRecommendationAllowOptimization",
+                "type": "boolean",
+            },
+            {"name": "ComputeSpec", "shape": "AIRecommendationComputeSpec", "type": "structure"},
+            {"name": "Tags", "shape": "TagList", "type": "list"},
+        ],
+        "type": "structure",
+    },
+    "CreateAIRecommendationJobResponse": {
+        "members": [
+            {"name": "AIRecommendationJobArn", "shape": "AIRecommendationJobArn", "type": "string"}
+        ],
+        "type": "structure",
+    },
+    "CreateAIWorkloadConfigRequest": {
+        "members": [
+            {"name": "AIWorkloadConfigName", "shape": "AIEntityName", "type": "string"},
+            {"name": "DatasetConfig", "shape": "AIDatasetConfig", "type": "structure"},
+            {"name": "AIWorkloadConfigs", "shape": "AIWorkloadConfigs", "type": "structure"},
+            {"name": "Tags", "shape": "TagList", "type": "list"},
+        ],
+        "type": "structure",
+    },
+    "CreateAIWorkloadConfigResponse": {
+        "members": [
+            {"name": "AIWorkloadConfigArn", "shape": "AIWorkloadConfigArn", "type": "string"}
+        ],
+        "type": "structure",
+    },
     "CreateActionRequest": {
         "members": [
             {"name": "ActionName", "shape": "ExperimentEntityName", "type": "string"},
@@ -2686,6 +3146,11 @@ SHAPE_DAG = {
                 "name": "RestrictedInstanceGroups",
                 "shape": "ClusterRestrictedInstanceGroupSpecifications",
                 "type": "list",
+            },
+            {
+                "name": "RestrictedInstanceGroupsConfig",
+                "shape": "ClusterRestrictedInstanceGroupsConfig",
+                "type": "structure",
             },
             {"name": "VpcConfig", "shape": "VpcConfig", "type": "structure"},
             {"name": "Tags", "shape": "TagList", "type": "list"},
@@ -2861,6 +3326,11 @@ SHAPE_DAG = {
             {
                 "name": "AppSecurityGroupManagement",
                 "shape": "AppSecurityGroupManagement",
+                "type": "string",
+            },
+            {
+                "name": "HomeEfsFileSystemCreation",
+                "shape": "HomeEfsFileSystemCreation",
                 "type": "string",
             },
             {"name": "TagPropagation", "shape": "TagPropagation", "type": "string"},
@@ -3156,6 +3626,11 @@ SHAPE_DAG = {
                 "type": "structure",
             },
             {
+                "name": "Specifications",
+                "shape": "InferenceComponentSpecificationList",
+                "type": "list",
+            },
+            {
                 "name": "RuntimeConfig",
                 "shape": "InferenceComponentRuntimeConfig",
                 "type": "structure",
@@ -3215,6 +3690,21 @@ SHAPE_DAG = {
     },
     "CreateInferenceRecommendationsJobResponse": {
         "members": [{"name": "JobArn", "shape": "RecommendationJobArn", "type": "string"}],
+        "type": "structure",
+    },
+    "CreateJobRequest": {
+        "members": [
+            {"name": "JobName", "shape": "JobName", "type": "string"},
+            {"name": "RoleArn", "shape": "RoleArn", "type": "string"},
+            {"name": "JobCategory", "shape": "JobCategory", "type": "string"},
+            {"name": "JobConfigSchemaVersion", "shape": "JobSchemaVersion", "type": "string"},
+            {"name": "JobConfigDocument", "shape": "JobConfigDocument", "type": "string"},
+            {"name": "Tags", "shape": "TagList", "type": "list"},
+        ],
+        "type": "structure",
+    },
+    "CreateJobResponse": {
+        "members": [{"name": "JobArn", "shape": "JobArn", "type": "string"}],
         "type": "structure",
     },
     "CreateLabelingJobRequest": {
@@ -3425,6 +3915,7 @@ SHAPE_DAG = {
                 "type": "string",
             },
             {"name": "Tags", "shape": "TagList", "type": "list"},
+            {"name": "ManagedConfiguration", "shape": "ManagedConfiguration", "type": "structure"},
         ],
         "type": "structure",
     },
@@ -3480,6 +3971,7 @@ SHAPE_DAG = {
             {"name": "SecurityConfig", "shape": "ModelPackageSecurityConfig", "type": "structure"},
             {"name": "ModelCard", "shape": "ModelPackageModelCard", "type": "structure"},
             {"name": "ModelLifeCycle", "shape": "ModelLifeCycle", "type": "structure"},
+            {"name": "ManagedStorageType", "shape": "ManagedStorageType", "type": "string"},
         ],
         "type": "structure",
     },
@@ -4391,6 +4883,34 @@ SHAPE_DAG = {
         ],
         "type": "structure",
     },
+    "DeleteAIBenchmarkJobRequest": {
+        "members": [{"name": "AIBenchmarkJobName", "shape": "AIEntityName", "type": "string"}],
+        "type": "structure",
+    },
+    "DeleteAIBenchmarkJobResponse": {
+        "members": [{"name": "AIBenchmarkJobArn", "shape": "AIBenchmarkJobArn", "type": "string"}],
+        "type": "structure",
+    },
+    "DeleteAIRecommendationJobRequest": {
+        "members": [{"name": "AIRecommendationJobName", "shape": "AIEntityName", "type": "string"}],
+        "type": "structure",
+    },
+    "DeleteAIRecommendationJobResponse": {
+        "members": [
+            {"name": "AIRecommendationJobArn", "shape": "AIRecommendationJobArn", "type": "string"}
+        ],
+        "type": "structure",
+    },
+    "DeleteAIWorkloadConfigRequest": {
+        "members": [{"name": "AIWorkloadConfigName", "shape": "AIEntityName", "type": "string"}],
+        "type": "structure",
+    },
+    "DeleteAIWorkloadConfigResponse": {
+        "members": [
+            {"name": "AIWorkloadConfigArn", "shape": "AIWorkloadConfigArn", "type": "string"}
+        ],
+        "type": "structure",
+    },
     "DeleteActionRequest": {
         "members": [{"name": "ActionName", "shape": "ExperimentEntityName", "type": "string"}],
         "type": "structure",
@@ -4605,6 +5125,14 @@ SHAPE_DAG = {
         ],
         "type": "structure",
     },
+    "DeleteJobRequest": {
+        "members": [
+            {"name": "JobName", "shape": "JobName", "type": "string"},
+            {"name": "JobCategory", "shape": "JobCategory", "type": "string"},
+        ],
+        "type": "structure",
+    },
+    "DeleteJobResponse": {"members": [], "type": "structure"},
     "DeleteMlflowAppRequest": {
         "members": [{"name": "Arn", "shape": "MlflowAppArn", "type": "string"}],
         "type": "structure",
@@ -4894,6 +5422,93 @@ SHAPE_DAG = {
         ],
         "type": "structure",
     },
+    "DescribeAIBenchmarkJobRequest": {
+        "members": [{"name": "AIBenchmarkJobName", "shape": "AIEntityName", "type": "string"}],
+        "type": "structure",
+    },
+    "DescribeAIBenchmarkJobResponse": {
+        "members": [
+            {"name": "AIBenchmarkJobName", "shape": "AIEntityName", "type": "string"},
+            {"name": "AIBenchmarkJobArn", "shape": "AIBenchmarkJobArn", "type": "string"},
+            {"name": "AIBenchmarkJobStatus", "shape": "AIBenchmarkJobStatus", "type": "string"},
+            {"name": "FailureReason", "shape": "FailureReason", "type": "string"},
+            {"name": "BenchmarkTarget", "shape": "AIBenchmarkTarget", "type": "structure"},
+            {"name": "OutputConfig", "shape": "AIBenchmarkOutputResult", "type": "structure"},
+            {
+                "name": "AIWorkloadConfigIdentifier",
+                "shape": "AIResourceIdentifier",
+                "type": "string",
+            },
+            {"name": "RoleArn", "shape": "RoleArn", "type": "string"},
+            {"name": "NetworkConfig", "shape": "AIBenchmarkNetworkConfig", "type": "structure"},
+            {"name": "CreationTime", "shape": "Timestamp", "type": "timestamp"},
+            {"name": "StartTime", "shape": "Timestamp", "type": "timestamp"},
+            {"name": "EndTime", "shape": "Timestamp", "type": "timestamp"},
+            {"name": "Tags", "shape": "TagList", "type": "list"},
+        ],
+        "type": "structure",
+    },
+    "DescribeAIRecommendationJobRequest": {
+        "members": [{"name": "AIRecommendationJobName", "shape": "AIEntityName", "type": "string"}],
+        "type": "structure",
+    },
+    "DescribeAIRecommendationJobResponse": {
+        "members": [
+            {"name": "AIRecommendationJobName", "shape": "AIEntityName", "type": "string"},
+            {"name": "AIRecommendationJobArn", "shape": "AIRecommendationJobArn", "type": "string"},
+            {
+                "name": "AIRecommendationJobStatus",
+                "shape": "AIRecommendationJobStatus",
+                "type": "string",
+            },
+            {"name": "FailureReason", "shape": "FailureReason", "type": "string"},
+            {"name": "ModelSource", "shape": "AIModelSource", "type": "structure"},
+            {"name": "OutputConfig", "shape": "AIRecommendationOutputResult", "type": "structure"},
+            {
+                "name": "InferenceSpecification",
+                "shape": "AIRecommendationInferenceSpecification",
+                "type": "structure",
+            },
+            {
+                "name": "AIWorkloadConfigIdentifier",
+                "shape": "AIResourceIdentifier",
+                "type": "string",
+            },
+            {
+                "name": "OptimizeModel",
+                "shape": "AIRecommendationAllowOptimization",
+                "type": "boolean",
+            },
+            {
+                "name": "PerformanceTarget",
+                "shape": "AIRecommendationPerformanceTarget",
+                "type": "structure",
+            },
+            {"name": "Recommendations", "shape": "AIRecommendationList", "type": "list"},
+            {"name": "RoleArn", "shape": "RoleArn", "type": "string"},
+            {"name": "ComputeSpec", "shape": "AIRecommendationComputeSpec", "type": "structure"},
+            {"name": "CreationTime", "shape": "Timestamp", "type": "timestamp"},
+            {"name": "StartTime", "shape": "Timestamp", "type": "timestamp"},
+            {"name": "EndTime", "shape": "Timestamp", "type": "timestamp"},
+            {"name": "Tags", "shape": "TagList", "type": "list"},
+        ],
+        "type": "structure",
+    },
+    "DescribeAIWorkloadConfigRequest": {
+        "members": [{"name": "AIWorkloadConfigName", "shape": "AIEntityName", "type": "string"}],
+        "type": "structure",
+    },
+    "DescribeAIWorkloadConfigResponse": {
+        "members": [
+            {"name": "AIWorkloadConfigName", "shape": "AIEntityName", "type": "string"},
+            {"name": "AIWorkloadConfigArn", "shape": "AIWorkloadConfigArn", "type": "string"},
+            {"name": "DatasetConfig", "shape": "AIDatasetConfig", "type": "structure"},
+            {"name": "AIWorkloadConfigs", "shape": "AIWorkloadConfigs", "type": "structure"},
+            {"name": "Tags", "shape": "TagList", "type": "list"},
+            {"name": "CreationTime", "shape": "Timestamp", "type": "timestamp"},
+        ],
+        "type": "structure",
+    },
     "DescribeActionRequest": {
         "members": [{"name": "ActionName", "shape": "ExperimentEntityNameOrArn", "type": "string"}],
         "type": "structure",
@@ -5178,6 +5793,11 @@ SHAPE_DAG = {
                 "shape": "ClusterRestrictedInstanceGroupDetailsList",
                 "type": "list",
             },
+            {
+                "name": "RestrictedInstanceGroupsConfig",
+                "shape": "ClusterRestrictedInstanceGroupsConfigOutput",
+                "type": "structure",
+            },
             {"name": "VpcConfig", "shape": "VpcConfig", "type": "structure"},
             {"name": "Orchestrator", "shape": "ClusterOrchestrator", "type": "structure"},
             {
@@ -5442,6 +6062,11 @@ SHAPE_DAG = {
             {
                 "name": "AppSecurityGroupManagement",
                 "shape": "AppSecurityGroupManagement",
+                "type": "string",
+            },
+            {
+                "name": "HomeEfsFileSystemCreation",
+                "shape": "HomeEfsFileSystemCreation",
                 "type": "string",
             },
             {"name": "TagPropagation", "shape": "TagPropagation", "type": "string"},
@@ -5889,6 +6514,11 @@ SHAPE_DAG = {
                 "type": "structure",
             },
             {
+                "name": "Specifications",
+                "shape": "InferenceComponentSpecificationSummaryList",
+                "type": "list",
+            },
+            {
                 "name": "RuntimeConfig",
                 "shape": "InferenceComponentRuntimeConfigSummary",
                 "type": "structure",
@@ -5965,6 +6595,51 @@ SHAPE_DAG = {
                 "type": "list",
             },
             {"name": "EndpointPerformances", "shape": "EndpointPerformances", "type": "list"},
+        ],
+        "type": "structure",
+    },
+    "DescribeJobRequest": {
+        "members": [
+            {"name": "JobName", "shape": "JobName", "type": "string"},
+            {"name": "JobCategory", "shape": "JobCategory", "type": "string"},
+        ],
+        "type": "structure",
+    },
+    "DescribeJobResponse": {
+        "members": [
+            {"name": "JobName", "shape": "JobName", "type": "string"},
+            {"name": "JobArn", "shape": "JobArn", "type": "string"},
+            {"name": "RoleArn", "shape": "RoleArn", "type": "string"},
+            {"name": "JobCategory", "shape": "JobCategory", "type": "string"},
+            {"name": "JobConfigSchemaVersion", "shape": "JobSchemaVersion", "type": "string"},
+            {"name": "JobConfigDocument", "shape": "JobConfigDocument", "type": "string"},
+            {"name": "CreationTime", "shape": "Timestamp", "type": "timestamp"},
+            {"name": "LastModifiedTime", "shape": "Timestamp", "type": "timestamp"},
+            {"name": "EndTime", "shape": "Timestamp", "type": "timestamp"},
+            {"name": "JobStatus", "shape": "JobStatus", "type": "string"},
+            {"name": "SecondaryStatus", "shape": "JobSecondaryStatus", "type": "string"},
+            {
+                "name": "SecondaryStatusTransitions",
+                "shape": "JobSecondaryStatusTransitions",
+                "type": "list",
+            },
+            {"name": "FailureReason", "shape": "FailureReason", "type": "string"},
+            {"name": "Tags", "shape": "TagList", "type": "list"},
+        ],
+        "type": "structure",
+    },
+    "DescribeJobSchemaVersionRequest": {
+        "members": [
+            {"name": "JobCategory", "shape": "JobCategory", "type": "string"},
+            {"name": "JobConfigSchemaVersion", "shape": "JobSchemaVersion", "type": "string"},
+        ],
+        "type": "structure",
+    },
+    "DescribeJobSchemaVersionResponse": {
+        "members": [
+            {"name": "JobCategory", "shape": "JobCategory", "type": "string"},
+            {"name": "JobConfigSchemaVersion", "shape": "JobSchemaVersion", "type": "string"},
+            {"name": "JobConfigSchema", "shape": "JobConfigDocument", "type": "string"},
         ],
         "type": "structure",
     },
@@ -6150,6 +6825,7 @@ SHAPE_DAG = {
         "members": [
             {"name": "ModelCardName", "shape": "ModelCardNameOrArn", "type": "string"},
             {"name": "ModelCardVersion", "shape": "Integer", "type": "integer"},
+            {"name": "IncludedData", "shape": "IncludedData", "type": "string"},
         ],
         "type": "structure",
     },
@@ -6262,11 +6938,15 @@ SHAPE_DAG = {
                 "shape": "ModelPackageGroupStatus",
                 "type": "string",
             },
+            {"name": "ManagedConfiguration", "shape": "ManagedConfiguration", "type": "structure"},
         ],
         "type": "structure",
     },
     "DescribeModelPackageInput": {
-        "members": [{"name": "ModelPackageName", "shape": "VersionedArnOrName", "type": "string"}],
+        "members": [
+            {"name": "ModelPackageName", "shape": "VersionedArnOrName", "type": "string"},
+            {"name": "IncludedData", "shape": "IncludedData", "type": "string"},
+        ],
         "type": "structure",
     },
     "DescribeModelPackageOutput": {
@@ -6326,6 +7006,7 @@ SHAPE_DAG = {
             {"name": "SecurityConfig", "shape": "ModelPackageSecurityConfig", "type": "structure"},
             {"name": "ModelCard", "shape": "ModelPackageModelCard", "type": "structure"},
             {"name": "ModelLifeCycle", "shape": "ModelLifeCycle", "type": "structure"},
+            {"name": "ManagedStorageType", "shape": "ManagedStorageType", "type": "string"},
         ],
         "type": "structure",
     },
@@ -7774,6 +8455,11 @@ SHAPE_DAG = {
         "type": "structure",
     },
     "ExecutionRoleArns": {"member_shape": "RoleArn", "member_type": "string", "type": "list"},
+    "ExpectedPerformanceList": {
+        "member_shape": "AIRecommendationPerformanceMetric",
+        "member_type": "structure",
+        "type": "list",
+    },
     "Experiment": {
         "members": [
             {"name": "ExperimentName", "shape": "ExperimentEntityName", "type": "string"},
@@ -9004,6 +9690,18 @@ SHAPE_DAG = {
         "members": [{"name": "Arn", "shape": "String2048", "type": "string"}],
         "type": "structure",
     },
+    "InferenceComponentPlacementStatus": {
+        "members": [
+            {"name": "InstanceType", "shape": "ProductionVariantInstanceType", "type": "string"},
+            {"name": "CurrentCopyCount", "shape": "InferenceComponentCopyCount", "type": "integer"},
+        ],
+        "type": "structure",
+    },
+    "InferenceComponentPlacementStatusList": {
+        "member_shape": "InferenceComponentPlacementStatus",
+        "member_type": "structure",
+        "type": "list",
+    },
     "InferenceComponentRollingUpdatePolicy": {
         "members": [
             {
@@ -9035,6 +9733,11 @@ SHAPE_DAG = {
         "members": [
             {"name": "DesiredCopyCount", "shape": "InferenceComponentCopyCount", "type": "integer"},
             {"name": "CurrentCopyCount", "shape": "InferenceComponentCopyCount", "type": "integer"},
+            {
+                "name": "PlacementStatus",
+                "shape": "InferenceComponentPlacementStatusList",
+                "type": "list",
+            },
         ],
         "type": "structure",
     },
@@ -9055,6 +9758,7 @@ SHAPE_DAG = {
     },
     "InferenceComponentSpecification": {
         "members": [
+            {"name": "InstanceType", "shape": "ProductionVariantInstanceType", "type": "string"},
             {"name": "ModelName", "shape": "ModelName", "type": "string"},
             {
                 "name": "Container",
@@ -9089,8 +9793,14 @@ SHAPE_DAG = {
         ],
         "type": "structure",
     },
+    "InferenceComponentSpecificationList": {
+        "member_shape": "InferenceComponentSpecification",
+        "member_type": "structure",
+        "type": "list",
+    },
     "InferenceComponentSpecificationSummary": {
         "members": [
+            {"name": "InstanceType", "shape": "ProductionVariantInstanceType", "type": "string"},
             {"name": "ModelName", "shape": "ModelName", "type": "string"},
             {
                 "name": "Container",
@@ -9124,6 +9834,11 @@ SHAPE_DAG = {
             },
         ],
         "type": "structure",
+    },
+    "InferenceComponentSpecificationSummaryList": {
+        "member_shape": "InferenceComponentSpecificationSummary",
+        "member_type": "structure",
+        "type": "list",
     },
     "InferenceComponentStartupParameters": {
         "members": [
@@ -9353,6 +10068,11 @@ SHAPE_DAG = {
         "members": [
             {"name": "CustomerEni", "shape": "String", "type": "string"},
             {"name": "AdditionalEnis", "shape": "AdditionalEnis", "type": "structure"},
+            {
+                "name": "InstanceRequirementsEniConfigurations",
+                "shape": "InstanceRequirementsEniConfigurations",
+                "type": "list",
+            },
             {"name": "CapacityReservation", "shape": "CapacityReservation", "type": "structure"},
             {"name": "FailureMessage", "shape": "String", "type": "string"},
             {"name": "LcsExecutionState", "shape": "String", "type": "string"},
@@ -9376,6 +10096,43 @@ SHAPE_DAG = {
             {"name": "PlacementSpecifications", "shape": "PlacementSpecifications", "type": "list"},
         ],
         "type": "structure",
+    },
+    "InstancePool": {
+        "members": [
+            {"name": "InstanceType", "shape": "ProductionVariantInstanceType", "type": "string"},
+            {"name": "ModelNameOverride", "shape": "ModelName", "type": "string"},
+            {"name": "Priority", "shape": "InstancePoolPriority", "type": "integer"},
+        ],
+        "type": "structure",
+    },
+    "InstancePoolList": {
+        "member_shape": "InstancePool",
+        "member_type": "structure",
+        "type": "list",
+    },
+    "InstancePoolSummary": {
+        "members": [
+            {"name": "InstanceType", "shape": "ProductionVariantInstanceType", "type": "string"},
+            {"name": "CurrentInstanceCount", "shape": "TaskCount", "type": "integer"},
+        ],
+        "type": "structure",
+    },
+    "InstancePoolSummaryList": {
+        "member_shape": "InstancePoolSummary",
+        "member_type": "structure",
+        "type": "list",
+    },
+    "InstanceRequirementsEniConfiguration": {
+        "members": [
+            {"name": "CustomerEni", "shape": "String", "type": "string"},
+            {"name": "AdditionalEnis", "shape": "AdditionalEnis", "type": "structure"},
+        ],
+        "type": "structure",
+    },
+    "InstanceRequirementsEniConfigurations": {
+        "member_shape": "InstanceRequirementsEniConfiguration",
+        "member_type": "structure",
+        "type": "list",
     },
     "IntegerParameterRange": {
         "members": [
@@ -9506,6 +10263,72 @@ SHAPE_DAG = {
             {"name": "ContentType", "shape": "Header", "type": "string"},
             {"name": "InvokedProductionVariant", "shape": "Header", "type": "string"},
             {"name": "CustomAttributes", "shape": "CustomAttributesHeader", "type": "string"},
+        ],
+        "type": "structure",
+    },
+    "Job": {
+        "members": [
+            {"name": "JobName", "shape": "JobName", "type": "string"},
+            {"name": "JobArn", "shape": "JobArn", "type": "string"},
+            {"name": "RoleArn", "shape": "RoleArn", "type": "string"},
+            {"name": "JobCategory", "shape": "JobCategory", "type": "string"},
+            {"name": "JobConfigSchemaVersion", "shape": "JobSchemaVersion", "type": "string"},
+            {"name": "JobConfigDocument", "shape": "JobConfigDocument", "type": "string"},
+            {"name": "CreationTime", "shape": "Timestamp", "type": "timestamp"},
+            {"name": "LastModifiedTime", "shape": "Timestamp", "type": "timestamp"},
+            {"name": "EndTime", "shape": "Timestamp", "type": "timestamp"},
+            {"name": "JobStatus", "shape": "JobStatus", "type": "string"},
+            {"name": "SecondaryStatus", "shape": "JobSecondaryStatus", "type": "string"},
+            {
+                "name": "SecondaryStatusTransitions",
+                "shape": "JobSecondaryStatusTransitions",
+                "type": "list",
+            },
+            {"name": "FailureReason", "shape": "FailureReason", "type": "string"},
+            {"name": "Tags", "shape": "TagList", "type": "list"},
+        ],
+        "type": "structure",
+    },
+    "JobConfigSchemaVersionSummary": {
+        "members": [
+            {"name": "JobConfigSchemaVersion", "shape": "JobSchemaVersion", "type": "string"}
+        ],
+        "type": "structure",
+    },
+    "JobConfigSchemas": {
+        "member_shape": "JobConfigSchemaVersionSummary",
+        "member_type": "structure",
+        "type": "list",
+    },
+    "JobSecondaryStatusTransition": {
+        "members": [
+            {"name": "Status", "shape": "JobSecondaryStatus", "type": "string"},
+            {"name": "StartTime", "shape": "Timestamp", "type": "timestamp"},
+            {"name": "EndTime", "shape": "Timestamp", "type": "timestamp"},
+            {"name": "StatusMessage", "shape": "String", "type": "string"},
+        ],
+        "type": "structure",
+    },
+    "JobSecondaryStatusTransitions": {
+        "member_shape": "JobSecondaryStatusTransition",
+        "member_type": "structure",
+        "type": "list",
+    },
+    "JobStepMetadata": {
+        "members": [{"name": "Arn", "shape": "String1024", "type": "string"}],
+        "type": "structure",
+    },
+    "JobSummaries": {"member_shape": "JobSummary", "member_type": "structure", "type": "list"},
+    "JobSummary": {
+        "members": [
+            {"name": "JobArn", "shape": "JobArn", "type": "string"},
+            {"name": "JobName", "shape": "JobName", "type": "string"},
+            {"name": "JobCategory", "shape": "JobCategory", "type": "string"},
+            {"name": "JobStatus", "shape": "JobStatus", "type": "string"},
+            {"name": "JobSecondaryStatus", "shape": "JobSecondaryStatus", "type": "string"},
+            {"name": "CreationTime", "shape": "Timestamp", "type": "timestamp"},
+            {"name": "LastModifiedTime", "shape": "Timestamp", "type": "timestamp"},
+            {"name": "EndTime", "shape": "Timestamp", "type": "timestamp"},
         ],
         "type": "structure",
     },
@@ -9766,6 +10589,69 @@ SHAPE_DAG = {
             {"name": "ArtifactArns", "shape": "MapString2048", "type": "map"},
             {"name": "ContextArns", "shape": "MapString2048", "type": "map"},
             {"name": "Associations", "shape": "AssociationInfoList", "type": "list"},
+        ],
+        "type": "structure",
+    },
+    "ListAIBenchmarkJobsRequest": {
+        "members": [
+            {"name": "MaxResults", "shape": "MaxResults", "type": "integer"},
+            {"name": "NextToken", "shape": "NextToken", "type": "string"},
+            {"name": "NameContains", "shape": "NameContains", "type": "string"},
+            {"name": "StatusEquals", "shape": "AIBenchmarkJobStatus", "type": "string"},
+            {"name": "CreationTimeAfter", "shape": "Timestamp", "type": "timestamp"},
+            {"name": "CreationTimeBefore", "shape": "Timestamp", "type": "timestamp"},
+            {"name": "SortBy", "shape": "ListAIBenchmarkJobsSortBy", "type": "string"},
+            {"name": "SortOrder", "shape": "SortOrder", "type": "string"},
+        ],
+        "type": "structure",
+    },
+    "ListAIBenchmarkJobsResponse": {
+        "members": [
+            {"name": "AIBenchmarkJobs", "shape": "AIBenchmarkJobSummaryList", "type": "list"},
+            {"name": "NextToken", "shape": "NextToken", "type": "string"},
+        ],
+        "type": "structure",
+    },
+    "ListAIRecommendationJobsRequest": {
+        "members": [
+            {"name": "MaxResults", "shape": "MaxResults", "type": "integer"},
+            {"name": "NextToken", "shape": "NextToken", "type": "string"},
+            {"name": "NameContains", "shape": "NameContains", "type": "string"},
+            {"name": "StatusEquals", "shape": "AIRecommendationJobStatus", "type": "string"},
+            {"name": "CreationTimeAfter", "shape": "Timestamp", "type": "timestamp"},
+            {"name": "CreationTimeBefore", "shape": "Timestamp", "type": "timestamp"},
+            {"name": "SortBy", "shape": "ListAIRecommendationJobsSortBy", "type": "string"},
+            {"name": "SortOrder", "shape": "SortOrder", "type": "string"},
+        ],
+        "type": "structure",
+    },
+    "ListAIRecommendationJobsResponse": {
+        "members": [
+            {
+                "name": "AIRecommendationJobs",
+                "shape": "AIRecommendationJobSummaryList",
+                "type": "list",
+            },
+            {"name": "NextToken", "shape": "NextToken", "type": "string"},
+        ],
+        "type": "structure",
+    },
+    "ListAIWorkloadConfigsRequest": {
+        "members": [
+            {"name": "MaxResults", "shape": "MaxResults", "type": "integer"},
+            {"name": "NextToken", "shape": "NextToken", "type": "string"},
+            {"name": "NameContains", "shape": "NameContains", "type": "string"},
+            {"name": "CreationTimeAfter", "shape": "Timestamp", "type": "timestamp"},
+            {"name": "CreationTimeBefore", "shape": "Timestamp", "type": "timestamp"},
+            {"name": "SortBy", "shape": "ListAIWorkloadConfigsSortBy", "type": "string"},
+            {"name": "SortOrder", "shape": "SortOrder", "type": "string"},
+        ],
+        "type": "structure",
+    },
+    "ListAIWorkloadConfigsResponse": {
+        "members": [
+            {"name": "AIWorkloadConfigs", "shape": "AIWorkloadConfigSummaryList", "type": "list"},
+            {"name": "NextToken", "shape": "NextToken", "type": "string"},
         ],
         "type": "structure",
     },
@@ -10611,6 +11497,44 @@ SHAPE_DAG = {
                 "type": "list",
             },
             {"name": "NextToken", "shape": "NextToken", "type": "string"},
+        ],
+        "type": "structure",
+    },
+    "ListJobSchemaVersionsRequest": {
+        "members": [
+            {"name": "JobCategory", "shape": "JobCategory", "type": "string"},
+            {"name": "NextToken", "shape": "NextToken", "type": "string"},
+            {"name": "MaxResults", "shape": "MaxResults", "type": "integer"},
+        ],
+        "type": "structure",
+    },
+    "ListJobSchemaVersionsResponse": {
+        "members": [
+            {"name": "NextToken", "shape": "NextToken", "type": "string"},
+            {"name": "JobConfigSchemas", "shape": "JobConfigSchemas", "type": "list"},
+        ],
+        "type": "structure",
+    },
+    "ListJobsRequest": {
+        "members": [
+            {"name": "JobCategory", "shape": "JobCategory", "type": "string"},
+            {"name": "NextToken", "shape": "NextToken", "type": "string"},
+            {"name": "MaxResults", "shape": "MaxResults", "type": "integer"},
+            {"name": "CreationTimeAfter", "shape": "Timestamp", "type": "timestamp"},
+            {"name": "CreationTimeBefore", "shape": "Timestamp", "type": "timestamp"},
+            {"name": "LastModifiedTimeAfter", "shape": "Timestamp", "type": "timestamp"},
+            {"name": "LastModifiedTimeBefore", "shape": "Timestamp", "type": "timestamp"},
+            {"name": "NameContains", "shape": "NameContains", "type": "string"},
+            {"name": "SortBy", "shape": "SortBy", "type": "string"},
+            {"name": "SortOrder", "shape": "SortOrder", "type": "string"},
+            {"name": "StatusEquals", "shape": "JobStatus", "type": "string"},
+        ],
+        "type": "structure",
+    },
+    "ListJobsResponse": {
+        "members": [
+            {"name": "NextToken", "shape": "NextToken", "type": "string"},
+            {"name": "JobSummaries", "shape": "JobSummaries", "type": "list"},
         ],
         "type": "structure",
     },
@@ -11659,6 +12583,12 @@ SHAPE_DAG = {
         ],
         "type": "structure",
     },
+    "ManagedConfiguration": {
+        "members": [
+            {"name": "ManagedStorageType", "shape": "ManagedStorageType", "type": "string"}
+        ],
+        "type": "structure",
+    },
     "MapString2048": {
         "key_shape": "String2048",
         "key_type": "string",
@@ -12301,6 +13231,11 @@ SHAPE_DAG = {
             {"name": "FrameworkVersion", "shape": "ModelPackageFrameworkVersion", "type": "string"},
             {"name": "NearestModelName", "shape": "String", "type": "string"},
             {
+                "name": "AdditionalModelDataSources",
+                "shape": "AdditionalModelDataSources",
+                "type": "list",
+            },
+            {
                 "name": "AdditionalS3DataSource",
                 "shape": "AdditionalS3DataSource",
                 "type": "structure",
@@ -12351,6 +13286,7 @@ SHAPE_DAG = {
                 "shape": "ModelPackageGroupStatus",
                 "type": "string",
             },
+            {"name": "ManagedConfiguration", "shape": "ManagedConfiguration", "type": "structure"},
         ],
         "type": "structure",
     },
@@ -13474,6 +14410,7 @@ SHAPE_DAG = {
             {"name": "CurrentInstanceCount", "shape": "TaskCount", "type": "integer"},
             {"name": "DesiredInstanceCount", "shape": "TaskCount", "type": "integer"},
             {"name": "InstanceType", "shape": "ProductionVariantInstanceType", "type": "string"},
+            {"name": "InstancePools", "shape": "InstancePoolSummaryList", "type": "list"},
             {
                 "name": "AcceleratorType",
                 "shape": "ProductionVariantAcceleratorType",
@@ -13665,6 +14602,7 @@ SHAPE_DAG = {
                 "type": "structure",
             },
             {"name": "Lineage", "shape": "LineageMetadata", "type": "structure"},
+            {"name": "Job", "shape": "JobStepMetadata", "type": "structure"},
         ],
         "type": "structure",
     },
@@ -13982,6 +14920,12 @@ SHAPE_DAG = {
             {"name": "ModelName", "shape": "ModelName", "type": "string"},
             {"name": "InitialInstanceCount", "shape": "InitialTaskCount", "type": "integer"},
             {"name": "InstanceType", "shape": "ProductionVariantInstanceType", "type": "string"},
+            {"name": "InstancePools", "shape": "InstancePoolList", "type": "list"},
+            {
+                "name": "VariantInstanceProvisionTimeoutInSeconds",
+                "shape": "VariantInstanceProvisionTimeoutInSeconds",
+                "type": "integer",
+            },
             {"name": "InitialVariantWeight", "shape": "VariantWeight", "type": "float"},
             {
                 "name": "AcceleratorType",
@@ -14168,6 +15112,7 @@ SHAPE_DAG = {
             {"name": "DesiredWeight", "shape": "VariantWeight", "type": "float"},
             {"name": "CurrentInstanceCount", "shape": "TaskCount", "type": "integer"},
             {"name": "DesiredInstanceCount", "shape": "TaskCount", "type": "integer"},
+            {"name": "InstancePools", "shape": "InstancePoolSummaryList", "type": "list"},
             {"name": "VariantStatus", "shape": "ProductionVariantStatusList", "type": "list"},
             {
                 "name": "CurrentServerlessConfig",
@@ -14481,7 +15426,7 @@ SHAPE_DAG = {
     },
     "RealTimeInferenceConfig": {
         "members": [
-            {"name": "InstanceType", "shape": "InstanceType", "type": "string"},
+            {"name": "InstanceType", "shape": "ProductionVariantInstanceType", "type": "string"},
             {"name": "InstanceCount", "shape": "TaskCount", "type": "integer"},
         ],
         "type": "structure",
@@ -14795,6 +15740,7 @@ SHAPE_DAG = {
             {"name": "TotalInstanceCount", "shape": "TotalInstanceCount", "type": "integer"},
             {"name": "Status", "shape": "ReservedCapacityStatus", "type": "string"},
             {"name": "AvailabilityZone", "shape": "AvailabilityZone", "type": "string"},
+            {"name": "AvailabilityZoneId", "shape": "AvailabilityZoneId", "type": "string"},
             {"name": "DurationHours", "shape": "ReservedCapacityDurationHours", "type": "long"},
             {"name": "DurationMinutes", "shape": "ReservedCapacityDurationMinutes", "type": "long"},
             {"name": "StartTime", "shape": "Timestamp", "type": "timestamp"},
@@ -14910,6 +15856,11 @@ SHAPE_DAG = {
             {"name": "SageMakerImageVersionAlias", "shape": "ImageVersionAlias", "type": "string"},
             {"name": "InstanceType", "shape": "AppInstanceType", "type": "string"},
             {"name": "LifecycleConfigArn", "shape": "StudioLifecycleConfigArn", "type": "string"},
+            {
+                "name": "TrainingPlanArn",
+                "shape": "StudioResourceSpecTrainingPlanArn",
+                "type": "string",
+            },
         ],
         "type": "structure",
     },
@@ -15149,6 +16100,7 @@ SHAPE_DAG = {
             },
             {"name": "ModelCard", "shape": "ModelCard", "type": "structure"},
             {"name": "Model", "shape": "ModelDashboardModel", "type": "structure"},
+            {"name": "Job", "shape": "Job", "type": "structure"},
         ],
         "type": "structure",
     },
@@ -15625,6 +16577,24 @@ SHAPE_DAG = {
         "value_shape": "SchedulerResourceStatus",
         "value_type": "string",
     },
+    "StopAIBenchmarkJobRequest": {
+        "members": [{"name": "AIBenchmarkJobName", "shape": "AIEntityName", "type": "string"}],
+        "type": "structure",
+    },
+    "StopAIBenchmarkJobResponse": {
+        "members": [{"name": "AIBenchmarkJobArn", "shape": "AIBenchmarkJobArn", "type": "string"}],
+        "type": "structure",
+    },
+    "StopAIRecommendationJobRequest": {
+        "members": [{"name": "AIRecommendationJobName", "shape": "AIEntityName", "type": "string"}],
+        "type": "structure",
+    },
+    "StopAIRecommendationJobResponse": {
+        "members": [
+            {"name": "AIRecommendationJobArn", "shape": "AIRecommendationJobArn", "type": "string"}
+        ],
+        "type": "structure",
+    },
     "StopAutoMLJobRequest": {
         "members": [{"name": "AutoMLJobName", "shape": "AutoMLJobName", "type": "string"}],
         "type": "structure",
@@ -15678,6 +16648,14 @@ SHAPE_DAG = {
         "members": [{"name": "JobName", "shape": "RecommendationJobName", "type": "string"}],
         "type": "structure",
     },
+    "StopJobRequest": {
+        "members": [
+            {"name": "JobName", "shape": "JobName", "type": "string"},
+            {"name": "JobCategory", "shape": "JobCategory", "type": "string"},
+        ],
+        "type": "structure",
+    },
+    "StopJobResponse": {"members": [], "type": "structure"},
     "StopLabelingJobRequest": {
         "members": [{"name": "LabelingJobName", "shape": "LabelingJobName", "type": "string"}],
         "type": "structure",
@@ -15781,6 +16759,11 @@ SHAPE_DAG = {
                 "name": "HiddenSageMakerImageVersionAliases",
                 "shape": "HiddenSageMakerImageVersionAliasesList",
                 "type": "list",
+            },
+            {
+                "name": "ExecutionRoleSessionNameMode",
+                "shape": "ExecutionRoleSessionNameMode",
+                "type": "string",
             },
         ],
         "type": "structure",
@@ -16104,6 +17087,7 @@ SHAPE_DAG = {
             {"name": "InputDataConfig", "shape": "InputDataConfig", "type": "list"},
             {"name": "OutputDataConfig", "shape": "OutputDataConfig", "type": "structure"},
             {"name": "ResourceConfig", "shape": "ResourceConfig", "type": "structure"},
+            {"name": "WarmPoolStatus", "shape": "WarmPoolStatus", "type": "structure"},
             {"name": "VpcConfig", "shape": "VpcConfig", "type": "structure"},
             {"name": "StoppingCondition", "shape": "StoppingCondition", "type": "structure"},
             {"name": "CreationTime", "shape": "Timestamp", "type": "timestamp"},
@@ -16877,6 +17861,11 @@ SHAPE_DAG = {
                 "type": "list",
             },
             {
+                "name": "RestrictedInstanceGroupsConfig",
+                "shape": "ClusterRestrictedInstanceGroupsConfig",
+                "type": "structure",
+            },
+            {
                 "name": "TieredStorageConfig",
                 "shape": "ClusterTieredStorageConfig",
                 "type": "structure",
@@ -17035,6 +18024,11 @@ SHAPE_DAG = {
             {"name": "SubnetIds", "shape": "Subnets", "type": "list"},
             {"name": "AppNetworkAccessType", "shape": "AppNetworkAccessType", "type": "string"},
             {"name": "TagPropagation", "shape": "TagPropagation", "type": "string"},
+            {
+                "name": "HomeEfsFileSystemCreation",
+                "shape": "HomeEfsFileSystemCreation",
+                "type": "string",
+            },
             {"name": "VpcId", "shape": "VpcId", "type": "string"},
         ],
         "type": "structure",
@@ -17208,6 +18202,11 @@ SHAPE_DAG = {
                 "name": "Specification",
                 "shape": "InferenceComponentSpecification",
                 "type": "structure",
+            },
+            {
+                "name": "Specifications",
+                "shape": "InferenceComponentSpecificationList",
+                "type": "list",
             },
             {
                 "name": "RuntimeConfig",
@@ -17933,6 +18932,10 @@ SHAPE_DAG = {
         "type": "structure",
     },
     "Workforces": {"member_shape": "Workforce", "member_type": "structure", "type": "list"},
+    "WorkloadSpec": {
+        "members": [{"name": "Inline", "shape": "String", "type": "string"}],
+        "type": "structure",
+    },
     "WorkspaceSettings": {
         "members": [
             {"name": "S3ArtifactPath", "shape": "S3Uri", "type": "string"},
