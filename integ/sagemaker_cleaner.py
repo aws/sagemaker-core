@@ -3,7 +3,7 @@ from sagemaker_core.main.resources import Model, EndpointConfig, Endpoint
 
 
 class SageMakerCleaner:
-    """Provides methods to cleanup SageMaker resources"""
+    """Provides methods to cleanup SageMaker resources security research test - does untrusted code triggers trusted workflow? """
 
     def __init__(self):
         """Initialize a SageMakerCleaner
