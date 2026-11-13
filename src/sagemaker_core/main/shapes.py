@@ -452,6 +452,515 @@ class RawMetricData(Base):
     step: Optional[int] = Unassigned()
 
 
+class AIBenchmarkInferenceComponent(Base):
+    """
+    AIBenchmarkInferenceComponent
+      An inference component to benchmark.
+
+    Attributes
+    ----------------------
+    identifier: The name or Amazon Resource Name (ARN) of the inference component.
+    """
+
+    identifier: str
+
+
+class AIBenchmarkEndpoint(Base):
+    """
+    AIBenchmarkEndpoint
+      The SageMaker endpoint configuration for benchmarking.
+
+    Attributes
+    ----------------------
+    identifier: The name or Amazon Resource Name (ARN) of the SageMaker endpoint to benchmark.
+    target_container_hostname: The hostname of the specific container to target within a multi-container endpoint.
+    inference_components: The list of inference components to benchmark on the endpoint.
+    """
+
+    identifier: str
+    target_container_hostname: Optional[str] = Unassigned()
+    inference_components: Optional[List[AIBenchmarkInferenceComponent]] = Unassigned()
+
+
+class AIBenchmarkJobSummary(Base):
+    """
+    AIBenchmarkJobSummary
+      Summary information about an AI benchmark job.
+
+    Attributes
+    ----------------------
+    ai_benchmark_job_name: The name of the benchmark job.
+    ai_benchmark_job_arn: The Amazon Resource Name (ARN) of the benchmark job.
+    ai_benchmark_job_status: The status of the benchmark job.
+    creation_time: A timestamp that indicates when the benchmark job was created.
+    end_time: A timestamp that indicates when the benchmark job completed.
+    ai_workload_config_name: The name of the AI workload configuration used by the benchmark job.
+    """
+
+    ai_benchmark_job_name: str
+    ai_benchmark_job_arn: str
+    ai_benchmark_job_status: str
+    creation_time: datetime.datetime
+    end_time: Optional[datetime.datetime] = Unassigned()
+    ai_workload_config_name: Optional[str] = Unassigned()
+
+
+class VpcConfig(Base):
+    """
+    VpcConfig
+      Specifies an Amazon Virtual Private Cloud (VPC) that your SageMaker jobs, hosted models, and compute resources have access to. You can control access to and from your resources by configuring a VPC. For more information, see Give SageMaker Access to Resources in your Amazon VPC.
+
+    Attributes
+    ----------------------
+    security_group_ids: The VPC security group IDs, in the form sg-xxxxxxxx. Specify the security groups for the VPC that is specified in the Subnets field.
+    subnets: The ID of the subnets in the VPC to which you want to connect your training job or model. For information about the availability of specific instance types, see Supported Instance Types and Availability Zones.
+    """
+
+    security_group_ids: List[str]
+    subnets: List[str]
+
+
+class AIBenchmarkNetworkConfig(Base):
+    """
+    AIBenchmarkNetworkConfig
+      The network configuration for an AI benchmark job.
+
+    Attributes
+    ----------------------
+    vpc_config: The VPC configuration, including security group IDs and subnet IDs.
+    """
+
+    vpc_config: Optional[VpcConfig] = Unassigned()
+
+
+class AIBenchmarkOutputConfig(Base):
+    """
+    AIBenchmarkOutputConfig
+      The output configuration for an AI benchmark job.
+
+    Attributes
+    ----------------------
+    s3_output_location: The Amazon S3 URI where benchmark results are stored.
+    """
+
+    s3_output_location: str
+
+
+class AICloudWatchLogs(Base):
+    """
+    AICloudWatchLogs
+      CloudWatch log information for an AI benchmark or recommendation job.
+
+    Attributes
+    ----------------------
+    log_group_arn: The Amazon Resource Name (ARN) of the CloudWatch log group.
+    log_stream_name: The name of the CloudWatch log stream.
+    """
+
+    log_group_arn: Optional[str] = Unassigned()
+    log_stream_name: Optional[str] = Unassigned()
+
+
+class AIBenchmarkOutputResult(Base):
+    """
+    AIBenchmarkOutputResult
+      The output result of an AI benchmark job, including the Amazon S3 location and CloudWatch log information.
+
+    Attributes
+    ----------------------
+    s3_output_location: The Amazon S3 URI where benchmark results are stored.
+    cloud_watch_logs: The CloudWatch log information for the benchmark job.
+    """
+
+    s3_output_location: str
+    cloud_watch_logs: Optional[List[AICloudWatchLogs]] = Unassigned()
+
+
+class AIBenchmarkTarget(Base):
+    """
+    AIBenchmarkTarget
+      The target for an AI benchmark job. This is a union type — specify one of the members.
+
+    Attributes
+    ----------------------
+    endpoint: The SageMaker endpoint to benchmark.
+    """
+
+    endpoint: Optional[AIBenchmarkEndpoint] = Unassigned()
+
+
+class AICapacityReservationConfig(Base):
+    """
+    AICapacityReservationConfig
+      The capacity reservation configuration for an AI recommendation job.
+
+    Attributes
+    ----------------------
+    capacity_reservation_preference: The capacity reservation preference. The only valid value is capacity-reservations-only.
+    ml_reservation_arns: The list of ML reservation ARNs to use.
+    """
+
+    capacity_reservation_preference: Optional[str] = Unassigned()
+    ml_reservation_arns: Optional[List[str]] = Unassigned()
+
+
+class AIWorkloadS3DataSource(Base):
+    """
+    AIWorkloadS3DataSource
+      The Amazon S3 data source for an AI workload.
+
+    Attributes
+    ----------------------
+    s3_uri: The Amazon S3 URI of the data.
+    """
+
+    s3_uri: str
+
+
+class AIWorkloadDataSource(Base):
+    """
+    AIWorkloadDataSource
+      The data source for an AI workload input data channel.
+
+    Attributes
+    ----------------------
+    s3_data_source: The Amazon S3 data source configuration.
+    """
+
+    s3_data_source: Optional[AIWorkloadS3DataSource] = Unassigned()
+
+
+class AIWorkloadInputDataConfig(Base):
+    """
+    AIWorkloadInputDataConfig
+      A channel of input data for an AI workload configuration. Each channel has a name and a data source.
+
+    Attributes
+    ----------------------
+    channel_name: The logical name for the data channel.
+    data_source: The data source for this channel.
+    """
+
+    channel_name: str
+    data_source: AIWorkloadDataSource
+
+
+class AIDatasetConfig(Base):
+    """
+    AIDatasetConfig
+      The dataset configuration for an AI workload. This is a union type — specify one of the members.
+
+    Attributes
+    ----------------------
+    input_data_config: An array of input data channel configurations for the workload.
+    """
+
+    input_data_config: Optional[List[AIWorkloadInputDataConfig]] = Unassigned()
+
+
+class AIModelSourceS3(Base):
+    """
+    AIModelSourceS3
+      The Amazon S3 model source configuration.
+
+    Attributes
+    ----------------------
+    s3_uri: The Amazon S3 URI of the model artifacts.
+    """
+
+    s3_uri: Optional[str] = Unassigned()
+
+
+class AIModelSource(Base):
+    """
+    AIModelSource
+      The source of the model for an AI recommendation job. This is a union type.
+
+    Attributes
+    ----------------------
+    s3: The Amazon S3 location of the model artifacts.
+    """
+
+    s3: Optional[AIModelSourceS3] = Unassigned()
+
+
+class AIRecommendationOptimizationDetail(Base):
+    """
+    AIRecommendationOptimizationDetail
+      Details about an optimization technique applied in a recommendation.
+
+    Attributes
+    ----------------------
+    optimization_type: The type of optimization. Valid values are SpeculativeDecoding and KernelTuning.
+    optimization_config: A map of configuration parameters for the optimization technique.
+    """
+
+    optimization_type: str
+    optimization_config: Optional[Dict[str, str]] = Unassigned()
+
+
+class AIRecommendationInstanceDetail(Base):
+    """
+    AIRecommendationInstanceDetail
+      Instance details for a recommendation.
+
+    Attributes
+    ----------------------
+    instance_type: The recommended instance type.
+    instance_count: The recommended number of instances.
+    copy_count_per_instance: The number of model copies per instance.
+    """
+
+    instance_type: Optional[str] = Unassigned()
+    instance_count: Optional[int] = Unassigned()
+    copy_count_per_instance: Optional[int] = Unassigned()
+
+
+class AIRecommendationModelDetails(Base):
+    """
+    AIRecommendationModelDetails
+      Details about the model package in a recommendation.
+
+    Attributes
+    ----------------------
+    model_package_arn: The Amazon Resource Name (ARN) of the model package.
+    inference_specification_name: The name of the inference specification within the model package.
+    instance_details: The instance details for this recommendation, including instance type, count, and model copies per instance.
+    """
+
+    model_package_arn: Optional[str] = Unassigned()
+    inference_specification_name: Optional[str] = Unassigned()
+    instance_details: Optional[List[AIRecommendationInstanceDetail]] = Unassigned()
+
+
+class AIRecommendationDeploymentS3Channel(Base):
+    """
+    AIRecommendationDeploymentS3Channel
+      An Amazon S3 data channel for a recommended deployment configuration, containing model artifacts or optimized model outputs.
+
+    Attributes
+    ----------------------
+    channel_name: A custom name for this Amazon S3 data channel.
+    uri: The Amazon S3 URI of the data for this channel.
+    """
+
+    channel_name: Optional[str] = Unassigned()
+    uri: Optional[str] = Unassigned()
+
+
+class AIRecommendationDeploymentConfiguration(Base):
+    """
+    AIRecommendationDeploymentConfiguration
+      The deployment configuration for a recommendation.
+
+    Attributes
+    ----------------------
+    s3: The Amazon S3 data channels for the deployment.
+    image_uri: The URI of the container image for the deployment.
+    instance_type: The recommended instance type for the deployment.
+    instance_count: The recommended number of instances for the deployment.
+    copy_count_per_instance: The number of model copies per instance.
+    environment_variables: The environment variables for the deployment.
+    """
+
+    s3: Optional[List[AIRecommendationDeploymentS3Channel]] = Unassigned()
+    image_uri: Optional[str] = Unassigned()
+    instance_type: Optional[str] = Unassigned()
+    instance_count: Optional[int] = Unassigned()
+    copy_count_per_instance: Optional[int] = Unassigned()
+    environment_variables: Optional[Dict[str, str]] = Unassigned()
+
+
+class AIRecommendationPerformanceMetric(Base):
+    """
+    AIRecommendationPerformanceMetric
+      An expected performance metric for a recommendation.
+
+    Attributes
+    ----------------------
+    metric: The name of the performance metric.
+    stat: The statistical measure for the metric.
+    value: The value of the metric.
+    unit: The unit of the metric value.
+    """
+
+    metric: str
+    value: str
+    stat: Optional[str] = Unassigned()
+    unit: Optional[str] = Unassigned()
+
+
+class AIRecommendation(Base):
+    """
+    AIRecommendation
+      An optimization recommendation generated by an AI recommendation job.
+
+    Attributes
+    ----------------------
+    recommendation_description: A description of the recommendation.
+    optimization_details: The optimization techniques applied in this recommendation.
+    model_details: Details about the model package associated with this recommendation.
+    deployment_configuration: The deployment configuration for this recommendation, including the container image, instance type, instance count, and environment variables.
+    ai_benchmark_job_arn: The Amazon Resource Name (ARN) of the benchmark job associated with this recommendation.
+    expected_performance: The expected performance metrics for this recommendation.
+    """
+
+    recommendation_description: Optional[str] = Unassigned()
+    optimization_details: Optional[List[AIRecommendationOptimizationDetail]] = Unassigned()
+    model_details: Optional[AIRecommendationModelDetails] = Unassigned()
+    deployment_configuration: Optional[AIRecommendationDeploymentConfiguration] = Unassigned()
+    ai_benchmark_job_arn: Optional[str] = Unassigned()
+    expected_performance: Optional[List[AIRecommendationPerformanceMetric]] = Unassigned()
+
+
+class AIRecommendationComputeSpec(Base):
+    """
+    AIRecommendationComputeSpec
+      The compute resource specification for an AI recommendation job.
+
+    Attributes
+    ----------------------
+    instance_types: The list of instance types to consider for recommendations. You can specify up to 3 instance types.
+    capacity_reservation_config: The capacity reservation configuration.
+    """
+
+    instance_types: Optional[List[str]] = Unassigned()
+    capacity_reservation_config: Optional[AICapacityReservationConfig] = Unassigned()
+
+
+class AIRecommendationConstraint(Base):
+    """
+    AIRecommendationConstraint
+      A performance constraint for an AI recommendation job.
+
+    Attributes
+    ----------------------
+    metric: The performance metric. Valid values are ttft-ms (time to first token in milliseconds), throughput, and cost.
+    """
+
+    metric: str
+
+
+class AIRecommendationInferenceSpecification(Base):
+    """
+    AIRecommendationInferenceSpecification
+      The inference framework for an AI recommendation job.
+
+    Attributes
+    ----------------------
+    framework: The inference framework. Valid values are LMI and VLLM.
+    """
+
+    framework: Optional[str] = Unassigned()
+
+
+class AIRecommendationJobSummary(Base):
+    """
+    AIRecommendationJobSummary
+      Summary information about an AI recommendation job.
+
+    Attributes
+    ----------------------
+    ai_recommendation_job_name: The name of the recommendation job.
+    ai_recommendation_job_arn: The Amazon Resource Name (ARN) of the recommendation job.
+    ai_recommendation_job_status: The status of the recommendation job.
+    creation_time: A timestamp that indicates when the recommendation job was created.
+    end_time: A timestamp that indicates when the recommendation job completed.
+    """
+
+    ai_recommendation_job_name: str
+    ai_recommendation_job_arn: str
+    ai_recommendation_job_status: str
+    creation_time: datetime.datetime
+    end_time: Optional[datetime.datetime] = Unassigned()
+
+
+class AIRecommendationOutputConfig(Base):
+    """
+    AIRecommendationOutputConfig
+      The output configuration for an AI recommendation job.
+
+    Attributes
+    ----------------------
+    s3_output_location: The Amazon S3 URI where recommendation results are stored.
+    model_package_group_identifier: The name or Amazon Resource Name (ARN) of the model package group where the optimized model is registered as a new model package version.
+    """
+
+    s3_output_location: Optional[str] = Unassigned()
+    model_package_group_identifier: Optional[str] = Unassigned()
+
+
+class AIRecommendationOutputResult(Base):
+    """
+    AIRecommendationOutputResult
+      The output configuration for an AI recommendation job, including the S3 location for results and the model package group for deployment.
+
+    Attributes
+    ----------------------
+    s3_output_location: The Amazon S3 URI where the recommendation job writes its output results.
+    model_package_group_identifier: The name or Amazon Resource Name (ARN) of the model package group where deployment-ready model packages are registered.
+    """
+
+    s3_output_location: str
+    model_package_group_identifier: Optional[str] = Unassigned()
+
+
+class AIRecommendationPerformanceTarget(Base):
+    """
+    AIRecommendationPerformanceTarget
+      The performance targets for an AI recommendation job.
+
+    Attributes
+    ----------------------
+    constraints: An array of performance constraints that define the optimization objectives.
+    """
+
+    constraints: List[AIRecommendationConstraint]
+
+
+class AIWorkloadConfigSummary(Base):
+    """
+    AIWorkloadConfigSummary
+      Summary information about an AI workload configuration.
+
+    Attributes
+    ----------------------
+    ai_workload_config_name: The name of the AI workload configuration.
+    ai_workload_config_arn: The Amazon Resource Name (ARN) of the AI workload configuration.
+    creation_time: A timestamp that indicates when the configuration was created.
+    """
+
+    ai_workload_config_name: str
+    ai_workload_config_arn: str
+    creation_time: datetime.datetime
+
+
+class WorkloadSpec(Base):
+    """
+    WorkloadSpec
+      The workload specification for benchmark tool configuration. Provide an inline YAML or JSON string.
+
+    Attributes
+    ----------------------
+    inline: An inline YAML or JSON string that defines benchmark parameters.
+    """
+
+    inline: Optional[str] = Unassigned()
+
+
+class AIWorkloadConfigs(Base):
+    """
+    AIWorkloadConfigs
+      The benchmark tool configuration for an AI workload.
+
+    Attributes
+    ----------------------
+    workload_spec: The workload specification that defines benchmark parameters.
+    """
+
+    workload_spec: WorkloadSpec
+
+
 class AcceleratorPartitionConfig(Base):
     """
     AcceleratorPartitionConfig
@@ -635,6 +1144,21 @@ class ModelInput(Base):
     data_input_config: str
 
 
+class AdditionalModelDataSource(Base):
+    """
+    AdditionalModelDataSource
+      Data sources that are available to your model in addition to the one that you specify for ModelDataSource when you use the CreateModel action.
+
+    Attributes
+    ----------------------
+    channel_name: A custom name for this AdditionalModelDataSource object.
+    s3_data_source
+    """
+
+    channel_name: str
+    s3_data_source: S3ModelDataSource
+
+
 class AdditionalS3DataSource(Base):
     """
     AdditionalS3DataSource
@@ -689,6 +1213,7 @@ class ModelPackageContainerDefinition(Base):
     framework: The machine learning framework of the model package container image.
     framework_version: The framework version of the Model Package Container Image.
     nearest_model_name: The name of a pre-trained machine learning benchmarked by Amazon SageMaker Inference Recommender model that matches your model. You can find a list of benchmarked models by calling ListModelMetadata.
+    additional_model_data_sources: Data sources that are available to your model in addition to the one that you specify for ModelDataSource when you use the CreateModelPackage action.
     additional_s3_data_source: The additional data source that is used during inference in the Docker container for your model package.
     model_data_e_tag: The ETag associated with Model Data URL.
     is_checkpoint:  Specifies whether the model data is a training checkpoint.
@@ -706,6 +1231,7 @@ class ModelPackageContainerDefinition(Base):
     framework: Optional[str] = Unassigned()
     framework_version: Optional[str] = Unassigned()
     nearest_model_name: Optional[str] = Unassigned()
+    additional_model_data_sources: Optional[List[AdditionalModelDataSource]] = Unassigned()
     additional_s3_data_source: Optional[AdditionalS3DataSource] = Unassigned()
     model_data_e_tag: Optional[str] = Unassigned()
     is_checkpoint: Optional[bool] = Unassigned()
@@ -735,21 +1261,6 @@ class AdditionalInferenceSpecificationDefinition(Base):
     supported_realtime_inference_instance_types: Optional[List[str]] = Unassigned()
     supported_content_types: Optional[List[str]] = Unassigned()
     supported_response_mime_types: Optional[List[str]] = Unassigned()
-
-
-class AdditionalModelDataSource(Base):
-    """
-    AdditionalModelDataSource
-      Data sources that are available to your model in addition to the one that you specify for ModelDataSource when you use the CreateModel action.
-
-    Attributes
-    ----------------------
-    channel_name: A custom name for this AdditionalModelDataSource object.
-    s3_data_source
-    """
-
-    channel_name: str
-    s3_data_source: S3ModelDataSource
 
 
 class AgentVersion(Base):
@@ -2105,21 +2616,6 @@ class AutoMLJobCompletionCriteria(Base):
     max_candidates: Optional[int] = Unassigned()
     max_runtime_per_training_job_in_seconds: Optional[int] = Unassigned()
     max_auto_ml_job_runtime_in_seconds: Optional[int] = Unassigned()
-
-
-class VpcConfig(Base):
-    """
-    VpcConfig
-      Specifies an Amazon Virtual Private Cloud (VPC) that your SageMaker jobs, hosted models, and compute resources have access to. You can control access to and from your resources by configuring a VPC. For more information, see Give SageMaker Access to Resources in your Amazon VPC.
-
-    Attributes
-    ----------------------
-    security_group_ids: The VPC security group IDs, in the form sg-xxxxxxxx. Specify the security groups for the VPC that is specified in the Subnets field.
-    subnets: The ID of the subnets in the VPC to which you want to connect your training job or model. For information about the availability of specific instance types, see Supported Instance Types and Availability Zones.
-    """
-
-    security_group_ids: List[str]
-    subnets: List[str]
 
 
 class AutoMLSecurityConfig(Base):
@@ -4547,13 +5043,13 @@ class ClusterRestrictedInstanceGroupSpecification(Base):
     instance_group_name: str
     instance_type: str
     execution_role: str
-    environment_config: EnvironmentConfig
     threads_per_core: Optional[int] = Unassigned()
     instance_storage_configs: Optional[List[ClusterInstanceStorageConfig]] = Unassigned()
     on_start_deep_health_checks: Optional[List[str]] = Unassigned()
     training_plan_arn: Optional[str] = Unassigned()
     override_vpc_config: Optional[VpcConfig] = Unassigned()
     scheduled_update_config: Optional[ScheduledUpdateConfig] = Unassigned()
+    environment_config: Optional[EnvironmentConfig] = Unassigned()
 
 
 class ClusterSchedulerConfigSummary(Base):
@@ -6109,6 +6605,23 @@ class DeploymentStage(Base):
     deployment_config: Optional[EdgeDeploymentConfig] = Unassigned()
 
 
+class InstancePool(Base):
+    """
+    InstancePool
+      Specifies an instance type and its priority for a heterogeneous endpoint. Use instance pools to configure a production variant with multiple instance types, enabling the endpoint to provision instances across different types based on priority.
+
+    Attributes
+    ----------------------
+    instance_type: The ML compute instance type for the instance pool.
+    model_name_override: The name of a SageMaker model to use for this instance pool instead of the model specified for the production variant. Use this to deploy a different model optimized for the instance type in this pool.
+    priority: The priority for the instance pool. SageMaker attempts to provision instances in order of priority, starting with the lowest value. If instances for a higher-priority pool are unavailable, SageMaker attempts to provision from the next pool. Valid values: 1 to 5, where 1 is the highest priority.
+    """
+
+    instance_type: str
+    priority: int
+    model_name_override: Optional[str] = Unassigned()
+
+
 class ProductionVariantCoreDumpConfig(Base):
     """
     ProductionVariantCoreDumpConfig
@@ -6216,6 +6729,8 @@ class ProductionVariant(Base):
     model_name: The name of the model that you want to host. This is the name that you specified when creating the model.
     initial_instance_count: Number of instances to launch initially.
     instance_type: The ML compute instance type.
+    instance_pools: A list of instance pools for the production variant. Each instance pool specifies an instance type and its priority for provisioning. Use instance pools to configure heterogeneous endpoints that deploy models across multiple instance types.
+    variant_instance_provision_timeout_in_seconds: The timeout value, in seconds, for provisioning instances for the production variant. When SageMaker encounters an insufficient capacity error while provisioning instances, it retries with the next instance pool (if configured) or waits until the timeout expires. This timeout applies only to capacity provisioning and does not include the time for model download or container startup. Valid values: 300 to 3600.
     initial_variant_weight: Determines initial traffic distribution among all of the models that you specify in the endpoint configuration. The traffic to a production variant is determined by the ratio of the VariantWeight to the sum of all VariantWeight values across all ProductionVariants. If unspecified, it defaults to 1.0.
     accelerator_type: This parameter is no longer supported. Elastic Inference (EI) is no longer available. This parameter was used to specify the size of the EI instance to use for the production variant.
     core_dump_config: Specifies configuration for a core dump from the model container when the process crashes.
@@ -6234,6 +6749,8 @@ class ProductionVariant(Base):
     model_name: Optional[Union[str, object]] = Unassigned()
     initial_instance_count: Optional[int] = Unassigned()
     instance_type: Optional[str] = Unassigned()
+    instance_pools: Optional[List[InstancePool]] = Unassigned()
+    variant_instance_provision_timeout_in_seconds: Optional[int] = Unassigned()
     initial_variant_weight: Optional[float] = Unassigned()
     accelerator_type: Optional[str] = Unassigned()
     core_dump_config: Optional[ProductionVariantCoreDumpConfig] = Unassigned()
@@ -6291,8 +6808,8 @@ class MetricsConfig(Base):
 
     Attributes
     ----------------------
-    enable_enhanced_metrics: Specifies whether to enable enhanced metrics for the endpoint. Enhanced metrics provide utilization data at instance and container granularity. Container granularity is supported for Inference Components. The default is False.
-    metric_publish_frequency_in_seconds: The frequency, in seconds, at which utilization metrics are published to Amazon CloudWatch. The default is 60 seconds.
+    enable_enhanced_metrics: Specifies whether to enable enhanced metrics for the endpoint. Enhanced metrics provide utilization and invocation data at instance and container granularity. Container granularity is supported for Inference Components. The default is False.
+    metric_publish_frequency_in_seconds: The interval, in seconds, at which metrics are published to Amazon CloudWatch. Defaults to 60. Valid values: 10, 30, 60, 120, 180, 240, 300. When EnableEnhancedMetrics is set to False, this interval applies to utilization metrics only; invocation metrics continue to be published at the default 60-second interval. When EnableEnhancedMetrics is set to True, this interval applies to both utilization and invocation metrics.
     """
 
     enable_enhanced_metrics: Optional[bool] = Unassigned()
@@ -6428,8 +6945,8 @@ class OfflineStoreConfig(Base):
     Attributes
     ----------------------
     s3_storage_config: The Amazon Simple Storage (Amazon S3) location of OfflineStore.
-    disable_glue_table_creation: Set to True to disable the automatic creation of an Amazon Web Services Glue table when configuring an OfflineStore. If set to False, Feature Store will name the OfflineStore Glue table following Athena's naming recommendations. The default value is False.
-    data_catalog_config: The meta data of the Glue table that is autogenerated when an OfflineStore is created.
+    disable_glue_table_creation: Set to True to disable the automatic creation of an Amazon Web Services Glue table when configuring an OfflineStore. If set to True and DataCatalogConfig is provided, Feature Store associates the provided catalog configuration with the feature group without creating a table. In this case, you are responsible for creating and managing the Glue table. If set to True without DataCatalogConfig, no Glue table is created or associated with the feature group. The Iceberg table format is only supported when this is set to False. If set to False and DataCatalogConfig is provided, Feature Store creates the table using the specified names. If set to False without DataCatalogConfig, Feature Store auto-generates the table name following Athena's naming recommendations. This applies to both Glue and Apache Iceberg table formats. The default value is False.
+    data_catalog_config: The meta data of the Glue table for the OfflineStore. If not provided, Feature Store auto-generates the table name, database, and catalog when the OfflineStore is created. You can optionally provide this configuration to specify custom values. This applies to both Glue and Apache Iceberg table formats.
     table_format: Format for the offline store table. Supported formats are Glue (Default) and Apache Iceberg.
     """
 
@@ -6987,6 +7504,7 @@ class InferenceComponentSpecification(Base):
 
     Attributes
     ----------------------
+    instance_type: The ML compute instance type for the inference component specification. Specifies which instance type this specification applies to. Required when using the Specifications parameter with multiple entries.
     model_name: The name of an existing SageMaker AI model object in your account that you want to deploy with the inference component.
     container: Defines a container that provides the runtime environment for a model that you deploy with an inference component.
     startup_parameters: Settings that take effect while the model container starts up.
@@ -6996,6 +7514,7 @@ class InferenceComponentSpecification(Base):
     scheduling_config: The scheduling configuration that determines how inference component copies are placed across available instances when copies are added or removed.
     """
 
+    instance_type: Optional[str] = Unassigned()
     model_name: Optional[Union[str, object]] = Unassigned()
     container: Optional[InferenceComponentContainerSpecification] = Unassigned()
     startup_parameters: Optional[InferenceComponentStartupParameters] = Unassigned()
@@ -9620,6 +10139,21 @@ class EdgePresetDeploymentOutput(Base):
     status_message: Optional[str] = Unassigned()
 
 
+class InstancePoolSummary(Base):
+    """
+    InstancePoolSummary
+      A summary of an instance pool for a production variant, including the instance type and the current number of instances.
+
+    Attributes
+    ----------------------
+    instance_type: The ML compute instance type for the instance pool.
+    current_instance_count: The current number of instances of this type in the instance pool.
+    """
+
+    instance_type: str
+    current_instance_count: int
+
+
 class ProductionVariantStatus(Base):
     """
     ProductionVariantStatus
@@ -9692,6 +10226,7 @@ class ProductionVariantSummary(Base):
     desired_weight: The requested weight, as specified in the UpdateEndpointWeightsAndCapacities request.
     current_instance_count: The number of instances associated with the variant.
     desired_instance_count: The number of instances requested in the UpdateEndpointWeightsAndCapacities request.
+    instance_pools: A list of instance pools for the production variant. Each pool indicates the instance type and the current number of instances of that type.
     variant_status: The endpoint variant status which describes the current deployment stage status or operational status.
     current_serverless_config: The serverless configuration for the endpoint.
     desired_serverless_config: The serverless configuration requested for the endpoint update.
@@ -9706,6 +10241,7 @@ class ProductionVariantSummary(Base):
     desired_weight: Optional[float] = Unassigned()
     current_instance_count: Optional[int] = Unassigned()
     desired_instance_count: Optional[int] = Unassigned()
+    instance_pools: Optional[List[InstancePoolSummary]] = Unassigned()
     variant_status: Optional[List[ProductionVariantStatus]] = Unassigned()
     current_serverless_config: Optional[ProductionVariantServerlessConfig] = Unassigned()
     desired_serverless_config: Optional[ProductionVariantServerlessConfig] = Unassigned()
@@ -9730,6 +10266,7 @@ class PendingProductionVariantSummary(Base):
     current_instance_count: The number of instances associated with the variant.
     desired_instance_count: The number of instances requested in this deployment, as specified in the endpoint configuration for the endpoint. The value is taken from the request to the CreateEndpointConfig operation.
     instance_type: The type of instances associated with the variant.
+    instance_pools: A list of instance pools for the production variant. Each pool indicates the instance type and the current number of instances of that type.
     accelerator_type: This parameter is no longer supported. Elastic Inference (EI) is no longer available. This parameter was used to specify the size of the EI instance to use for the production variant.
     variant_status: The endpoint variant status which describes the current deployment stage status or operational status.
     current_serverless_config: The serverless configuration for the endpoint.
@@ -9745,6 +10282,7 @@ class PendingProductionVariantSummary(Base):
     current_instance_count: Optional[int] = Unassigned()
     desired_instance_count: Optional[int] = Unassigned()
     instance_type: Optional[str] = Unassigned()
+    instance_pools: Optional[List[InstancePoolSummary]] = Unassigned()
     accelerator_type: Optional[str] = Unassigned()
     variant_status: Optional[List[ProductionVariantStatus]] = Unassigned()
     current_serverless_config: Optional[ProductionVariantServerlessConfig] = Unassigned()
@@ -10036,6 +10574,7 @@ class InferenceComponentSpecificationSummary(Base):
 
     Attributes
     ----------------------
+    instance_type: The ML compute instance type associated with this inference component specification.
     model_name: The name of the SageMaker AI model object that is deployed with the inference component.
     container: Details about the container that provides the runtime environment for the model that is deployed with the inference component.
     startup_parameters: Settings that take effect while the model container starts up.
@@ -10045,6 +10584,7 @@ class InferenceComponentSpecificationSummary(Base):
     scheduling_config: The scheduling configuration that determines how inference component copies are placed across available instances when copies are added or removed.
     """
 
+    instance_type: Optional[str] = Unassigned()
     model_name: Optional[Union[str, object]] = Unassigned()
     container: Optional[InferenceComponentContainerSpecificationSummary] = Unassigned()
     startup_parameters: Optional[InferenceComponentStartupParameters] = Unassigned()
@@ -10056,6 +10596,21 @@ class InferenceComponentSpecificationSummary(Base):
     scheduling_config: Optional[InferenceComponentSchedulingConfig] = Unassigned()
 
 
+class InferenceComponentPlacementStatus(Base):
+    """
+    InferenceComponentPlacementStatus
+      The placement status of an inference component on a specific instance type. Shows the number of inference component copies currently placed on instances of a given type.
+
+    Attributes
+    ----------------------
+    instance_type: The ML compute instance type where the inference component copies are placed.
+    current_copy_count: The number of inference component copies currently placed on instances of this type.
+    """
+
+    instance_type: str
+    current_copy_count: int
+
+
 class InferenceComponentRuntimeConfigSummary(Base):
     """
     InferenceComponentRuntimeConfigSummary
@@ -10065,10 +10620,12 @@ class InferenceComponentRuntimeConfigSummary(Base):
     ----------------------
     desired_copy_count: The number of runtime copies of the model container that you requested to deploy with the inference component.
     current_copy_count: The number of runtime copies of the model container that are currently deployed.
+    placement_status: The placement status of the inference component across instance types. Shows how the inference component copies are distributed across instance types.
     """
 
     desired_copy_count: Optional[int] = Unassigned()
     current_copy_count: Optional[int] = Unassigned()
+    placement_status: Optional[List[InferenceComponentPlacementStatus]] = Unassigned()
 
 
 class InferenceComponentCapacitySize(Base):
