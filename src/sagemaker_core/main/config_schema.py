@@ -16,6 +16,33 @@ SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA = {
                         "Resources": {
                             "type": "object",
                             "properties": {
+                                "AIBenchmarkJob": {
+                                    "type": "object",
+                                    "properties": {
+                                        "output_config": {"s3_output_location": {"type": "string"}},
+                                        "role_arn": {"type": "string"},
+                                        "network_config": {
+                                            "vpc_config": {
+                                                "security_group_ids": {
+                                                    "type": "array",
+                                                    "items": {"type": "string"},
+                                                },
+                                                "subnets": {
+                                                    "type": "array",
+                                                    "items": {"type": "string"},
+                                                },
+                                            }
+                                        },
+                                    },
+                                },
+                                "AIRecommendationJob": {
+                                    "type": "object",
+                                    "properties": {
+                                        "model_source": {"s3": {"s3_uri": {"type": "string"}}},
+                                        "output_config": {"s3_output_location": {"type": "string"}},
+                                        "role_arn": {"type": "string"},
+                                    },
+                                },
                                 "Algorithm": {
                                     "type": "object",
                                     "properties": {
@@ -234,6 +261,11 @@ SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA = {
                                                     },
                                                 }
                                             },
+                                            "studio_web_portal_settings": {
+                                                "execution_role_session_name_mode": {
+                                                    "type": "string"
+                                                }
+                                            },
                                         },
                                         "domain_settings": {
                                             "security_group_ids": {
@@ -421,6 +453,10 @@ SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA = {
                                             },
                                         },
                                     },
+                                },
+                                "Job": {
+                                    "type": "object",
+                                    "properties": {"role_arn": {"type": "string"}},
                                 },
                                 "LabelingJob": {
                                     "type": "object",
@@ -902,6 +938,11 @@ SAGEMAKER_PYTHON_SDK_CONFIG_SCHEMA = {
                                                         "type": "array",
                                                         "items": {"type": "string"},
                                                     },
+                                                }
+                                            },
+                                            "studio_web_portal_settings": {
+                                                "execution_role_session_name_mode": {
+                                                    "type": "string"
                                                 }
                                             },
                                         }
