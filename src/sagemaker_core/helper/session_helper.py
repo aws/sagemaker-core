@@ -334,6 +334,14 @@ class Session(object):  # pylint: disable=too-many-public-methods
             bucket=bucket, key_prefix=key_prefix, sagemaker_session=self
         )
 
+        # If the destination is the SDK-generated default bucket, assert ownership on every
+        # upload so that a bucket squatted under the predictable default name is rejected by S3.
+        # Other buckets are left untouched to preserve cross-account flows.
+        expected_owner = self._get_account_id_if_default_bucket(bucket)
+        if expected_owner:
+            extra_args = dict(extra_args) if extra_args else {}
+            extra_args["ExpectedBucketOwner"] = expected_owner
+
         # Generate a tuple for each file that we want to upload of the form (local_path, s3_key).
         files = []
         key_suffix = None
@@ -385,8 +393,15 @@ class Session(object):  # pylint: disable=too-many-public-methods
         else:
             s3 = self.s3_client
 
+        # Assert ownership only when reading from the SDK-generated default bucket. Other
+        # buckets (e.g. JumpStart or shared buckets) are read without ExpectedBucketOwner.
+        get_kwargs = {"Bucket": bucket, "Key": key_prefix}
+        expected_owner = self._get_account_id_if_default_bucket(bucket)
+        if expected_owner:
+            get_kwargs["ExpectedBucketOwner"] = expected_owner
+
         # Explicitly passing a None kms_key to boto3 throws a validation error.
-        s3_object = s3.get_object(Bucket=bucket, Key=key_prefix)
+        s3_object = s3.get_object(**get_kwargs)
 
         return s3_object["Body"].read().decode("utf-8")
 
@@ -442,6 +457,10 @@ class Session(object):  # pylint: disable=too-many-public-methods
             s3 = self.s3_resource
 
         bucket = s3.Bucket(name=bucket_name)
+        # ``creation_date`` is populated from ListBuckets, which only returns buckets owned by
+        # the caller. A bucket squatted by another account under the SDK-generated name therefore
+        # takes this first branch, so the ownership check must happen inside
+        # ``general_bucket_check_if_user_has_permission`` and not only in the ``elif`` below.
         if bucket.creation_date is None:
             self.general_bucket_check_if_user_has_permission(bucket_name, s3, bucket, region, True)
 
@@ -487,27 +506,47 @@ class Session(object):  # pylint: disable=too-many-public-methods
         If there is any other error that comes up with calling head bucket, it is raised up here
         If there is no bucket , it will create one
 
+        When the SDK generated the bucket name itself (``_default_bucket_set_by_sdk`` is True),
+        the probe is sent with ``ExpectedBucketOwner`` set to the caller's account id, so S3
+        returns ``403`` if a bucket with that name exists in another account (bucket-squatting
+        defense). User-supplied bucket names are probed without ``ExpectedBucketOwner`` to
+        preserve legitimate cross-account usage.
+
         Args:
             bucket_name (str): Name of the S3 bucket
             s3 (str): S3 object from boto session
             region (str): The region in which to create the bucket.
             bucket_creation_date_none (bool):Indicating whether S3 bucket already exists or not
         """
+        head_bucket_kwargs = {"Bucket": bucket_name}
+        if self._default_bucket_set_by_sdk:
+            head_bucket_kwargs["ExpectedBucketOwner"] = self.account_id()
+
         try:
-            s3.meta.client.head_bucket(Bucket=bucket_name)
+            s3.meta.client.head_bucket(**head_bucket_kwargs)
         except ClientError as e:
             error_code = e.response["Error"]["Code"]
             message = e.response["Error"]["Message"]
-            # bucket does not exist or forbidden to access
+            # bucket does not exist, is owned by another account, or is forbidden to access
             if bucket_creation_date_none:
                 if error_code == "404" and message == "Not Found":
                     self.create_bucket_for_not_exist_error(bucket_name, region, s3)
                 elif error_code == "403" and message == "Forbidden":
-                    LOGGER.error(
-                        "Bucket %s exists, but access is forbidden. Please try again after "
-                        "adding appropriate access.",
-                        bucket.name,
-                    )
+                    if self._default_bucket_set_by_sdk:
+                        LOGGER.error(
+                            "Since default_bucket param was not set, SageMaker Python SDK tried "
+                            "to use %s bucket. This bucket cannot be used as it is not owned by "
+                            "Account %s, or access is forbidden. To unblock, pass a custom "
+                            "default_bucket parameter to Session.",
+                            bucket.name,
+                            head_bucket_kwargs["ExpectedBucketOwner"],
+                        )
+                    else:
+                        LOGGER.error(
+                            "Bucket %s exists, but access is forbidden. Please try again after "
+                            "adding appropriate access.",
+                            bucket.name,
+                        )
                     raise
                 else:
                     raise
@@ -555,6 +594,30 @@ class Session(object):  # pylint: disable=too-many-public-methods
             "sts", region_name=region, endpoint_url=sts_regional_endpoint(region)
         ).get_caller_identity()["Account"]
         return "sagemaker-{}-{}".format(region, account)
+
+    def _get_account_id_if_default_bucket(self, bucket):
+        """Return the caller's account id if ``bucket`` is the SDK-generated default bucket.
+
+        S3 operations that receive a bucket name use this to decide whether to send
+        ``ExpectedBucketOwner``. It returns an account id only when the SDK generated the
+        default bucket name itself (``sagemaker-{region}-{account}``) and ``bucket`` matches it.
+        For any other bucket, including a user-supplied ``default_bucket`` (which may
+        legitimately live in another account), it returns ``None`` so the call is unchanged.
+
+        This check is passive: it does not trigger default-bucket resolution or creation.
+        If :func:`default_bucket` has not been called yet, this returns ``None``.
+
+        Args:
+            bucket (str): The bucket name the caller is about to use.
+
+        Returns:
+            Optional[str]: The expected account id, or ``None`` if the check does not apply.
+        """
+        if not bucket or not self._default_bucket_set_by_sdk:
+            return None
+        if self._default_bucket and bucket == self._default_bucket:
+            return self.account_id()
+        return None
 
     def determine_bucket_and_prefix(
         self, bucket: Optional[str] = None, key_prefix: Optional[str] = None, sagemaker_session=None
