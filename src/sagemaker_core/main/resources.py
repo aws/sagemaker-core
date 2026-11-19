@@ -142,6 +142,1148 @@ class Base(BaseModel):
         return wrapper
 
 
+class AIBenchmarkJob(Base):
+    """
+    Class representing resource AIBenchmarkJob
+
+    Attributes:
+        ai_benchmark_job_name: The name of the AI benchmark job.
+        ai_benchmark_job_arn: The Amazon Resource Name (ARN) of the AI benchmark job.
+        ai_benchmark_job_status: The status of the AI benchmark job.
+        benchmark_target: The target endpoint that was benchmarked.
+        output_config: The output configuration for the benchmark job, including the Amazon S3 output location and CloudWatch log information.
+        ai_workload_config_identifier: The name or Amazon Resource Name (ARN) of the AI workload configuration used for this benchmark job.
+        role_arn: The Amazon Resource Name (ARN) of the IAM role used by the benchmark job.
+        creation_time: A timestamp that indicates when the benchmark job was created.
+        failure_reason: If the benchmark job failed, the reason it failed.
+        network_config: The network configuration for the benchmark job.
+        start_time: A timestamp that indicates when the benchmark job started running.
+        end_time: A timestamp that indicates when the benchmark job completed.
+        tags: The tags associated with the benchmark job.
+
+    """
+
+    ai_benchmark_job_name: str
+    ai_benchmark_job_arn: Optional[str] = Unassigned()
+    ai_benchmark_job_status: Optional[str] = Unassigned()
+    failure_reason: Optional[str] = Unassigned()
+    benchmark_target: Optional[shapes.AIBenchmarkTarget] = Unassigned()
+    output_config: Optional[shapes.AIBenchmarkOutputResult] = Unassigned()
+    ai_workload_config_identifier: Optional[str] = Unassigned()
+    role_arn: Optional[str] = Unassigned()
+    network_config: Optional[shapes.AIBenchmarkNetworkConfig] = Unassigned()
+    creation_time: Optional[datetime.datetime] = Unassigned()
+    start_time: Optional[datetime.datetime] = Unassigned()
+    end_time: Optional[datetime.datetime] = Unassigned()
+    tags: Optional[List[shapes.Tag]] = Unassigned()
+
+    def get_name(self) -> str:
+        attributes = vars(self)
+        resource_name = "ai_benchmark_job_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
+        for attribute, value in attributes.items():
+            if attribute == "name" or attribute in attribute_name_candidates:
+                return value
+        logger.error("Name attribute not found for object ai_benchmark_job")
+        return None
+
+    @classmethod
+    @Base.add_validate_call
+    def create(
+        cls,
+        ai_benchmark_job_name: str,
+        benchmark_target: shapes.AIBenchmarkTarget,
+        output_config: shapes.AIBenchmarkOutputConfig,
+        ai_workload_config_identifier: str,
+        role_arn: str,
+        network_config: Optional[shapes.AIBenchmarkNetworkConfig] = Unassigned(),
+        tags: Optional[List[shapes.Tag]] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional["AIBenchmarkJob"]:
+        """
+        Create a AIBenchmarkJob resource
+
+        Parameters:
+            ai_benchmark_job_name: The name of the AI benchmark job. The name must be unique within your Amazon Web Services account in the current Amazon Web Services Region.
+            benchmark_target: The target endpoint to benchmark. Specify a SageMaker endpoint by providing its name or Amazon Resource Name (ARN).
+            output_config: The output configuration for the benchmark job, including the Amazon S3 location where benchmark results are stored.
+            ai_workload_config_identifier: The name or Amazon Resource Name (ARN) of the AI workload configuration to use for this benchmark job.
+            role_arn: The Amazon Resource Name (ARN) of an IAM role that enables Amazon SageMaker AI to perform tasks on your behalf.
+            network_config: The network configuration for the benchmark job, including VPC settings.
+            tags: The metadata that you apply to Amazon Web Services resources to help you categorize and organize them. Each tag consists of a key and a value, both of which you define.
+            session: Boto3 session.
+            region: Region name.
+
+        Returns:
+            The AIBenchmarkJob resource.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceInUse: Resource being accessed is in use.
+            ResourceLimitExceeded: You have exceeded an SageMaker resource limit. For example, you might have too many training jobs created.
+            ResourceNotFound: Resource being access is not found.
+            ConfigSchemaValidationError: Raised when a configuration file does not adhere to the schema
+            LocalConfigNotFoundError: Raised when a configuration file is not found in local file system
+            S3ConfigNotFoundError: Raised when a configuration file is not found in S3
+        """
+
+        logger.info("Creating ai_benchmark_job resource.")
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
+
+        operation_input_args = {
+            "AIBenchmarkJobName": ai_benchmark_job_name,
+            "BenchmarkTarget": benchmark_target,
+            "OutputConfig": output_config,
+            "AIWorkloadConfigIdentifier": ai_workload_config_identifier,
+            "RoleArn": role_arn,
+            "NetworkConfig": network_config,
+            "Tags": tags,
+        }
+
+        operation_input_args = Base.populate_chained_attributes(
+            resource_name="AIBenchmarkJob", operation_input_args=operation_input_args
+        )
+
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+
+        # create the resource
+        response = client.create_ai_benchmark_job(**operation_input_args)
+        logger.debug(f"Response: {response}")
+
+        return cls.get(ai_benchmark_job_name=ai_benchmark_job_name, session=session, region=region)
+
+    @classmethod
+    @Base.add_validate_call
+    def get(
+        cls,
+        ai_benchmark_job_name: str,
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional["AIBenchmarkJob"]:
+        """
+        Get a AIBenchmarkJob resource
+
+        Parameters:
+            ai_benchmark_job_name: The name of the AI benchmark job to describe.
+            session: Boto3 session.
+            region: Region name.
+
+        Returns:
+            The AIBenchmarkJob resource.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceNotFound: Resource being access is not found.
+        """
+
+        operation_input_args = {
+            "AIBenchmarkJobName": ai_benchmark_job_name,
+        }
+        # serialize the input request
+        operation_input_args = serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
+        response = client.describe_ai_benchmark_job(**operation_input_args)
+
+        logger.debug(response)
+
+        # deserialize the response
+        transformed_response = transform(response, "DescribeAIBenchmarkJobResponse")
+        ai_benchmark_job = cls(**transformed_response)
+        return ai_benchmark_job
+
+    @Base.add_validate_call
+    def refresh(
+        self,
+    ) -> Optional["AIBenchmarkJob"]:
+        """
+        Refresh a AIBenchmarkJob resource
+
+        Returns:
+            The AIBenchmarkJob resource.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceNotFound: Resource being access is not found.
+        """
+
+        operation_input_args = {
+            "AIBenchmarkJobName": self.ai_benchmark_job_name,
+        }
+        # serialize the input request
+        operation_input_args = serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+
+        client = Base.get_sagemaker_client()
+        response = client.describe_ai_benchmark_job(**operation_input_args)
+
+        # deserialize response and update self
+        transform(response, "DescribeAIBenchmarkJobResponse", self)
+        return self
+
+    @Base.add_validate_call
+    def delete(
+        self,
+    ) -> None:
+        """
+        Delete a AIBenchmarkJob resource
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceNotFound: Resource being access is not found.
+        """
+
+        client = Base.get_sagemaker_client()
+
+        operation_input_args = {
+            "AIBenchmarkJobName": self.ai_benchmark_job_name,
+        }
+        # serialize the input request
+        operation_input_args = serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+
+        client.delete_ai_benchmark_job(**operation_input_args)
+
+        logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+
+    @Base.add_validate_call
+    def stop(self) -> None:
+        """
+        Stop a AIBenchmarkJob resource
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceNotFound: Resource being access is not found.
+        """
+
+        client = SageMakerClient().client
+
+        operation_input_args = {
+            "AIBenchmarkJobName": self.ai_benchmark_job_name,
+        }
+        # serialize the input request
+        operation_input_args = serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+
+        client.stop_ai_benchmark_job(**operation_input_args)
+
+        logger.info(f"Stopping {self.__class__.__name__} - {self.get_name()}")
+
+    @Base.add_validate_call
+    def wait(
+        self,
+        poll: int = 5,
+        timeout: Optional[int] = None,
+    ) -> None:
+        """
+        Wait for a AIBenchmarkJob resource.
+
+        Parameters:
+            poll: The number of seconds to wait between each poll.
+            timeout: The maximum number of seconds to wait before timing out.
+
+        Raises:
+            TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
+            FailedStatusError:   If the resource reaches a failed state.
+            WaiterError: Raised when an error occurs while waiting.
+
+        """
+        terminal_states = ["Completed", "Failed", "Stopped"]
+        start_time = time.time()
+
+        progress = Progress(
+            SpinnerColumn("bouncingBar"),
+            TextColumn("{task.description}"),
+            TimeElapsedColumn(),
+        )
+        progress.add_task("Waiting for AIBenchmarkJob...")
+        status = Status("Current status:")
+
+        with Live(
+            Panel(
+                Group(progress, status),
+                title="Wait Log Panel",
+                border_style=Style(color=Color.BLUE.value),
+            ),
+            transient=True,
+        ):
+            while True:
+                self.refresh()
+                current_status = self.ai_benchmark_job_status
+                status.update(f"Current status: [bold]{current_status}")
+
+                if current_status in terminal_states:
+                    logger.info(f"Final Resource Status: [bold]{current_status}")
+
+                    if "failed" in current_status.lower():
+                        raise FailedStatusError(
+                            resource_type="AIBenchmarkJob",
+                            status=current_status,
+                            reason=self.failure_reason,
+                        )
+
+                    return
+
+                if timeout is not None and time.time() - start_time >= timeout:
+                    raise TimeoutExceededError(resouce_type="AIBenchmarkJob", status=current_status)
+                time.sleep(poll)
+
+    @classmethod
+    @Base.add_validate_call
+    def get_all(
+        cls,
+        name_contains: Optional[str] = Unassigned(),
+        status_equals: Optional[str] = Unassigned(),
+        creation_time_after: Optional[datetime.datetime] = Unassigned(),
+        creation_time_before: Optional[datetime.datetime] = Unassigned(),
+        sort_by: Optional[str] = Unassigned(),
+        sort_order: Optional[str] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> ResourceIterator["AIBenchmarkJob"]:
+        """
+        Get all AIBenchmarkJob resources
+
+        Parameters:
+            max_results: The maximum number of benchmark jobs to return in the response.
+            next_token: If the previous call to ListAIBenchmarkJobs didn't return the full set of jobs, the call returns a token for getting the next set.
+            name_contains: A string in the job name. This filter returns only jobs whose name contains the specified string.
+            status_equals: A filter that returns only benchmark jobs with the specified status.
+            creation_time_after: A filter that returns only jobs created after the specified time.
+            creation_time_before: A filter that returns only jobs created before the specified time.
+            sort_by: The field to sort results by. The default is CreationTime.
+            sort_order: The sort order for results. The default is Descending.
+            session: Boto3 session.
+            region: Region name.
+
+        Returns:
+            Iterator for listed AIBenchmarkJob resources.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+        """
+
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
+
+        operation_input_args = {
+            "NameContains": name_contains,
+            "StatusEquals": status_equals,
+            "CreationTimeAfter": creation_time_after,
+            "CreationTimeBefore": creation_time_before,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
+        }
+
+        # serialize the input request
+        operation_input_args = serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+
+        return ResourceIterator(
+            client=client,
+            list_method="list_ai_benchmark_jobs",
+            summaries_key="AIBenchmarkJobs",
+            summary_name="AIBenchmarkJobSummary",
+            resource_cls=AIBenchmarkJob,
+            list_method_kwargs=operation_input_args,
+        )
+
+
+class AIRecommendationJob(Base):
+    """
+    Class representing resource AIRecommendationJob
+
+    Attributes:
+        ai_recommendation_job_name: The name of the AI recommendation job.
+        ai_recommendation_job_arn: The Amazon Resource Name (ARN) of the AI recommendation job.
+        ai_recommendation_job_status: The status of the AI recommendation job.
+        model_source: The source of the model that was analyzed.
+        output_config: The output configuration for the recommendation job.
+        ai_workload_config_identifier: The name or Amazon Resource Name (ARN) of the AI workload configuration used for this recommendation job.
+        role_arn: The Amazon Resource Name (ARN) of the IAM role used by the recommendation job.
+        creation_time: A timestamp that indicates when the recommendation job was created.
+        failure_reason: If the recommendation job failed, the reason it failed.
+        inference_specification: The inference framework configuration.
+        optimize_model: Whether model optimization techniques were allowed.
+        performance_target: The performance targets specified for the recommendation job.
+        recommendations: The list of optimization recommendations generated by the job. Each recommendation includes optimization details, deployment configuration, expected performance metrics, and the associated benchmark job ARN.
+        compute_spec: The compute resource specification for the recommendation job.
+        start_time: A timestamp that indicates when the recommendation job started running.
+        end_time: A timestamp that indicates when the recommendation job completed.
+        tags: The tags associated with the recommendation job.
+
+    """
+
+    ai_recommendation_job_name: str
+    ai_recommendation_job_arn: Optional[str] = Unassigned()
+    ai_recommendation_job_status: Optional[str] = Unassigned()
+    failure_reason: Optional[str] = Unassigned()
+    model_source: Optional[shapes.AIModelSource] = Unassigned()
+    output_config: Optional[shapes.AIRecommendationOutputResult] = Unassigned()
+    inference_specification: Optional[shapes.AIRecommendationInferenceSpecification] = Unassigned()
+    ai_workload_config_identifier: Optional[str] = Unassigned()
+    optimize_model: Optional[bool] = Unassigned()
+    performance_target: Optional[shapes.AIRecommendationPerformanceTarget] = Unassigned()
+    recommendations: Optional[List[shapes.AIRecommendation]] = Unassigned()
+    role_arn: Optional[str] = Unassigned()
+    compute_spec: Optional[shapes.AIRecommendationComputeSpec] = Unassigned()
+    creation_time: Optional[datetime.datetime] = Unassigned()
+    start_time: Optional[datetime.datetime] = Unassigned()
+    end_time: Optional[datetime.datetime] = Unassigned()
+    tags: Optional[List[shapes.Tag]] = Unassigned()
+
+    def get_name(self) -> str:
+        attributes = vars(self)
+        resource_name = "ai_recommendation_job_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
+        for attribute, value in attributes.items():
+            if attribute == "name" or attribute in attribute_name_candidates:
+                return value
+        logger.error("Name attribute not found for object ai_recommendation_job")
+        return None
+
+    @classmethod
+    @Base.add_validate_call
+    def create(
+        cls,
+        ai_recommendation_job_name: str,
+        model_source: shapes.AIModelSource,
+        output_config: shapes.AIRecommendationOutputConfig,
+        ai_workload_config_identifier: str,
+        performance_target: shapes.AIRecommendationPerformanceTarget,
+        role_arn: str,
+        inference_specification: Optional[
+            shapes.AIRecommendationInferenceSpecification
+        ] = Unassigned(),
+        optimize_model: Optional[bool] = Unassigned(),
+        compute_spec: Optional[shapes.AIRecommendationComputeSpec] = Unassigned(),
+        tags: Optional[List[shapes.Tag]] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional["AIRecommendationJob"]:
+        """
+        Create a AIRecommendationJob resource
+
+        Parameters:
+            ai_recommendation_job_name: The name of the AI recommendation job. The name must be unique within your Amazon Web Services account in the current Amazon Web Services Region.
+            model_source: The source of the model to optimize. Specify the Amazon S3 location of the model artifacts.
+            output_config: The output configuration for the recommendation job, including the Amazon S3 location for results and an optional model package group where the optimized model is registered.
+            ai_workload_config_identifier: The name or Amazon Resource Name (ARN) of the AI workload configuration to use for this recommendation job.
+            performance_target: The performance targets for the recommendation job. Specify constraints on metrics such as time to first token (ttft-ms), throughput, or cost.
+            role_arn: The Amazon Resource Name (ARN) of an IAM role that enables Amazon SageMaker AI to perform tasks on your behalf.
+            inference_specification: The inference framework configuration. Specify the framework (such as LMI or vLLM) for the recommendation job.
+            optimize_model: Whether to allow model optimization techniques such as quantization, speculative decoding, and kernel tuning. The default is true.
+            compute_spec: The compute resource specification for the recommendation job. You can specify up to 3 instance types to consider, and optionally provide capacity reservation configuration.
+            tags: The metadata that you apply to Amazon Web Services resources to help you categorize and organize them.
+            session: Boto3 session.
+            region: Region name.
+
+        Returns:
+            The AIRecommendationJob resource.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceInUse: Resource being accessed is in use.
+            ResourceLimitExceeded: You have exceeded an SageMaker resource limit. For example, you might have too many training jobs created.
+            ResourceNotFound: Resource being access is not found.
+            ConfigSchemaValidationError: Raised when a configuration file does not adhere to the schema
+            LocalConfigNotFoundError: Raised when a configuration file is not found in local file system
+            S3ConfigNotFoundError: Raised when a configuration file is not found in S3
+        """
+
+        logger.info("Creating ai_recommendation_job resource.")
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
+
+        operation_input_args = {
+            "AIRecommendationJobName": ai_recommendation_job_name,
+            "ModelSource": model_source,
+            "OutputConfig": output_config,
+            "AIWorkloadConfigIdentifier": ai_workload_config_identifier,
+            "PerformanceTarget": performance_target,
+            "RoleArn": role_arn,
+            "InferenceSpecification": inference_specification,
+            "OptimizeModel": optimize_model,
+            "ComputeSpec": compute_spec,
+            "Tags": tags,
+        }
+
+        operation_input_args = Base.populate_chained_attributes(
+            resource_name="AIRecommendationJob", operation_input_args=operation_input_args
+        )
+
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+
+        # create the resource
+        response = client.create_ai_recommendation_job(**operation_input_args)
+        logger.debug(f"Response: {response}")
+
+        return cls.get(
+            ai_recommendation_job_name=ai_recommendation_job_name, session=session, region=region
+        )
+
+    @classmethod
+    @Base.add_validate_call
+    def get(
+        cls,
+        ai_recommendation_job_name: str,
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional["AIRecommendationJob"]:
+        """
+        Get a AIRecommendationJob resource
+
+        Parameters:
+            ai_recommendation_job_name: The name of the AI recommendation job to describe.
+            session: Boto3 session.
+            region: Region name.
+
+        Returns:
+            The AIRecommendationJob resource.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceNotFound: Resource being access is not found.
+        """
+
+        operation_input_args = {
+            "AIRecommendationJobName": ai_recommendation_job_name,
+        }
+        # serialize the input request
+        operation_input_args = serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
+        response = client.describe_ai_recommendation_job(**operation_input_args)
+
+        logger.debug(response)
+
+        # deserialize the response
+        transformed_response = transform(response, "DescribeAIRecommendationJobResponse")
+        ai_recommendation_job = cls(**transformed_response)
+        return ai_recommendation_job
+
+    @Base.add_validate_call
+    def refresh(
+        self,
+    ) -> Optional["AIRecommendationJob"]:
+        """
+        Refresh a AIRecommendationJob resource
+
+        Returns:
+            The AIRecommendationJob resource.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceNotFound: Resource being access is not found.
+        """
+
+        operation_input_args = {
+            "AIRecommendationJobName": self.ai_recommendation_job_name,
+        }
+        # serialize the input request
+        operation_input_args = serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+
+        client = Base.get_sagemaker_client()
+        response = client.describe_ai_recommendation_job(**operation_input_args)
+
+        # deserialize response and update self
+        transform(response, "DescribeAIRecommendationJobResponse", self)
+        return self
+
+    @Base.add_validate_call
+    def delete(
+        self,
+    ) -> None:
+        """
+        Delete a AIRecommendationJob resource
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceNotFound: Resource being access is not found.
+        """
+
+        client = Base.get_sagemaker_client()
+
+        operation_input_args = {
+            "AIRecommendationJobName": self.ai_recommendation_job_name,
+        }
+        # serialize the input request
+        operation_input_args = serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+
+        client.delete_ai_recommendation_job(**operation_input_args)
+
+        logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+
+    @Base.add_validate_call
+    def stop(self) -> None:
+        """
+        Stop a AIRecommendationJob resource
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceNotFound: Resource being access is not found.
+        """
+
+        client = SageMakerClient().client
+
+        operation_input_args = {
+            "AIRecommendationJobName": self.ai_recommendation_job_name,
+        }
+        # serialize the input request
+        operation_input_args = serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+
+        client.stop_ai_recommendation_job(**operation_input_args)
+
+        logger.info(f"Stopping {self.__class__.__name__} - {self.get_name()}")
+
+    @Base.add_validate_call
+    def wait(
+        self,
+        poll: int = 5,
+        timeout: Optional[int] = None,
+    ) -> None:
+        """
+        Wait for a AIRecommendationJob resource.
+
+        Parameters:
+            poll: The number of seconds to wait between each poll.
+            timeout: The maximum number of seconds to wait before timing out.
+
+        Raises:
+            TimeoutExceededError:  If the resource does not reach a terminal state before the timeout.
+            FailedStatusError:   If the resource reaches a failed state.
+            WaiterError: Raised when an error occurs while waiting.
+
+        """
+        terminal_states = ["Completed", "Failed", "Stopped"]
+        start_time = time.time()
+
+        progress = Progress(
+            SpinnerColumn("bouncingBar"),
+            TextColumn("{task.description}"),
+            TimeElapsedColumn(),
+        )
+        progress.add_task("Waiting for AIRecommendationJob...")
+        status = Status("Current status:")
+
+        with Live(
+            Panel(
+                Group(progress, status),
+                title="Wait Log Panel",
+                border_style=Style(color=Color.BLUE.value),
+            ),
+            transient=True,
+        ):
+            while True:
+                self.refresh()
+                current_status = self.ai_recommendation_job_status
+                status.update(f"Current status: [bold]{current_status}")
+
+                if current_status in terminal_states:
+                    logger.info(f"Final Resource Status: [bold]{current_status}")
+
+                    if "failed" in current_status.lower():
+                        raise FailedStatusError(
+                            resource_type="AIRecommendationJob",
+                            status=current_status,
+                            reason=self.failure_reason,
+                        )
+
+                    return
+
+                if timeout is not None and time.time() - start_time >= timeout:
+                    raise TimeoutExceededError(
+                        resouce_type="AIRecommendationJob", status=current_status
+                    )
+                time.sleep(poll)
+
+    @classmethod
+    @Base.add_validate_call
+    def get_all(
+        cls,
+        name_contains: Optional[str] = Unassigned(),
+        status_equals: Optional[str] = Unassigned(),
+        creation_time_after: Optional[datetime.datetime] = Unassigned(),
+        creation_time_before: Optional[datetime.datetime] = Unassigned(),
+        sort_by: Optional[str] = Unassigned(),
+        sort_order: Optional[str] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> ResourceIterator["AIRecommendationJob"]:
+        """
+        Get all AIRecommendationJob resources
+
+        Parameters:
+            max_results: The maximum number of recommendation jobs to return in the response.
+            next_token: If the previous call to ListAIRecommendationJobs didn't return the full set of jobs, the call returns a token for getting the next set.
+            name_contains: A string in the job name. This filter returns only jobs whose name contains the specified string.
+            status_equals: A filter that returns only recommendation jobs with the specified status.
+            creation_time_after: A filter that returns only jobs created after the specified time.
+            creation_time_before: A filter that returns only jobs created before the specified time.
+            sort_by: The field to sort results by. The default is CreationTime.
+            sort_order: The sort order for results. The default is Descending.
+            session: Boto3 session.
+            region: Region name.
+
+        Returns:
+            Iterator for listed AIRecommendationJob resources.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+        """
+
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
+
+        operation_input_args = {
+            "NameContains": name_contains,
+            "StatusEquals": status_equals,
+            "CreationTimeAfter": creation_time_after,
+            "CreationTimeBefore": creation_time_before,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
+        }
+
+        # serialize the input request
+        operation_input_args = serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+
+        return ResourceIterator(
+            client=client,
+            list_method="list_ai_recommendation_jobs",
+            summaries_key="AIRecommendationJobs",
+            summary_name="AIRecommendationJobSummary",
+            resource_cls=AIRecommendationJob,
+            list_method_kwargs=operation_input_args,
+        )
+
+
+class AIWorkloadConfig(Base):
+    """
+    Class representing resource AIWorkloadConfig
+
+    Attributes:
+        ai_workload_config_name: The name of the AI workload configuration.
+        ai_workload_config_arn: The Amazon Resource Name (ARN) of the AI workload configuration.
+        creation_time: A timestamp that indicates when the AI workload configuration was created.
+        dataset_config: The dataset configuration for the workload.
+        ai_workload_configs: The benchmark tool configuration and workload specification.
+        tags: The tags associated with the AI workload configuration.
+
+    """
+
+    ai_workload_config_name: str
+    ai_workload_config_arn: Optional[str] = Unassigned()
+    dataset_config: Optional[shapes.AIDatasetConfig] = Unassigned()
+    ai_workload_configs: Optional[shapes.AIWorkloadConfigs] = Unassigned()
+    tags: Optional[List[shapes.Tag]] = Unassigned()
+    creation_time: Optional[datetime.datetime] = Unassigned()
+
+    def get_name(self) -> str:
+        attributes = vars(self)
+        resource_name = "ai_workload_config_name"
+        resource_name_split = resource_name.split("_")
+        attribute_name_candidates = []
+
+        l = len(resource_name_split)
+        for i in range(0, l):
+            attribute_name_candidates.append("_".join(resource_name_split[i:l]))
+
+        for attribute, value in attributes.items():
+            if attribute == "name" or attribute in attribute_name_candidates:
+                return value
+        logger.error("Name attribute not found for object ai_workload_config")
+        return None
+
+    @classmethod
+    @Base.add_validate_call
+    def create(
+        cls,
+        ai_workload_config_name: str,
+        dataset_config: Optional[shapes.AIDatasetConfig] = Unassigned(),
+        ai_workload_configs: Optional[shapes.AIWorkloadConfigs] = Unassigned(),
+        tags: Optional[List[shapes.Tag]] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional["AIWorkloadConfig"]:
+        """
+        Create a AIWorkloadConfig resource
+
+        Parameters:
+            ai_workload_config_name: The name of the AI workload configuration. The name must be unique within your Amazon Web Services account in the current Amazon Web Services Region.
+            dataset_config: The dataset configuration for the workload. Specify input data channels with their data sources for benchmark workloads.
+            ai_workload_configs: The benchmark tool configuration and workload specification. Provide the specification as an inline YAML or JSON string.
+            tags: The metadata that you apply to Amazon Web Services resources to help you categorize and organize them. Each tag consists of a key and a value, both of which you define. For more information, see Tagging Amazon Web Services Resources in the Amazon Web Services General Reference.
+            session: Boto3 session.
+            region: Region name.
+
+        Returns:
+            The AIWorkloadConfig resource.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceInUse: Resource being accessed is in use.
+            ResourceLimitExceeded: You have exceeded an SageMaker resource limit. For example, you might have too many training jobs created.
+            ConfigSchemaValidationError: Raised when a configuration file does not adhere to the schema
+            LocalConfigNotFoundError: Raised when a configuration file is not found in local file system
+            S3ConfigNotFoundError: Raised when a configuration file is not found in S3
+        """
+
+        logger.info("Creating ai_workload_config resource.")
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
+
+        operation_input_args = {
+            "AIWorkloadConfigName": ai_workload_config_name,
+            "DatasetConfig": dataset_config,
+            "AIWorkloadConfigs": ai_workload_configs,
+            "Tags": tags,
+        }
+
+        operation_input_args = Base.populate_chained_attributes(
+            resource_name="AIWorkloadConfig", operation_input_args=operation_input_args
+        )
+
+        logger.debug(f"Input request: {operation_input_args}")
+        # serialize the input request
+        operation_input_args = serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+
+        # create the resource
+        response = client.create_ai_workload_config(**operation_input_args)
+        logger.debug(f"Response: {response}")
+
+        return cls.get(
+            ai_workload_config_name=ai_workload_config_name, session=session, region=region
+        )
+
+    @classmethod
+    @Base.add_validate_call
+    def get(
+        cls,
+        ai_workload_config_name: str,
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> Optional["AIWorkloadConfig"]:
+        """
+        Get a AIWorkloadConfig resource
+
+        Parameters:
+            ai_workload_config_name: The name of the AI workload configuration to describe.
+            session: Boto3 session.
+            region: Region name.
+
+        Returns:
+            The AIWorkloadConfig resource.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceNotFound: Resource being access is not found.
+        """
+
+        operation_input_args = {
+            "AIWorkloadConfigName": ai_workload_config_name,
+        }
+        # serialize the input request
+        operation_input_args = serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
+        response = client.describe_ai_workload_config(**operation_input_args)
+
+        logger.debug(response)
+
+        # deserialize the response
+        transformed_response = transform(response, "DescribeAIWorkloadConfigResponse")
+        ai_workload_config = cls(**transformed_response)
+        return ai_workload_config
+
+    @Base.add_validate_call
+    def refresh(
+        self,
+    ) -> Optional["AIWorkloadConfig"]:
+        """
+        Refresh a AIWorkloadConfig resource
+
+        Returns:
+            The AIWorkloadConfig resource.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceNotFound: Resource being access is not found.
+        """
+
+        operation_input_args = {
+            "AIWorkloadConfigName": self.ai_workload_config_name,
+        }
+        # serialize the input request
+        operation_input_args = serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+
+        client = Base.get_sagemaker_client()
+        response = client.describe_ai_workload_config(**operation_input_args)
+
+        # deserialize response and update self
+        transform(response, "DescribeAIWorkloadConfigResponse", self)
+        return self
+
+    @Base.add_validate_call
+    def delete(
+        self,
+    ) -> None:
+        """
+        Delete a AIWorkloadConfig resource
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+            ResourceInUse: Resource being accessed is in use.
+            ResourceNotFound: Resource being access is not found.
+        """
+
+        client = Base.get_sagemaker_client()
+
+        operation_input_args = {
+            "AIWorkloadConfigName": self.ai_workload_config_name,
+        }
+        # serialize the input request
+        operation_input_args = serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+
+        client.delete_ai_workload_config(**operation_input_args)
+
+        logger.info(f"Deleting {self.__class__.__name__} - {self.get_name()}")
+
+    @classmethod
+    @Base.add_validate_call
+    def get_all(
+        cls,
+        name_contains: Optional[str] = Unassigned(),
+        creation_time_after: Optional[datetime.datetime] = Unassigned(),
+        creation_time_before: Optional[datetime.datetime] = Unassigned(),
+        sort_by: Optional[str] = Unassigned(),
+        sort_order: Optional[str] = Unassigned(),
+        session: Optional[Session] = None,
+        region: Optional[str] = None,
+    ) -> ResourceIterator["AIWorkloadConfig"]:
+        """
+        Get all AIWorkloadConfig resources
+
+        Parameters:
+            max_results: The maximum number of AI workload configurations to return in the response.
+            next_token: If the previous call to ListAIWorkloadConfigs didn't return the full set of configurations, the call returns a token for getting the next set of configurations.
+            name_contains: A string in the configuration name. This filter returns only configurations whose name contains the specified string.
+            creation_time_after: A filter that returns only configurations created after the specified time.
+            creation_time_before: A filter that returns only configurations created before the specified time.
+            sort_by: The field to sort results by. The default is CreationTime.
+            sort_order: The sort order for results. The default is Descending.
+            session: Boto3 session.
+            region: Region name.
+
+        Returns:
+            Iterator for listed AIWorkloadConfig resources.
+
+        Raises:
+            botocore.exceptions.ClientError: This exception is raised for AWS service related errors.
+                The error message and error code can be parsed from the exception as follows:
+                ```
+                try:
+                    # AWS service call here
+                except botocore.exceptions.ClientError as e:
+                    error_message = e.response['Error']['Message']
+                    error_code = e.response['Error']['Code']
+                ```
+        """
+
+        client = Base.get_sagemaker_client(
+            session=session, region_name=region, service_name="sagemaker"
+        )
+
+        operation_input_args = {
+            "NameContains": name_contains,
+            "CreationTimeAfter": creation_time_after,
+            "CreationTimeBefore": creation_time_before,
+            "SortBy": sort_by,
+            "SortOrder": sort_order,
+        }
+
+        # serialize the input request
+        operation_input_args = serialize(operation_input_args)
+        logger.debug(f"Serialized input request: {operation_input_args}")
+
+        return ResourceIterator(
+            client=client,
+            list_method="list_ai_workload_configs",
+            summaries_key="AIWorkloadConfigs",
+            summary_name="AIWorkloadConfigSummary",
+            resource_cls=AIWorkloadConfig,
+            list_method_kwargs=operation_input_args,
+        )
+
+
 class Action(Base):
     """
     Class representing resource Action
