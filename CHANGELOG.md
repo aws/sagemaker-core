@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.0.79 (2026-11-20)
+
+ * fix: Verify default bucket owner on S3 operations (#442)
+ * ci: Remove legacy workflows (#441)
+ * ci(security): Remove PR checks workflow (#440)
+
 ## v1.0.78 (2026-04-20)
 
  * Daily Sync with Botocore v1.42.91 on 2026/04/20 (#403)
